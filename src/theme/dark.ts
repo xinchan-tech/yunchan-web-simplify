@@ -4,8 +4,8 @@ const theme: ThemeConfig = {
   token: {
     colorBgBase: '#0c0c0c',
     colorTextBase: '#ffffff',
-    colorBgContainer: '#202020',
-    colorBgElevated: '#202020',
+    colorBgContainer: '#141518',
+    colorBgElevated: '#141518',
     colorText: '#fff',
     borderRadius: 4
   },

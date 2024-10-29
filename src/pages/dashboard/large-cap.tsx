@@ -11,6 +11,7 @@ const LargeCap = () => {
   const [activeKey, setActiveKey] = useState<string>()
   const largeCap = useRequest(getLargeCapIndexes, {
     cacheKey: 'largeCap',
+    pollingInterval: 10 * 1000,
     onSuccess: (data) => {
       if (!activeKey) {
         setActiveKey(data[0].category_name)

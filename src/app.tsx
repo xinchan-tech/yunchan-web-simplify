@@ -41,10 +41,10 @@ const App = () => {
         </div>
       </div>
       <div className="main overflow-hidden">
-        <div className="sider h-full float-left">
+        <div className="sider h-full float-left bg-primary">
           <Menu />
         </div>
-        <div className="content ">
+        <div className="content">
           <Suspense fallback={<Spin spinning />}>
             <RouterProvider router={router} />
           </Suspense>
@@ -79,6 +79,7 @@ const App = () => {
             box-sizing: border-box;
             padding: 16px;
             padding-left: calc(54px + 16px);
+            background: ${token.colorBgContainer};
           }
         `}
       </style>
