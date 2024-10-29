@@ -1,0 +1,30 @@
+@unocss preflights;
+@unocss default;
+
+body {
+  margin: 0;
+  color: var(--text-color);
+}
+
+:root {
+  --bg-color: #0c0c0c;
+  --bg-secondary-color: #141518;
+  --bg-active-color: #27282a;
+  --bg-hover-color: #27282a;
+  --text-color: #ffffff;
+  --border-color: #202020;
+}
+
+
+
+.custom-model {
+  &.ant-modal-content{
+    border: 1px solid #333333;
+    padding: 0;
+    overflow: hidden;
+  }
+
+  .ant-modal-footer{
+    padding: 16px;
+  }
+}

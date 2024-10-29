@@ -1,0 +1,20 @@
+{
+  "app": "mgjkn",
+  "search": {
+    "stocks": "search stocks"
+  },
+  "contact": "contact teacher",
+  "user center": "user center",
+  "login": "login",
+  "avatar": "avatar",
+  "base info": "basic information",
+  "current packages": "current packages",
+  "edit": "edit",
+  "nickname": "nick name",
+  "package name": "package name",
+  "user": "user",
+  "expiration date": "expiration date",
+  "userEdit": {
+    "nickname": "edit nickname"
+  }
+}
