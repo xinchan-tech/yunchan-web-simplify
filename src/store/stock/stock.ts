@@ -92,4 +92,8 @@ export class Stock {
       cb(this.records[time], time)
     }
   }
+
+  get lastRecord(){
+    return this.records[this.times[this.times.length - 1]]
+  }
 }

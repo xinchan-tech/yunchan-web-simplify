@@ -138,7 +138,8 @@ interface LargeCapChartProps {
 }
 
 const LargeCapChart = ({ symbol, type }: LargeCapChartProps) => {
-  const { findStock, createStock, stocks } = useStock()
+  const {  createStock, stocks } = useStock()
+  const currentStock = symbol ? stocks[Symbol.for(symbol)] : undefined
   const chartRef = useRef<echarts.ECharts>()
   const chartDomRef = useRef<HTMLDivElement>(null)
 
@@ -161,17 +162,39 @@ const LargeCapChart = ({ symbol, type }: LargeCapChartProps) => {
     })
   }, [type])
 
-  const currentStock = useMemo(() => {
-    if (symbol) {
-      const s = findStock(symbol)
-      return s
-    }
-  }, [symbol, stocks, findStock])
-
 
   useUpdateEffect(() => {
     setChartData()
+
+    if(currentStock){
+      const stockRecord = currentStock.lastRecord
+      setChartAreaStyle(stockRecord.close >= stockRecord.prevClose ? 'up' : 'down')
+    }
+
   }, [currentStock])
+
+  const setChartAreaStyle = (type: 'down' | 'up') => {
+    const style = type === 'up' ? '0, 171, 67' : '255, 30, 58'
+
+
+    chartRef.current?.setOption({
+      series: [{
+        color: `rgb(${style})`,
+        areaStyle: {
+          color: {
+
+            colorStops: [{
+              offset: 0, color: `rgba(${style}, .35)` // 0% 处的颜色
+            }, {
+              offset: .6, color: `rgba(${style}, .2)` // 100% 处的颜色
+            } , {
+              offset: 1, color: 'transparent' // 100% 处的颜色
+            }]
+          }
+        }
+      }]
+    })
+  }
 
   const setChartData = () => {
 
