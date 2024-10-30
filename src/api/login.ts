@@ -36,3 +36,36 @@ export const logout = (platform?: 'window' | 'macos' | 'android' | 'linux') => {
   form.append('platform', platform || 'window')
   return request.post('/user/logOut', form).then(r => r.data)
 }
+
+export const getConfig = () => {
+  return request.get('/init/get').then(r => r.data)
+}
+
+type getUsTimeResult = {
+     /**
+     * 美国时间
+     */
+     date: string
+     /**
+      * false：休息，0开盘前，1开盘中，2开盘后
+      */
+     open_status: boolean
+     /**
+      * 开盘时段列表
+      */
+     stock_open: {
+      active: number
+      name: string
+     }[]
+     /**
+      * 美国时间戳
+      */
+     time: number
+}
+
+/**
+ * 获取美国纽约时间
+ */
+export const getUsTime = () => {
+  return request.get<getUsTimeResult>('/index/us/info').then(r => r.data)
+}

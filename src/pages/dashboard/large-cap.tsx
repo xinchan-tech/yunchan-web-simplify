@@ -125,6 +125,13 @@ const LargeCap = () => {
   )
 }
 
+
+/**
+ * 盘中时间偏移量，9:30:00 - 16:59:00
+ * 单位为秒
+ */
+const timeInOffset = dayjs().hour(16).minute(0).second(0).diff(dayjs().hour(9).minute(30).second(0), 'second')
+
 interface LargeCapChartProps {
   symbol?: string
   type: StockChartInterval
@@ -147,7 +154,6 @@ const LargeCapChart = ({ symbol, type }: LargeCapChartProps) => {
   })
 
   useUpdateEffect(() => {
-    console.log( getStockChartCategory(type), type)
     chartRef.current?.setOption({
       xAxis: {
         data: getStockChartCategory(type),
@@ -177,7 +183,7 @@ const LargeCapChart = ({ symbol, type }: LargeCapChartProps) => {
     const dataset: (string | number)[][] = []
 
     for (const s of currentStock.getDataSet()) {
-      dataset.push([s.time, s.close, s.prevClose])
+      dataset.push([dayjs(s.time).valueOf(), s.close, s.percent])
       prevClose = s.prevClose
       maxPercent = Math.max(maxPercent, s.percent)
       minPercent = Math.min(minPercent, s.percent)
@@ -187,6 +193,8 @@ const LargeCapChart = ({ symbol, type }: LargeCapChartProps) => {
     const rightYMin = minPercent - 0.002
     const leftYMax = prevClose * (1 + Math.abs(rightYMax))
     const leftYMin = prevClose * (1 - Math.abs(rightYMin))
+
+    console.log(prevClose);
 
     chartRef.current?.setOption({
       yAxis: [
@@ -200,6 +208,7 @@ const LargeCapChart = ({ symbol, type }: LargeCapChartProps) => {
             }
           }
         }, {
+          interval: (rightYMax - rightYMin) / 8,
           min: rightYMin,
           max: rightYMax,
           axisLabel: {
@@ -209,8 +218,11 @@ const LargeCapChart = ({ symbol, type }: LargeCapChartProps) => {
           }
         }
       ],
+      xAxis: {
+        max: dayjs(dataset[0][0]).add(timeInOffset, 'second').valueOf()
+      },
       series: [{
-        data: dataset.map(item => item[1]),
+        data: dataset.map(item => [item[0], item[1]]),
         markLine: {
           symbol: 'none',
           silent: true,
@@ -229,9 +241,6 @@ const LargeCapChart = ({ symbol, type }: LargeCapChartProps) => {
       }]
     })
   }
-
-
-
 
   useUpdateEffect(() => {
     if (!symbol) return
@@ -264,7 +273,11 @@ const LargeCapChart = ({ symbol, type }: LargeCapChartProps) => {
       }
     },
     xAxis: {
-      data: getStockChartCategory(StockChartInterval.IN),
+      type: 'value',
+      min: 'dataMin',
+      max: 'dataMax',
+      interval:30 * 60 * 1000,
+      // data: getStockChartCategory(StockChartInterval.IN),
       splitLine: {
         show: true,
         lineStyle: {
@@ -283,10 +296,9 @@ const LargeCapChart = ({ symbol, type }: LargeCapChartProps) => {
         }
       },
       axisLabel: {
-        interval: 59,
         showMinLabel: true,
-        formatter: (value: string) => {
-          return dayjs(value).format('HH:mm')
+        formatter: (value, index) => {
+          return index % 2 === 0 ? dayjs(value).format('HH:mm') : ''
         },
         color: '#999999',
         fontSize: 10
@@ -372,7 +384,7 @@ const LargeCapChart = ({ symbol, type }: LargeCapChartProps) => {
           global: false
         }
       }
-    }, { type: 'line' }]
+    }, { type: 'line', yAxisIndex: 1 }]
   }
 
   useMount(() => {

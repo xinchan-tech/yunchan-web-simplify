@@ -5,15 +5,28 @@ import './app.scss'
 import { SearchOutlined } from "@ant-design/icons"
 import { RouterProvider } from "react-router-dom"
 import { router } from "./router"
-import { useMount } from "ahooks"
+import { useMount, useRequest } from "ahooks"
 import { useConfig } from "./store"
 import { useTranslation } from "react-i18next"
 import { Suspense } from "react"
+import { getConfig, getUsTime } from "./api"
+import dayjs from "dayjs"
 
 const App = () => {
   const { token } = theme.useToken()
   const config = useConfig()
   const { t, i18n } = useTranslation()
+  useRequest(getConfig)
+
+  useRequest(getUsTime, {
+    pollingInterval: 1000 * 60 * 1,
+    onSuccess: (data) => {
+      if (data.time) {
+        config.setUsTime(data.time)
+        config.setUsTimeStr(data.date)
+      }
+    }
+  })
 
   useMount(() => {
     if (!config.hasSelected) {
@@ -48,7 +61,15 @@ const App = () => {
           <Suspense fallback={<Spin spinning />}>
             <RouterProvider router={router} />
           </Suspense>
+          <div>
+          <div className="footer">
+            <div className="text-center">
+              {config.usTimeStr ? dayjs(config.usTimeStr).format('YYYY-MM-DD HH:mm:ss'): '-'}
+            </div>
+          </div>
         </div>
+        </div>
+   
       </div>
 
       <style jsx>
@@ -80,6 +101,7 @@ const App = () => {
             padding: 16px;
             padding-left: calc(54px + 16px);
             background: ${token.colorBgContainer};
+            padding-bottom: 20px;
           }
         `}
       </style>
