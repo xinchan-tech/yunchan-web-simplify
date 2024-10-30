@@ -1,3 +1,4 @@
 export * from './token'
 export * from './config'
 export * from './user'
+export * from './stock'

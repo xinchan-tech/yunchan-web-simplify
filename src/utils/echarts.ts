@@ -1,0 +1,47 @@
+import * as echarts from 'echarts/core'
+
+import { LineChart, type LineSeriesOption } from 'echarts/charts'
+
+
+import {
+  TitleComponent,
+  type TitleComponentOption,
+  TooltipComponent,
+  type TooltipComponentOption,
+  GridComponent,
+  type GridComponentOption,
+  DatasetComponent,
+  type DatasetComponentOption,
+  TransformComponent,
+  MarkLineComponent,
+  type MarkLineComponentOption
+} from 'echarts/components'
+
+import { LabelLayout, UniversalTransition } from 'echarts/features';
+// 引入 Canvas 渲染器，注意引入 CanvasRenderer 或者 SVGRenderer 是必须的一步
+import { CanvasRenderer } from 'echarts/renderers';
+
+echarts.use([
+  TitleComponent,
+  TooltipComponent,
+  GridComponent,
+  DatasetComponent,
+  TransformComponent,
+  LineChart,
+  LabelLayout,
+  UniversalTransition,
+  CanvasRenderer,
+  MarkLineComponent
+])
+
+export type ECOption = echarts.ComposeOption<
+  | LineSeriesOption
+  | TitleComponentOption
+  | TooltipComponentOption
+  | GridComponentOption
+  | DatasetComponentOption
+  | DatasetComponentOption
+  | MarkLineComponentOption
+>
+
+export default echarts

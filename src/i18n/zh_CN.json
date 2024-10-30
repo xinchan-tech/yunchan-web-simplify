@@ -16,5 +16,10 @@
   "expiration date": "到期时间",
   "userEdit": {
     "nickname": "修改昵称"
+  },
+  "stockChart": {
+    "before": "盘前",
+    "in": "盘中",
+    "after": "盘后"
   }
 }

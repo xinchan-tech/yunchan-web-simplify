@@ -3,7 +3,6 @@ import { Modal } from "antd"
 import axios from "axios"
 
 const request = axios.create()
-console.log(import.meta.env)
 request.defaults.baseURL = import.meta.env.PUBLIC_BASE_API_URL
 
 request.interceptors.request.use(config => {

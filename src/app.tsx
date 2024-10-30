@@ -25,7 +25,7 @@ const App = () => {
   })
 
   return (
-    <div className="container">
+    <div className="container-layout">
 
       <div className="header relative z-10 px-4">
         <div className="search float-left flex items-center h-full">
@@ -53,7 +53,7 @@ const App = () => {
 
       <style jsx>
         {`
-          .container {
+          .container-layout {
             background: ${token.colorBgBase};
             overflow: hidden;
             height: 100vh;

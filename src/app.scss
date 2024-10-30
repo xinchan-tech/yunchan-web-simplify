@@ -1,5 +1,7 @@
-@unocss preflights;
-@unocss default;
+@use '@/theme/utilities';
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 body {
   margin: 0;
@@ -28,3 +30,4 @@ body {
     padding: 16px;
   }
 }
+

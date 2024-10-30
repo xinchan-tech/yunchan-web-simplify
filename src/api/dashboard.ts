@@ -20,3 +20,4 @@ type LargeCapIndexStock = {
 export const getLargeCapIndexes = () => {
   return request.get<LargeCapIndex[]>('/index/largeCapIndexes').then(r => r.data)
 }
+
