@@ -198,6 +198,7 @@ type GetHotSectorsParams = {
 }
 
 type GetHotSectorsResult = {
+  amount: number
   /**
    * 总成交额
    */
@@ -212,10 +213,11 @@ type GetHotSectorsResult = {
    */
   rise_number: number
   sector_name: string
+  market_cap: number
   /**
    * 涨幅前几名股票列表
    */
-  tops: { code: string; increase: number; lifting: number; name: string; plate_code: string; stock: StockRawRecord }[]
+  tops: { code: string; increase: number; lifting: number; name: string; plate_code: string; stock: StockRawRecord, symbol: string }[]
 }
 
 /**

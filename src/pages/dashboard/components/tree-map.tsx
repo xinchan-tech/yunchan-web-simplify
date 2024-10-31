@@ -39,7 +39,7 @@ const TreeMap = (props: TreeMapProps) => {
       roam: false,
       nodeClick: false,
       visibleMin: 0,
-      color: ['#30333c'],
+      color: ['#30333c', '#fff'],
       label: {
         show: true,
         color: themeToken.colorTextSecondary,
@@ -57,6 +57,9 @@ const TreeMap = (props: TreeMapProps) => {
       levels: [
         {},
         {
+          // color:()=> {
+          //   return '#fff'
+          // },
           upperLabel: {
             show: true,
             backgroundColor: themeToken.colorBgContainer,
@@ -67,9 +70,9 @@ const TreeMap = (props: TreeMapProps) => {
             padding: [0, 0, 0, 6],
             height: 28,
             formatter: (params) => {
-              const { value, name, data } = params.data as { value: number, name: string, data: number }
+              const { name, data } = params.data as { value: number, name: string, data: number }
               const _v = data * 100
-              return name ? data >= 0 ? `${name}  {r|${_v.toFixed(3)}%}` : `${name}  {g|${_v.toFixed(3)}%}` : ''
+              return name ? data >= 0 ? `${name}  {g|${_v.toFixed(3)}%}` : `${name}  {r|${_v.toFixed(3)}%}` : ''
             },
             rich: {
               r: {

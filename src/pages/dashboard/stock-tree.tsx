@@ -41,12 +41,12 @@ const StockTree = () => {
     const root = []
 
     for (const node of query.data) {
-      const n = { name: node.sector_name, value: Math.abs(node.change), data: node.change, children: [] }
+      const n = { name: node.sector_name, value: node.amount, data: node.change, children: [] }
       root.push(n)
 
       for (const t of node.tops) {
         const stockRecord = new StockRecord(t.stock)
-        n.children.push({ name: t.name, value: stockRecord.percent === 0 ? 1 : Math.abs(stockRecord.percent), data: node.change } as never)
+        n.children.push({ name: t.symbol, value: stockRecord.turnover , data: node.change, itemStyle: { color: node.change >= 0 ? '#07753c' : '#ac2532' } } as never)
       }
 
     }
@@ -100,6 +100,7 @@ interface StockTreeProps {
   value: number[]
 }
 
+// TODO: 待优化
 const SimpleCheck = ({ value }: StockTreeProps) => {
   const [checked, setChecked] = useImmer([true, true, true, true, true, true, true])
 

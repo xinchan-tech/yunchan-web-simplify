@@ -1,9 +1,9 @@
-import { useMemo, useState } from "react"
+import { useMemo, useRef, useState } from "react"
 import CapsuleTabs from "./components/capsule-tabs"
 import { useTranslation } from "react-i18next"
 import { Table } from "@/components"
 import type { TableProps } from "antd"
-import { useMount, useRequest } from "ahooks"
+import { useMount, useRequest, useSize } from "ahooks"
 import { getIncreaseTop, IncreaseTopStatus, type StockRawRecord } from "@/api"
 import { type StockRecord, useStock } from "@/store"
 import { useImmer } from "use-immer"
@@ -24,8 +24,10 @@ const TopList = () => {
   const { t } = useTranslation()
   const stock = useStock()
   const [codes, setCodes] = useImmer<Record<IncreaseTopStatus, [string, number][]>>({} as Record<IncreaseTopStatus, [string, number][]>)
+  const tableContainer = useRef<HTMLDivElement>(null)
+  const tableSize = useSize(tableContainer)
 
-  const query = useRequest(getIncreaseTop, { 
+  const query = useRequest(getIncreaseTop, {
     cacheKey: 'topList',
     manual: true,
     onSuccess: (data) => {
@@ -35,14 +37,14 @@ const TopList = () => {
         // s.stock 为盘中最后一分钟数据
         s.stock[0] = dayjs(s.stock[0]).hour(15).minute(59).second(0).format('YYYY-MM-DD HH:mm:ss')
         _stock.insertForRaw(s.stock)
-        
+
         _codes.push([s.symbol, s.extend?.total_share as number])
 
-        if(s.extend){
-          if((s.extend.stock_before as StockRawRecord).length > 0){
+        if (s.extend) {
+          if ((s.extend.stock_before as StockRawRecord).length > 0) {
             _stock.insertForRaw(s.extend?.stock_before as StockRawRecord)
           }
-          if((s.extend.stock_after as StockRawRecord).length > 0){
+          if ((s.extend.stock_after as StockRawRecord).length > 0) {
             _stock.insertForRaw(s.extend?.stock_after as StockRawRecord)
           }
         }
@@ -54,31 +56,31 @@ const TopList = () => {
     }
   })
 
-  useMount(()=> {
-    query.run( { open_status: IncreaseTopStatus.PRE_MARKET, extend: ['total_share', 'stock_before', 'stock_after'] })
+  useMount(() => {
+    query.run({ open_status: IncreaseTopStatus.PRE_MARKET, extend: ['total_share', 'stock_before', 'stock_after'] })
   })
 
-  const onTypeChange = (s: IncreaseTopStatus)  => {
+  const onTypeChange = (s: IncreaseTopStatus) => {
     query.run({ open_status: s, extend: ['total_share', 'stock_before', 'stock_after'] })
     setType(s)
   }
-  
+
   const data = useMemo(() => {
     const d: TableData[] = []
 
     for (const [code, totalShare] of codes[type] ?? []) {
       const _stock = stock.findStock(code)
-      if(!_stock) continue
+      if (!_stock) continue
       let lastData: StockRecord | undefined
-      if(type === IncreaseTopStatus.PRE_MARKET){
+      if (type === IncreaseTopStatus.PRE_MARKET) {
         lastData = _stock?.getLastRecords('preMarket')
-      }else if(type === IncreaseTopStatus.INTRA_DAY || type === IncreaseTopStatus.YESTERDAY || type === IncreaseTopStatus.WEEK){
+      } else if (type === IncreaseTopStatus.INTRA_DAY || type === IncreaseTopStatus.YESTERDAY || type === IncreaseTopStatus.WEEK) {
         lastData = _stock.getLastRecords('intraDay')
-      }else if(type === IncreaseTopStatus.AFTER_HOURS){
+      } else if (type === IncreaseTopStatus.AFTER_HOURS) {
         lastData = _stock.getLastRecords('afterHours')
       }
 
-      if(!lastData) continue
+      if (!lastData) continue
 
       d.push({
         key: _stock.getCode() + type,
@@ -90,15 +92,13 @@ const TopList = () => {
         marketValue: lastData.turnover * totalShare
       })
     }
-
-    console.log(d, codes)
-
     return d
   }, [stock, codes, type])
 
   const columns: TableProps<TableData>['columns'] = [
-    { 
+    {
       title: '名称代码', dataIndex: 'name', sorter: true, showSorterTooltip: false,
+      width: '25%',
       render: (_, row) => (
         <div className="overflow-hidden w-full">
           <div className="text-secondary">{row.code}</div>
@@ -106,11 +106,11 @@ const TopList = () => {
         </div>
       )
 
-     },
-    { title: '盘前价', dataIndex: 'price', sorter: true, align: 'right', showSorterTooltip: false },
-    { title: '盘前涨跌幅',dataIndex: 'percent',  sorter: true, align: 'right', showSorterTooltip: false },
-    { title: '成交额',dataIndex: 'turnover',  sorter: true, align: 'right', showSorterTooltip: false },
-    { title: '总市值',dataIndex: 'marketValue',  sorter: true, align: 'right', showSorterTooltip: false },
+    },
+    { title: '盘前价', dataIndex: 'price', sorter: true, align: 'right', showSorterTooltip: false, width: '17%' },
+    { title: '盘前涨跌幅', dataIndex: 'percent', sorter: true, align: 'right', showSorterTooltip: false, width: '22%' },
+    { title: '成交额', dataIndex: 'turnover', sorter: true, align: 'right', showSorterTooltip: false, width: '17%' },
+    { title: '总市值', dataIndex: 'marketValue', sorter: true, align: 'right', showSorterTooltip: false, width: '19%' },
   ]
 
   return (
@@ -124,10 +124,10 @@ const TopList = () => {
           <CapsuleTabs.Tab value={IncreaseTopStatus.WEEK.toString()} label={<span>本周</span>} />
         </CapsuleTabs>
       </div>
-      <div className="h-[calc(100%-38px)]">
+      <div className="h-[calc(100%-38px)]" ref={tableContainer}>
         <Table rowKey="code" columns={columns} dataSource={data} key="code" sortDirections={['descend', 'ascend']} scroll={{
-          y: 240
-        }} pagination={false}/>
+          y: tableSize?.height ?? 0
+        }} pagination={false} />
       </div>
     </div>
   )
