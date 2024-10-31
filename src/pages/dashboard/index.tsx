@@ -1,4 +1,8 @@
+import GoldenStockPool from "./golden-stock-pool"
+import HotFundPoll from "./hot-fund-pool"
 import LargeCap from "./large-cap"
+import StockTree from "./stock-tree"
+import TopList from "./top-list"
 
 const DashBoardPage = () => {
   return (
@@ -6,10 +10,19 @@ const DashBoardPage = () => {
       <div>
         <LargeCap />
       </div>
-      <div className="col-span-2"></div>
-      <div></div>
-      <div></div>
-      <div></div>
+      <div className="col-span-2">
+        <StockTree />
+      </div>
+      <div>
+        {/* 股票金池 */}
+        <GoldenStockPool />
+      </div>
+      <div>
+        <TopList />
+      </div>
+      <div>
+        <HotFundPoll />
+      </div>
     </div>
   )
 }

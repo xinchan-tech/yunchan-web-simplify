@@ -23,7 +23,6 @@ const App = () => {
     onSuccess: (data) => {
       if (data.time) {
         config.setUsTime(data.time)
-        config.setUsTimeStr(data.date)
       }
     }
   })
@@ -36,6 +35,8 @@ const App = () => {
 
     i18n.changeLanguage(config.language)
   })
+
+  const weeks = config.language === 'zh_CN' ? ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'] : ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
   return (
     <div className="container-layout">
@@ -62,14 +63,22 @@ const App = () => {
             <RouterProvider router={router} />
           </Suspense>
           <div>
-          <div className="footer">
-            <div className="text-center">
-              {config.usTimeStr ? dayjs(config.usTimeStr).format('YYYY-MM-DD HH:mm:ss'): '-'}
+            <div className="footer">
+              <div className="text-center">
+                {
+                  config.usTime && (
+                    <span>
+                      {dayjs(config.usTime).tz('America/New_York').format('MM-DD')}
+                      {weeks[dayjs(config.usTime).tz('America/New_York').day()]}
+                      {dayjs(config.usTime).tz('America/New_York').format('HH:mm:ss')}
+                    </span>
+                  )
+                }
+              </div>
             </div>
           </div>
         </div>
-        </div>
-   
+
       </div>
 
       <style jsx>

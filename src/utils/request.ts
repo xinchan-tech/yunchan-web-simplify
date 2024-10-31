@@ -18,7 +18,7 @@ request.interceptors.request.use(config => {
 let modalIns: ReturnType<typeof Modal.error> | null = null
 
 request.interceptors.response.use(response => {
-  if(response.data.status === 0){
+  if(response.data.status !== 1){
     throw new Error(response.data.msg)
   }
 

@@ -3,6 +3,11 @@ module.exports = {
   content: ['./src/**/*.{html,js,ts,jsx,tsx}'],
   theme: {
     extend: {
+      textColor: {
+        primary: 'var(--text-color)',
+        secondary: 'var(--text-secondary-color)',
+        tertiary: 'var(--text-tertiary-color)'
+      },
       colors: {},
       backgroundColor: {
         primary: 'var(--bg-color)',

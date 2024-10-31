@@ -1,22 +1,24 @@
 import { theme } from "antd"
-import { createContext, type PropsWithChildren, useContext } from "react"
+import { createContext, type PropsWithChildren, type ReactNode, useContext } from "react"
 
 interface CapsuleTabsProps {
   activeKey?: string
   onChange?: (value: string) => void
+  type?: 'default' | 'text'
 }
 
 interface CapsuleTabsContext {
   value?: string
   onChange?: (value: string) => void
+  type: CapsuleTabsProps['type']
 }
 
 const CapsuleTabsContext = createContext<CapsuleTabsContext>({} as CapsuleTabsContext)
 
-const _CapsuleTabs = ({ activeKey, onChange, children }: PropsWithChildren<CapsuleTabsProps>) => {
+const _CapsuleTabs = ({ activeKey, onChange, children, type = 'default' }: PropsWithChildren<CapsuleTabsProps>) => {
   return (
     <div className="flex items-center space-x-2">
-      <CapsuleTabsContext.Provider value={{ value: activeKey, onChange }}>
+      <CapsuleTabsContext.Provider value={{ value: activeKey, onChange, type }}>
         {
           children
         }
@@ -27,7 +29,7 @@ const _CapsuleTabs = ({ activeKey, onChange, children }: PropsWithChildren<Capsu
 
 interface TabItemProps {
   value: string
-  label: string
+  label: string | ReactNode
 }
 
 const TabItem = ({ value, label }: TabItemProps) => {
@@ -35,9 +37,10 @@ const TabItem = ({ value, label }: TabItemProps) => {
   const { token: themeToken } = theme.useToken()
   return (
     <div
-      className="items-center justify-center rounded-xl cursor-pointer text-xs px-3 py-0.5"
+      className="items-center justify-center rounded-xl cursor-pointer text-xs px-3 py-0.5 transition-all duration-200"
       style={{
-        background: value === context.value ? themeToken.colorPrimary : 'transparent',
+        background: value === context.value && context.type === 'default'  ? themeToken.colorPrimary : 'transparent',
+        color: value === context.value && context.type === 'text' ? themeToken.colorPrimaryActive : themeToken.colorText,
       }}
       onClick={() => { context.onChange?.(value) }} onKeyDown={() => { }}
     >

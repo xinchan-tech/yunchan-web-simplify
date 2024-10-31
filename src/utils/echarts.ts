@@ -1,6 +1,6 @@
 import * as echarts from 'echarts/core'
 
-import { LineChart, type LineSeriesOption } from 'echarts/charts'
+import { LineChart, type LineSeriesOption, TreemapChart, type TreemapSeriesOption } from 'echarts/charts'
 
 
 import {
@@ -31,7 +31,8 @@ echarts.use([
   LabelLayout,
   UniversalTransition,
   CanvasRenderer,
-  MarkLineComponent
+  MarkLineComponent,
+  TreemapChart
 ])
 
 export type ECOption = echarts.ComposeOption<
@@ -42,6 +43,7 @@ export type ECOption = echarts.ComposeOption<
   | DatasetComponentOption
   | DatasetComponentOption
   | MarkLineComponentOption
+  | TreemapSeriesOption
 >
 
 export default echarts

@@ -16,5 +16,16 @@
   "expiration date": "expiration date",
   "userEdit": {
     "nickname": "edit nickname"
-  }
+  },
+  "stockTree": {
+    "industry": "Industry stocks",
+    "concept": "Concept stocks",
+    "bull": "Bull stock heat map",
+    "etf": "ETF heat map",
+    "etfHeatmap": "concept heat map",
+    "today": "Today's hot topics",
+    "month": "Hot topics this month"
+  },
+  "goldenStockPool": "Stock gold pool",
+  "hotFundPoll": "Hot fund pool"
 }

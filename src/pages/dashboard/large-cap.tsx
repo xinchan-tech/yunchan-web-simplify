@@ -16,7 +16,7 @@ import { useTranslation } from "react-i18next"
 const LargeCap = () => {
   const [activeKey, setActiveKey] = useState<string>()
   const [activeStock, setActiveStock] = useState<string>()
-  const [stockType, setStockType] = useState<StockChartInterval>(StockChartInterval.IN)
+  const [stockType, setStockType] = useState<StockChartInterval>(StockChartInterval.INTRA_DAY)
   const largeCap = useRequest(getLargeCapIndexes, {
     cacheKey: 'largeCap',
     onSuccess: (data) => {
@@ -27,7 +27,7 @@ const LargeCap = () => {
     }
   })
 
-  getStockChartCategory(StockChartInterval.IN)
+  getStockChartCategory(StockChartInterval.INTRA_DAY)
 
   const tabs = useMemo(() => {
     return largeCap.data?.map(item => ({
@@ -61,7 +61,7 @@ const LargeCap = () => {
   const onActiveStockChange = (s: string) => {
     setActiveStock(s)
     if(s === '大盘指数'){
-      setStockType(StockChartInterval.IN)
+      setStockType(StockChartInterval.INTRA_DAY)
     }
   }
 
@@ -113,9 +113,9 @@ const LargeCap = () => {
           activeKey !== '大盘指数' && (
             <div className="absolute bottom-4 left-10">
               <CapsuleTabs activeKey={stockType.toString()} onChange={(value) => setStockType(value as unknown as StockChartInterval)}>
-                  <CapsuleTabs.Tab value={StockChartInterval.BEFORE.toString()} label={t('stockChart.before')} />
-                  <CapsuleTabs.Tab value={StockChartInterval.IN.toString()} label={t('stockChart.in')} />
-                  <CapsuleTabs.Tab value={StockChartInterval.AFTER.toString()} label={t('stockChart.after')} />
+                  <CapsuleTabs.Tab value={StockChartInterval.PRE_MARKET.toString()} label={t('stockChart.before')} />
+                  <CapsuleTabs.Tab value={StockChartInterval.INTRA_DAY.toString()} label={t('stockChart.in')} />
+                  <CapsuleTabs.Tab value={StockChartInterval.AFTER_HOURS.toString()} label={t('stockChart.after')} />
               </CapsuleTabs>
             </div>
           )
@@ -216,8 +216,6 @@ const LargeCapChart = ({ symbol, type }: LargeCapChartProps) => {
     const rightYMin = minPercent - 0.002
     const leftYMax = prevClose * (1 + Math.abs(rightYMax))
     const leftYMin = prevClose * (1 - Math.abs(rightYMin))
-
-    console.log(prevClose);
 
     chartRef.current?.setOption({
       yAxis: [

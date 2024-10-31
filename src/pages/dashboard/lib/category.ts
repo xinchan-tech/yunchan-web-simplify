@@ -29,9 +29,9 @@ const afterCategory = (() => {
 
 export const getStockChartCategory = (interval: StockChartInterval) => {
   switch (+interval) {
-    case StockChartInterval.IN:
+    case StockChartInterval.INTRA_DAY:
       return inCategory
-    case StockChartInterval.AFTER:
+    case StockChartInterval.AFTER_HOURS:
       return afterCategory
     default:
       return inCategory

@@ -5,6 +5,12 @@ import DarkTheme from '@/theme/dark'
 import '@/utils/i18n'
 import zhCN from 'antd/locale/zh_CN'
 import {useConfig} from '@/store'
+import dayjs from "dayjs"
+import utc from 'dayjs/plugin/utc'
+import tz from 'dayjs/plugin/timezone'
+
+dayjs.extend(utc)
+dayjs.extend(tz)
 
 const rootEl = document.getElementById('root')
 if (rootEl) {

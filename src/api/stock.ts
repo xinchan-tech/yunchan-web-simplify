@@ -1,8 +1,8 @@
 import request from '@/utils/request'
-import dayjs from "dayjs"
-import { md5 } from "js-md5"
-import { sha256 } from "js-sha256"
-import { customAlphabet } from "nanoid"
+import dayjs from 'dayjs'
+import { md5 } from 'js-md5'
+import { sha256 } from 'js-sha256'
+import { customAlphabet } from 'nanoid'
 
 type StockTime = string
 type StockOpen = number
@@ -15,9 +15,20 @@ type StockCumulativeVolume = number // 当日累计成交量
 type StockCumulativeTurnover = number // 当日累计成交额
 type StockPrevClose = number // 前收盘价
 
-export type StockRawRecord = 
- | [StockTime, StockOpen, StockClose, StockHigh, StockLow, StockVolume, StockTurnover, StockCumulativeVolume, StockCumulativeTurnover, StockPrevClose]
- | [StockTime, StockOpen, StockClose, StockHigh, StockLow, StockVolume, StockTurnover, StockPrevClose]
+export type StockRawRecord =
+  | [
+      StockTime,
+      StockOpen,
+      StockClose,
+      StockHigh,
+      StockLow,
+      StockVolume,
+      StockTurnover,
+      StockCumulativeVolume,
+      StockCumulativeTurnover,
+      StockPrevClose
+    ]
+  | [StockTime, StockOpen, StockClose, StockHigh, StockLow, StockVolume, StockTurnover, StockPrevClose]
 
 /**
  * 股票接口通用extend参数
@@ -61,27 +72,26 @@ export const getStockBaseCodeInfo = (params: GetStockBaseCodeInfoParams) => {
   return request.get('/basic/stock/getCodeInfo', { params }).then(r => r.data)
 }
 
-
 export enum StockChartInterval {
-    /**
+  /**
    * 0：盘中分时图，-1：盘前分时图，-2：盘后分时图，小于1440-任意分钟的分钟线, 1440-日线, 7200：5日分时图, 10080-周线, 43200-月线,
    * 129600-季线, 259200-半年线
    */
-  IN = 0,
-  BEFORE = -1,
-  AFTER = -2,
+  INTRA_DAY = 0,
+  PRE_MARKET = -1,
+  AFTER_HOURS = -2,
   DAY = 1440,
   FIVE_DAY = 7200,
   WEEK = 10080,
   MONTH = 43200,
   QUARTER = 129600,
-  HALF_YEAR = 259200,
+  HALF_YEAR = 259200
 }
 
 export enum StockChartType {
-  BEFORE = -1,
-  IN = 0,
-  AFTER = 1,
+  PRE_MARKET = -1,
+  INTRA_DAY = 0,
+  AFTER_HOURS = 1
 }
 
 type GetStockChartParams = {
@@ -152,7 +162,7 @@ export const getStockChart = (params: GetStockChartParams) => {
   // 步骤 3: sha256、MD5 加密
   // 对上述字符串依次进行sha256和MD5加密，即可得到最终的签名 Sign
 
-  if(!params._tr){
+  if (!params._tr) {
     params._tr = dayjs().valueOf().toString() + customAlphabet('0123456789', 6)()
   }
 
@@ -162,6 +172,83 @@ export const getStockChart = (params: GetStockChartParams) => {
 
   const sign = md5(sha256(paramsStr))
 
+  return request
+    .get<GetStockChartResult>('/stock/chart', {
+      params,
+      headers: { sign, 'Content-Type': 'application/x-www-form-urlencoded' }
+    })
+    .then(r => r.data)
+}
 
-  return request.get<GetStockChartResult>('/stock/chart', { params, headers: { sign, "Content-Type": 'application/x-www-form-urlencoded' } }).then(r => r.data)
+type GetHotSectorsParams = {
+  type: 'day' | 'month' | 'week'
+  /**
+   * 排名前几
+   */
+  top?: number
+  /**
+   * 选择项
+   */
+  sector: 'industry' | 'concept'
+  /**
+   * 是否显示股票相关信息：1、显示（领涨股信息、涨家数、跌家数、成交总额）
+   * @example ["1"]
+   */
+  stock?: string[]
+}
+
+type GetHotSectorsResult = {
+  /**
+   * 总成交额
+   */
+  amount_total: number
+  change: number
+  /**
+   * 跌家数
+   */
+  fall_number: number
+  /**
+   * 涨家数
+   */
+  rise_number: number
+  sector_name: string
+  /**
+   * 涨幅前几名股票列表
+   */
+  tops: { code: string; increase: number; lifting: number; name: string; plate_code: string; stock: StockRawRecord }[]
+}
+
+/**
+ * 行业/概念热点
+ */
+export const getHotSectors = (params: GetHotSectorsParams) => {
+  return request.get<GetHotSectorsResult[]>('/index/hotSectors', { params }).then(r => r.data)
+}
+
+export enum IncreaseTopStatus {
+  PRE_MARKET = 0,
+  INTRA_DAY = 1,
+  AFTER_HOURS = 2,
+  NIGHT_MARKET = 3,
+  YESTERDAY = 4,
+  WEEK = 5
+}
+
+type GetIncreaseTopParams = {
+  open_status: IncreaseTopStatus,
+  extend: StockExtend[]
+}
+
+type GetIncreaseTopResult = {
+  name: string
+  symbol: string
+  stock: StockRawRecord
+  extend?: Record<StockExtend, unknown>
+}[]
+
+/**
+ * 鹰眼数据
+ */
+export const getIncreaseTop = (params: GetIncreaseTopParams) => {
+  return request.get<GetIncreaseTopResult>('/index/increase/top', { params }).then(r => r.data)
 }
