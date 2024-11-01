@@ -56,7 +56,7 @@ const GoldenStockPool = () => {
     for (const { stock: _stock, name, symbol, extend } of query.data.items) {
       const _stock = stock.findStock(symbol)
       if (!_stock) continue
-      const lastData = _stock.getLastRecords('intraDay')
+      const lastData = _stock.getLastRecord('intraDay')
       if (!lastData) continue
       d.push({
         key: _stock.getCode(),

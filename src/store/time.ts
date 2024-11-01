@@ -42,7 +42,6 @@ export const useTime = create<TimeStore>()((set, get) => ({
   },
   isToday: data => {
     const date = dayjs(data)
-    console.log(date.format('YYYY-MM-DD HH:mm:ss'))
     return date.isSame(dayjs(get().usTime).tz('America/New_York'), 'day')
   }
 }))

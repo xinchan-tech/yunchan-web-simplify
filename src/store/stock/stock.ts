@@ -68,12 +68,14 @@ export class Stock {
     return this.symbol
   }
 
+  // TODO: 批量插入
   insertForRaw(raw: StockRawRecord) {
     const record = new StockRecord(raw)
     if (this.records[record.time]) return
     this.records[record.time] = record
     this.insertTimeOrder(record.time)
     this.insertPeriodOrder(record.time)
+    
   }
 
   private insertTimeOrder(time: string) {
@@ -81,7 +83,7 @@ export class Stock {
       this.times.push(time)
       return
     }
-    const index = this.times.findIndex(t => t > time)
+    const index = this.times.findIndex(t => t >= time)
     if (index === -1) {
       this.times.push(time)
     } else {
@@ -115,9 +117,10 @@ export class Stock {
       //盘后交易时间段
       per = p.afterHours
     }
-
+  
     const index = per.findIndex(t => t > time)
-    if(index !== -1){
+
+    if(index === -1){
       per.push(time)
     }else{
       per.splice(index, 0, time)
@@ -145,7 +148,7 @@ export class Stock {
   /**
    * 根据周期获取最新数据
    */
-  getLastRecords(period: StockTrading) {
+  getLastRecord(period: StockTrading) {
     const periods = Object.keys(this.period)
     periods.sort()
 
@@ -159,4 +162,16 @@ export class Stock {
       }
     }
   }
+
+  /**
+   * 获取指定时间段的数据
+   */
+  getLastRecords(trading: StockTrading) {
+    const periods = Object.keys(this.period)
+    periods.sort()
+
+    const times = this.period[periods[periods.length - 1]]?.[trading] ?? []
+    return times.map(time => this.records[time])
+  }
+
 }

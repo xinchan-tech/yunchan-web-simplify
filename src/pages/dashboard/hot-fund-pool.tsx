@@ -54,7 +54,7 @@ const TopList = () => {
     for (const [code, share] of codes) {
       const _stock = stock.findStock(code)
       if (!_stock) continue
-      const lastData = _stock.getLastRecords('intraDay')
+      const lastData = _stock.getLastRecord('intraDay')
       if (!lastData) continue
       d.push({
         key: _stock.getCode(),

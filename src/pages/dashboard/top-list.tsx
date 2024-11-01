@@ -81,11 +81,11 @@ const TopList = () => {
       if (!_stock) continue
       let lastData: StockRecord | undefined
       if (type === IncreaseTopStatus.PRE_MARKET) {
-        lastData = _stock?.getLastRecords(trading === 'preMarket' ? 'preMarket' : 'intraDay')
+        lastData = _stock?.getLastRecord(trading === 'preMarket' ? 'preMarket' : 'intraDay')
       } else if (type === IncreaseTopStatus.INTRA_DAY || type === IncreaseTopStatus.YESTERDAY || type === IncreaseTopStatus.WEEK) {
-        lastData = _stock.getLastRecords('intraDay')
+        lastData = _stock.getLastRecord('intraDay')
       } else if (type === IncreaseTopStatus.AFTER_HOURS) {
-        lastData = _stock.getLastRecords('afterHours')
+        lastData = _stock.getLastRecord('afterHours')
       }
 
       if (!lastData) continue

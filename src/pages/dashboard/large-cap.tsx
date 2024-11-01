@@ -9,7 +9,7 @@ import { useMemo, useRef, useState } from "react"
 import CapsuleTabs from "./components/capsule-tabs"
 import { getStockChartCategory } from "./lib/category"
 import echarts, { type ECOption } from "@/utils/echarts"
-import { useStock } from "@/store"
+import { type Stock, type StockTrading, useStock } from "@/store"
 import dayjs from "dayjs"
 import { useTranslation } from "react-i18next"
 
@@ -108,7 +108,7 @@ const LargeCap = () => {
         }
       </div>
       <div className="flex-1 relative">
-        <LargeCapChart symbol={activeStock} type={stockType} />
+        <LargeCapChart code={activeStock} type={stockType} />
         {
           activeKey !== '大盘指数' && (
             <div className="absolute bottom-4 left-10">
@@ -133,22 +133,21 @@ const LargeCap = () => {
 const timeInOffset = dayjs().hour(16).minute(0).second(0).diff(dayjs().hour(9).minute(30).second(0), 'second')
 
 interface LargeCapChartProps {
-  symbol?: string
+  code?: string
   type: StockChartInterval
 }
 
-const LargeCapChart = ({ symbol, type }: LargeCapChartProps) => {
-  const {  createStock, stocks } = useStock()
-  const currentStock = symbol ? stocks[Symbol.for(symbol)] : undefined
+const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
+  const stock = useStock()
   const chartRef = useRef<echarts.ECharts>()
   const chartDomRef = useRef<HTMLDivElement>(null)
-
+  
   const chart = useRequest(getStockChart, {
     manual: true, onSuccess: (data) => {
-      if (symbol) {
-        const stock = createStock(symbol, '')
+      if (code) {
+        const _stock = stock.createStock(code, '')
         for (const h of data.history) {
-          stock.insertForRaw(h)
+          _stock.insertForRaw(h)
         }
       }
     }
@@ -162,16 +161,31 @@ const LargeCapChart = ({ symbol, type }: LargeCapChartProps) => {
     })
   }, [type])
 
+  const getTrading = (t: StockChartInterval) => {
+    switch (t) {
+      case StockChartInterval.INTRA_DAY:
+        return 'intraDay'
+      case StockChartInterval.PRE_MARKET:
+        return 'preMarket'
+      case StockChartInterval.AFTER_HOURS:
+        return 'afterHours'
+      default:
+        return 'intraDay'
+    }
+  }
 
   useUpdateEffect(() => {
-    setChartData()
+    const currentStock = code ? stock.findStock(code) : undefined
+
+    setChartData(currentStock)
 
     if(currentStock){
-      const stockRecord = currentStock.lastRecord
-      setChartAreaStyle(stockRecord.close >= stockRecord.prevClose ? 'up' : 'down')
+      const trading = getTrading(type)
+      const stockRecord = currentStock.getLastRecord(trading)
+      setChartAreaStyle(stockRecord ? stockRecord.close >= stockRecord.prevClose ? 'up' : 'down': 'up')
     }
 
-  }, [currentStock])
+  }, [stock, type, code])
 
   const setChartAreaStyle = (type: 'down' | 'up') => {
     const style = type === 'up' ? '0, 171, 67' : '255, 30, 58'
@@ -196,7 +210,7 @@ const LargeCapChart = ({ symbol, type }: LargeCapChartProps) => {
     })
   }
 
-  const setChartData = () => {
+  const setChartData = (currentStock?: Stock) => {
 
     if (!currentStock) return
     let prevClose = 0
@@ -204,14 +218,16 @@ const LargeCapChart = ({ symbol, type }: LargeCapChartProps) => {
     let maxPercent = 0
 
     const dataset: (string | number)[][] = []
-
-    for (const s of currentStock.getDataSet()) {
+    const trading = getTrading(type)
+    for (const s of currentStock.getLastRecords(trading)) {
       dataset.push([dayjs(s.time).valueOf(), s.close, s.percent])
       prevClose = s.prevClose
       maxPercent = Math.max(maxPercent, s.percent)
       minPercent = Math.min(minPercent, s.percent)
     }
 
+    console.log(JSON.stringify(dataset), currentStock)
+  
     const rightYMax = maxPercent + 0.002
     const rightYMin = minPercent - 0.002
     const leftYMax = prevClose * (1 + Math.abs(rightYMax))
@@ -240,7 +256,7 @@ const LargeCapChart = ({ symbol, type }: LargeCapChartProps) => {
         }
       ],
       xAxis: {
-        max: dayjs(dataset[0][0]).add(timeInOffset, 'second').valueOf()
+        max: dayjs(dataset[0]?.[0]).add(timeInOffset, 'second').valueOf()
       },
       series: [{
         data: dataset.map(item => [item[0], item[1]]),
@@ -264,15 +280,15 @@ const LargeCapChart = ({ symbol, type }: LargeCapChartProps) => {
   }
 
   useUpdateEffect(() => {
-    if (!symbol) return
+    if (!code) return
 
     const params: Parameters<typeof getStockChart>[0] = {
-      ticker: symbol,
+      ticker: code,
       interval: type
     }
 
     chart.run(params)
-  }, [symbol, type])
+  }, [code, type])
 
   const options: ECOption = {
     grid: {
