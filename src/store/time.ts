@@ -34,7 +34,7 @@ export const useTime = create<TimeStore>()((set, get) => ({
       return 'preMarket'
     }
 
-    if (usTime.isAfter(usTime.hour(9).minute(30).second(0)) && usTime.isBefore(usTime.hour(16).minute(0).second(0))) {
+    if (usTime.isAfter(usTime.hour(9).minute(29).second(0)) && usTime.isBefore(usTime.hour(16).minute(0).second(0))) {
       return 'intraDay'
     }
 

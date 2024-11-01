@@ -1,4 +1,5 @@
 import request from "@/utils/request"
+import type { StockRawRecord } from "./stock"
 
 /**
  * 大盘指数
@@ -12,7 +13,7 @@ type LargeCapIndex = {
 
 type LargeCapIndexStock = {
   name: string
-  stock: string[]
+  stock: StockRawRecord
   symbol: string
 }
 

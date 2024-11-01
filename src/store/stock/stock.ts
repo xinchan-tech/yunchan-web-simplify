@@ -1,6 +1,7 @@
 import type { StockRawRecord } from '@/api'
 import dayjs from 'dayjs'
 import Decimal from 'decimal.js'
+import { produce } from "immer"
 
 export type StockTrading = 'preMarket' | 'intraDay' | 'afterHours'
 
@@ -15,6 +16,7 @@ export class StockRecord {
   cumulativeVolume: number // 当日累计成交量
   cumulativeTurnover: number // 当日累计成交额
   prevClose: number // 前收盘价
+  trading: StockTrading
   // 市值
   get marketValue() {
     return this.close * this.cumulativeVolume
@@ -32,6 +34,7 @@ export class StockRecord {
     this.low = data[4]
     this.volume = data[5]
     this.turnover = data[6]
+    this.trading = this.getTrading(data[0])
     if (data.length === 10) {
       this.cumulativeVolume = data[7]
       this.cumulativeTurnover = data[8]
@@ -41,6 +44,28 @@ export class StockRecord {
       this.cumulativeTurnover = 0
       this.prevClose = data[7]
     }
+  }
+
+  private getTrading(time: string) {
+    const usTime = dayjs(time)
+    // 盘前交易时间（Premarket Trading）：
+
+    // 4:00 AM - 9:30 AM 美国东部时间
+    // 盘中交易时间（Regular Market Hours）：
+
+    // 9:30 AM - 4:00 PM 美国东部时间
+    // 盘后交易时间（After-hours Trading）：
+
+    // 4:00 PM - 8:00 PM 美国东部时间
+    if (usTime.isAfter(usTime.hour(4).minute(0).second(0)) && usTime.isBefore(usTime.hour(9).minute(30).second(0))) {
+      return 'preMarket'
+    }
+
+    if (usTime.isAfter(usTime.hour(9).minute(30).second(0)) && usTime.isBefore(usTime.hour(16).minute(0).second(0))) {
+      return 'intraDay'
+    }
+
+    return 'afterHours'
   }
 }
 
@@ -68,11 +93,13 @@ export class Stock {
     return this.symbol
   }
 
-  // TODO: 批量插入
+
   insertForRaw(raw: StockRawRecord) {
     const record = new StockRecord(raw)
     if (this.records[record.time]) return
-    this.records[record.time] = record
+    this.records = produce(this.records, r => {
+      r[record.time] = record
+    }) 
     this.insertTimeOrder(record.time)
     this.insertPeriodOrder(record.time) 
   }
@@ -92,16 +119,7 @@ export class Stock {
   }
 
   private insertTimeOrder(time: string) {
-    if (this.times.length === 0) {
-      this.times.push(time)
-      return
-    }
-    const index = this.times.findIndex(t => t >= time)
-    if (index === -1) {
-      this.times.push(time)
-    } else {
-      this.times.splice(index, 0, time)
-    }
+    
   }
 
   private insertTimeOrderBatch(times: string[]): string[] {

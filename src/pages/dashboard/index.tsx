@@ -10,19 +10,25 @@ const DashBoardPage = () => {
       <div>
         <LargeCap />
       </div>
-      <div className="col-span-2">
-        <StockTree />
-      </div>
-      <div>
-        {/* 股票金池 */}
-        <GoldenStockPool />
-      </div>
-      <div>
-        <TopList />
-      </div>
-      <div>
-        <HotFundPoll />
-      </div>
+      {
+        false && (
+          <>
+            <div className="col-span-2">
+              <StockTree />
+            </div>
+            <div>
+              {/* 股票金池 */}
+              <GoldenStockPool />
+            </div>
+            <div>
+              <TopList />
+            </div>
+            <div>
+              <HotFundPoll />
+            </div>
+          </>
+        )
+      }
     </div>
   )
 }
