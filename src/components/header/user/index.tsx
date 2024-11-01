@@ -5,16 +5,30 @@ import { Avatar } from "antd"
 import LoginForm from "./login-form"
 import UserCenter from "./user-center"
 import { useTranslation } from "react-i18next"
+import { useMount, useUnmount } from "ahooks"
+import { appEvent } from "@/utils/event"
 
 const HeaderUser = () => {
   const { user } = useUser()
   const { token } = useToken()
   const { t } = useTranslation()
 
+  useMount(() => {
+    appEvent.on('login', () => {
+      if(!token){
+        loginForm.modal.open()
+      }
+    })
+  })
+
+  useUnmount(() => {
+    appEvent.off('login')
+  })
+
   const loginForm = useModal({
     content: <LoginForm afterLogin={() => loginForm.modal.close()} onClose={() => loginForm.modal.close()} />,
     width: 660,
-    footer: false,
+    footer: null,
     maskClosable: true,
     onOpen: () => { }
   })

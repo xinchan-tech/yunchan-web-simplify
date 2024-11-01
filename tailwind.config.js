@@ -8,7 +8,10 @@ module.exports = {
         secondary: 'var(--text-secondary-color)',
         tertiary: 'var(--text-tertiary-color)'
       },
-      colors: {},
+      colors: {
+        'stock-up': 'var(--stock-up-color)',
+        'stock-down': 'var(--stock-down-color)'
+      },
       backgroundColor: {
         primary: 'var(--bg-color)',
         secondary: 'var(--bg-secondary-color)',

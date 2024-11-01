@@ -18,11 +18,8 @@ request.interceptors.request.use(config => {
 let modalIns: ReturnType<typeof Modal.error> | null = null
 
 request.interceptors.response.use(response => {
-  if(response.data.status !== 1){
-    throw new Error(response.data.msg)
-  }
-
   if(response.data.status === 401){
+    console.log(modalIns)
     if(!modalIns){
       modalIns = Modal.error({ 
         content: '登录已过期，请重新登录',
@@ -35,6 +32,11 @@ request.interceptors.response.use(response => {
     }
     throw new Error(response.data.msg)
   }
+
+  if(response.data.status !== 1){
+    throw new Error(response.data.msg)
+  }
+
 
   return response.data
 }, (err) => {

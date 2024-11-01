@@ -1,16 +1,37 @@
-import { useMemo, useState } from "react"
+import { useMemo, useRef, useState } from "react"
 import CapsuleTabs from "./components/capsule-tabs"
-import { cn } from "@/utils/style"
 import { useImmer } from 'use-immer'
 import { useTranslation } from "react-i18next"
-import { useRequest } from "ahooks"
+import { useRequest, useSize } from "ahooks"
 import { getHotSectors } from "@/api"
 import TreeMap from "./components/tree-map"
 import { StockRecord } from "@/store"
 import { Skeleton } from "antd"
+import Decimal from "decimal.js"
 
 type StockTreeType = 'industry' | 'concept' | 'bull' | 'etf' | 'industry-heatmap' | 'etf-heatmap'
 type StockTreeDate = 'day' | 'week' | 'month'
+
+const colors = [
+  '#ac2532', '#782029', '#3a1a1f', '#30333c', '#112e21', '#0e532f', '#07753c'
+]
+
+const steps = [
+  '-3', '-2', '-1', '0', '1', '2', '3'
+]
+
+const getColorByStep = (step: string | number) => {
+  const n = new Decimal(step).times(100)
+  if(n.isNaN()) return '#1e1e1e'
+
+  for (let i = 0; i < steps.length; i++) {
+    const step = new Decimal(steps[i])
+
+    if (n.lte(step)) return colors[i]
+  }
+
+  return colors[colors.length - 1]
+}
 
 const StockTree = () => {
   const [type, setType] = useState<StockTreeType>('industry')
@@ -46,7 +67,7 @@ const StockTree = () => {
 
       for (const t of node.tops) {
         const stockRecord = new StockRecord(t.stock)
-        n.children.push({ name: t.symbol, value: stockRecord.turnover , data: node.change, itemStyle: { color: node.change >= 0 ? '#07753c' : '#ac2532' } } as never)
+        n.children.push({ name: t.symbol, value: stockRecord.turnover , data: stockRecord.percent, itemStyle: { color: getColorByStep(stockRecord.percent) } } as never)
       }
 
     }
@@ -100,6 +121,8 @@ interface StockTreeProps {
   value: number[]
 }
 
+
+
 // TODO: 待优化
 const SimpleCheck = ({ value }: StockTreeProps) => {
   const [checked, setChecked] = useImmer([true, true, true, true, true, true, true])
@@ -114,13 +137,20 @@ const SimpleCheck = ({ value }: StockTreeProps) => {
 
   return (
     <div className="check-group flex items-center space-x-2 text-center text-xs leading-5">
-      <div className={cn({ '!bg-[#ac2532]': checked[0] })} onClick={() => onClick(0)} onKeyDown={() => { }}>-3%</div>
+      {
+        steps.map((step, index) => (
+          <div key={step} style={{
+            background: checked[index] ? colors[index] : '#1e1e1e'
+          }} onClick={() => onClick(index)} onKeyDown={() => { }}>{step}%</div>
+        ))
+      }
+      {/* <div className={cn({ '!bg-[#ac2532]': checked[0] })} onClick={() => onClick(0)} onKeyDown={() => { }}>-3%</div>
       <div className={cn({ '!bg-[#782029]': checked[1] })} onClick={() => onClick(1)} onKeyDown={() => { }}>-2%</div>
       <div className={cn({ '!bg-[#3a1a1f]': checked[2] })} onClick={() => onClick(2)} onKeyDown={() => { }}>-1%</div>
       <div className={cn({ '!bg-[#30333c]': checked[3] })} onClick={() => onClick(3)} onKeyDown={() => { }}>-0%</div>
       <div className={cn({ '!bg-[#112e21]': checked[4] })} onClick={() => onClick(4)} onKeyDown={() => { }}>1%</div>
       <div className={cn({ '!bg-[#0e532f]': checked[5] })} onClick={() => onClick(5)} onKeyDown={() => { }}>2%</div>
-      <div className={cn({ '!bg-[#07753c]': checked[6] })} onClick={() => onClick(6)} onKeyDown={() => { }}>3%</div>
+      <div className={cn({ '!bg-[#07753c]': checked[6] })} onClick={() => onClick(6)} onKeyDown={() => { }}>3%</div> */}
       <style jsx>{`
           .check-group > div {!
             background: #1e1e1e;

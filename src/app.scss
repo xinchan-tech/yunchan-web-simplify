@@ -6,6 +6,12 @@
 body {
   margin: 0;
   color: var(--text-color);
+  overflow-y: hidden;
+  overflow-x: auto;
+}
+
+#root{
+  overflow-y: hidden;
 }
 
 :root {
@@ -18,19 +24,19 @@ body {
   --text-tertiary-color: rgba(255, 255, 255, 0.25);
   --border-color: #202020;
   --bg-table-header: #1c1d1f;
+  //涨幅颜色
+  --stock-up-color: #00a74e;
+  --stock-down-color: #ff2c3f;
 }
 
-
-
 .custom-model {
-  &.ant-modal-content{
+  &.ant-modal-content {
     border: 1px solid #333333;
     padding: 0;
     overflow: hidden;
   }
 
-  .ant-modal-footer{
+  .ant-modal-footer {
     padding: 16px;
   }
 }
-

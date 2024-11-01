@@ -217,7 +217,15 @@ type GetHotSectorsResult = {
   /**
    * 涨幅前几名股票列表
    */
-  tops: { code: string; increase: number; lifting: number; name: string; plate_code: string; stock: StockRawRecord, symbol: string }[]
+  tops: {
+    code: string
+    increase: number
+    lifting: number
+    name: string
+    plate_code: string
+    stock: StockRawRecord
+    symbol: string
+  }[]
 }
 
 /**
@@ -237,7 +245,7 @@ export enum IncreaseTopStatus {
 }
 
 type GetIncreaseTopParams = {
-  open_status: IncreaseTopStatus,
+  open_status: IncreaseTopStatus
   extend: StockExtend[]
 }
 
@@ -253,4 +261,95 @@ type GetIncreaseTopResult = {
  */
 export const getIncreaseTop = (params: GetIncreaseTopParams) => {
   return request.get<GetIncreaseTopResult>('/index/increase/top', { params }).then(r => r.data)
+}
+
+type GetCollectHotResult = {
+  name: string
+  stocks: {
+    count: string
+    extend: Record<StockExtend, unknown>
+    name: string
+    stock: StockRawRecord
+    symbol: string
+    total_mv: string
+  }[],
+  type: number
+}
+
+/**
+ * 热度金池
+ */
+export const getCollectHot = (params: { extend: StockExtend[] }) => {
+  return request.get<GetCollectHotResult[]>('/collect/hot', { params }).then(r => r.data)
+}
+
+
+type GetStockCollectsParams = {
+  /**
+   * 获取类型
+   */
+  extend: StockExtend[]
+  /**
+   * 分类id
+   */
+  cate_id?: number
+  /**
+   * 页码
+   */
+  page?: number
+  /**
+   * 每页数量
+   */
+  limit?: number
+}
+
+type GetStockCollectsResult = {
+  /**
+     * 当前的上一页
+     */
+  before: number;
+  /**
+   * 当前页码
+   */
+  current: number;
+  first: number;
+  /**
+   * 数据列表
+   */
+  items: {
+    id: string
+    symbol: string
+    name: string
+    create_time: string
+    stock: StockRawRecord
+    extend?: Record<StockExtend, unknown>
+  }[]
+  /**
+   * 记录集中的最后一页
+   */
+  last: number;
+  /**
+   * 每页显示数量
+   */
+  limit: number;
+  /**
+   * 当前的下一页
+   */
+  next: number;
+  previous: number;
+  /**
+   * 源数据中的项目数
+   */
+  total_items: number;
+  /**
+   * 页数
+   */
+  total_pages: number;
+}
+
+/**
+ * 股票金池
+ */
+export const getStockCollects = (params: GetStockCollectsParams) => {
+  return request.get<GetStockCollectsResult>('/collects', { params }).then(r => r.data)
 }

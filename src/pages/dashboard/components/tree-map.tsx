@@ -1,5 +1,5 @@
 import echarts, { type ECOption } from "@/utils/echarts"
-import { useMount, useUnmount, useUpdateEffect } from "ahooks"
+import { useMount, useSize, useUnmount, useUpdateEffect } from "ahooks"
 import { theme } from "antd"
 import { useRef } from "react"
 
@@ -18,6 +18,7 @@ interface TreeMapProps {
 const TreeMap = (props: TreeMapProps) => {
   const chartRef = useRef<echarts.EChartsType>()
   const chartDomRef = useRef<HTMLDivElement>(null)
+  const treeMapSize = useSize(chartDomRef)
   const { token: themeToken } = theme.useToken()
 
 
@@ -39,7 +40,7 @@ const TreeMap = (props: TreeMapProps) => {
       roam: false,
       nodeClick: false,
       visibleMin: 0,
-      color: ['#30333c', '#fff'],
+      color: ['#30333c'],
       label: {
         show: true,
         color: themeToken.colorTextSecondary,
@@ -76,10 +77,10 @@ const TreeMap = (props: TreeMapProps) => {
             },
             rich: {
               r: {
-                color: '#ff1e3a'
+                color: '#ff2c3f'
               },
               g: {
-                color: '#00ab43'
+                color: '#00a74e'
               }
             }
           }
@@ -96,6 +97,10 @@ const TreeMap = (props: TreeMapProps) => {
       chartRef.current.setOption(option)
     }
   })
+
+  useUpdateEffect(() => {
+    chartRef.current?.resize()
+  }, [treeMapSize])
 
   useUnmount(() => {
     chartRef.current?.dispose()

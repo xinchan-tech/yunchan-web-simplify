@@ -19,6 +19,9 @@ const theme: ThemeConfig = {
       primaryShadow: 'none',
       defaultHoverBorderColor: '#fff',
       defaultHoverColor: '#fff',
+    },
+    Tooltip: {
+      colorBgSpotlight: '#141518'
     }
   }
 }

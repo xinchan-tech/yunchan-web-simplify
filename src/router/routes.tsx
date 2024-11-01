@@ -7,8 +7,6 @@ export const routes: RouteObject[] = [
     path: "/",
     Component: lazy(() => import('@/pages/dashboard')),
   },
-  {
-
-  }
+  
 ]
 

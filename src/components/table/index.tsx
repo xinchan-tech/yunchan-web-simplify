@@ -25,7 +25,8 @@ const Table = (props: TableProps) => {
           }
 
           .custom-table :global(.ant-table-tbody .ant-table-cell){
-            border-color: transparent;
+            border-color: var( --bg-color);
+            padding: 2px 4px;
           }
 
           .custom-table :global(.ant-table-column-sorter){

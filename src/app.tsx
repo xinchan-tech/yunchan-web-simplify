@@ -9,23 +9,20 @@ import { useMount, useRequest } from "ahooks"
 import { useConfig } from "./store"
 import { useTranslation } from "react-i18next"
 import { Suspense } from "react"
-import { getConfig, getUsTime } from "./api"
-import dayjs from "dayjs"
+import { getConfig } from "./api"
+import FooterTime from "./components/footer-time"
 
 const App = () => {
   const { token } = theme.useToken()
   const config = useConfig()
   const { t, i18n } = useTranslation()
-  useRequest(getConfig)
 
-  useRequest(getUsTime, {
-    pollingInterval: 1000 * 60 * 1,
+  useRequest(getConfig, {
     onSuccess: (data) => {
-      if (data.time) {
-        config.setUsTime(data.time)
-      }
+      config.setConsults(data.consults)
     }
   })
+
 
   useMount(() => {
     if (!config.hasSelected) {
@@ -35,8 +32,6 @@ const App = () => {
 
     i18n.changeLanguage(config.language)
   })
-
-  const weeks = config.language === 'zh_CN' ? ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'] : ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
   return (
     <div className="container-layout">
@@ -58,23 +53,16 @@ const App = () => {
         <div className="sider h-full float-left bg-primary">
           <Menu />
         </div>
-        <div className="content">
-          <Suspense fallback={<Spin spinning />}>
-            <RouterProvider router={router} />
-          </Suspense>
+        <div className="content overflow-hidden">
           <div>
-            <div className="footer">
-              <div className="text-center">
-                {
-                  config.usTime && (
-                    <span>
-                      {dayjs(config.usTime).tz('America/New_York').format('MM-DD')}
-                      {weeks[dayjs(config.usTime).tz('America/New_York').day()]}
-                      {dayjs(config.usTime).tz('America/New_York').format('HH:mm:ss')}
-                    </span>
-                  )
-                }
-              </div>
+            <Suspense fallback={<Spin spinning />}>
+              <RouterProvider router={router} />
+            </Suspense>
+          </div>
+
+          <div className="footer border-style-primary">
+            <div className="ml-auto pr-2">
+              <FooterTime />
             </div>
           </div>
         </div>
@@ -90,6 +78,8 @@ const App = () => {
             position: relative;
             width: 100vw;
             box-sizing: border-box;
+            min-width: 1425px;
+            min-height: 810px;
           }
 
           .sider{
@@ -107,10 +97,19 @@ const App = () => {
           .content{
             height: 100%;
             box-sizing: border-box;
-            padding: 16px;
-            padding-left: calc(54px + 16px);
             background: ${token.colorBgContainer};
-            padding-bottom: 20px;
+          }
+
+          .content > div:first-child {
+            height: calc(100% - 28px);
+          }
+
+          .footer{
+            font-size: 12px;
+            height: 28px;
+            line-height: 28px;
+            display: flex;
+            align-items: center;
           }
         `}
       </style>
