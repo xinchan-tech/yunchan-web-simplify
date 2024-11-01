@@ -146,9 +146,7 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
     manual: true, onSuccess: (data) => {
       if (code) {
         const _stock = stock.createStock(code, '')
-        for (const h of data.history) {
-          _stock.insertForRaw(h)
-        }
+        _stock.insertForRawBatch(data.history)
       }
     }
   })

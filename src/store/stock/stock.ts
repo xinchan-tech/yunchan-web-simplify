@@ -74,8 +74,21 @@ export class Stock {
     if (this.records[record.time]) return
     this.records[record.time] = record
     this.insertTimeOrder(record.time)
-    this.insertPeriodOrder(record.time)
-    
+    this.insertPeriodOrder(record.time) 
+  }
+
+  insertForRawBatch(raw: StockRawRecord[]){
+
+    for (const r of raw) {
+      const record = new StockRecord(r)
+      if (this.records[record.time]) continue
+      this.records[record.time] = record
+      this.insertPeriodOrder(record.time) 
+    }
+
+    const times = this.insertTimeOrderBatch(raw.map(r => r[0]))
+    this.times = times
+
   }
 
   private insertTimeOrder(time: string) {
@@ -89,6 +102,26 @@ export class Stock {
     } else {
       this.times.splice(index, 0, time)
     }
+  }
+
+  private insertTimeOrderBatch(times: string[]): string[] {
+    const res = [...this.times]
+    
+    for (const time of times) {
+      if (this.times.length === 0) {
+        this.times.push(time)
+        continue
+      }
+      const index = this.times.findIndex(t => t >= time)
+
+      if (index === -1) {
+        res.push(time)
+      } else {
+        res.splice(index, 0, time)
+      }
+    }
+
+    return res
   }
 
   private insertPeriodOrder(time: string) {
@@ -124,6 +157,12 @@ export class Stock {
       per.push(time)
     }else{
       per.splice(index, 0, time)
+    }
+  }
+
+  private insertPeriodOrderBatch(times: string[]) {
+    for (const times of time) {
+      
     }
   }
 
