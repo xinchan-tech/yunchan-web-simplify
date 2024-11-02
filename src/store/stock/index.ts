@@ -24,6 +24,7 @@ export const useStock = create<StockStore>()((set, get) => ({
       if(!records){
         state.stocks[Symbol.for(code)] = [new StockRecord(raw)]
       }else{
+        if(hasIndex(records as StockRecord[], raw[0])) return
         const index = getInsertIndex(records as StockRecord[], raw[0])
 
         records.splice(index, 0, new StockRecord(raw))
@@ -46,6 +47,25 @@ export const useStock = create<StockStore>()((set, get) => ({
     return r
   }
 }))
+
+//根据二分法查找
+const hasIndex = (times: StockRecord[], time: string) => {
+  let left = 0
+  let right = times.length - 1
+  while (left <= right) {
+    const mid = Math.floor((left + right) / 2)
+    if (times[mid].time === time) {
+      return true
+    } 
+    
+    if (times[mid].time > time) {
+      right = mid - 1
+    }else {
+      left = mid + 1
+    }
+  }
+  return false
+}
 
 //根据二分查找获取时间列表的插入下标
 const getInsertIndex = (times: StockRecord[], time: string) => {

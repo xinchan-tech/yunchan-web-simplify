@@ -116,7 +116,7 @@ const LargeCap = () => {
         {
           activeKey !== '大盘指数' && (
             <div className="absolute bottom-4 left-10">
-              <CapsuleTabs activeKey={stockType.toString()} onChange={(value) => setStockType(value as unknown as StockChartInterval)}>
+              <CapsuleTabs activeKey={stockType.toString()} onChange={(value) => setStockType(+value as unknown as StockChartInterval)}>
                 <CapsuleTabs.Tab value={StockChartInterval.PRE_MARKET.toString()} label={t('stockChart.before')} />
                 <CapsuleTabs.Tab value={StockChartInterval.INTRA_DAY.toString()} label={t('stockChart.in')} />
                 <CapsuleTabs.Tab value={StockChartInterval.AFTER_HOURS.toString()} label={t('stockChart.after')} />
@@ -179,8 +179,7 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
   }
 
   useUpdateEffect(() => {
-    const stockRecords = code ? stock.getLastRecords(code, time.getTrading()) : undefined
-
+    const stockRecords = code ? stock.getLastRecords(code, getTrading(+type)) : undefined
     setChartData(stockRecords)
 
     // if (currentStock) {
@@ -229,7 +228,7 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
       minPercent = Math.min(minPercent, s.percent)
     }
 
-    console.log(JSON.stringify(dataset), records)
+    // console.log(JSON.stringify(dataset), records)
 
     const rightYMax = maxPercent + 0.002
     const rightYMin = minPercent - 0.002

@@ -4,21 +4,26 @@ import { ConfigProvider } from 'antd'
 import DarkTheme from '@/theme/dark'
 import '@/utils/i18n'
 import zhCN from 'antd/locale/zh_CN'
-import {useConfig} from '@/store'
+import { useConfig } from '@/store'
 import dayjs from "dayjs"
 import utc from 'dayjs/plugin/utc'
 import tz from 'dayjs/plugin/timezone'
+import isSameOrAfter from 'dayjs/plugin/isSameOrAfter'
+import isSameOrBefore from 'dayjs/plugin/isSameOrBefore'
 
 dayjs.extend(utc)
 dayjs.extend(tz)
+dayjs.extend(isSameOrAfter)
+dayjs.extend(isSameOrBefore)
+dayjs.tz.setDefault('America/New_York')
 
 const rootEl = document.getElementById('root')
 if (rootEl) {
   const root = ReactDOM.createRoot(rootEl)
   root.render(
 
-      <ConfigProvider locale={useConfig.getState().language === 'zh_CN' ? zhCN : undefined} theme={ DarkTheme }>
-        <App />
-      </ConfigProvider>
+    <ConfigProvider locale={useConfig.getState().language === 'zh_CN' ? zhCN : undefined} theme={DarkTheme}>
+      <App />
+    </ConfigProvider>
   )
 }

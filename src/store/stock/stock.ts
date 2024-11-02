@@ -57,11 +57,11 @@ export class StockRecord {
     // 盘后交易时间（After-hours Trading）：
 
     // 4:00 PM - 8:00 PM 美国东部时间
-    if (usTime.isAfter(usTime.hour(4).minute(0).second(0)) && usTime.isBefore(usTime.hour(9).minute(30).second(0))) {
+    if (usTime.isSameOrAfter(usTime.hour(4).minute(0).second(0)) && usTime.isBefore(usTime.hour(9).minute(30).second(0))) {
       return 'preMarket'
     }
 
-    if (usTime.isAfter(usTime.hour(9).minute(30).second(0)) && usTime.isBefore(usTime.hour(16).minute(0).second(0))) {
+    if (usTime.isSameOrAfter(usTime.hour(9).minute(30).second(0)) && usTime.isBefore(usTime.hour(16).minute(0).second(0))) {
       return 'intraDay'
     }
 
