@@ -10,6 +10,7 @@ interface StockStore {
   // findStock: (code: string) => Stock | undefined
   insertRaw: (code: string, raw: StockRawRecord) => void
   getLastRecord: (code: string) => StockRecord | undefined
+  getLastRecordByTrading: (code: string, trading: StockTrading) => StockRecord | undefined
   getLastRecords: (code: string, trading: StockTrading) => StockRecord[]
   // createStock: (code: string, name: string) => Stock
 }
@@ -34,6 +35,11 @@ export const useStock = create<StockStore>()((set, get) => ({
   getLastRecord: (code) => {
     const records = get().stocks[Symbol.for(code)]
     return records?.[records.length - 1]
+  },
+  getLastRecordByTrading: (code, trading) => {
+    const records = get().stocks[Symbol.for(code)]
+
+    return records?.filter(record => record.trading === trading).slice(-1)[0]
   },
   getLastRecords: (code, trading) => {
     const records = get().stocks[Symbol.for(code)] ?? []

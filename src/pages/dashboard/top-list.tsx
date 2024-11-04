@@ -1,6 +1,6 @@
 import { IncreaseTopStatus, type StockRawRecord, getIncreaseTop } from "@/api"
 import { Table } from "@/components"
-import { type StockRecord, useStock, useTime } from "@/store"
+import { type StockRecord, type StockTrading, useStock, useTime } from "@/store"
 import { numToFixed, priceToCnUnit } from "@/utils/price"
 import { cn } from "@/utils/style"
 import { InfoCircleFilled } from "@ant-design/icons"
@@ -24,13 +24,21 @@ type TableData = {
   date: string
 }
 
+const tradingToTopStatusMap: Record<StockTrading, IncreaseTopStatus> = {
+  intraDay: IncreaseTopStatus.INTRA_DAY,
+  preMarket: IncreaseTopStatus.PRE_MARKET,
+  afterHours: IncreaseTopStatus.AFTER_HOURS,
+  close: IncreaseTopStatus.AFTER_HOURS
+}
+
 const TopList = () => {
-  const [type, setType] = useState<IncreaseTopStatus>(IncreaseTopStatus.PRE_MARKET)
+  const time = useTime()
+  const [type, setType] = useState<IncreaseTopStatus>(tradingToTopStatusMap[time.getTrading()])
   const { t } = useTranslation()
   const stock = useStock()
   const trading = useTime().getTrading()
   const { isToday } = useTime()
-  const [codes, setCodes] = useImmer<Record<IncreaseTopStatus, [string, number][]>>({} as Record<IncreaseTopStatus, [string, number][]>)
+  const [codes, setCodes] = useImmer<Record<IncreaseTopStatus, [string, number, string][]>>({} as Record<IncreaseTopStatus, [string, number, string][]>)
   const tableContainer = useRef<HTMLDivElement>(null)
   const tableSize = useSize(tableContainer)
 
@@ -39,21 +47,20 @@ const TopList = () => {
     manual: true,
     pollingInterval: 30 * 1000,
     onSuccess: (data) => {
-      const _codes: [string, number][] = []
+      const _codes: [string, number, string][] = []
       for (const s of data) {
-        const _stock = stock.createStock(s.symbol, s.name)
         // s.stock 为盘中最后一分钟数据
         s.stock[0] = dayjs(s.stock[0]).hour(15).minute(59).second(0).format('YYYY-MM-DD HH:mm:ss')
-        _stock.insertForRaw(s.stock)
+        stock.insertRaw(s.symbol, s.stock)
 
-        _codes.push([s.symbol, s.extend?.total_share as number])
+        _codes.push([s.symbol, s.extend?.total_share as number, s.name])
 
         if (s.extend) {
           if ((s.extend.stock_before as StockRawRecord).length > 0) {
-            _stock.insertForRaw(s.extend?.stock_before as StockRawRecord)
+            stock.insertRaw(s.symbol, s.extend?.stock_before as StockRawRecord)
           }
           if ((s.extend.stock_after as StockRawRecord).length > 0) {
-            _stock.insertForRaw(s.extend?.stock_after as StockRawRecord)
+            stock.insertRaw(s.symbol, s.extend?.stock_after as StockRawRecord)
           }
         }
       }
@@ -65,7 +72,7 @@ const TopList = () => {
   })
 
   useMount(() => {
-    query.run({ open_status: IncreaseTopStatus.PRE_MARKET, extend: ['total_share', 'stock_before', 'stock_after'] })
+    query.run({ open_status: tradingToTopStatusMap[time.getTrading()], extend: ['total_share', 'stock_before', 'stock_after'] })
   })
 
   const onTypeChange = (s: IncreaseTopStatus) => {
@@ -76,24 +83,22 @@ const TopList = () => {
   const data = useMemo(() => {
     const d: TableData[] = []
 
-    for (const [code, totalShare] of codes[type] ?? []) {
-      const _stock = stock.findStock(code)
-      if (!_stock) continue
+    for (const [code, totalShare, name] of codes[type] ?? []) {
       let lastData: StockRecord | undefined
       if (type === IncreaseTopStatus.PRE_MARKET) {
-        lastData = _stock?.getLastRecord(trading === 'preMarket' ? 'preMarket' : 'intraDay')
+        lastData = stock.getLastRecordByTrading(code, trading === 'preMarket' ? 'preMarket' : 'intraDay')
       } else if (type === IncreaseTopStatus.INTRA_DAY || type === IncreaseTopStatus.YESTERDAY || type === IncreaseTopStatus.WEEK) {
-        lastData = _stock.getLastRecord('intraDay')
+        lastData = stock.getLastRecordByTrading(code, 'intraDay')
       } else if (type === IncreaseTopStatus.AFTER_HOURS) {
-        lastData = _stock.getLastRecord('afterHours')
+        lastData = stock.getLastRecordByTrading(code, 'afterHours')
       }
 
       if (!lastData) continue
 
       d.push({
-        key: _stock.getCode() + type,
-        code: _stock.getCode(),
-        name: _stock.getName(),
+        key: code + type,
+        code: code,
+        name: name,
         price: lastData.close,
         percent: lastData.percent,
         turnover: lastData.turnover,

@@ -3,7 +3,7 @@ import dayjs from 'dayjs'
 import Decimal from 'decimal.js'
 import { produce } from "immer"
 
-export type StockTrading = 'preMarket' | 'intraDay' | 'afterHours'
+export type StockTrading = 'preMarket' | 'intraDay' | 'afterHours' | 'close'
 
 export class StockRecord {
   time: string // 时间

@@ -39,10 +39,8 @@ const TopList = () => {
       if (!d) return
 
       for (const s of d.stocks) {
-        const _stock = stock.createStock(s.symbol, s.name)
         s.stock[0] = dayjs(s.stock[0]).hour(15).minute(59).second(0).format('YYYY-MM-DD HH:mm:ss')
-
-        _stock.insertForRaw(s.stock)
+        stock.insertRaw(s.symbol, s.stock)
       }
 
     }
@@ -50,16 +48,14 @@ const TopList = () => {
 
   const data = useMemo(() => {
     const d: TableData[] = []
-    const codes: [string, number][] = query.data?.find(v => v.type === HotType)?.stocks.map(v => [v.symbol, v.extend.total_share as number]) ?? []
-    for (const [code, share] of codes) {
-      const _stock = stock.findStock(code)
-      if (!_stock) continue
-      const lastData = _stock.getLastRecord('intraDay')
+    const codes: [string, number, string][] = query.data?.find(v => v.type === HotType)?.stocks.map(v => [v.symbol, v.extend.total_share as number, v.name]) ?? []
+    for (const [code, share, name] of codes) {
+      const lastData = stock.getLastRecordByTrading(code, 'intraDay')
       if (!lastData) continue
       d.push({
-        key: _stock.getCode(),
-        code: _stock.getCode(),
-        name: _stock.getName(),
+        key: code,
+        code: code,
+        name: name,
         price: lastData.close,
         percent: lastData.percent,
         turnover: lastData.turnover,

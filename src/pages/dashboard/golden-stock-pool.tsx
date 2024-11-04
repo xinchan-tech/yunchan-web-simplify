@@ -41,9 +41,8 @@ const GoldenStockPool = () => {
     ],
     onSuccess: (data) => {
       for (const s of data.items) {
-        const _stock = stock.createStock(s.symbol, s.name)
         s.stock[0] = dayjs(s.stock[0]).hour(15).minute(59).second(0).format('YYYY-MM-DD HH:mm:ss')
-        _stock.insertForRaw(s.stock)
+        stock.insertRaw(s.symbol, s.stock)
       }
 
     }
@@ -54,13 +53,11 @@ const GoldenStockPool = () => {
     if (!query.data) return d
 
     for (const { stock: _stock, name, symbol, extend } of query.data.items) {
-      const _stock = stock.findStock(symbol)
-      if (!_stock) continue
-      const lastData = _stock.getLastRecord('intraDay')
+      const lastData = stock.getLastRecord('intraDay')
       if (!lastData) continue
       d.push({
-        key: _stock.getCode(),
-        code: _stock.getCode(),
+        key: symbol,
+        code: symbol,
         name: name,
         price: lastData.close,
         percent: lastData.percent,

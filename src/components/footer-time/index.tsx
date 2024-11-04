@@ -1,54 +1,51 @@
 import { getUsTime } from "@/api"
 import { useTime } from "@/store"
-import { dateToWeek } from "@/utils/date"
-import { useRequest } from "ahooks"
+import { dateToWeek, getTrading } from "@/utils/date"
+import { useMount, useRequest, useUnmount } from "ahooks"
 import dayjs from "dayjs"
-import { useState } from "react"
-
-let timer: number | null = null
-let localTimestamp = 0
+import { useRef, useState } from "react"
 
 const FooterTime = () => {
   const [usTime, setUsTime] = useState(0)
   const time = useTime()
+  const timer = useRef<number | null>(null)
+  const timeForOnline = useRef<number>(time.usTime)
+
 
   useRequest(getUsTime, {
-    pollingInterval: 1000 * 60 * 1,
+    pollingInterval: 1000 * 10,
     onSuccess: (data) => {
-      if (data.time) {
-        if (timer) {
-          clearTimeout(timer)
-        }
-        // data.time = 1730447995
-        localTimestamp = new Date().valueOf()
-        time.setUsTime(data.time * 1000)
-        setUsTime(data.time * 1000)
-
-        timer = setInterval(() => {
-          const now = new Date().valueOf()
-          setUsTime(data.time * 1000 + (now - localTimestamp))
-          updateUsTimeToStore(data.time * 1000 + (now - localTimestamp))
-        }, 1000)
-      }
+      time.setLocalStamp(new Date().valueOf())
+      const uTime = data.time * 1000
+      time.setUsTime(uTime)
+      timeForOnline.current = uTime
     }
   })
 
+  useMount(() => {
+    // data.time = 1730447995
+    updateUsTimeToStore(updateTimeStamp())
+    timer.current = setInterval(() => {
+      updateUsTimeToStore(updateTimeStamp())
+    }, 1000)
+  })
+
+  useUnmount(() => {
+    timer.current && clearInterval(timer.current)
+  })
+
+  const updateTimeStamp = (): number => {
+    const currentTimestamp = new Date().valueOf()
+    const diffTime = (currentTimestamp - time.localStamp)
+    setUsTime(timeForOnline.current + diffTime)
+    return timeForOnline.current + diffTime
+  }
+
   // 优化render
   const updateUsTimeToStore = (newTime: number) => {
-    const _newTime = dayjs(newTime).tz('America/New_York')
     const trading = time.getTrading()
-
-    let r = ''
-
-    if (_newTime.isAfter(_newTime.hour(4).minute(0).second(0)) && _newTime.isBefore(_newTime.hour(9).minute(30).second(0))) {
-      r = 'preMarket'
-    } else if (_newTime.isAfter(_newTime.hour(9).minute(30).second(0)) && _newTime.isBefore(_newTime.hour(16).minute(0).second(0))) {
-      r = 'intraDay'
-    } else {
-      r = 'afterHours'
-    }
-
-    if (trading !== r) {
+    const localTrading = getTrading(dayjs(newTime).tz('America/New_York').format('YYYY-MM-DD HH:mm:ss'))
+    if (trading !== localTrading) {
       time.setUsTime(newTime)
     }
   }

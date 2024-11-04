@@ -7,6 +7,7 @@ import Menu6 from '@/assets/icon/left_menu_6@2x.png'
 import Menu8 from '@/assets/icon/left_menu_8@2x.png'
 import Menu10 from '@/assets/icon/left_menu_10@2x.png'
 import { router } from "@/router"
+import { navWithAuth } from "@/utils/nav"
 
 const Menu = () => {
   const menus = [
@@ -53,7 +54,7 @@ const Menu = () => {
   ]
 
   const onNav = (path: string) => {
-    router.navigate(path)
+    navWithAuth(path)
   }
 
   return (

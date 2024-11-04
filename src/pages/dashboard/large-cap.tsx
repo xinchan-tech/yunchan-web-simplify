@@ -1,30 +1,50 @@
 import { StockChartInterval, getLargeCapIndexes, getStockChart } from "@/api"
 import StockDownIcon from '@/assets/icon/stock_down.png'
 import StockUpIcon from '@/assets/icon/stock_up.png'
+import { type StockRecord, type StockTrading, useStock, useTime } from "@/store"
+import { getTradingPeriod } from "@/utils/date"
+import echarts, { type ECOption } from "@/utils/echarts"
+import { numToFixed } from "@/utils/price"
 import { cn } from "@/utils/style"
 import { useMount, useRequest, useSize, useUnmount, useUpdateEffect } from "ahooks"
 import clsx from "clsx"
-import { Decimal } from "decimal.js"
-import { useMemo, useRef, useState } from "react"
-import CapsuleTabs from "./components/capsule-tabs"
-import { getStockChartCategory } from "./lib/category"
-import echarts, { type ECOption } from "@/utils/echarts"
-import { type Stock, StockRecord, type StockTrading, useStock, useTime } from "@/store"
 import dayjs from "dayjs"
+import { useMemo, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
-import { numToFixed } from "@/utils/price"
+import CapsuleTabs from "./components/capsule-tabs"
+
+const tradingToIntervalMap: Record<StockTrading, StockChartInterval> = {
+  intraDay: StockChartInterval.INTRA_DAY,
+  preMarket: StockChartInterval.PRE_MARKET,
+  afterHours: StockChartInterval.AFTER_HOURS,
+  close: StockChartInterval.AFTER_HOURS,
+}
+
+const intervalToTradingMap: Record<StockChartInterval, StockTrading> = {
+  [StockChartInterval.INTRA_DAY]: 'intraDay',
+  [StockChartInterval.PRE_MARKET]: 'preMarket',
+  [StockChartInterval.AFTER_HOURS]: 'afterHours',
+  [StockChartInterval.DAY]: 'intraDay',
+  [StockChartInterval.FIVE_DAY]: 'intraDay',
+  [StockChartInterval.MONTH]: 'intraDay',
+  [StockChartInterval.QUARTER]: 'intraDay',
+  [StockChartInterval.HALF_YEAR]: 'intraDay',
+  [StockChartInterval.WEEK]: 'intraDay',
+}
 
 const LargeCap = () => {
   const [activeKey, setActiveKey] = useState<string>()
   const [activeStock, setActiveStock] = useState<string>()
-  const [stockType, setStockType] = useState<StockChartInterval>(StockChartInterval.INTRA_DAY)
   const stock = useStock()
+  const time = useTime()
+
+  const [stockType, setStockType] = useState<StockChartInterval>(tradingToIntervalMap[time.getTrading()])
   const largeCap = useRequest(getLargeCapIndexes, {
     cacheKey: 'largeCap',
     onSuccess: (data) => {
       if (!activeKey) {
-        setActiveKey(data[0].category_name)
-        setActiveStock(data[0].stocks[0].symbol)
+        setActiveKey(data[1].category_name)
+        setActiveStock(data[1].stocks[0].symbol)
       }
       for (const st of data) {
         for (const s of st.stocks) {
@@ -35,8 +55,6 @@ const LargeCap = () => {
       }
     }
   })
-
-  getStockChartCategory(StockChartInterval.INTRA_DAY)
 
   const tabs = useMemo(() => {
     return largeCap.data?.map(item => ({
@@ -72,10 +90,18 @@ const LargeCap = () => {
     return r
   }, [activeKey, largeCap.data, stock])
 
+  const onActiveKeyChange = (key: string) => {
+    setActiveKey(key)
+    const codes = largeCap.data?.find(item => item.category_name === key)?.stocks.map(item => [item.symbol, item.name]) ?? []
+    setActiveStock(codes[0][0])
+
+    // setActiveStock(t.stocks[0].code)
+  }
+
   return (
     <div className="h-full flex flex-col">
       <div className="bg-secondary py-1.5 border-style-primary px-2 h-[34px] box-border">
-        <CapsuleTabs activeKey={activeKey} onChange={setActiveKey}>
+        <CapsuleTabs activeKey={activeKey} onChange={onActiveKeyChange}>
           {
             tabs?.map(item => <CapsuleTabs.Tab key={item.key} value={item.key} label={item.label} />)
           }
@@ -129,13 +155,6 @@ const LargeCap = () => {
   )
 }
 
-
-/**
- * 盘中时间偏移量，9:30:00 - 16:59:00
- * 单位为秒
- */
-const timeInOffset = dayjs().hour(16).minute(0).second(0).diff(dayjs().hour(9).minute(30).second(0), 'second')
-
 interface LargeCapChartProps {
   code?: string
   type: StockChartInterval
@@ -145,7 +164,6 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
   const stock = useStock()
   const chartRef = useRef<echarts.ECharts>()
   const chartDomRef = useRef<HTMLDivElement>(null)
-  const time = useTime()
 
   const chart = useRequest(getStockChart, {
     manual: true, onSuccess: (data) => {
@@ -160,12 +178,12 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
   useUpdateEffect(() => {
     chartRef.current?.setOption({
       xAxis: {
-        data: getStockChartCategory(type),
+        data: getTradingPeriod(intervalToTradingMap[type]),
       }
     })
   }, [type])
 
-  const getTrading = (t: StockChartInterval) => {
+  const getTrading = (t: StockChartInterval): StockTrading => {
     switch (t) {
       case StockChartInterval.INTRA_DAY:
         return 'intraDay'
@@ -178,15 +196,28 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
     }
   }
 
+  const _getTrading = () => {
+    let trading = getTrading(+type)
+    if (code && ['SPX', 'IXIC', 'DJI'].includes(code)) {
+      if (trading === 'afterHours') {
+        trading = 'intraDay'
+      }
+    }
+
+    return trading
+  }
+
   useUpdateEffect(() => {
-    const stockRecords = code ? stock.getLastRecords(code, getTrading(+type)) : undefined
+    const stockRecords = code ? stock.getLastRecords(code, _getTrading()) : undefined
     setChartData(stockRecords)
 
-    // if (currentStock) {
-    //   const trading = getTrading(type)
-    //   const stockRecord = currentStock.getLastRecord(trading)
-    //   setChartAreaStyle(stockRecord ? stockRecord.close >= stockRecord.prevClose ? 'up' : 'down' : 'up')
-    // }
+    if (!stockRecords || stockRecords.length === 0) {
+      setChartAreaStyle('up')
+    } else {
+      const lastRecord = stockRecords[stockRecords.length - 1]
+      setChartAreaStyle(lastRecord.percent > 0 ? 'up' : 'down')
+
+    }
 
   }, [stock, type, code])
 
@@ -222,18 +253,17 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
     const dataset: (string | number)[][] = []
 
     for (const s of records) {
-      dataset.push([dayjs(s.time).valueOf(), s.close, s.percent])
+      dataset.push([s.time, s.close])
       prevClose = s.prevClose
       maxPercent = Math.max(maxPercent, s.percent)
       minPercent = Math.min(minPercent, s.percent)
     }
 
-    // console.log(JSON.stringify(dataset), records)
-
     const rightYMax = maxPercent + 0.002
     const rightYMin = minPercent - 0.002
     const leftYMax = prevClose * (1 + Math.abs(rightYMax))
     const leftYMin = prevClose * (1 - Math.abs(rightYMin))
+    const xAxisData = getTradingPeriod(_getTrading(), dataset[0]?.[0] as string)
 
     chartRef.current?.setOption({
       yAxis: [
@@ -258,7 +288,8 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
         }
       ],
       xAxis: {
-        max: dayjs(dataset[0]?.[0]).add(timeInOffset, 'second').valueOf()
+        min: dayjs(xAxisData[0]).valueOf(),
+        max: dayjs(xAxisData[xAxisData.length - 1]).valueOf()
       },
       series: [{
         data: dataset.map(item => [item[0], item[1]]),
@@ -289,6 +320,12 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
       interval: type
     }
 
+    if (['SPX', 'IXIC', 'DJI'].includes(code)) {
+      if (params.interval === StockChartInterval.AFTER_HOURS) {
+        params.interval = StockChartInterval.INTRA_DAY
+      }
+    }
+
     chart.run(params)
   }, [code, type])
 
@@ -312,11 +349,9 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
       }
     },
     xAxis: {
-      type: 'value',
-      min: 'dataMin',
-      max: 'dataMax',
-      interval: 30 * 60 * 1000,
-      // data: getStockChartCategory(StockChartInterval.IN),
+      type: 'time',
+      minInterval: 30 * 60 * 1000,
+      maxInterval: 30 * 60 * 1000,
       splitLine: {
         show: true,
         lineStyle: {
@@ -429,7 +464,8 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
   useMount(() => {
     chartRef.current = echarts.init(chartDomRef.current)
     chartRef.current.setOption(options)
-    setChartData()
+    const stockRecords = code ? stock.getLastRecords(code, _getTrading()) : undefined
+    setChartData(stockRecords)
   })
 
   useUnmount(() => {
