@@ -11,6 +11,7 @@ import { useTranslation } from "react-i18next"
 import { Suspense } from "react"
 import { getConfig } from "./api"
 import FooterTime from "./components/footer-time"
+import { Button } from "./components/ui/button"
 
 const App = () => {
   const { token } = theme.useToken()
@@ -40,6 +41,7 @@ const App = () => {
         <div className="search float-left flex items-center h-full">
           <Input prefix={<SearchOutlined />} size="small" placeholder={t('search.stocks')} />
         </div>
+        <Button >123</Button>
         <div className="absolute top-0 left-0 h-full w-full text-center flex justify-center items-center -z-10">
           <img src={Logo} alt="logo" className="w-6 h-6 mr-2" />
           {t('app')}-首页

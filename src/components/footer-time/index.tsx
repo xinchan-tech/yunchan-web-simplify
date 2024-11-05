@@ -10,15 +10,18 @@ const FooterTime = () => {
   const time = useTime()
   const timer = useRef<number | null>(null)
   const timeForOnline = useRef<number>(time.usTime)
+  const timeForLocal = useRef<number>(time.localStamp)
 
 
   useRequest(getUsTime, {
     pollingInterval: 1000 * 10,
     onSuccess: (data) => {
-      time.setLocalStamp(new Date().valueOf())
+      const local = new Date().valueOf()
+      time.setLocalStamp(local)
       const uTime = data.time * 1000
       time.setUsTime(uTime)
       timeForOnline.current = uTime
+      timeForLocal.current = local
     }
   })
 
@@ -36,7 +39,7 @@ const FooterTime = () => {
 
   const updateTimeStamp = (): number => {
     const currentTimestamp = new Date().valueOf()
-    const diffTime = (currentTimestamp - time.localStamp)
+    const diffTime = (currentTimestamp - timeForLocal.current)
     setUsTime(timeForOnline.current + diffTime)
     return timeForOnline.current + diffTime
   }
