@@ -10,7 +10,7 @@ interface TokenStore {
 export const useToken = create<TokenStore>()(
   persist(
     (set) => ({
-      token: undefined,
+      token: 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwczovL3d3dy51c2prbi5jb20iLCJpYXQiOjE3MzA2OTI2ODMsImV4cCI6MTczMzI4NDY4MywiaWQiOiI0MTEiLCJ1c2VybmFtZSI6IkRwRnZ3MXphIiwibW9iaWxlIjoiMTU3NzgzNDExMDYifQ.qmVdhzXuG9tgd7vnuxKDOep192DbYF6aIB_DBMYvg3I',
       setToken: (token: string) => set(() => ({ token })),
       removeToken: () => set(() => ({ token: undefined })),
     }),

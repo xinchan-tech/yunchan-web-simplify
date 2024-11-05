@@ -1,5 +1,5 @@
 import { getCollectHot } from "@/api"
-import { Table } from "@/components"
+import { JknTable } from "@/components"
 import { useStock } from "@/store"
 import { numToFixed, priceToCnUnit } from "@/utils/price"
 import { cn } from "@/utils/style"
@@ -115,7 +115,7 @@ const TopList = () => {
       </div>
       <div className="h-[calc(100%-38px)]" ref={tableContainer}>
         <Skeleton loading={query.loading && !query.data} paragraph={{ rows: 10 }} active>
-          <Table rowKey="code" bordered columns={columns} dataSource={data} key="code" sortDirections={['descend', 'ascend']} scroll={{
+          <JknTable rowKey="code" bordered columns={columns} dataSource={data} key="code" sortDirections={['descend', 'ascend']} scroll={{
             y: tableSize?.height ? tableSize.height - 32 : 0
           }} pagination={false} />
         </Skeleton>

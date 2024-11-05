@@ -1,3 +1,4 @@
+import { useStock } from '@/store'
 import request from '@/utils/request'
 import dayjs from 'dayjs'
 import { md5 } from 'js-md5'
@@ -55,6 +56,21 @@ export type StockExtend =
   | 'stock_after'
   | 'total_share'
   | 'financials'
+  | 'bubble'
+
+export type StockExtendResult =
+  | 'alarm_ai'
+  | 'alarm_all'
+  | 'collect'
+  | 'thumbs'
+  | 'day_basic'
+  | 'basic_index'
+  | 'stock_before'
+  | 'stock_after'
+  | 'total_share'
+  | 'liabilities'
+  | 'liabilities_and_equity'
+  | 'net_income_loss'
   | 'bubble'
 
 type GetStockBaseCodeInfoParams = {
@@ -272,7 +288,7 @@ type GetCollectHotResult = {
     stock: StockRawRecord
     symbol: string
     total_mv: string
-  }[],
+  }[]
   type: number
 }
 
@@ -282,7 +298,6 @@ type GetCollectHotResult = {
 export const getCollectHot = (params: { extend: StockExtend[] }) => {
   return request.get<GetCollectHotResult[]>('/collect/hot', { params }).then(r => r.data)
 }
-
 
 type GetStockCollectsParams = {
   /**
@@ -305,14 +320,14 @@ type GetStockCollectsParams = {
 
 type GetStockCollectsResult = {
   /**
-     * 当前的上一页
-     */
-  before: number;
+   * 当前的上一页
+   */
+  before: number
   /**
    * 当前页码
    */
-  current: number;
-  first: number;
+  current: number
+  first: number
   /**
    * 数据列表
    */
@@ -322,34 +337,120 @@ type GetStockCollectsResult = {
     name: string
     create_time: string
     stock: StockRawRecord
-    extend?: Record<StockExtend, unknown>
+    extend?: Record<StockExtendResult, unknown>
   }[]
   /**
    * 记录集中的最后一页
    */
-  last: number;
+  last: number
   /**
    * 每页显示数量
    */
-  limit: number;
+  limit: number
   /**
    * 当前的下一页
    */
-  next: number;
-  previous: number;
+  next: number
+  previous: number
   /**
    * 源数据中的项目数
    */
-  total_items: number;
+  total_items: number
   /**
    * 页数
    */
-  total_pages: number;
+  total_pages: number
 }
 
 /**
  * 股票金池
  */
-export const getStockCollects = (params: GetStockCollectsParams) => {
-  return request.get<GetStockCollectsResult>('/collects', { params }).then(r => r.data)
+export const getStockCollects = async (params: GetStockCollectsParams) => {
+  const r = await request.get<GetStockCollectsResult>('/collects', { params }).then(r => r.data)
+  const stock = useStock.getState()
+  for (const s of r.items) {
+    s.stock[0] = dayjs(s.stock[0]).hour(15).minute(59).second(0).format('YYYY-MM-DD HH:mm:ss')
+    stock.insertRaw(s.symbol, s.stock)
+  }
+
+  return r
+}
+
+type GetStockCollectCatesResult = {
+  /**
+   * 唯一标识
+   */
+  id: string
+
+  /**
+   * 名称
+   */
+  name: string
+
+  /**
+   * 创建时间戳
+   */
+  create_time: string
+
+  /**
+   * 激活状态
+   */
+  active: number
+
+  /**
+   * 总数
+   */
+  total: string
+}
+
+/**
+ * 股票金池分类
+ */
+export const getStockCollectCates = (symbol?: string) => {
+  const url = symbol ? `/collect/cates/${symbol}` : '/collect/cates'
+
+  return request.get<GetStockCollectCatesResult[]>(url).then(r => r.data)
+}
+
+/**
+ * 修改金池分类
+ */
+export const updateStockCollectCate = (params: { id: string; name: string }) => {
+  return request.post('/collect/cate/update', new URLSearchParams(params)).then(r => r.data)
+}
+
+/**
+ * 添加金池分类
+ */
+export const addStockCollectCate = (name: string) => {
+  return request.post('/collect/cate/save', new URLSearchParams({name})).then(r => r.data)
+}
+
+/**
+ * 删除金池分类
+ */
+export const removeStockCollectCate = (id: string) => {
+  return request.post('/collect/cate/delete', new URLSearchParams({ id })).then(r => r.data)
+}
+
+/**
+ * 加入金池
+ */
+export const addStockCollect = (params: { symbols: string[]; cate_ids: number[] }) => {
+  return request.post('/collect/add', params).then(r => r.data)
+}
+
+/**
+ * 移出金池
+ */
+export const removeStockCollect = (params: { symbols: string[]; cate_ids: number[] }) => {
+  const form = new URLSearchParams()
+  for (const s of params.symbols) {
+    form.append('symbols[]', s)
+  }
+
+  for (const c of params.cate_ids) {
+    form.append('cate_ids[]', c.toString())
+  }
+  return request.post<void>('/collect/delete', form).then(r => r.data)
 }

@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react"
 import CapsuleTabs from "./components/capsule-tabs"
 import { useTranslation } from "react-i18next"
-import { Table } from "@/components"
+import { JknTable } from "@/components"
 import { Button, Skeleton, type TableProps } from "antd"
 import { useStock, useToken } from "@/store"
 import { appEvent } from "@/utils/event"
@@ -135,7 +135,7 @@ const GoldenStockPool = () => {
         {
           token ? (
             <Skeleton loading={query.loading && !query.data} active paragraph={{ rows: 10 }}>
-              <Table dataSource={data} columns={columns} sortDirections={['descend', 'ascend']} pagination={false}
+              <JknTable dataSource={data} columns={columns} sortDirections={['descend', 'ascend']} pagination={false}
                 scroll={{
                   y: tableContainerSize?.height ? tableContainerSize.height - 32 : 0
                 }}

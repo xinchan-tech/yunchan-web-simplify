@@ -19,7 +19,8 @@ module.exports = {
         hover: 'var(--bg-hover-color)'
       },
       borderColor: {
-        primary: 'var(--border-color)'
+        primary: 'var(--border-color)',
+        secondary: 'var(--border-secondary-color)'
       }
     }
   },

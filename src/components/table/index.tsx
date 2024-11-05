@@ -1,5 +1,5 @@
 import { Table as ATable, type TableProps } from 'antd'
-const Table = (props: TableProps) => {
+const JknTable = (props: TableProps) => {
   return (
     <div className="custom-table">
       <ATable {...props} />
@@ -26,7 +26,7 @@ const Table = (props: TableProps) => {
 
           .custom-table :global(.ant-table-tbody .ant-table-cell){
             border-color: var( --bg-color);
-            padding: 2px 4px;
+            padding: 4px;
           }
 
           .custom-table :global(.ant-table-column-sorter){
@@ -39,4 +39,4 @@ const Table = (props: TableProps) => {
   )
 }
 
-export default Table
+export default JknTable

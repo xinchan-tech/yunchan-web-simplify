@@ -21,12 +21,15 @@ body {
   --bg-hover-color: #27282a;
   --text-color: #ffffff;
   --text-secondary-color: rgba(255, 255, 255, 0.85);
-  --text-tertiary-color: rgba(255, 255, 255, 0.25);
+  --text-tertiary-color: rgba(255, 255, 255, 0.35);
   --border-color: #202020;
+  --border-secondary-color: #353535;
   --bg-table-header: #1c1d1f;
   //涨幅颜色
   --stock-up-color: #00a74e;
   --stock-down-color: #ff2c3f;
+  scrollbar-width: 'thin';
+  scrollbar-gutter: 'stable';
 }
 
 .custom-model {
@@ -37,6 +40,19 @@ body {
   }
 
   .ant-modal-footer {
+    padding: 16px;
+  }
+}
+
+.custom-static-model{
+  .ant-modal-content {
+    border: 1px solid var(--border-color);
+    background-color: var(--bg-color);
+    padding: 0;
+    overflow: hidden;
+  }
+
+  .ant-modal-confirm-btns {
     padding: 16px;
   }
 }

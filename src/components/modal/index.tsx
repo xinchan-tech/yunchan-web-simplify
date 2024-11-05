@@ -1,4 +1,4 @@
-import { Form, message, Modal, theme, type ModalProps } from 'antd'
+import { Form, message, Modal, ModalFuncProps, theme, type ModalProps } from 'antd'
 import { useBoolean } from 'ahooks'
 import to from "await-to-js"
 import type { ReactNode } from "react"
@@ -46,11 +46,11 @@ export const useModal = ({ content, onOpen, title, closeIcon, classNames, ...pro
                       onClick={toggleModalVisible}
                       onKeyDown={() => { }}
                     >
-                      <CloseOutlined className="scale-70" />
+                      <CloseOutlined className="scale-50" />
                     </span>
                   )
                 }
-                <span className="line-height-[40px]">{title}</span>
+                <span className="leading-[40px]">{title}</span>
               </div>
             )
           }
@@ -89,11 +89,11 @@ export const useFormModal = ({ content, onOk, onOpen, ...props }: UseFormModalPr
 
   const _onFinish = async (values: unknown) => {
     const [err] = await to(new Promise(r => r(onOk(values))))
-   
+
     setFalse()
 
-    if(err){
-      throw err 
+    if (err) {
+      throw err
     }
   }
 
@@ -166,4 +166,52 @@ export const useSimpleFormModal = (props: SimpleFormModalOptions) => {
   return form
 }
 
+type JknModalOptions = Parameters<typeof Modal.info>[0] 
 
+export const JknModal = {
+  info({content, title, closeIcon, ...args}: JknModalOptions) {
+    const model = Modal.info({
+      className: 'custom-static-model',
+      title: null,
+      icon: null,
+      centered: true,
+      content: (
+        <div className="text-white">
+          {
+            title && (
+              <div className="title text-center text-white h-10" style={{ background: 'var(--bg-secondary-color)' }}>
+                {
+                  !closeIcon && (
+                    <span
+                      className="bg-[#F36059] box-border rounded-full cursor-pointer  hover:opacity-90 absolute -z-0 w-4 h-4 left-2 top-3 flex items-center justify-center"
+                      onClick={() => model.destroy()}
+                      onKeyDown={() => { }}
+                    >
+                      <CloseOutlined className="scale-75" />
+                    </span>
+                  )
+                }
+                <span className="leading-[40px]">{title}</span>
+              </div>
+            )
+          }
+          {
+            typeof content === 'string' ? (
+              <div className="text-white text-center mt-4">{content}</div>
+            ) : (
+              content
+            )
+          }
+        </div>
+      ),
+      ...args
+    })
+
+    return model
+  },
+
+  confirm(args: JknModalOptions) {
+    return JknModal.info(args)
+  }
+  
+}
