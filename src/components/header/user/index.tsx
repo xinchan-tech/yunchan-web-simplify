@@ -1,12 +1,12 @@
 import UserDefaultPng from '@/assets/icon/user_default.png'
 import { useModal } from "@/components/modal"
 import { useToken, useUser } from "@/store"
-import { Avatar } from "antd"
 import LoginForm from "./login-form"
 import UserCenter from "./user-center"
 import { useTranslation } from "react-i18next"
 import { useMount, useUnmount } from "ahooks"
 import { appEvent } from "@/utils/event"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components"
 
 const HeaderUser = () => {
   const { user } = useUser()
@@ -52,7 +52,10 @@ const HeaderUser = () => {
 
   return (
     <div className="text-sm flex items-center cursor-pointer" >
-      <Avatar src={user?.avatar ?? UserDefaultPng} size={24} className="mr-1" />
+      <Avatar>
+        <AvatarImage src={user?.avatar} className="mr-1" />
+        <AvatarFallback><img src={UserDefaultPng} alt="CN"/></AvatarFallback>
+      </Avatar>
       <span onClick={onClick} onKeyDown={() => { }}>{user?.realname ?? t('login')}</span>
       {
         loginForm.context

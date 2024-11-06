@@ -9,6 +9,9 @@ export default defineConfig({
       '@': './src'
     }
   },
+  html:{
+    template: './public/index.html'
+  },
   server:{
     proxy: {
       '/api': {

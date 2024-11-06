@@ -1,12 +1,21 @@
-import { Form, message, Modal, ModalFuncProps, theme, type ModalProps } from 'antd'
-import { useBoolean } from 'ahooks'
+import { useBoolean, useUpdate, useUpdateEffect } from 'ahooks'
 import to from "await-to-js"
 import type { ReactNode } from "react"
-import { CloseOutlined } from "@ant-design/icons"
+import { Form } from "react-router-dom"
+import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogHeader, DialogFooter } from "../ui/dialog"
+import { Cross2Icon } from "@radix-ui/react-icons"
+import useZForm from "@/hooks/use-z-form"
+import { FieldValues, UseFormReturn } from "react-hook-form"
+import { Button } from "../ui/button"
 
-export interface UseModalProps extends Omit<ModalProps, 'visible' | 'afterClose'> {
+export interface UseModalProps {
   content: ReactNode
+  title?: string
+  closeIcon?: boolean
   onOpen?: (...arg: unknown[]) => void
+  className?: string
+  footer?: boolean | ReactNode
+  onOk?: () => void
 }
 
 export interface UseModalAction {
@@ -14,57 +23,77 @@ export interface UseModalAction {
   close: () => void
 }
 
-export const useModal = ({ content, onOpen, title, closeIcon, classNames, ...props }: UseModalProps) => {
+export const useModal = ({ content, onOpen, title, closeIcon, className, footer, ...props }: UseModalProps) => {
   const [modalVisible, { toggle: toggleModalVisible }] = useBoolean(false)
-  const [visible, { toggle }] = useBoolean(false)
-  const { token: themeToken } = theme.useToken()
+  const [visible, { setFalse, setTrue }] = useBoolean(false)
 
-  const _onCancel: ModalProps['onCancel'] = (e) => {
-    props.onCancel ? props.onCancel(e) : toggleModalVisible()
+  const _onOpenChange = (open?: boolean) => {
+    if (!open) {
+      toggleModalVisible()
+    }
   }
 
-
+  useUpdateEffect(() => {
+    if (!modalVisible) {
+      setTimeout(() => {
+        setFalse()
+      }, 200)
+    }
+  }, [modalVisible])
 
   const render = () => {
     if (!visible) return null
     return (
-      <Modal
-        open={modalVisible}
-        onCancel={_onCancel}
-        afterClose={toggle}
-        closeIcon={false}
-        classNames={{ content: 'custom-model', ...classNames }}
-        {...props}>
-        <div>
-          {
-            title && (
-              <div className="title text-center h-10" style={{ background: themeToken.colorBgBase }}>
+      <Dialog open={modalVisible} onOpenChange={_onOpenChange}>
+        <DialogContent className={className}>
+          <DialogHeader>
+            <DialogTitle asChild>
+              <div>
                 {
-                  !closeIcon && (
-                    <span
-                      className="bg-[#F36059] box-border rounded-full cursor-pointer  hover:opacity-90 absolute -z-0 w-4 h-4 left-2 top-3 flex items-center justify-center"
-                      onClick={toggleModalVisible}
-                      onKeyDown={() => { }}
-                    >
-                      <CloseOutlined className="scale-50" />
-                    </span>
+                  title && (
+                    <div className="title text-center h-10" style={{}}>
+                      {
+                        !closeIcon && (
+                          <span
+                            className="bg-[#F36059] box-border rounded-full cursor-pointer  hover:opacity-90 absolute -z-0 w-4 h-4 left-2 top-3 flex items-center justify-center"
+                            onClick={toggleModalVisible}
+                            onKeyDown={() => { }}
+                          >
+                            <Cross2Icon className="scale-75" />
+                          </span>
+                        )
+                      }
+                      <span className="leading-[40px]">{title}</span>
+                    </div>
                   )
                 }
-                <span className="leading-[40px]">{title}</span>
               </div>
+            </DialogTitle>
+          </DialogHeader>
+          {
+            content
+          }
+          {
+            footer !== false && (
+              footer === undefined ? (
+                <DialogFooter>
+                  <Button onClick={() => toggleModalVisible()}>取消</Button>
+                  <Button onClick={() => props.onOk?.()}>确认</Button>
+                </DialogFooter>
+              ) : (
+                footer
+              )
             )
           }
-          {content}
-        </div>
-      </Modal>
+        </DialogContent>
+      </Dialog >
     )
   }
 
   const modal: UseModalAction = {
     open: (...arg: unknown[]) => {
-
       toggleModalVisible()
-      toggle()
+      setTrue()
       onOpen?.(...arg)
     },
     close: () => {
@@ -78,19 +107,14 @@ export const useModal = ({ content, onOpen, title, closeIcon, classNames, ...pro
   }
 }
 
-export interface UseFormModalProps extends UseModalProps {
-  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-  onOk: (values: any) => void
+export interface UseFormModalProps<T extends FieldValues> extends Omit<UseModalProps, 'onOk'> {
+  onOk: (values: T) => void
+  form: UseFormReturn<T>
 }
 
-export const useFormModal = ({ content, onOk, onOpen, ...props }: UseFormModalProps) => {
-  const [form] = Form.useForm()
-  const [confirmLoading, { setFalse, setTrue }] = useBoolean(false)
-
-  const _onFinish = async (values: unknown) => {
+export const useFormModal = <T extends FieldValues>({ content, onOk, onOpen, form, ...props }: UseFormModalProps<T>) => {
+  const _onFinish = async (values: T) => {
     const [err] = await to(new Promise(r => r(onOk(values))))
-
-    setFalse()
 
     if (err) {
       throw err
@@ -98,28 +122,30 @@ export const useFormModal = ({ content, onOk, onOpen, ...props }: UseFormModalPr
   }
 
   const _content = (
-    <Form form={form} onFinish={_onFinish}>
-      {
-        content
-      }
+    <Form {...form}>
+      <form className="space-y-8">
+
+      </form>
     </Form>
+    // <Form form={form} onFinish={_onFinish}>
+    //   {
+    //     content
+    //   }
+    // </Form>
   )
 
   const _onOpen = (...arg: unknown[]) => {
-    form.resetFields()
+    form.reset()
     onOpen?.(...arg)
   }
 
-  const _onOk = async () => {
-    await form.validateFields()
-    setTrue()
-    form.submit()
+  const _onOk = () => {
+    form.handleSubmit(_onFinish)
   }
 
 
-
   const { modal, context } = useModal({
-    content: _content, onOk: () => _onOk(), onOpen: _onOpen, confirmLoading, ...props
+    content: _content, onOpen: _onOpen, onOk: _onOk, ...props
   })
 
   return {
@@ -128,8 +154,8 @@ export const useFormModal = ({ content, onOk, onOpen, ...props }: UseFormModalPr
     context,
     open: modal.open,
     close: modal.close,
-    setFieldsValue: form.setFieldsValue,
-    getFieldValue: form.getFieldValue
+    setFieldsValue: form.setValue,
+    getFieldValue: form.getValues
   }
 }
 
@@ -166,10 +192,10 @@ export const useSimpleFormModal = (props: SimpleFormModalOptions) => {
   return form
 }
 
-type JknModalOptions = Parameters<typeof Modal.info>[0] 
+type JknModalOptions = Parameters<typeof Modal.info>[0]
 
 export const JknModal = {
-  info({content, title, closeIcon, ...args}: JknModalOptions) {
+  info({ content, title, closeIcon, ...args }: JknModalOptions) {
     const model = Modal.info({
       className: 'custom-static-model',
       title: null,
@@ -213,5 +239,5 @@ export const JknModal = {
   confirm(args: JknModalOptions) {
     return JknModal.info(args)
   }
-  
+
 }

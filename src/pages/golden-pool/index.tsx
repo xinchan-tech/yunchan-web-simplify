@@ -1,16 +1,19 @@
 import { type StockExtend, addStockCollectCate, getStockCollectCates, getStockCollects, removeStockCollect, removeStockCollectCate, updateStockCollectCate } from "@/api"
-import { CapsuleTabs, JknModal, JknTable, useFormModal, useModal } from "@/components"
+import { Button, CapsuleTabs, Checkbox, Form, Input, JknModal, JknTable, type JknTableProps, Popover, PopoverContent, PopoverTrigger, useFormModal, useModal } from "@/components"
+import { DialogHeader } from "@/components/ui/dialog"
 import { useDomSize } from "@/hooks"
+import useZForm from "@/hooks/use-z-form"
 import { useStock, useTime } from "@/store"
 import { numToFixed, priceToCnUnit } from "@/utils/price"
 import { cn } from "@/utils/style"
-import { DeleteOutlined, PlusSquareOutlined, SettingFilled } from "@ant-design/icons"
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@radix-ui/react-dialog"
+import { PlusIcon, TrashIcon } from "@radix-ui/react-icons"
 import { useRequest } from "ahooks"
-import { Button, Checkbox, Form, Input, Modal, Popover, Skeleton, type CheckboxProps, type TableProps } from "antd"
 import to from "await-to-js"
 import Decimal from "decimal.js"
 import { useMemo, useState } from "react"
 import { useImmer } from "use-immer"
+import { z } from "zod"
 
 const baseExtends: StockExtend[] = ['total_share', 'basic_index', 'day_basic', 'alarm_ai', 'alarm_all', 'financials']
 type CollectCate = Awaited<ReturnType<typeof getStockCollectCates>>[0]
@@ -108,10 +111,10 @@ const GoldenPool = () => {
     }
   }
 
-  const onCheckAllChange: CheckboxProps['onChange'] = (e) => {
+  const onCheckAllChange = (e: boolean) => {
     setCheck(d => {
-      d.all = e.target.checked
-      d.selected = e.target.checked ? data?.map(d => d.key) ?? [] : []
+      d.all = e
+      d.selected = e ? data?.map(d => d.key) ?? [] : []
     })
   }
 
@@ -158,74 +161,75 @@ const GoldenPool = () => {
   }
 
 
-  const columns: TableProps['columns'] = [
-    { title: '序号', dataIndex: 'index', width: 60, align: 'center' },
+  const columns: JknTableProps<DataType>['columns'] = [
+    { header: '序号', accessorKey: 'index', meta: { align: 'center', width: 40 } },
     {
-      title: '名称代码', dataIndex: 'name', sorter: true, showSorterTooltip: false,
-      width: '25%',
-      render: (_, row) => (
+      header: '名称代码', accessorKey: 'name', meta: { width: '25%' },
+      cell: ({ row }) => (
         <div className="overflow-hidden">
-          <div className="text-secondary">{row.code}</div>
-          <div className="text-tertiary text-xs text-ellipsis overflow-hidden whitespace-nowrap w-full">{row.name}</div>
+          <div className="text-secondary">{row.original.code}</div>
+          <div className="text-tertiary text-xs text-ellipsis overflow-hidden whitespace-nowrap w-full">{row.getValue('name')}</div>
         </div>
       )
 
     },
     {
-      title: '现价', dataIndex: 'price', sorter: true, align: 'right', showSorterTooltip: false, width: '17%',
-      render: (v, row) => <span className={cn(row.percent >= 0 ? 'text-stock-up' : 'text-stock-down')}>
-        {numToFixed(v)}
+      header: '现价', accessorKey: 'price', meta: { width: '25%', align: 'right' },
+      cell: ({ row }) => <span className={cn(row.getValue<number>('percent') >= 0 ? 'text-stock-up' : 'text-stock-down')}>
+        {numToFixed(row.getValue<number>('price'))}
       </span>
     },
     {
-      title: '涨跌幅', dataIndex: 'percent', sorter: true, align: 'right', showSorterTooltip: false, width: '22%',
-      render: v => (
-        <div className={cn(v >= 0 ? 'bg-stock-up' : 'bg-stock-down', 'h-full rounded-sm w-16 text-center px-1 py-0.5 float-right')}>
-          {v > 0 ? '+' : null}{`${numToFixed(v * 100, 2)}%`}
+      header: '涨跌幅', accessorKey: 'percent', meta: { width: '22%', align: 'right' },
+      cell: ({ row }) => (
+        <div className={cn(row.getValue<number>('percent') >= 0 ? 'bg-stock-up' : 'bg-stock-down', 'h-full rounded-sm w-16 text-center px-1 py-0.5 float-right')}>
+          {row.getValue<number>('percent') > 0 ? '+' : null}{`${numToFixed(row.getValue<number>('percent') * 100, 2)}%`}
         </div>
       )
     },
     {
-      title: '成交额', dataIndex: 'turnover', sorter: true, align: 'right', showSorterTooltip: false, width: '17%',
-      render: (v) => <span>
-        {priceToCnUnit(v * 10000, 2)}
+      header: '成交额', accessorKey: 'turnover', meta: { width: '17%', align: 'right' },
+      cell: ({ row }) => <span>
+        {priceToCnUnit(row.getValue<number>('percent') * 10000, 2)}
       </span>
     },
     {
-      title: '总市值', dataIndex: 'marketValue', sorter: true, align: 'right', showSorterTooltip: false, width: '19%',
-      render: (v) => <span>
-        {priceToCnUnit(v, 2)}
+      header: '总市值', accessorKey: 'marketValue', meta: { width: '19%', align: 'right' },
+      cell: ({ row }) => <span>
+        {priceToCnUnit(row.getValue<number>('percent'), 2)}
       </span>
     },
     {
-      title: '换手率', dataIndex: '', sorter: true, align: 'right', showSorterTooltip: false, width: '19%',
-      render: () => '0.00%'
+      header: '换手率', accessorKey: 't', meta: { width: '19%', align: 'right' },
+      cell: () => '0.00%'
     },
     // TODO: 待计算公式
     {
-      title: '市盈率', dataIndex: 'pe', sorter: true, align: 'right', showSorterTooltip: false, width: '19%',
-      render: (v) => <span>
-        {numToFixed(v, 2)}
+      header: '市盈率', accessorKey: 'pe', meta: { width: '19%', align: 'right' },
+      cell: ({ row }) => <span>
+        {numToFixed(row.getValue<number>('percent'), 2)}
       </span>
     },
     {
-      title: '行业板块', dataIndex: 'dataIndex', sorter: true, align: 'right', showSorterTooltip: false, width: '19%',
+      header: '行业板块', accessorKey: 'dataIndex', meta: { width: '19%', align: 'right' },
     },
     {
-      title: '+AI报警', dataIndex: 'marketValue', align: 'center', width: 80,
-      render: () => (
+      header: '+AI报警', accessorKey: 'ai', meta: { width: 80, align: 'center' },
+      cell: () => (
         <div className="text-stock-up cursor-pointer">
-          <PlusSquareOutlined size={48} />
+          <PlusIcon />
         </div>
       )
     },
     {
-      title: (
+      header: () => (
         <Popover
           open={check.selected.length > 0}
-          placement="bottomRight"
-          overlayClassName="rounded-md border-style-secondary overflow-hidden"
-          content={(
+        >
+          <PopoverTrigger asChild>
+            <span>123</span>
+          </PopoverTrigger>
+          <PopoverContent>
             <div className="bg-secondary rounded">
               <div className="bg-primary px-16 py-2">批量操作 {check.selected.length} 项</div>
               <div className="text-center px-4 py-4">
@@ -239,21 +243,23 @@ const GoldenPool = () => {
                 >删除</span>
               </div>
             </div>
-          )}
-        >
-          移除
+          </PopoverContent>
         </Popover>
-      ), dataIndex: 'marketValue', align: 'center', width: 60,
-      render: (_, row) => (
+      ),
+      accessorKey: 'opt',
+      meta: { align: 'center', width: 60 },
+      cell: ({ row }) => (
         <div className="cursor-pointer text-tertiary">
-          <DeleteOutlined size={48} onClick={() => onRemove(row.code, row.name)} />
+          <TrashIcon onClick={() => onRemove(row.original.code, row.original.name)} />
         </div>
       )
     },
     {
-      title: <Checkbox checked={check.all} onChange={onCheckAllChange} />, align: 'center', width: 60,
-      render: (_, row) => (
-        <Checkbox checked={check.selected.includes(row.code)} onChange={() => onCheckboxClick(row.code)} />
+      header: () => <Checkbox checked={check.all} onCheckedChange={onCheckAllChange} />,
+      accessorKey: 'check',
+      meta: { align: 'center', width: 60 },
+      cell: ({ row }) => (
+        <Checkbox checked={check.selected.includes(row.original.code)} onCheckedChange={() => onCheckboxClick(row.original.code)} />
       )
     },
   ]
@@ -280,9 +286,9 @@ const GoldenPool = () => {
         </div>
       </div>
       <div className="flex-1" ref={ref}>
-        <Skeleton loading={collects.loading && !collects.data} active paragraph={{ rows: 10 }}>
-          <JknTable rowKey="key" pagination={false} scroll={{ y: (size?.height ?? 60) - 30 }} columns={columns} dataSource={data} />
-        </Skeleton>
+        <div >
+          <JknTable columns={columns} data={data} />
+        </div>
       </div>
       <style jsx>
         {
@@ -310,11 +316,8 @@ const GoldenPoolManager = (props: GoldenPoolManagerProps) => {
 
   const table = useModal({
     content: <GoldenPoolTable data={props.data} onUpdate={props.onUpdate} />,
-    width: 800,
     title: '管理金池',
-    footer: false,
-    centered: true,
-    maskClosable: true,
+    className: 'w-[980px]',
     onOpen: () => {
     }
   })
@@ -334,30 +337,42 @@ interface GoldenPoolTableProps {
   onUpdate: () => void
 }
 
+const poolSchema = z.object({
+  id: z.string().optional(),
+  name: z.string()
+})
+
 const GoldenPoolTable = (props: GoldenPoolTableProps) => {
-  const columns: TableProps['columns'] = [
-    { title: '序号', align: 'center', width: 60, render: (_, __, index) => <div className="text-center">{index + 1}</div> },
-    { title: '股票名称', dataIndex: 'name' },
-    { title: '股票数量', dataIndex: 'total' },
-    { title: '创建时间', dataIndex: 'create_time' },
+  const columns: JknTableProps['columns'] = [
     {
-      title: '操作', align: 'center', width: 120, render: (_, row) => (
+      header: '序号',
+      accessorKey: 'index',
+      meta: { align: 'center', width: 60, },
+      cell: ({ row }) => <div className="text-center">{row.index + 1}</div>
+    },
+    { header: '股票名称', accessorKey: 'name' },
+    { header: '股票数量', accessorKey: 'total' },
+    { header: '创建时间', accessorKey: 'create_time' },
+    {
+      header: '操作', accessorKey: 'opt', meta: { align: 'center', width: 120 },
+      cell: ({ row }) => (
         <div className="flex items-center justify-around">
-          <span onClick={() => edit.open(row)} onKeyDown={() => { }}>重命名</span>
-          <span onClick={() => onDelete(row.id, row.name)} onKeyDown={() => { }}>删除</span>
+          <span className="cursor-pointer" onClick={() => edit.open(row)} onKeyDown={() => { }}>重命名</span>
+          <span className="cursor-pointer" onClick={() => onDelete(row.original.id as string, row.original.name as string)} onKeyDown={() => { }}>删除</span>
         </div>
       )
     },
   ]
-
+  const form = useZForm(poolSchema, {
+    id: undefined,
+    name: ''
+  })
   const [title, setTitle] = useState('新建金池')
 
   const edit = useFormModal({
     content: <GoldenPoolForm />,
     title: title,
-    width: 400,
-    centered: true,
-    maskClosable: true,
+    form,
     onOk: async (values) => {
       const [err] = await to(values.id ? updateStockCollectCate(values) : addStockCollectCate(values.name))
 
@@ -368,8 +383,12 @@ const GoldenPoolTable = (props: GoldenPoolTableProps) => {
       edit.close()
       props.onUpdate()
     },
-    onOpen: (values) => {
-      edit.form.setFieldsValue(values)
+    onOpen: (values?: z.infer<typeof poolSchema>) => {
+      if (values) {
+        form.setValue('id', values.id)
+        form.setValue('name', values.name)
+      }
+
       setTitle(values ? '编辑金池' : '新建金池')
     }
   })
@@ -396,14 +415,14 @@ const GoldenPoolTable = (props: GoldenPoolTableProps) => {
   return (
     <div >
       <div className="h-[480px]">
-        <JknTable pagination={false} scroll={{ y: 400 }} columns={columns} dataSource={props.data} />
+        <JknTable columns={columns} data={props.data} />
       </div>
-      <div className="text-center">
+      {/* <div className="text-center">
         <Button onClick={() => edit.open()} type="primary">新建金池</Button>
       </div>
       {
         edit.context
-      }
+      } */}
     </div>
   )
 }

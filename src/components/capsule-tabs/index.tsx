@@ -1,4 +1,3 @@
-import { theme } from "antd"
 import { createContext, type PropsWithChildren, type ReactNode, useContext } from "react"
 
 interface CapsuleTabsProps {
@@ -34,13 +33,13 @@ interface TabItemProps {
 
 const TabItem = ({ value, label }: TabItemProps) => {
   const context = useContext(CapsuleTabsContext)
-  const { token: themeToken } = theme.useToken()
+
   return (
     <div
       className="items-center justify-center rounded-xl cursor-pointer text-xs px-3 py-0.5 transition-all duration-200"
       style={{
-        background: value === context.value && context.type === 'default'  ? themeToken.colorPrimary : 'transparent',
-        color: value === context.value && context.type === 'text' ? themeToken.colorPrimaryActive : themeToken.colorText,
+        background: value === context.value && context.type === 'default'  ? 'hsl(var(--active-color))' : 'transparent',
+        color: value === context.value && context.type === 'text' ? 'hsl(var(--active-color))' : 'hsl(var(--text))',
       }}
       onClick={() => { context.onChange?.(value) }} onKeyDown={() => { }}
     >

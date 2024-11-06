@@ -1,13 +1,11 @@
 import { getCollectHot } from "@/api"
-import { JknTable } from "@/components"
+import { CapsuleTabs, JknTable, type JknTableProps } from "@/components"
 import { useStock } from "@/store"
 import { numToFixed, priceToCnUnit } from "@/utils/price"
 import { cn } from "@/utils/style"
 import { useRequest, useSize } from "ahooks"
-import { Skeleton, type TableProps } from "antd"
 import dayjs from "dayjs"
 import { useMemo, useRef } from "react"
-import CapsuleTabs from "./components/capsule-tabs"
 
 type TableData = {
   key: string
@@ -67,42 +65,42 @@ const TopList = () => {
     return d
   }, [stock, query.data])
 
-  const columns: TableProps['columns'] = [
+  const columns: JknTableProps<TableData>['columns'] = [
     {
-      title: '名称代码', dataIndex: 'name', sorter: true, showSorterTooltip: false,
+      header: '名称代码', accessorKey: 'name', sorter: true, showSorterTooltip: false,
       width: '25%',
-      render: (_, row) => (
+      cell: ({row, table}) => (
         <div className="overflow-hidden w-full">
-          <div className="text-secondary">{row.code}</div>
-          <div className="text-tertiary text-xs text-ellipsis overflow-hidden whitespace-nowrap w-full">{row.name}</div>
+          <div className="text-secondary">{row.original.code}</div>
+          <div className="text-tertiary text-xs text-ellipsis overflow-hidden whitespace-nowrap w-full">{row.getValue('name')}</div>
         </div>
       )
 
     },
     {
-      title: '现价', dataIndex: 'price', sorter: true, align: 'right', showSorterTooltip: false, width: '17%',
-      render: (v, row) => <span className={cn(row.percent >= 0 ? 'text-stock-up' : 'text-stock-down')}>
-        {numToFixed(v)}
+      header: '现价', accessorKey: 'price', sorter: true, align: 'right', showSorterTooltip: false, width: '17%',
+      cell: ({row}) => <span className={cn(row.getValue<number>('percent') >= 0 ? 'text-stock-up' : 'text-stock-down')}>
+        {numToFixed(row.getValue<number>('price'))}
       </span>
     },
     {
-      title: '涨跌幅', dataIndex: 'percent', sorter: true, align: 'right', showSorterTooltip: false, width: '22%',
-      render: v => (
-        <div className={cn(v >= 0 ? 'bg-stock-up' : 'bg-stock-down', 'h-full rounded-sm w-16 text-center px-1 py-0.5 float-right')}>
-          {v > 0 ? '+' : null}{`${numToFixed(v * 100, 2)}%`}
+      header: '涨跌幅', accessorKey: 'percent', sorter: true, align: 'right', showSorterTooltip: false, width: '22%',
+      cell: ({row}) => (
+        <div className={cn(row.getValue<number>('percent') >= 0 ? 'bg-stock-up' : 'bg-stock-down', 'h-full rounded-sm w-16 text-center px-1 py-0.5 float-right')}>
+          {row.getValue<number>('percent') > 0 ? '+' : null}{`${numToFixed(row.getValue<number>('percent') * 100, 2)}%`}
         </div>
       )
     },
     {
-      title: '成交额', dataIndex: 'turnover', sorter: true, align: 'right', showSorterTooltip: false, width: '17%',
-      render: (v, row) => <span className={cn(row.percent >= 0 ? 'text-stock-up' : 'text-stock-down')}>
-        {priceToCnUnit(v * 10000, 2)}
+      header: '成交额', accessorKey: 'turnover', sorter: true, align: 'right', showSorterTooltip: false, width: '17%',
+      cell: ({row}) => <span className={cn(row.getValue<number>('percent') >= 0 ? 'text-stock-up' : 'text-stock-down')}>
+        {priceToCnUnit(row.getValue<number>('turnover') * 10000, 2)}
       </span>
     },
     {
-      title: '总市值', dataIndex: 'marketValue', sorter: true, align: 'right', showSorterTooltip: false, width: '19%',
-      render: (v, row) => <span className={cn(row.percent >= 0 ? 'text-stock-up' : 'text-stock-down')}>
-        {priceToCnUnit(v, 2)}
+      header: '总市值', accessorKey: 'marketValue', sorter: true, align: 'right', showSorterTooltip: false, width: '19%',
+      cell: ({row}) => <span className={cn(row.getValue<number>('percent') >= 0 ? 'text-stock-up' : 'text-stock-down')}>
+        {priceToCnUnit(row.getValue<number>('marketValue'), 2)}
       </span>
     },
   ]
@@ -114,11 +112,11 @@ const TopList = () => {
         </CapsuleTabs>
       </div>
       <div className="h-[calc(100%-38px)]" ref={tableContainer}>
-        <Skeleton loading={query.loading && !query.data} paragraph={{ rows: 10 }} active>
-          <JknTable rowKey="code" bordered columns={columns} dataSource={data} key="code" sortDirections={['descend', 'ascend']} scroll={{
+        <div>
+          <JknTable  columns={columns} data={data} key="code" sortDirections={['descend', 'ascend']} scroll={{
             y: tableSize?.height ? tableSize.height - 32 : 0
           }} pagination={false} />
-        </Skeleton>
+        </div>
       </div>
     </div>
   )

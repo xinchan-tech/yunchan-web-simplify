@@ -1,40 +1,67 @@
-import { Table as ATable, type TableProps } from 'antd'
-const JknTable = (props: TableProps) => {
+import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "../ui/table"
+import { flexRender, getCoreRowModel, useReactTable, type ColumnDef } from "@tanstack/react-table"
+
+export interface JknTableProps<TData extends Record<string, unknown> = Record<string, unknown>, TValue = unknown> {
+  columns: ColumnDef<TData, TValue>[]
+  data: TData[]
+}
+
+const JknTable = <TData extends Record<string, unknown>, TValue>(props: JknTableProps<TData, TValue>) => {
+  const table = useReactTable({
+    columns: props.columns,
+    data: props.data,
+    getCoreRowModel: getCoreRowModel(),
+  })
+
   return (
-    <div className="custom-table">
-      <ATable {...props} />
-      <style jsx>
-        {
-          `
-          .custom-table :global(.ant-table-wrapper .ant-table-thead .ant-table-cell){
-            padding: 0 8px;;
-            background: var(--bg-table-header);
-            color: var(--text-secondary-color);
-            font-size: 12px;
-            line-height: 28px;
-            font-weight: normal;
-            border-color:   var(--bg-secondary-color);;
-          }
-
-          .custom-table.custom-table.custom-table :global(.ant-table-wrapper .ant-table-thead .ant-table-cell::before){
-            top: 0;
-            bottom: 0;
-            transform: none;
-            height: auto;
-            background-color:  var(--bg-secondary-color);
-          }
-
-          .custom-table :global(.ant-table-tbody .ant-table-cell){
-            border-color: var( --bg-color);
-            padding: 4px;
-          }
-
-          .custom-table :global(.ant-table-column-sorter){
-            font-size: 7px;
-          }
-        `
-        }
-      </style>
+    <div className="w-full">
+      <Table className="w-full">
+        <TableHeader>
+          {table.getHeaderGroups().map((headerGroup) => (
+            <TableRow key={headerGroup.id}>
+              {headerGroup.headers.map((header) => {
+                const { width, align } = header.column.columnDef.meta ?? {}
+                return (
+                  <TableHead key={header.id} style={{ width, textAlign: align }} >
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(
+                        header.column.columnDef.header,
+                        header.getContext()
+                      )}
+                  </TableHead>
+                )
+              })}
+            </TableRow>
+          ))}
+        </TableHeader>
+        <TableBody>
+          {table.getRowModel().rows?.length ? (
+            table.getRowModel().rows.map((row) => (
+              <TableRow
+                key={row.id}
+                data-state={row.getIsSelected() && "selected"}
+                className="bg-muted hover:bg-accent"
+              >
+                {row.getVisibleCells().map((cell) => {
+                  const { align } = cell.column.columnDef.meta ?? {}
+                  return (
+                    <TableCell key={cell.id} style={{ textAlign: align }}>
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </TableCell>
+                  )
+                })}
+              </TableRow>
+            ))
+          ) : (
+            <TableRow>
+              <TableCell colSpan={props.columns.length} className="h-24 text-center">
+                暂无数据
+              </TableCell>
+            </TableRow>
+          )}
+        </TableBody>
+      </Table>
     </div>
   )
 }

@@ -1,14 +1,15 @@
-import { useToken, useUser } from "@/store"
-import { Avatar, Button, Form, Input, message, Spin } from "antd"
-import UserDefaultPng from '@/assets/icon/user_default.png'
-import { useTranslation } from "react-i18next"
-import { useMount, useRequest } from "ahooks"
-import { getUser, updateUser } from "@/api/user"
-import { useMemo } from "react"
-import dayjs from "dayjs"
-import { useFormModal } from "@/components/modal"
-import to from "await-to-js"
 import { logout } from "@/api"
+import { getUser, updateUser } from "@/api/user"
+import UserDefaultPng from '@/assets/icon/user_default.png'
+import { Avatar, Button, JknAvatar } from "@/components"
+import { useFormModal } from "@/components/modal"
+import { useToast } from "@/hooks"
+import { useToken, useUser } from "@/store"
+import { useMount, useRequest } from "ahooks"
+import to from "await-to-js"
+import dayjs from "dayjs"
+import { useMemo } from "react"
+import { useTranslation } from "react-i18next"
 
 interface UserCenterProps {
   onLogout: () => void
@@ -20,7 +21,7 @@ const UserCenter = (props: UserCenterProps) => {
   const { t } = useTranslation()
   const query = useRequest(getUser, { defaultParams: [{ extends: ['authorized'] }] })
   const logoutQuery = useRequest(logout, { manual: true })
-
+  const { toast } = useToast()
   const authorized = useMemo(() => {
     return query.data?.authorized[0]
   }, [query.data])
@@ -33,7 +34,9 @@ const UserCenter = (props: UserCenterProps) => {
       const [err] = await to(updateUser(values))
 
       if (err) {
-        message.error(err.message)
+        toast({
+          description: err.message
+        })
         return
       }
 
@@ -55,7 +58,9 @@ const UserCenter = (props: UserCenterProps) => {
     const [err] = await to(logoutQuery.runAsync())
 
     if (err) {
-      message.error(err.message)
+      toast({
+        description: err.message
+      })
       return
     }
 
@@ -65,7 +70,7 @@ const UserCenter = (props: UserCenterProps) => {
   }
 
   return (
-    <Spin spinning={query.loading}>
+    <div >
       <div className="p-4">
         <div className="text-base mb-2">{t('base info')}</div>
         <div className="border-0 border-b border-solid border-b-gray-7" />
@@ -77,7 +82,9 @@ const UserCenter = (props: UserCenterProps) => {
             </div>
             <div className="py-2">
               <div>{t('avatar')}：</div>
-              <div><Avatar src={user?.avatar ?? UserDefaultPng} size={36} /></div>
+              <div>
+                <JknAvatar src={user?.avatar} fallback={UserDefaultPng} />
+              </div>
               <span className="text-sm text-gray-5 cursor-pointer">&emsp;&nbsp;&nbsp;{t('edit')}</span>
             </div>
             <div><div>{t('user')}ID：</div><div>{user?.username}</div></div>
@@ -89,7 +96,7 @@ const UserCenter = (props: UserCenterProps) => {
           </div>
         </div>
         <div className="text-right" onClick={onLogout} onKeyDown={() => { }}>
-          <Button loading={logoutQuery.loading}>退出登录</Button>
+          <Button>退出登录</Button>
         </div>
         {
           edit.context
@@ -109,7 +116,7 @@ const UserCenter = (props: UserCenterProps) => {
         `}
         </style>
       </div>
-    </Spin>
+    </div>
   )
 }
 
@@ -122,9 +129,9 @@ const UserEditForm = () => {
 
   return (
     <div className="p-4">
-      <Form.Item name="realname" rules={[{ required: true, message: t('nickname_required') }]} label={t('nickname')}>
+      {/* <Form.Item name="realname" rules={[{ required: true, message: t('nickname_required') }]} label={t('nickname')}>
         <Input />
-      </Form.Item>
+      </Form.Item> */}
       {/* <Form.Item name="avatar" label={t('avatar')}>
         <Upload listType="picture-card" maxCount={1} />
       </Form.Item> */}

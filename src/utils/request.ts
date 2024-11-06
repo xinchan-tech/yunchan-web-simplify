@@ -1,5 +1,4 @@
 import { useConfig, useToken, useUser } from "@/store"
-import { Modal } from "antd"
 import axios from "axios"
 
 const request = axios.create()

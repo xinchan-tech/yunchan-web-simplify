@@ -1,6 +1,6 @@
 import { router } from "@/router"
 import { useToken } from "@/store"
-import { message } from "antd"
+
 
 export const navWithAuth = (...args: Parameters<typeof router.navigate>) => {
   const token = useToken.getState().token

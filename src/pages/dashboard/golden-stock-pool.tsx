@@ -1,13 +1,10 @@
 import { useMemo, useState } from "react"
-import CapsuleTabs from "./components/capsule-tabs"
 import { useTranslation } from "react-i18next"
-import { JknTable } from "@/components"
-import { Button, Skeleton, type TableProps } from "antd"
+import { Button, CapsuleTabs, JknTable, JknTableProps } from "@/components"
 import { useStock, useToken } from "@/store"
 import { appEvent } from "@/utils/event"
 import { getStockCollects } from "@/api"
 import { useRequest } from "ahooks"
-import dayjs from "dayjs"
 import { useDomSize } from "@/hooks"
 import { numToFixed, priceToCnUnit } from "@/utils/price"
 import { cn } from "@/utils/style"
@@ -38,14 +35,7 @@ const GoldenStockPool = () => {
         extend: ['total_share', 'basic_index', 'day_basic', 'alarm_ai', 'alarm_all', 'financials', 'thumbs', 'stock_after', 'stock_before'],
         limit: 300, cate_id: 1
       },
-    ],
-    onSuccess: (data) => {
-      for (const s of data.items) {
-        s.stock[0] = dayjs(s.stock[0]).hour(15).minute(59).second(0).format('YYYY-MM-DD HH:mm:ss')
-        stock.insertRaw(s.symbol, s.stock)
-      }
-
-    }
+    ]
   })
 
   const data = useMemo(() => {
@@ -69,46 +59,45 @@ const GoldenStockPool = () => {
 
     return d
   }, [stock, query.data])
-
+  console.log(data)
   const onLogin = () => {
     appEvent.emit('login')
   }
 
-  const columns: TableProps['columns'] = [
+  const columns: JknTableProps<TableData>['columns'] = [
     {
-      title: '名称代码', dataIndex: 'name', sorter: true, showSorterTooltip: false,
-      width: '25%',
-      render: (_, row) => (
+      accessorKey: 'name',
+      header: '名称代码',
+      cell: ({ row }) => (
         <div className="overflow-hidden w-full">
-          <div className="text-secondary">{row.code}</div>
-          <div className="text-tertiary text-xs text-ellipsis overflow-hidden whitespace-nowrap w-full">{row.name}</div>
+          <div className="text-secondary">{row.getValue('code')}</div>
+          <div className="text-tertiary text-xs text-ellipsis overflow-hidden whitespace-nowrap w-full">{row.getValue('name')}</div>
         </div>
       )
-
     },
     {
-      title: '现价', dataIndex: 'price', sorter: true, align: 'right', showSorterTooltip: false, width: '17%',
-      render: (v, row) => <span className={cn(row.percent >= 0 ? 'text-stock-up' : 'text-stock-down')}>
+      header: '现价', accessorKey: 'price', sorter: true, align: 'right', showSorterTooltip: false, width: '17%',
+      cell: ({ row }) => <span className={cn(row.percent >= 0 ? 'text-stock-up' : 'text-stock-down')}>
         {numToFixed(v)}
       </span>
     },
     {
-      title: '涨跌幅', dataIndex: 'percent', sorter: true, align: 'right', showSorterTooltip: false, width: '22%',
-      render: v => (
+      header: '涨跌幅', accessorKey: 'percent', sorter: true, align: 'right', showSorterTooltip: false, width: '22%',
+      cell: ({ row }) => (
         <div className={cn(v >= 0 ? 'bg-stock-up' : 'bg-stock-down', 'h-full rounded-sm w-16 text-center px-1 py-0.5 float-right')}>
           {v > 0 ? '+' : null}{`${numToFixed(v * 100, 2)}%`}
         </div>
       )
     },
     {
-      title: '成交额', dataIndex: 'turnover', sorter: true, align: 'right', showSorterTooltip: false, width: '17%',
-      render: (v, row) => <span className={cn(row.percent >= 0 ? 'text-stock-up' : 'text-stock-down')}>
+      header: '成交额', accessorKey: 'turnover', sorter: true, align: 'right', showSorterTooltip: false, width: '17%',
+      cell: ({ row }) => <span className={cn(row.percent >= 0 ? 'text-stock-up' : 'text-stock-down')}>
         {priceToCnUnit(v * 10000, 2)}
       </span>
     },
     {
-      title: '总市值', dataIndex: 'marketValue', sorter: true, align: 'right', showSorterTooltip: false, width: '19%',
-      render: (v, row) => <span className={cn(row.percent >= 0 ? 'text-stock-up' : 'text-stock-down')}>
+      header: '总市值', accessorKey: 'marketValue', sorter: true, align: 'right', showSorterTooltip: false, width: '19%',
+      cell: ({ row }) => <span className={cn(row.percent >= 0 ? 'text-stock-up' : 'text-stock-down')}>
         {priceToCnUnit(v, 2)}
       </span>
     },
@@ -134,13 +123,9 @@ const GoldenStockPool = () => {
       <div className="h-[calc(100%-38px)]" ref={tableContainerRef}>
         {
           token ? (
-            <Skeleton loading={query.loading && !query.data} active paragraph={{ rows: 10 }}>
-              <JknTable dataSource={data} columns={columns} sortDirections={['descend', 'ascend']} pagination={false}
-                scroll={{
-                  y: tableContainerSize?.height ? tableContainerSize.height - 32 : 0
-                }}
-              />
-            </Skeleton>
+            <JknTable data={data} columns={columns} 
+            
+            />
           ) : (
             <div className="w-full text-center mt-40">
               <div className="mb-4 text-secondary">尚未登录账号</div>

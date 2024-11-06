@@ -4,13 +4,15 @@ module.exports = {
   theme: {
     extend: {
       textColor: {
-        primary: 'var(--text-color)',
-        secondary: 'var(--text-secondary-color)',
-        tertiary: 'var(--text-tertiary-color)'
+        secondary: 'hsl(var(--text-secondary))',
+        tertiary: 'hsl(var(--text-tertiary))'
       },
       colors: {
-        'stock-up': 'var(--stock-up-color)',
-        'stock-down': 'var(--stock-down-color)',
+        stock: {
+          up: 'hsl(var(--stock-up-color))',
+          down: 'hsl(var(--stock-down-color))'
+        },
+        active: 'hsl(var(--active-color))',
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
@@ -44,16 +46,12 @@ module.exports = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-      },
-      backgroundColor: {
-        primary: 'var(--bg-color)',
-        secondary: 'var(--bg-secondary-color)',
-        active: 'var(--bg-active-color)',
-        hover: 'var(--bg-hover-color)'
-      },
-      borderColor: {
-        primary: 'var(--border-color)',
-        secondary: 'var(--border-secondary-color)'
+        table: {
+          header: "hsl(var(--table-header))",
+        },
+        dialog: {
+          border: "hsl(var(--dialog-border))"
+        }
       },
       borderRadius: {
         lg: 'var(--radius)',

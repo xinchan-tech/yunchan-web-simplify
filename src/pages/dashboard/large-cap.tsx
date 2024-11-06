@@ -1,6 +1,7 @@
 import { StockChartInterval, getLargeCapIndexes, getStockChart } from "@/api"
 import StockDownIcon from '@/assets/icon/stock_down.png'
 import StockUpIcon from '@/assets/icon/stock_up.png'
+import { CapsuleTabs } from "@/components"
 import { type StockRecord, type StockTrading, useStock, useTime } from "@/store"
 import { getTradingPeriod } from "@/utils/date"
 import echarts, { type ECOption } from "@/utils/echarts"
@@ -11,7 +12,6 @@ import clsx from "clsx"
 import dayjs from "dayjs"
 import { useMemo, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
-import CapsuleTabs from "./components/capsule-tabs"
 
 const tradingToIntervalMap: Record<StockTrading, StockChartInterval> = {
   intraDay: StockChartInterval.INTRA_DAY,

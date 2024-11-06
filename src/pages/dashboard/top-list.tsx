@@ -1,16 +1,13 @@
 import { IncreaseTopStatus, type StockRawRecord, getIncreaseTop } from "@/api"
-import { JknTable } from "@/components"
+import { CapsuleTabs, JknTable, JknTableProps } from "@/components"
 import { type StockRecord, type StockTrading, useStock, useTime } from "@/store"
 import { numToFixed, priceToCnUnit } from "@/utils/price"
 import { cn } from "@/utils/style"
-import { InfoCircleFilled } from "@ant-design/icons"
 import { useMount, useRequest, useSize } from "ahooks"
-import { Skeleton, type TableProps, Tooltip } from "antd"
 import dayjs from "dayjs"
 import { useMemo, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useImmer } from "use-immer"
-import CapsuleTabs from "./components/capsule-tabs"
 import { dateToWeek } from "@/utils/date"
 
 type TableData = {
@@ -109,10 +106,9 @@ const TopList = () => {
     return d
   }, [stock, codes, type, trading])
 
-  const columns: TableProps['columns'] = [
+  const columns: JknTableProps<TableData>['columns'] = [
     {
-      title: '名称代码', dataIndex: 'name', sorter: true, showSorterTooltip: false,
-      width: '25%',
+      header: '名称代码', accessorKey: 'name',
       render: (_, row) => (
         <div className="overflow-hidden w-full">
           <div className="text-secondary">{row.code}</div>
@@ -122,13 +118,13 @@ const TopList = () => {
 
     },
     {
-      title: '盘前价', dataIndex: 'price', sorter: true, align: 'right', showSorterTooltip: false, width: '17%',
+      header: '盘前价', accessorKey: 'price', sorter: true, align: 'right', showSorterTooltip: false, width: '17%',
       render: (v, row) => <span className={cn(row.percent >= 0 ? 'text-stock-up' : 'text-stock-down')}>
         {numToFixed(v)}
       </span>
     },
     {
-      title: '盘前涨跌幅', dataIndex: 'percent', sorter: true, align: 'right', showSorterTooltip: false, width: '22%',
+      header: '盘前涨跌幅', accessorKey: 'percent', sorter: true, align: 'right', showSorterTooltip: false, width: '22%',
       render: v => (
         <div className={cn(v >= 0 ? 'bg-stock-up' : 'bg-stock-down', 'h-full rounded-sm w-16 text-center px-1 py-0.5 float-right')}>
           {v > 0 ? '+' : null}{`${numToFixed(v * 100, 2)}%`}
@@ -136,13 +132,13 @@ const TopList = () => {
       )
     },
     {
-      title: '成交额', dataIndex: 'turnover', sorter: true, align: 'right', showSorterTooltip: false, width: '17%',
+      header: '成交额', accessorKey: 'turnover', sorter: true, align: 'right', showSorterTooltip: false, width: '17%',
       render: (v, row) => <span className={cn(row.percent >= 0 ? 'text-stock-up' : 'text-stock-down')}>
         {priceToCnUnit(v * 10000, 2)}
       </span>
     },
     {
-      title: '总市值', dataIndex: 'marketValue', sorter: true, align: 'right', showSorterTooltip: false, width: '19%',
+      header: '总市值', accessorKey: 'marketValue', sorter: true, align: 'right', showSorterTooltip: false, width: '19%',
       render: (v, row) => <span className={cn(row.percent >= 0 ? 'text-stock-up' : 'text-stock-down')}>
         {priceToCnUnit(v, 2)}
       </span>
@@ -154,6 +150,7 @@ const TopList = () => {
   // }, [trading])
 
   const isShowTips = () => {
+    return false
     if (!data || data.length === 0) return false
 
     const firstRecord = data[0]
@@ -200,11 +197,9 @@ const TopList = () => {
         </CapsuleTabs>
       </div>
       <div className="h-[calc(100%-38px)]" ref={tableContainer}>
-        <Skeleton loading={query.loading && !codes[type]} paragraph={{ rows: 10 }} active>
-          <JknTable rowKey="code" bordered columns={columns} dataSource={data} key="code" sortDirections={['descend', 'ascend']} scroll={{
-            y: tableSize?.height ? tableSize.height - 32: 0
-          }} pagination={false} />
-        </Skeleton>
+        <div>
+          <JknTable columns={columns} data={data} key="code"  />
+        </div>
       </div>
     </div>
   )

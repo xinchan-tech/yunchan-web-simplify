@@ -1,13 +1,12 @@
-import { useMemo, useRef, useState } from "react"
-import CapsuleTabs from "./components/capsule-tabs"
+import { useMemo, useState } from "react"
 import { useImmer } from 'use-immer'
 import { useTranslation } from "react-i18next"
-import { useRequest, useSize } from "ahooks"
+import { useRequest } from "ahooks"
 import { getHotSectors } from "@/api"
 import TreeMap from "./components/tree-map"
 import { StockRecord } from "@/store"
-import { Skeleton } from "antd"
 import Decimal from "decimal.js"
+import { CapsuleTabs } from "@/components"
 
 type StockTreeType = 'industry' | 'concept' | 'bull' | 'etf' | 'industry-heatmap' | 'etf-heatmap'
 type StockTreeDate = 'day' | 'week' | 'month'
@@ -22,7 +21,7 @@ const steps = [
 
 const getColorByStep = (step: string | number) => {
   const n = new Decimal(step).times(100)
-  if(n.isNaN()) return '#1e1e1e'
+  if (n.isNaN()) return '#1e1e1e'
 
   for (let i = 0; i < steps.length; i++) {
     const step = new Decimal(steps[i])
@@ -67,11 +66,11 @@ const StockTree = () => {
 
       for (const t of node.tops) {
         const stockRecord = new StockRecord(t.stock)
-        n.children.push({ name: t.symbol, value: stockRecord.turnover , data: stockRecord.percent, itemStyle: { color: getColorByStep(stockRecord.percent) } } as never)
+        n.children.push({ name: t.symbol, value: stockRecord.turnover, data: stockRecord.percent, itemStyle: { color: getColorByStep(stockRecord.percent) } } as never)
       }
 
     }
-    
+
     return root
   }, [query.data])
 
@@ -103,9 +102,7 @@ const StockTree = () => {
                 <CapsuleTabs.Tab value="month" label={t('stockTree.month')} />
               </CapsuleTabs>
               <div className="flex-1 p-1">
-                <Skeleton loading={query.loading} active paragraph={{rows: 10}}>
-                  <TreeMap data={treeData}/>
-                </Skeleton>
+                <TreeMap data={treeData} />
               </div>
             </div>
           ) : (

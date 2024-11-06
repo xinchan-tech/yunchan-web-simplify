@@ -4,35 +4,43 @@ import LoginLeftImg from '@/assets/image/login_left.png'
 import AppleIcon from '@/assets/icon/apple.png'
 import GoogleIcon from '@/assets/icon/google.png'
 import { useToken, useUser } from "@/store"
-import { LockOutlined, UserOutlined } from "@ant-design/icons"
 import { useRequest } from "ahooks"
-import { Button, Divider, Form, Input, message } from "antd"
 import to from "await-to-js"
-
-type LoginForm = {
-  mobile: string
-  password: string
-}
+import { z } from "zod"
+import useZForm from "@/hooks/use-z-form"
+import { Button, Form, FormControl, FormField, FormItem,  Input } from "@/components"
+import { useToast } from "@/hooks"
 
 interface LoginFormProps {
   afterLogin?: () => void
   onClose?: () => void
 }
 
+const loginSchema = z.object({
+  mobile: z.string().min(2).max(50),
+  password: z.string().min(6).max(50)
+})
+
+type LoginForm = z.infer<typeof loginSchema>
+
 const LoginForm = (props: LoginFormProps) => {
-  const [form] = Form.useForm<LoginForm>()
-  const {setUser} = useUser()
-  const {setToken} = useToken()
+  const form = useZForm(loginSchema, { mobile: '', password: '' })
+  const { setUser } = useUser()
+  const { setToken } = useToken()
   const submitLogin = useRequest(login, { manual: true })
+  const { toast } = useToast()
   const onLogin = async (values: LoginForm) => {
     const [err, res] = await to(submitLogin.runAsync(values))
 
     if (err) {
-      message.error(err.message)
+      // toast.error(err.message)
+      toast({
+        description: err.message,
+      })
       return
     }
 
-    if(res){
+    if (res) {
       setUser(res.user)
       setToken(res.token)
     }
@@ -43,22 +51,36 @@ const LoginForm = (props: LoginFormProps) => {
   return (
     <div className="flex login-form">
       <div className="w-[380px] h-[400px] relative">
-        <div className="absolute left-0 top-0 w-8 h-8 cursor-pointer" onClick={() => props.onClose?.()} onKeyUp={() => {}}  />
+        <div className="absolute left-0 top-0 w-8 h-8 cursor-pointer" onClick={() => props.onClose?.()} onKeyUp={() => { }} />
         <img src={LoginLeftImg} alt="" className="w-full h-full" />
       </div>
       <div className="bg-white h-[400px] w-[280px] box-border flex flex-col px-4">
         <p className="text-[#3861F6] mt-12 text-lg">登录账号</p>
-        <Form form={form} onFinish={onLogin}>
-          <Form.Item name="mobile">
-            <Input size="large" prefix={<UserOutlined />} placeholder="请输入账号" />
-          </Form.Item>
-          <Form.Item name="password">
-            <Input.Password size="large" prefix={<LockOutlined />} placeholder="请输入密码" />
-          </Form.Item>
-          <Button type="primary" block size="large" htmlType="submit" loading={submitLogin.loading}>登录</Button>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onLogin)}>
+            <FormField control={form.control} name="mobile"
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <Input placeholder="请输入账号" {...field} />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+            <FormField control={form.control} name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <Input placeholder="请输入密码" {...field} type="password" />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+            <Button type="submit" >登录</Button>
+          </form>
         </Form>
         <div className="px-4 other-login mt-4" >
-          <Divider >其他登录方式</Divider>
+          {/* <Divider >其他登录方式</Divider> */}
           <div className="flex items-center justify-between px-10">
             <AppleLogin />
             <WeChatLogin />

@@ -1,8 +1,6 @@
-import { Input, Spin, theme } from 'antd'
-import { HeaderService, HeaderUser, Menu } from './components'
+import { HeaderService, HeaderUser, Input, Menu, Toaster } from './components'
 import Logo from './assets/icon/icon_jkn@2x.png'
 import './app.scss'
-import { SearchOutlined } from "@ant-design/icons"
 import { RouterProvider } from "react-router-dom"
 import { router } from "./router"
 import { useMount, useRequest } from "ahooks"
@@ -11,10 +9,8 @@ import { useTranslation } from "react-i18next"
 import { Suspense } from "react"
 import { getConfig } from "./api"
 import FooterTime from "./components/footer-time"
-import { Button } from "./components/ui/button"
 
 const App = () => {
-  const { token } = theme.useToken()
   const config = useConfig()
   const { t, i18n } = useTranslation()
 
@@ -35,13 +31,13 @@ const App = () => {
   })
 
   return (
-    <div className="container-layout">
-
+    <div className="container-layout dark">
+      <Toaster />
       <div className="header relative z-10 px-4">
         <div className="search float-left flex items-center h-full">
-          <Input prefix={<SearchOutlined />} size="small" placeholder={t('search.stocks')} />
+          <Input size="sm" placeholder={t('search.stocks')} />
         </div>
-        <Button >123</Button>
+  
         <div className="absolute top-0 left-0 h-full w-full text-center flex justify-center items-center -z-10">
           <img src={Logo} alt="logo" className="w-6 h-6 mr-2" />
           {t('app')}-首页
@@ -52,12 +48,12 @@ const App = () => {
         </div>
       </div>
       <div className="main overflow-hidden">
-        <div className="sider h-full float-left bg-primary">
+        <div className="sider h-full float-left bg-background">
           <Menu />
         </div>
         <div className="content overflow-hidden">
           <div>
-            <Suspense fallback={<Spin spinning />}>
+            <Suspense fallback={<div/>}>
               <RouterProvider router={router} />
             </Suspense>
           </div>
@@ -74,7 +70,7 @@ const App = () => {
       <style jsx>
         {`
           .container-layout {
-            background: ${token.colorBgBase};
+            background-color: hsl(var(--background));
             overflow: hidden;
             height: 100vh;
             position: relative;
@@ -82,6 +78,7 @@ const App = () => {
             box-sizing: border-box;
             min-width: 1425px;
             min-height: 810px;
+            color: hsl(var(--text))
           }
 
           .sider{
@@ -99,7 +96,7 @@ const App = () => {
           .content{
             height: 100%;
             box-sizing: border-box;
-            background: ${token.colorBgContainer};
+            background: var(--bg-secondary-color);
           }
 
           .content > div:first-child {
