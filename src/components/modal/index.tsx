@@ -144,7 +144,6 @@ export const useFormModal = <T extends z.ZodTypeAny>({ content, onOk, onOpen, fo
 
   const _onOk = async () => {
     await form.trigger()
-    console.log(123)
     form.handleSubmit(_onFinish)()
   }
 

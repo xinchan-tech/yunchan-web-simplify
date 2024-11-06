@@ -1,5 +1,6 @@
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog'
 import { useBoolean, useMount } from "ahooks"
+import { nanoid } from "nanoid"
 import { ReactNode } from "react"
 import { createRoot } from 'react-dom/client'
 
@@ -15,9 +16,17 @@ export const JknAlert = {
       rootEl = el
     }
 
-    const root = createRoot(rootEl)
+    const container = document.createElement('div')
+    container.id = `alert-${nanoid(8)}`
+
+    const root = createRoot(container)
+
+    const destroy = () => {
+      root.unmount()
+    }
+
     root.render(
-      <AlertComponent title={title} content={content} />
+      <AlertComponent title={title} content={content} afterClose={destroy} />
     )
   },
 
@@ -31,7 +40,8 @@ interface AlertDialogProps {
   content: ReactNode
   title: string
   cancelBtn?: boolean
-  onAction?: (action: 'confirm' | 'cancel' | 'close') => Promise<void | boolean>
+  onAction?: (action: 'confirm' | 'cancel' | 'close') => Promise<undefined | boolean>
+  afterClose?: () => void
 }
 
 const AlertComponent = (props: AlertDialogProps) => {
@@ -60,6 +70,10 @@ const AlertComponent = (props: AlertDialogProps) => {
     }
 
     setFalse()
+
+    setTimeout(() => {
+      props.afterClose?.()
+    }, 250)
   }
 
   return (
