@@ -5,14 +5,17 @@ import { Form } from "react-router-dom"
 import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogHeader, DialogFooter } from "../ui/dialog"
 import { Cross2Icon } from "@radix-ui/react-icons"
 import useZForm from "@/hooks/use-z-form"
-import { FieldValues, UseFormReturn } from "react-hook-form"
+import { FieldValues, FormProvider, UseFormReturn } from "react-hook-form"
 import { Button } from "../ui/button"
+import { z } from "zod"
+import { cn } from "@/utils/style"
 
 export interface UseModalProps {
   content: ReactNode
   title?: string
   closeIcon?: boolean
-  onOpen?: (...arg: unknown[]) => void
+  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+  onOpen?: (...arg: any[]) => void
   className?: string
   footer?: boolean | ReactNode
   onOk?: () => void
@@ -45,7 +48,7 @@ export const useModal = ({ content, onOpen, title, closeIcon, className, footer,
     if (!visible) return null
     return (
       <Dialog open={modalVisible} onOpenChange={_onOpenChange}>
-        <DialogContent className={className}>
+        <DialogContent className={cn('w-[680px]', className)}>
           <DialogHeader>
             <DialogTitle asChild>
               <div>
@@ -69,15 +72,16 @@ export const useModal = ({ content, onOpen, title, closeIcon, className, footer,
                 }
               </div>
             </DialogTitle>
+            <DialogDescription className="text-center" />
           </DialogHeader>
           {
             content
           }
           {
-            footer !== false && (
+            footer === null ? null : (
               footer === undefined ? (
-                <DialogFooter>
-                  <Button onClick={() => toggleModalVisible()}>取消</Button>
+                <DialogFooter className="m-4">
+                  <Button variant="outline" onClick={() => toggleModalVisible()}>取消</Button>
                   <Button onClick={() => props.onOk?.()}>确认</Button>
                 </DialogFooter>
               ) : (
@@ -107,13 +111,13 @@ export const useModal = ({ content, onOpen, title, closeIcon, className, footer,
   }
 }
 
-export interface UseFormModalProps<T extends FieldValues> extends Omit<UseModalProps, 'onOk'> {
-  onOk: (values: T) => void
-  form: UseFormReturn<T>
+export interface UseFormModalProps<T extends z.ZodTypeAny> extends Omit<UseModalProps, 'onOk'> {
+  onOk: (values: z.infer<T>) => void
+  form: UseFormReturn<z.infer<T>>
 }
 
-export const useFormModal = <T extends FieldValues>({ content, onOk, onOpen, form, ...props }: UseFormModalProps<T>) => {
-  const _onFinish = async (values: T) => {
+export const useFormModal = <T extends z.ZodTypeAny>({ content, onOk, onOpen, form, ...props }: UseFormModalProps<T>) => {
+  const _onFinish = async (values: z.infer<T>) => {
     const [err] = await to(new Promise(r => r(onOk(values))))
 
     if (err) {
@@ -122,16 +126,15 @@ export const useFormModal = <T extends FieldValues>({ content, onOk, onOpen, for
   }
 
   const _content = (
-    <Form {...form}>
-      <form className="space-y-8">
-
-      </form>
-    </Form>
-    // <Form form={form} onFinish={_onFinish}>
-    //   {
-    //     content
-    //   }
-    // </Form>
+    <FormProvider {...form}>
+      <Form {...form}>
+        <form className="space-y-8">
+          {
+            content
+          }
+        </form>
+      </Form>
+    </FormProvider>
   )
 
   const _onOpen = (...arg: unknown[]) => {
@@ -139,10 +142,11 @@ export const useFormModal = <T extends FieldValues>({ content, onOk, onOpen, for
     onOpen?.(...arg)
   }
 
-  const _onOk = () => {
-    form.handleSubmit(_onFinish)
+  const _onOk = async () => {
+    await form.trigger()
+    console.log(123)
+    form.handleSubmit(_onFinish)()
   }
-
 
   const { modal, context } = useModal({
     content: _content, onOpen: _onOpen, onOk: _onOk, ...props
@@ -192,52 +196,3 @@ export const useSimpleFormModal = (props: SimpleFormModalOptions) => {
   return form
 }
 
-type JknModalOptions = Parameters<typeof Modal.info>[0]
-
-export const JknModal = {
-  info({ content, title, closeIcon, ...args }: JknModalOptions) {
-    const model = Modal.info({
-      className: 'custom-static-model',
-      title: null,
-      icon: null,
-      centered: true,
-      content: (
-        <div className="text-white">
-          {
-            title && (
-              <div className="title text-center text-white h-10" style={{ background: 'var(--bg-secondary-color)' }}>
-                {
-                  !closeIcon && (
-                    <span
-                      className="bg-[#F36059] box-border rounded-full cursor-pointer  hover:opacity-90 absolute -z-0 w-4 h-4 left-2 top-3 flex items-center justify-center"
-                      onClick={() => model.destroy()}
-                      onKeyDown={() => { }}
-                    >
-                      <CloseOutlined className="scale-75" />
-                    </span>
-                  )
-                }
-                <span className="leading-[40px]">{title}</span>
-              </div>
-            )
-          }
-          {
-            typeof content === 'string' ? (
-              <div className="text-white text-center mt-4">{content}</div>
-            ) : (
-              content
-            )
-          }
-        </div>
-      ),
-      ...args
-    })
-
-    return model
-  },
-
-  confirm(args: JknModalOptions) {
-    return JknModal.info(args)
-  }
-
-}

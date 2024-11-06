@@ -41,7 +41,7 @@ const JknTable = <TData extends Record<string, unknown>, TValue>(props: JknTable
               <TableRow
                 key={row.id}
                 data-state={row.getIsSelected() && "selected"}
-                className="bg-muted hover:bg-accent"
+                className="bg-muted hover:bg-accent transition-all duration-200"
               >
                 {row.getVisibleCells().map((cell) => {
                   const { align } = cell.column.columnDef.meta ?? {}

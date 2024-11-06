@@ -1,5 +1,5 @@
 import { type StockExtend, addStockCollectCate, getStockCollectCates, getStockCollects, removeStockCollect, removeStockCollectCate, updateStockCollectCate } from "@/api"
-import { Button, CapsuleTabs, Checkbox, Form, Input, JknModal, JknTable, type JknTableProps, Popover, PopoverContent, PopoverTrigger, useFormModal, useModal } from "@/components"
+import {  Button, CapsuleTabs, Checkbox, Form, FormControl, FormField, FormItem, FormLabel, Input, JknAlert, JknTable, type JknTableProps, Popover, PopoverContent, PopoverTrigger, useFormModal, useModal } from "@/components"
 import { DialogHeader } from "@/components/ui/dialog"
 import { useDomSize } from "@/hooks"
 import useZForm from "@/hooks/use-z-form"
@@ -12,6 +12,7 @@ import { useRequest } from "ahooks"
 import to from "await-to-js"
 import Decimal from "decimal.js"
 import { useMemo, useState } from "react"
+import { useFormContext } from "react-hook-form"
 import { useImmer } from "use-immer"
 import { z } from "zod"
 
@@ -317,6 +318,7 @@ const GoldenPoolManager = (props: GoldenPoolManagerProps) => {
   const table = useModal({
     content: <GoldenPoolTable data={props.data} onUpdate={props.onUpdate} />,
     title: '管理金池',
+    footer: null,
     className: 'w-[980px]',
     onOpen: () => {
     }
@@ -338,7 +340,7 @@ interface GoldenPoolTableProps {
 }
 
 const poolSchema = z.object({
-  id: z.string().optional(),
+  id: z.string(),
   name: z.string()
 })
 
@@ -364,12 +366,12 @@ const GoldenPoolTable = (props: GoldenPoolTableProps) => {
     },
   ]
   const form = useZForm(poolSchema, {
-    id: undefined,
+    id: '',
     name: ''
   })
   const [title, setTitle] = useState('新建金池')
 
-  const edit = useFormModal({
+  const edit = useFormModal<typeof poolSchema>({
     content: <GoldenPoolForm />,
     title: title,
     form,
@@ -394,22 +396,27 @@ const GoldenPoolTable = (props: GoldenPoolTableProps) => {
   })
 
   const onDelete = (id: string, name: string) => {
-    JknModal.confirm({
-      title: '删除金池',
-      content: `确定删除 ${name}？`,
-      okText: '删除',
-      cancelText: '取消',
-      onOk: async () => {
-        const [err] = await to(removeStockCollectCate(id))
-
-        if (err) {
-          JknModal.info({ content: err.message })
-          return
-        }
-
-        props.onUpdate()
-      }
+    console.log(123)
+    JknAlert.info({
+      title: 1,
+      content: 123
     })
+    // JknModal.confirm({
+    //   title: '删除金池',
+    //   content: `确定删除 ${name}？`,
+    //   okText: '删除',
+    //   cancelText: '取消',
+    //   onOk: async () => {
+    //     const [err] = await to(removeStockCollectCate(id))
+
+    //     if (err) {
+    //       JknModal.info({ content: err.message })
+    //       return
+    //     }
+
+    //     props.onUpdate()
+    //   }
+    // })
   }
 
   return (
@@ -417,26 +424,34 @@ const GoldenPoolTable = (props: GoldenPoolTableProps) => {
       <div className="h-[480px]">
         <JknTable columns={columns} data={props.data} />
       </div>
-      {/* <div className="text-center">
-        <Button onClick={() => edit.open()} type="primary">新建金池</Button>
+      <div className="text-center mb-4">
+        <Button onClick={() => edit.open()} variant="default">新建金池</Button>
       </div>
       {
         edit.context
-      } */}
+      }
     </div>
   )
 }
 
 
 const GoldenPoolForm = () => {
+  const form = useFormContext<z.infer<typeof poolSchema>>()
+
   return (
     <div className="p-4">
-      <Form.Item layout="vertical" label="" name="id" hidden>
-        <Input placeholder="" />
-      </Form.Item>
-      <Form.Item layout="vertical" label="金池名称" name="name">
-        <Input placeholder="请输入金池名称" />
-      </Form.Item>
+      <FormField
+        control={form.control}
+        name="name"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>金池名称</FormLabel>
+            <FormControl>
+              <Input placeholder="请输入金池名称" {...field} />
+            </FormControl>
+          </FormItem>
+        )}
+      />
     </div>
   )
 }
