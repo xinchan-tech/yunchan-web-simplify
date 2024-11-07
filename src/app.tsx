@@ -37,7 +37,7 @@ const App = () => {
         <div className="search float-left flex items-center h-full">
           <Input size="sm" placeholder={t('search.stocks')} />
         </div>
-  
+
         <div className="absolute top-0 left-0 h-full w-full text-center flex justify-center items-center -z-10">
           <img src={Logo} alt="logo" className="w-6 h-6 mr-2" />
           {t('app')}-首页
@@ -53,7 +53,7 @@ const App = () => {
         </div>
         <div className="content overflow-hidden">
           <div>
-            <Suspense fallback={<div/>}>
+            <Suspense fallback={<div />}>
               <RouterProvider router={router} />
             </Suspense>
           </div>

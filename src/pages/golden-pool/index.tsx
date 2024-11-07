@@ -1,12 +1,10 @@
 import { type StockExtend, addStockCollectCate, getStockCollectCates, getStockCollects, removeStockCollect, removeStockCollectCate, updateStockCollectCate } from "@/api"
-import {  Button, CapsuleTabs, Checkbox, Form, FormControl, FormField, FormItem, FormLabel, Input, JknAlert, JknTable, type JknTableProps, Popover, PopoverContent, PopoverTrigger, useFormModal, useModal } from "@/components"
-import { DialogHeader } from "@/components/ui/dialog"
-import { useDomSize } from "@/hooks"
+import { Button, CapsuleTabs, Checkbox, FormControl, FormField, FormItem, FormLabel, Input, JknAlert, JknTable, type JknTableProps, Popover, PopoverContent, PopoverTrigger, useFormModal, useModal } from "@/components"
+import { useDomSize, useToast } from "@/hooks"
 import useZForm from "@/hooks/use-z-form"
 import { useStock, useTime } from "@/store"
 import { numToFixed, priceToCnUnit } from "@/utils/price"
 import { cn } from "@/utils/style"
-import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@radix-ui/react-dialog"
 import { PlusIcon, TrashIcon } from "@radix-ui/react-icons"
 import { useRequest } from "ahooks"
 import to from "await-to-js"
@@ -89,6 +87,19 @@ const GoldenPool = () => {
           dataIndex: c.extend?.basic_index as string ?? '-',
           pe: pe.toNumber()
         })
+      }else{
+        r.push({
+          index: i + 1,
+          key: c.symbol,
+          code: c.symbol,
+          name: c.name,
+          price: 0,
+          percent: 0,
+          turnover: 0,
+          marketValue: 0,
+          dataIndex: '-',
+          pe: 0
+        })
       }
     }
 
@@ -119,17 +130,18 @@ const GoldenPool = () => {
     })
   }
 
+  const { toast } = useToast()
   const onRemove = async (code: string, name: string) => {
     if (!activeStock) return
-    JknModal.confirm({
+    JknAlert.confirm({
       title: '确认移除',
       content: <div className="text-center mt-4">确认将 {name} 移出金池?</div>,
-      okText: '确认',
-      onOk: async () => {
+      onAction: async (action) => {
+        if (action !== 'confirm') return
         const [err] = await to(removeStockCollect({ symbols: [code], cate_ids: [+activeStock] }))
 
         if (err) {
-          JknModal.info({ content: err.message })
+          toast({ description: err.message })
           return
         }
 
@@ -140,15 +152,15 @@ const GoldenPool = () => {
 
   const onRemoveBatch = async () => {
     if (!activeStock) return
-    JknModal.confirm({
+    JknAlert.confirm({
       title: '批量操作',
       content: <div className="text-center mt-4">确定该操作?</div>,
-      okText: '确认',
-      onOk: async () => {
+      onAction: async (action) => {
+        if(action !== 'confirm') return
         const [err] = await to(removeStockCollect({ symbols: check.selected, cate_ids: [+activeStock] }))
 
         if (err) {
-          JknModal.info({ content: err.message })
+          toast({ description: err.message })
           return
         }
 
@@ -223,16 +235,24 @@ const GoldenPool = () => {
       )
     },
     {
+      header: '移除',
+      accessorKey: 'opt',
+      meta: { align: 'center', width: 60 },
+      cell: ({ row }) => (
+        <div className="cursor-pointer text-tertiary">
+          <TrashIcon onClick={() => onRemove(row.original.code, row.original.name)} />
+        </div>
+      )
+    },
+    {
       header: () => (
-        <Popover
-          open={check.selected.length > 0}
-        >
+        <Popover open={check.selected.length > 0}>
           <PopoverTrigger asChild>
-            <span>123</span>
+            <Checkbox checked={check.all} onCheckedChange={onCheckAllChange} />
           </PopoverTrigger>
-          <PopoverContent>
-            <div className="bg-secondary rounded">
-              <div className="bg-primary px-16 py-2">批量操作 {check.selected.length} 项</div>
+          <PopoverContent align="start" side="left">
+            <div className="rounded">
+              <div className="bg-background px-16 py-2">批量操作 {check.selected.length} 项</div>
               <div className="text-center px-4 py-4">
                 {
                   cates.data?.find(c => c.id === activeStock)?.name
@@ -247,16 +267,6 @@ const GoldenPool = () => {
           </PopoverContent>
         </Popover>
       ),
-      accessorKey: 'opt',
-      meta: { align: 'center', width: 60 },
-      cell: ({ row }) => (
-        <div className="cursor-pointer text-tertiary">
-          <TrashIcon onClick={() => onRemove(row.original.code, row.original.name)} />
-        </div>
-      )
-    },
-    {
-      header: () => <Checkbox checked={check.all} onCheckedChange={onCheckAllChange} />,
       accessorKey: 'check',
       meta: { align: 'center', width: 60 },
       cell: ({ row }) => (
@@ -359,7 +369,7 @@ const GoldenPoolTable = (props: GoldenPoolTableProps) => {
       header: '操作', accessorKey: 'opt', meta: { align: 'center', width: 120 },
       cell: ({ row }) => (
         <div className="flex items-center justify-around">
-          <span className="cursor-pointer" onClick={() => edit.open(row)} onKeyDown={() => { }}>重命名</span>
+          <span className="cursor-pointer" onClick={() => edit.open(row.original)} onKeyDown={() => { }}>重命名</span>
           <span className="cursor-pointer" onClick={() => onDelete(row.original.id as string, row.original.name as string)} onKeyDown={() => { }}>删除</span>
         </div>
       )
@@ -370,6 +380,7 @@ const GoldenPoolTable = (props: GoldenPoolTableProps) => {
     name: ''
   })
   const [title, setTitle] = useState('新建金池')
+  const { toast } = useToast()
 
   const edit = useFormModal<typeof poolSchema>({
     content: <GoldenPoolForm />,
@@ -379,7 +390,7 @@ const GoldenPoolTable = (props: GoldenPoolTableProps) => {
       const [err] = await to(values.id ? updateStockCollectCate(values) : addStockCollectCate(values.name))
 
       if (err) {
-        JknModal.info({ content: err.message })
+        toast({ description: err.message })
         return
       }
       edit.close()
@@ -395,28 +406,26 @@ const GoldenPoolTable = (props: GoldenPoolTableProps) => {
     }
   })
 
-  const onDelete = (id: string, name: string) => {
-    console.log(123)
-    JknAlert.info({
-      title: 1,
-      content: 123
+  const onDelete = async (id: string, name: string) => {
+
+    JknAlert.confirm({
+      title: '删除金池',
+      cancelBtn: true,
+      content: <span className="mt-4 block text-center text-base">确认删除 {name}?</span>,
+      onAction: async (action) => {
+        if (action === 'confirm') {
+          const [err] = await to(removeStockCollectCate(id))
+
+          if (err) {
+            toast({ description: err.message })
+            return false
+          }
+
+          props.onUpdate()
+        }
+      }
+
     })
-    // JknModal.confirm({
-    //   title: '删除金池',
-    //   content: `确定删除 ${name}？`,
-    //   okText: '删除',
-    //   cancelText: '取消',
-    //   onOk: async () => {
-    //     const [err] = await to(removeStockCollectCate(id))
-
-    //     if (err) {
-    //       JknModal.info({ content: err.message })
-    //       return
-    //     }
-
-    //     props.onUpdate()
-    //   }
-    // })
   }
 
   return (
@@ -447,7 +456,7 @@ const GoldenPoolForm = () => {
           <FormItem>
             <FormLabel>金池名称</FormLabel>
             <FormControl>
-              <Input placeholder="请输入金池名称" {...field} />
+              <Input placeholder="请输入金池名称" {...field} value={field.value} />
             </FormControl>
           </FormItem>
         )}

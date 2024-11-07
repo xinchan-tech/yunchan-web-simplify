@@ -14,3 +14,4 @@ declare module '@tanstack/react-table' {
     align?: 'left' | 'center' | 'right'
   }
 }
+

@@ -1,7 +1,7 @@
-import type { StockRawRecord } from '@/api'
+import type { StockExtendResultMap, StockRawRecord } from '@/api'
+import { getTrading } from '@/utils/date'
 import dayjs from 'dayjs'
 import Decimal from 'decimal.js'
-import { produce } from "immer"
 
 export type StockTrading = 'preMarket' | 'intraDay' | 'afterHours' | 'close'
 
@@ -18,23 +18,41 @@ export class StockRecord {
   prevClose: number // 前收盘价
   trading: StockTrading
   // 市值
-  get marketValue() {
-    return this.close * this.cumulativeVolume
-  }
+  marketValue: number
+  // 换手率
+  turnOverRate: number
+  // 所属行业
+  industry: string
+  // 市盈率
+  pe: number
+  // 市净率
+  pb: number
+
   //涨幅
   get percent() {
     return new Decimal(this.close).minus(this.prevClose).div(this.prevClose).toNumber()
   }
 
-  constructor(data: StockRawRecord) {
-    this.time = data[0]
+  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+  static isValid (data: any): data is StockRawRecord {
+    return Array.isArray(data) && (data.length === 8 || data.length === 10)
+  } 
+
+  constructor(data: StockRawRecord, extend?: StockExtendResultMap) {
+    this.time = this.parseTime(data[0])
     this.open = data[1]
     this.close = data[2]
     this.high = data[3]
     this.low = data[4]
     this.volume = data[5]
-    this.turnover = data[6]
-    this.trading = this.getTrading(data[0])
+    this.turnover = data[6] * 10000
+    this.trading = this._getTrading(this.time)
+    this.industry = '-'
+    this.pe = 0
+    this.pb = 0
+
+    this.marketValue = 0
+    this.turnOverRate = 0
     if (data.length === 10) {
       this.cumulativeVolume = data[7]
       this.cumulativeTurnover = data[8]
@@ -44,191 +62,49 @@ export class StockRecord {
       this.cumulativeTurnover = 0
       this.prevClose = data[7]
     }
-  }
 
-  private getTrading(time: string) {
-    const usTime = dayjs(time)
-    // 盘前交易时间（Premarket Trading）：
-
-    // 4:00 AM - 9:30 AM 美国东部时间
-    // 盘中交易时间（Regular Market Hours）：
-
-    // 9:30 AM - 4:00 PM 美国东部时间
-    // 盘后交易时间（After-hours Trading）：
-
-    // 4:00 PM - 8:00 PM 美国东部时间
-    if (usTime.isSameOrAfter(usTime.hour(4).minute(0).second(0)) && usTime.isBefore(usTime.hour(9).minute(30).second(0))) {
-      return 'preMarket'
+    if (extend) {
+      this.calcExtend(extend)
     }
-
-    if (usTime.isSameOrAfter(usTime.hour(9).minute(30).second(0)) && usTime.isBefore(usTime.hour(16).minute(0).second(0))) {
-      return 'intraDay'
-    }
-
-    return 'afterHours'
-  }
-}
-
-export class Stock {
-  private symbol: symbol
-  private name: string
-  private records: Record<string, StockRecord>
-  private times: string[]
-  //时间段
-  private period: Record<string, Record<StockTrading, string[]>>
-
-  constructor(symbol: string, name: string) {
-    this.symbol = Symbol.for(symbol)
-    this.name = name
-    this.times = []
-    this.records = {}
-    this.period = {}
   }
 
-  getCode() {
-    return this.symbol.description as string
-  }
+  private calcExtend(extend: StockExtendResultMap) {
+    if (extend.total_share) {
+      this.marketValue = extend.total_share * this.close
+      this.turnOverRate = this.turnover / this.marketValue
 
-  getSymbol() {
-    return this.symbol
-  }
-
-
-  insertForRaw(raw: StockRawRecord) {
-    const record = new StockRecord(raw)
-    if (this.records[record.time]) return
-    this.records = produce(this.records, r => {
-      r[record.time] = record
-    }) 
-    this.insertTimeOrder(record.time)
-    this.insertPeriodOrder(record.time) 
-  }
-
-  insertForRawBatch(raw: StockRawRecord[]){
-
-    for (const r of raw) {
-      const record = new StockRecord(r)
-      if (this.records[record.time]) continue
-      this.records[record.time] = record
-      this.insertPeriodOrder(record.time) 
-    }
-
-    const times = this.insertTimeOrderBatch(raw.map(r => r[0]))
-    this.times = times
-
-  }
-
-  private insertTimeOrder(time: string) {
-    
-  }
-
-  private insertTimeOrderBatch(times: string[]): string[] {
-    const res = [...this.times]
-    
-    for (const time of times) {
-      if (this.times.length === 0) {
-        this.times.push(time)
-        continue
+      if (extend.net_income_loss) {
+        this.pe = this.marketValue / extend.net_income_loss
       }
-      const index = this.times.findIndex(t => t >= time)
 
-      if (index === -1) {
-        res.push(time)
-      } else {
-        res.splice(index, 0, time)
+      // 市净率(P/B Ratio):
+      // 计算公式:
+      // 市净率 = 股票市价 / 每股净资产
+      // 其中:
+      // 股票市价 = 股票当前的市场价格
+      // 每股净资产 = (公司总资产 - 总负债) / 总股本
+      if (extend.liabilities_and_equity && extend.liabilities) {
+        this.pb = this.close / ((extend.liabilities_and_equity - extend.liabilities) / extend.total_share)
       }
     }
 
-    return res
-  }
-
-  private insertPeriodOrder(time: string) {
-    const date = dayjs(time)
-
-    const period = date.format('YYYY-MM-DD')
-
-    if (!this.period[period]) {
-      this.period[period] = {
-        preMarket: [],
-        intraDay: [],
-        afterHours: []
-      }
-    }
-
-    const p = this.period[period]
-    let per: string[]
-
-    //盘前交易时间段
-    if (date.isBefore(date.hour(9).minute(30))) {
-      per = p.preMarket
-    } else if (date.isBefore(date.hour(16).minute(0))) {
-      //盘中交易时间段
-      per = p.intraDay
-    } else {
-      //盘后交易时间段
-      per = p.afterHours
-    }
-  
-    const index = per.findIndex(t => t > time)
-
-    if(index === -1){
-      per.push(time)
-    }else{
-      per.splice(index, 0, time)
+    if (extend.basic_index as string) {
+      this.industry = extend.basic_index as string
     }
   }
 
-  private insertPeriodOrderBatch(times: string[]) {
-    for (const times of time) {
-      
-    }
-  }
-
-  getName() {
-    return this.name
-  }
-
-  getDataSet() {
-    return this.times.map(time => this.records[time])
-  }
-
-  forEach(cb: (record: StockRecord, time: string) => void) {
-    for (const time of this.times) {
-      cb(this.records[time], time)
-    }
-  }
-
-  get lastRecord() {
-    return this.records[this.times[this.times.length - 1]]
+  private _getTrading(time: string) {
+    return getTrading(time)
   }
 
   /**
-   * 根据周期获取最新数据
+   * 判断时间数据
+   * 2024-09-10 不带时间默认为盘中数据，自动补齐
    */
-  getLastRecord(period: StockTrading) {
-    const periods = Object.keys(this.period)
-    periods.sort()
-
-    //倒序查找
-    for (let i = periods.length - 1; i >= 0; i--) {
-      const p = this.period[periods[i]]
-      
-      if(p[period].length > 0){
-        const time = p[period][p[period].length - 1]
-        return this.records[time]
-      }
+  private parseTime(time: string) {
+    if (time.length === 10) {
+      return `${dayjs(time).format('YYYY-MM-DD')} 15:59:00`
     }
+    return time
   }
-
-  /**
-   * 获取指定时间段的数据
-   */
-  getLastRecords(trading: StockTrading) {
-    const periods = Object.keys(this.period)
-    periods.sort()
-
-    const times = this.period[periods[periods.length - 1]]?.[trading] ?? []
-    return times.map(time => this.records[time])
-  }
-
 }

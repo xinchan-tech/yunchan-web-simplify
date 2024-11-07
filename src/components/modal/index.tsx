@@ -1,14 +1,12 @@
-import { useBoolean, useUpdate, useUpdateEffect } from 'ahooks'
+import { cn } from "@/utils/style"
+import { Cross2Icon } from "@radix-ui/react-icons"
+import { useBoolean, useUpdateEffect } from 'ahooks'
 import to from "await-to-js"
 import type { ReactNode } from "react"
-import { Form } from "react-router-dom"
-import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogHeader, DialogFooter } from "../ui/dialog"
-import { Cross2Icon } from "@radix-ui/react-icons"
-import useZForm from "@/hooks/use-z-form"
-import { FieldValues, FormProvider, UseFormReturn } from "react-hook-form"
+import { Form, FormProvider, type UseFormReturn } from "react-hook-form"
+import type { z } from "zod"
 import { Button } from "../ui/button"
-import { z } from "zod"
-import { cn } from "@/utils/style"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "../ui/dialog"
 
 export interface UseModalProps {
   content: ReactNode
@@ -127,13 +125,11 @@ export const useFormModal = <T extends z.ZodTypeAny>({ content, onOk, onOpen, fo
 
   const _content = (
     <FormProvider {...form}>
-      <Form {...form}>
-        <form className="space-y-8">
-          {
-            content
-          }
-        </form>
-      </Form>
+      <form className="space-y-8">
+        {
+          content
+        }
+      </form>
     </FormProvider>
   )
 

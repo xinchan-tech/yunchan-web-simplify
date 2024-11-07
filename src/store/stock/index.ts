@@ -1,14 +1,13 @@
-import { create } from "zustand"
-import { Stock, StockRecord, StockTrading } from "./stock"
-import { produce } from "immer"
-import type { StockRawRecord } from "@/api"
-
-export * from './stock'
+import { create } from 'zustand'
+import { StockRecord, type StockTrading } from './stock'
+import { produce } from 'immer'
+import type { StockExtendResult, StockRawRecord } from '@/api'
 
 interface StockStore {
   stocks: Record<symbol, StockRecord[]>
   // findStock: (code: string) => Stock | undefined
-  insertRaw: (code: string, raw: StockRawRecord) => void
+  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+  insertRaw: (code: string, raw: StockRawRecord, extend?: Record<StockExtendResult, any>) => void
   getLastRecord: (code: string) => StockRecord | undefined
   getLastRecordByTrading: (code: string, trading: StockTrading) => StockRecord | undefined
   getLastRecords: (code: string, trading: StockTrading) => StockRecord[]
@@ -18,34 +17,35 @@ interface StockStore {
 export const useStock = create<StockStore>()((set, get) => ({
   stocks: {},
   stocksTimeIndex: {},
-  insertRaw: (code, raw: StockRawRecord) => {
-    set(produce<StockStore>(state => {
-      const records = state.stocks[Symbol.for(code)]
+  insertRaw: (code, raw, extend) => {
+    set(
+      produce<StockStore>(state => {
+        const records = state.stocks[Symbol.for(code)]
 
-      if(!records){
-        state.stocks[Symbol.for(code)] = [new StockRecord(raw)]
-      }else{
-        if(hasIndex(records as StockRecord[], raw[0])) return
-        const index = getInsertIndex(records as StockRecord[], raw[0])
+        if (!records) {
+          state.stocks[Symbol.for(code)] = [new StockRecord(raw, extend)]
+        } else {
+          if (hasIndex(records as StockRecord[], raw[0])) return
+          const index = getInsertIndex(records as StockRecord[], raw[0])
 
-        records.splice(index, 0, new StockRecord(raw))
-      }
-    }))
+          records.splice(index, 0, new StockRecord(raw, extend))
+        }
+      })
+    )
   },
-  getLastRecord: (code) => {
+  getLastRecord: code => {
     const records = get().stocks[Symbol.for(code)]
     return records?.[records.length - 1]
   },
   getLastRecordByTrading: (code, trading) => {
     const records = get().stocks[Symbol.for(code)]
-
     return records?.filter(record => record.trading === trading).slice(-1)[0]
   },
   getLastRecords: (code, trading) => {
     const records = get().stocks[Symbol.for(code)] ?? []
     const r = []
     for (let index = records.length - 1; index >= 0; index--) {
-      if(records[index].trading === trading){
+      if (records[index].trading === trading) {
         r.unshift(records[index])
       }
     }
@@ -62,11 +62,11 @@ const hasIndex = (times: StockRecord[], time: string) => {
     const mid = Math.floor((left + right) / 2)
     if (times[mid].time === time) {
       return true
-    } 
-    
+    }
+
     if (times[mid].time > time) {
       right = mid - 1
-    }else {
+    } else {
       left = mid + 1
     }
   }
@@ -81,14 +81,16 @@ const getInsertIndex = (times: StockRecord[], time: string) => {
     const mid = Math.floor((left + right) / 2)
     if (times[mid].time === time) {
       return mid
-    } 
-    
+    }
+
     if (times[mid].time > time) {
       right = mid - 1
-    }else {
+    } else {
       left = mid + 1
     }
   }
 
   return left
 }
+
+

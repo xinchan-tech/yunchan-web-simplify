@@ -1,4 +1,5 @@
 import { useStock } from '@/store'
+import { StockRecord } from "@/store/stock/stock"
 import request from '@/utils/request'
 import dayjs from 'dayjs'
 import { md5 } from 'js-md5'
@@ -70,8 +71,11 @@ export type StockExtendResult =
   | 'total_share'
   | 'liabilities'
   | 'liabilities_and_equity'
-  | 'net_income_loss'
+  | 'net_income_loss' // 净利润？
   | 'bubble'
+
+// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+export type StockExtendResultMap = Record<StockExtendResult, any>
 
 type GetStockBaseCodeInfoParams = {
   /**
@@ -369,8 +373,9 @@ export const getStockCollects = async (params: GetStockCollectsParams) => {
   const r = await request.get<GetStockCollectsResult>('/collects', { params }).then(r => r.data)
   const stock = useStock.getState()
   for (const s of r.items) {
-    s.stock[0] = dayjs(s.stock[0]).hour(15).minute(59).second(0).format('YYYY-MM-DD HH:mm:ss')
-    stock.insertRaw(s.symbol, s.stock)
+    if(StockRecord.isValid(s.stock)){
+      stock.insertRaw(s.symbol, s.stock, s.extend)
+    }
   }
 
   return r
@@ -423,7 +428,7 @@ export const updateStockCollectCate = (params: { id: string; name: string }) => 
  * 添加金池分类
  */
 export const addStockCollectCate = (name: string) => {
-  return request.post('/collect/cate/save', new URLSearchParams({name})).then(r => r.data)
+  return request.post('/collect/cate/save', new URLSearchParams({ name })).then(r => r.data)
 }
 
 /**
@@ -453,4 +458,80 @@ export const removeStockCollect = (params: { symbols: string[]; cate_ids: number
     form.append('cate_ids[]', c.toString())
   }
   return request.post<void>('/collect/delete', form).then(r => r.data)
+}
+
+/**
+ * 股票：symbol
+ * 现价：'close',
+ * 成交额： 'amount',
+ * 成交量： 'volume',
+ * 市值： 'total_mv',
+ * 换手率： 'turnover_rate',
+ * 盘前涨跌幅：'stock_before',
+ * 涨跌幅：'increase',
+ * 盘后涨跌幅： 'stock_after'
+ * 市盈率TTM： 'pe_ttm'
+ * 市净率： 'pb'
+ */
+export type UsStockColumn =
+  | 'symbol'
+  | 'close'
+  | 'amount'
+  | 'volume'
+  | 'total_mv'
+  | 'turnover_rate'
+  | 'stock_before'
+  | 'increase'
+  | 'stock_after'
+  | 'pe_ttm'
+  | 'pb'
+
+export type UsStockType = 'ETF' | 'EXCLUDE_ETF' | 'IXIC' | 'SPX' | 'DJI' | 'ETF_EXCLUDE_INDEX'
+
+type GetUsStocksParams = {
+  column: UsStockColumn
+  order: 'asc' | 'desc'
+  limit: number
+  page: number
+  extend?: StockExtend[]
+  type?: UsStockType
+}
+
+type GetUsStocksResult = {
+  before?: number
+  current: number
+  first: number
+  items: {
+    extend: StockExtendResultMap
+    symbol: string
+    name: string
+    stock: StockRawRecord
+  }[]
+  last: number
+  limit: number
+  next: number
+  previous: number
+  total_items: number
+  total_pages: number
+}
+
+/**
+ * 全部美股
+ */
+export const getUsStocks = async (params: GetUsStocksParams) => {
+  const r = await request.get<GetUsStocksResult>('/stock/cutom/getUsStocks', { params: params }).then(r => r.data)
+  const stock = useStock.getState()
+
+  for (const s of r.items) {
+    stock.insertRaw(s.symbol, s.stock, s.extend)
+
+    if (s.extend.stock_after && s.extend.stock_after.length > 0) {
+      stock.insertRaw(s.symbol, s.extend.stock_after)
+    }
+    if (s.extend.stock_before && s.extend.stock_before.length > 0) {
+      stock.insertRaw(s.symbol, s.extend.stock_before)
+    }
+  }
+
+  return r
 }
