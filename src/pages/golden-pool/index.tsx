@@ -2,11 +2,11 @@ import { type StockExtend, addStockCollectCate, getStockCollectCates, getStockCo
 import { Button, CapsuleTabs, Checkbox, FormControl, FormField, FormItem, FormLabel, Input, JknAlert, JknTable, type JknTableProps, Popover, PopoverContent, PopoverTrigger, useFormModal, useModal } from "@/components"
 import { useDomSize, useToast } from "@/hooks"
 import useZForm from "@/hooks/use-z-form"
-import { useStock, useTime } from "@/store"
+import { useCollectCates, useStock, useTime } from "@/store"
 import { numToFixed, priceToCnUnit } from "@/utils/price"
 import { cn } from "@/utils/style"
 import { PlusIcon, TrashIcon } from "@radix-ui/react-icons"
-import { useRequest } from "ahooks"
+import { useMount, useRequest } from "ahooks"
 import to from "await-to-js"
 import Decimal from "decimal.js"
 import { useMemo, useState } from "react"
@@ -30,7 +30,7 @@ type DataType = {
   pe: number
 }
 const GoldenPool = () => {
-  const [activeStock, setActiveStock] = useState<string>()
+
   const [size, ref] = useDomSize<HTMLDivElement>()
   const time = useTime()
   const stock = useStock()
@@ -38,23 +38,32 @@ const GoldenPool = () => {
     all: false,
     selected: []
   })
-  const cates = useRequest(getStockCollectCates, {
-    cacheKey: 'collectCates',
+  const cates = useCollectCates()
+  const [activeStock, setActiveStock] = useState<string>(cates.collects[0]?.id)
+
+  const cateQuery = useRequest(getStockCollectCates, {
+    cacheKey: getStockCollectCates.cacheKey,
     onSuccess: (data) => {
       if (data && data.length > 0) {
         setActiveStock(data[0].id)
-        collects.run({
-          extend: baseExtends,
-          cate_id: +data[0].id,
-          limit: 300
-        })
       }
+      cates.setCollects(data)
     }
   })
 
   const collects = useRequest(getStockCollects, {
     cacheKey: 'stockCollects',
     manual: true
+  })
+
+  useMount(() => {
+    if (cates.collects?.[0].id) {
+      collects.run({
+        extend: baseExtends,
+        cate_id: +cates.collects[0].id,
+        limit: 300
+      })
+    }
   })
 
   const data = useMemo<DataType[]>(() => {
@@ -87,7 +96,7 @@ const GoldenPool = () => {
           dataIndex: c.extend?.basic_index as string ?? '-',
           pe: pe.toNumber()
         })
-      }else{
+      } else {
         r.push({
           index: i + 1,
           key: c.symbol,
@@ -146,6 +155,7 @@ const GoldenPool = () => {
         }
 
         collects.refresh()
+        cateQuery.refresh()
       }
     })
   }
@@ -156,7 +166,7 @@ const GoldenPool = () => {
       title: '批量操作',
       content: <div className="text-center mt-4">确定该操作?</div>,
       onAction: async (action) => {
-        if(action !== 'confirm') return
+        if (action !== 'confirm') return
         const [err] = await to(removeStockCollect({ symbols: check.selected, cate_ids: [+activeStock] }))
 
         if (err) {
@@ -255,7 +265,7 @@ const GoldenPool = () => {
               <div className="bg-background px-16 py-2">批量操作 {check.selected.length} 项</div>
               <div className="text-center px-4 py-4">
                 {
-                  cates.data?.find(c => c.id === activeStock)?.name
+                  cates.collects.find(c => c.id === activeStock)?.name
                 }
                 &emsp;
                 <span
@@ -281,7 +291,7 @@ const GoldenPool = () => {
         <div className="flex-1 overflow-x-auto">
           <CapsuleTabs activeKey={activeStock} onChange={onActiveStockChange}>
             {
-              cates.data?.map((cate) => (
+              cates.collects.map((cate) => (
                 <CapsuleTabs.Tab
                   key={cate.id}
                   label={
@@ -293,7 +303,7 @@ const GoldenPool = () => {
           </CapsuleTabs>
         </div>
         <div className="text-secondary">
-          <GoldenPoolManager data={cates.data ?? []} onUpdate={cates.refresh} />
+          <GoldenPoolManager data={cates.collects ?? []} onUpdate={cateQuery.refresh} />
         </div>
       </div>
       <div className="flex-1" ref={ref}>

@@ -1,13 +1,13 @@
-import { CapsuleTabs, JknTable, JknTableProps, NumSpan, StockView } from "@/components"
-import { numToFixed } from "@/utils/price"
+import { CapsuleTabs, ScrollArea } from "@/components"
 import { useState } from "react"
 import SingleTable from "./signle-table"
+import DoubleTable from "./double-table"
 
 const Views = () => {
   const [activeKey, setActiveKey] = useState('all')
 
   return (
-    <div className="h-full">
+    <div className="h-full overflow-hidden">
       <div className="h-8 border-border border border-solid flex items-center">
         <CapsuleTabs activeKey={activeKey} onChange={setActiveKey}>
           <CapsuleTabs.Tab label="全部美股" value="all" />
@@ -26,9 +26,11 @@ const Views = () => {
           <CapsuleTabs.Tab label="昨日放量榜" value="nz" />
         </CapsuleTabs>
       </div>
-      <div className="h-[calc(100%-32px)]">
-        <SingleTable />
-      </div>
+      <ScrollArea className="h-[calc(100%-32px)]">
+        {
+          ['industry', 'concept'].includes(activeKey) ? <DoubleTable /> : <SingleTable />
+        }
+      </ScrollArea>
     </div>
   )
 }

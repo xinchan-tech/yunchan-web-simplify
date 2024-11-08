@@ -12,7 +12,6 @@ export const useTableSelection = (opts: TableSelectionProps) => {
   })
 
   const onCheckboxClick = (code: string) => {
-    console.log(123)
     if (check.selected.includes(code)) {
       setCheck(d => {
         d.selected = d.selected.filter(s => s !== code)
@@ -25,7 +24,15 @@ export const useTableSelection = (opts: TableSelectionProps) => {
     }
   }
 
+  const cleanAll = () => {
+    setCheck(d => {
+      d.all = false
+      d.selected = []
+    })
+  }
+
   const onCheckAllChange = (e: boolean) => {
+    console.log(e)
     setCheck(d => {
       d.all = e
       d.selected = e ? opts.selectAll() ?? [] : []
@@ -34,6 +41,7 @@ export const useTableSelection = (opts: TableSelectionProps) => {
 
   return {
     check,
+    cleanAll: cleanAll,
     onCheck: onCheckboxClick,
     onCheckAll: onCheckAllChange
   }

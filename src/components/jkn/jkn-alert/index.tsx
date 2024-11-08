@@ -4,6 +4,8 @@ import { nanoid } from "nanoid"
 import type { ReactNode } from "react"
 import { createRoot } from 'react-dom/client'
 import { Button } from "../../ui/button"
+import to from "await-to-js"
+import { VisuallyHidden } from '@radix-ui/react-visually-hidden'
 
 type AlertAction = 'confirm' | 'cancel' | 'close'
 
@@ -41,7 +43,7 @@ export const JknAlert = {
   },
 
   confirm(args: AlertOptions) {
-    return JknAlert.info({cancelBtn: true, ...args})
+    return JknAlert.info({ cancelBtn: true, ...args })
   }
 
 }
@@ -52,6 +54,7 @@ interface AlertDialogProps extends AlertOptions {
 
 const AlertComponent = (props: AlertDialogProps) => {
   const [open, { setTrue, setFalse }] = useBoolean(false)
+  const [loading, { setTrue: setLoadingTrue, setFalse: setLoadingFalse }] = useBoolean(false)
   const onClose = () => {
     waitAction('close')
   }
@@ -69,10 +72,18 @@ const AlertComponent = (props: AlertDialogProps) => {
   })
 
   const waitAction = async (action: 'confirm' | 'cancel' | 'close') => {
-    const r = await props.onAction?.(action)
+    if (props.onAction) {
+      setLoadingTrue()
+      const [err, r] = await to(props.onAction?.(action))
 
-    if (r === false) {
-      return
+
+      if (err) {
+        setLoadingFalse()
+        throw err
+      }
+      if (r === false) {
+        return
+      }
     }
 
     setFalse()
@@ -86,8 +97,10 @@ const AlertComponent = (props: AlertDialogProps) => {
     <AlertDialog open={open} onOpenChange={(open) => !open && onClose()}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>{props.title}</AlertDialogTitle>
-          <AlertDialogDescription>
+          <VisuallyHidden hidden={props.title === undefined}>
+            <AlertDialogTitle>{props.title}</AlertDialogTitle>
+          </VisuallyHidden>
+          <AlertDialogDescription className="text-center text-lg mt-4">
             {
               props.content
             }

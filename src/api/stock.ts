@@ -1,5 +1,5 @@
 import { useStock } from '@/store'
-import { StockRecord } from "@/store/stock/stock"
+import { StockRecord } from '@/store/stock/stock'
 import request from '@/utils/request'
 import dayjs from 'dayjs'
 import { md5 } from 'js-md5'
@@ -373,7 +373,7 @@ export const getStockCollects = async (params: GetStockCollectsParams) => {
   const r = await request.get<GetStockCollectsResult>('/collects', { params }).then(r => r.data)
   const stock = useStock.getState()
   for (const s of r.items) {
-    if(StockRecord.isValid(s.stock)){
+    if (StockRecord.isValid(s.stock)) {
       stock.insertRaw(s.symbol, s.stock, s.extend)
     }
   }
@@ -416,6 +416,8 @@ export const getStockCollectCates = (symbol?: string) => {
 
   return request.get<GetStockCollectCatesResult[]>(url).then(r => r.data)
 }
+getStockCollectCates.cacheKey = '/collect/cates'
+
 
 /**
  * 修改金池分类
@@ -442,7 +444,15 @@ export const removeStockCollectCate = (id: string) => {
  * 加入金池
  */
 export const addStockCollect = (params: { symbols: string[]; cate_ids: number[] }) => {
-  return request.post('/collect/add', params).then(r => r.data)
+  const form = new URLSearchParams()
+  for (const s of params.symbols) {
+    form.append('symbols[]', s)
+  }
+
+  for (const c of params.cate_ids) {
+    form.append('cate_ids[]', c.toString())
+  }
+  return request.post('/collect/save', new URLSearchParams(form)).then(r => r.data)
 }
 
 /**
@@ -535,3 +545,56 @@ export const getUsStocks = async (params: GetUsStocksParams) => {
 
   return r
 }
+
+type GetPlateListResult = {
+  amount: number
+  change: number
+  hot_rise: number
+  id: string
+  name: string
+}
+
+/**
+ * 板块列表
+ * 1: 行业板块 2：概念板块
+ */
+export const getPlateList = (type: 1 | 2) => {
+  return request.get<GetPlateListResult[]>('/plate/list', { params: { type } }).then(r => r.data)
+}
+getPlateList.cacheKey = '/plate/list'
+
+type GetPlateStocksResult = {
+  symbol: string
+  name: string
+  market_cap: string
+  ep: number
+  change_perc: number
+  /**
+   * 获取类型
+   */
+  extend: StockExtendResultMap
+  stock: StockRawRecord
+}
+
+/**
+ * 成分股板块
+ * 
+ */
+export const getPlateStocks = async (id: string, extend: StockExtend[]) => {
+  const r = await request.get<GetPlateStocksResult[]>('/plate/stocks', { params: { plate_id: id , extend} }).then(r => r.data)
+  const stock = useStock.getState()
+
+  for (const s of r) {
+    stock.insertRaw(s.symbol, s.stock, s.extend)
+
+    if (s.extend.stock_after && s.extend.stock_after.length > 0) {
+      stock.insertRaw(s.symbol, s.extend.stock_after)
+    }
+    if (s.extend.stock_before && s.extend.stock_before.length > 0) {
+      stock.insertRaw(s.symbol, s.extend.stock_before)
+    }
+  }
+
+  return r
+}
+getPlateStocks.cacheKey = '/plate/stocks'

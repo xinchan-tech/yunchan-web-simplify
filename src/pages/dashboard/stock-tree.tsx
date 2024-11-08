@@ -4,9 +4,9 @@ import { useTranslation } from "react-i18next"
 import { useRequest } from "ahooks"
 import { getHotSectors } from "@/api"
 import TreeMap from "./components/tree-map"
-import { StockRecord } from "@/store"
 import Decimal from "decimal.js"
 import { CapsuleTabs } from "@/components"
+import { StockRecord } from "@/store/stock/stock"
 
 type StockTreeType = 'industry' | 'concept' | 'bull' | 'etf' | 'industry-heatmap' | 'etf-heatmap'
 type StockTreeDate = 'day' | 'week' | 'month'
