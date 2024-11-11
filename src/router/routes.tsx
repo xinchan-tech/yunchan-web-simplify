@@ -11,7 +11,7 @@ export const routes: RouteObject[] = [
     path: "/golden",
     Component: lazy(() => import('@/pages/golden-pool')),
     handle:{
-      title: '金股池'
+      title: '股票金池'
     }
   },
   {
@@ -19,6 +19,13 @@ export const routes: RouteObject[] = [
     Component: lazy(() => import('@/pages/views')),
     handle:{
       title: '行情概览'
+    }
+  },
+  {
+    path: '/super',
+    Component: lazy(() => import('@/pages/super')),
+    handle:{
+      title: '超级选股'
     }
   }
   

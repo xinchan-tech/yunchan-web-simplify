@@ -1,7 +1,13 @@
 import { create } from 'zustand'
 import { StockRecord, type StockTrading } from './stock'
 import { produce } from 'immer'
-import type { StockExtendResult, StockRawRecord } from '@/api'
+import type { StockExtendResult, StockExtendResultMap, StockRawRecord } from '@/api'
+
+type StockResultRecord = {
+  symbol: string
+  stock: StockRawRecord
+  extend?: StockExtendResultMap
+}
 
 interface StockStore {
   stocks: Record<symbol, StockRecord[]>
@@ -11,6 +17,7 @@ interface StockStore {
   getLastRecord: (code: string) => StockRecord | undefined
   getLastRecordByTrading: (code: string, trading: StockTrading) => StockRecord | undefined
   getLastRecords: (code: string, trading: StockTrading) => StockRecord[]
+  insertRawByRecords: (record: StockResultRecord[]) => void
   // createStock: (code: string, name: string) => Stock
 }
 
@@ -51,7 +58,21 @@ export const useStock = create<StockStore>()((set, get) => ({
     }
 
     return r
-  }
+  },
+  insertRawByRecords: (record) => {
+    for (const s of record) {
+      if(StockRecord.isValid(s.stock)){
+        get().insertRaw(s.symbol, s.stock, s.extend)
+      }
+  
+      if (s.extend?.stock_after && StockRecord.isValid(s.extend.stock_after)) {
+        get().insertRaw(s.symbol, s.extend.stock_after)
+      }
+      if (s.extend?.stock_before && StockRecord.isValid(s.extend.stock_before)) {
+        get().insertRaw(s.symbol, s.extend.stock_before)
+      }
+    }
+  },
 }))
 
 //根据二分法查找
@@ -94,3 +115,5 @@ const getInsertIndex = (times: StockRecord[], time: string) => {
 }
 
 
+
+export type { StockTrading }

@@ -14,14 +14,14 @@ const FooterTime = () => {
 
 
   useRequest(getUsTime, {
-    pollingInterval: 1000 * 10,
+    pollingInterval: 1000 * 60 * 5,
     onSuccess: (data) => {
-      // const local = new Date().valueOf()
-      // time.setLocalStamp(local)
-      // const uTime = data.time * 1000
-      // time.setUsTime(uTime)
-      // timeForOnline.current = uTime
-      // timeForLocal.current = local
+      const local = new Date().valueOf()
+      time.setLocalStamp(local)
+      const uTime = data.time * 1000
+      time.setUsTime(uTime)
+      timeForOnline.current = uTime
+      timeForLocal.current = local
     }
   })
 

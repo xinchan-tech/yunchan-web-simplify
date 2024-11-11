@@ -1,51 +1,132 @@
-import { Checkbox } from "@radix-ui/react-checkbox"
+
 import { HoverCard, HoverCardTrigger, HoverCardContent } from "@radix-ui/react-hover-card"
 import { Button } from "../ui/button"
 import Star from "./index"
 import { useCollectCates } from "@/store"
 import { useRequest } from "ahooks"
-import { getStockCollectCates } from "@/api"
+import { addStockCollectBatch, addStockCollectCate, getStockCollectCates, updateStockCollectCate } from "@/api"
+import { Checkbox, useFormModal } from ".."
+import to from "await-to-js"
+import { useToast } from "@/hooks"
+import { z } from "zod"
+import { useZForm } from "@/hooks"
+import { GoldenPoolForm } from "@/pages/golden-pool/components/golden-pool-form"
 
 
 interface CollectStarProps {
   checked: boolean
   code: string
+  onUpdate?: (checked: boolean) => void
 }
 
+const poolSchema = z.object({
+  id: z.string(),
+  name: z.string()
+})
+
 const CollectStar = (props: CollectStarProps) => {
-  const collects = useCollectCates(s => s.collects)
+  const { collects, setCollects } = useCollectCates()
+
   const cateQuery = useRequest(getStockCollectCates, {
-    cacheKey: getStockCollectCates.cacheKey,
     manual: true,
     defaultParams: [props.code],
   })
 
+  const { toast } = useToast()
+
+  const onCheck = async (cate: typeof collects[0]) => {
+    const cates = cateQuery.data?.filter(item => item.active === 1).map(item => +item.id) ?? []
+    if (cates.includes(+cate.id)) {
+      cates.splice(cates.indexOf(+cate.id), 1)
+    } else {
+      cates.push(+cate.id)
+    }
+
+    cateQuery.mutate((s) => {
+      return s?.map(item => {
+        item.active = cates.includes(+item.id) ? 1 : 0
+        return item
+      })
+    })
+
+    props.onUpdate?.(cates.length > 0)
+    
+    const [err] = await to(addStockCollectBatch({
+      symbol: props.code,
+      cate_ids: cates
+    }))
+
+    if (err) {
+      toast({ description: err.message })
+
+      return
+    }
+
+    cateQuery.refresh()
+
+  }
+
+  const form = useZForm(poolSchema, {
+    id: '',
+    name: ''
+  })
+
+  const edit = useFormModal<typeof poolSchema>({
+    content: <GoldenPoolForm />,
+    title: '新建金池',
+    form,
+    onOk: async (values) => {
+      const [err] = await to(values.id ? updateStockCollectCate(values) : addStockCollectCate(values.name))
+
+      if (err) {
+        toast({ description: err.message })
+        return
+      }
+      edit.close()
+      getStockCollectCates().then(r => setCollects(r))
+    },
+    onOpen: () => {
+    }
+  })
+
   return (
-    <HoverCard
-      onOpenChange={open => open && cateQuery.run(props.code)}
-      openDelay={100}
-    >
-      <HoverCardTrigger asChild>
-        <div><Star checked={props.checked} /></div>
-      </HoverCardTrigger>
-      <HoverCardContent align="center" side="left" sideOffset={-10}
-        className="p-0 w-32"
+    <div className="">
+      <HoverCard
+        onOpenChange={open => open && cateQuery.run(props.code)}
+        openDelay={100}
+        closeDelay={0}
       >
-        <div className="bg-background py-2">加入金池</div>
-        <div className="min-h-32 space-y-2">
-          {
-            collects.map(item => (
-              <div key={item.id} className="flex cursor-pointer items-center justify-center space-x-4 hover:bg-primary py-1">
-                <Checkbox />
-                <span>{item.name}</span>
-              </div>
-            ))
-          }
-        </div>
-        <div>
-          <Button block className="rounded-none">确认</Button>
-        </div>
-      </HoverCardContent>
-    </HoverCard>
+        <HoverCardTrigger asChild>
+          <div className="flex justify-center items-center"><Star checked={props.checked} /></div>
+        </HoverCardTrigger>
+        <HoverCardContent align="center" side="left" sideOffset={-10}
+          className="p-0 w-32 bg-muted z-20"
+        >
+          <div className="bg-background py-2">加入金池</div>
+          <div className="min-h-32 space-y-2">
+            {
+              collects.map(item => (
+                <div key={item.id} onClick={() => onCheck(item)} onKeyDown={() => { }} className="flex cursor-pointer items-center pl-4 space-x-4 hover:bg-primary py-1">
+                  {
+                    <Checkbox checked={cateQuery.data?.some(cate => cate.id === item.id && cate.active === 1)} />
+                  }
+                  <span>{item.name}</span>
+                </div>
+              ))
+            }
+          </div>
+          <div>
+            <Button block className="rounded-none" onClick={() => edit.open()}>
+              新建金池
+            </Button>
+          </div>
+        </HoverCardContent>
+      </HoverCard>
+      {
+        edit.context
+      }
+    </div>
   )
 }
+
+export default CollectStar

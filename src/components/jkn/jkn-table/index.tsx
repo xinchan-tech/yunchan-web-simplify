@@ -1,4 +1,4 @@
-import { type ColumnDef, type ColumnSort, type OnChangeFn, type SortingState, type TableOptions, flexRender, getCoreRowModel, useReactTable } from "@tanstack/react-table"
+import { type ColumnDef, type ColumnSort, type Row, type SortingState, type TableOptions, flexRender, getCoreRowModel, useReactTable } from "@tanstack/react-table"
 import { useState } from "react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../ui/table"
 import JknIcon from "../jkn-icon"
@@ -8,7 +8,7 @@ export interface JknTableProps<TData extends Record<string, unknown> = Record<st
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
   rowKey?: string
-  onRowClick?: (row: TData) => void
+  onRowClick?: (data: TData, row: Row<TData>) => void
   onSortingChange?: (params: ColumnSort) => void
 }
 
@@ -18,6 +18,7 @@ const SortNone = () => <JknIcon name="ic_btn_nor" className="w-2 h-4" />
 
 const JknTable = <TData extends Record<string, unknown>, TValue>(props: JknTableProps<TData, TValue>) => {
   const [sorting, setSorting] = useState<SortingState>([])
+  const [rowSelection, setRowSelection] = useState({})
 
   const _onSortCHange: TableOptions<TData>['onSortingChange'] = (e) => {
     setSorting(e)
@@ -31,7 +32,8 @@ const JknTable = <TData extends Record<string, unknown>, TValue>(props: JknTable
     columns: props.columns,
     data: props.data,
     state: {
-      sorting
+      sorting,
+      rowSelection,
     },
     getRowId: (row) => row[props.rowKey ?? 'id'] as string,
     enableMultiSort: false,
@@ -39,6 +41,8 @@ const JknTable = <TData extends Record<string, unknown>, TValue>(props: JknTable
     sortDescFirst: true,
     onSortingChange: _onSortCHange,
     getCoreRowModel: getCoreRowModel(),
+    enableRowSelection: true,
+    onRowSelectionChange: setRowSelection,
   })
 
   return (
@@ -88,7 +92,7 @@ const JknTable = <TData extends Record<string, unknown>, TValue>(props: JknTable
               <TableRow
                 key={row.id}
                 data-state={row.getIsSelected() && "selected"}
-                onClick={() => props.onRowClick?.(row.original)}
+                onClick={() => props.onRowClick?.(row.original, row)}
                 className="bg-muted hover:bg-accent transition-all duration-200"
               >
                 {row.getVisibleCells().map((cell) => {

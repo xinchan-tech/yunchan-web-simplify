@@ -1,7 +1,6 @@
 import { type StockExtend, addStockCollectCate, getStockCollectCates, getStockCollects, removeStockCollect, removeStockCollectCate, updateStockCollectCate } from "@/api"
-import { Button, CapsuleTabs, Checkbox, FormControl, FormField, FormItem, FormLabel, Input, JknAlert, JknTable, type JknTableProps, Popover, PopoverContent, PopoverTrigger, useFormModal, useModal } from "@/components"
-import { useDomSize, useToast } from "@/hooks"
-import useZForm from "@/hooks/use-z-form"
+import { Button, CapsuleTabs, Checkbox, JknAlert, JknTable, type JknTableProps, Popover, PopoverContent, PopoverTrigger, useFormModal, useModal } from "@/components"
+import { useDomSize, useToast, useZForm } from "@/hooks"
 import { useCollectCates, useStock, useTime } from "@/store"
 import { numToFixed, priceToCnUnit } from "@/utils/price"
 import { cn } from "@/utils/style"
@@ -10,9 +9,9 @@ import { useMount, useRequest } from "ahooks"
 import to from "await-to-js"
 import Decimal from "decimal.js"
 import { useMemo, useState } from "react"
-import { useFormContext } from "react-hook-form"
 import { useImmer } from "use-immer"
-import { z } from "zod"
+import type { z } from "zod"
+import { GoldenPoolForm, poolSchema } from "./components/golden-pool-form"
 
 const baseExtends: StockExtend[] = ['total_share', 'basic_index', 'day_basic', 'alarm_ai', 'alarm_all', 'financials']
 type CollectCate = Awaited<ReturnType<typeof getStockCollectCates>>[0]
@@ -22,17 +21,15 @@ type DataType = {
   key: string
   code: string
   name: string
-  price: number
-  percent: number
-  turnover: number
-  marketValue: number
+  price?: number
+  percent?: number
+  turnover?: number
+  marketValue?: number
   dataIndex: string
-  pe: number
+  pe?: number
 }
 const GoldenPool = () => {
-
   const [size, ref] = useDomSize<HTMLDivElement>()
-  const time = useTime()
   const stock = useStock()
   const [check, setCheck] = useImmer<{ all: boolean, selected: string[] }>({
     all: false,
@@ -52,68 +49,41 @@ const GoldenPool = () => {
   })
 
   const collects = useRequest(getStockCollects, {
-    cacheKey: 'stockCollects',
-    manual: true
-  })
-
-  useMount(() => {
-    if (cates.collects?.[0].id) {
-      collects.run({
+    cacheKey: getStockCollects.cacheKey,
+    defaultParams: [
+      {
         extend: baseExtends,
-        cate_id: +cates.collects[0].id,
+        cate_id: 1,
         limit: 300
-      })
-    }
+      }
+    ],
   })
 
   const data = useMemo<DataType[]>(() => {
-    let trading = time.getTrading()
-
-    if (trading === 'close') {
-      trading = 'intraDay'
-    }
-
     const r: DataType[] = []
 
     if (!collects.data) return r
 
     for (let i = 0; i < collects.data.items.length; i++) {
       const c = collects.data.items[i]
-      const s = stock.getLastRecord(c.symbol)
+      const s = stock.getLastRecordByTrading(c.symbol, 'intraDay')
 
-      if (s) {
-        const marketValue = (c.extend?.total_share as number ?? 0) * s.close
-        const pe = new Decimal(marketValue).div(c.extend?.liabilities_and_equity as string ?? 0).times(c.extend?.total_share as number ?? 0)
-        r.push({
-          index: i + 1,
-          key: c.symbol,
-          code: c.symbol,
-          name: c.name,
-          price: s.close,
-          percent: s.percent,
-          turnover: s.turnover,
-          marketValue: marketValue,
-          dataIndex: c.extend?.basic_index as string ?? '-',
-          pe: pe.toNumber()
-        })
-      } else {
-        r.push({
-          index: i + 1,
-          key: c.symbol,
-          code: c.symbol,
-          name: c.name,
-          price: 0,
-          percent: 0,
-          turnover: 0,
-          marketValue: 0,
-          dataIndex: '-',
-          pe: 0
-        })
-      }
+      r.push({
+        index: i + 1,
+        key: c.symbol,
+        code: c.symbol,
+        name: c.name,
+        price: s?.close,
+        percent: s?.percent,
+        turnover: s?.turnover,
+        marketValue: s?.marketValue,
+        dataIndex: c.extend?.basic_index as string ?? '-',
+        pe: s?.pe
+      })
     }
 
     return r
-  }, [time, collects.data, stock])
+  }, [collects.data, stock])
 
   const onActiveStockChange = (v: string) => {
     setActiveStock(v)
@@ -359,10 +329,7 @@ interface GoldenPoolTableProps {
   onUpdate: () => void
 }
 
-const poolSchema = z.object({
-  id: z.string(),
-  name: z.string()
-})
+
 
 const GoldenPoolTable = (props: GoldenPoolTableProps) => {
   const columns: JknTableProps['columns'] = [
@@ -454,25 +421,6 @@ const GoldenPoolTable = (props: GoldenPoolTableProps) => {
 }
 
 
-const GoldenPoolForm = () => {
-  const form = useFormContext<z.infer<typeof poolSchema>>()
 
-  return (
-    <div className="p-4">
-      <FormField
-        control={form.control}
-        name="name"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>金池名称</FormLabel>
-            <FormControl>
-              <Input placeholder="请输入金池名称" {...field} value={field.value} />
-            </FormControl>
-          </FormItem>
-        )}
-      />
-    </div>
-  )
-}
 
 export default GoldenPool

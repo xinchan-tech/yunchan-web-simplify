@@ -7,9 +7,8 @@ import { useToken, useUser } from "@/store"
 import { useRequest } from "ahooks"
 import to from "await-to-js"
 import { z } from "zod"
-import useZForm from "@/hooks/use-z-form"
 import { Button, Form, FormControl, FormField, FormItem,  Input } from "@/components"
-import { useToast } from "@/hooks"
+import { useToast, useZForm } from "@/hooks"
 
 interface LoginFormProps {
   afterLogin?: () => void

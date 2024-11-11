@@ -1,3 +1,4 @@
+import { getStockCollectCates } from "@/api"
 import { create } from "zustand"
 import { createJSONStorage, persist } from "zustand/middleware"
 
@@ -32,6 +33,7 @@ interface CollectCateStore {
   collects: CollectCate[]
   setCollects: (goldenPool: CollectCate[]) => void
   removeCollect: (id: string) => void
+  refresh: () => Promise<void>
 }
 
 export const useCollectCates = create<CollectCateStore>()(
@@ -40,7 +42,10 @@ export const useCollectCates = create<CollectCateStore>()(
     setCollects: (collects) => set({ collects }),
     removeCollect: (id) => set((state) => ({
       collects: state.collects.filter(item => item.id !== id)
-    }))
+    })),
+    refresh: async () => {
+      await getStockCollectCates().then(r => set({ collects: r }))
+    }
   }), {
     name: 'collect-cate',
     storage: createJSONStorage(() => localStorage)

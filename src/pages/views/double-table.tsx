@@ -1,23 +1,29 @@
 import { getPlateList, getPlateStocks } from "@/api"
-import { Button, Checkbox, HoverCard, HoverCardContent, HoverCardTrigger, JknTable, type JknTableProps, NumSpan, Star, StockView } from "@/components"
-import { useStock } from "@/store"
-import { numToFixed, priceToCnUnit } from "@/utils/price"
-import { useRequest } from "ahooks"
+import { JknTable, type JknTableProps, NumSpan, ScrollArea } from "@/components"
+import { priceToCnUnit } from "@/utils/price"
+import { useRequest, useUpdateEffect } from "ahooks"
 import { useMemo, useState } from "react"
 import { useImmer } from "use-immer"
 import PlateStocks from "./components/plate-stocks"
 
+interface DoubleTableProps {
+  type: 1 | 2
+}
 
-const DoubleTable = () => {
+const DoubleTable = (props: DoubleTableProps) => {
   const [activePlate, setActivePlate] = useState<string>()
-  const stock = useStock()
   const plate = useRequest(getPlateList, {
     cacheKey: getPlateList.cacheKey,
+    defaultParams: [props.type],
     onSuccess: (data) => {
       setActivePlate(data[0].id)
-      plateStocks.run(data[0].id, ['basic_index', 'stock_before', 'stock_after', 'total_share', 'collect', 'financials'])
+      plateStocks.run(+data[0].id, ['basic_index', 'stock_before', 'stock_after', 'total_share', 'collect', 'financials'])
     }
   })
+
+  useUpdateEffect(() => {
+    plate.run(props.type)
+  }, [props.type])
 
   const plateStocks = useRequest(getPlateStocks, {
     manual: true
@@ -25,47 +31,19 @@ const DoubleTable = () => {
 
   const onClickPlate = (row: PlateDataType) => {
     setActivePlate(row.id)
-    plateStocks.run(row.id, ['basic_index', 'stock_before', 'stock_after', 'total_share', 'collect', 'financials'])
   }
 
-  const plateStocksData = useMemo(() => {
-    const r: TableDataType[] = []
-
-    if (!plateStocks.data) return r
-
-    for (const { stock: _stock, name, symbol, extend } of plateStocks.data) {
-      const lastData = stock.getLastRecordByTrading(symbol, 'intraDay')
-      const beforeData = stock.getLastRecordByTrading(symbol, 'preMarket')
-      const afterData = stock.getLastRecordByTrading(symbol, 'afterHours')
-
-      if (!lastData) continue
-      r.push({
-        code: symbol,
-        name: name,
-        price: lastData.close,
-        percent: lastData.percent,
-        total: lastData.marketValue,
-        amount: lastData.turnover,
-        industry: lastData.industry,
-        prePercent: (beforeData?.percent ?? 0) * 100,
-        afterPercent: (afterData?.percent ?? 0) * 100,
-        turnoverRate: lastData.turnOverRate * 100,
-        pe: lastData.pe,
-        pb: lastData.pb,
-        collect: extend.collect
-      })
-    }
-
-    return r
-  }, [plateStocks.data, stock])
-
   return (
-    <div className="flex">
+    <div className="flex overflow-hidden h-full">
       <div className="w-[30%]">
-        <PlateList data={plate.data ?? []} onRowClick={onClickPlate} />
+        <ScrollArea className="h-full">
+          <PlateList data={plate.data ?? []} onRowClick={onClickPlate} />
+        </ScrollArea>
       </div>
       <div className="w-[70%]">
-        <PlateStocks></PlateStocks>
+        <ScrollArea className="h-full">
+          <PlateStocks plateId={activePlate ? +activePlate : undefined} />
+        </ScrollArea>
       </div>
     </div>
   )
@@ -79,12 +57,12 @@ type PlateDataType = {
   name: string
 }
 
-interface DoubleTableProps {
+interface PlateListProps {
   data: PlateDataType[]
   onRowClick: (row: PlateDataType) => void
 }
 
-const PlateList = (props: DoubleTableProps) => {
+const PlateList = (props: PlateListProps) => {
   const [sort, setSort] = useImmer<{ type?: string, order?: 'asc' | 'desc' }>({
     type: undefined,
     order: undefined

@@ -34,7 +34,7 @@ const PlateStocks = (props: PlateStocksProps) => {
     cacheKey: getPlateStocks.cacheKey,
     manual: true,
   })
-  
+  const trading = useTime(s => s.getTrading())
   const stock = useStock()
   const collects = useCollectCates(s => s.collects)
 
@@ -49,7 +49,7 @@ const PlateStocks = (props: PlateStocksProps) => {
     if (!plateStocks.data) return r
 
     for (const { stock: _stock, name, symbol, extend } of plateStocks.data) {
-      const lastData = stock.getLastRecordByTrading(symbol, 'intraDay')
+      const lastData = stock.getLastRecordByTrading(symbol, trading === 'close' ? 'intraDay' : trading)
       r.push({
         code: symbol,
         name: name,
@@ -66,7 +66,7 @@ const PlateStocks = (props: PlateStocksProps) => {
 
     return r
 
-  }, [plateStocks.data, stock])
+  }, [plateStocks.data, stock, trading])
 
   const { toast } = useToast()
 
@@ -118,78 +118,7 @@ const PlateStocks = (props: PlateStocksProps) => {
       header: '总市值', accessorKey: 'total', meta: { align: 'right', },
       cell: ({ row }) => priceToCnUnit(row.getValue<number>('total'))
     },
-    {
-      header: '换手率', accessorKey: 'turnoverRate', meta: { align: 'right' },
-      cell: ({ row }) => `${numToFixed(row.getValue<number>('turnoverRate'), 2)}%`
-    },
-    {
-      header: '市盈率', enableSorting: false, accessorKey: 'pe', meta: { align: 'right' },
-      cell: ({ row }) => `${numToFixed(row.getValue<number>('pe'), 2)}`
-    },
-    {
-      header: '市净率', enableSorting: false, accessorKey: 'pb', meta: { align: 'right' },
-      cell: ({ row }) => `${numToFixed(row.getValue<number>('pb'), 2)}`
-    },
-    {
-      header: '+股票金池', enableSorting: false, accessorKey: 'collect', meta: { width: 60, align: 'center' },
-      cell: ({ row }) => (
-        <div>
-          <CollectStar
-            onUpdate={checked => plateStocks.mutate(s => {
-              const r = s?.find(item => item.symbol === row.original.code)
-              if (r) {
-                r.extend.collect = checked ? 1 : 0
-              }
-              return s ? [...s] : undefined
-            })}
-            checked={row.getValue<boolean>('collect')}
-            code={row.original.code} />
-        </div>
-      )
-    },
-    {
-      header: '+AI报警', enableSorting: false, accessorKey: 't9', meta: { width: 50, align: 'center' },
-      cell: ({ row }) => <div><JknIcon name="ic_add" /></div>
-    },
-    {
-      header: ({ table }) => (
-        <div>
-          <Popover open={table.getIsSomeRowsSelected() || table.getIsAllRowsSelected()}>
-            <PopoverAnchor asChild>
-              <Checkbox
-                checked={table.getIsSomeRowsSelected() || table.getIsAllRowsSelected()}
-                onCheckedChange={e => table.getToggleAllRowsSelectedHandler()({ target: e })}
-              />
-            </PopoverAnchor>
-            <PopoverContent className="w-60" align="start" side="left">
-              <div className="rounded">
-                <div className="bg-background px-16 py-2">批量操作 {table.getSelectedRowModel().rows.length} 项</div>
-                <div className="text-center px-12 py-4 space-y-4">
-                  {
-                    collects.map((cate) => (
-                      <div key={cate.id} className="flex space-x-2 items-center">
-                        <div>{cate.name}</div>
-                        <div onClick={() => onCreateStockToCollects(cate.id, table.getSelectedRowModel().rows.map(item => item.original.code))} onKeyDown={() => { }}>
-                          <Button className="text-tertiary" size="mini" variant="outline">添加</Button>
-                        </div>
-                      </div>
-                    ))
-                  }
-                </div>
-              </div>
-            </PopoverContent>
-          </Popover>
-        </div>
-      ),
-      accessorKey: 'check',
-      id: 'select',
-      enableSorting: false,
-      meta: { align: 'center', width: 60 },
-      cell: ({ row }) => (
-        <Checkbox checked={row.getIsSelected()} onCheckedChange={(e) => row.getToggleSelectedHandler()({ target: e })} />
-      )
-    }
-  ], [plateStocks.mutate, collects, onCreateStockToCollects])
+  ], [])
   return (
     <div>
       <JknTable

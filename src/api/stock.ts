@@ -371,15 +371,10 @@ type GetStockCollectsResult = {
  */
 export const getStockCollects = async (params: GetStockCollectsParams) => {
   const r = await request.get<GetStockCollectsResult>('/collects', { params }).then(r => r.data)
-  const stock = useStock.getState()
-  for (const s of r.items) {
-    if (StockRecord.isValid(s.stock)) {
-      stock.insertRaw(s.symbol, s.stock, s.extend)
-    }
-  }
-
+  useStock.getState().insertRawByRecords(r.items)
   return r
 }
+getStockCollects.cacheKey = 'getStockCollects'
 
 type GetStockCollectCatesResult = {
   /**
@@ -418,7 +413,6 @@ export const getStockCollectCates = (symbol?: string) => {
 }
 getStockCollectCates.cacheKey = '/collect/cates'
 
-
 /**
  * 修改金池分类
  */
@@ -453,6 +447,18 @@ export const addStockCollect = (params: { symbols: string[]; cate_ids: number[] 
     form.append('cate_ids[]', c.toString())
   }
   return request.post('/collect/save', new URLSearchParams(form)).then(r => r.data)
+}
+
+/**
+ * 单个股票加入多个金池
+ */
+export const addStockCollectBatch = (params: { symbol: string; cate_ids: number[] }) => {
+  const form = new URLSearchParams()
+
+  for (const c of params.cate_ids) {
+    form.append('cate_ids[]', c.toString())
+  }
+  return request.post(`/collect/save/${params.symbol}`, new URLSearchParams(form)).then(r => r.data)
 }
 
 /**
@@ -496,15 +502,13 @@ export type UsStockColumn =
   | 'pe_ttm'
   | 'pb'
 
-export type UsStockType = 'ETF' | 'EXCLUDE_ETF' | 'IXIC' | 'SPX' | 'DJI' | 'ETF_EXCLUDE_INDEX'
-
 type GetUsStocksParams = {
   column: UsStockColumn
   order: 'asc' | 'desc'
   limit: number
   page: number
   extend?: StockExtend[]
-  type?: UsStockType
+  type?: string
 }
 
 type GetUsStocksResult = {
@@ -530,18 +534,7 @@ type GetUsStocksResult = {
  */
 export const getUsStocks = async (params: GetUsStocksParams) => {
   const r = await request.get<GetUsStocksResult>('/stock/cutom/getUsStocks', { params: params }).then(r => r.data)
-  const stock = useStock.getState()
-
-  for (const s of r.items) {
-    stock.insertRaw(s.symbol, s.stock, s.extend)
-
-    if (s.extend.stock_after && s.extend.stock_after.length > 0) {
-      stock.insertRaw(s.symbol, s.extend.stock_after)
-    }
-    if (s.extend.stock_before && s.extend.stock_before.length > 0) {
-      stock.insertRaw(s.symbol, s.extend.stock_before)
-    }
-  }
+  useStock.getState().insertRawByRecords(r.items)
 
   return r
 }
@@ -569,6 +562,7 @@ type GetPlateStocksResult = {
   market_cap: string
   ep: number
   change_perc: number
+  collect: number
   /**
    * 获取类型
    */
@@ -578,23 +572,48 @@ type GetPlateStocksResult = {
 
 /**
  * 成分股板块
- * 
+ *
  */
-export const getPlateStocks = async (id: string, extend: StockExtend[]) => {
-  const r = await request.get<GetPlateStocksResult[]>('/plate/stocks', { params: { plate_id: id , extend} }).then(r => r.data)
-  const stock = useStock.getState()
-
-  for (const s of r) {
-    stock.insertRaw(s.symbol, s.stock, s.extend)
-
-    if (s.extend.stock_after && s.extend.stock_after.length > 0) {
-      stock.insertRaw(s.symbol, s.extend.stock_after)
-    }
-    if (s.extend.stock_before && s.extend.stock_before.length > 0) {
-      stock.insertRaw(s.symbol, s.extend.stock_before)
-    }
-  }
-
+export const getPlateStocks = async (id: number, extend: StockExtend[]) => {
+  const r = await request
+    .get<GetPlateStocksResult[]>('/plate/stocks', { params: { plate_id: id, extend } })
+    .then(r => r.data)
+  useStock.getState().insertRawByRecords(r)
   return r
 }
 getPlateStocks.cacheKey = '/plate/stocks'
+
+type GetIndexRecommendsResult = {
+  extend: StockExtendResultMap
+  name: string
+  symbol: string
+  stock: StockRawRecord
+}
+
+/**
+ * 精品推荐集合
+ */
+export const getIndexRecommends = async (type: string, extend: StockExtend[]) => {
+  const r = await request
+    .get<GetIndexRecommendsResult[]>('/index/recommends', { params: { type, extend } })
+    .then(r => r.data)
+  useStock.getState().insertRawByRecords(r)
+
+  return r
+}
+
+type GetIndexGapAmplitudeResult = GetIndexRecommendsResult
+
+/**
+ * 跳空涨跌
+ */
+export const getIndexGapAmplitude = (extend: StockExtend[]) => {
+  return request.get<GetIndexGapAmplitudeResult[]>('/index/gapAmplitude', { params: { extend } }).then(r => r.data)
+}
+
+/**
+ * 名师推荐列表
+ */
+export const getRecommendIndex = (params: { type: 0 | 1 | 2; extend: StockExtend[] }) => {
+  return request.get<void>('/recommend/index', { params }).then(r => r.data)
+}
