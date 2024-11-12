@@ -617,3 +617,28 @@ export const getIndexGapAmplitude = (extend: StockExtend[]) => {
 export const getRecommendIndex = (params: { type: 0 | 1 | 2; extend: StockExtend[] }) => {
   return request.get<void>('/recommend/index', { params }).then(r => r.data)
 }
+
+type GetStockCategoryResult = Record<string, StockCategory>
+
+export type StockCategory = {
+  from_datas: never[]
+  authorized: 0 | 1
+  children: Record<string, StockCategory>
+  datas: string
+  id: string
+  /**
+   * 1 为 hot
+   */
+  is_hot: string
+  key: string
+  name: string
+  pid: string
+}
+
+/**
+ * 获取选股分类所有数据
+ */
+export const getStockCategoryData = () => {
+  return request.get<GetStockCategoryResult>('/stock/category/data').then(r => r.data)
+}
+getStockCategoryData.cacheKey = '/stock/category/data'

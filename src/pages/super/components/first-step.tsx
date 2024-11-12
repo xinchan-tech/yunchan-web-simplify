@@ -1,12 +1,14 @@
 import { getPlateList, getPlateStocks, getRecommendIndex, getStockCollects, type StockExtend } from "@/api"
-import { Checkbox, JknIcon, JknTable, NumSpan, ScrollArea, StockView, type JknTableProps } from "@/components"
-import DoubleTable from "./double-table"
-import { useCollectCates, useStock, useTime } from "@/store"
+import { Checkbox, JknIcon, JknTable, NumSpan, ScrollArea, StockView, ToggleGroup, ToggleGroupItem, type JknTableProps } from "@/components"
+import { useCollectCates, useStock } from "@/store"
 import { numToFixed, priceToCnUnit } from "@/utils/price"
 import { cn } from "@/utils/style"
-import { useMount, useRequest, useUpdateEffect } from "ahooks"
-import { useMemo, useState } from "react"
+import { useMount, useUpdateEffect } from "ahooks"
+import { CSSProperties, useContext, useMemo, useState } from "react"
 import { useImmer } from "use-immer"
+import { useQuery } from '@tanstack/react-query'
+import type { Row } from "@tanstack/react-table"
+import { SuperStockContext } from "../ctx"
 
 const baseExtends: StockExtend[] = ['total_share', 'basic_index', 'day_basic', 'alarm_ai', 'alarm_all', 'financials']
 
@@ -114,24 +116,14 @@ interface GoldenPoolListProps {
   cateId: number
 }
 const GoldenPoolList = (props: GoldenPoolListProps) => {
-  const query = useRequest(getStockCollects, {
-    cacheKey: getStockCollects.cacheKey,
-    defaultParams: [{
-      extend: baseExtends,
-      cate_id: props.cateId,
-      limit: 300
-    }]
+  const query = useQuery({
+    queryKey: [getStockCollects.cacheKey, props.cateId],
+    queryFn: () => getStockCollects({ cate_id: props.cateId, extend: baseExtends, limit: 300 }),
+    enabled: !!props.cateId
   })
 
   const stock = useStock()
 
-  useUpdateEffect(() => {
-    query.run({
-      extend: baseExtends,
-      cate_id: props.cateId,
-      limit: 300
-    })
-  }, [props.cateId])
 
   const data = useMemo(() => {
     if (!query.data) return []
@@ -210,36 +202,36 @@ const GoldenPoolList = (props: GoldenPoolListProps) => {
 
 
 const RecommendIndex = () => {
-  const query = useRequest(getRecommendIndex, {
-    defaultParams: [{
-      type: 2,
-      extend: ['total_share']
-    }]
-  })
-
+  const ctx = useContext(SuperStockContext)
+  const data = ((ctx.data?.stock_range?.children?.t_recommend.from_datas) ?? []) as unknown as { name: string; value: string }[]
   return (
-    <div>123</div>
+    <ToggleGroup type="multiple" className="grid grid-cols-3 gap-4 p-4">
+      {data?.map((child) => (
+        child.name !== '' ? (
+          <ToggleGroupItem className="w-full h-full" key={child.value} value={child.value}>
+            {child.name}
+          </ToggleGroupItem>
+        ) : null
+      ))}
+    </ToggleGroup>
   )
 }
 
 //板块组件
-const Plate = (props: {type: 1 | 2}) => {
+const Plate = (props: { type: 1 | 2 }) => {
   const [activePlate, setActivePlate] = useState<string>()
-  const plate = useRequest(getPlateList, {
-    defaultParams: [props.type],
-    onSuccess: (data) => {
-      setActivePlate(data[0].id)
-      plateStocks.run(+data[0].id, ['basic_index', 'stock_before', 'stock_after', 'total_share', 'collect', 'financials'])
-    }
+
+  const plate = useQuery({
+    queryKey: [getPlateList.cacheKey, props.type],
+    queryFn: () => getPlateList(props.type),
+    placeholderData: [],
   })
 
   useUpdateEffect(() => {
-    plate.run(props.type)
-  }, [props.type])
-
-  const plateStocks = useRequest(getPlateStocks, {
-    manual: true
-  })
+    if (plate.data && plate.data.length > 0) {
+      setActivePlate(plate.data[0].id)
+    }
+  }, [plate.data])
 
   const onClickPlate = (row: PlateDataType) => {
     setActivePlate(row.id)
@@ -247,12 +239,12 @@ const Plate = (props: {type: 1 | 2}) => {
 
   return (
     <div className="flex overflow-hidden h-full">
-      <div className="w-[30%]">
+      <div className="w-[40%]">
         <ScrollArea className="h-full">
           <PlateList data={plate.data ?? []} onRowClick={onClickPlate} />
         </ScrollArea>
       </div>
-      <div className="w-[70%]">
+      <div className="w-[60%]">
         <ScrollArea className="h-full">
           <PlateStocks plateId={activePlate ? +activePlate : undefined} />
         </ScrollArea>
@@ -296,8 +288,25 @@ const PlateList = (props: PlateListProps) => {
 
   }, [props.data, sort])
 
+  const _onRowClick = (data: PlateDataType, row: Row<PlateDataType>) => {
+    props.onRowClick(data)
+    row.toggleSelected()
+  }
+
   const column = useMemo<JknTableProps<PlateDataType>['columns']>(() => [
-    { header: '序号', enableSorting: false, accessorKey: 'index', meta: { align: 'center', width: 60 }, cell: ({ row }) => row.index + 1 },
+    {
+      header: () => <JknIcon name="checkbox_mult_nor_dis" />,
+      enableSorting: false,
+      accessorKey: 'select',
+      id: 'select',
+      meta: { align: 'center', width: 40 },
+      cell: ({ row }) => (
+        <div className="w-full flex justify-center">
+          <Checkbox checked={row.getIsSelected()} onCheckedChange={(e) => row.getToggleSelectedHandler()({ target: e })} />
+        </div>
+      )
+    },
+    { header: '序号', enableSorting: false, accessorKey: 'index', meta: { align: 'center', width: 40 }, cell: ({ row }) => row.index + 1 },
     { header: '行业', enableSorting: false, accessorKey: 'name' },
     {
       header: '涨跌幅', accessorKey: 'change',
@@ -311,7 +320,7 @@ const PlateList = (props: PlateListProps) => {
     }
   ], [])
   return (
-    <JknTable onRowClick={props.onRowClick} columns={column} data={data} onSortingChange={(s) => setSort(d => { d.type = s.id; d.order = s.desc ? 'desc' : 'asc' })} />
+    <JknTable onRowClick={_onRowClick} columns={column} data={data} onSortingChange={(s) => setSort(d => { d.type = s.id; d.order = s.desc ? 'desc' : 'asc' })} />
   )
 }
 
@@ -338,16 +347,14 @@ export type PlateStockTableDataType = {
   collect: 1 | 0
 }
 const PlateStocks = (props: PlateStocksProps) => {
-  const plateStocks = useRequest(getPlateStocks, {
-    cacheKey: getPlateStocks.cacheKey,
-    manual: true,
+  console.log(props.plateId)
+  const plateStocks = useQuery({
+    queryKey: [getPlateStocks.cacheKey, props.plateId],
+    queryFn: () => getPlateStocks(props.plateId!, ['basic_index', 'stock_before', 'stock_after', 'total_share']),
+    enabled: !!props.plateId
   })
-  const stock = useStock()
 
-  useUpdateEffect(() => {
-    if (!props.plateId) return
-    plateStocks.run(props.plateId, ['alarm_ai', 'alarm_all', 'collect', 'day_basic', 'total_share', 'financials'])
-  }, [props.plateId])
+  const stock = useStock()
 
   const data = useMemo(() => {
     const r: PlateStockTableDataType[] = []

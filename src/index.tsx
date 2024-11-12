@@ -6,6 +6,7 @@ import utc from 'dayjs/plugin/utc'
 import tz from 'dayjs/plugin/timezone'
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter'
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore'
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 
 dayjs.extend(utc)
 dayjs.extend(tz)
@@ -13,10 +14,14 @@ dayjs.extend(isSameOrAfter)
 dayjs.extend(isSameOrBefore)
 dayjs.tz.setDefault('America/New_York')
 
+const queryClient = new QueryClient()
+
 const rootEl = document.getElementById('root')
 if (rootEl) {
   const root = ReactDOM.createRoot(rootEl)
   root.render(
-    <App />
+    <QueryClientProvider client={queryClient}>
+      <App />
+    </QueryClientProvider>
   )
 }

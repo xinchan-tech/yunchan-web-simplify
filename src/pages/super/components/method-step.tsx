@@ -1,0 +1,74 @@
+import { type CSSProperties, useContext, useEffect, useState } from "react"
+import { SuperStockContext } from "../ctx"
+import type { StockCategory } from "@/api"
+import { cn } from "@/utils/style"
+import { JknIcon, ToggleGroup, ToggleGroupItem } from "@/components"
+
+const MethodStep = () => {
+  const ctx = useContext(SuperStockContext)
+  const [method, setMethod] = useState<StockCategory>()
+  const data = (ctx.data?.technology?.children?.method.children) as unknown as StockCategory[]
+
+  useEffect(() => {
+    if (data && data.length > 0) {
+      setMethod(data[0])
+    }
+  }, [data])
+
+  const children = method?.children as unknown as StockCategory[]
+
+  return (
+    <div className="min-h-64 flex  border-0 border-b border-solid border-background items-stretch">
+      <div className="w-36 px-4 flex items-center flex-shrink-0 border border-t-0 border-solid border-background">
+        第三步：选股方式
+      </div>
+      <div className="flex-1 flex flex-col">
+        <div className="py-3 ml-3">
+          {
+            data?.map((item) => (
+              <div
+                key={item.id}
+                className={cn(
+                  'h-10 leading-10 w-40 mb-2 text-center rounded-sm text-secondary transition-all cursor-pointer bg-accent',
+                  method?.id === item.id && 'bg-primary text-foreground'
+                )}
+                onClick={() => setMethod(item)}
+                onKeyDown={() => { }}
+              >
+                {item.name}
+              </div>
+            ))
+          }
+        </div>
+        <div className="py-3 border-0 border-t border-solid border-background">
+          {
+            children?.map((item) => (
+              <div key={item.id} className="flex mb-4">
+                <div
+                  className="flex-shrink-0 px-4 flex items-center text-sm"
+                  style={{ color: item.name === '多头策略' ? 'hsl(var(--stock-up-color))' : 'hsl(var(--stock-down-color))' }}
+                >
+                  <JknIcon name={item.name === '多头策略' ? 'ic_price_up_green' : 'ic_price_down_red'} />
+                  {item.name}
+                </div>
+                <ToggleGroup style={{
+                  '--toggle-active-bg': item.name === '多头策略' ? 'hsl(var(--stock-up-color))' : 'hsl(var(--stock-down-color))',
+                } as CSSProperties} type="multiple" className="flex-1 flex">
+                  {(item.children as unknown as StockCategory[])?.map((child) => (
+                    child.name !== '' ? (
+                      <ToggleGroupItem className="w-36" key={child.id} value={child.id}>
+                        {child.name}
+                      </ToggleGroupItem>
+                    ) : null
+                  ))}
+                </ToggleGroup>
+              </div>
+            ))
+          }
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export default MethodStep
