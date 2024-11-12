@@ -7,7 +7,7 @@ interface StockViewProps {
 const StockView = ({ code, name }: StockViewProps) => {
   return (
     <div className="overflow-hidden">
-      <div className="text-secondary">{code}</div>
+      <div className="text-foreground">{code}</div>
       <div className="text-tertiary text-xs text-ellipsis overflow-hidden whitespace-nowrap w-full">{name}</div>
     </div>
   )
