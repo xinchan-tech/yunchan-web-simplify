@@ -1,95 +1,44 @@
-import { type StockExtend, addStockCollect, getIndexGapAmplitude, getIndexRecommends, getUsStocks } from "@/api"
-import { Button, Checkbox, CollectStar, JknAlert, JknIcon, JknTable, type JknTableProps, NumSpan, Popover, PopoverAnchor, PopoverContent, ScrollArea, StockView } from "@/components"
+import { addStockCollect, type getStockSelection } from "@/api"
+import { type JknTableProps, StockView, NumSpan, Checkbox, CollectStar, JknIcon, Button, JknAlert, JknTable } from "@/components"
 import { useToast } from "@/hooks"
-import { useCollectCates, useStock } from "@/store"
+import { StockRecord, useCollectCates } from "@/store"
 import { numToFixed, priceToCnUnit } from "@/utils/price"
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { Popover, PopoverAnchor, PopoverContent } from "@radix-ui/react-popover"
 import to from "await-to-js"
 import { useMemo } from "react"
 
-interface SingleTableProps {
-  type?: string
-}
-
 type TableDataType = {
+  index: number
   code: string
   name: string
+  stock_cycle: number
+  indicator_name: string
   price: number
-  // 涨跌幅
   percent: number
-  // 成交额
-  amount: number
-  // 总市值
   total: number
-  // 所属行业
+  amount: number
   industry: string
-  // 盘前涨跌幅
   prePercent: number
-  // 盘后涨跌幅
   afterPercent: number
-  // 换手率
-  turnoverRate: number
-  // 市盈率
-  pe: number
-  // 市净率
-  pb: number
   collect: 1 | 0
 }
-//单表格
-const SingleTable = (props: SingleTableProps) => {
-  const QueryFn = () => {
-    const extend: StockExtend[] = ['basic_index', 'stock_before', 'stock_after', 'total_share', 'collect', 'financials']
-    if (!props.type || ['all', 'ixic', 'spx', 'dji', 'etf', 'china'].includes(props.type)) {
-      return getUsStocks({ type: props.type === 'all' ? undefined : props.type, column: 'total_mv', limit: 50, page: 1, order: 'desc', extend }).then(r => r.items)
-    }
 
-    if (['yesterday_bear', 'yesterday_bull', 'short_amp_up', 'short_amp_d', 'release'].includes(props.type)) {
-      return getIndexRecommends(props.type, extend)
-    }
-
-    if (props.type === 'gap') {
-      return getIndexGapAmplitude(extend)
-    }
-
-    return getUsStocks({ type: props.type, column: 'total_mv', limit: 50, page: 1, order: 'desc', extend }).then(r => r.items)
-  }
-
-  const queryClient = useQueryClient()
-  const query = useQuery({
-    queryKey: ['stock-table-view', props.type],
-    queryFn: () => QueryFn()
-  })
-
-  const updateCollectMutation = useMutation<void, void, { code: string, checked: boolean }>({
-    mutationFn: () => Promise.resolve(),
-    onMutate: async (f) => {
-      queryClient.setQueryData(['stock-table-view', props.type], (s: typeof query.data) => {
-        const v = s?.find(item => item.symbol === f.code)
-        if (v) {
-          v.extend.collect = f.checked ? 1 : 0
-        }
-
-        return s ? [...s] : undefined
-      })
-    }
-    
-  })
-
-  const stock = useStock()
-
-  const data = (() => {
-  
+interface StockTableProps {
+  data: Awaited<ReturnType<typeof getStockSelection>>
+  onUpdate?: () => void
+}
+const StockTable = (props: StockTableProps) => {
+  const data = useMemo(() => {
     const r: TableDataType[] = []
 
-    if (!query.data) return []
+    let index = 0
+    for (const { stock: _stock, name, symbol, stock_cycle, indicator_name, extend } of props.data) {
+      const lastData = new StockRecord(_stock, extend)
+      const beforeData = StockRecord.isValid(extend?.stock_before) ? new StockRecord(extend.stock_before) : {} as StockRecord
+      const afterData = StockRecord.isValid(extend?.stock_after) ? new StockRecord(extend.stock_after) : {} as StockRecord
 
-    for (const { stock: _stock, name, symbol, extend } of query.data) {
-      const lastData = stock.getLastRecordByTrading(symbol, 'intraDay')
-      const beforeData = stock.getLastRecordByTrading(symbol, 'preMarket')
-      const afterData = stock.getLastRecordByTrading(symbol, 'afterHours')
-
-      if (!lastData) continue
       r.push({
+        index: index++,
         code: symbol,
         name: name,
         price: lastData.close,
@@ -99,16 +48,16 @@ const SingleTable = (props: SingleTableProps) => {
         industry: lastData.industry,
         prePercent: (beforeData?.percent ?? 0) * 100,
         afterPercent: (afterData?.percent ?? 0) * 100,
-        turnoverRate: lastData.turnOverRate * 100,
-        pe: lastData.pe,
-        pb: lastData.pb,
-        collect: extend.collect
+        collect: extend.collect,
+        stock_cycle,
+        indicator_name
       })
     }
 
+
     return r
 
-  })()
+  }, [props.data])
 
   const onSortChange: JknTableProps<TableDataType>['onSortingChange'] = (e) => {
     // const columnMap: Record<string, string> = {
@@ -129,31 +78,40 @@ const SingleTable = (props: SingleTableProps) => {
 
 
   const columns: JknTableProps<TableDataType>['columns'] = useMemo(() => ([
-    { header: '序号', enableSorting: false, accessorKey: 'index', meta: { align: 'center', width: 60, }, cell: ({ row }) => row.index + 1 },
+    { header: '序号', enableSorting: false, accessorKey: 'index', meta: { align: 'center', width: 40 }, cell: ({ row }) => row.index + 1 },
     {
       header: '名称代码', accessorKey: 'name', meta: { align: 'left', width: 120 },
       cell: ({ row }) => (
         <StockView name={row.getValue('name')} code={row.original.code as string} />
       )
+    }, {
+      header: '周期', accessorKey: 'stock_cycle', meta: { align: 'right', width: 40},
+      cell: ({ row }) => `${row.getValue('stock_cycle')}分`
+    }, {
+      header: '信号类型', enableSorting: false, accessorKey: 'indicator_name', meta: { align: 'center', width: 60 },
+      cell: ({ row }) => row.getValue('indicator_name')
+    }, {
+      header: '底部类型', accessorKey: 'price', meta: { align: 'center', width: 60},
+      cell: ({ row }) => '-'
     },
     {
-      header: '现价', accessorKey: 'price', meta: { align: 'right', width: 120 },
+      header: '现价', accessorKey: 'price', meta: { align: 'right', width: 80 },
       cell: ({ row }) => (
         <NumSpan value={numToFixed(row.getValue<number>('price')) ?? 0} isPositive={row.getValue<number>('percent') >= 0} />
       )
     },
     {
-      header: '涨跌幅', accessorKey: 'percent', meta: { align: 'right', width: 120 },
+      header: '涨跌幅', accessorKey: 'percent', meta: { align: 'right', width: 90 },
       cell: ({ row }) => (
         <NumSpan percent block decimal={2} value={row.getValue<number>('percent') * 100} isPositive={row.getValue<number>('percent') >= 0} symbol />
       )
     },
     {
-      header: '成交额', accessorKey: 'amount', meta: { align: 'right', width: 120 },
+      header: '成交额', accessorKey: 'amount', meta: { align: 'right', width: 100 },
       cell: ({ row }) => priceToCnUnit(row.getValue<number>('amount'))
     },
     {
-      header: '总市值', accessorKey: 'total', meta: { align: 'right', width: 120 },
+      header: '总市值', accessorKey: 'total', meta: { align: 'right', width: 100 },
       cell: ({ row }) => priceToCnUnit(row.getValue<number>('total'))
     },
     {
@@ -172,30 +130,11 @@ const SingleTable = (props: SingleTableProps) => {
       )
     },
     {
-      header: '换手率', accessorKey: 'turnoverRate', meta: { width: '15%', align: 'right' },
-      cell: ({ row }) => `${numToFixed(row.getValue<number>('turnoverRate'), 2)}%`
-    },
-    {
-      header: '市盈率', enableSorting: false, accessorKey: 'pe', meta: { width: '15%', align: 'right' },
-      cell: ({ row }) => `${numToFixed(row.getValue<number>('pe'), 2) ?? '-'}`
-    },
-    {
-      header: '市净率', enableSorting: false, accessorKey: 'pb', meta: { width: '15%', align: 'right' },
-      cell: ({ row }) => `${numToFixed(row.getValue<number>('pb'), 2) ?? '-'}`
-    },
-    {
       header: '+股票金池', enableSorting: false, accessorKey: 'collect', meta: { width: 60, align: 'center' },
       cell: ({ row }) => (
         <div>
           <CollectStar
-            onUpdate={(checked) => updateCollectMutation.mutate({ code: row.original.code, checked })}
-            // onUpdate={checked => query.mutate(s => {
-            //   const r = s?.find(item => item.symbol === row.original.code)
-            //   if (r) {
-            //     r.extend.collect = checked ? 1 : 0
-            //   }
-            //   return s ? [...s] : undefined
-            // })}
+            onUpdate={props.onUpdate}
             checked={row.getValue<boolean>('collect')}
             code={row.original.code} />
         </div>
@@ -238,12 +177,12 @@ const SingleTable = (props: SingleTableProps) => {
       accessorKey: 'check',
       id: 'select',
       enableSorting: false,
-      meta: { align: 'center', width: 60 },
+      meta: { align: 'center', width: 40 },
       cell: ({ row }) => (
         <Checkbox checked={row.getIsSelected()} onCheckedChange={(e) => row.getToggleSelectedHandler()({ target: e })} />
       )
     }
-  ]), [updateCollectMutation.mutate])
+  ]), [props.onUpdate])
 
   const collects = useCollectCates(s => s.collects)
   const { toast } = useToast()
@@ -260,18 +199,17 @@ const SingleTable = (props: SingleTableProps) => {
           return false
         }
 
-        query.refetch()
+        props.onUpdate?.()
       }
     })
   }
 
 
   return (
-    <ScrollArea className="h-[calc(100%-32px)]">
-      <JknTable loading={query.isLoading} rowKey="code" onSortingChange={onSortChange} columns={columns} data={data}>
-      </JknTable>
-    </ScrollArea>
+    <JknTable rowKey="index" onSortingChange={onSortChange} columns={columns} data={data}>
+    </JknTable>
   )
 }
 
-export default SingleTable
+
+export default StockTable

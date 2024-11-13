@@ -1,11 +1,11 @@
 import { addStockCollect, getPlateStocks } from "@/api"
 import { Button, Checkbox, CollectStar, JknAlert, JknIcon, JknTable, NumSpan, Popover, PopoverAnchor, PopoverContent, StockView, type JknTableProps } from "@/components"
 import { useToast } from "@/hooks"
-import { useCollectCates, useStock, useTime } from "@/store"
+import { useCollectCates, useStock } from "@/store"
 import { numToFixed, priceToCnUnit } from "@/utils/price"
-import { useRequest, useUpdateEffect } from "ahooks"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import to from "await-to-js"
-import { useCallback, useMemo } from "react"
+import { useMemo } from "react"
 
 interface PlateStocksProps {
   plateId?: number
@@ -30,20 +30,21 @@ export type PlateStockTableDataType = {
   collect: 1 | 0
 }
 const PlateStocks = (props: PlateStocksProps) => {
-  const plateStocks = useRequest(getPlateStocks, {
-    cacheKey: getPlateStocks.cacheKey,
-    manual: true,
+  const plateStocks = useQuery({
+    queryKey: [getPlateStocks.cacheKey, props.plateId],
+    queryFn: () => getPlateStocks(+props.plateId!, ['basic_index', 'stock_before', 'stock_after', 'total_share', 'collect', 'financials']),
+    enabled: !!props.plateId
   })
-  
+
   const stock = useStock()
   const collects = useCollectCates(s => s.collects)
 
-  useUpdateEffect(() => {
-    if (!props.plateId) return
-    plateStocks.run(props.plateId, ['alarm_ai', 'alarm_all', 'collect', 'day_basic', 'total_share', 'financials'])
-  }, [props.plateId])
+  // useUpdateEffect(() => {
+  //   if (!props.plateId) return
+  //   plateStocks.run(props.plateId, ['alarm_ai', 'alarm_all', 'collect', 'day_basic', 'total_share', 'financials'])
+  // }, [props.plateId])
 
-  const data = useMemo(() => {
+  const data = (() => {
     const r: PlateStockTableDataType[] = []
 
     if (!plateStocks.data) return r
@@ -66,11 +67,28 @@ const PlateStocks = (props: PlateStocksProps) => {
 
     return r
 
-  }, [plateStocks.data, stock])
+  })()
 
   const { toast } = useToast()
 
-  const onCreateStockToCollects = useCallback((cateId: string, stockIds: string[]) => {
+  const queryClient = useQueryClient()
+  const updateCollectMutation = useMutation<void, void, { code: string, checked: boolean }>({
+    mutationFn: () => Promise.resolve(),
+    onMutate: async (f) => {
+      queryClient.setQueryData([getPlateStocks.cacheKey, props.plateId], (s: typeof plateStocks.data) => {
+        const v = s?.find(item => item.symbol === f.code)
+        if (v) {
+          v.extend.collect = f.checked ? 1 : 0
+        }
+
+        return s ? [...s] : undefined
+      })
+    }
+
+  })
+
+
+  const onCreateStockToCollects = (cateId: string, stockIds: string[]) => {
     JknAlert.confirm({
       content: `确定添加到 ${collects.find(c => c.id === cateId)?.name}？`,
       onAction: async (action) => {
@@ -83,10 +101,10 @@ const PlateStocks = (props: PlateStocksProps) => {
           return false
         }
 
-        plateStocks.refresh()
+        plateStocks.refetch()
       }
     })
-  }, [collects.find, plateStocks.refresh, toast])
+  }
 
 
 
@@ -135,13 +153,7 @@ const PlateStocks = (props: PlateStocksProps) => {
       cell: ({ row }) => (
         <div>
           <CollectStar
-            onUpdate={checked => plateStocks.mutate(s => {
-              const r = s?.find(item => item.symbol === row.original.code)
-              if (r) {
-                r.extend.collect = checked ? 1 : 0
-              }
-              return s ? [...s] : undefined
-            })}
+            onUpdate={checked => updateCollectMutation.mutate({ code: row.original.code, checked })}
             checked={row.getValue<boolean>('collect')}
             code={row.original.code} />
         </div>
@@ -189,7 +201,7 @@ const PlateStocks = (props: PlateStocksProps) => {
         <Checkbox checked={row.getIsSelected()} onCheckedChange={(e) => row.getToggleSelectedHandler()({ target: e })} />
       )
     }
-  ], [plateStocks.mutate, collects, onCreateStockToCollects])
+  ], [updateCollectMutation.mutate, collects])
   return (
     <div>
       <JknTable

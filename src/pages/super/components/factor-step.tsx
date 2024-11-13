@@ -1,11 +1,27 @@
 import type { StockCategory } from "@/api"
 import { JknIcon, ToggleGroup, ToggleGroupItem } from "@/components"
-import { type CSSProperties, useContext } from "react"
+import { type CSSProperties, useContext, useRef } from "react"
 import { SuperStockContext } from "../ctx"
+import { useMount, useUnmount } from "ahooks"
 
 const FactorStep = () => {
   const ctx = useContext(SuperStockContext)
   const data = (ctx.data?.technology?.children?.factor.children) as unknown as StockCategory[]
+
+  const selection = useRef<string[]>([])
+  useMount(() => {
+    ctx.register(
+      'category_ids_ext',
+      10,
+      () => [...selection.current],
+      () => true
+    )
+  })
+
+  useUnmount(() => {
+    ctx.unregister('category_ids_ext')
+    selection.current = []
+  })
   
   return (
     <div className="min-h-24 flex border-0 border-b border-solid border-background items-stretch">

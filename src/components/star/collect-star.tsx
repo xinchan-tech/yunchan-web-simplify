@@ -3,7 +3,6 @@ import { HoverCard, HoverCardTrigger, HoverCardContent } from "@radix-ui/react-h
 import { Button } from "../ui/button"
 import Star from "./index"
 import { useCollectCates } from "@/store"
-import { useRequest } from "ahooks"
 import { addStockCollectBatch, addStockCollectCate, getStockCollectCates, updateStockCollectCate } from "@/api"
 import { Checkbox, useFormModal } from ".."
 import to from "await-to-js"
@@ -11,6 +10,7 @@ import { useToast } from "@/hooks"
 import { z } from "zod"
 import { useZForm } from "@/hooks"
 import { GoldenPoolForm } from "@/pages/golden-pool/components/golden-pool-form"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
 
 interface CollectStarProps {
@@ -26,10 +26,38 @@ const poolSchema = z.object({
 
 const CollectStar = (props: CollectStarProps) => {
   const { collects, setCollects } = useCollectCates()
+  const queryClient = useQueryClient()
+  const cateQuery = useQuery({
+    queryKey: [getStockCollectCates.cacheKey, props.code],
+    queryFn: () => getStockCollectCates(props.code),
+    enabled: false
+  })
 
-  const cateQuery = useRequest(getStockCollectCates, {
-    manual: true,
-    defaultParams: [props.code],
+  const updateCollectMutation = useMutation({
+    mutationFn: async (cates: number[]) => {
+      props.onUpdate?.(cates.length > 0)
+
+      const [err] = await to(addStockCollectBatch({
+        symbol: props.code,
+        cate_ids: cates
+      }))
+
+      if (err) {
+        toast({ description: err.message })
+        return
+      }
+    },
+    onMutate: async (cates: number[]) => {
+      queryClient.setQueryData([getStockCollectCates.cacheKey, props.code], (s: typeof cateQuery.data) => {
+        return s?.map(item => {
+          item.active = cates.includes(+item.id) ? 1 : 0
+          return item
+        })
+      })
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: [getStockCollectCates.cacheKey, props.code] })
+    },
   })
 
   const { toast } = useToast()
@@ -42,27 +70,11 @@ const CollectStar = (props: CollectStarProps) => {
       cates.push(+cate.id)
     }
 
-    cateQuery.mutate((s) => {
-      return s?.map(item => {
-        item.active = cates.includes(+item.id) ? 1 : 0
-        return item
-      })
-    })
+    updateCollectMutation.mutate(cates)
 
-    props.onUpdate?.(cates.length > 0)
-    
-    const [err] = await to(addStockCollectBatch({
-      symbol: props.code,
-      cate_ids: cates
-    }))
 
-    if (err) {
-      toast({ description: err.message })
 
-      return
-    }
-
-    cateQuery.refresh()
+    // cateQuery.refresh()
 
   }
 
@@ -92,7 +104,7 @@ const CollectStar = (props: CollectStarProps) => {
   return (
     <div className="">
       <HoverCard
-        onOpenChange={open => open && cateQuery.run(props.code)}
+        onOpenChange={open => open && cateQuery.refetch()}
         openDelay={100}
         closeDelay={0}
       >

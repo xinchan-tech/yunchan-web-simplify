@@ -30,13 +30,17 @@ export class StockRecord {
 
   //涨幅
   get percent() {
-    return new Decimal(this.close).minus(this.prevClose).div(this.prevClose).toNumber()
+    const m = new Decimal(this.close).minus(this.prevClose)
+    if (m.eq(0)) {
+      return 0
+    }
+    return m.div(this.prevClose).toNumber()
   }
 
   // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-  static isValid (data: any): data is StockRawRecord {
+  static isValid(data: any): data is StockRawRecord {
     return Array.isArray(data) && (data.length === 8 || data.length === 10)
-  } 
+  }
 
   constructor(data: StockRawRecord, extend?: StockExtendResultMap) {
     this.time = this.parseTime(data[0])

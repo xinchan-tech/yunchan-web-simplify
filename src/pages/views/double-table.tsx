@@ -1,10 +1,11 @@
 import { getPlateList, getPlateStocks } from "@/api"
 import { JknTable, type JknTableProps, NumSpan, ScrollArea } from "@/components"
 import { priceToCnUnit } from "@/utils/price"
-import { useRequest, useUpdateEffect } from "ahooks"
+import { useUpdateEffect } from "ahooks"
 import { useMemo, useState } from "react"
 import { useImmer } from "use-immer"
 import PlateStocks from "./components/plate-stocks"
+import { useQuery } from "@tanstack/react-query"
 
 interface DoubleTableProps {
   type: 1 | 2
@@ -12,23 +13,25 @@ interface DoubleTableProps {
 
 const DoubleTable = (props: DoubleTableProps) => {
   const [activePlate, setActivePlate] = useState<string>()
-  const plate = useRequest(getPlateList, {
-    cacheKey: getPlateList.cacheKey,
-    defaultParams: [props.type],
-    onSuccess: (data) => {
-      setActivePlate(data[0].id)
-      plateStocks.run(+data[0].id, ['basic_index', 'stock_before', 'stock_after', 'total_share', 'collect', 'financials'])
-    }
+  // getPlateList, {
+  //   cacheKey: getPlateList.cacheKey,
+  //   defaultParams: [props.type],
+  //   onSuccess: (data) => {
+  //     setActivePlate(data[0].id)
+  //     plateStocks.run(+data[0].id, ['basic_index', 'stock_before', 'stock_after', 'total_share', 'collect', 'financials'])
+  //   }
+  // }
+  const plate = useQuery({
+    queryKey: [getPlateList.cacheKey, props.type],
+    queryFn: () => getPlateList(props.type),
   })
 
   useUpdateEffect(() => {
-    plate.run(props.type)
-  }, [props.type])
-
-  const plateStocks = useRequest(getPlateStocks, {
-    manual: true
-  })
-
+    if (plate.data?.[0]) {
+      setActivePlate(plate.data[0].id)
+      // plateStocks.run(+data[0].id, ['basic_index', 'stock_before', 'stock_after', 'total_share', 'collect', 'financials'])
+    }
+  }, [plate.isFetched])
   const onClickPlate = (row: PlateDataType) => {
     setActivePlate(row.id)
   }
@@ -68,7 +71,7 @@ const PlateList = (props: PlateListProps) => {
     order: undefined
   })
 
-  const data = useMemo(() => {
+  const data = (() => {
     if (!sort.type) return [...props.data]
     const newData = [...props.data]
     newData.sort((a, b) => {
@@ -81,7 +84,7 @@ const PlateList = (props: PlateListProps) => {
 
     return newData
 
-  }, [props.data, sort])
+  })()
 
   const column = useMemo<JknTableProps<PlateDataType>['columns']>(() => [
     { header: '序号', enableSorting: false, accessorKey: 'index', meta: { align: 'center', width: 60 }, cell: ({ row }) => row.index + 1 },

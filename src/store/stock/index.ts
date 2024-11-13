@@ -3,6 +3,8 @@ import { StockRecord, type StockTrading } from './stock'
 import { produce } from 'immer'
 import type { StockExtendResult, StockExtendResultMap, StockRawRecord } from '@/api'
 
+export { StockRecord }
+
 type StockResultRecord = {
   symbol: string
   stock: StockRawRecord
@@ -59,12 +61,12 @@ export const useStock = create<StockStore>()((set, get) => ({
 
     return r
   },
-  insertRawByRecords: (record) => {
+  insertRawByRecords: record => {
     for (const s of record) {
-      if(StockRecord.isValid(s.stock)){
+      if (StockRecord.isValid(s.stock)) {
         get().insertRaw(s.symbol, s.stock, s.extend)
       }
-  
+
       if (s.extend?.stock_after && StockRecord.isValid(s.extend.stock_after)) {
         get().insertRaw(s.symbol, s.extend.stock_after)
       }
@@ -72,7 +74,7 @@ export const useStock = create<StockStore>()((set, get) => ({
         get().insertRaw(s.symbol, s.extend.stock_before)
       }
     }
-  },
+  }
 }))
 
 //根据二分法查找
@@ -113,7 +115,5 @@ const getInsertIndex = (times: StockRecord[], time: string) => {
 
   return left
 }
-
-
 
 export type { StockTrading }

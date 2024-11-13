@@ -28,7 +28,7 @@ export const priceToCnUnit = (price?: number, decimal = 3) => {
 }
 
 export const numToFixed = (price?: number, fixed = 3) => {
-  if(!price){
+  if(!price && price !== 0){
     return undefined
   }
   return new Decimal(price).toFixed(fixed)

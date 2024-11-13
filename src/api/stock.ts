@@ -642,3 +642,206 @@ export const getStockCategoryData = () => {
   return request.get<GetStockCategoryResult>('/stock/category/data').then(r => r.data)
 }
 getStockCategoryData.cacheKey = '/stock/category/data'
+
+/**
+* 财务
+*/
+export type Finance = {
+  /**
+   * 研发额
+   */
+  develop_amount: number[];
+  /**
+   * 研发额占比率
+   */
+  develop_amount_rate: number[];
+  /**
+   * 净资产
+   */
+  equity: number[];
+  /**
+   * 净资产回报率
+   */
+  equity_rate: number[];
+  /**
+   * 年报、季报
+   */
+  fiscal_period: FiscalPeriod;
+  /**
+   * 总负债
+   */
+  liabilities: number[];
+  /**
+   * 总负债率
+   */
+  liabilities_rate: number[];
+  /**
+   * 现金流
+   */
+  net_cash_flow: number[];
+  /**
+   * 现金流占比率
+   */
+  net_cash_flow_rate: number[];
+  /**
+   * 净利润
+   */
+  net_income_loss: number[];
+  /**
+   * 净利润率
+   */
+  net_income_loss_rate: number[];
+  /**
+   * 总营收
+   */
+  revenues: number[];
+  /**
+   * 营收增长率
+   */
+  revenues_rate: number[];
+  [property: string]: any;
+}
+
+/**
+* 年报、季报
+*/
+export enum FiscalPeriod {
+  Fy = "FY",
+  Q1 = "Q1",
+  Q2 = "Q2",
+  Q3 = "Q3",
+  Q4 = "Q4",
+}
+
+/**
+* 量价指标
+*/
+export type QuantityPrice = {
+  /**
+   * 上一个交易日成交额前排名，
+   */
+  amount_top: number;
+  /**
+   * 天数，0默认当天
+   */
+  day: number;
+  /**
+   * 活跃度（特色指标）
+   */
+  feature: number[];
+  [property: string]: any;
+}
+
+
+/**
+* 估值指标[总市值][开始]
+*/
+export type Valuation = {
+  /**
+   * 创新高
+   */
+  innovate_high: number;
+  /**
+   * 创新低
+   */
+  innovate_low: number;
+  /**
+   * 市净率
+   */
+  pb: number[];
+  /**
+   * 市盈率
+   */
+  pe: number[];
+  /**
+   * 股价
+   */
+  price: number[];
+  /**
+   * 估值指标[总市值]
+   */
+  total_mv?: TotalMv[];
+  [property: string]: any;
+}
+
+/**
+* [开始|表达式，结束]
+*/
+export enum TotalMv {
+  Empty = ">=",
+  Fluffy = "<",
+  Purple = ">",
+  Tentacled = "=",
+  The1000 = "1000",
+  TotalMv = "<=",
+}
+
+
+type StockSelectionParams = {
+    /**
+   * 泡沫系数
+   */
+    bubble: number
+    /**
+     * 指标分类id集合
+     */
+    category_ids: number[]
+    /**
+     * 金池
+     */
+    collect: number[]
+    /**
+     * 行业比价
+     */
+    compare: string[]
+    /**
+     * 财务
+     */
+    finance: Finance
+    /**
+     * 量价指标
+     */
+    quantity_price: QuantityPrice
+    /**
+     * 名师推荐
+     */
+    recommend: number[]
+    /**
+     * 板块代码，plate_code
+     */
+    sectors: string[]
+    /**
+     * 股票周期，单位：分
+     */
+    stock_cycle: number[]
+    /**
+     * 股票代码
+     */
+    symbols: string[]
+    /**
+     * 0技术面、1基本面、2超级组合、3名师专用
+     */
+    tab_page: number
+    /**
+     * 估值指标[总市值][开始]
+     */
+    valuation: Valuation
+}
+
+type GetStockSelectionResult = {
+  bull: string
+  extend: StockExtendResultMap
+  indicator_name: string
+  indicator_name_hdly: string
+  name: string
+  stock: StockRawRecord
+  stock_cycle: number
+  symbol: string
+}
+
+/**
+ * 筛选股票
+ */
+export const getStockSelection = (params: StockSelectionParams) => {
+  return request.post<GetStockSelectionResult[]>('/stock/selection', params).then(r => r.data)
+}

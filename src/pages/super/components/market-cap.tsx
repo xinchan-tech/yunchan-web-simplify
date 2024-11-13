@@ -1,6 +1,7 @@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components"
-import { useContext } from "react"
+import { useContext, useRef } from "react"
 import { SuperStockContext } from "../ctx"
+import { useMount, useUnmount } from "ahooks"
 
 type MarketCapItemType = {
   key: string
@@ -9,11 +10,46 @@ type MarketCapItemType = {
     start: string
     end: string
     name: string
+    value?: string
   }[]
 }
 const MarketCap = () => {
   const ctx = useContext(SuperStockContext)
   const data = ((ctx.data?.basic?.children?.valuation.from_datas) ?? []) as unknown as MarketCapItemType[]
+  const form = useRef<Record<string, string | string[]>>({})
+
+  const onValueChange = (field: string, value: string) => {
+    if (value === 'none') {
+      delete form.current[field]
+      return
+    }
+
+    if (['pb', 'pe', 'price', 'total_mv'].includes(field)) {
+      const v = data.find(item => item.key === field)?.items.find(item => item.name === value)
+      if(v){
+        form.current[field] = [v.start, v.end]
+      }
+
+    } else {
+      form.current[field] = value
+    }
+
+
+  }
+
+  useMount(() => {
+    ctx.register(
+      'valuation',
+      5,
+      () => ({ ...form.current }),
+      () => Object.keys(form.current).length > 0
+    )
+  })
+
+  useUnmount(() => {
+    ctx.unregister('valuation')
+    form.current = {}
+  })
 
   return (
     <div className="min-h-24 flex border-0 border-b border-solid border-background items-stretch">
@@ -27,7 +63,7 @@ const MarketCap = () => {
               <span className="w-12">
                 {item.name}
               </span>
-              <Select>
+              <Select onValueChange={v => onValueChange(item.key, v)}>
                 <SelectTrigger className="w-[280px] ml-8">
                   <SelectValue placeholder="请选择" />
                 </SelectTrigger>
@@ -37,7 +73,11 @@ const MarketCap = () => {
                   </SelectItem>
                   {
                     item.items.map(subItem => (
-                      <SelectItem key={subItem.name} value={subItem.start}>
+                      <SelectItem
+                        key={subItem.name}
+                        value={
+                          subItem.value ? subItem.value : subItem.name
+                        }>
                         {subItem.name}
                       </SelectItem>
                     ))

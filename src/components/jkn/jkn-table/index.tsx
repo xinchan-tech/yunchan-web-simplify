@@ -1,14 +1,17 @@
 import { type ColumnDef, type ColumnSort, type Row, type SortingState, type TableOptions, flexRender, getCoreRowModel, useReactTable } from "@tanstack/react-table"
+import { useUpdateEffect } from "ahooks"
 import { useState } from "react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../ui/table"
 import JknIcon from "../jkn-icon"
-import { useUpdateEffect } from "ahooks"
+import { Skeleton } from "@/components"
 
 export interface JknTableProps<TData extends Record<string, unknown> = Record<string, unknown>, TValue = unknown> {
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
   rowKey?: string
+  loading?: boolean
   onRowClick?: (data: TData, row: Row<TData>) => void
+  onSelection?: (params: string[]) => void
   onSortingChange?: (params: ColumnSort) => void
 }
 
@@ -16,7 +19,7 @@ const SortUp = () => <JknIcon name="ic_btn_up" className="w-2 h-4" />
 const SortDown = () => <JknIcon name="ic_btn_down" className="w-2 h-4" />
 const SortNone = () => <JknIcon name="ic_btn_nor" className="w-2 h-4" />
 
-const JknTable = <TData extends Record<string, unknown>, TValue>(props: JknTableProps<TData, TValue>) => {
+const _JknTable = <TData extends Record<string, unknown>, TValue>(props: JknTableProps<TData, TValue>) => {
   const [sorting, setSorting] = useState<SortingState>([])
   const [rowSelection, setRowSelection] = useState({})
 
@@ -27,6 +30,10 @@ const JknTable = <TData extends Record<string, unknown>, TValue>(props: JknTable
   useUpdateEffect(() => {
     props.onSortingChange?.(sorting[0] ?? { desc: undefined, id: '' })
   }, [sorting])
+
+  useUpdateEffect(() => {
+    props.onSelection?.(Object.keys(rowSelection))
+  }, [rowSelection])
 
   const table = useReactTable({
     columns: props.columns,
@@ -44,6 +51,7 @@ const JknTable = <TData extends Record<string, unknown>, TValue>(props: JknTable
     enableRowSelection: true,
     onRowSelectionChange: setRowSelection,
   })
+
 
   return (
     <div className="w-full">
@@ -86,36 +94,54 @@ const JknTable = <TData extends Record<string, unknown>, TValue>(props: JknTable
             </TableRow>
           ))}
         </TableHeader>
-        <TableBody>
-          {table.getRowModel().rows?.length ? (
-            table.getRowModel().rows.map((row) => (
-              <TableRow
-                key={row.id}
-                data-state={row.getIsSelected() && "selected"}
-                onClick={() => props.onRowClick?.(row.original, row)}
-                className="bg-muted hover:bg-accent transition-all duration-200"
-              >
-                {row.getVisibleCells().map((cell) => {
-                  const { align } = cell.column.columnDef.meta ?? {}
-                  return (
-                    <TableCell key={cell.id} style={{ textAlign: align }}>
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </TableCell>
-                  )
-                })}
-              </TableRow>
-            ))
+        {
+          !props.loading ? (
+            <TableBody>
+              {table.getRowModel().rows?.length ? (
+                table.getRowModel().rows.map((row) => (
+                  <TableRow
+                    key={row.id}
+                    data-state={row.getIsSelected() && "selected"}
+                    onClick={() => props.onRowClick?.(row.original, row)}
+                    className="bg-muted hover:bg-accent transition-all duration-200"
+                  >
+                    {row.getVisibleCells().map((cell) => {
+                      const { align } = cell.column.columnDef.meta ?? {}
+                      return (
+                        <TableCell key={cell.id} style={{ textAlign: align }}>
+                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        </TableCell>
+                      )
+                    })}
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={props.columns.length} className="h-24 text-center">
+                    暂无数据
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
           ) : (
-            <TableRow>
-              <TableCell colSpan={props.columns.length} className="h-24 text-center">
-                暂无数据
-              </TableCell>
-            </TableRow>
-          )}
-        </TableBody>
+            <TableBody>
+              <TableRow>
+                <TableCell colSpan={props.columns.length} className="h-24 text-center">
+                  <Skeleton className="h-4 w-full"  />
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-full" />
+                </TableCell>
+              </TableRow>
+            </TableBody>
+          )
+        }
       </Table>
     </div>
   )
 }
+
+const JknTable = _JknTable
+
 
 export default JknTable

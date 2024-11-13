@@ -3,8 +3,8 @@ import { Checkbox, JknIcon, JknTable, NumSpan, ScrollArea, StockView, ToggleGrou
 import { useCollectCates, useStock } from "@/store"
 import { numToFixed, priceToCnUnit } from "@/utils/price"
 import { cn } from "@/utils/style"
-import { useMount, useUpdateEffect } from "ahooks"
-import { CSSProperties, useContext, useMemo, useState } from "react"
+import { useMount, useUnmount, useUpdateEffect } from "ahooks"
+import { useContext, useMemo, useRef, useState } from "react"
 import { useImmer } from "use-immer"
 import { useQuery } from '@tanstack/react-query'
 import type { Row } from "@tanstack/react-table"
@@ -58,6 +58,7 @@ const FirstStep = () => {
 
 const GoldenPoolTabContent = () => {
   const [cateId, setCateId] = useState(1)
+
   return (
     <div className="flex h-full overflow-hidden">
       <GoldenPool onChange={setCateId} />
@@ -72,10 +73,22 @@ interface GoldenPoolProps {
 
 const GoldenPool = (props: GoldenPoolProps) => {
   const { collects, refresh } = useCollectCates()
+  const selection = useRef<string[]>([])
+  const ctx = useContext(SuperStockContext)
 
   useMount(() => {
     refresh()
+    ctx.register('collect', 1, () => [...selection.current], () => selection.current.length > 0)
   })
+
+  useUnmount(() => {
+    ctx.unregister('collect')
+    selection.current = []
+  })
+
+  const _onSelect: JknTableProps['onSelection'] = (e) => {
+    selection.current = e
+  }
 
   const columns: JknTableProps<{ name: string, id: string }>['columns'] = [
     {
@@ -106,7 +119,7 @@ const GoldenPool = (props: GoldenPoolProps) => {
 
   return (
     <ScrollArea className="h-[calc(100%-52px)] w-[30%]">
-      <JknTable onRowClick={(r, row) => { row.toggleSelected(); props.onChange?.(+r.id) }} data={collects} columns={columns} />
+      <JknTable rowKey="id" onSelection={_onSelect} onRowClick={(r, row) => { row.toggleSelected(); props.onChange?.(+r.id) }} data={collects} columns={columns} />
     </ScrollArea>
   )
 
@@ -204,8 +217,20 @@ const GoldenPoolList = (props: GoldenPoolListProps) => {
 const RecommendIndex = () => {
   const ctx = useContext(SuperStockContext)
   const data = ((ctx.data?.stock_range?.children?.t_recommend.from_datas) ?? []) as unknown as { name: string; value: string }[]
+  const selection = useRef<string[]>([])
+
+  useMount(() => {
+    ctx.register('recommend', 1, () => [...selection.current], () => selection.current.length > 0)
+  })
+
+  useUnmount(() => {
+    ctx.unregister('recommend')
+    selection.current = []
+  })
+
+
   return (
-    <ToggleGroup type="multiple" className="grid grid-cols-3 gap-4 p-4">
+    <ToggleGroup onValueChange={(value) => { selection.current = value }} type="multiple" className="grid grid-cols-3 gap-4 p-4">
       {data?.map((child) => (
         child.name !== '' ? (
           <ToggleGroupItem className="w-full h-full" key={child.value} value={child.value}>
@@ -273,6 +298,18 @@ const PlateList = (props: PlateListProps) => {
     order: undefined
   })
 
+  const ctx = useContext(SuperStockContext)
+  const selection = useRef<string[]>([])
+
+  useMount(() => {
+    ctx.register('sectors', 1, () => [...selection.current], () => selection.current.length > 0)
+  })
+
+  useUnmount(() => {
+    ctx.unregister('sectors')
+    selection.current = []
+  })
+
   const data = useMemo(() => {
     if (!sort.type) return [...props.data]
     const newData = [...props.data]
@@ -320,7 +357,7 @@ const PlateList = (props: PlateListProps) => {
     }
   ], [])
   return (
-    <JknTable onRowClick={_onRowClick} columns={column} data={data} onSortingChange={(s) => setSort(d => { d.type = s.id; d.order = s.desc ? 'desc' : 'asc' })} />
+    <JknTable onSelection={v => {selection.current = v}} onRowClick={_onRowClick} columns={column} data={data} onSortingChange={(s) => setSort(d => { d.type = s.id; d.order = s.desc ? 'desc' : 'asc' })} />
   )
 }
 
@@ -347,7 +384,6 @@ export type PlateStockTableDataType = {
   collect: 1 | 0
 }
 const PlateStocks = (props: PlateStocksProps) => {
-  console.log(props.plateId)
   const plateStocks = useQuery({
     queryKey: [getPlateStocks.cacheKey, props.plateId],
     queryFn: () => getPlateStocks(props.plateId!, ['basic_index', 'stock_before', 'stock_after', 'total_share']),

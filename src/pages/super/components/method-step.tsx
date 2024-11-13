@@ -1,21 +1,61 @@
-import { type CSSProperties, useContext, useEffect, useState } from "react"
+import { type CSSProperties, useContext, useEffect, useRef, useState } from "react"
 import { SuperStockContext } from "../ctx"
 import type { StockCategory } from "@/api"
 import { cn } from "@/utils/style"
 import { JknIcon, ToggleGroup, ToggleGroupItem } from "@/components"
+import { useMount, useUnmount } from "ahooks"
 
 const MethodStep = () => {
   const ctx = useContext(SuperStockContext)
   const [method, setMethod] = useState<StockCategory>()
   const data = (ctx.data?.technology?.children?.method.children) as unknown as StockCategory[]
-
+  const [value, setValue] = useState<string[]>([])
+  const selection = useRef<string[]>([])
+  const lastType = useRef<string>()
   useEffect(() => {
     if (data && data.length > 0) {
       setMethod(data[0])
     }
   }, [data])
 
-  const children = method?.children as unknown as StockCategory[]
+
+  const children = (method?.children ?? []) as unknown as StockCategory[]
+
+  const _onValueChange = (e: string[], type: string) => {
+    if (e.length <= 0) {
+      setValue([])
+      selection.current = []
+      return
+    }
+
+    if (!lastType.current || lastType.current === type) {
+      setValue(e)
+      selection.current = e
+      lastType.current = type
+      return
+    }
+
+    const lastData = e[e.length - 1]
+
+    setValue([lastData])
+    selection.current = [lastData]
+    lastType.current = type
+  }
+
+
+
+
+  useMount(() => {
+    ctx.register('category_ids', 3, () => [...selection.current], () => selection.current.length > 0)
+  })
+
+  useUnmount(() => {
+    ctx.unregister('category_ids')
+    selection.current = []
+    lastType.current = undefined
+    setValue([])
+  })
+
 
   return (
     <div className="min-h-64 flex  border-0 border-b border-solid border-background items-stretch">
@@ -42,7 +82,7 @@ const MethodStep = () => {
         </div>
         <div className="py-3 border-0 border-t border-solid border-background">
           {
-            children?.map((item) => (
+            children.map((item) => (
               <div key={item.id} className="flex mb-4">
                 <div
                   className="flex-shrink-0 px-4 flex items-center text-sm"
@@ -51,12 +91,15 @@ const MethodStep = () => {
                   <JknIcon name={item.name === '多头策略' ? 'ic_price_up_green' : 'ic_price_down_red'} />
                   {item.name}
                 </div>
-                <ToggleGroup style={{
+                <ToggleGroup value={value} onValueChange={v => _onValueChange(v, item.id)} style={{
                   '--toggle-active-bg': item.name === '多头策略' ? 'hsl(var(--stock-up-color))' : 'hsl(var(--stock-down-color))',
                 } as CSSProperties} type="multiple" className="flex-1 flex">
                   {(item.children as unknown as StockCategory[])?.map((child) => (
                     child.name !== '' ? (
-                      <ToggleGroupItem className="w-36" key={child.id} value={child.id}>
+                      <ToggleGroupItem disabled={!child.authorized} className="w-36 relative" key={child.id} value={child.id}>
+                        {
+                          !child.authorized && <JknIcon name="ic_lock" className="absolute right-0 top-0 w-3 h-3" />
+                        }
                         {child.name}
                       </ToggleGroupItem>
                     ) : null

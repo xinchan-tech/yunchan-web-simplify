@@ -113,7 +113,7 @@
 
 body {
   margin: 0;
-  color: var(--text-color);
+  color: hsl(var(--foreground));
   overflow-y: hidden;
   overflow-x: auto;
 

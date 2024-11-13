@@ -1,14 +1,14 @@
-import { type StockExtend, addStockCollectCate, getStockCollectCates, getStockCollects, removeStockCollect, removeStockCollectCate, updateStockCollectCate } from "@/api"
-import { Button, CapsuleTabs, Checkbox, JknAlert, JknTable, type JknTableProps, Popover, PopoverContent, PopoverTrigger, useFormModal, useModal } from "@/components"
+import { type StockExtend, addStockCollectCate, type getStockCollectCates, getStockCollects, removeStockCollect, removeStockCollectCate, updateStockCollectCate } from "@/api"
+import { Button, CapsuleTabs, Checkbox, JknAlert, JknIcon, JknTable, type JknTableProps, NumSpan, Popover, PopoverContent, PopoverTrigger, ScrollArea, useFormModal, useModal } from "@/components"
 import { useDomSize, useToast, useZForm } from "@/hooks"
-import { useCollectCates, useStock, useTime } from "@/store"
+import { useCollectCates, useStock } from "@/store"
 import { numToFixed, priceToCnUnit } from "@/utils/price"
 import { cn } from "@/utils/style"
 import { PlusIcon, TrashIcon } from "@radix-ui/react-icons"
-import { useMount, useRequest } from "ahooks"
+import { useQuery } from "@tanstack/react-query"
+import { useMount } from "ahooks"
 import to from "await-to-js"
-import Decimal from "decimal.js"
-import { useMemo, useState } from "react"
+import { useState } from "react"
 import { useImmer } from "use-immer"
 import type { z } from "zod"
 import { GoldenPoolForm, poolSchema } from "./components/golden-pool-form"
@@ -27,39 +27,27 @@ type DataType = {
   marketValue?: number
   dataIndex: string
   pe?: number
+  turnoverRate?: number
 }
 const GoldenPool = () => {
-  const [size, ref] = useDomSize<HTMLDivElement>()
   const stock = useStock()
   const [check, setCheck] = useImmer<{ all: boolean, selected: string[] }>({
     all: false,
     selected: []
   })
   const cates = useCollectCates()
-  const [activeStock, setActiveStock] = useState<string>(cates.collects[0]?.id)
+  const [activeStock, setActiveStock] = useState<string>('1')
 
-  const cateQuery = useRequest(getStockCollectCates, {
-    cacheKey: getStockCollectCates.cacheKey,
-    onSuccess: (data) => {
-      if (data && data.length > 0) {
-        setActiveStock(data[0].id)
-      }
-      cates.setCollects(data)
-    }
+  useMount(() => {
+    cates.refresh()
   })
 
-  const collects = useRequest(getStockCollects, {
-    cacheKey: getStockCollects.cacheKey,
-    defaultParams: [
-      {
-        extend: baseExtends,
-        cate_id: 1,
-        limit: 300
-      }
-    ],
+  const collects = useQuery({
+    queryKey: [getStockCollects.cacheKey, activeStock],
+    queryFn: () => getStockCollects({ cate_id: +activeStock, limit: 300, extend: baseExtends }),
   })
 
-  const data = useMemo<DataType[]>(() => {
+  const data: DataType[] = (() => {
     const r: DataType[] = []
 
     if (!collects.data) return r
@@ -67,7 +55,7 @@ const GoldenPool = () => {
     for (let i = 0; i < collects.data.items.length; i++) {
       const c = collects.data.items[i]
       const s = stock.getLastRecordByTrading(c.symbol, 'intraDay')
-
+     
       r.push({
         index: i + 1,
         key: c.symbol,
@@ -78,12 +66,13 @@ const GoldenPool = () => {
         turnover: s?.turnover,
         marketValue: s?.marketValue,
         dataIndex: c.extend?.basic_index as string ?? '-',
+        turnoverRate: s?.turnOverRate,
         pe: s?.pe
       })
     }
 
     return r
-  }, [collects.data, stock])
+  })()
 
   const onActiveStockChange = (v: string) => {
     setActiveStock(v)
@@ -124,8 +113,8 @@ const GoldenPool = () => {
           return
         }
 
-        collects.refresh()
-        cateQuery.refresh()
+        cates.refresh()
+        collects.refetch()
       }
     })
   }
@@ -144,7 +133,7 @@ const GoldenPool = () => {
           return
         }
 
-        collects.refresh()
+        collects.refetch()
         setCheck(d => {
           d.all = false
           d.selected = []
@@ -173,46 +162,33 @@ const GoldenPool = () => {
       </span>
     },
     {
-      header: '涨跌幅', accessorKey: 'percent', meta: { width: '22%', align: 'right' },
+      header: '涨跌幅', accessorKey: 'percent', meta: { align: 'right', width: 120 },
       cell: ({ row }) => (
-        <div className={cn(row.getValue<number>('percent') >= 0 ? 'bg-stock-up' : 'bg-stock-down', 'h-full rounded-sm w-16 text-center px-1 py-0.5 float-right')}>
-          {row.getValue<number>('percent') > 0 ? '+' : null}{`${numToFixed(row.getValue<number>('percent') * 100, 2)}%`}
-        </div>
+        <NumSpan percent block decimal={2} value={row.getValue<number>('percent') * 100} isPositive={row.getValue<number>('percent') >= 0} symbol />
       )
     },
     {
-      header: '成交额', accessorKey: 'turnover', meta: { width: '17%', align: 'right' },
-      cell: ({ row }) => <span>
-        {priceToCnUnit(row.getValue<number>('percent') * 10000, 2)}
-      </span>
+      header: '成交额', accessorKey: 'turnover', meta: { align: 'right', width: 120 },
+      cell: ({ row }) => priceToCnUnit(row.getValue<number>('turnover'))
     },
     {
-      header: '总市值', accessorKey: 'marketValue', meta: { width: '19%', align: 'right' },
-      cell: ({ row }) => <span>
-        {priceToCnUnit(row.getValue<number>('percent'), 2)}
-      </span>
+      header: '总市值', accessorKey: 'marketValue', meta: { align: 'right', width: 120 },
+      cell: ({ row }) => priceToCnUnit(row.getValue<number>('marketValue'))
     },
     {
-      header: '换手率', accessorKey: 't', meta: { width: '19%', align: 'right' },
-      cell: () => '0.00%'
+      header: '换手率', accessorKey: 'turnoverRate', meta: { width: '15%', align: 'right' },
+      cell: ({ row }) => `${numToFixed(row.getValue<number>('turnoverRate'), 2)}%`
     },
-    // TODO: 待计算公式
     {
-      header: '市盈率', accessorKey: 'pe', meta: { width: '19%', align: 'right' },
-      cell: ({ row }) => <span>
-        {numToFixed(row.getValue<number>('percent'), 2)}
-      </span>
+      header: '市盈率', enableSorting: false, accessorKey: 'pe', meta: { width: '15%', align: 'right' },
+      cell: ({ row }) => `${numToFixed(row.getValue<number>('pe'), 2) ?? '-'}`
     },
     {
       header: '行业板块', accessorKey: 'dataIndex', meta: { width: '19%', align: 'right' },
     },
     {
       header: '+AI报警', accessorKey: 'ai', meta: { width: 80, align: 'center' },
-      cell: () => (
-        <div className="text-stock-up cursor-pointer">
-          <PlusIcon />
-        </div>
-      )
+      cell: ({ row }) => <div><JknIcon name="ic_add" /></div>
     },
     {
       header: '移除',
@@ -273,13 +249,13 @@ const GoldenPool = () => {
           </CapsuleTabs>
         </div>
         <div className="text-secondary">
-          <GoldenPoolManager data={cates.collects ?? []} onUpdate={cateQuery.refresh} />
+          <GoldenPoolManager data={cates.collects ?? []} onUpdate={cates.refresh} />
         </div>
       </div>
-      <div className="flex-1" ref={ref}>
-        <div >
+      <div className="flex-1 overflow-hidden">
+        <ScrollArea className="h-full">
           <JknTable columns={columns} data={data} />
-        </div>
+        </ScrollArea>
       </div>
       <style jsx>
         {

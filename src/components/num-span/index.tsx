@@ -66,7 +66,7 @@ interface NumSpanProps extends React.HTMLAttributes<HTMLSpanElement>, VariantPro
 
 
 const NumSpan = ({ isPositive, block, percent, value, symbol, className, decimal = 3, unit = false, ...props }: NumSpanProps) => {
-  if (!value) return '-'
+  if (!value && value !== 0) return '-'
   const num = new Decimal(value)
   return (
     <span className={cn(numSpanVariants({ isPositive, block, className }))} {...props}>

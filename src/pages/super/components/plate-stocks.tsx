@@ -1,11 +1,9 @@
-import { addStockCollect, getPlateStocks } from "@/api"
-import { Button, Checkbox, CollectStar, JknAlert, JknIcon, JknTable, NumSpan, Popover, PopoverAnchor, PopoverContent, StockView, type JknTableProps } from "@/components"
-import { useToast } from "@/hooks"
-import { useCollectCates, useStock, useTime } from "@/store"
+import { getPlateStocks } from "@/api"
+import { JknTable, type JknTableProps, NumSpan, StockView } from "@/components"
+import { useStock, useTime } from "@/store"
 import { numToFixed, priceToCnUnit } from "@/utils/price"
 import { useRequest, useUpdateEffect } from "ahooks"
-import to from "await-to-js"
-import { useCallback, useMemo } from "react"
+import { useMemo } from "react"
 
 interface PlateStocksProps {
   plateId?: number
@@ -36,7 +34,6 @@ const PlateStocks = (props: PlateStocksProps) => {
   })
   const trading = useTime(s => s.getTrading())
   const stock = useStock()
-  const collects = useCollectCates(s => s.collects)
 
   useUpdateEffect(() => {
     if (!props.plateId) return
@@ -67,26 +64,6 @@ const PlateStocks = (props: PlateStocksProps) => {
     return r
 
   }, [plateStocks.data, stock, trading])
-
-  const { toast } = useToast()
-
-  const onCreateStockToCollects = useCallback((cateId: string, stockIds: string[]) => {
-    JknAlert.confirm({
-      content: `确定添加到 ${collects.find(c => c.id === cateId)?.name}？`,
-      onAction: async (action) => {
-        if (action !== 'confirm') return
-
-        const [err] = await to(addStockCollect({ symbols: stockIds, cate_ids: [+cateId] }))
-
-        if (err) {
-          toast({ description: err.message })
-          return false
-        }
-
-        plateStocks.refresh()
-      }
-    })
-  }, [collects.find, plateStocks.refresh, toast])
 
 
 
