@@ -644,188 +644,186 @@ export const getStockCategoryData = () => {
 getStockCategoryData.cacheKey = '/stock/category/data'
 
 /**
-* 财务
-*/
+ * 财务
+ */
 export type Finance = {
   /**
    * 研发额
    */
-  develop_amount: number[];
+  develop_amount: number[]
   /**
    * 研发额占比率
    */
-  develop_amount_rate: number[];
+  develop_amount_rate: number[]
   /**
    * 净资产
    */
-  equity: number[];
+  equity: number[]
   /**
    * 净资产回报率
    */
-  equity_rate: number[];
+  equity_rate: number[]
   /**
    * 年报、季报
    */
-  fiscal_period: FiscalPeriod;
+  fiscal_period: FiscalPeriod
   /**
    * 总负债
    */
-  liabilities: number[];
+  liabilities: number[]
   /**
    * 总负债率
    */
-  liabilities_rate: number[];
+  liabilities_rate: number[]
   /**
    * 现金流
    */
-  net_cash_flow: number[];
+  net_cash_flow: number[]
   /**
    * 现金流占比率
    */
-  net_cash_flow_rate: number[];
+  net_cash_flow_rate: number[]
   /**
    * 净利润
    */
-  net_income_loss: number[];
+  net_income_loss: number[]
   /**
    * 净利润率
    */
-  net_income_loss_rate: number[];
+  net_income_loss_rate: number[]
   /**
    * 总营收
    */
-  revenues: number[];
+  revenues: number[]
   /**
    * 营收增长率
    */
-  revenues_rate: number[];
-  [property: string]: any;
+  revenues_rate: number[]
+  [property: string]: any
 }
 
 /**
-* 年报、季报
-*/
+ * 年报、季报
+ */
 export enum FiscalPeriod {
-  Fy = "FY",
-  Q1 = "Q1",
-  Q2 = "Q2",
-  Q3 = "Q3",
-  Q4 = "Q4",
+  Fy = 'FY',
+  Q1 = 'Q1',
+  Q2 = 'Q2',
+  Q3 = 'Q3',
+  Q4 = 'Q4'
 }
 
 /**
-* 量价指标
-*/
+ * 量价指标
+ */
 export type QuantityPrice = {
   /**
    * 上一个交易日成交额前排名，
    */
-  amount_top: number;
+  amount_top: number
   /**
    * 天数，0默认当天
    */
-  day: number;
+  day: number
   /**
    * 活跃度（特色指标）
    */
-  feature: number[];
-  [property: string]: any;
+  feature: number[]
+  [property: string]: any
 }
 
-
 /**
-* 估值指标[总市值][开始]
-*/
+ * 估值指标[总市值][开始]
+ */
 export type Valuation = {
   /**
    * 创新高
    */
-  innovate_high: number;
+  innovate_high: number
   /**
    * 创新低
    */
-  innovate_low: number;
+  innovate_low: number
   /**
    * 市净率
    */
-  pb: number[];
+  pb: number[]
   /**
    * 市盈率
    */
-  pe: number[];
+  pe: number[]
   /**
    * 股价
    */
-  price: number[];
+  price: number[]
   /**
    * 估值指标[总市值]
    */
-  total_mv?: TotalMv[];
-  [property: string]: any;
+  total_mv?: TotalMv[]
+  [property: string]: any
 }
 
 /**
-* [开始|表达式，结束]
-*/
+ * [开始|表达式，结束]
+ */
 export enum TotalMv {
-  Empty = ">=",
-  Fluffy = "<",
-  Purple = ">",
-  Tentacled = "=",
-  The1000 = "1000",
-  TotalMv = "<=",
+  Empty = '>=',
+  Fluffy = '<',
+  Purple = '>',
+  Tentacled = '=',
+  The1000 = '1000',
+  TotalMv = '<='
 }
 
-
 type StockSelectionParams = {
-    /**
+  /**
    * 泡沫系数
    */
-    bubble: number
-    /**
-     * 指标分类id集合
-     */
-    category_ids: number[]
-    /**
-     * 金池
-     */
-    collect: number[]
-    /**
-     * 行业比价
-     */
-    compare: string[]
-    /**
-     * 财务
-     */
-    finance: Finance
-    /**
-     * 量价指标
-     */
-    quantity_price: QuantityPrice
-    /**
-     * 名师推荐
-     */
-    recommend: number[]
-    /**
-     * 板块代码，plate_code
-     */
-    sectors: string[]
-    /**
-     * 股票周期，单位：分
-     */
-    stock_cycle: number[]
-    /**
-     * 股票代码
-     */
-    symbols: string[]
-    /**
-     * 0技术面、1基本面、2超级组合、3名师专用
-     */
-    tab_page: number
-    /**
-     * 估值指标[总市值][开始]
-     */
-    valuation: Valuation
+  bubble: number
+  /**
+   * 指标分类id集合
+   */
+  category_ids: number[]
+  /**
+   * 金池
+   */
+  collect: number[]
+  /**
+   * 行业比价
+   */
+  compare: string[]
+  /**
+   * 财务
+   */
+  finance: Finance
+  /**
+   * 量价指标
+   */
+  quantity_price: QuantityPrice
+  /**
+   * 名师推荐
+   */
+  recommend: number[]
+  /**
+   * 板块代码，plate_code
+   */
+  sectors: string[]
+  /**
+   * 股票周期，单位：分
+   */
+  stock_cycle: number[]
+  /**
+   * 股票代码
+   */
+  symbols: string[]
+  /**
+   * 0技术面、1基本面、2超级组合、3名师专用
+   */
+  tab_page: number
+  /**
+   * 估值指标[总市值][开始]
+   */
+  valuation: Valuation
 }
 
 type GetStockSelectionResult = {
@@ -845,3 +843,131 @@ type GetStockSelectionResult = {
 export const getStockSelection = (params: StockSelectionParams) => {
   return request.post<GetStockSelectionResult[]>('/stock/selection', params).then(r => r.data)
 }
+
+type GetStockFinancialsParams = {
+  'date[0]': string
+  'date[1]': string
+  page: number
+  limit: number
+  symbol?: string
+  extend?: StockExtend[]
+}
+
+type GetStockFinancialsResult = {
+  items: {
+    date: string
+    id: string
+    name: string
+    stock: StockRawRecord
+    symbol: string
+    time: string
+    extend?: StockExtendResultMap
+  }[]
+}
+
+/**
+ * 财报个股
+ */
+export const getStockFinancials = (params: GetStockFinancialsParams) => {
+  return request.get<GetStockFinancialsResult>('/stock/financials', { params }).then(r => r.data)
+}
+getStockFinancials.cacheKey = 'stock:financials'
+
+type GetStockEconomicParams = {
+  /**
+   * 开始时间
+   */
+  'date[0]'?: string
+  /**
+   * 结束时间
+   */
+  'date[1]'?: string
+  /**
+   * 每页显示数量
+   */
+  limit?: number
+  /**
+   * 页码
+   */
+  page?: number
+  /**
+   * 排序 DESC   ASC
+   */
+  sort?: 'DESC' | 'ASC'
+  /**
+   * 默认0 经济数据  1重大事件
+   */
+  type?: number
+}
+
+type GetStockEconomicResult = {
+  items: {
+    /**
+     * 唯一标识符
+     */
+    id: string
+  
+    /**
+     * 发布日期和时间
+     */
+    date: string
+  
+    /**
+     * 指标关键字
+     */
+    key: string
+  
+    /**
+     * 指标名称
+     */
+    title: string
+  
+    /**
+     * 上期值
+     */
+    previous: string
+  
+    /**
+     * 预估值
+     */
+    estimate: string
+  
+    /**
+     * 实际值
+     */
+    actual: string
+  
+    /**
+     * 变动值
+     */
+    change: string
+  
+    /**
+     * 影响程度
+     */
+    impact: number
+  
+    /**
+     * 变动百分比
+     */
+    changePercentage: string
+  
+    /**
+     * 单位
+     */
+    unit: string
+  
+    /**
+     * 下次发布时间
+     */
+    next_time: string
+  }[]
+}
+
+/**
+ * 经济数据
+ */
+export const getStockEconomic = (params: GetStockEconomicParams) => {
+  return request.get<GetStockEconomicResult>('/stock/economic', { params }).then(r => r.data)
+}
+getStockEconomic.cacheKey = 'stock:economic'

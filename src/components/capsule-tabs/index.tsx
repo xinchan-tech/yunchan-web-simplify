@@ -29,9 +29,10 @@ const _CapsuleTabs = ({ activeKey, onChange, children, type = 'default' }: Props
 interface TabItemProps {
   value: string
   label: string | ReactNode
+  disabled?: boolean
 }
 
-const TabItem = ({ value, label }: TabItemProps) => {
+const TabItem = ({ value, label, disabled }: TabItemProps) => {
   const context = useContext(CapsuleTabsContext)
 
   return (
@@ -41,7 +42,7 @@ const TabItem = ({ value, label }: TabItemProps) => {
         background: value === context.value && context.type === 'default'  ? 'hsl(var(--active-color))' : 'transparent',
         color: value === context.value && context.type === 'text' ? 'hsl(var(--active-color))' : 'hsl(var(--text))',
       }}
-      onClick={() => { context.onChange?.(value) }} onKeyDown={() => { }}
+      onClick={() => { !disabled && context.onChange?.(value) }} onKeyDown={() => { }}
     >
       {label}
     </div>

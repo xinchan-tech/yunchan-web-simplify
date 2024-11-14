@@ -5,6 +5,12 @@ import Decimal from 'decimal.js'
 
 export type StockTrading = 'preMarket' | 'intraDay' | 'afterHours' | 'close'
 
+export type StockResultRecord = {
+  symbol: string
+  stock: StockRawRecord
+  extend?: StockExtendResultMap
+}
+
 export class StockRecord {
   time: string // 时间
   open: number // 开盘价
@@ -40,6 +46,28 @@ export class StockRecord {
   // biome-ignore lint/suspicious/noExplicitAny: <explanation>
   static isValid(data: any): data is StockRawRecord {
     return Array.isArray(data) && (data.length === 8 || data.length === 10)
+  }
+
+  static create(record: StockResultRecord): [StockRecord?, StockRecord?, StockRecord?] {
+    const r: [StockRecord?, StockRecord?, StockRecord?] = []
+    if (StockRecord.isValid(record.stock)) {
+      r.push(new StockRecord(record.stock, record.extend))
+    }else{
+      r.push(undefined)
+    }
+
+    if (record.extend?.stock_before && StockRecord.isValid(record.extend.stock_before)) {
+      r.push(new StockRecord(record.extend.stock_before))
+    }else{
+      r.push(undefined)
+    }
+
+    if (record.extend?.stock_after && StockRecord.isValid(record.extend.stock_after)) {
+      r.push(new StockRecord(record.extend.stock_after))
+    }else{
+      r.push(undefined)
+    }
+    return r
   }
 
   constructor(data: StockRawRecord, extend?: StockExtendResultMap) {

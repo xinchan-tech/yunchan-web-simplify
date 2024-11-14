@@ -15,7 +15,7 @@ export default defineConfig({
   server:{
     proxy: {
       '/api': {
-        target: 'https://us.mgjkn.com/',
+        target: 'http://us.mgjkn.com/',
         changeOrigin: true,
         pathRewrite: {
           '^/api': ''

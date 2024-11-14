@@ -17,7 +17,7 @@ const numSpanVariants = cva(
       },
       block: {
         default: "",
-        true: "h-full box-border w-full rounded-sm text-center px-2 py-1 float-right"
+        true: "box-border w-full rounded-sm text-center px-2 py-1 float-right"
       },
     },
     compoundVariants: [

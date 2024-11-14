@@ -2,6 +2,7 @@ import { navWithAuth } from "@/utils/nav"
 import JknIcon from "../jkn/jkn-icon"
 import { cn } from "@/utils/style"
 import { router } from "@/router"
+import { useEffect, useState } from "react"
 
 type MenuItem = {
   icon: IconName
@@ -11,7 +12,19 @@ type MenuItem = {
 
 
 const Menu = () => {
-  const pathname = router.state.location.pathname
+  const [pathname, setPathname] = useState(router.state.location.pathname)
+  
+  useEffect(() => {
+    const s = router.subscribe((s) => {
+      setPathname(s.location.pathname)
+      console.log(1)
+    })
+  
+    return () => {
+      s()
+    }
+  }, [])
+
   const menus: MenuItem[] = [
     {
       icon: 'left_menu_1@2x',
@@ -41,7 +54,7 @@ const Menu = () => {
     {
       icon: 'left_menu_6@2x',
       title: '股票日历',
-      path: '/stock',
+      path: '/calendar',
     },
     {
       icon: 'left_menu_7@2x',

@@ -1,15 +1,10 @@
 import { create } from 'zustand'
-import { StockRecord, type StockTrading } from './stock'
+import { StockRecord, type StockResultRecord, type StockTrading } from './stock'
 import { produce } from 'immer'
-import type { StockExtendResult, StockExtendResultMap, StockRawRecord } from '@/api'
+import type { StockExtendResult, StockRawRecord } from '@/api'
 
 export { StockRecord }
 
-type StockResultRecord = {
-  symbol: string
-  stock: StockRawRecord
-  extend?: StockExtendResultMap
-}
 
 interface StockStore {
   stocks: Record<symbol, StockRecord[]>

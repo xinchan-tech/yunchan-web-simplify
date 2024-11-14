@@ -27,6 +27,13 @@ export const routes: RouteObject[] = [
     handle:{
       title: '超级选股'
     }
+  },
+  {
+    path: '/calendar',
+    Component: lazy(() => import('@/pages/calendar')),
+    handle:{
+      title: '股票日历'
+    }
   }
   
 ]

@@ -1,10 +1,11 @@
 import { type ColumnDef, type ColumnSort, type Row, type SortingState, type TableOptions, flexRender, getCoreRowModel, useReactTable } from "@tanstack/react-table"
 import { useUpdateEffect } from "ahooks"
-import { useState } from "react"
+import { type CSSProperties, useRef, useState } from "react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../ui/table"
 import JknIcon from "../jkn-icon"
-import { Skeleton } from "@/components"
-import VirtualizedTable from './virtualized-table'
+import { ScrollArea, Skeleton } from "@/components"
+import { cn } from "@/utils/style"
+import { useVirtualizer } from '@tanstack/react-virtual'
 
 export interface JknTableProps<TData extends Record<string, unknown> = Record<string, unknown>, TValue = unknown> {
   columns: ColumnDef<TData, TValue>[]
@@ -14,13 +15,15 @@ export interface JknTableProps<TData extends Record<string, unknown> = Record<st
   onRowClick?: (data: TData, row: Row<TData>) => void
   onSelection?: (params: string[]) => void
   onSortingChange?: (params: ColumnSort) => void
+  style?: CSSProperties
+  className?: string
 }
 
 const SortUp = () => <JknIcon name="ic_btn_up" className="w-2 h-4" />
 const SortDown = () => <JknIcon name="ic_btn_down" className="w-2 h-4" />
 const SortNone = () => <JknIcon name="ic_btn_nor" className="w-2 h-4" />
 
-const _JknTable = <TData extends Record<string, unknown>, TValue>(props: JknTableProps<TData, TValue>) => {
+const VirtualizedTable = <TData extends Record<string, unknown>, TValue>({ className, style, ...props }: JknTableProps<TData, TValue>) => {
   const [sorting, setSorting] = useState<SortingState>([])
   const [rowSelection, setRowSelection] = useState({})
 
@@ -53,17 +56,33 @@ const _JknTable = <TData extends Record<string, unknown>, TValue>(props: JknTabl
     onRowSelectionChange: setRowSelection,
   })
 
+  const { rows } = table.getRowModel()
+
+  const rowVirtualizer = useVirtualizer({
+    count: rows.length,
+    estimateSize: () => 44, //estimate row height for accurate scrollbar dragging
+    getScrollElement: () => scrollRef.current?.querySelector('[data-radix-scroll-area-viewport]') ?? null,
+    //measure dynamic row height, except in firefox because it measures table border height incorrectly
+    measureElement:
+      typeof window !== 'undefined' &&
+        navigator.userAgent.indexOf('Firefox') === -1
+        ? element => element?.getBoundingClientRect().height
+        : undefined,
+    overscan: 20,
+  })
+
+  const scrollRef = useRef<HTMLDivElement>(null)
 
   return (
-    <div className="w-full">
-      <Table className="w-full mt-[-1px]">
-        <TableHeader className="sticky top-0 z-10">
+    <ScrollArea ref={scrollRef} className={cn('w-full relative', className)} style={style}>
+      <Table className="w-full mt-[-1px] grid">
+        <TableHeader className="sticky top-0 z-10 grid">
           {table.getHeaderGroups().map((headerGroup) => (
-            <TableRow key={headerGroup.id}>
+            <TableRow key={headerGroup.id} className="flex w-full">
               {headerGroup.headers.map((header) => {
                 const { align } = header.column.columnDef.meta ?? {}
                 return (
-                  <TableHead key={header.id} style={{ width: header.column.getSize() }} >
+                  <TableHead key={header.id} className="flex" style={{ width: header.column.getSize() }} >
                     {header.isPlaceholder
                       ? null
                       : (
@@ -97,28 +116,39 @@ const _JknTable = <TData extends Record<string, unknown>, TValue>(props: JknTabl
         </TableHeader>
         {
           !props.loading ? (
-            <TableBody>
+            <TableBody className="grid relative z-0" style={{ height: `${rowVirtualizer.getTotalSize()}px` }}>
               {table.getRowModel().rows?.length ? (
-                table.getRowModel().rows.map((row) => (
-                  <TableRow
-                    key={row.id}
-                    data-state={row.getIsSelected() && "selected"}
-                    onClick={() => props.onRowClick?.(row.original, row)}
-                    className="bg-muted hover:bg-accent transition-all duration-200"
-                  >
-                    {row.getVisibleCells().map((cell) => {
-                      const { align } = cell.column.columnDef.meta ?? {}
-                      return (
-                        <TableCell key={cell.id} style={{ textAlign: align }}>
-                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                        </TableCell>
-                      )
-                    })}
-                  </TableRow>
-                ))
+                rowVirtualizer.getVirtualItems().map(virtualRow => {
+                  const row = rows[virtualRow.index] as Row<TData>
+
+                  return (
+                    <TableRow
+                      data-index={virtualRow.index}
+                      key={row.id}
+                      data-state={row.getIsSelected() && "selected"}
+                      ref={node => rowVirtualizer.measureElement(node)}
+                      onClick={() => props.onRowClick?.(row.original, row)}
+                      className="bg-muted hover:bg-accent transition-all duration-200 flex absolute w-full z-0"
+                      style={{
+                        transform: `translateY(${virtualRow.start}px)` //this should always be a `style` as it changes on scroll
+                      }}
+                    >
+                      {row.getVisibleCells().map((cell) => {
+                        const { align } = cell.column.columnDef.meta ?? {}
+                        return (
+                          <TableCell className="flex items-center" key={cell.id} style={{ textAlign: align, width: cell.column.getSize() }}>
+                            <div className="w-full">
+                              {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                            </div>
+                          </TableCell>
+                        )
+                      })}
+                    </TableRow>
+                  )
+                })
               ) : (
-                <TableRow>
-                  <TableCell colSpan={props.columns.length} className="h-24 text-center">
+                <TableRow className="flex">
+                  <TableCell colSpan={props.columns.length} className="h-24 text-center w-full mt-12">
                     暂无数据
                   </TableCell>
                 </TableRow>
@@ -128,7 +158,7 @@ const _JknTable = <TData extends Record<string, unknown>, TValue>(props: JknTabl
             <TableBody>
               <TableRow>
                 <TableCell colSpan={props.columns.length} className="h-24 text-center">
-                  <Skeleton className="h-4 w-full"  />
+                  <Skeleton className="h-4 w-full" />
                   <Skeleton className="h-4 w-full" />
                   <Skeleton className="h-4 w-full" />
                   <Skeleton className="h-4 w-full" />
@@ -138,15 +168,9 @@ const _JknTable = <TData extends Record<string, unknown>, TValue>(props: JknTabl
           )
         }
       </Table>
-    </div>
+    </ScrollArea>
   )
 }
 
-const JknTable = _JknTable as typeof _JknTable & {
-  Virtualizer: typeof VirtualizedTable
-}
-JknTable.Virtualizer = VirtualizedTable
 
-
-
-export default JknTable
+export default VirtualizedTable
