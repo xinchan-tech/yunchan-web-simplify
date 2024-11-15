@@ -34,6 +34,13 @@ export const routes: RouteObject[] = [
     handle:{
       title: '股票日历'
     }
+  },
+  {
+    path: '/message',
+    Component: lazy(() => import('@/pages/message')),
+    handle:{
+      title: '消息中心'
+    }
   }
   
 ]

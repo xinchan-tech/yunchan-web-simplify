@@ -85,6 +85,7 @@ type GetUserParams = {
 export const getUser = (params: GetUserParams) => {
   return request.get<UserResult>('/user', { params: params }).then(r => r.data)
 }
+getUser.cacheKey = 'user:info'
 
 type UpdateUserParams = {
   avatar?: string

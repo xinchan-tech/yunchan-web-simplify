@@ -3,17 +3,33 @@ import Logo from './assets/icon/icon_jkn@2x.png'
 import './app.scss'
 import { RouterProvider } from "react-router-dom"
 import { router } from "./router"
-import { useMount, useRequest } from "ahooks"
-import { useConfig } from "./store"
+import { useMount, useRequest, useUpdateEffect } from "ahooks"
+import { useConfig, useUser } from "./store"
 import { useTranslation } from "react-i18next"
 import { Suspense } from "react"
-import { getConfig } from "./api"
+import { getConfig, getUser } from "./api"
 import FooterTime from "./components/footer-time"
+import { useQuery } from "@tanstack/react-query"
 
 const App = () => {
   const config = useConfig()
   const { t, i18n } = useTranslation()
+  const user = useUser()
+  const query = useQuery({
+    queryKey: [getUser.cacheKey],
+    queryFn: () => getUser({
+      extends: ['authorized']
+    })
+  })
 
+  useUpdateEffect(() => {
+    if(!query.isLoading){
+      user.setUser({
+        ...query.data
+      })
+    }
+  }, [query.isLoading])
+  
   useRequest(getConfig, {
     onSuccess: (data) => {
       config.setConsults(data.consults)

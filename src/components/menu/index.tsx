@@ -59,7 +59,7 @@ const Menu = () => {
     {
       icon: 'left_menu_7@2x',
       title: '消息中心',
-      path: '/stock',
+      path: '/message',
     },
     {
       icon: 'left_menu_8@2x',

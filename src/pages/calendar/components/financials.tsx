@@ -1,10 +1,10 @@
-import { getStockEconomicDetail, getStockFinancials } from "@/api"
-import { Button, CapsuleTabs, Checkbox, CollectStar, JknDatePicker, JknIcon, JknTable, type JknTableProps, NumSpan, Popover, PopoverAnchor, PopoverContent, ScrollArea, StockView } from "@/components"
+import { getStockFinancials } from "@/api"
+import { CapsuleTabs, Checkbox, CollectStar, JknDatePicker, JknIcon, JknTable, type JknTableProps, NumSpan, Popover, PopoverAnchor, PopoverContent, StockView } from "@/components"
 import { StockRecord, useCollectCates, useTime } from "@/store"
 import { numToFixed, priceToCnUnit } from "@/utils/price"
 import { useQuery } from "@tanstack/react-query"
 import dayjs from "dayjs"
-import { ComponentType, useMemo, useRef, useState } from "react"
+import { useMemo, useState } from "react"
 
 const weeks = ['日', '一', '二', '三', '四', '五', '六']
 
@@ -120,7 +120,7 @@ const StockFinancials = () => {
           <CollectStar
             // onUpdate={props.onUpdate}
             checked={row.getValue<boolean>('collect')}
-            code={row.original.code} />
+            code={row.original.code as string} />
         </div>
       )
     },

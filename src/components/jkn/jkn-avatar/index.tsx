@@ -1,16 +1,18 @@
+import type { ComponentProps } from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "../../ui/avatar"
+import UserDefaultPng from '@/assets/icon/user_default.png'
 
-interface JknAvatarProps {
+interface JknAvatarProps extends ComponentProps<typeof Avatar> {
   src?: string
   fallback?: string
 }
-const JknAvatar = (props: JknAvatarProps) => {
+const JknAvatar = ({src, fallback, ...props}: JknAvatarProps) => {
   return (
-    <Avatar>
-      <AvatarImage src={props.src} />
-      <AvatarFallback><img src={props.fallback} alt="" /></AvatarFallback>
+    <Avatar {...props}>
+      <AvatarImage src={src} />
+      <AvatarFallback><img src={fallback ?? UserDefaultPng} alt="" className="w-full h-full" /></AvatarFallback>
     </Avatar>
-  )  
+  )
 }
 
 export default JknAvatar

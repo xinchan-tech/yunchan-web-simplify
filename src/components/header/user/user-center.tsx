@@ -5,6 +5,7 @@ import { Avatar, Button, JknAvatar } from "@/components"
 import { useFormModal } from "@/components/modal"
 import { useToast } from "@/hooks"
 import { useToken, useUser } from "@/store"
+import { useQuery } from "@tanstack/react-query"
 import { useMount, useRequest } from "ahooks"
 import to from "await-to-js"
 import dayjs from "dayjs"
@@ -19,7 +20,14 @@ const UserCenter = (props: UserCenterProps) => {
   const { user, setUser, reset } = useUser()
   const { removeToken } = useToken()
   const { t } = useTranslation()
-  const query = useRequest(getUser, { defaultParams: [{ extends: ['authorized'] }] })
+  const query = useQuery({
+    queryKey: [getUser.cacheKey],
+    queryFn: () => getUser({
+      extends: ['authorized']
+    })
+  })
+  
+
   const logoutQuery = useRequest(logout, { manual: true })
   const { toast } = useToast()
   const authorized = useMemo(() => {
