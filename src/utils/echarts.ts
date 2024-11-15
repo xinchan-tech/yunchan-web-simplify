@@ -14,7 +14,9 @@ import {
   type DatasetComponentOption,
   TransformComponent,
   MarkLineComponent,
-  type MarkLineComponentOption
+  type MarkLineComponentOption,
+  LegendComponent,
+  type LegendComponentOption
 } from 'echarts/components'
 
 import { LabelLayout, UniversalTransition } from 'echarts/features';
@@ -32,7 +34,8 @@ echarts.use([
   UniversalTransition,
   CanvasRenderer,
   MarkLineComponent,
-  TreemapChart
+  TreemapChart,
+  LegendComponent
 ])
 
 export type ECOption = echarts.ComposeOption<
@@ -44,6 +47,7 @@ export type ECOption = echarts.ComposeOption<
   | DatasetComponentOption
   | MarkLineComponentOption
   | TreemapSeriesOption
+  | LegendComponentOption
 >
 
 export default echarts

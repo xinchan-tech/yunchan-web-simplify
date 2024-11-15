@@ -906,57 +906,57 @@ type GetStockEconomicResult = {
      * 唯一标识符
      */
     id: string
-  
+
     /**
      * 发布日期和时间
      */
     date: string
-  
+
     /**
      * 指标关键字
      */
     key: string
-  
+
     /**
      * 指标名称
      */
     title: string
-  
+
     /**
      * 上期值
      */
     previous: string
-  
+
     /**
      * 预估值
      */
     estimate: string
-  
+
     /**
      * 实际值
      */
     actual: string
-  
+
     /**
      * 变动值
      */
     change: string
-  
+
     /**
      * 影响程度
      */
     impact: number
-  
+
     /**
      * 变动百分比
      */
     changePercentage: string
-  
+
     /**
      * 单位
      */
     unit: string
-  
+
     /**
      * 下次发布时间
      */
@@ -971,3 +971,50 @@ export const getStockEconomic = (params: GetStockEconomicParams) => {
   return request.get<GetStockEconomicResult>('/stock/economic', { params }).then(r => r.data)
 }
 getStockEconomic.cacheKey = 'stock:economic'
+
+type GetStockEconomicDetailResult = {
+  introduce: {
+    analysis: string
+    frequency: string
+    impact: string
+    institutions: string
+    reasons: string
+  }
+  list: {
+    id: string
+    date: string
+    title: string
+    currency: string
+    previous: string
+    estimate: string
+    actual: string
+    change: string
+    impact: string
+    changePercentage: string
+    unit: string
+  }[]
+}
+
+/**
+ * 经济数据详情
+ */
+export const getStockEconomicDetail = (key: string) => {
+  return request.get<GetStockEconomicDetailResult>('/stock/economic/info', { params: { key } }).then(r => r.data)
+}
+getStockEconomicDetail.cacheKey = 'stock:economic:detail'
+
+type GetStockHolidayResult = {
+  id: string
+  exchange: string
+  date: string
+  name: string
+  status: string
+}
+
+/**
+ * 休市
+ */
+export const getStockHoliday = (start: string, end: string) => {
+  return request.get<GetStockHolidayResult[]>('/market/holidays', {params: {'date[0]': start, 'date[1]': end}}).then(r => r.data)
+}
+getStockHoliday.cacheKey = 'stock:holiday'

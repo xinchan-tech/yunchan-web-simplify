@@ -60,23 +60,23 @@ const StockEvent = () => {
     },
     {
       header: '前值', size: 120, enableSorting: false, accessorKey: 'before', meta: { align: 'center' },
-      cell: ({ row }) => (<span style={{ color: getColor(row.original.date) }}>{row.getValue('before')}</span>)
+      cell: ({ row }) => (<span style={{ color: getColor(row.original.date) }}>{row.getValue<string>('before')|| '--'}</span>)
     },
     {
       header: '现值', size: 120, enableSorting: false, accessorKey: 'current', meta: { align: 'center' },
-      cell: ({ row }) => (<span style={{ color: getColor(row.original.date) }}>{row.getValue('current')}</span>)
+      cell: ({ row }) => (<span style={{ color: getColor(row.original.date) }}>{row.getValue<string>('current') || '--'}</span>)
     },
     {
       header: '预测值', size: 120, enableSorting: false, accessorKey: 'predict', meta: { align: 'center' },
-      cell: ({ row }) => (<span style={{ color: getColor(row.original.date) }}>{row.getValue('predict')}</span>)
+      cell: ({ row }) => (<span style={{ color: getColor(row.original.date) }}>{row.getValue<string>('predict') || '--'}</span>)
     },
     {
       header: '发布时间（美东）', enableSorting: false, size: 120, accessorKey: 'date', meta: { align: 'center' },
-      cell: ({ row }) => (<span style={{ color: getColor(row.original.date) }}>{row.getValue('date')}</span>)
+      cell: ({ row }) => (<span style={{ color: getColor(row.original.date) }}>{row.getValue<string>('date')?.slice(0, 16) || '--'}</span>)
     },
     {
       header: '下次发布时间（美东）', enableSorting: false, size: 120, accessorKey: 'nextDate', meta: { align: 'center' },
-      cell: ({ row }) => (<span style={{ color: getColor(row.original.date) }}>{row.getValue('nextDate')}</span>)
+      cell: ({ row }) => (<span style={{ color: getColor(row.original.date) }}>{row.getValue<string>('nextDate')?.slice(0, 16) || '--'}</span>)
     },
     {
       header: '重要性', size: 120, enableSorting: false, accessorKey: 'star', meta: { align: 'center' },

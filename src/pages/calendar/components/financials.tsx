@@ -1,5 +1,5 @@
-import { getStockFinancials } from "@/api"
-import { Button, CapsuleTabs, Checkbox, CollectStar, JknIcon, JknTable, type JknTableProps, NumSpan, Popover, PopoverAnchor, PopoverContent, ScrollArea, StockView } from "@/components"
+import { getStockEconomicDetail, getStockFinancials } from "@/api"
+import { Button, CapsuleTabs, Checkbox, CollectStar, JknDatePicker, JknIcon, JknTable, type JknTableProps, NumSpan, Popover, PopoverAnchor, PopoverContent, ScrollArea, StockView } from "@/components"
 import { StockRecord, useCollectCates, useTime } from "@/store"
 import { numToFixed, priceToCnUnit } from "@/utils/price"
 import { useQuery } from "@tanstack/react-query"
@@ -169,17 +169,19 @@ const StockFinancials = () => {
     }
   ], [collects])
 
-  const scrollRef = useRef<HTMLDivElement>(null)
 
-  console.log(scrollRef)
   return (
     <div>
       <div className="py-1">
         <CapsuleTabs type="text" activeKey={active} onChange={setActive}>
-          {days.map((day, i) => (
+          {days.map((day) => (
             <CapsuleTabs.Tab key={day} label={`${day} 星期${weeks[dayjs(day).day()]}`} value={day} />
           ))}
-          <CapsuleTabs.Tab disabled label="自定义" value="manual" />
+          <JknDatePicker onChange={(date) => date && setActive(date)}>
+            {
+              (date, action) => <span className="inline-block w-24" onClick={action.open} onKeyDown={() => { }}><CapsuleTabs.Tab disabled label={date ?? '自定义'} value={date ?? 'manual'} /></span>
+            }
+          </JknDatePicker>
         </CapsuleTabs>
       </div>
       <div>
@@ -188,5 +190,6 @@ const StockFinancials = () => {
     </div>
   )
 }
+
 
 export default StockFinancials

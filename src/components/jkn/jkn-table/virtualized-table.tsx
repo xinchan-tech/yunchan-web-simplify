@@ -1,4 +1,4 @@
-import { type ColumnDef, type ColumnSort, type Row, type SortingState, type TableOptions, flexRender, getCoreRowModel, useReactTable } from "@tanstack/react-table"
+import { type ColumnDef, type ColumnSort, type Row, type SortingState, type TableOptions, flexRender, getCoreRowModel, getSortedRowModel, useReactTable } from "@tanstack/react-table"
 import { useUpdateEffect } from "ahooks"
 import { type CSSProperties, useRef, useState } from "react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../ui/table"
@@ -15,6 +15,7 @@ export interface JknTableProps<TData extends Record<string, unknown> = Record<st
   onRowClick?: (data: TData, row: Row<TData>) => void
   onSelection?: (params: string[]) => void
   onSortingChange?: (params: ColumnSort) => void
+  manualSorting?: boolean
   style?: CSSProperties
   className?: string
 }
@@ -50,8 +51,10 @@ const VirtualizedTable = <TData extends Record<string, unknown>, TValue>({ class
     enableMultiSort: false,
     enableSorting: true,
     sortDescFirst: true,
+    manualSorting: props.manualSorting,
     onSortingChange: _onSortCHange,
     getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
     enableRowSelection: true,
     onRowSelectionChange: setRowSelection,
   })

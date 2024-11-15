@@ -3,6 +3,7 @@ import StockFinancials from "./components/financials"
 import { useState } from "react"
 import StockEconomic from "./components/economic"
 import StockEvent from "./components/event"
+import StockHolidays from "./components/holidays"
 
 const StockCalendar = () => {
   const [active, setActive] = useState('financials')
@@ -20,7 +21,8 @@ const StockCalendar = () => {
         {{
           financials: <StockFinancials />,
           economic: <StockEconomic />,
-          event: <StockEvent />
+          event: <StockEvent />,
+          holidays: <StockHolidays />
         }[active] ?? null}
       </div>
     </div>
