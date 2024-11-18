@@ -10,7 +10,7 @@ const Table = React.forwardRef<
     <table
       ref={ref}
       cellSpacing={1}
-      className={cn("w-full caption-bottom text-sm table-fixed bg-table", className)}
+      className={cn("w-full caption-bottom text-sm bg-table", className)}
       {...props}
     />
   </div>

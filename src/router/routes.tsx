@@ -41,6 +41,20 @@ export const routes: RouteObject[] = [
     handle:{
       title: '消息中心'
     }
+  },
+  {
+    path: '/shout',
+    Component: lazy(() => import('@/pages/shout')),
+    handle:{
+      title: '大V快评'
+    }
+  },
+  {
+    path: '/alarm',
+    Component: lazy(() => import('@/pages/alarm')),
+    handle:{
+      title: 'AI报警'
+    }
   }
   
 ]

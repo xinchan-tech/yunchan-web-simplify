@@ -1,10 +1,13 @@
 import { type ColumnDef, type ColumnSort, type Row, type SortingState, type TableOptions, flexRender, getCoreRowModel, useReactTable } from "@tanstack/react-table"
-import { useUpdateEffect } from "ahooks"
-import { useState } from "react"
+import { useMount, useUnmount, useUpdateEffect } from "ahooks"
+import { useRef, useState } from "react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../ui/table"
 import JknIcon from "../jkn-icon"
 import { Skeleton } from "@/components"
 import VirtualizedTable from './virtualized-table'
+import { cn } from "@/utils/style"
+import { nanoid } from "nanoid"
+import { appEvent } from "@/utils/event"
 
 export interface JknTableProps<TData extends Record<string, unknown> = Record<string, unknown>, TValue = unknown> {
   columns: ColumnDef<TData, TValue>[]
@@ -14,6 +17,8 @@ export interface JknTableProps<TData extends Record<string, unknown> = Record<st
   onRowClick?: (data: TData, row: Row<TData>) => void
   onSelection?: (params: string[]) => void
   onSortingChange?: (params: ColumnSort) => void
+  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+  onEvent?: (arg: { event: string, params: any }) => void
 }
 
 const SortUp = () => <JknIcon name="ic_btn_up" className="w-2 h-4" />
@@ -23,9 +28,15 @@ const SortNone = () => <JknIcon name="ic_btn_nor" className="w-2 h-4" />
 const _JknTable = <TData extends Record<string, unknown>, TValue>(props: JknTableProps<TData, TValue>) => {
   const [sorting, setSorting] = useState<SortingState>([])
   const [rowSelection, setRowSelection] = useState({})
-
+  const [rowClick, setRowClick] = useState<string | number>()
+  const eventTopic = useRef(`table:${nanoid(8)}`)
   const _onSortCHange: TableOptions<TData>['onSortingChange'] = (e) => {
     setSorting(e)
+  }
+
+  const _onRowClick = (row: Row<TData>) => {
+    props.onRowClick?.(row.original, row)
+    setRowClick(rowClick !== undefined ? undefined : row.original[props.rowKey ?? 'id'] as string | number)
   }
 
   useUpdateEffect(() => {
@@ -36,8 +47,16 @@ const _JknTable = <TData extends Record<string, unknown>, TValue>(props: JknTabl
     props.onSelection?.(Object.keys(rowSelection))
   }, [rowSelection])
 
+  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+  const emitEvent = (arg: { event: string, params: any }) => {
+    if (eventTopic.current) {
+      appEvent.emit(eventTopic.current, arg)
+    }
+  }
+
   const table = useReactTable({
     columns: props.columns,
+
     data: props.data,
     state: {
       sorting,
@@ -51,6 +70,21 @@ const _JknTable = <TData extends Record<string, unknown>, TValue>(props: JknTabl
     getCoreRowModel: getCoreRowModel(),
     enableRowSelection: true,
     onRowSelectionChange: setRowSelection,
+    meta: {
+      emit: emitEvent
+    }
+  })
+
+  useMount(() => {
+    if (eventTopic.current) {
+      appEvent.on(eventTopic.current, (props.onEvent as () => void) ?? (() => { }))
+    }
+  })
+
+  useUnmount(() => {
+    if (eventTopic?.current) {
+      appEvent.off(eventTopic.current)
+    }
   })
 
 
@@ -68,7 +102,8 @@ const _JknTable = <TData extends Record<string, unknown>, TValue>(props: JknTabl
                       ? null
                       : (
                         <div className="flex items-center w-full space-x-1">
-                          <div className="flex-1" style={{ textAlign: align }}>
+                          {/* biome-ignore lint/suspicious/noExplicitAny: <explanation> */}
+                          <div className="flex-1" style={{ textAlign: align as any }}>
                             {
                               flexRender(
                                 header.column.columnDef.header,
@@ -103,13 +138,17 @@ const _JknTable = <TData extends Record<string, unknown>, TValue>(props: JknTabl
                   <TableRow
                     key={row.id}
                     data-state={row.getIsSelected() && "selected"}
-                    onClick={() => props.onRowClick?.(row.original, row)}
-                    className="bg-muted hover:bg-accent transition-all duration-200"
+                    onClick={() => _onRowClick(row)}
+                    className={cn(
+                      'bg-muted hover:bg-accent transition-all duration-200',
+                      rowClick === row.original[props.rowKey ?? 'id'] && '!bg-accent'
+                    )}
                   >
                     {row.getVisibleCells().map((cell) => {
                       const { align } = cell.column.columnDef.meta ?? {}
                       return (
-                        <TableCell key={cell.id} style={{ textAlign: align }}>
+                        // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+                        <TableCell key={cell.id} style={{ textAlign: align as any }}>
                           {flexRender(cell.column.columnDef.cell, cell.getContext())}
                         </TableCell>
                       )
@@ -128,7 +167,7 @@ const _JknTable = <TData extends Record<string, unknown>, TValue>(props: JknTabl
             <TableBody>
               <TableRow>
                 <TableCell colSpan={props.columns.length} className="h-24 text-center">
-                  <Skeleton className="h-4 w-full"  />
+                  <Skeleton className="h-4 w-full" />
                   <Skeleton className="h-4 w-full" />
                   <Skeleton className="h-4 w-full" />
                   <Skeleton className="h-4 w-full" />

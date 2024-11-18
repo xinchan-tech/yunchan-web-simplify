@@ -1,5 +1,5 @@
 import { getChatContacts, getChatRecords, getNoticeList, getNoticeTypes } from "@/api"
-import { JknAvatar } from "@/components"
+import { Button, Input, JknAvatar, JknIcon, ScrollArea, Textarea } from "@/components"
 import { useUser } from "@/store"
 import { dateToWeek } from "@/utils/date"
 import { cn } from "@/utils/style"
@@ -81,7 +81,7 @@ const MessageCenter = () => {
           ))
         }
       </div>
-      <div className="flex-1 box-border p-4">
+      <div className="flex-1 box-border">
         <MessageContent msgKey={active} type={type} />
       </div>
     </div>
@@ -141,39 +141,52 @@ const MessageContent = (props: MessageContentProps) => {
   }, [notices.data, chats.data, props.type])
 
   return (
-    <div>
-      <div>
-        {
-          data.map(group => (
-            <div key={group[0].create_time} className="space-y-4">
-              <div className="text-center">
-                美东时间&nbsp;
-                {dayjs(+group[0].create_time * 1000).tz('America/New_York').format('MM-DD')}&nbsp;
-                {dateToWeek(dayjs(+group[0].create_time * 1000).tz('America/New_York'))}&nbsp;
-                {dayjs(+group[0].create_time * 1000).tz('America/New_York').format('HH:mm')}
-              </div>
-              {
-                group.map(msg => (
-                  <div key={msg.id} className="flex items-center w-full">
-                    {
-                      msg.from_user.id === user.user?.id ? (
-                        <div className="ml-auto flex items-center">
-                          <div className="bg-[#1e8bf1] rounded py-2 px-2 relative max-w-1/2 message-content">
-                            {msg.message}
+    <div className="h-full overflow-hidden">
+      <ScrollArea className="h-[calc(100%-170px)] border-0 border-b border-solid border-b-border p-4 box-border">
+        <div className=" ">
+          {
+            data.map(group => (
+              <div key={group[0].create_time} className="space-y-4">
+                <div className="text-center flex items-center justify-center text-tertiary">
+                  <div className="w-1/5 h-0 border-0 border-b border-solid border-b-border mr-2" />
+                  美东时间&nbsp;
+                  {dayjs(+group[0].create_time * 1000).tz('America/New_York').format('MM-DD')}&nbsp;
+                  {dateToWeek(dayjs(+group[0].create_time * 1000).tz('America/New_York'))}&nbsp;
+                  {dayjs(+group[0].create_time * 1000).tz('America/New_York').format('HH:mm')}
+                  <div className="w-1/5 h-0 border-0 border-b border-solid border-b-border ml-2" />
+                </div>
+                {
+                  group.map(msg => (
+                    <div key={msg.id} className="flex items-center w-full">
+                      {
+                        msg.from_user.id === user.user?.id ? (
+                          <div className="ml-auto flex items-center">
+                            <div className="bg-[#1e8bf1] rounded py-2 px-2 relative max-w-1/2 message-content">
+                              {msg.message}
+                            </div>
+                            <JknAvatar className="ml-3" src={msg.from_user.avatar ?? undefined} />
                           </div>
-                          <JknAvatar className="ml-3" src={msg.from_user.avatar ?? undefined} />
-                        </div>
-                      ) : (
-                        <div className="justify-self-start">123</div>
-                      )
-                    }
-                  </div>
+                        ) : (
+                          <div className="justify-self-start">123</div>
+                        )
+                      }
+                    </div>
 
-                ))
-              }
-            </div>
-          ))
-        }
+                  ))
+                }
+              </div>
+            ))
+          }
+        </div>
+      </ScrollArea>
+      <div className="py-4 h-[170px] p-4 box-border flex flex-col">
+        <div>
+          <JknIcon name="pick_image" />
+        </div>
+        <div className="flex justify-stretch flex-1">
+          <Textarea placeholder="请输入文字或选择图片" />
+          <Button className="ml-3 h-full w-24">发送</Button>
+        </div>
       </div>
       <style jsx>{`
         .message-content::after {
@@ -182,10 +195,11 @@ const MessageContent = (props: MessageContentProps) => {
           position: absolute;
           width: 0;
           height: 0;
-          border-top: 10px solid transparent;
-          border-right: 10px solid #1e8bf1;
-          border-top: 10px solid transparent;
-          top: 20px;
+          border-bottom: 6px solid transparent;
+          border-left: 6px solid #1e8bf1;
+          border-top: 6px solid transparent;
+          top: 50%;
+          transform: translateY(-50%);
           right: -5px;
         }
       `}</style>

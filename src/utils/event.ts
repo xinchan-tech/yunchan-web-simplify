@@ -1,6 +1,6 @@
 import mitt from 'mitt'
 
-type EventType = 'login' | 'toast'
+type EventType = 'login' | 'toast' | string
 
 type Events = Record<EventType, unknown>
 

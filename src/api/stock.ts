@@ -77,6 +77,10 @@ export type StockExtendResult =
 // biome-ignore lint/suspicious/noExplicitAny: <explanation>
 export type StockExtendResultMap = Record<StockExtendResult, any>
 
+export const getAllStocks = async (key: string) => {
+  return request.get('/index/getAllStock', { params: { key } }).then(r => r.data)
+}
+
 type GetStockBaseCodeInfoParams = {
   /**
    * 股票代码
@@ -1015,6 +1019,8 @@ type GetStockHolidayResult = {
  * 休市
  */
 export const getStockHoliday = (start: string, end: string) => {
-  return request.get<GetStockHolidayResult[]>('/market/holidays', {params: {'date[0]': start, 'date[1]': end}}).then(r => r.data)
+  return request
+    .get<GetStockHolidayResult[]>('/market/holidays', { params: { 'date[0]': start, 'date[1]': end } })
+    .then(r => r.data)
 }
 getStockHoliday.cacheKey = 'stock:holiday'

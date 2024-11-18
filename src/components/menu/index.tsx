@@ -49,7 +49,7 @@ const Menu = () => {
     {
       icon: 'left_menu_5@2x',
       title: 'AI 报警',
-      path: '/stock',
+      path: '/alarm',
     },
     {
       icon: 'left_menu_6@2x',
@@ -63,8 +63,8 @@ const Menu = () => {
     },
     {
       icon: 'left_menu_8@2x',
-      title: '大V喊单',
-      path: '/stock',
+      title: '大V快评',
+      path: '/shout',
     }
   ]
 
