@@ -76,3 +76,53 @@ export const deleteAlarm = async (params: { ids?: string[]; symbols?: string[]; 
 
   return request.post('/alarms/delete', f).then(r => r.data)
 }
+
+
+/**
+ * 添加报警
+ */
+
+type AddAlarmParams = {
+  symbol: string
+  type: number
+  stock_cycle?: string[]
+  expire_time?: string
+  condition: {
+    category_ids?: string[]
+    category_hdly_ids?: string[]
+    own_ids?: string[]
+    rise?: number[]
+    fall?: number[]
+    frequency?: number
+    is_email?: '0' | '1'
+  }
+}
+export const addAlarm = async (params: AddAlarmParams) => {
+  return request.post('/alarm/add', params).then(r => r.data)
+}
+
+
+type GetAlarmTypesResult = {
+  own: []
+  stock_kline: {
+    authorized: 0 | 1
+    id: string
+    name: string
+    value: string
+  }[]
+  stocks: {
+    children?: GetAlarmTypesResult['stocks']
+    authorized: 0 | 1
+    id: string
+    name: string
+    pid: string
+  }[]
+}
+
+/**
+ * 获取报警类型
+ */
+export const getAlarmTypes = async () => {
+  return request.get<GetAlarmTypesResult>('/alarm/getStocks').then(r => r.data)
+}
+getAlarmTypes.cacheKey = 'alarm:getStocks'

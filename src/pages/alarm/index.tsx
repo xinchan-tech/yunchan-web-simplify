@@ -6,6 +6,7 @@ import { useMount } from "ahooks"
 
 const AlarmPage = () => {
   const [alarmType, setAlarmType] = useState('0')
+  const [viewType, setViewKey] = useState('list')
   const aiForm = useModal({
     content: <AiAlarmForm />,
     title: 'AI报警设置',
@@ -16,7 +17,7 @@ const AlarmPage = () => {
 
 
   useMount(() => {
-    aiForm.modal.open()
+
   })
 
   return (
@@ -27,13 +28,19 @@ const AlarmPage = () => {
           <CapsuleTabs.Tab label="股价报警" value="2" />
           <CapsuleTabs.Tab label="画线报警" value="3" />
         </CapsuleTabs>
-        <div className="flex items-center cursor-pointer ml-auto text-xs text-secondary space-x-1">
+        <div onClick={aiForm.modal.open} onKeyDown={() => { }} className="flex items-center cursor-pointer ml-auto text-xs text-secondary space-x-1">
           <JknIcon name="add" className="w-3 h-3" />
           <span>添加报警</span>
         </div>
       </div>
       <div className="flex-1 ">
-        <AlarmList type={alarmType} />
+        <div className="border-0 border-b border-solid border-border py-1">
+          <CapsuleTabs type="text" activeKey={viewType} onChange={setViewKey}>
+            <CapsuleTabs.Tab label="报警列表" value="list" />
+            <CapsuleTabs.Tab label="已触发报警" value="log" />
+          </CapsuleTabs>
+        </div>
+        <AlarmList type={alarmType} options />
       </div>
       {
         aiForm.context

@@ -1,11 +1,13 @@
 import { type ColumnDef, type ColumnSort, type Row, type SortingState, type TableOptions, flexRender, getCoreRowModel, getSortedRowModel, useReactTable } from "@tanstack/react-table"
-import { useUpdateEffect } from "ahooks"
+import { useMount, useUnmount, useUpdateEffect } from "ahooks"
 import { type CSSProperties, useRef, useState } from "react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../ui/table"
 import JknIcon from "../jkn-icon"
 import { ScrollArea, Skeleton } from "@/components"
 import { cn } from "@/utils/style"
 import { useVirtualizer } from '@tanstack/react-virtual'
+import { appEvent } from "@/utils/event"
+import { nanoid } from "nanoid"
 
 export interface JknTableProps<TData extends Record<string, unknown> = Record<string, unknown>, TValue = unknown> {
   columns: ColumnDef<TData, TValue>[]
@@ -18,6 +20,8 @@ export interface JknTableProps<TData extends Record<string, unknown> = Record<st
   manualSorting?: boolean
   style?: CSSProperties
   className?: string
+  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+  onEvent?: (arg: { event: string, params: any }) => void
 }
 
 const SortUp = () => <JknIcon name="ic_btn_up" className="w-2 h-4" />
@@ -27,6 +31,7 @@ const SortNone = () => <JknIcon name="ic_btn_nor" className="w-2 h-4" />
 const VirtualizedTable = <TData extends Record<string, unknown>, TValue>({ className, style, ...props }: JknTableProps<TData, TValue>) => {
   const [sorting, setSorting] = useState<SortingState>([])
   const [rowSelection, setRowSelection] = useState({})
+  const [rowClick, setRowClick] = useState<string | number>()
 
   const _onSortCHange: TableOptions<TData>['onSortingChange'] = (e) => {
     setSorting(e)
@@ -39,6 +44,14 @@ const VirtualizedTable = <TData extends Record<string, unknown>, TValue>({ class
   useUpdateEffect(() => {
     props.onSelection?.(Object.keys(rowSelection))
   }, [rowSelection])
+
+  const eventTopic = useRef(`table:${nanoid(8)}`)
+  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+  const emitEvent = (arg: { event: string, params: any }) => {
+    if (eventTopic.current) {
+      appEvent.emit(eventTopic.current, arg)
+    }
+  }
 
   const table = useReactTable({
     columns: props.columns,
@@ -57,6 +70,9 @@ const VirtualizedTable = <TData extends Record<string, unknown>, TValue>({ class
     getSortedRowModel: getSortedRowModel(),
     enableRowSelection: true,
     onRowSelectionChange: setRowSelection,
+    meta: {
+      emit: emitEvent
+    }
   })
 
   const { rows } = table.getRowModel()
@@ -74,6 +90,23 @@ const VirtualizedTable = <TData extends Record<string, unknown>, TValue>({ class
     overscan: 20,
   })
 
+  useMount(() => {
+    if (eventTopic.current) {
+      appEvent.on(eventTopic.current, (props.onEvent as () => void) ?? (() => { }))
+    }
+  })
+
+  useUnmount(() => {
+    if (eventTopic?.current) {
+      appEvent.off(eventTopic.current)
+    }
+  })
+
+  const _onRowClick = (row: Row<TData>) => {
+    props.onRowClick?.(row.original, row)
+    setRowClick(rowClick !== undefined ? undefined : row.original[props.rowKey ?? 'id'] as string | number)
+  }
+
   const scrollRef = useRef<HTMLDivElement>(null)
 
   return (
@@ -85,12 +118,12 @@ const VirtualizedTable = <TData extends Record<string, unknown>, TValue>({ class
               {headerGroup.headers.map((header) => {
                 const { align } = header.column.columnDef.meta ?? {}
                 return (
-                  <TableHead key={header.id} className="flex" style={{ width: header.column.getSize() }} >
+                  <TableHead key={header.id} className="flex" style={{ width: header.getSize() }} >
                     {header.isPlaceholder
                       ? null
                       : (
                         <div className="flex items-center w-full space-x-1">
-                          <div className="flex-1" style={{ textAlign: align }}>
+                          <div className="flex-1" style={{ textAlign: align as undefined }}>
                             {
                               flexRender(
                                 header.column.columnDef.header,
@@ -130,7 +163,7 @@ const VirtualizedTable = <TData extends Record<string, unknown>, TValue>({ class
                       key={row.id}
                       data-state={row.getIsSelected() && "selected"}
                       ref={node => rowVirtualizer.measureElement(node)}
-                      onClick={() => props.onRowClick?.(row.original, row)}
+                      onClick={() => _onRowClick(row)}
                       className="bg-muted hover:bg-accent transition-all duration-200 flex absolute w-full z-0"
                       style={{
                         transform: `translateY(${virtualRow.start}px)` //this should always be a `style` as it changes on scroll
@@ -139,7 +172,7 @@ const VirtualizedTable = <TData extends Record<string, unknown>, TValue>({ class
                       {row.getVisibleCells().map((cell) => {
                         const { align } = cell.column.columnDef.meta ?? {}
                         return (
-                          <TableCell className="flex items-center" key={cell.id} style={{ textAlign: align, width: cell.column.getSize() }}>
+                          <TableCell className="flex items-center" key={cell.id} style={{ textAlign: align as undefined, width: cell.column.getSize() }}>
                             <div className="w-full">
                               {flexRender(cell.column.columnDef.cell, cell.getContext())}
                             </div>

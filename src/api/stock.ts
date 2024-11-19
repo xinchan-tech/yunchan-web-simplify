@@ -77,9 +77,10 @@ export type StockExtendResult =
 // biome-ignore lint/suspicious/noExplicitAny: <explanation>
 export type StockExtendResultMap = Record<StockExtendResult, any>
 
-export const getAllStocks = async (key: string) => {
-  return request.get('/index/getAllStock', { params: { key } }).then(r => r.data)
+export const getAllStocks = async (key?: string) => {
+  return request.get<{data: string, key: string}>('/index/getAllStock', { params: { key } }).then(r => r.data)
 }
+getAllStocks.cacheKey = 'index:allStock'
 
 type GetStockBaseCodeInfoParams = {
   /**
@@ -92,9 +93,17 @@ type GetStockBaseCodeInfoParams = {
   extend: StockExtend[]
 }
 
-export const getStockBaseCodeInfo = (params: GetStockBaseCodeInfoParams) => {
-  return request.get('/basic/stock/getCodeInfo', { params }).then(r => r.data)
+type GetStockBaseCodeInfoResult = {
+  extend?: StockExtendResultMap
+  name: string
+  stock: StockRawRecord
+  symbol: string
 }
+
+export const getStockBaseCodeInfo = (params: GetStockBaseCodeInfoParams) => {
+  return request.get<GetStockBaseCodeInfoResult>('/basic/stock/getCodeInfo', { params }).then(r => r.data)
+}
+getStockBaseCodeInfo.cacheKey = 'basic:stock:code:info'
 
 export enum StockChartInterval {
   /**

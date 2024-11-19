@@ -54,7 +54,7 @@ export const useModal = ({ content, onOpen, title, closeIcon, className, footer,
                   title && (
                     <div className="title text-center h-10" style={{}}>
                       {
-                        !closeIcon && (
+                        closeIcon && (
                           <span
                             className="bg-[#F36059] box-border rounded-full cursor-pointer  hover:opacity-90 absolute -z-0 w-4 h-4 left-2 top-3 flex items-center justify-center"
                             onClick={toggleModalVisible}

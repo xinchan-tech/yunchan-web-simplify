@@ -1,4 +1,4 @@
-import { type ColumnDef, type ColumnSort, type Row, type SortingState, type TableOptions, flexRender, getCoreRowModel, useReactTable } from "@tanstack/react-table"
+import { type ColumnDef, type ColumnSort, type Row, type SortingState, type TableOptions, flexRender, getCoreRowModel, getSortedRowModel, useReactTable } from "@tanstack/react-table"
 import { useMount, useUnmount, useUpdateEffect } from "ahooks"
 import { useRef, useState } from "react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../ui/table"
@@ -14,6 +14,7 @@ export interface JknTableProps<TData extends Record<string, unknown> = Record<st
   data: TData[]
   rowKey?: string
   loading?: boolean
+  manualSorting?: boolean
   onRowClick?: (data: TData, row: Row<TData>) => void
   onSelection?: (params: string[]) => void
   onSortingChange?: (params: ColumnSort) => void
@@ -66,8 +67,10 @@ const _JknTable = <TData extends Record<string, unknown>, TValue>(props: JknTabl
     enableMultiSort: false,
     enableSorting: true,
     sortDescFirst: true,
+    manualSorting: props.manualSorting,
     onSortingChange: _onSortCHange,
     getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
     enableRowSelection: true,
     onRowSelectionChange: setRowSelection,
     meta: {
@@ -90,14 +93,14 @@ const _JknTable = <TData extends Record<string, unknown>, TValue>(props: JknTabl
 
   return (
     <div className="w-full">
-      <Table className="w-full mt-[-1px]">
+      <Table className="w-full mt-[-1px]" >
         <TableHeader className="sticky top-0 z-10">
           {table.getHeaderGroups().map((headerGroup) => (
-            <TableRow key={headerGroup.id}>
+            <TableRow key={headerGroup.id} className="w-fit">
               {headerGroup.headers.map((header) => {
                 const { align } = header.column.columnDef.meta ?? {}
                 return (
-                  <TableHead key={header.id} style={{ width: header.column.getSize() }} >
+                  <TableHead key={header.id} style={{ width: header.getSize() }} >
                     {header.isPlaceholder
                       ? null
                       : (
@@ -140,7 +143,7 @@ const _JknTable = <TData extends Record<string, unknown>, TValue>(props: JknTabl
                     data-state={row.getIsSelected() && "selected"}
                     onClick={() => _onRowClick(row)}
                     className={cn(
-                      'bg-muted hover:bg-accent transition-all duration-200',
+                      'hover:bg-accent transition-all duration-200',
                       rowClick === row.original[props.rowKey ?? 'id'] && '!bg-accent'
                     )}
                   >
@@ -148,7 +151,7 @@ const _JknTable = <TData extends Record<string, unknown>, TValue>(props: JknTabl
                       const { align } = cell.column.columnDef.meta ?? {}
                       return (
                         // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-                        <TableCell key={cell.id} style={{ textAlign: align as any }}>
+                        <TableCell key={cell.id} style={{ textAlign: align as any, width: cell.column.getSize() }}>
                           {flexRender(cell.column.columnDef.cell, cell.getContext())}
                         </TableCell>
                       )
