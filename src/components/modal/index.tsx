@@ -157,37 +157,3 @@ export const useFormModal = <T extends z.ZodTypeAny>({ content, onOk, onOpen, fo
     getFieldValue: form.getValues
   }
 }
-
-interface SimpleFormModalOptions {
-  title: string
-  content: ReactNode
-  create: (values: unknown) => Promise<unknown>
-  update: (values: unknown) => Promise<unknown>
-  refresh: () => void
-}
-
-export const useSimpleFormModal = (props: SimpleFormModalOptions) => {
-  const form = useFormModal({
-    title: props.title,
-    content: props.content,
-    className: 'w-form',
-    onOk: async (values) => {
-      const [err] = await to(((values as { id: number | string }).id ? props.update?.(values) : props.create?.(values)))
-
-      if (err) {
-        message.error(err.message)
-        return
-      }
-
-      message.success('操作成功')
-      form.close()
-      props.refresh()
-    },
-    onOpen: (v: unknown) => {
-      form.form.setFieldsValue(v)
-    }
-  })
-
-  return form
-}
-

@@ -1,12 +1,12 @@
 import UserDefaultPng from '@/assets/icon/user_default.png'
+import { Avatar, AvatarFallback, AvatarImage, JknAvatar } from "@/components"
 import { useModal } from "@/components/modal"
 import { useToken, useUser } from "@/store"
+import { appEvent } from "@/utils/event"
+import { useMount, useUnmount } from "ahooks"
+import { useTranslation } from "react-i18next"
 import LoginForm from "./login-form"
 import UserCenter from "./user-center"
-import { useTranslation } from "react-i18next"
-import { useMount, useUnmount } from "ahooks"
-import { appEvent } from "@/utils/event"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components"
 
 const HeaderUser = () => {
   const { user } = useUser()
@@ -27,18 +27,16 @@ const HeaderUser = () => {
 
   const loginForm = useModal({
     content: <LoginForm afterLogin={() => loginForm.modal.close()} onClose={() => loginForm.modal.close()} />,
-    width: 660,
     footer: null,
-    maskClosable: true,
     onOpen: () => { }
   })
 
   const userCenter = useModal({
     content: <UserCenter onLogout={() => userCenter.modal.close()} />,
-    width: 512,
+    className: 'w-[500px]',
     title: t('user center'),
     footer: false,
-    maskClosable: true,
+    closeIcon: true,
     onOpen: () => { }
   })
 
@@ -52,10 +50,7 @@ const HeaderUser = () => {
 
   return (
     <div className="text-sm flex items-center cursor-pointer" >
-      <Avatar>
-        <AvatarImage src={user?.avatar} className="mr-1" />
-        <AvatarFallback><img src={UserDefaultPng} alt="CN"/></AvatarFallback>
-      </Avatar>
+      <JknAvatar className="w-5 h-5 mr-2" src={user?.avatar} />
       <span onClick={onClick} onKeyDown={() => { }}>{user?.realname ?? t('login')}</span>
       {
         loginForm.context

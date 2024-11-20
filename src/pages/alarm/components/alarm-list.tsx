@@ -1,4 +1,4 @@
-import { getAlarmsGroup, getAlarms, deleteAlarm } from "@/api"
+import { AlarmType, getAlarmsGroup, getAlarms, deleteAlarm } from "@/api"
 import { type JknTableProps, StockView, NumSpan, JknIcon, JknTable, Popover, PopoverAnchor, PopoverClose, PopoverContent, PopoverTrigger, ScrollArea, Button } from "@/components"
 import { useToast } from "@/hooks"
 import { useStock } from "@/store"
@@ -9,7 +9,7 @@ import dayjs from "dayjs"
 import { useEffect, useMemo, useState } from "react"
 
 interface AlarmListProps {
-  type: string
+  type: AlarmType
   options?: boolean
 }
 
@@ -31,15 +31,16 @@ const AlarmList = (props: AlarmListProps) => {
 export default AlarmList
 
 interface AlarmItemProps {
-  type: string
+  type: AlarmType
   options?: boolean
   onChange?: (symbol: string) => void
 }
 const GroupAlarm = (props: AlarmItemProps) => {
-  const query = useQuery({
+  const options = {
     queryKey: [getAlarmsGroup.cacheKey, props.type],
-    queryFn: () => getAlarmsGroup({ type: +props.type, extend: ['total_share'] }),
-  })
+    queryFn: () => getAlarmsGroup({ type: +props.type, extend: ['total_share'] })
+  }
+  const query = useQuery(options)
   const stock = useStock()
 
   useEffect(() => {
@@ -61,23 +62,23 @@ const GroupAlarm = (props: AlarmItemProps) => {
     const c: JknTableProps<TableDataType>['columns'] = [
       { header: '序号', accessorKey: 'index', size: 30, enableSorting: false, cell: ({ row }) => <span className="block py-1">{row.index + 1}</span>, meta: { align: 'center' } },
       {
-        header: '股票代码', accessorKey: 'name', size: 80,
+        header: '股票代码', accessorKey: 'name', meta: { width: '15%' },
         cell: ({ row }) => <StockView code={row.original.code} name={row.original.name} />
       },
       {
-        header: '股票名称', accessorKey: 'price',size: 80, meta: { align: 'right' },
-        cell: ({ row }) => <NumSpan value={numToFixed(row.original.price, 3) ?? 0} isPositive={row.original.percent > 0} />
+        header: '股票名称', accessorKey: 'price', meta: { align: 'right', width: '15%' },
+        cell: ({ row }) => <NumSpan value={numToFixed(row.original.price, 2) ?? 0} isPositive={row.original.percent > 0} />
       },
       {
-        header: '涨跌幅', size: 80, accessorKey: 'percent', meta: { align: 'right' },
+        header: '涨跌幅', accessorKey: 'percent', meta: { align: 'right', width: '15%' },
         cell: ({ row }) => <NumSpan symbol block percent value={numToFixed(row.original.percent, 3) ?? 0} isPositive={row.original.percent > 0} />
       },
       {
-        header: '成交额', accessorKey: 'volume', meta: { align: 'right' },
+        header: '成交额', accessorKey: 'volume', meta: { align: 'right', width: '15%' },
         cell: ({ row }) => <span >{priceToCnUnit(row.original.volume)} </span>
       },
       {
-        header: '总市值', accessorKey: 'marketValue', meta: { align: 'right' },
+        header: '总市值', accessorKey: 'marketValue', meta: { align: 'right', width: '15%' },
         cell: ({ row }) => <NumSpan unit value={row.original.marketValue} isPositive={row.original.percent > 0} />
       },
     ]
@@ -117,13 +118,13 @@ const GroupAlarm = (props: AlarmItemProps) => {
             <JknIcon name={row.table.getSelectedRowModel().rows.length > 0 ? 'checkbox_mult_sel' : 'checkbox_mult_nor'} />
           </div>
         ),
-        enableSorting: false, size: 90, accessorKey: 'action', meta: { align: 'center' },
+        enableSorting: false, size: 60, accessorKey: 'action', meta: { align: 'center' },
         cell: ({ row, table }) => (
           <div className="flex justify-center gap-2">
             <Popover>
               <PopoverTrigger asChild>
                 <Button variant="icon">
-                  <JknIcon name="del" />
+                  <JknIcon name="del" className="w-4 h-4" />
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto">
@@ -146,6 +147,8 @@ const GroupAlarm = (props: AlarmItemProps) => {
           </div>
         )
       })
+    }else{
+      c.splice(4, 1)
     }
 
     return c
@@ -159,7 +162,7 @@ const GroupAlarm = (props: AlarmItemProps) => {
         code: symbol,
         name: name,
         price: lastData?.close ?? 0,
-        percent: lastData?.percent ?? 0,
+        percent: (lastData?.percent ?? 0) * 100,
         marketValue: lastData?.marketValue ?? 0,
         volume: (lastData?.volume ?? 0),
       })
@@ -167,7 +170,46 @@ const GroupAlarm = (props: AlarmItemProps) => {
     return r
   })()
 
+  const queryClient = useQueryClient()
+  const { toast } = useToast()
+
+  const deleteAlarmMutation = useMutation({
+    mutationFn: async (params: { ids: string[], type: AlarmType }) => deleteAlarm({ symbols: params.ids, type: params.type }),
+    onMutate: async (params) => {
+      await queryClient.cancelQueries(options)
+
+      const previous = queryClient.getQueryData<Awaited<ReturnType<typeof getAlarmsGroup>>>(options.queryKey)
+
+      if (previous) {
+        queryClient.setQueryData(options.queryKey, {
+          ...previous,
+          items: previous.items.filter(item => !params.ids.includes(item.symbol))
+        })
+      }
+
+      return { previous }
+    },
+    onError: (err, _, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData<Awaited<ReturnType<typeof getAlarmsGroup>>>(options.queryKey, context.previous)
+      }
+
+      if (err) {
+        toast({ description: err.message })
+      }
+    },
+
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: options.queryKey })
+    }
+  })
+
   const _onEvent: JknTableProps['onEvent'] = ({ event, params }) => {
+    if (event === 'deleteOne') {
+      deleteAlarmMutation.mutate({ ids: [params], type: props.type })
+    } else if (event === 'delete') {
+      deleteAlarmMutation.mutate({ ids: params, type: props.type })
+    }
   }
 
   return (
@@ -178,7 +220,7 @@ const GroupAlarm = (props: AlarmItemProps) => {
 }
 
 interface AlarmGroupListProps {
-  type: string
+  type: AlarmType
   symbol: string
   options?: boolean
 }
@@ -194,7 +236,7 @@ const AlarmGroupList = (props: AlarmGroupListProps) => {
   const { toast } = useToast()
 
   const deleteAlarmMutation = useMutation({
-    mutationFn: async (params: { ids: string[], type: string }) => deleteAlarm({ ids: params.ids, type: params.type }),
+    mutationFn: async (params: { ids: string[], type: AlarmType }) => deleteAlarm({ ids: params.ids, type: params.type }),
     onMutate: async (params) => {
       await queryClient.cancelQueries(options)
 
@@ -250,7 +292,7 @@ const AlarmGroupList = (props: AlarmGroupListProps) => {
         )
       },
       {
-        header: '底部类型', accessorKey: 'bottom', size: 80, enableSorting: false, meta: { align: 'center' },
+        header: props.type === AlarmType.AI ? '底部类型' : '提醒频率', accessorKey: 'bottom', size: 80, enableSorting: false, meta: { align: 'center' },
         cell: ({ row }) => <span className={cn(row.getValue('bull') === '1' ? 'text-stock-up' : 'text-stock-down')}>{row.original.bottom ?? '-'}</span>
       },
       {
@@ -321,10 +363,11 @@ const AlarmGroupList = (props: AlarmGroupListProps) => {
           </div>
         )
       })
+
     }
 
-    if(props.type === '2'){
-      c.splice(1,1)
+    if (props.type !== AlarmType.AI) {
+      c.splice(1, 1)
     }
 
     return c
@@ -332,13 +375,16 @@ const AlarmGroupList = (props: AlarmGroupListProps) => {
 
   const data = (() => {
     const r: TableDataType[] = []
-    for (const { condition: { bull, category_names, category_hdly_names }, stock_cycle, id, create_time } of query.data?.items || []) {
+    for (const { condition: { bull, category_names, category_hdly_names, price, trigger, frequency }, stock_cycle, id, create_time } of query.data?.items || []) {
+      const _bull = props.type === AlarmType.AI ? bull : trigger === 2 ? '1' : '2'
+      const alarmType = props.type === AlarmType.AI ? category_names?.[0] : ((_bull === '1' ? '涨到' : '跌到') + price)
+      const bottom = props.type === AlarmType.AI ? category_hdly_names?.[0] : frequency === 0 ? '仅提醒一次' : '持续提醒'
       r.push({
         id,
         cycle: stock_cycle,
-        alarmType: category_names?.[0],
-        bottom: category_hdly_names?.[0],
-        bull: bull,
+        alarmType: alarmType,
+        bottom: bottom,
+        bull: _bull,
         create: dayjs(+create_time * 1000).format('MM-DD HH:mm')
       })
     }

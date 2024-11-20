@@ -1,3 +1,4 @@
+import { useStockList } from "@/store"
 import echarts, { type ECOption } from "@/utils/echarts"
 import { useMount, useSize, useUnmount, useUpdateEffect } from "ahooks"
 import { useRef } from "react"
@@ -15,9 +16,11 @@ interface TreeMapProps {
 }
 
 const TreeMap = (props: TreeMapProps) => {
+  const stockList = useStockList()
   const chartRef = useRef<echarts.EChartsType>()
   const chartDomRef = useRef<HTMLDivElement>(null)
   const treeMapSize = useSize(chartDomRef)
+  const dataRef = useRef<TreeMapData[]>([])
 
 
   const option: ECOption = {
@@ -27,7 +30,7 @@ const TreeMap = (props: TreeMapProps) => {
       bottom: 0,
       right: 0
     },
-  
+
     series: [{
       type: 'treemap',
       left: 0,
@@ -41,10 +44,11 @@ const TreeMap = (props: TreeMapProps) => {
       color: ['#30333c'],
       label: {
         show: true,
-        color: '#fff',
         fontSize: 12,
         fontWeight: 'bold',
-        formatter: '{b}'
+        formatter: (v) => `{${v.name}| }\n${v.name}`,
+        rich: {
+        }
       },
       itemStyle: {
         borderColor: 'transparent',
@@ -90,7 +94,29 @@ const TreeMap = (props: TreeMapProps) => {
 
   useMount(() => {
     const dom = chartDomRef.current
-    if(dom){
+    const icons: Record<string, {
+      backgroundColor: {
+        image: string
+      }
+    }> = {}
+
+    for (const node of props.data) {
+      for (const child of node.children ?? []) {
+        const s = stockList.list.find(s => s[1] === child.name)
+
+        if (s?.[0]) {
+          icons[child.name] = { 
+            backgroundColor: { 
+              image: import.meta.env.PUBLIC_BASE_ICON_URL + s[0] ,
+              width: 40,
+              height: 40
+            } 
+          }
+        }
+      }
+    }
+    option.series[0].label.rich = { ...icons }
+    if (dom) {
       chartRef.current = echarts.init(dom)
       chartRef.current.setOption(option)
     }
@@ -102,14 +128,50 @@ const TreeMap = (props: TreeMapProps) => {
 
   useUnmount(() => {
     chartRef.current?.dispose()
+    dataRef.current = []
   })
 
+
   useUpdateEffect(() => {
+    const icons: Record<string, {
+      backgroundColor: {
+        image: string
+      }
+      width: number
+      height: number
+    }> = {}
+
+    for (const node of props.data) {
+      for (const child of node.children ?? []) {
+        const s = stockList.list.find(s => s[1] === child.name)
+
+        if (s?.[0]) {
+          icons[child.name] = { 
+            backgroundColor: { 
+              image: import.meta.env.PUBLIC_BASE_ICON_URL + s[0] ,
+              size: '20%',
+            } ,
+            overflow: 'hidden',
+            borderRadius: 50,
+            width: 50,
+            height: 50
+          }
+        }
+      }
+    }
+
     chartRef.current?.setOption({
       series: [{
-        data: props.data
+        data: props.data,
+        label: {
+          rich: {
+            ...icons
+          }
+        }
       }]
     })
+
+    dataRef.current = props.data
   }, [props.data])
 
   return <div ref={chartDomRef} className="w-full h-full" />

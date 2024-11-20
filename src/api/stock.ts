@@ -1,5 +1,5 @@
 import { useStock } from '@/store'
-import { StockRecord } from '@/store/stock/stock'
+import type { StockResultRecord } from '@/store/stock/stock'
 import request from '@/utils/request'
 import dayjs from 'dayjs'
 import { md5 } from 'js-md5'
@@ -264,8 +264,16 @@ type GetHotSectorsResult = {
 /**
  * 行业/概念热点
  */
-export const getHotSectors = (params: GetHotSectorsParams) => {
-  return request.get<GetHotSectorsResult[]>('/index/hotSectors', { params }).then(r => r.data)
+export const getHotSectors = async (params: GetHotSectorsParams) => {
+  const r = await request.get<GetHotSectorsResult[]>('/index/hotSectors', { params }).then(r => r.data)
+  const t:StockResultRecord[] = []
+  for (const res of r) {
+    for (const top  of res.tops) {
+      t.push(top)
+    }
+  }
+  useStock.getState().insertRawByRecords(t)
+  return r
 }
 
 export enum IncreaseTopStatus {
@@ -712,7 +720,6 @@ export type Finance = {
    * 营收增长率
    */
   revenues_rate: number[]
-  [property: string]: any
 }
 
 /**
@@ -742,7 +749,6 @@ export type QuantityPrice = {
    * 活跃度（特色指标）
    */
   feature: number[]
-  [property: string]: any
 }
 
 /**
@@ -773,7 +779,6 @@ export type Valuation = {
    * 估值指标[总市值]
    */
   total_mv?: TotalMv[]
-  [property: string]: any
 }
 
 /**

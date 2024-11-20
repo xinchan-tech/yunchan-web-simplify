@@ -4,6 +4,7 @@
 
 interface ImportMetaEnv {
   readonly PUBLIC_BASE_API_URL: string
+  readonly PUBLIC_BASE_ICON_URL: string
 }
 
 import '@tanstack/react-table' //or vue, svelte, solid, qwik, etc.

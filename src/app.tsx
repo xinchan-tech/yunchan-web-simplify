@@ -1,4 +1,4 @@
-import { HeaderService, HeaderUser, Input, Menu, Toaster } from './components'
+import { HeaderService, HeaderUser, Input, Menu, StockSelect, Toaster } from './components'
 import Logo from './assets/icon/icon_jkn@2x.png'
 import './app.scss'
 import { RouterProvider } from "react-router-dom"
@@ -23,13 +23,13 @@ const App = () => {
   })
 
   useUpdateEffect(() => {
-    if(!query.isLoading){
+    if (!query.isLoading) {
       user.setUser({
         ...query.data
       })
     }
   }, [query.isLoading])
-  
+
   useRequest(getConfig, {
     onSuccess: (data) => {
       config.setConsults(data.consults)
@@ -51,7 +51,7 @@ const App = () => {
       <Toaster />
       <div className="header relative z-10 px-4">
         <div className="search float-left flex items-center h-full">
-          <Input size="sm" placeholder={t('search.stocks')} />
+          <StockSelect size="mini" placeholder={t('search.stocks')} />
         </div>
 
         <div className="absolute top-0 left-0 h-full w-full text-center flex justify-center items-center -z-10">

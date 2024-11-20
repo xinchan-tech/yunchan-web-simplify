@@ -1,3 +1,5 @@
+import { useStockList } from "@/store"
+import JknIcon from "../jkn/jkn-icon"
 
 interface StockViewProps {
   code: string
@@ -5,10 +7,25 @@ interface StockViewProps {
 }
 
 const StockView = ({ code, name }: StockViewProps) => {
+  const stockList = useStockList()
+
+  const stock = stockList.list.find(item => item[1] === code)
+  
   return (
-    <div className="overflow-hidden">
-      <div className="text-foreground">{code}</div>
-      <div className="text-tertiary text-xs text-ellipsis overflow-hidden whitespace-nowrap w-full">{name}</div>
+    <div className="overflow-hidden flex items-center">
+      <div>
+        {
+          stock?.[0] ? (
+            <JknIcon stock={stock?.[0]} className="h-8 w-8 mr-3" />
+          ) : (
+            <div className="h-8 w-8 mr-3 leading-8 text-center rounded-full bg-black" >{code.slice(0, 1)}</div>
+          )
+        }
+      </div>
+      <div>
+        <div className="text-foreground">{code}</div>
+        <div className="text-tertiary text-xs text-ellipsis overflow-hidden whitespace-nowrap w-full">{name}</div>
+      </div>
     </div>
   )
 }

@@ -1,12 +1,12 @@
 import { useMemo, useState } from "react"
 import { useImmer } from 'use-immer'
 import { useTranslation } from "react-i18next"
-import { useRequest } from "ahooks"
 import { getHotSectors } from "@/api"
 import TreeMap from "./components/tree-map"
 import Decimal from "decimal.js"
 import { CapsuleTabs } from "@/components"
 import { StockRecord } from "@/store/stock/stock"
+import { useQuery } from "@tanstack/react-query"
 
 type StockTreeType = 'industry' | 'concept' | 'bull' | 'etf' | 'industry-heatmap' | 'etf-heatmap'
 type StockTreeDate = 'day' | 'week' | 'month'
@@ -18,6 +18,11 @@ const colors = [
 const steps = [
   '-3', '-2', '-1', '0', '1', '2', '3'
 ]
+
+/**
+ * 归一化数据，调整矩形面积
+ */
+
 
 const getColorByStep = (step: string | number) => {
   const n = new Decimal(step).times(100)
@@ -53,12 +58,16 @@ const StockTree = () => {
     })
   }
 
-  const query = useRequest(queryData)
+  const query = useQuery({
+    queryKey: ['stock-tree', type, date],
+    queryFn: queryData
+  })
 
   const treeData = useMemo(() => {
     if (!query.data) return []
 
     const root = []
+    const dataset: Record<string, { value: number }> = {}
 
     for (const node of query.data) {
       const n = { name: node.sector_name, value: node.amount, data: node.change, children: [] }
@@ -66,9 +75,18 @@ const StockTree = () => {
 
       for (const t of node.tops) {
         const stockRecord = new StockRecord(t.stock)
-        n.children.push({ name: t.symbol, value: stockRecord.turnover, data: stockRecord.percent, itemStyle: { color: getColorByStep(stockRecord.percent) } } as never)
+        const child = { name: t.symbol, value: stockRecord.turnover, data: stockRecord.percent, itemStyle: { color: getColorByStep(stockRecord.percent) } }
+        dataset[child.name] = child
+        n.children.push(child as never)
       }
+    }
 
+    const absValues = Object.keys(dataset).map(key => dataset[key as keyof typeof dataset].value)
+    const min = Math.min(...absValues)
+    const max = Math.max(...absValues)
+    
+    for (const k of Object.keys(dataset)) {
+      dataset[k].value = ((dataset[k].value - min) / (max - min)) * (20 - 5) + 5
     }
 
     return root

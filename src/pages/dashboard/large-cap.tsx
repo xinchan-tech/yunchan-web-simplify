@@ -1,16 +1,17 @@
-import { StockChartInterval, getLargeCapIndexes, getStockChart } from "@/api"
+import { StockChartInterval, type StockRawRecord, getLargeCapIndexes, getStockChart } from "@/api"
 import StockDownIcon from '@/assets/icon/stock_down.png'
 import StockUpIcon from '@/assets/icon/stock_up.png'
 import { CapsuleTabs } from "@/components"
-import { type StockRecord, type StockTrading, useStock, useTime } from "@/store"
+import { StockRecord, type StockTrading, useStock, useTime } from "@/store"
 import { getTradingPeriod } from "@/utils/date"
 import echarts, { type ECOption } from "@/utils/echarts"
 import { numToFixed } from "@/utils/price"
 import { cn } from "@/utils/style"
+import { useQuery } from "@tanstack/react-query"
 import { useMount, useRequest, useSize, useUnmount, useUpdateEffect } from "ahooks"
 import clsx from "clsx"
 import dayjs from "dayjs"
-import { useMemo, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 
 const tradingToIntervalMap: Record<StockTrading, StockChartInterval> = {
@@ -35,26 +36,20 @@ const intervalToTradingMap: Record<StockChartInterval, StockTrading> = {
 const LargeCap = () => {
   const [activeKey, setActiveKey] = useState<string>()
   const [activeStock, setActiveStock] = useState<string>()
-  const stock = useStock()
   const time = useTime()
 
   const [stockType, setStockType] = useState<StockChartInterval>(tradingToIntervalMap[time.getTrading()])
-  const largeCap = useRequest(getLargeCapIndexes, {
-    cacheKey: 'largeCap',
-    onSuccess: (data) => {
-      if (!activeKey) {
-        setActiveKey(data[1].category_name)
-        setActiveStock(data[1].stocks[0].symbol)
-      }
-      for (const st of data) {
-        for (const s of st.stocks) {
-          //盘中最后一笔时间，补齐分钟和秒
-          s.stock[0] = dayjs(s.stock[0]).hour(15).minute(59).second(0).format('YYYY-MM-DD HH:mm:ss')
-          stock.insertRaw(s.symbol, s.stock)
-        }
-      }
-    }
+  const largeCap = useQuery({
+    queryKey: [getLargeCapIndexes.cacheKey],
+    queryFn: () => getLargeCapIndexes(),
   })
+
+  useEffect(() => {
+    if(largeCap.data){
+      setActiveKey(largeCap.data[1].category_name)
+      setActiveStock(largeCap.data[1].stocks[0].symbol)
+    }
+  }, [largeCap.data])
 
   const tabs = useMemo(() => {
     return largeCap.data?.map(item => ({
@@ -75,20 +70,20 @@ const LargeCap = () => {
   const list = useMemo(() => {
     if (!activeKey) return []
 
-    const codes = largeCap.data?.find(item => item.category_name === activeKey)?.stocks.map(item => [item.symbol, item.name]) ?? []
+    const codes = largeCap.data?.find(item => item.category_name === activeKey)?.stocks.map(item => [item.symbol, item.name, item.stock]) ?? []
 
     const r = []
 
-    for (const [code, name] of codes) {
+    for (const [code, name, stock] of codes) {
       r.push({
-        name,
-        code,
-        stock: stock.getLastRecord(code)
+        name: name as string,
+        code: code as string,
+        stock: new StockRecord(stock as StockRawRecord)
       })
     }
 
     return r
-  }, [activeKey, largeCap.data, stock])
+  }, [activeKey, largeCap.data])
 
   const onActiveKeyChange = (key: string) => {
     setActiveKey(key)
@@ -100,14 +95,14 @@ const LargeCap = () => {
 
   return (
     <div className="h-full flex flex-col">
-      <div className="bg-secondary py-1.5 border-style-primary px-2 h-[34px] box-border">
+      <div className="py-1.5 border-style-primary px-2 h-[34px] box-border">
         <CapsuleTabs activeKey={activeKey} onChange={onActiveKeyChange}>
           {
             tabs?.map(item => <CapsuleTabs.Tab key={item.key} value={item.key} label={item.label} />)
           }
         </CapsuleTabs>
       </div>
-      <div className="flex bg-secondary p-1.5 border-style-primary justify-between space-x-2 h-[100px] box-border">
+      <div className="flex p-1.5 border-style-primary justify-between space-x-2 h-[100px] box-border">
         {
           list.map(item => (
             <div
@@ -115,7 +110,7 @@ const LargeCap = () => {
               className={cn(
                 'border-style-primary  flex-1 hover:bg-hover text-center py-2 cursor-pointer transition-all duration-300',
                 {
-                  'bg-active': activeStock === item.code
+                  'bg-accent': activeStock === item.code
                 }
               )}
               onClick={() => onActiveStockChange(item.code)}
@@ -131,7 +126,7 @@ const LargeCap = () => {
                   {numToFixed(item.stock?.close ?? 0)}
                   <img className="w-5" src={(item.stock?.percent ?? 0) >= 0 ? StockUpIcon : StockDownIcon} alt="" />
                 </div>
-                <div className="">{numToFixed(item.stock?.percent ?? 0 * 100)}%</div>
+                <div className="">{numToFixed((item.stock?.percent ?? 0) * 100, 2)}%</div>
               </div>
             </div>
           ))
@@ -162,6 +157,7 @@ interface LargeCapChartProps {
 
 const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
   const stock = useStock()
+  const time = useTime()
   const chartRef = useRef<echarts.ECharts>()
   const chartDomRef = useRef<HTMLDivElement>(null)
 
@@ -185,8 +181,6 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
 
   const getTrading = (t: StockChartInterval): StockTrading => {
     switch (t) {
-      case StockChartInterval.INTRA_DAY:
-        return 'intraDay'
       case StockChartInterval.PRE_MARKET:
         return 'preMarket'
       case StockChartInterval.AFTER_HOURS:
@@ -199,7 +193,10 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
   const _getTrading = () => {
     let trading = getTrading(+type)
     if (code && ['SPX', 'IXIC', 'DJI'].includes(code)) {
-      if (trading === 'afterHours') {
+      const _t = time.getTrading()
+      if(_t === 'preMarket'){
+        trading = 'preMarket'
+      }else{
         trading = 'intraDay'
       }
     }
@@ -259,8 +256,8 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
       minPercent = Math.min(minPercent, s.percent)
     }
 
-    const rightYMax = maxPercent + 0.002
-    const rightYMin = minPercent - 0.002
+    const rightYMax = maxPercent + 0.0005
+    const rightYMin = minPercent - 0.0005
     const leftYMax = prevClose * (1 + Math.abs(rightYMax))
     const leftYMin = prevClose * (1 - Math.abs(rightYMin))
     const xAxisData = getTradingPeriod(_getTrading(), dataset[0]?.[0] as string)

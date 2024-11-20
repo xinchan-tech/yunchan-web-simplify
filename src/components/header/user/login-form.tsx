@@ -56,12 +56,12 @@ const LoginForm = (props: LoginFormProps) => {
       <div className="bg-white h-[400px] w-[280px] box-border flex flex-col px-4">
         <p className="text-[#3861F6] mt-12 text-lg">登录账号</p>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onLogin)}>
+          <form onSubmit={form.handleSubmit(onLogin)} className="space-y-4">
             <FormField control={form.control} name="mobile"
               render={({ field }) => (
                 <FormItem>
                   <FormControl>
-                    <Input placeholder="请输入账号" {...field} />
+                    <Input className="bg-[#dcdcdc] border-none placeholder:text-tertiary text-tertiary" placeholder="请输入账号" {...field} />
                   </FormControl>
                 </FormItem>
               )}
@@ -70,12 +70,12 @@ const LoginForm = (props: LoginFormProps) => {
               render={({ field }) => (
                 <FormItem>
                   <FormControl>
-                    <Input placeholder="请输入密码" {...field} type="password" />
+                    <Input className="bg-[#dcdcdc] border-none placeholder:text-tertiary text-tertiary" placeholder="请输入密码" {...field} type="password" />
                   </FormControl>
                 </FormItem>
               )}
             />
-            <Button type="submit" >登录</Button>
+            <Button block >登录</Button>
           </form>
         </Form>
         <div className="px-4 other-login mt-4" >
@@ -87,43 +87,6 @@ const LoginForm = (props: LoginFormProps) => {
           </div>
         </div>
       </div>
-      <style jsx>
-        {`
-          .login-form :global(.ant-input-outlined){
-            --text-color: #7d7d7d;
-            --bg-color: #dcdcdc;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            border-color: var(--bg-color);
-          }
-
-          .login-form :global(.ant-input) {
-            color: #000;
-          }
-
-          .login-form :global(.ant-input::-webkit-input-placeholder){
-            color: var(--text-color);
-          }
-
-          .login-form :global(.ant-btn){
-            background-color: #3156f5;
-          }
-
-          .login-form :global(.ant-btn:hover){
-            background-color: #4e7fff;
-          }
-
-          .other-login :global(.ant-divider-inner-text){
-            color: #dcdcdc !important;
-            font-size: 12px;
-            font-weight: normal;
-          }
-
-          .other-login :global(.ant-divider){
-            border-block-start: 0 rgba(0, 0, 0, 0.1);
-          }
-        `}
-      </style>
     </div>
   )
 }

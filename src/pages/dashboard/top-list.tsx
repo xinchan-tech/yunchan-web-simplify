@@ -1,5 +1,5 @@
 import { IncreaseTopStatus, type StockRawRecord, getIncreaseTop } from "@/api"
-import { CapsuleTabs, JknTable, JknTableProps } from "@/components"
+import { CapsuleTabs, JknTable, type JknTableProps } from "@/components"
 import { type StockRecord, type StockTrading, useStock, useTime } from "@/store"
 import { numToFixed, priceToCnUnit } from "@/utils/price"
 import { cn } from "@/utils/style"

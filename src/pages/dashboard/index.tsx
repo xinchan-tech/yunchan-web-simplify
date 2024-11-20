@@ -26,22 +26,4 @@ const DashBoardPage = () => {
   )
 }
 
-/*       <div>
-  <LargeCap />
-</div>
-<div className="col-span-2">
-  <StockTree />
-</div>
-
-<div>
-  <GoldenStockPool />
-</div>
-<div>
-  <TopList />
-</div>
-<div>
-  <HotFundPoll />
-</div>
- */
-
 export default DashBoardPage

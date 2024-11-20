@@ -2,17 +2,18 @@ import request from '@/utils/request'
 import type { StockExtend, StockExtendResultMap, StockRawRecord } from './stock'
 import { useStock } from '@/store'
 
+export enum AlarmType {
+  AI = 0,
+  HISTORY = 1,
+  PRICE = 2,
+  LINE = 3
+}
+
 type GetAlarmsGroupParams = {
   limit?: number | string
   page?: number | string
   extend?: StockExtend[]
-  /**
-   * 0 AI报警
-   * 1 全息报警
-   * 2 股价报警
-   * 3 画线报警
-   */
-  type: number
+  type: AlarmType
 }
 
 type GetAlarmsGroupResult = PageResult<{
@@ -43,11 +44,14 @@ type GetAlarmsParams = {
 
 type GetAlarmsResult = PageResult<{
   condition: {
+    frequency: number
     bull: string
     category_hdly_ids: string[]
     category_hdly_names: string[]
     category_ids: number[]
     category_names: string[]
+    price: string
+    trigger: number
   }
   create_time: string
   id: string
@@ -63,7 +67,7 @@ getAlarms.cacheKey = 'alarms:list'
 /**
  * 删除报警
  */
-export const deleteAlarm = async (params: { ids?: string[]; symbols?: string[]; type: string }) => {
+export const deleteAlarm = async (params: { ids?: string[]; symbols?: string[]; type: AlarmType }) => {
   const f = new URLSearchParams()
   for (const id of params.ids || []) {
     f.append('ids[]', id)
@@ -72,7 +76,7 @@ export const deleteAlarm = async (params: { ids?: string[]; symbols?: string[]; 
   for (const symbol of params.symbols || []) {
     f.append('symbols[]', symbol)
   }
-  f.append('type', params.type)
+  f.append('type', params.type.toString())
 
   return request.post('/alarms/delete', f).then(r => r.data)
 }
@@ -125,4 +129,35 @@ type GetAlarmTypesResult = {
 export const getAlarmTypes = async () => {
   return request.get<GetAlarmTypesResult>('/alarm/getStocks').then(r => r.data)
 }
-getAlarmTypes.cacheKey = 'alarm:getStocks'
+getAlarmTypes.cacheKey = 'alarms:getStocks'
+
+
+type GetAlarmLogsParams = {
+  limit?: number | string
+  page?: number | string
+  symbol?: string
+  type?: AlarmType
+  /**
+   * k线周期
+   */
+  cycle?: string
+  /**
+   * 开始时间
+   * @example 2023-01-01 00:00:00
+   */
+  start?: string
+  /**
+   * 结束时间
+   * @example 2023-01-01 00:00:00
+   */
+  end?: string
+  extend?: StockExtend[]
+}
+
+/**
+ * 获取触发报警列表
+ */
+export const getAlarmLogs = async (params: GetAlarmLogsParams) => {
+  return request.get('/alarm/logs', { params }).then(r => r.data)
+}
+getAlarmLogs.cacheKey = 'alarms:logs'

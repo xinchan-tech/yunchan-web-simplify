@@ -1,22 +1,31 @@
 import { logout } from "@/api"
 import { getUser, updateUser } from "@/api/user"
 import UserDefaultPng from '@/assets/icon/user_default.png'
-import { Avatar, Button, JknAvatar } from "@/components"
+import { Button, FormControl, FormField, FormItem, FormLabel, Input, JknAvatar } from "@/components"
 import { useFormModal } from "@/components/modal"
-import { useToast } from "@/hooks"
+import { useToast, useZForm } from "@/hooks"
 import { useToken, useUser } from "@/store"
 import { useQuery } from "@tanstack/react-query"
-import { useMount, useRequest } from "ahooks"
+import { useRequest } from "ahooks"
 import to from "await-to-js"
 import dayjs from "dayjs"
 import { useMemo } from "react"
+import { useFormContext } from "react-hook-form"
 import { useTranslation } from "react-i18next"
+import { z } from "zod"
 
 interface UserCenterProps {
   onLogout: () => void
 }
 
+const userFormSchema = z.object({
+  realname: z.string().optional(),
+  avatar: z.string().optional()
+})
+
+
 const UserCenter = (props: UserCenterProps) => {
+  const form = useZForm(userFormSchema, { realname: '', avatar: '' })
   const { user, setUser, reset } = useUser()
   const { removeToken } = useToken()
   const { t } = useTranslation()
@@ -26,7 +35,7 @@ const UserCenter = (props: UserCenterProps) => {
       extends: ['authorized']
     })
   })
-  
+
 
   const logoutQuery = useRequest(logout, { manual: true })
   const { toast } = useToast()
@@ -35,9 +44,9 @@ const UserCenter = (props: UserCenterProps) => {
   }, [query.data])
 
   const edit = useFormModal({
+    form,
     title: t('userEdit.nickname'),
     content: <UserEditForm />,
-    width: 320,
     onOk: async (values: UserEditForm) => {
       const [err] = await to(updateUser(values))
 
@@ -48,17 +57,15 @@ const UserCenter = (props: UserCenterProps) => {
         return
       }
 
-      const r = await query.refreshAsync()
+      const r = await query.refetch()
 
-      setUser({ ...r })
+      setUser({ ...r.data })
 
       edit.close()
     },
     onOpen: () => {
-      edit.setFieldsValue({
-        realname: query.data?.realname,
-        avatar: query.data?.avatar
-      })
+      form.setValue('realname', query.data?.realname)
+      form.setValue('avatar', query.data?.avatar)
     }
   })
 
@@ -79,7 +86,7 @@ const UserCenter = (props: UserCenterProps) => {
 
   return (
     <div >
-      <div className="p-4">
+      <div className="p-4 text-sm">
         <div className="text-base mb-2">{t('base info')}</div>
         <div className="border-0 border-b border-solid border-b-gray-7" />
         <div className="flex my-2">
@@ -104,7 +111,7 @@ const UserCenter = (props: UserCenterProps) => {
           </div>
         </div>
         <div className="text-right" onClick={onLogout} onKeyDown={() => { }}>
-          <Button>退出登录</Button>
+          <Button variant="outline">退出登录</Button>
         </div>
         {
           edit.context
@@ -134,15 +141,29 @@ type UserEditForm = {
 
 const UserEditForm = () => {
   const { t } = useTranslation()
-
+  const form = useFormContext()
   return (
     <div className="p-4">
-      {/* <Form.Item name="realname" rules={[{ required: true, message: t('nickname_required') }]} label={t('nickname')}>
-        <Input />
-      </Form.Item> */}
-      {/* <Form.Item name="avatar" label={t('avatar')}>
-        <Upload listType="picture-card" maxCount={1} />
-      </Form.Item> */}
+      <FormField control={form.control} name="realname"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>{t('nickname')}</FormLabel>
+            <FormControl>
+              <Input {...field} />
+            </FormControl>
+          </FormItem>
+        )}
+      />
+      <FormField control={form.control} name="avatar"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>{t('avatar')}</FormLabel>
+            <FormControl>
+              <Input  {...field}  />
+            </FormControl>
+          </FormItem>
+        )}
+      />
     </div>
   )
 }

@@ -93,18 +93,18 @@ const _JknTable = <TData extends Record<string, unknown>, TValue>(props: JknTabl
 
   return (
     <div className="w-full">
-      <Table className="w-full mt-[-1px]" >
+      <Table className="w-full mt-[-1px] table-fixed" >
         <TableHeader className="sticky top-0 z-10">
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id} className="w-fit">
               {headerGroup.headers.map((header) => {
-                const { align } = header.column.columnDef.meta ?? {}
+                const { align, width } = header.column.columnDef.meta ?? {}
                 return (
-                  <TableHead key={header.id} style={{ width: header.getSize() }} >
+                  <TableHead  key={header.id} style={{ width: width || header.getSize() }} >
                     {header.isPlaceholder
                       ? null
                       : (
-                        <div className="flex items-center w-full space-x-1">
+                        <div className="inline-flex items-center w-full space-x-1">
                           {/* biome-ignore lint/suspicious/noExplicitAny: <explanation> */}
                           <div className="flex-1" style={{ textAlign: align as any }}>
                             {
@@ -151,7 +151,7 @@ const _JknTable = <TData extends Record<string, unknown>, TValue>(props: JknTabl
                       const { align } = cell.column.columnDef.meta ?? {}
                       return (
                         // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-                        <TableCell key={cell.id} style={{ textAlign: align as any, width: cell.column.getSize() }}>
+                        <TableCell key={cell.id} style={{ textAlign: align as any }}>
                           {flexRender(cell.column.columnDef.cell, cell.getContext())}
                         </TableCell>
                       )
