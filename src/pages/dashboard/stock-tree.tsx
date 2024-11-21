@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react"
 import { useImmer } from 'use-immer'
 import { useTranslation } from "react-i18next"
-import { getHotSectors } from "@/api"
+import { getHotSectors, getPlateList, getUsStocks } from "@/api"
 import TreeMap from "./components/tree-map"
 import Decimal from "decimal.js"
 import { CapsuleTabs } from "@/components"
@@ -40,27 +40,18 @@ const getColorByStep = (step: string | number) => {
 const StockTree = () => {
   const [type, setType] = useState<StockTreeType>('industry')
   const [date, setDate] = useState<StockTreeDate>('day')
+  const [filter, setFilter] = useImmer(steps.map(Number))
   const { t } = useTranslation()
 
-  const queryData = () => {
-    if (['industry', 'concept'].includes(type)) {
-      return getHotSectors({
-        type: date,
-        sector: type as 'industry' | 'concept',
-        top: 15,
-        stock: ['1']
-      })
-    }
-    return getHotSectors({
+  const query = useQuery({
+    queryKey: [getHotSectors.cacheKey, type, date],
+    queryFn: () => getHotSectors({
       type: date,
       sector: type as 'industry' | 'concept',
-      top: 15
-    })
-  }
-
-  const query = useQuery({
-    queryKey: ['stock-tree', type, date],
-    queryFn: queryData
+      top: 15,
+      stock: ['1']
+    }),
+    enabled: ['industry', 'concept'].includes(type)
   })
 
   const treeData = useMemo(() => {
@@ -70,28 +61,107 @@ const StockTree = () => {
     const dataset: Record<string, { value: number }> = {}
 
     for (const node of query.data) {
-      const n = { name: node.sector_name, value: node.amount, data: node.change, children: [] }
+      const n = { name: node.sector_name, data: node.change, children: [] }
       root.push(n)
 
       for (const t of node.tops) {
-        const stockRecord = new StockRecord(t.stock)
-        const child = { name: t.symbol, value: stockRecord.turnover, data: stockRecord.percent, itemStyle: { color: getColorByStep(stockRecord.percent) } }
-        dataset[child.name] = child
-        n.children.push(child as never)
+        if (StockRecord.isValid(t.stock)) {
+          const stockRecord = new StockRecord(t.stock)
+          const child = { name: t.symbol, value: stockRecord.turnover, data: stockRecord.percent, color: getColorByStep(stockRecord.percent) }
+          dataset[child.name + t.plate_id] = child
+          n.children.push(child as never)
+        } else {
+          n.children.push({ name: t.symbol, value: 0, data: 0 } as never)
+        }
       }
     }
 
     const absValues = Object.keys(dataset).map(key => dataset[key as keyof typeof dataset].value)
     const min = Math.min(...absValues)
     const max = Math.max(...absValues)
-    
+
     for (const k of Object.keys(dataset)) {
-      dataset[k].value = ((dataset[k].value - min) / (max - min)) * (20 - 5) + 5
+      dataset[k].value = ((dataset[k].value - min) / (max - min)) * (5 - 1) + 1
     }
 
     return root
   }, [query.data])
 
+
+  const queryPlate = useQuery({
+    queryKey: [getPlateList.cacheKey, type],
+    queryFn: () => getPlateList(type === 'industry-heatmap' ? 1 : 2),
+    enabled: type === 'industry-heatmap' || type === 'etf-heatmap'
+  })
+
+  const dataPlate = useMemo(() => {
+    const r = []
+
+    if (!queryPlate.data) return []
+    console.log(queryPlate.data)
+    const dataset: Record<string, { value: number }> = {}
+
+    for (const plate of queryPlate.data) {
+      const n = { name: plate.name, value: plate.amount, data: plate.change / 100, color: getColorByStep(plate.change / 100) }
+      dataset[plate.id] = n
+      r.push(n)
+    }
+
+    const absValues = Object.keys(dataset).map(key => dataset[key as keyof typeof dataset].value)
+    const min = Math.min(...absValues)
+    const max = Math.max(...absValues)
+
+    for (const k of Object.keys(dataset)) {
+      dataset[k].value = ((dataset[k].value - min) / (max - min)) * (10 - 1) + 1
+    }
+
+    return r
+  }, [queryPlate.data])
+
+
+  const queryStock = useQuery({
+    queryKey: [getUsStocks.cacheKey, type],
+    queryFn: () => getUsStocks({
+      type: type === 'bull' ? 'EXCLUDE_ETF' : 'ETF',
+      column: 'amount',
+      limit: 50,
+      page: 1,
+      order: 'desc',
+      extend: ['basic_index', 'stock_before', 'stock_after', 'total_share', 'collect', 'financials']
+    }),
+    enabled: type === 'bull' || type === 'etf'
+  })
+
+
+  const dataStock = useMemo(() => {
+    // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+    const r: any[] = []
+
+    if (!queryStock.data) return []
+
+    const dataset: Record<string, { value: number }> = {}
+
+    for (const stock of queryStock.data.items) {
+      if (StockRecord.isValid(stock.stock)) {
+        const stockRecord = new StockRecord(stock.stock)
+        const child = { name: stock.symbol, value: stockRecord.turnover, data: stockRecord.percent, color: getColorByStep(stockRecord.percent) }
+        dataset[child.name] = child
+        r.push(child as never)
+      } else {
+        r.push({ name: stock.symbol, value: 0, data: 0 } as never)
+      }
+    }
+
+    const absValues = Object.keys(dataset).map(key => dataset[key as keyof typeof dataset].value)
+    const min = Math.min(...absValues)
+    const max = Math.max(...absValues)
+
+    for (const k of Object.keys(dataset)) {
+      dataset[k].value = ((dataset[k].value - min) / (max - min)) * (10 - 1) + 1
+    }
+
+    return r
+  }, [queryStock.data])
 
 
   return (
@@ -106,7 +176,7 @@ const StockTree = () => {
           <CapsuleTabs.Tab value="etf-heatmap" label={t('stockTree.etfHeatmap')} />
         </CapsuleTabs>
         <div className="ml-auto">
-          <SimpleCheck value={[]} />
+          <SimpleCheck value={filter} onChange={setFilter} />
         </div>
 
       </div>
@@ -123,9 +193,15 @@ const StockTree = () => {
                 <TreeMap data={treeData} />
               </div>
             </div>
-          ) : (
-            <div>1</div>
-          )
+          ) : ['industry-heatmap', 'etf-heatmap'].includes(type) ? (
+            <div className="h-full">
+              <TreeMap data={dataPlate} />
+            </div>
+          ) : ['bull', 'etf'].includes(type) ? (
+            <div className="h-full">
+              <TreeMap data={dataStock} />
+            </div>
+          ) : null
         }
       </div>
     </div>
@@ -134,20 +210,20 @@ const StockTree = () => {
 
 interface StockTreeProps {
   value: number[]
+  onChange?: (v: number[]) => void
 }
 
 
-
-// TODO: 待优化
-const SimpleCheck = ({ value }: StockTreeProps) => {
-  const [checked, setChecked] = useImmer([true, true, true, true, true, true, true])
-
-  const onClick = (index: number) => {
-    setChecked(draft => {
-      const nextStatus = !checked[index]
-      if (!nextStatus && draft.filter(Boolean).length <= 1) return
-      draft[index] = nextStatus
-    })
+const SimpleCheck = ({ value, onChange }: StockTreeProps) => {
+  const onClick = (v: number) => {
+    if (value.includes(v)) {
+      if (value.length === 1) {
+        return
+      }
+      onChange?.(value.filter(_v => _v !== v))
+    } else {
+      onChange?.([...value, v])
+    }
   }
 
   return (
@@ -155,17 +231,10 @@ const SimpleCheck = ({ value }: StockTreeProps) => {
       {
         steps.map((step, index) => (
           <div key={step} style={{
-            background: checked[index] ? colors[index] : '#1e1e1e'
-          }} onClick={() => onClick(index)} onKeyDown={() => { }}>{step}%</div>
+            background: value.includes(+step) ? colors[index] : '#1e1e1e'
+          }} onClick={() => onClick(+step)} onKeyDown={() => { }}>{step}%</div>
         ))
       }
-      {/* <div className={cn({ '!bg-[#ac2532]': checked[0] })} onClick={() => onClick(0)} onKeyDown={() => { }}>-3%</div>
-      <div className={cn({ '!bg-[#782029]': checked[1] })} onClick={() => onClick(1)} onKeyDown={() => { }}>-2%</div>
-      <div className={cn({ '!bg-[#3a1a1f]': checked[2] })} onClick={() => onClick(2)} onKeyDown={() => { }}>-1%</div>
-      <div className={cn({ '!bg-[#30333c]': checked[3] })} onClick={() => onClick(3)} onKeyDown={() => { }}>-0%</div>
-      <div className={cn({ '!bg-[#112e21]': checked[4] })} onClick={() => onClick(4)} onKeyDown={() => { }}>1%</div>
-      <div className={cn({ '!bg-[#0e532f]': checked[5] })} onClick={() => onClick(5)} onKeyDown={() => { }}>2%</div>
-      <div className={cn({ '!bg-[#07753c]': checked[6] })} onClick={() => onClick(6)} onKeyDown={() => { }}>3%</div> */}
       <style jsx>{`
           .check-group > div {!
             background: #1e1e1e;

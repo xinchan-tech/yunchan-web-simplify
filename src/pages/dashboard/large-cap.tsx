@@ -161,15 +161,19 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
   const chartRef = useRef<echarts.ECharts>()
   const chartDomRef = useRef<HTMLDivElement>(null)
 
-  const chart = useRequest(getStockChart, {
-    manual: true, onSuccess: (data) => {
-      if (code) {
-        for (const d of data.history) {
-          stock.insertRaw(code, d)
-        }
+  const chart = useQuery({
+    queryKey: [getStockChart.cacheKey, code, type],
+    queryFn: () => getStockChart({ticker: code!, interval: ((c, t) => {
+      
+      if (['SPX', 'IXIC', 'DJI'].includes(c!)) {
+        return StockChartInterval.INTRA_DAY
       }
-    }
+      return t
+    })(code, type)}),
+    enabled: !!code && !!type,
+    refetchInterval: 60 * 1000,
   })
+
 
   useUpdateEffect(() => {
     chartRef.current?.setOption({
@@ -193,14 +197,9 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
   const _getTrading = () => {
     let trading = getTrading(+type)
     if (code && ['SPX', 'IXIC', 'DJI'].includes(code)) {
-      const _t = time.getTrading()
-      if(_t === 'preMarket'){
-        trading = 'preMarket'
-      }else{
-        trading = 'intraDay'
-      }
+      trading = 'intraDay'
     }
-
+ 
     return trading
   }
 
@@ -244,24 +243,27 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
   const setChartData = (records?: StockRecord[]) => {
     if (!records) return
     let prevClose = 0
-    let minPercent = 0
-    let maxPercent = 0
+    let maxPrice = -999
+    let minPrice = 999
 
     const dataset: (string | number)[][] = []
 
     for (const s of records) {
       dataset.push([s.time, s.close])
       prevClose = s.prevClose
-      maxPercent = Math.max(maxPercent, s.percent)
-      minPercent = Math.min(minPercent, s.percent)
+      maxPrice = Math.max(maxPrice, s.close)
+      minPrice = Math.min(minPrice, s.close)
     }
 
-    const rightYMax = maxPercent + 0.0005
-    const rightYMin = minPercent - 0.0005
-    const leftYMax = prevClose * (1 + Math.abs(rightYMax))
-    const leftYMin = prevClose * (1 - Math.abs(rightYMin))
+    const leftYMax = maxPrice * 1.0005
+    const leftYMin = minPrice * 0.9995
+    const rightYMax = (leftYMax - prevClose) / prevClose
+    const rightYMin = (leftYMin - prevClose) / prevClose
+ 
+    // const leftYMax = prevClose * (1 + Math.abs(rightYMax))
+    // const leftYMin = prevClose * (1 - Math.abs(rightYMin))
     const xAxisData = getTradingPeriod(_getTrading(), dataset[0]?.[0] as string)
-
+    console.log(records)
     chartRef.current?.setOption({
       yAxis: [
         {
@@ -309,22 +311,7 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
     })
   }
 
-  useUpdateEffect(() => {
-    if (!code) return
 
-    const params: Parameters<typeof getStockChart>[0] = {
-      ticker: code,
-      interval: type
-    }
-
-    if (['SPX', 'IXIC', 'DJI'].includes(code)) {
-      if (params.interval === StockChartInterval.AFTER_HOURS) {
-        params.interval = StockChartInterval.INTRA_DAY
-      }
-    }
-
-    chart.run(params)
-  }, [code, type])
 
   const options: ECOption = {
     grid: {

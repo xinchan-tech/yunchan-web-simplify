@@ -78,7 +78,7 @@ export type StockExtendResult =
 export type StockExtendResultMap = Record<StockExtendResult, any>
 
 export const getAllStocks = async (key?: string) => {
-  return request.get<{data: string, key: string}>('/index/getAllStock', { params: { key } }).then(r => r.data)
+  return request.get<{ data: string; key: string }>('/index/getAllStock', { params: { key } }).then(r => r.data)
 }
 getAllStocks.cacheKey = 'index:allStock'
 
@@ -180,7 +180,7 @@ type GetStockChartResult = {
 /**
  * 股票K线数据
  */
-export const getStockChart = (params: GetStockChartParams) => {
+export const getStockChart = async (params: GetStockChartParams) => {
   //   生成sign的步骤：
   // 步骤 1: 请求参数排序
   // 按照请求参数的名称，对所有的请求参数进行升序排序。
@@ -205,13 +205,17 @@ export const getStockChart = (params: GetStockChartParams) => {
 
   const sign = md5(sha256(paramsStr))
 
-  return request
+  const r = await request
     .get<GetStockChartResult>('/stock/chart', {
       params,
       headers: { sign, 'Content-Type': 'application/x-www-form-urlencoded' }
     })
     .then(r => r.data)
+
+  useStock.getState().insertRawByRecords(r.history.map(item => ({ symbol: params.ticker, stock: item })))
+  return r
 }
+getStockChart.cacheKey = 'stock:chart'
 
 type GetHotSectorsParams = {
   type: 'day' | 'month' | 'week'
@@ -255,7 +259,7 @@ type GetHotSectorsResult = {
     increase: number
     lifting: number
     name: string
-    plate_code: string
+    plate_id: string
     stock: StockRawRecord
     symbol: string
   }[]
@@ -266,15 +270,16 @@ type GetHotSectorsResult = {
  */
 export const getHotSectors = async (params: GetHotSectorsParams) => {
   const r = await request.get<GetHotSectorsResult[]>('/index/hotSectors', { params }).then(r => r.data)
-  const t:StockResultRecord[] = []
+  const t: StockResultRecord[] = []
   for (const res of r) {
-    for (const top  of res.tops) {
+    for (const top of res.tops) {
       t.push(top)
     }
   }
   useStock.getState().insertRawByRecords(t)
   return r
 }
+getHotSectors.cacheKey = 'index:hot:sector'
 
 export enum IncreaseTopStatus {
   PRE_MARKET = 0,
@@ -559,6 +564,7 @@ export const getUsStocks = async (params: GetUsStocksParams) => {
 
   return r
 }
+getUsStocks.cacheKey = 'stock:cutom:getUsStocks'
 
 type GetPlateListResult = {
   amount: number

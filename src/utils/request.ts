@@ -10,26 +10,27 @@ request.interceptors.request.use(config => {
 
   config.headers.set('Authorization', token)
   config.headers.set('Accept-Language', language)
+  config.headers.set('os', 'windows')
   
   return config
 })
 
-let modalIns: ReturnType<typeof Modal.error> | null = null
+// let modalIns: ReturnType<typeof Modal.error> | null = null
 
 request.interceptors.response.use(response => {
   if(response.data.status === 401){
-    console.log(modalIns)
-    if(!modalIns){
-      modalIns = Modal.error({ 
-        content: '登录已过期，请重新登录',
-        afterClose: () => {
-          modalIns = null
-          useUser.getState().reset()
-          useToken.getState().removeToken()
-        }
-      })
-    }
-    throw new Error(response.data.msg)
+    // console.log(modalIns)
+    // if(!modalIns){
+    //   modalIns = Modal.error({ 
+    //     content: '登录已过期，请重新登录',
+    //     afterClose: () => {
+    //       modalIns = null
+    //       useUser.getState().reset()
+    //       useToken.getState().removeToken()
+    //     }
+    //   })
+    // }
+    // throw new Error(response.data.msg)
   }
 
   if(response.data.status !== 1){
