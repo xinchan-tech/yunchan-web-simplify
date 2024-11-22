@@ -1,15 +1,13 @@
 import { type StockExtend, addStockCollectCate, type getStockCollectCates, getStockCollects, removeStockCollect, removeStockCollectCate, updateStockCollectCate } from "@/api"
-import { Button, CapsuleTabs, Checkbox, JknAlert, JknIcon, JknTable, type JknTableProps, NumSpan, Popover, PopoverContent, PopoverTrigger, ScrollArea, useFormModal, useModal } from "@/components"
-import { useDomSize, useToast, useZForm } from "@/hooks"
+import { AiAlarm, Button, CapsuleTabs, Checkbox, JknAlert, JknIcon, JknTable, type JknTableProps, NumSpan, Popover, PopoverAnchor, PopoverContent, ScrollArea, StockView, useFormModal, useModal } from "@/components"
+import { useToast, useZForm } from "@/hooks"
 import { useCollectCates, useStock } from "@/store"
 import { numToFixed, priceToCnUnit } from "@/utils/price"
 import { cn } from "@/utils/style"
-import { PlusIcon, TrashIcon } from "@radix-ui/react-icons"
 import { useQuery } from "@tanstack/react-query"
 import { useMount } from "ahooks"
 import to from "await-to-js"
-import { useState } from "react"
-import { useImmer } from "use-immer"
+import { useMemo, useState } from "react"
 import type { z } from "zod"
 import { GoldenPoolForm, poolSchema } from "./components/golden-pool-form"
 
@@ -31,10 +29,6 @@ type DataType = {
 }
 const GoldenPool = () => {
   const stock = useStock()
-  const [check, setCheck] = useImmer<{ all: boolean, selected: string[] }>({
-    all: false,
-    selected: []
-  })
   const cates = useCollectCates()
   const [activeStock, setActiveStock] = useState<string>('1')
 
@@ -55,7 +49,7 @@ const GoldenPool = () => {
     for (let i = 0; i < collects.data.items.length; i++) {
       const c = collects.data.items[i]
       const s = stock.getLastRecordByTrading(c.symbol, 'intraDay')
-     
+
       r.push({
         index: i + 1,
         key: c.symbol,
@@ -78,25 +72,6 @@ const GoldenPool = () => {
     setActiveStock(v)
   }
 
-  const onCheckboxClick = (code: string) => {
-    if (check.selected.includes(code)) {
-      setCheck(d => {
-        d.selected = d.selected.filter(s => s !== code)
-        d.all = d.selected.length === data?.length
-      })
-    } else {
-      setCheck(d => {
-        d.selected.push(code)
-      })
-    }
-  }
-
-  const onCheckAllChange = (e: boolean) => {
-    setCheck(d => {
-      d.all = e
-      d.selected = e ? data?.map(d => d.key) ?? [] : []
-    })
-  }
 
   const { toast } = useToast()
   const onRemove = async (code: string, name: string) => {
@@ -119,14 +94,14 @@ const GoldenPool = () => {
     })
   }
 
-  const onRemoveBatch = async () => {
+  const onRemoveBatch = async (codes: string[]) => {
     if (!activeStock) return
     JknAlert.confirm({
       title: '批量操作',
       content: <div className="text-center mt-4">确定该操作?</div>,
       onAction: async (action) => {
         if (action !== 'confirm') return
-        const [err] = await to(removeStockCollect({ symbols: check.selected, cate_ids: [+activeStock] }))
+        const [err] = await to(removeStockCollect({ symbols: codes, cate_ids: [+activeStock] }))
 
         if (err) {
           toast({ description: err.message })
@@ -134,29 +109,20 @@ const GoldenPool = () => {
         }
 
         collects.refetch()
-        setCheck(d => {
-          d.all = false
-          d.selected = []
-        })
       }
     })
   }
 
 
-  const columns: JknTableProps<DataType>['columns'] = [
-    { header: '序号', accessorKey: 'index', meta: { align: 'center', width: 40 } },
+  const columns: JknTableProps<DataType>['columns'] = useMemo(() => [
+    { header: '序号', accessorKey: 'index', enableSorting: false, meta: { align: 'center', width: 60 } },
     {
       header: '名称代码', accessorKey: 'name', meta: { width: '25%' },
-      cell: ({ row }) => (
-        <div className="overflow-hidden">
-          <div className="text-secondary">{row.original.code}</div>
-          <div className="text-tertiary text-xs text-ellipsis overflow-hidden whitespace-nowrap w-full">{row.getValue('name')}</div>
-        </div>
-      )
+      cell: ({ row }) => <StockView name={row.getValue('name')} code={row.original.code} />
 
     },
     {
-      header: '现价', accessorKey: 'price', meta: { width: '25%', align: 'right' },
+      header: '现价', accessorKey: 'price', meta: { width: '10%', align: 'right' },
       cell: ({ row }) => <span className={cn(row.getValue<number>('percent') >= 0 ? 'text-stock-up' : 'text-stock-down')}>
         {numToFixed(row.getValue<number>('price'))}
       </span>
@@ -168,11 +134,11 @@ const GoldenPool = () => {
       )
     },
     {
-      header: '成交额', accessorKey: 'turnover', meta: { align: 'right', width: 120 },
+      header: '成交额', accessorKey: 'turnover', meta: { align: 'right', width: '10%' },
       cell: ({ row }) => priceToCnUnit(row.getValue<number>('turnover'))
     },
     {
-      header: '总市值', accessorKey: 'marketValue', meta: { align: 'right', width: 120 },
+      header: '总市值', accessorKey: 'marketValue', meta: { align: 'right', width: '10%' },
       cell: ({ row }) => priceToCnUnit(row.getValue<number>('marketValue'))
     },
     {
@@ -187,28 +153,32 @@ const GoldenPool = () => {
       header: '行业板块', accessorKey: 'dataIndex', meta: { width: '19%', align: 'right' },
     },
     {
-      header: '+AI报警', accessorKey: 'ai', meta: { width: 80, align: 'center' },
-      cell: ({ row }) => <div><JknIcon name="ic_add" /></div>
+      header: '+AI报警', accessorKey: 'ai', meta: { width: 80, align: 'center' }, enableSorting: false,
+      cell: ({ row }) => <AiAlarm code={row.original.code} ><JknIcon name="ic_add" /></AiAlarm>
     },
     {
       header: '移除',
       accessorKey: 'opt',
+      enableSorting: false,
       meta: { align: 'center', width: 60 },
-      cell: ({ row }) => (
-        <div className="cursor-pointer text-tertiary">
-          <TrashIcon onClick={() => onRemove(row.original.code, row.original.name)} />
+      cell: ({ row, table }) => (
+        <div className="cursor-pointer text-tertiary" onClick={() => table.options.meta?.emit({ event: 'delete', params: { code: row.original.code, name: row.original.name } })} onKeyDown={() => { }}>
+          <JknIcon name="del" className="w-4 h-4" />
         </div>
       )
     },
     {
-      header: () => (
-        <Popover open={check.selected.length > 0}>
-          <PopoverTrigger asChild>
-            <Checkbox checked={check.all} onCheckedChange={onCheckAllChange} />
-          </PopoverTrigger>
+      header: ({ table }) => (
+        <Popover open={table.getSelectedRowModel().rows.length > 0}>
+          <PopoverAnchor asChild>
+            <Checkbox
+              checked={table.getIsSomeRowsSelected() || table.getIsAllRowsSelected()}
+              onCheckedChange={e => table.getToggleAllRowsSelectedHandler()({ target: e })}
+            />
+          </PopoverAnchor>
           <PopoverContent align="start" side="left">
             <div className="rounded">
-              <div className="bg-background px-16 py-2">批量操作 {check.selected.length} 项</div>
+              <div className="bg-background px-16 py-2">批量操作 {table.getSelectedRowModel().rows.length} 项</div>
               <div className="text-center px-4 py-4">
                 {
                   cates.collects.find(c => c.id === activeStock)?.name
@@ -216,7 +186,7 @@ const GoldenPool = () => {
                 &emsp;
                 <span
                   className="inline-block rounded-sm border-style-secondary text-tertiary cursor-pointer px-1"
-                  onClick={onRemoveBatch} onKeyDown={() => { }}
+                  onClick={() => table.options.meta?.emit({ event: 'deleteBatch', params: { codes: table.getSelectedRowModel().rows.map(v => v.original.code) } })} onKeyDown={() => { }}
                 >删除</span>
               </div>
             </div>
@@ -224,12 +194,26 @@ const GoldenPool = () => {
         </Popover>
       ),
       accessorKey: 'check',
+      enableSorting: false,
       meta: { align: 'center', width: 60 },
       cell: ({ row }) => (
-        <Checkbox checked={check.selected.includes(row.original.code)} onCheckedChange={() => onCheckboxClick(row.original.code)} />
+        <Checkbox checked={row.getIsSelected()} onCheckedChange={(v) => row.toggleSelected(v === true)} />
       )
     },
-  ]
+  ], [cates.collects, activeStock])
+
+  const _onEvent: JknTableProps['onEvent'] = ({ event, params }) => {
+    console.log(event)
+    if (event === 'delete') {
+      onRemove(params.code, params.name)
+      return
+    }
+
+    if (event === 'deleteBatch') {
+      onRemoveBatch(params.codes)
+      return
+    }
+  }
 
   return (
     <div className="h-full overflow-hidden flex flex-col golden-pool">
@@ -254,7 +238,7 @@ const GoldenPool = () => {
       </div>
       <div className="flex-1 overflow-hidden">
         <ScrollArea className="h-full">
-          <JknTable columns={columns} data={data} />
+          <JknTable onEvent={_onEvent} rowKey="code" columns={columns} data={data} />
         </ScrollArea>
       </div>
       <style jsx>

@@ -30,7 +30,7 @@ const BubbleStep = () => {
         <ToggleGroup type="single" onValueChange={v => { selection.current = v }} style={{ '--toggle-active-bg': 'hsl(var(--stock-up-color))' } as CSSProperties}>
           {
             data.map(item => (
-              <ToggleGroupItem className="w-16 h-8 " variant="outline" key={item.name} value={item.value}>
+              <ToggleGroupItem className="w-32 h-8 " variant="outline" key={item.name} value={item.value}>
                 {item.name}
               </ToggleGroupItem>
             ))

@@ -33,6 +33,8 @@ export class StockRecord {
   pe: number
   // 市净率
   pb: number
+  //
+  totalShare: number
 
   //涨幅
   get percent() {
@@ -52,26 +54,26 @@ export class StockRecord {
     const r: [StockRecord?, StockRecord?, StockRecord?] = []
     if (StockRecord.isValid(record.stock)) {
       r.push(new StockRecord(record.stock, record.extend))
-    }else{
+    } else {
       r.push(undefined)
     }
 
     if (record.extend?.stock_before && StockRecord.isValid(record.extend.stock_before)) {
       r.push(new StockRecord(record.extend.stock_before))
-    }else{
+    } else {
       r.push(undefined)
     }
 
     if (record.extend?.stock_after && StockRecord.isValid(record.extend.stock_after)) {
       r.push(new StockRecord(record.extend.stock_after))
-    }else{
+    } else {
       r.push(undefined)
     }
     return r
   }
 
   constructor(data: StockRawRecord, extend?: StockExtendResultMap) {
-    this.time = this.parseTime(data[0])
+    this.time = StockRecord.parseTime(data[0])
     this.open = data[1]
     this.close = data[2]
     this.high = data[3]
@@ -82,6 +84,7 @@ export class StockRecord {
     this.industry = '-'
     this.pe = 0
     this.pb = 0
+    this.totalShare = 0
 
     this.marketValue = 0
     this.turnOverRate = 0
@@ -100,8 +103,35 @@ export class StockRecord {
     }
   }
 
+  update(data: StockRawRecord, extend?: StockExtendResultMap) {
+    this.time = StockRecord.parseTime(data[0])
+    this.open = data[1]
+    this.close = data[2]
+    this.high = data[3]
+    this.low = data[4]
+    this.volume = data[5]
+    this.turnover = data[6] * 10000
+    this.trading = this._getTrading(this.time)
+    this.industry = '-'
+
+    if (data.length === 10) {
+      this.cumulativeVolume = data[7]
+      this.cumulativeTurnover = data[8]
+      this.prevClose = data[9]
+    } else {
+      this.cumulativeVolume = 0
+      this.cumulativeTurnover = 0
+      this.prevClose = data[7]
+    }
+
+    if (extend) {
+      this.calcExtend(extend)
+    }
+  }
+
   private calcExtend(extend: StockExtendResultMap) {
     if (extend.total_share) {
+      this.totalShare = extend.total_share
       this.marketValue = extend.total_share * this.close
       this.turnOverRate = this.turnover / this.marketValue
 
@@ -133,10 +163,11 @@ export class StockRecord {
    * 判断时间数据
    * 2024-09-10 不带时间默认为盘中数据，自动补齐
    */
-  private parseTime(time: string) {
+  static parseTime(time: string) {
     if (time.length === 10) {
       return `${dayjs(time).format('YYYY-MM-DD')} 15:59:00`
     }
     return time
   }
+  
 }

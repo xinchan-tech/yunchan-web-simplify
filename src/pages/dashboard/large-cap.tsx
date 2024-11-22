@@ -8,7 +8,7 @@ import echarts, { type ECOption } from "@/utils/echarts"
 import { numToFixed } from "@/utils/price"
 import { cn } from "@/utils/style"
 import { useQuery } from "@tanstack/react-query"
-import { useMount, useRequest, useSize, useUnmount, useUpdateEffect } from "ahooks"
+import { useMount, useSize, useUnmount, useUpdateEffect } from "ahooks"
 import clsx from "clsx"
 import dayjs from "dayjs"
 import { useEffect, useMemo, useRef, useState } from "react"
@@ -156,12 +156,10 @@ interface LargeCapChartProps {
 }
 
 const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
-  const stock = useStock()
-  const time = useTime()
+  const stock = useStock() 
   const chartRef = useRef<echarts.ECharts>()
   const chartDomRef = useRef<HTMLDivElement>(null)
-
-  const chart = useQuery({
+  useQuery({
     queryKey: [getStockChart.cacheKey, code, type],
     queryFn: () => getStockChart({ticker: code!, interval: ((c, t) => {
       
@@ -170,7 +168,7 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
       }
       return t
     })(code, type)}),
-    enabled: !!code && !!type,
+    enabled: !!code && type !== undefined,
     refetchInterval: 60 * 1000,
   })
 
@@ -243,8 +241,8 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
   const setChartData = (records?: StockRecord[]) => {
     if (!records) return
     let prevClose = 0
-    let maxPrice = -999
-    let minPrice = 999
+    let maxPrice = -999999
+    let minPrice = 999999
 
     const dataset: (string | number)[][] = []
 
@@ -255,15 +253,15 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
       minPrice = Math.min(minPrice, s.close)
     }
 
-    const leftYMax = maxPrice * 1.0005
-    const leftYMin = minPrice * 0.9995
+    const leftYMax = maxPrice * 1.001
+    const leftYMin = minPrice * 0.999
     const rightYMax = (leftYMax - prevClose) / prevClose
     const rightYMin = (leftYMin - prevClose) / prevClose
  
     // const leftYMax = prevClose * (1 + Math.abs(rightYMax))
     // const leftYMin = prevClose * (1 - Math.abs(rightYMin))
     const xAxisData = getTradingPeriod(_getTrading(), dataset[0]?.[0] as string)
-    console.log(records)
+
     chartRef.current?.setOption({
       yAxis: [
         {

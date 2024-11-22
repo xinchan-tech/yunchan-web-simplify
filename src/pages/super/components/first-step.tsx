@@ -92,11 +92,11 @@ const GoldenPool = (props: GoldenPoolProps) => {
 
   const columns: JknTableProps<{ name: string, id: string }>['columns'] = [
     {
-      header: () => <JknIcon name="checkbox_mult_nor" />,
+      header: () => <JknIcon name="checkbox_mult_nor_dis" />,
       accessorKey: 'select',
       id: 'select',
       enableSorting: false,
-      meta: { align: 'center', width: 60 },
+      meta: { align: 'center', width: 40 },
       cell: ({ row }) => (
         <div className="flex items-center justify-center w-full"><Checkbox checked={row.getIsSelected()} onCheckedChange={(e) => row.toggleSelected(e as boolean)} /></div>
       ),
@@ -105,7 +105,7 @@ const GoldenPool = (props: GoldenPoolProps) => {
       header: '序号',
       accessorKey: 'index',
       enableSorting: false,
-      meta: { align: 'center', width: 60 },
+      meta: { align: 'center', width: 40 },
       cell: ({ row }) => (
         <div className="text-center">{row.index + 1}</div>
       )
@@ -208,7 +208,7 @@ const GoldenPoolList = (props: GoldenPoolListProps) => {
   ]
   return (
     <ScrollArea className="h-[calc(100%-52px)] w-[70%]">
-      <JknTable columns={columns} data={data} />
+      <JknTable rowKey="code" columns={columns} data={data} />
     </ScrollArea>
   )
 }
@@ -253,10 +253,11 @@ const Plate = (props: { type: 1 | 2 }) => {
   })
 
   useUpdateEffect(() => {
+    setActivePlate(undefined)
     if (plate.data && plate.data.length > 0) {
       setActivePlate(plate.data[0].id)
     }
-  }, [plate.data])
+  }, [plate.data, activePlate])
 
   const onClickPlate = (row: PlateDataType) => {
     setActivePlate(row.id)
@@ -336,7 +337,7 @@ const PlateList = (props: PlateListProps) => {
       enableSorting: false,
       accessorKey: 'select',
       id: 'select',
-      meta: { align: 'center', width: 40 },
+      meta: { align: 'center', width: 30 },
       cell: ({ row }) => (
         <div className="w-full flex justify-center">
           <Checkbox checked={row.getIsSelected()} onCheckedChange={(e) => row.getToggleSelectedHandler()({ target: e })} />
@@ -344,20 +345,23 @@ const PlateList = (props: PlateListProps) => {
       )
     },
     { header: '序号', enableSorting: false, accessorKey: 'index', meta: { align: 'center', width: 40 }, cell: ({ row }) => row.index + 1 },
-    { header: '行业', enableSorting: false, accessorKey: 'name' },
+    {
+      header: '行业', enableSorting: false, accessorKey: 'name', meta: { width: 'auto' },
+      cell: ({ row }) => <div className="w-full overflow-hidden text-ellipsis whitespace-nowrap">{row.getValue('name')}</div>
+    },
     {
       header: '涨跌幅', accessorKey: 'change',
-      meta: { width: 80 },
+      meta: { width: 120 },
       cell: ({ row }) => <NumSpan block percent value={row.original.change} isPositive={row.original.change > 0} />
     },
     {
       header: '成交额', accessorKey: 'amount',
-      meta: { align: 'right' },
-      cell: ({ row }) => priceToCnUnit(row.original.amount)
+      meta: { align: 'right', width: 90 },
+      cell: ({ row }) => priceToCnUnit(row.original.amount, 2)
     }
   ], [])
   return (
-    <JknTable onSelection={v => {selection.current = v}} onRowClick={_onRowClick} columns={column} data={data} onSortingChange={(s) => setSort(d => { d.type = s.id; d.order = s.desc ? 'desc' : 'asc' })} />
+    <JknTable onSelection={v => { selection.current = v }} onRowClick={_onRowClick} columns={column} data={data} onSortingChange={(s) => setSort(d => { d.type = s.id; d.order = s.desc ? 'desc' : 'asc' })} />
   )
 }
 
@@ -423,29 +427,29 @@ const PlateStocks = (props: PlateStocksProps) => {
   const columns = useMemo<JknTableProps<PlateStockTableDataType>['columns']>(() => [
     { header: '序号', enableSorting: false, accessorKey: 'index', meta: { align: 'center', width: 60, }, cell: ({ row }) => row.index + 1 },
     {
-      header: '名称代码', accessorKey: 'name', meta: { align: 'left', },
+      header: '名称代码', accessorKey: 'name', meta: { align: 'left', width: 'auto' },
       cell: ({ row }) => (
         <StockView name={row.getValue('name')} code={row.original.code as string} />
       )
     },
     {
-      header: '现价', accessorKey: 'price', meta: { align: 'right', },
+      header: '现价', accessorKey: 'price', meta: { align: 'right', width: 'auto' },
       cell: ({ row }) => (
         <NumSpan value={numToFixed(row.getValue<number>('price')) ?? 0} isPositive={row.getValue<number>('percent') >= 0} />
       )
     },
     {
-      header: '涨跌幅', accessorKey: 'percent', meta: { align: 'right', },
+      header: '涨跌幅', accessorKey: 'percent', meta: { align: 'right', width: 'auto' },
       cell: ({ row }) => (
         <NumSpan percent block decimal={2} value={row.getValue<number>('percent') * 100} isPositive={row.getValue<number>('percent') >= 0} symbol />
       )
     },
     {
-      header: '成交额', accessorKey: 'amount', meta: { align: 'right', },
+      header: '成交额', accessorKey: 'amount', meta: { align: 'right', width: 'auto' },
       cell: ({ row }) => priceToCnUnit(row.getValue<number>('amount'))
     },
     {
-      header: '总市值', accessorKey: 'total', meta: { align: 'right', },
+      header: '总市值', accessorKey: 'total', meta: { align: 'right', width: 'auto' },
       cell: ({ row }) => priceToCnUnit(row.getValue<number>('total'))
     },
   ], [])

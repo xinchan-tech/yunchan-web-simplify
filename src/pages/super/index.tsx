@@ -110,77 +110,79 @@ const SuperStock = () => {
   return (
     <SuperStockContext.Provider value={{ data: category as unknown as SuperStockContext['data'], register, unregister }} >
       <ScrollArea className="bg-muted h-full">
-        <div className="p-12 box-border ">
-          <div className="flex justify-center text-secondary mb-12">
-            <SuperStockTypeTab type={type} onChange={setType} />
-          </div>
-          {
-            type === SuperStockType.Super && (
-              <div className="mt-8 bg-accent py-1 text-center text-sm">
-                技术面
-              </div>
-            )
-          }
-          <div>
-            <FirstStep />
-          </div>
-          {
-            (type === SuperStockType.Tech || type === SuperStockType.Super) && (
-              <>
-                <KLineType />
-                <MethodStep />
-                <FactorStep />
-              </>
-            )
-          }
-          {
-            type === SuperStockType.Super && (
-              <div className="mt-8 bg-accent py-1 text-center text-sm">
-                基本面
-              </div>
-            )
-          }
-          {
-            (type === SuperStockType.Basic || type === SuperStockType.Super) && (
-              <>
-                <MarketCap />
-                <BubbleStep />
-                <FinanceStep />
-                <PeriodStep />
-                <CompareStep />
-              </>
-            )
-          }
-          <div className="text-center mt-12">
-            <Button className="w-24" onClick={onSubmit}>确定</Button>
-          </div>
-        </div>
-        {
-          loading && (<div className="fixed w-screen h-screen top-0 bg-background/45 flex items-center justify-center">
-            <div className="w-60 bg-background/95 p-12 flex flex-col items-center">
-              <JknIcon className="w-48 h-48" name="load" />
-              <div className="text-center mt-4">拼命选股中</div>
+        <div className="w-[1366px] mx-auto ">
+          <div className="p-12 box-border ">
+            <div className="flex justify-center text-secondary mb-12">
+              <SuperStockTypeTab type={type} onChange={setType} />
+            </div>
+            {
+              type === SuperStockType.Super && (
+                <div className="mt-8 bg-accent py-1 text-center text-sm">
+                  技术面
+                </div>
+              )
+            }
+            <div>
+              <FirstStep />
+            </div>
+            {
+              (type === SuperStockType.Tech || type === SuperStockType.Super) && (
+                <>
+                  <KLineType />
+                  <MethodStep />
+                  <FactorStep />
+                </>
+              )
+            }
+            {
+              type === SuperStockType.Super && (
+                <div className="mt-8 bg-accent py-1 text-center text-sm">
+                  基本面
+                </div>
+              )
+            }
+            {
+              (type === SuperStockType.Basic || type === SuperStockType.Super) && (
+                <>
+                  <MarketCap />
+                  <BubbleStep />
+                  <FinanceStep />
+                  <PeriodStep />
+                  <CompareStep />
+                </>
+              )
+            }
+            <div className="text-center mt-12">
+              <Button className="w-24" onClick={onSubmit}>确定</Button>
             </div>
           </div>
-          )
-        }
-        <Drawer open={drawerOpen} onOpenChange={v => !v && setDrawerClose()}>
-          <DrawerContent className="h-[95vh]">
-            <VisuallyHidden>
-              <DrawerHeader className="text-left">
-              </DrawerHeader>
-            </VisuallyHidden>
-            <ScrollArea className="h-full overflow-hidden">
-              <StockTable data={data} onUpdate={onUpdate} />
-            </ScrollArea>
-            <DrawerFooter className="pt-2">
-              <DrawerClose asChild>
-                <Button className="w-32 mx-auto">重新选股</Button>
-              </DrawerClose>
-            </DrawerFooter>
-          </DrawerContent>
-        </Drawer>
+          {
+            loading && (<div className="fixed w-screen h-screen top-0 bg-background/45 flex items-center justify-center">
+              <div className="w-60 bg-background/95 p-12 flex flex-col items-center">
+                <JknIcon className="w-48 h-48" name="load" />
+                <div className="text-center mt-4">拼命选股中</div>
+              </div>
+            </div>
+            )
+          }
+        </div>
       </ScrollArea>
+      <Drawer open={drawerOpen} onOpenChange={v => !v && setDrawerClose()}>
+        <DrawerContent className="h-[95vh]">
+          <VisuallyHidden>
+            <DrawerHeader className="text-left">
+            </DrawerHeader>
+          </VisuallyHidden>
+          <ScrollArea className="h-full overflow-hidden">
+            <StockTable data={data} onUpdate={onUpdate} />
+          </ScrollArea>
+          <DrawerFooter className="pt-2">
+            <DrawerClose asChild>
+              <Button className="w-32 mx-auto">重新选股</Button>
+            </DrawerClose>
+          </DrawerFooter>
+        </DrawerContent>
+      </Drawer>
     </SuperStockContext.Provider >
   )
 }

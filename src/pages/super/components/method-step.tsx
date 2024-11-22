@@ -20,7 +20,7 @@ const MethodStep = () => {
 
 
   const children = (method?.children ?? []) as unknown as StockCategory[]
-
+  
   const _onValueChange = (e: string[], type: string) => {
     if (e.length <= 0) {
       setValue([])

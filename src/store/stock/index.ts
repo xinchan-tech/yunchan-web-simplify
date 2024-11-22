@@ -5,7 +5,6 @@ import type { StockExtendResult, StockRawRecord } from '@/api'
 
 export { StockRecord }
 
-
 interface StockStore {
   stocks: Record<symbol, StockRecord[]>
   // findStock: (code: string) => Stock | undefined
@@ -25,14 +24,17 @@ export const useStock = create<StockStore>()((set, get) => ({
     set(
       produce<StockStore>(state => {
         const records = state.stocks[Symbol.for(code)]
-
         if (!records) {
           state.stocks[Symbol.for(code)] = [new StockRecord(raw, extend)]
         } else {
-          if (hasIndex(records as StockRecord[], raw[0])) return
-          const index = getInsertIndex(records as StockRecord[], raw[0])
+          if (hasIndex(records as StockRecord[], StockRecord.parseTime( raw[0]))) {
+            const record = records.find(record => record.time === StockRecord.parseTime( raw[0]))
+            record?.update(raw, extend)
+          } else {
+            const index = getInsertIndex(records as StockRecord[], StockRecord.parseTime( raw[0]))
 
-          records.splice(index, 0, new StockRecord(raw, extend))
+            records.splice(index, 0, new StockRecord(raw, extend))
+          }
         }
       })
     )
@@ -49,6 +51,11 @@ export const useStock = create<StockStore>()((set, get) => ({
     const records = get().stocks[Symbol.for(code)] ?? []
     const r = []
     for (let index = records.length - 1; index >= 0; index--) {
+      if(r.length !== 0){
+        if(records[index].time.slice(0, 8) !== r[0].time.slice(0, 8)){
+          return r
+        }
+      }
       if (records[index].trading === trading) {
         r.unshift(records[index])
       }
@@ -63,10 +70,10 @@ export const useStock = create<StockStore>()((set, get) => ({
       }
 
       if (s.extend?.stock_after && StockRecord.isValid(s.extend.stock_after)) {
-        get().insertRaw(s.symbol, s.extend.stock_after)
+        get().insertRaw(s.symbol, s.extend.stock_after, s.extend)
       }
       if (s.extend?.stock_before && StockRecord.isValid(s.extend.stock_before)) {
-        get().insertRaw(s.symbol, s.extend.stock_before)
+        get().insertRaw(s.symbol, s.extend.stock_before, s.extend)
       }
     }
   }

@@ -19,18 +19,12 @@ const steps = [
   '-3', '-2', '-1', '0', '1', '2', '3'
 ]
 
-/**
- * 归一化数据，调整矩形面积
- */
-
-
 const getColorByStep = (step: string | number) => {
   const n = new Decimal(step).times(100)
   if (n.isNaN()) return '#1e1e1e'
 
   for (let i = 0; i < steps.length; i++) {
     const step = new Decimal(steps[i])
-
     if (n.lte(step)) return colors[i]
   }
 
@@ -60,6 +54,8 @@ const StockTree = () => {
     const root = []
     const dataset: Record<string, { value: number }> = {}
 
+    const colors = filter.map(v => getColorByStep(v / 100))
+
     for (const node of query.data) {
       const n = { name: node.sector_name, data: node.change, children: [] }
       root.push(n)
@@ -67,6 +63,8 @@ const StockTree = () => {
       for (const t of node.tops) {
         if (StockRecord.isValid(t.stock)) {
           const stockRecord = new StockRecord(t.stock)
+          const _color = getColorByStep(stockRecord.percent)
+          if(!colors.includes(_color)) continue
           const child = { name: t.symbol, value: stockRecord.turnover, data: stockRecord.percent, color: getColorByStep(stockRecord.percent) }
           dataset[child.name + t.plate_id] = child
           n.children.push(child as never)
@@ -84,8 +82,9 @@ const StockTree = () => {
       dataset[k].value = ((dataset[k].value - min) / (max - min)) * (5 - 1) + 1
     }
 
+
     return root
-  }, [query.data])
+  }, [query.data, filter])
 
 
   const queryPlate = useQuery({
@@ -98,10 +97,14 @@ const StockTree = () => {
     const r = []
 
     if (!queryPlate.data) return []
-    console.log(queryPlate.data)
+
     const dataset: Record<string, { value: number }> = {}
 
+    const _colors = filter.map(v => getColorByStep(v / 100))
+
     for (const plate of queryPlate.data) {
+      const _color = getColorByStep(plate.change / 100)
+      if(!_colors.includes(_color)) continue
       const n = { name: plate.name, value: plate.amount, data: plate.change / 100, color: getColorByStep(plate.change / 100) }
       dataset[plate.id] = n
       r.push(n)
@@ -116,7 +119,7 @@ const StockTree = () => {
     }
 
     return r
-  }, [queryPlate.data])
+  }, [queryPlate.data, filter])
 
 
   const queryStock = useQuery({
@@ -141,9 +144,13 @@ const StockTree = () => {
 
     const dataset: Record<string, { value: number }> = {}
 
+    const colors = filter.map(v => getColorByStep(v / 100))
+
     for (const stock of queryStock.data.items) {
       if (StockRecord.isValid(stock.stock)) {
         const stockRecord = new StockRecord(stock.stock)
+        const _color = getColorByStep(stockRecord.percent)
+        if(!colors.includes(_color)) continue
         const child = { name: stock.symbol, value: stockRecord.turnover, data: stockRecord.percent, color: getColorByStep(stockRecord.percent) }
         dataset[child.name] = child
         r.push(child as never)
@@ -161,7 +168,7 @@ const StockTree = () => {
     }
 
     return r
-  }, [queryStock.data])
+  }, [queryStock.data, filter])
 
 
   return (

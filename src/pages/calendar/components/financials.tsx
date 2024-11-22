@@ -1,5 +1,5 @@
 import { getStockFinancials } from "@/api"
-import { CapsuleTabs, Checkbox, CollectStar, JknDatePicker, JknIcon, JknTable, type JknTableProps, NumSpan, Popover, PopoverAnchor, PopoverContent, StockView } from "@/components"
+import { AiAlarm, CapsuleTabs, Checkbox, CollectStar, JknDatePicker, JknIcon, JknTable, type JknTableProps, NumSpan, Popover, PopoverAnchor, PopoverContent, StockView } from "@/components"
 import { StockRecord, useCollectCates, useTime } from "@/store"
 import { numToFixed, priceToCnUnit } from "@/utils/price"
 import { useQuery } from "@tanstack/react-query"
@@ -68,14 +68,14 @@ const StockFinancials = () => {
   })()
 
   const columns: JknTableProps['columns'] = useMemo(() => [
-    { header: '序号', size: 40, accessorKey: 'rank', cell: ({ row }) => row.index + 1, meta: { align: 'center' } },
+    { header: '序号', size: 60, accessorKey: 'rank', cell: ({ row }) => row.index + 1, meta: { align: 'center' } },
     {
-      header: '名称代码', accessorKey: 'name', meta: { align: 'left' },
+      header: '名称代码', accessorKey: 'name', meta: { align: 'left', width: 'full' },
       cell: ({ row }) => (
         <StockView name={row.getValue('name')} code={row.original.code as string} />
       )
     }, {
-      header: '财报发布', accessorKey: 'date', meta: { align: 'right' },
+      header: '财报发布', accessorKey: 'date', meta: { align: 'right', width: 'full' },
       cell: ({ row }) => `${row.getValue('date')}`
     },
     {
@@ -85,7 +85,7 @@ const StockFinancials = () => {
       )
     },
     {
-      header: '涨跌幅', size: 90, accessorKey: 'percent', meta: { align: 'right' },
+      header: '涨跌幅', size: 120, accessorKey: 'percent', meta: { align: 'right' },
       cell: ({ row }) => (
         <NumSpan percent block decimal={2} value={row.getValue<number>('percent') * 100} isPositive={row.getValue<number>('percent') >= 0} symbol />
       )
@@ -102,19 +102,19 @@ const StockFinancials = () => {
       header: '所属行业', size: 220, enableSorting: false, accessorKey: 'industry', meta: { align: 'right' }
     },
     {
-      header: '盘前涨跌幅', size: 90, accessorKey: 'prePercent', meta: { align: 'right' },
+      header: '盘前涨跌幅', size: 120, accessorKey: 'prePercent', meta: { align: 'right' },
       cell: ({ row }) => (
         <NumSpan symbol block decimal={2} percent value={row.getValue<number>('prePercent') * 100} isPositive={row.getValue<number>('prePercent') >= 0} />
       )
     },
     {
-      header: '盘后涨跌幅', size: 90, accessorKey: 'afterPercent', meta: { align: 'right' },
+      header: '盘后涨跌幅', size: 120, accessorKey: 'afterPercent', meta: { align: 'right' },
       cell: ({ row }) => (
         <NumSpan symbol block decimal={2} percent value={row.getValue<number>('afterPercent') * 100} isPositive={row.getValue<number>('afterPercent') >= 0} />
       )
     },
     {
-      header: '+股票金池', size: 60, enableSorting: false, accessorKey: 'collect', meta: { align: 'center' },
+      header: '+股票金池', size: 80, enableSorting: false, accessorKey: 'collect', meta: { align: 'center' },
       cell: ({ row }) => (
         <div>
           <CollectStar
@@ -125,8 +125,8 @@ const StockFinancials = () => {
       )
     },
     {
-      header: '+AI报警', size: 50, enableSorting: false, accessorKey: 't9', meta: { align: 'center' },
-      cell: ({ row }) => <div><JknIcon name="ic_add" /></div>
+      header: '+AI报警', size: 80, enableSorting: false, accessorKey: 't9', meta: { align: 'center' },
+      cell: ({ row }) => <AiAlarm code={row.original.code as string} ><JknIcon name="ic_add" /></AiAlarm>
     },
     {
       header: ({ table }) => (

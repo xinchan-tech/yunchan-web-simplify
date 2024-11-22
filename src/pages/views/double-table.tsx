@@ -1,4 +1,4 @@
-import { getPlateList, getPlateStocks } from "@/api"
+import { getPlateList } from "@/api"
 import { JknTable, type JknTableProps, NumSpan, ScrollArea } from "@/components"
 import { priceToCnUnit } from "@/utils/price"
 import { useUpdateEffect } from "ahooks"
@@ -13,40 +13,36 @@ interface DoubleTableProps {
 
 const DoubleTable = (props: DoubleTableProps) => {
   const [activePlate, setActivePlate] = useState<string>()
-  // getPlateList, {
-  //   cacheKey: getPlateList.cacheKey,
-  //   defaultParams: [props.type],
-  //   onSuccess: (data) => {
-  //     setActivePlate(data[0].id)
-  //     plateStocks.run(+data[0].id, ['basic_index', 'stock_before', 'stock_after', 'total_share', 'collect', 'financials'])
-  //   }
-  // }
+
   const plate = useQuery({
     queryKey: [getPlateList.cacheKey, props.type],
     queryFn: () => getPlateList(props.type),
   })
 
-  useUpdateEffect(() => {
-    if (plate.data?.[0]) {
-      setActivePlate(plate.data[0].id)
-      // plateStocks.run(+data[0].id, ['basic_index', 'stock_before', 'stock_after', 'total_share', 'collect', 'financials'])
-    }
-  }, [plate.isFetched])
+
   const onClickPlate = (row: PlateDataType) => {
     setActivePlate(row.id)
   }
 
+  useUpdateEffect(() => {
+    setActivePlate(undefined)
+
+    if (plate.data?.[0]) {
+      setActivePlate(plate.data[0].id)
+    }
+  }, [props.type, plate.data])
+
   return (
     <div className="flex overflow-hidden h-full">
-      <div className="w-[30%]">
+      <div className="w-[25%]">
         <ScrollArea className="h-full">
           <PlateList data={plate.data ?? []} onRowClick={onClickPlate} />
         </ScrollArea>
       </div>
-      <div className="w-[70%]">
-        <ScrollArea className="h-full">
+      <div className="w-[75%]">
+        <div className="h-full overflow-hidden">
           <PlateStocks plateId={activePlate ? +activePlate : undefined} />
-        </ScrollArea>
+        </div>
       </div>
     </div>
   )
@@ -87,16 +83,16 @@ const PlateList = (props: PlateListProps) => {
   })()
 
   const column = useMemo<JknTableProps<PlateDataType>['columns']>(() => [
-    { header: '序号', enableSorting: false, accessorKey: 'index', meta: { align: 'center', width: 60 }, cell: ({ row }) => row.index + 1 },
-    { header: '行业', enableSorting: false, accessorKey: 'name' },
+    { header: '序号', enableSorting: false, accessorKey: 'index', meta: { align: 'center', width: 40 }, cell: ({ row }) => row.index + 1 },
+    { header: '行业', enableSorting: false, accessorKey: 'name', meta: { width: 'auto' } },
     {
       header: '涨跌幅', accessorKey: 'change',
-      meta: { width: 80 },
+      meta: { width: 100 },
       cell: ({ row }) => <NumSpan block percent value={row.original.change} isPositive={row.original.change > 0} />
     },
     {
       header: '成交额', accessorKey: 'amount',
-      meta: { align: 'right' },
+      meta: { align: 'right', width: 100 },
       cell: ({ row }) => priceToCnUnit(row.original.amount)
     }
   ], [])

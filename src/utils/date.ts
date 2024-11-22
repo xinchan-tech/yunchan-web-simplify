@@ -22,7 +22,12 @@ export const dateToWeek = (date: Dayjs | string) => {
   return weeks[dayjs(date).day()]
 }
 export const getTrading = (time: string): StockTrading => {
+
   const usTime = dayjs(time)
+  
+  if (time.length === 10) {
+    return 'intraDay'
+  }
   // 盘前交易时间（Premarket Trading）：
 
   // 4:00 AM - 9:30 AM 美国东部时间
@@ -46,7 +51,10 @@ export const getTrading = (time: string): StockTrading => {
     return 'intraDay'
   }
 
-  if( usTime.isSameOrAfter(usTime.hour(16).minute(0).second(0)) && usTime.isBefore(usTime.hour(20).minute(0).second(0))){
+  if (
+    usTime.isSameOrAfter(usTime.hour(16).minute(0).second(0)) &&
+    usTime.isBefore(usTime.hour(20).minute(0).second(0))
+  ) {
     return 'afterHours'
   }
 

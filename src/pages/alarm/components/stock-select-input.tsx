@@ -1,5 +1,5 @@
 import { getStockBaseCodeInfo } from "@/api"
-import { StockSelect } from "@/components"
+import { JknIcon, StockSelect } from "@/components"
 import { StockRecord, useStockList } from "@/store"
 import { numToFixed } from "@/utils/price"
 import { cn } from "@/utils/style"
@@ -13,6 +13,7 @@ interface StockSelectInputProps {
 
 const StockSelectInput = forwardRef((props: StockSelectInputProps, _) => {
   const stockList = useStockList()
+
   const query = useQuery({
     queryKey: [getStockBaseCodeInfo.cacheKey, props.value],
     queryFn: () => getStockBaseCodeInfo({ symbol: props.value!, extend: ['total_share'] }),
@@ -43,7 +44,9 @@ const StockSelectInput = forwardRef((props: StockSelectInputProps, _) => {
     <div className="flex items-center">
       <StockSelect onChange={v => props.onChange?.(v)} />
       <div className="flex items-center ml-4 text-sm">
-        <div className="w-4 h-4 mr-2">{data.symbol}</div>
+        <div className="w-6 h-6 mr-2">
+          <JknIcon stock={data.icon} className="w-full h-full" />
+        </div>
         {
           data.price ? (
             <div>
@@ -56,7 +59,7 @@ const StockSelectInput = forwardRef((props: StockSelectInputProps, _) => {
               <div className="text-tertiary text-xs">{data.name}</div>
             </div>
           ) : (
-            <span>- &nbsp;&nbsp;-&nbsp;&nbsp;-</span>
+            <span className="h-[36px]">- &nbsp;&nbsp;-&nbsp;&nbsp;-</span>
           )
         }
       </div>

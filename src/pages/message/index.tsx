@@ -1,5 +1,5 @@
 import { getChatContacts, getChatRecords, getNoticeList, getNoticeTypes } from "@/api"
-import { Button, Input, JknAvatar, JknIcon, ScrollArea, Textarea } from "@/components"
+import { Button, JknAvatar, JknIcon, ScrollArea, Textarea } from "@/components"
 import { useUser } from "@/store"
 import { dateToWeek } from "@/utils/date"
 import { cn } from "@/utils/style"

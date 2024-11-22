@@ -1,11 +1,12 @@
-import { type StockExtend, addStockCollect, getIndexGapAmplitude, getIndexRecommends, getUsStocks } from "@/api"
-import { Button, Checkbox, CollectStar, JknAlert, JknIcon, JknTable, type JknTableProps, NumSpan, Popover, PopoverAnchor, PopoverContent, ScrollArea, StockView } from "@/components"
+import { type StockExtend, type UsStockColumn, addStockCollect, getIndexGapAmplitude, getIndexRecommends, getUsStocks } from "@/api"
+import { AiAlarm, Button, Checkbox, CollectStar, JknAlert, JknIcon, JknTable, type JknTableProps, NumSpan, Popover, PopoverAnchor, PopoverContent, ScrollArea, StockView } from "@/components"
 import { useToast } from "@/hooks"
 import { useCollectCates, useStock } from "@/store"
 import { numToFixed, priceToCnUnit } from "@/utils/price"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import to from "await-to-js"
 import { useMemo } from "react"
+import { useImmer } from "use-immer"
 
 interface SingleTableProps {
   type?: string
@@ -37,10 +38,11 @@ type TableDataType = {
 }
 //单表格
 const SingleTable = (props: SingleTableProps) => {
+  const [sort, setSort] = useImmer<{ column: UsStockColumn, order: 'asc' | 'desc' }>({ column: 'total_mv', order: 'desc' })
   const QueryFn = () => {
     const extend: StockExtend[] = ['basic_index', 'stock_before', 'stock_after', 'total_share', 'collect', 'financials']
     if (!props.type || ['all', 'ixic', 'spx', 'dji', 'etf', 'china'].includes(props.type)) {
-      return getUsStocks({ type: props.type === 'all' ? undefined : props.type, column: 'total_mv', limit: 50, page: 1, order: 'desc', extend }).then(r => r.items)
+      return getUsStocks({ type: props.type === 'all' ? undefined : props.type, column: sort.column, limit: 50, page: 1, order: sort.order, extend }).then(r => r.items)
     }
 
     if (['yesterday_bear', 'yesterday_bull', 'short_amp_up', 'short_amp_d', 'release'].includes(props.type)) {
@@ -56,7 +58,7 @@ const SingleTable = (props: SingleTableProps) => {
 
   const queryClient = useQueryClient()
   const query = useQuery({
-    queryKey: ['stock-table-view', props.type],
+    queryKey: ['stock-table-view', props.type, sort],
     queryFn: () => QueryFn()
   })
 
@@ -72,13 +74,13 @@ const SingleTable = (props: SingleTableProps) => {
         return s ? [...s] : undefined
       })
     }
-    
+
   })
 
   const stock = useStock()
 
   const data = (() => {
-  
+
     const r: TableDataType[] = []
 
     if (!query.data) return []
@@ -111,53 +113,55 @@ const SingleTable = (props: SingleTableProps) => {
   })()
 
   const onSortChange: JknTableProps<TableDataType>['onSortingChange'] = (e) => {
-    // const columnMap: Record<string, string> = {
-    //   code: 'symbol',
-    //   price: 'close',
-    //   amount: 'amount',
-    //   percent: "increase",
-    //   total: "total_mv",
-    //   prePercent: "stock_before",
-    //   afterPercent: "stock_after",
-    //   turnoverRate: "turnover_rate",
-    // }
-    // Object.assign(query.params[0] ?? {}, { column: columnMap[e.id as string] ?? 'total_mv', order: e.desc === undefined ? 'desc' : e.desc ? 'desc' : 'asc' })
-    // query.refresh()
+    const columnMap: Record<string, UsStockColumn> = {
+      code: 'symbol',
+      price: 'close',
+      amount: 'amount',
+      percent: "increase",
+      total: "total_mv",
+      prePercent: "stock_before",
+      afterPercent: "stock_after",
+      turnoverRate: "turnover_rate",
+    }
+    setSort(d => {
+      d.column = columnMap[e.id as string] ?? 'total_mv'
+      d.order = e.desc === undefined ? 'desc' : e.desc ? 'desc' : 'asc'
+    })
   }
 
 
 
 
   const columns: JknTableProps<TableDataType>['columns'] = useMemo(() => ([
-    { header: '序号', enableSorting: false, accessorKey: 'index', meta: { align: 'center', width: 60, }, cell: ({ row }) => row.index + 1 },
+    { header: '序号', enableSorting: false, accessorKey: 'index', meta: { align: 'center', width: 40, }, cell: ({ row }) => row.index + 1 },
     {
-      header: '名称代码', accessorKey: 'name', meta: { align: 'left', width: 120 },
+      header: '名称代码', accessorKey: 'name', meta: { align: 'left', width: '20%' },
       cell: ({ row }) => (
         <StockView name={row.getValue('name')} code={row.original.code as string} />
       )
     },
     {
-      header: '现价', accessorKey: 'price', meta: { align: 'right', width: 120 },
+      header: '现价', accessorKey: 'price', meta: { align: 'right', width: '10%' },
       cell: ({ row }) => (
         <NumSpan value={numToFixed(row.getValue<number>('price')) ?? 0} isPositive={row.getValue<number>('percent') >= 0} />
       )
     },
     {
-      header: '涨跌幅', accessorKey: 'percent', meta: { align: 'right', width: 120 },
+      header: '涨跌幅', accessorKey: 'percent', meta: { align: 'right', width: '12%' },
       cell: ({ row }) => (
         <NumSpan percent block decimal={2} value={row.getValue<number>('percent') * 100} isPositive={row.getValue<number>('percent') >= 0} symbol />
       )
     },
     {
-      header: '成交额', accessorKey: 'amount', meta: { align: 'right', width: 120 },
+      header: '成交额', accessorKey: 'amount', meta: { align: 'right', width: '17%' },
       cell: ({ row }) => priceToCnUnit(row.getValue<number>('amount'))
     },
     {
-      header: '总市值', accessorKey: 'total', meta: { align: 'right', width: 120 },
+      header: '总市值', accessorKey: 'total', meta: { align: 'right', width: '20%' },
       cell: ({ row }) => priceToCnUnit(row.getValue<number>('total'))
     },
     {
-      header: '所属行业', enableSorting: false, accessorKey: 'industry', meta: { width: 120, align: 'right' }
+      header: '所属行业', enableSorting: false, accessorKey: 'industry', meta: { width: '17%', align: 'right' }
     },
     {
       header: '盘前涨跌幅', accessorKey: 'prePercent', meta: { width: '15%', align: 'right' },
@@ -172,38 +176,31 @@ const SingleTable = (props: SingleTableProps) => {
       )
     },
     {
-      header: '换手率', accessorKey: 'turnoverRate', meta: { width: '15%', align: 'right' },
+      header: '换手率', accessorKey: 'turnoverRate', meta: { width: '10%', align: 'right' },
       cell: ({ row }) => `${numToFixed(row.getValue<number>('turnoverRate'), 2)}%`
     },
     {
-      header: '市盈率', enableSorting: false, accessorKey: 'pe', meta: { width: '15%', align: 'right' },
+      header: '市盈率', enableSorting: false, accessorKey: 'pe', meta: { width: '10%', align: 'right' },
       cell: ({ row }) => `${numToFixed(row.getValue<number>('pe'), 2) ?? '-'}`
     },
     {
-      header: '市净率', enableSorting: false, accessorKey: 'pb', meta: { width: '15%', align: 'right' },
+      header: '市净率', enableSorting: false, accessorKey: 'pb', meta: { width: '10%', align: 'right' },
       cell: ({ row }) => `${numToFixed(row.getValue<number>('pb'), 2) ?? '-'}`
     },
     {
-      header: '+股票金池', enableSorting: false, accessorKey: 'collect', meta: { width: 60, align: 'center' },
+      header: '+股票金池', enableSorting: false, accessorKey: 'collect', meta: { width: 80, align: 'center' },
       cell: ({ row }) => (
         <div>
           <CollectStar
             onUpdate={(checked) => updateCollectMutation.mutate({ code: row.original.code, checked })}
-            // onUpdate={checked => query.mutate(s => {
-            //   const r = s?.find(item => item.symbol === row.original.code)
-            //   if (r) {
-            //     r.extend.collect = checked ? 1 : 0
-            //   }
-            //   return s ? [...s] : undefined
-            // })}
             checked={row.getValue<boolean>('collect')}
             code={row.original.code} />
         </div>
       )
     },
     {
-      header: '+AI报警', enableSorting: false, accessorKey: 't9', meta: { width: 50, align: 'center' },
-      cell: ({ row }) => <div><JknIcon name="ic_add" /></div>
+      header: '+AI报警', enableSorting: false, accessorKey: 't9', meta: { width: 80, align: 'center' },
+      cell: ({ row }) => <AiAlarm code={row.original.code}><JknIcon name="ic_add" /></AiAlarm>
     },
     {
       header: ({ table }) => (
@@ -268,7 +265,7 @@ const SingleTable = (props: SingleTableProps) => {
 
   return (
     <ScrollArea className="h-[calc(100%-32px)]">
-      <JknTable loading={query.isLoading} rowKey="code" onSortingChange={onSortChange} columns={columns} data={data}>
+      <JknTable loading={query.isLoading} manualSorting rowKey="code" onSortingChange={onSortChange} columns={columns} data={data}>
       </JknTable>
     </ScrollArea>
   )

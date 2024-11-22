@@ -154,10 +154,31 @@ type GetAlarmLogsParams = {
   extend?: StockExtend[]
 }
 
+type GetAlarmLogsResult = PageResult<{
+  symbol: string
+  type: number
+  stock_cycle?: string
+  alarm_time: string
+  condition: {
+    category_name?: string
+    category_hdly_name?: string
+    own_ids?: string[]
+    rise?: number[]
+    price?: number
+    fall?: number[]
+    frequency?: number
+    is_email?: '0' | '1'
+    bull?: string
+    trigger?: number
+  }
+  id: string
+  
+}>
+
 /**
  * 获取触发报警列表
  */
 export const getAlarmLogs = async (params: GetAlarmLogsParams) => {
-  return request.get('/alarm/logs', { params }).then(r => r.data)
+  return request.get<GetAlarmLogsResult>('/alarm/logs', { params }).then(r => r.data)
 }
 getAlarmLogs.cacheKey = 'alarms:logs'

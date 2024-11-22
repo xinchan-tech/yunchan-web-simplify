@@ -1,51 +1,35 @@
-import { AlarmType, type StockCategory, addAlarm, getAlarmTypes } from "@/api"
-import { Button, CapsuleTabs, FormControl, FormField, FormItem, FormLabel, JknIcon, ToggleGroup, ToggleGroupItem } from "@/components"
-import { useToast, useZForm } from "@/hooks"
+import { addAlarm, getAlarmTypes, type StockCategory } from "@/api"
+import { useZForm, useToast } from "@/hooks"
+import StockSelectInput from "@/pages/alarm/components/stock-select-input"
+import to from "await-to-js"
+import { FormProvider, useFormContext } from "react-hook-form"
+import { FormField, FormItem, FormLabel, FormControl } from "../ui/form"
 import { cn } from "@/utils/style"
 import { useQuery } from "@tanstack/react-query"
 import { useUpdateEffect } from "ahooks"
-import to from "await-to-js"
-import { type CSSProperties, forwardRef, useEffect, useMemo, useState } from "react"
-import { FormProvider, useFormContext } from "react-hook-form"
+import { forwardRef, useState, useMemo, useEffect, type CSSProperties } from "react"
+import JknIcon from "../jkn/jkn-icon"
 import { z } from "zod"
-import AlarmList from "./alarm-list"
-import StockSelectInput from "./stock-select-input"
-import AlarmLog from "./alarm-log"
+import { ToggleGroup, ToggleGroupItem } from "../ui/toggle-group"
+import { Button } from "../ui/button"
+
 const formSchema = z.object({
   symbol: z.string({ message: '股票代码错误' }).min(1, '股票代码错误'),
   stockCycle: z.array(z.string()).min(1, '至少选择一个周期'),
   categoryIds: z.array(z.string()).min(1, '请选择报警类型'),
   categoryHdlyIds: z.array(z.string()).optional()
 })
-const AiAlarmForm = () => {
-  const [active, setActive] = useState('1')
 
-  return (
-    <div className="h-[800px] overflow-hidden">
-      <div className="p-1 border-0 border-b border-solid border-border">
-        <CapsuleTabs activeKey={active} onChange={setActive}>
-          <CapsuleTabs.Tab label="报警设置" value="1" />
-          <CapsuleTabs.Tab label="报警列表" value="2" />
-          <CapsuleTabs.Tab label="已触发报警" value="3" />
-        </CapsuleTabs>
-      </div>
-      <div>
-        {{
-          1: <AiAlarmSetting />,
-          2: <AlarmList type={AlarmType.AI} />,
-          3: <AlarmLog type={AlarmType.AI} />
-        }[active] ?? null}
-      </div>
-    </div>
-  )
+interface AiAlarmSetting {
+  code?: string
 }
 
-const AiAlarmSetting = () => {
+const AiAlarmSetting = (props: AiAlarmSetting) => {
   const form = useZForm(formSchema, {
     stockCycle: [],
     categoryHdlyIds: [],
     categoryIds: [],
-    symbol: ''
+    symbol: props.code ?? ''
   })
 
 
@@ -139,7 +123,7 @@ const AiAlarmSetting = () => {
   )
 }
 
-
+export default AiAlarmSetting
 
 
 interface StockCycleSelectProps {
@@ -302,6 +286,3 @@ const StockHdlySelect = forwardRef((props: StockHdlySelectProps, _) => {
     </ToggleGroup>
   )
 })
-
-
-export default AiAlarmForm

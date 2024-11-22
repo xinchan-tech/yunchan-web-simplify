@@ -16,13 +16,13 @@ const StockView = ({ code, name }: StockViewProps) => {
       <div>
         {
           stock?.[0] ? (
-            <JknIcon stock={stock?.[0]} className="h-8 w-8 mr-3" />
+            <JknIcon stock={stock?.[0]} className="h-6 w-6 mr-3" />
           ) : (
             <div className="h-8 w-8 mr-3 leading-8 text-center rounded-full bg-black" >{code.slice(0, 1)}</div>
           )
         }
       </div>
-      <div>
+      <div className="flex-1 overflow-hidden">
         <div className="text-foreground">{code}</div>
         <div className="text-tertiary text-xs text-ellipsis overflow-hidden whitespace-nowrap w-full">{name}</div>
       </div>

@@ -299,21 +299,24 @@ type GetIncreaseTopResult = {
   name: string
   symbol: string
   stock: StockRawRecord
-  extend?: Record<StockExtend, unknown>
+  extend?: StockExtendResultMap
 }[]
 
 /**
  * 鹰眼数据
  */
-export const getIncreaseTop = (params: GetIncreaseTopParams) => {
-  return request.get<GetIncreaseTopResult>('/index/increase/top', { params }).then(r => r.data)
+export const getIncreaseTop = async (params: GetIncreaseTopParams) => {
+  const r = await request.get<GetIncreaseTopResult>('/index/increase/top', { params }).then(r => r.data)
+  useStock.getState().insertRawByRecords(r)
+  return r
 }
+getIncreaseTop.cacheKey = 'index:increase:top'
 
 type GetCollectHotResult = {
   name: string
   stocks: {
     count: string
-    extend: Record<StockExtend, unknown>
+    extend: StockExtendResultMap
     name: string
     stock: StockRawRecord
     symbol: string
@@ -325,9 +328,13 @@ type GetCollectHotResult = {
 /**
  * 热度金池
  */
-export const getCollectHot = (params: { extend: StockExtend[] }) => {
-  return request.get<GetCollectHotResult[]>('/collect/hot', { params }).then(r => r.data)
+export const getCollectHot = async (params: { extend: StockExtend[] }) => {
+  const r = await request.get<GetCollectHotResult[]>('/collect/hot', { params }).then(r => r.data)
+  useStock.getState().insertRawByRecords(r.flatMap(item => item.stocks).map(item => ({ symbol: item.symbol, stock: item.stock, extend: item.extend })))
+
+  return r
 }
+getCollectHot.cacheKey = 'collect:hot'
 
 type GetStockCollectsParams = {
   /**

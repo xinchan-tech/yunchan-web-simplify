@@ -4,7 +4,7 @@ import { Button } from "../ui/button"
 import Star from "./index"
 import { useCollectCates } from "@/store"
 import { addStockCollectBatch, addStockCollectCate, getStockCollectCates, updateStockCollectCate } from "@/api"
-import { Checkbox, useFormModal } from ".."
+import { Checkbox, ScrollArea, useFormModal } from ".."
 import to from "await-to-js"
 import { useToast } from "@/hooks"
 import { z } from "zod"
@@ -112,10 +112,10 @@ const CollectStar = (props: CollectStarProps) => {
           <div className="flex justify-center items-center"><Star checked={props.checked} /></div>
         </HoverCardTrigger>
         <HoverCardContent align="center" side="left" sideOffset={-10}
-          className="p-0 w-32 bg-muted z-20"
+          className="p-0 w-32 bg-muted z-20 border-dialog-border"
         >
           <div className="bg-background py-2">加入金池</div>
-          <div className="min-h-32 space-y-2">
+          <ScrollArea className="h-[240px] space-y-2 ">
             {
               collects.map(item => (
                 <div key={item.id} onClick={() => onCheck(item)} onKeyDown={() => { }} className="flex cursor-pointer items-center pl-4 space-x-4 hover:bg-primary py-1">
@@ -126,7 +126,7 @@ const CollectStar = (props: CollectStarProps) => {
                 </div>
               ))
             }
-          </div>
+          </ScrollArea>
           <div>
             <Button block className="rounded-none" onClick={() => edit.open()}>
               新建金池

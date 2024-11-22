@@ -51,7 +51,7 @@ const PeriodStep = () => {
         {
           data.conditions?.map(item => (
             <div key={item.key} className="flex items-center text-sm">
-              <span className="w-12">
+              <span className="w-28">
                 {item.name}
               </span>
               <Select onValueChange={v => onValueChange(item.key, v)}>

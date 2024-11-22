@@ -33,6 +33,9 @@ const buttonVariants = cva(
       },
       block: {
         'true': "w-full"
+      },
+      reset: {
+        'true': "bg-transparent border-none text-inherit hover:bg-transparent"
       }
     },
     defaultVariants: {
@@ -49,11 +52,11 @@ export interface ButtonProps
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, asChild = false, loading, children, block, ...props }, ref) => {
+  ({ className, variant, size, asChild = false, loading, children, block, reset, ...props }, ref) => {
     const Comp = asChild ? Slot : "button"
     return (
       <Comp
-        className={cn(buttonVariants({ variant, size, loading, block, className }))}
+        className={cn(buttonVariants({ variant, size, loading, block, reset, className }))}
         ref={ref}
         {...props}
       >

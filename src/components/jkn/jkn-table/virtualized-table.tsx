@@ -116,9 +116,12 @@ const VirtualizedTable = <TData extends Record<string, unknown>, TValue>({ class
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id} className="flex w-full">
               {headerGroup.headers.map((header) => {
-                const { align } = header.column.columnDef.meta ?? {}
+                const { align, width } = header.column.columnDef.meta ?? {}
                 return (
-                  <TableHead key={header.id} className="flex" style={{ width: header.getSize() }} >
+                  <TableHead key={header.id} className="flex flex-shrink-0" style={{
+                    width: width === 'full' ? 'auto' : (width || header.column.getSize()),
+                    flexGrow: width === 'full' ? 1 : undefined
+                  }} >
                     {header.isPlaceholder
                       ? null
                       : (
@@ -170,9 +173,12 @@ const VirtualizedTable = <TData extends Record<string, unknown>, TValue>({ class
                       }}
                     >
                       {row.getVisibleCells().map((cell) => {
-                        const { align } = cell.column.columnDef.meta ?? {}
+                        const { align, width } = cell.column.columnDef.meta ?? {}
                         return (
-                          <TableCell className="flex items-center" key={cell.id} style={{ textAlign: align as undefined, width: cell.column.getSize() }}>
+                          <TableCell className="flex items-center flex-shrink-0" key={cell.id} style={{
+                            textAlign: align as undefined, width: width === 'full' ? 'auto' : (width || cell.column.getSize()),
+                            flexGrow: width === 'full' ? 1 : undefined
+                          }}>
                             <div className="w-full">
                               {flexRender(cell.column.columnDef.cell, cell.getContext())}
                             </div>

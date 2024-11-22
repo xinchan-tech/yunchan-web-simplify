@@ -6,12 +6,12 @@ import to from "await-to-js"
 import { forwardRef, useEffect, useState } from "react"
 import { FormProvider, useFormContext } from "react-hook-form"
 import { z } from "zod"
-import AlarmList from "./alarm-list"
+import AlarmList from "../../../components/ai-alarm/alarm-list"
 import StockSelectInput from "./stock-select-input"
 import { StockRecord } from "@/store"
 import Decimal from "decimal.js"
 import { nanoid } from "nanoid"
-import AlarmLog from "./alarm-log"
+import AlarmLog from "../../../components/ai-alarm/alarm-log"
 const formSchema = z.object({
   symbol: z.string({ message: '股票代码错误' }).min(1, '股票代码错误'),
   rise: z.array(z.string()).optional(),

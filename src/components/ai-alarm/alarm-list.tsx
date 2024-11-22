@@ -60,25 +60,25 @@ const GroupAlarm = (props: AlarmItemProps) => {
 
   const columns = useMemo(() => {
     const c: JknTableProps<TableDataType>['columns'] = [
-      { header: '序号', accessorKey: 'index', size: 30, enableSorting: false, cell: ({ row }) => <span className="block py-1">{row.index + 1}</span>, meta: { align: 'center' } },
+      { header: '序号', accessorKey: 'index', enableSorting: false, cell: ({ row }) => <span className="block py-1">{row.index + 1}</span>, meta: { align: 'center', width: 40 } },
       {
-        header: '股票代码', accessorKey: 'name', meta: { width: '15%' },
+        header: '股票代码', accessorKey: 'name', meta: { width: '32%' },
         cell: ({ row }) => <StockView code={row.original.code} name={row.original.name} />
       },
       {
-        header: '股票名称', accessorKey: 'price', meta: { align: 'right', width: '15%' },
+        header: '现价', accessorKey: 'price', meta: { align: 'right', width: '17%' },
         cell: ({ row }) => <NumSpan value={numToFixed(row.original.price, 2) ?? 0} isPositive={row.original.percent > 0} />
       },
       {
-        header: '涨跌幅', accessorKey: 'percent', meta: { align: 'right', width: '15%' },
-        cell: ({ row }) => <NumSpan symbol block percent value={numToFixed(row.original.percent, 3) ?? 0} isPositive={row.original.percent > 0} />
+        header: '涨跌幅', accessorKey: 'percent', meta: { align: 'right', width: '21%' },
+        cell: ({ row }) => <NumSpan symbol block percent decimal={2} value={numToFixed(row.original.percent, 3) ?? 0} isPositive={row.original.percent > 0} />
       },
       {
-        header: '成交额', accessorKey: 'volume', meta: { align: 'right', width: '15%' },
+        header: '成交额', accessorKey: 'volume', meta: { align: 'right', width: '17%' },
         cell: ({ row }) => <span >{priceToCnUnit(row.original.volume)} </span>
       },
       {
-        header: '总市值', accessorKey: 'marketValue', meta: { align: 'right', width: '15%' },
+        header: '总市值', accessorKey: 'marketValue', meta: { align: 'right', width: '19%' },
         cell: ({ row }) => <NumSpan unit value={row.original.marketValue} isPositive={row.original.percent > 0} />
       },
     ]
@@ -147,7 +147,7 @@ const GroupAlarm = (props: AlarmItemProps) => {
           </div>
         )
       })
-    }else{
+    } else {
       c.splice(4, 1)
     }
 
@@ -277,9 +277,9 @@ const AlarmGroupList = (props: AlarmGroupListProps) => {
 
   const columns = useMemo(() => {
     const c: JknTableProps<TableDataType>['columns'] = [
-      { header: '序号', accessorKey: 'index', size: 40, enableSorting: false, cell: ({ row }) => <span className="block py-1">{row.index + 1}</span>, meta: { align: 'center' } },
+      { header: '序号', accessorKey: 'index', enableSorting: false, cell: ({ row }) => <span className="block py-1">{row.index + 1}</span>, meta: { align: 'center', width: 40 } },
       {
-        header: '周期', accessorKey: 'cycle', size: 120, enableSorting: false,
+        header: '周期', accessorKey: 'cycle', size: 80, enableSorting: false,
         cell: ({ row }) => <span>{row.getValue('cycle')}分</span>
       },
       {

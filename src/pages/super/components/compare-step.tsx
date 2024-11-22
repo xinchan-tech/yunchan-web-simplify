@@ -31,7 +31,7 @@ const CompareStep = () => {
         <ToggleGroup onValueChange={v => { selection.current = v }} type="multiple" style={{ '--toggle-active-bg': 'hsl(var(--stock-up-color))' } as CSSProperties}>
           {
             data.map(item => (
-              <ToggleGroupItem size="sm" className="w-24" variant="outline" key={item.name} value={item.value}>
+              <ToggleGroupItem size="sm" className="w-32" variant="outline" key={item.name} value={item.value}>
                 {item.name}
               </ToggleGroupItem>
             ))
