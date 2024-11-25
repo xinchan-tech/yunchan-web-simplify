@@ -49,3 +49,5 @@ export const AiAlarm = (props: PropsWithChildren<AiAlarmProps>) => {
 export {
   AiAlarmSetting
 }
+
+export * from './ai-alarm-notice'

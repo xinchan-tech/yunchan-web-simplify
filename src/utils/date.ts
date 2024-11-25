@@ -90,3 +90,16 @@ export const getTradingPeriod = (trading: StockTrading, date?: string) => {
     return start.add(i, 'minute').format('YYYY-MM-DD HH:mm:ss')
   })
 }
+
+
+/**
+ * 根据时间获取上一交易日期
+ */
+export const getPrevTradingDay = (date?: string | Dayjs) => {
+  const day = dayjs.isDayjs(date) ? date : dayjs(date)
+  let prevDay = day.subtract(1, 'day')
+  while (prevDay.day() === 0 || prevDay.day() === 6) {
+    prevDay = prevDay.subtract(1, 'day')
+  }
+  return prevDay
+}

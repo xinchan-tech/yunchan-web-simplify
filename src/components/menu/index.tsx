@@ -2,10 +2,11 @@ import { navWithAuth } from "@/utils/nav"
 import JknIcon from "../jkn/jkn-icon"
 import { cn } from "@/utils/style"
 import { router } from "@/router"
-import { useEffect, useState } from "react"
+import { type ReactNode, useEffect, useState } from "react"
+import { Settings } from "lucide-react"
 
 type MenuItem = {
-  icon: IconName
+  icon: IconName | ReactNode
   title: string
   path: string
 }
@@ -13,13 +14,12 @@ type MenuItem = {
 
 const Menu = () => {
   const [pathname, setPathname] = useState(router.state.location.pathname)
-  
+
   useEffect(() => {
     const s = router.subscribe((s) => {
       setPathname(s.location.pathname)
-      console.log(1)
     })
-  
+
     return () => {
       s()
     }
@@ -44,7 +44,7 @@ const Menu = () => {
     {
       icon: 'left_menu_4@2x',
       title: '超级选股',
-      path:  '/super'
+      path: '/super'
     },
     {
       icon: 'left_menu_5@2x',
@@ -65,6 +65,11 @@ const Menu = () => {
       icon: 'left_menu_8@2x',
       title: '大V快评',
       path: '/shout',
+    },
+    {
+      icon: <Settings className="text-[#3c3c3c]" />,
+      title: '设置',
+      path: '/setting'
     }
   ]
 
@@ -73,13 +78,22 @@ const Menu = () => {
   }
 
   return (
-    <div>
+    <div className="h-full flex flex-col items-center">
       {menus.map((item) => (
-        <div key={item.title} onClick={() => onNav(item.path)} onKeyDown={() => { }} className="mb-4 flex flex-col items-center cursor-pointer">
+        <div key={item.title} onClick={() => onNav(item.path)} onKeyDown={() => { }}
+          className={cn(
+            'mb-4 flex flex-col items-center cursor-pointer',
+            item.title === '设置' ? 'mt-auto': ''
+          )}
+        >
           <div className={cn(pathname === item.path && 'active-icon')}>
-            <JknIcon name={item.icon}
-              className="inline-block w-7 h-7 mb-1"
-            />
+            {
+              typeof item.icon === 'string' ? (
+                <JknIcon name={item.icon as IconName} className="w-8 h-8" />
+              ) : (
+                item.icon
+              )
+            }
           </div>
           <div className={
             cn(
@@ -87,8 +101,10 @@ const Menu = () => {
               pathname === item.path && 'active-text'
             )
           }>{item.title}</div>
-          <style jsx>{
-            `
+        </div>
+      ))}
+      <style jsx>{
+        `
             {
               .active-icon {
                 filter: invert(50%) sepia(96%) saturate(6798%) hue-rotate(227deg) brightness(99%) contrast(94%);
@@ -98,9 +114,7 @@ const Menu = () => {
                 color: hsl(var(--primary))
               }
             }`
-          }</style>
-        </div>
-      ))}
+      }</style>
     </div>
   )
 }

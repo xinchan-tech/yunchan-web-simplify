@@ -86,10 +86,6 @@
 
     --active-color: 229 91% 58%;
 
-    --stock-up-color: 148.02 100% 32.75%;
-
-    --stock-down-color: 354.6 100 58.63%;
-
     --text-secondary: 0 0% 80%;
 
     --text-tertiary: 0 0% 40%;
@@ -98,6 +94,12 @@
 
     --table-header: 220 5% 12%;
   
+  }
+
+  .stock-color-reverse {
+    --stock-up-color: 354.6 100 58.63%;
+
+    --stock-down-color: 148.02 100% 32.75%;
   }
 }
  

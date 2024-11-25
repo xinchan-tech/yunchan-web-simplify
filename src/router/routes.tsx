@@ -55,6 +55,13 @@ export const routes: RouteObject[] = [
     handle:{
       title: 'AI报警'
     }
+  },
+  {
+    path: '/setting',
+    Component: lazy(() => import('@/pages/setting')),
+    handle:{
+      title: '系统设置'
+    }
   }
   
 ]

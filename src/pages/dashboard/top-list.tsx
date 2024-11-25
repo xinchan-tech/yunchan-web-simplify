@@ -92,7 +92,7 @@ const TopList = () => {
     },
     {
       header: '盘前涨跌幅', accessorKey: 'percent', meta: { align: 'right', width: '21%' },
-      cell: ({ row }) => <NumSpan className="py-0.5" block decimal={2} value={`${row.getValue<number>('percent') * 100}`} percent isPositive={row.getValue<number>('percent') >= 0} symbol />
+      cell: ({ row }) => <NumSpan block className="py-0.5 w-20"  decimal={2} value={`${row.getValue<number>('percent') * 100}`} percent isPositive={row.getValue<number>('percent') >= 0} symbol />
     },
     {
       header: '成交额', accessorKey: 'turnover', meta: { align: 'right', width: '19%' },

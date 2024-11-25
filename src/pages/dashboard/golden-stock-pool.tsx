@@ -89,7 +89,7 @@ const GoldenStockPool = () => {
     {
       header: '成交额', accessorKey: 'turnover', meta: { align: 'right', width: '19%'}, 
       cell: ({ row }) => <span className={cn(row.original.percent >= 0 ? 'text-stock-up' : 'text-stock-down')}>
-        {priceToCnUnit(row.getValue<number>('turnover') * 10000, 2)}
+        {priceToCnUnit(row.getValue<number>('turnover'), 2)}
       </span>
     },
     {

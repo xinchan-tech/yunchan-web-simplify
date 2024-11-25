@@ -162,6 +162,7 @@ type GetAlarmLogsResult = PageResult<{
   condition: {
     category_name?: string
     category_hdly_name?: string
+    indicators?: string
     own_ids?: string[]
     rise?: number[]
     price?: number

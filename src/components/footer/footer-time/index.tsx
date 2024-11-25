@@ -4,6 +4,7 @@ import { dateToWeek, getTrading } from "@/utils/date"
 import { useMount, useRequest, useUnmount } from "ahooks"
 import dayjs from "dayjs"
 import { useRef, useState } from "react"
+import JknIcon from "../../jkn/jkn-icon"
 
 const FooterTime = () => {
   const [usTime, setUsTime] = useState(0)
@@ -57,9 +58,11 @@ const FooterTime = () => {
     <div>
       {
         usTime && (
-          <span>
-            {dayjs(usTime).tz('America/New_York').format('MM-DD')}
-            {dateToWeek(dayjs(usTime).tz('America/New_York'))}
+          <span className="flex items-center">
+            <JknIcon name="ic_us" className="w-3 h-3" /> &nbsp;
+            美东时间：
+            {dayjs(usTime).tz('America/New_York').format('MM-DD')} &nbsp;
+            {dateToWeek(dayjs(usTime).tz('America/New_York'))} &nbsp;
             {dayjs(usTime).tz('America/New_York').format('HH:mm:ss')}
           </span>
         )

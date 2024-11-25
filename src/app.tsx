@@ -1,4 +1,4 @@
-import { HeaderService, HeaderUser, Input, Menu, StockSelect, Toaster } from './components'
+import { AiAlarmNotice, Footer, HeaderService, HeaderUser, Menu, MenuRight, StockSelect, Toaster } from './components'
 import Logo from './assets/icon/icon_jkn@2x.png'
 import './app.scss'
 import { RouterProvider } from "react-router-dom"
@@ -8,7 +8,6 @@ import { useConfig, useUser } from "./store"
 import { useTranslation } from "react-i18next"
 import { Suspense } from "react"
 import { getConfig, getUser } from "./api"
-import FooterTime from "./components/footer-time"
 import { useQuery } from "@tanstack/react-query"
 
 const App = () => {
@@ -67,6 +66,15 @@ const App = () => {
         <div className="sider h-full float-left bg-background">
           <Menu />
         </div>
+        <div className="float-right bg-background h-full sider">
+          <div className="flex flex-col items-center h-full">
+            <MenuRight />
+
+            <div className="mt-auto">
+              <AiAlarmNotice />
+            </div>
+          </div>
+        </div>
         <div className="content overflow-hidden">
           <div>
             <Suspense fallback={<div />}>
@@ -75,9 +83,7 @@ const App = () => {
           </div>
 
           <div className="footer border-style-primary">
-            <div className="ml-auto pr-2">
-              <FooterTime />
-            </div>
+            <Footer />
           </div>
         </div>
 
