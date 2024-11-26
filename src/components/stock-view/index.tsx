@@ -10,7 +10,7 @@ const StockView = ({ code, name }: StockViewProps) => {
   const stockList = useStockList()
 
   const stock = stockList.list.find(item => item[1] === code)
-  
+
   return (
     <div className="overflow-hidden flex items-center">
       <div>
@@ -22,9 +22,9 @@ const StockView = ({ code, name }: StockViewProps) => {
           )
         }
       </div>
-      <div className="flex-1 overflow-hidden">
+      <div className="flex-1 overflow-hidden ">
         <div className="text-foreground">{code}</div>
-        <div className="text-tertiary text-xs text-ellipsis overflow-hidden whitespace-nowrap w-full">{name}</div>
+        <div className="w-full text-tertiary text-xs whitespace-nowrap text-ellipsis overflow-hidden">{name}</div>
       </div>
     </div>
   )

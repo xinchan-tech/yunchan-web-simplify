@@ -37,8 +37,20 @@ export const logout = (platform?: 'window' | 'macos' | 'android' | 'linux') => {
   return request.post('/user/logOut', form).then(r => r.data)
 }
 
+type GetConfigResult = {
+  servers: {
+    host: string
+    name: string
+    ws: string
+  }[]
+  consults: {
+    name: string
+    contact: string[]
+  }[]
+}
+
 export const getConfig = () => {
-  return request.get('/init/get').then(r => r.data)
+  return request.get<GetConfigResult>('/init/get').then(r => r.data)
 }
 
 type getUsTimeResult = {

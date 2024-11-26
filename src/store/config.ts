@@ -6,6 +6,11 @@ type Language = 'zh_CN' | 'en'
 interface ConfigStore {
   language: Language
   hasSelected: boolean
+  servers: {
+    host: string
+    name: string
+    ws: string
+  }[]
   consults: {
     name: string
     contact: string[]
@@ -28,6 +33,7 @@ interface ConfigStore {
     gapShow: '1' | '0'
   }
   setSetting: (setting: Partial<ConfigStore['setting']>) => void
+  setServers: (service: ConfigStore['servers']) => void
 }
 
 export const useConfig = create<ConfigStore>()(
@@ -35,6 +41,7 @@ export const useConfig = create<ConfigStore>()(
     set => ({
       language: 'zh_CN',
       hasSelected: false,
+      servers: [{ name: 'Conn_us1', host: 'http://us.mgjkn.com', ws: 'ws://us.ws.mgjkn.com' }],
       consults: [],
       aiAlarmAutoNotice: true,
       setting: {
@@ -50,7 +57,8 @@ export const useConfig = create<ConfigStore>()(
       setAiAlarmAutoNotice: auto => set(() => ({ aiAlarmAutoNotice: auto })),
       setConsults: consults => set(() => ({ consults })),
       setLanguage: language => set(() => ({ language })),
-      setHasSelected: () => set(() => ({ hasSelected: true }))
+      setHasSelected: () => set(() => ({ hasSelected: true })),
+      setServers: servers => set(s => ({ servers: [...s.servers, ...servers ] }))
     }),
     { name: 'config', storage: createJSONStorage(() => localStorage) }
   )

@@ -13,12 +13,20 @@ export default defineConfig({
     template: './public/index.html'
   },
   server:{
+    host: '0.0.0.0',
     proxy: {
       '/api': {
         target: 'http://us.mgjkn.com/',
         changeOrigin: true,
         pathRewrite: {
           '^/api': ''
+        }
+      },
+      '/ws': {
+        target: 'ws://us.ws.mgjkn.com',
+        ws: true,
+        pathRewrite: {
+          '^/ws': ''
         }
       }
     }

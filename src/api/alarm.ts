@@ -9,6 +9,11 @@ export enum AlarmType {
   LINE = 3
 }
 
+export enum PriceAlarmTrigger {
+  UP = 2,
+  DOWN = 3
+}
+
 type GetAlarmsGroupParams = {
   limit?: number | string
   page?: number | string
@@ -156,7 +161,7 @@ type GetAlarmLogsParams = {
 
 type GetAlarmLogsResult = PageResult<{
   symbol: string
-  type: number
+  type: AlarmType
   stock_cycle?: string
   alarm_time: string
   condition: {
@@ -170,7 +175,7 @@ type GetAlarmLogsResult = PageResult<{
     frequency?: number
     is_email?: '0' | '1'
     bull?: string
-    trigger?: number
+    trigger?: PriceAlarmTrigger
   }
   id: string
   

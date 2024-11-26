@@ -14,6 +14,7 @@ declare module '@tanstack/react-table' {
     width?: number | string
     align?: 'left' | 'center' | 'right' | string
     sort?: boolean
+    minWidth?: number | string
   }
 
   interface TableMeta<TData extends RowData> {

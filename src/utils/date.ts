@@ -103,3 +103,15 @@ export const getPrevTradingDay = (date?: string | Dayjs) => {
   }
   return prevDay
 }
+
+/**
+ * 获取最近的交易日期
+ */
+export const getLatestTradingDay = (date?: string | Dayjs) => {
+  const day = dayjs.isDayjs(date) ? date : dayjs(date)
+
+  if(day.day() !== 0 && day.day() !== 6 && day.hour() >= 4){
+    return day
+  }
+  return getPrevTradingDay(day)
+}

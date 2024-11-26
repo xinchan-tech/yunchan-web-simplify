@@ -1,11 +1,11 @@
-import { useBoolean, useMount } from "ahooks"
+import { useBoolean } from "ahooks"
 import JknIcon from "../jkn/jkn-icon"
 import { Popover, PopoverAnchor, PopoverContent } from "../ui/popover"
 import { useConfig, useTime } from "@/store"
-import { dateToWeek, getPrevTradingDay } from "@/utils/date"
+import { dateToWeek, getLatestTradingDay } from "@/utils/date"
 import dayjs from "dayjs"
 import { useQuery } from "@tanstack/react-query"
-import { getAlarmLogs } from "@/api"
+import { AlarmType, getAlarmLogs, PriceAlarmTrigger } from "@/api"
 import { useEffect, useMemo } from "react"
 import JknTable, { type JknTableProps } from "../jkn/jkn-table"
 import StockView from "../stock-view"
@@ -16,13 +16,12 @@ export const AiAlarmNotice = () => {
   const [open, { setTrue, setFalse }] = useBoolean(false)
   const time = useTime()
   const config = useConfig()
-  const prevDate = getPrevTradingDay(dayjs(time.usTime).tz('America/New_York'))
+  const prevDate = getLatestTradingDay(dayjs(time.usTime).tz('America/New_York'))
   const query = useQuery({
-    queryKey: [getAlarmLogs.cacheKey, 0, prevDate.format('YYYY-MM-DD')],
+    queryKey: [getAlarmLogs.cacheKey, 0, prevDate.hour(4).minute(0).second(0).format('YYYY-MM-DD HH:mm:ss')],
     queryFn: () => getAlarmLogs({
-      start: prevDate.format('YYYY-MM-DD'),
+      start: prevDate.hour(4).minute(0).second(0).format('YYYY-MM-DD HH:mm:ss'),
       page: 1,
-      type: 0,
       limit: 2000
     })
   })
@@ -37,10 +36,10 @@ export const AiAlarmNotice = () => {
   })()
 
   useEffect(() => {
-    if(query.isFetched && config.aiAlarmAutoNotice){
+    if (query.isFetched && config.aiAlarmAutoNotice && query.data?.items?.length) {
       setTrue()
     }
-  }, [query.isFetched, config.aiAlarmAutoNotice, setTrue])
+  }, [query.isFetched, config.aiAlarmAutoNotice, setTrue, query.data?.items])
 
   const columns = useMemo<JknTableProps<Awaited<ReturnType<typeof getAlarmLogs>>['items'][0]>['columns']>(() => [
     {
@@ -51,6 +50,7 @@ export const AiAlarmNotice = () => {
     },
     {
       header: '名称代码', accessorKey: 'name', enableSorting: false,
+      meta: { width: 'auto' },
       cell: ({ row }) => (
         <StockView name={row.getValue('name')} code={row.original.symbol} />
       )
@@ -60,12 +60,20 @@ export const AiAlarmNotice = () => {
         <span>{row.original.stock_cycle}分</span>
       )
     }, {
-      header: '报警类型', accessorKey: 'type', enableSorting: false, meta: { align: 'center', width: 100 },
+      header: '报警类型', accessorKey: 'type', enableSorting: false, meta: { align: 'center', width: 120 },
       cell: ({ row }) => (
-        <span className={cn(row.original.condition.bull === '1' ? 'text-stock-up' : 'text-stock-down', 'flex items-center')}>
-          <JknIcon name={row.original.condition.bull === '1' ? 'ic_price_up_green' : 'ic_price_down_red'} />
-          {row.original.condition.indicators}
-        </span>
+        +row.original.type === AlarmType.AI ? (
+          <span className={cn(row.original.condition.bull === '1' ? 'text-stock-up' : 'text-stock-down', 'flex items-center')}>
+            <JknIcon name={row.original.condition.bull === '1' ? 'ic_price_up_green' : 'ic_price_down_red'} />
+            {row.original.condition.indicators}
+          </span>
+        ) : (
+          <span className={cn(row.original.condition.trigger === PriceAlarmTrigger.UP ? 'text-stock-up' : 'text-stock-down', 'flex items-center')}>
+            <JknIcon name={row.original.condition.trigger === PriceAlarmTrigger.UP ? 'ic_price_up_green' : 'ic_price_down_red'} />
+            <span>{row.original.condition.trigger === PriceAlarmTrigger.UP ? '涨到' : '跌到'}</span>
+            {row.original.condition.price}
+          </span>
+        )
       )
     }, {
       header: '底部类型', accessorKey: 'bottom', enableSorting: false, meta: { align: 'center', width: 70 },
@@ -94,8 +102,8 @@ export const AiAlarmNotice = () => {
               <span>已触发报警</span>
               {
                 query.data?.items && query.data?.items.length > 0 ? (
-                  <span className="bg-stock-down w-4 h-4 rounded-full text-center leading-4">1</span>
-                ): null
+                  <span className="bg-stock-down w-4 h-4 rounded-full text-center leading-4">{query.data.items.length}</span>
+                ) : null
               }
             </div>
             <div className="absolute right-2 top-2.5 flex items-center">

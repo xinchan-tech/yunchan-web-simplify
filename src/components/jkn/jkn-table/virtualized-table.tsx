@@ -120,7 +120,9 @@ const VirtualizedTable = <TData extends Record<string, unknown>, TValue>({ class
                 return (
                   <TableHead key={header.id} className="flex flex-shrink-0" style={{
                     width: width === 'full' ? 'auto' : (width || header.column.getSize()),
-                    flexGrow: width === 'full' ? 1 : undefined
+                    minWidth: 0,
+                    flexGrow: width === 'full' ? 1 : undefined,
+                    flexShrink: width === 'full' ? 1 : undefined
                   }} >
                     {header.isPlaceholder
                       ? null
@@ -177,7 +179,9 @@ const VirtualizedTable = <TData extends Record<string, unknown>, TValue>({ class
                         return (
                           <TableCell className="flex items-center flex-shrink-0" key={cell.id} style={{
                             textAlign: align as undefined, width: width === 'full' ? 'auto' : (width || cell.column.getSize()),
-                            flexGrow: width === 'full' ? 1 : undefined
+                            flexGrow: width === 'full' ? 1 : undefined,
+                            flexShrink: width === 'full' ? 1 : undefined,
+                            minWidth: 0
                           }}>
                             <div className="w-full">
                               {flexRender(cell.column.columnDef.cell, cell.getContext())}
