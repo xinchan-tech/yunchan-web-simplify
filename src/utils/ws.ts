@@ -1,5 +1,5 @@
 import { useConfig, useToken } from '@/store'
-import { client } from 'websocket'
+import socket from 'sockjs-client'
 
 type MessageEvent =
   | 'exist'
