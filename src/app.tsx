@@ -4,7 +4,7 @@ import './app.scss'
 import { RouterProvider } from "react-router-dom"
 import { router } from "./router"
 import { useMount, useUpdateEffect } from "ahooks"
-import { useConfig, useServers, useUser } from "./store"
+import { useConfig, useUser } from "./store"
 import { useTranslation } from "react-i18next"
 import { Suspense } from "react"
 import { getConfig, getUser } from "./api"
@@ -12,7 +12,6 @@ import { useQuery } from "@tanstack/react-query"
 
 const App = () => {
   const config = useConfig()
-  const { setServers } = useServers()
   const { t, i18n } = useTranslation()
   const user = useUser()
   const query = useQuery({

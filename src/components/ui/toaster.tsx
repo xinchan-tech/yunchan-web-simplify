@@ -7,24 +7,27 @@ import {
   ToastTitle,
   ToastViewport,
 } from "@/components/ui/toast"
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden"
 
 export function Toaster() {
   const { toasts } = useToast()
 
   return (
-    <ToastProvider>
+    <ToastProvider swipeDirection="down" duration={3000}>
       {toasts.map(({ id, title, description, action, ...props }) => (
-          <Toast key={id} {...props}>
-            <div className="grid gap-1">
-              {title && <ToastTitle>{title}</ToastTitle>}
-              {description && (
-                <ToastDescription>{description}</ToastDescription>
-              )}
-            </div>
-            {action}
+        <Toast key={id} {...props} >
+          <div className="grid gap-1 text-center w-full">
+            {title && <ToastTitle>{title}</ToastTitle>}
+            {description && (
+              <ToastDescription >{description}</ToastDescription>
+            )}
+          </div>
+          {action}
+          <VisuallyHidden>
             <ToastClose />
-          </Toast>
-        ))}
+          </VisuallyHidden>
+        </Toast>
+      ))}
       <ToastViewport />
     </ToastProvider>
   )
