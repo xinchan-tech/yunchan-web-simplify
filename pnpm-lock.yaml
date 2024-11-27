@@ -62,6 +62,9 @@ importers:
       '@radix-ui/react-visually-hidden':
         specifier: ^1.1.0
         version: 1.1.0(@types/react-dom@18.3.1)(@types/react@18.3.12)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@tanstack/query-sync-storage-persister':
+        specifier: ^5.61.4
+        version: 5.61.4
       '@tanstack/react-query':
         specifier: ^5.60.5
         version: 5.60.5(react@18.3.1)
@@ -119,6 +122,9 @@ importers:
       lucide-react:
         specifier: ^0.454.0
         version: 0.454.0(react@18.3.1)
+      lz-string:
+        specifier: ^1.5.0
+        version: 1.5.0
       mitt:
         specifier: ^3.0.1
         version: 3.0.1
@@ -1323,11 +1329,20 @@ packages:
   '@tanstack/query-core@5.60.5':
     resolution: {integrity: sha512-jiS1aC3XI3BJp83ZiTuDLerTmn9P3U95r6p+6/SNauLJaYxfIC4dMuWygwnBHIZxjn2zJqEpj3nysmPieoxfPQ==}
 
+  '@tanstack/query-core@5.61.4':
+    resolution: {integrity: sha512-rsnemyhPvEG4ViZe0R2UQDM8NgQS/BNC5/Gf9RTs0TKN5thUhPUwnL2anWG4jxAGKFyDfvG7PXbx6MRq3hxi1w==}
+
   '@tanstack/query-devtools@5.59.20':
     resolution: {integrity: sha512-vxhuQ+8VV4YWQSFxQLsuM+dnEKRY7VeRzpNabFXdhEwsBYLrjXlF1pM38A8WyKNLqZy8JjyRO8oP4Wd/oKHwuQ==}
 
   '@tanstack/query-persist-client-core@5.60.5':
     resolution: {integrity: sha512-vA5MR5W8jKv9NvdsbXFztBPi+Hs8ZtiVPiLTWk+nfyqmAKXEGZlxZpUo8zTHr7GgmLZCDgx/l+HntlL58Jbl0w==}
+
+  '@tanstack/query-persist-client-core@5.61.4':
+    resolution: {integrity: sha512-yP648VJiXhU7AtdOkylTiz1iZvsstsH7R0BhuJQJFMLezyD+DbcgiwDOtzz7qRZZMEwhspYQx+r7Si1atY477Q==}
+
+  '@tanstack/query-sync-storage-persister@5.61.4':
+    resolution: {integrity: sha512-l3YJaGoYQ8uHcg9WJmaHwePy78AG7pWYF+BUe9hFRrOC99nuAENmO/tv7Gb1mMivhO/lJbZi2UBK4i+etktb8w==}
 
   '@tanstack/react-query-devtools@5.60.5':
     resolution: {integrity: sha512-lzANl0ih3CNKBGUoXhhkAAHI1Y4Yqs9Jf3iuTUsGiPpmF0RWXTeYFaQxc+h1PhJz3VwYrIYCwmPoNts0mSjSuA==}
@@ -2193,6 +2208,10 @@ packages:
     resolution: {integrity: sha512-hw7zMDwykCLnEzgncEEjHeA6+45aeEzRYuKHuyRSOPkhko+J3ySGjGIzu+mmMfDFG1vazHepMaYFYHbTFAZAAQ==}
     peerDependencies:
       react: ^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0-rc
+
+  lz-string@1.5.0:
+    resolution: {integrity: sha512-h5bgJWpxJNswbU7qCrV0tIKQCaS3blPDrqKWx+QxzuzL1zGUzij9XCWLrSLsJPu5t+eWA/ycetzYAO5IOMcWAQ==}
+    hasBin: true
 
   magic-string@0.30.12:
     resolution: {integrity: sha512-Ea8I3sQMVXr8JhN4z+H/d8zwo+tYDgHE9+5G4Wnrwhs0gaK9fXTKx0Tw5Xwsd/bCPTTZNRAdpyzvoeORe9LYpw==}
@@ -3833,11 +3852,22 @@ snapshots:
 
   '@tanstack/query-core@5.60.5': {}
 
+  '@tanstack/query-core@5.61.4': {}
+
   '@tanstack/query-devtools@5.59.20': {}
 
   '@tanstack/query-persist-client-core@5.60.5':
     dependencies:
       '@tanstack/query-core': 5.60.5
+
+  '@tanstack/query-persist-client-core@5.61.4':
+    dependencies:
+      '@tanstack/query-core': 5.61.4
+
+  '@tanstack/query-sync-storage-persister@5.61.4':
+    dependencies:
+      '@tanstack/query-core': 5.61.4
+      '@tanstack/query-persist-client-core': 5.61.4
 
   '@tanstack/react-query-devtools@5.60.5(@tanstack/react-query@5.60.5(react@18.3.1))(react@18.3.1)':
     dependencies:
@@ -4816,6 +4846,8 @@ snapshots:
   lucide-react@0.454.0(react@18.3.1):
     dependencies:
       react: 18.3.1
+
+  lz-string@1.5.0: {}
 
   magic-string@0.30.12:
     dependencies:

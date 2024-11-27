@@ -80,7 +80,6 @@ const SingleTable = (props: SingleTableProps) => {
   const stock = useStock()
 
   const data = (() => {
-
     const r: TableDataType[] = []
 
     if (!query.data) return []

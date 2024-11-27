@@ -7,6 +7,7 @@ import { getTradingPeriod } from "@/utils/date"
 import echarts, { type ECOption } from "@/utils/echarts"
 import { numToFixed } from "@/utils/price"
 import { cn } from "@/utils/style"
+import { wsManager } from "@/utils/ws"
 import { useQuery } from "@tanstack/react-query"
 import { useMount, useSize, useUnmount, useUpdateEffect } from "ahooks"
 import clsx from "clsx"
@@ -48,6 +49,10 @@ const LargeCap = () => {
     if(largeCap.data){
       setActiveKey(largeCap.data[1].category_name)
       setActiveStock(largeCap.data[1].stocks[0].symbol)
+
+      for (const d of largeCap.data) {
+        wsManager.subscribe(d.stocks.map(item => item.symbol))
+      }
     }
   }, [largeCap.data])
 

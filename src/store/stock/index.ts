@@ -7,14 +7,11 @@ export { StockRecord }
 
 interface StockStore {
   stocks: Record<symbol, StockRecord[]>
-  // findStock: (code: string) => Stock | undefined
-  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
   insertRaw: (code: string, raw: StockRawRecord, extend?: Record<StockExtendResult, any>) => void
   getLastRecord: (code: string) => StockRecord | undefined
   getLastRecordByTrading: (code: string, trading: StockTrading) => StockRecord | undefined
   getLastRecords: (code: string, trading: StockTrading) => StockRecord[]
   insertRawByRecords: (record: StockResultRecord[]) => void
-  // createStock: (code: string, name: string) => Stock
 }
 
 export const useStock = create<StockStore>()((set, get) => ({

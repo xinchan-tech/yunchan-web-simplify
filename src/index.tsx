@@ -8,6 +8,9 @@ import isSameOrAfter from 'dayjs/plugin/isSameOrAfter'
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore'
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
+import { persistQueryClient, removeOldestQuery } from '@tanstack/react-query-persist-client'
+import { createSyncStoragePersister } from '@tanstack/query-sync-storage-persister'
+import { compress, decompress } from 'lz-string'
 import { StrictMode } from "react"
 
 dayjs.extend(utc)
@@ -24,6 +27,18 @@ const queryClient = new QueryClient({
   }
 })
 
+const localStoragePersister = createSyncStoragePersister({
+  storage: window.localStorage,
+  retry: removeOldestQuery,
+  serialize: (data: any) => compress(JSON.stringify(data)),
+  deserialize: (data: any) => JSON.parse(decompress(data))
+})
+
+persistQueryClient({
+  queryClient,
+  persister: localStoragePersister
+})
+
 const rootEl = document.getElementById('root')
 if (rootEl) {
   const root = ReactDOM.createRoot(rootEl)
@@ -31,7 +46,7 @@ if (rootEl) {
     <StrictMode>
       <QueryClientProvider client={queryClient}>
         <App />
-        <ReactQueryDevtools initialIsOpen={true} />
+        <ReactQueryDevtools initialIsOpen={false} />
       </QueryClientProvider>
     </StrictMode>
   )
