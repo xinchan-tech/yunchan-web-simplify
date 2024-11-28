@@ -1,5 +1,5 @@
 import { lazy } from "react"
-import type { RouteObject } from "react-router-dom"
+import type { RouteObject } from "react-router"
 
 export const routes: RouteObject[] = [
   {
@@ -61,6 +61,13 @@ export const routes: RouteObject[] = [
     Component: lazy(() => import('@/pages/setting')),
     handle:{
       title: '系统设置'
+    }
+  },
+  {
+    path: '/stock',
+    Component: lazy(() => import('@/pages/stock')),
+    handle:{
+      title: '个股盘口'
     }
   }
   

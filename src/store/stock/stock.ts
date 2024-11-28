@@ -35,6 +35,8 @@ export class StockRecord {
   pb: number
   //
   totalShare: number
+  // 缩略走势图
+  thumbs: string[] = []
 
   //涨幅
   get percent() {
@@ -45,7 +47,6 @@ export class StockRecord {
     return m.div(this.prevClose).toNumber()
   }
 
-  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
   static isValid(data: any): data is StockRawRecord {
     return Array.isArray(data) && (data.length === 8 || data.length === 10)
   }
@@ -153,6 +154,10 @@ export class StockRecord {
     if (extend.basic_index as string) {
       this.industry = extend.basic_index as string
     }
+
+    if (extend.thumbs && extend.thumbs.length > 0) {
+      this.thumbs = extend.thumbs
+    }
   }
 
   private _getTrading(time: string) {
@@ -169,5 +174,4 @@ export class StockRecord {
     }
     return time
   }
-  
 }

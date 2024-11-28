@@ -1,3 +1,4 @@
+import { cn } from "@/utils/style"
 import { createContext, type PropsWithChildren, type ReactNode, useContext } from "react"
 
 interface CapsuleTabsProps {
@@ -16,7 +17,7 @@ const CapsuleTabsContext = createContext<CapsuleTabsContext>({} as CapsuleTabsCo
 
 const _CapsuleTabs = ({ activeKey, onChange, children, type = 'default' }: PropsWithChildren<CapsuleTabsProps>) => {
   return (
-    <div className="flex items-center space-x-2">
+    <div className="flex items-center space-x-2 flex-wrap">
       <CapsuleTabsContext.Provider value={{ value: activeKey, onChange, type }}>
         {
           children
@@ -30,14 +31,18 @@ interface TabItemProps {
   value: string
   label: string | ReactNode
   disabled?: boolean
+  className?: string
 }
 
-const TabItem = ({ value, label, disabled }: TabItemProps) => {
+const TabItem = ({ value, label, disabled, className }: TabItemProps) => {
   const context = useContext(CapsuleTabsContext)
 
   return (
     <div
-      className="items-center justify-center rounded-xl cursor-pointer text-xs px-3 py-0.5 transition-all duration-200"
+      className={cn(
+        'items-center justify-center rounded-xl cursor-pointer text-xs px-3 py-0.5 transition-all duration-200',
+        className
+      )}
       style={{
         background: value === context.value && context.type === 'default'  ? 'hsl(var(--active-color))' : 'transparent',
         color: value === context.value && context.type === 'text' ? 'hsl(var(--active-color))' : 'hsl(var(--text))',
@@ -50,8 +55,8 @@ const TabItem = ({ value, label, disabled }: TabItemProps) => {
 }
 
 _CapsuleTabs.Tab = TabItem
-const CapsuleTabs = _CapsuleTabs as typeof _CapsuleTabs & {
+export const CapsuleTabs = _CapsuleTabs as typeof _CapsuleTabs & {
   Tab: typeof TabItem
 }
 
-export default CapsuleTabs
+export * from './collect'

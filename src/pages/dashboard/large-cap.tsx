@@ -246,42 +246,25 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
   const setChartData = (records?: StockRecord[]) => {
     if (!records) return
     let prevClose = 0
-    let maxPrice = -999999
-    let minPrice = 999999
 
     const dataset: (string | number)[][] = []
 
     for (const s of records) {
-      dataset.push([s.time, s.close])
+      dataset.push([s.time, s.close, s.percent])
       prevClose = s.prevClose
-      maxPrice = Math.max(maxPrice, s.close)
-      minPrice = Math.min(minPrice, s.close)
     }
 
-    const leftYMax = maxPrice * 1.001
-    const leftYMin = minPrice * 0.999
-    const rightYMax = (leftYMax - prevClose) / prevClose
-    const rightYMin = (leftYMin - prevClose) / prevClose
- 
-    // const leftYMax = prevClose * (1 + Math.abs(rightYMax))
-    // const leftYMin = prevClose * (1 - Math.abs(rightYMin))
     const xAxisData = getTradingPeriod(_getTrading(), dataset[0]?.[0] as string)
 
     chartRef.current?.setOption({
       yAxis: [
         {
-          interval: (leftYMax - leftYMin) / 8,
-          min: leftYMin,
-          max: leftYMax,
           axisLabel: {
             color: (v: number) => {
               return v >= prevClose ? '#00ab43' : '#ff1e3a'
             }
           }
         }, {
-          interval: (rightYMax - rightYMin) / 8,
-          min: rightYMin,
-          max: rightYMax,
           axisLabel: {
             color: (v: number) => {
               return v >= 0 ? '#00ab43' : '#ff1e3a'
@@ -310,6 +293,8 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
             }
           }]
         }
+      }, {
+        data: dataset.map(item => [item[0], item[2]])
       }]
     })
   }
@@ -368,8 +353,7 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
     yAxis: [
       {
         splitNumber: 8,
-        max: -9999,
-        min: -10000,
+        scale: true,
         axisLine: {
           show: true,
           lineStyle: {
@@ -395,8 +379,7 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
       }, {
         splitNumber: 8,
         position: 'right',
-        max: -9999,
-        min: -10000,
+        scale: true,
         axisLine: {
           show: true,
           lineStyle: {
@@ -407,7 +390,7 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
         splitLine: {
           show: false,
         },
-        alignTicks: true,
+        // alignTicks: true,
         axisLabel: {
           formatter: (v: number) => v <= -9999 ? '-' : `${(v * 100).toFixed(2)}%`,
           color: '#00ab43',
@@ -445,7 +428,7 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
           global: false
         }
       }
-    }, { type: 'line', yAxisIndex: 1 }]
+    }, { type: 'line', yAxisIndex: 1, showSymbol: false, color: 'transparent' }]
   }
 
   useMount(() => {

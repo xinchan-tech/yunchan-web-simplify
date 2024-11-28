@@ -1,7 +1,7 @@
 import { AiAlarmNotice, Footer, HeaderService, HeaderUser, Menu, MenuRight, StockSelect, Toaster } from './components'
 import Logo from './assets/icon/icon_jkn@2x.png'
 import './app.scss'
-import { RouterProvider } from "react-router-dom"
+import { RouterProvider } from "react-router"
 import { router } from "./router"
 import { useMount, useUpdateEffect } from "ahooks"
 import { useConfig, useUser } from "./store"

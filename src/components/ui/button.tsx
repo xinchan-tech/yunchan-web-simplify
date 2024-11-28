@@ -23,7 +23,7 @@ const buttonVariants = cva(
       },
       size: {
         default: "h-9 px-4 py-2",
-        sm: "h-8 rounded-md px-3 text-xs",
+        sm: "h-7 rounded-md px-3 text-xs",
         lg: "h-10 rounded-md px-8",
         icon: "h-9 w-9",
         mini: "h-6 px-2 rounded-sm text-xs",
@@ -35,7 +35,7 @@ const buttonVariants = cva(
         'true': "w-full"
       },
       reset: {
-        'true': "bg-transparent border-none text-inherit hover:bg-transparent"
+        'true': "bg-transparent border-none text-inherit hover:bg-transparent p-0"
       }
     },
     defaultVariants: {

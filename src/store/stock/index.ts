@@ -49,7 +49,7 @@ export const useStock = create<StockStore>()((set, get) => ({
     const r = []
     for (let index = records.length - 1; index >= 0; index--) {
       if(r.length !== 0){
-        if(records[index].time.slice(0, 8) !== r[0].time.slice(0, 8)){
+        if(records[index].time.slice(0, 8) !== r[r.length - 1].time.slice(0, 8)){
           return r
         }
       }

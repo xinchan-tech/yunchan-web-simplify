@@ -48,7 +48,7 @@ const Menu = () => {
     },
     {
       icon: 'left_menu_5@2x',
-      title: 'AI 报警',
+      title: 'AI报警',
       path: '/alarm',
     },
     {
@@ -89,7 +89,7 @@ const Menu = () => {
           <div className={cn(pathname === item.path && 'active-icon')}>
             {
               typeof item.icon === 'string' ? (
-                <JknIcon name={item.icon as IconName} className="w-8 h-8" />
+                <JknIcon name={item.icon as IconName} className="w-6 h-6" />
               ) : (
                 item.icon
               )
