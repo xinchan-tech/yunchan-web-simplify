@@ -50,9 +50,9 @@ const LargeCap = () => {
       setActiveKey(largeCap.data[1].category_name)
       setActiveStock(largeCap.data[1].stocks[0].symbol)
 
-      for (const d of largeCap.data) {
-        wsManager.subscribe(d.stocks.map(item => item.symbol))
-      }
+      // for (const d of largeCap.data) {
+      //   wsManager.subscribe(d.stocks.map(item => item.symbol))
+      // }
     }
   }, [largeCap.data])
 

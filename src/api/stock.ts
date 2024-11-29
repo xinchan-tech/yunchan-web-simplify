@@ -1,6 +1,7 @@
 import { useStock } from '@/store'
 import type { StockResultRecord } from '@/store/stock/stock'
 import request from '@/utils/request'
+import { stockManager } from '@/utils/stock'
 import dayjs from 'dayjs'
 import { md5 } from 'js-md5'
 import { sha256 } from 'js-sha256'
@@ -100,8 +101,9 @@ type GetStockBaseCodeInfoResult = {
   symbol: string
 }
 
-export const getStockBaseCodeInfo = (params: GetStockBaseCodeInfoParams) => {
-  return request.get<GetStockBaseCodeInfoResult>('/basic/stock/getCodeInfo', { params }).then(r => r.data)
+export const getStockBaseCodeInfo = async (params: GetStockBaseCodeInfoParams) => {
+  const r = await request.get<GetStockBaseCodeInfoResult>('/basic/stock/getCodeInfo', { params }).then(r => r.data)
+  return r
 }
 getStockBaseCodeInfo.cacheKey = 'basic:stock:code:info'
 
@@ -330,7 +332,11 @@ type GetCollectHotResult = {
  */
 export const getCollectHot = async (params: { extend: StockExtend[] }) => {
   const r = await request.get<GetCollectHotResult[]>('/collect/hot', { params }).then(r => r.data)
-  useStock.getState().insertRawByRecords(r.flatMap(item => item.stocks).map(item => ({ symbol: item.symbol, stock: item.stock, extend: item.extend })))
+  useStock
+    .getState()
+    .insertRawByRecords(
+      r.flatMap(item => item.stocks).map(item => ({ symbol: item.symbol, stock: item.stock, extend: item.extend }))
+    )
 
   return r
 }
@@ -1051,3 +1057,114 @@ export const getStockHoliday = (start: string, end: string) => {
     .then(r => r.data)
 }
 getStockHoliday.cacheKey = 'stock:holiday'
+
+type GetStockBriefResult = {
+  symbol: string
+  active: string
+  address?: string
+  cik?: string
+  name: string
+  description?: string
+  sic_description?: string
+  list_date: string
+  composite_figi: string
+  ticker_root: string
+  ticker_suffix?: string
+  homepage_url?: string
+  locale: string
+  market: string
+  market_cap: string
+  phone_number?: string
+  primary_exchange: string
+  round_lot?: string
+  share_class_figi: string
+  share_class_shares_outstanding: string
+  sic_code?: string
+  total_employees?: string
+  type: string
+  weighted_shares_outstanding?: string
+}
+
+/**
+ * 股票详情
+ */
+export const getStockBrief = (symbol: string) => {
+  return request.get<GetStockBriefResult>('/stock/brief', { params: { ticker: symbol } }).then(r => r.data)
+}
+getStockBrief.cacheKey = 'stock:brief'
+
+type GetStockQuoteResult = {
+  /**
+   * 当日成交额
+   */
+  amount: string
+  /**
+   * 股价变化值百分比
+   */
+  change_perc: string
+  /**
+   * 股价变化值
+   */
+  change_val: string
+  /**
+   * 总市值
+   */
+  market_cap: string
+  /**
+   * 最新报价
+   */
+  q_close: string
+  /**
+   * 当日最高价
+   */
+  q_high: string
+  /**
+   * 当日最低价
+   */
+  q_low: string
+  /**
+   * 开盘价
+   */
+  q_open: string
+  /**
+   * 昨日收盘价
+   */
+  q_preday_close: string
+  /**
+   * 52周最高价
+   */
+  q_year_high: string
+  /**
+   * 52周最低价
+   */
+  q_year_low: string
+  /**
+   * 当日成交量
+   */
+  volume: string
+}
+
+/**
+ * 当日报价
+ */
+export const getStockQuote = (symbol: string) => {
+  return request.get<GetStockQuoteResult>('/stock/quote', { params: { ticker: symbol } }).then(r => r.data)
+}
+getStockQuote.cacheKey = 'stock:quote'
+
+/**
+ * 股票新闻列表
+ */
+export const getStockNewsList = (symbol: string) => {
+  return request.get('/stock/newslist', { params: { ticker: symbol } }).then(r => r.data)
+}
+getStockNewsList.cacheKey = 'stock:newslist'
+
+
+/**
+ * 公告
+ */
+export const getStockNotice = (symbol: string) => {
+  return request.get('/stock/notice', { params: { symbol: symbol } }).then(r => r.data)
+}
+getStockNotice.cacheKey = 'stock:notice'

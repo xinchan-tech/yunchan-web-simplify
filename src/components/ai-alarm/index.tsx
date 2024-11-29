@@ -7,7 +7,7 @@ import AiAlarmForm from "./ai-alarm-form"
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden"
 
 interface AiAlarmProps {
-  code: string
+  code?: string
 }
 export const AiAlarm = (props: PropsWithChildren<AiAlarmProps>) => {
   return (

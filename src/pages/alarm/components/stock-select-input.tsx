@@ -15,7 +15,7 @@ const StockSelectInput = forwardRef((props: StockSelectInputProps, _) => {
   const stockList = useStockList()
 
   const query = useQuery({
-    queryKey: [getStockBaseCodeInfo.cacheKey, props.value],
+    queryKey: [getStockBaseCodeInfo.cacheKey, props.value, ['total_share'] ],
     queryFn: () => getStockBaseCodeInfo({ symbol: props.value!, extend: ['total_share'] }),
     enabled: !!props.value
   })

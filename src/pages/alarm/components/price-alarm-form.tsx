@@ -158,7 +158,7 @@ const PriceSetting = forwardRef((props: PriceSettingProps, _) => {
   const symbol = form.watch('symbol')
   const [list, setList] = useState<{ checked: boolean, value: string, id: string }[]>([{ checked: false, value: '', id: nanoid(8) }])
   const query = useQuery({
-    queryKey: [getStockBaseCodeInfo.cacheKey, symbol],
+    queryKey: [getStockBaseCodeInfo.cacheKey, symbol, ['total_share']],
     queryFn: () => getStockBaseCodeInfo({ symbol: symbol, extend: ['total_share'] }),
     enabled: !!symbol
   })
