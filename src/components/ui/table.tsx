@@ -93,7 +93,7 @@ const TableCell = React.forwardRef<
   <td
     ref={ref}
     className={cn(
-      "px-2 py-1 box-border align-middle break-words",
+      "px-1 py-1 box-border align-middle break-words",
       className
     )}
     {...props}

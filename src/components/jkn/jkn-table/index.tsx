@@ -150,7 +150,6 @@ const _JknTable = <TData extends Record<string, unknown>, TValue>(props: JknTabl
                     {row.getVisibleCells().map((cell) => {
                       const { align } = cell.column.columnDef.meta ?? {}
                       return (
-                        // biome-ignore lint/suspicious/noExplicitAny: <explanation>
                         <TableCell key={cell.id} style={{ textAlign: align as any }}>
                           {flexRender(cell.column.columnDef.cell, cell.getContext())}
                         </TableCell>

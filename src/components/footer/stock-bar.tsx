@@ -18,7 +18,7 @@ export const StockBar = () => {
 
     for (const code of codes) {
       const s = stock.getLastRecordByTrading(code, 'intraDay')
-
+      console.log(s)
       r.push({
         name: code === 'IXIC' ? '纳指' : code === 'SPX' ? '标指' : '道指',
         price: s?.close,
@@ -39,7 +39,7 @@ export const StockBar = () => {
           <span key={item.code}>
             <span>{item.name}:</span>&nbsp;
             <span className={cn(item.percent >= 0 ? 'text-stock-up' : 'text-stock-down')}>
-              <NumSpan value={item.price ?? 0} decimal={2} />
+              <NumSpan value={item.price ?? 0} decimal={3} />
               <JknIcon className="w-4 h-4 -mb-0.5" name={item.percent >= 0 ? 'ic_price_up_green' : 'ic_price_down_red'} />
               &emsp;
               <NumSpan value={item.offset} isPositive={item.percent >= 0} symbol />&emsp;

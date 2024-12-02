@@ -35,7 +35,7 @@ const buttonVariants = cva(
         'true': "w-full"
       },
       reset: {
-        'true': "bg-transparent border-none text-inherit hover:bg-transparent p-0"
+        'true': "bg-transparent border-none text-inherit hover:bg-transparent p-0 focus-visible:ring-0"
       }
     },
     defaultVariants: {

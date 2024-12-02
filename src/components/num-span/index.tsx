@@ -1,7 +1,9 @@
-import { numToFixed, priceToCnUnit } from "@/utils/price"
+import { useConfig } from "@/store"
+import { priceToCnUnit } from "@/utils/price"
 import { cn } from "@/utils/style"
 import { cva, type VariantProps } from "class-variance-authority"
 import Decimal from "decimal.js"
+import { JknIcon } from ".."
 
 const numSpanVariants = cva(
   '',
@@ -17,7 +19,7 @@ const numSpanVariants = cva(
       },
       block: {
         default: "",
-        true: "box-border w-full rounded-sm text-center px-2 py-1 float-right"
+        true: "box-border w-full rounded-[2px] text-center px-2 py-1 float-right"
       }
     },
     compoundVariants: [
@@ -61,20 +63,42 @@ interface NumSpanProps extends React.HTMLAttributes<HTMLSpanElement>, VariantPro
    * 单位
    */
   unit?: boolean
+
+  /**
+   * 箭头
+   */
+  arrow?: boolean
 }
 
 
 
-const NumSpan = ({ isPositive, block, percent, value, symbol, className, decimal = 3, unit = false, ...props }: NumSpanProps) => {
+const NumSpan = ({ isPositive, block, percent, value, symbol, className, arrow, decimal = 3, unit = false, ...props }: NumSpanProps) => {
+  const { setting: { upOrDownColor } } = useConfig()
+
   if (!value && value !== 0) return '-'
   const num = new Decimal(value)
+
   return (
-    <span className={cn(numSpanVariants({ isPositive, block, className }))} {...props}>
-      {symbol && num.gte(0) ? '+' : ''}
+    <span className={cn(
+      'inline-flex items-center flex-nowrap space-x-0.5',
+      block && 'w-full'
+    )}>
+      <span className={cn(numSpanVariants({ isPositive, block, className }))} {...props}>
+        {symbol && num.gte(0) ? '+' : ''}
+        {
+          unit !== false ? priceToCnUnit(num.toNumber(), decimal) : num.toFixed(decimal)
+        }
+        {percent && '%'}
+      </span>
       {
-        unit !== false ? priceToCnUnit(num.toNumber(), decimal) : num.toFixed(decimal)
+        arrow ? (
+          upOrDownColor === 'upGreenAndDownRed' ? (
+            <JknIcon className="w-4 h-4" name={isPositive ? 'ic_price_up_green' : 'ic_price_down_red'} />
+          ) : (
+            <JknIcon className="w-4 h-4" name={isPositive ? 'ic_price_up_red' : 'ic_price_down_green'} />
+          )
+        ) : null
       }
-      {percent && '%'}
     </span>
   )
 }

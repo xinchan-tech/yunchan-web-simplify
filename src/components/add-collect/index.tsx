@@ -8,9 +8,11 @@ import { useState } from "react"
 
 interface AddCollectProps {
   children: React.ReactNode
+  sideOffset?: number
+  alignOffset?: number
 }
 
-export const AddCollect = ({ children }: AddCollectProps) => {
+export const AddCollect = ({ children, sideOffset, alignOffset }: AddCollectProps) => {
   const { collects, refresh, setCollects } = useCollectCates()
   const [name, setName] = useState<string>()
   const { toast } = useToast()
@@ -56,7 +58,7 @@ export const AddCollect = ({ children }: AddCollectProps) => {
           }
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-52 text-center">
+      <PopoverContent className="w-52 text-center" sideOffset={sideOffset} alignOffset={alignOffset}>
         <div className="bg-background text-center py-2">新建金池</div>
         <div className="px-4">
           <Input size="sm" placeholder="输入金池名称" onChange={e => setName(e.target.value)} />

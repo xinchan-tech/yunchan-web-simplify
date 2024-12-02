@@ -1,49 +1,35 @@
-import { addAlarm, AlarmType, getStockBaseCodeInfo } from "@/api"
-import { Button, CapsuleTabs, Checkbox, FormControl, FormField, FormItem, FormLabel, Input, JknIcon, ToggleGroup, ToggleGroupItem } from "@/components"
-import { useToast, useZForm } from "@/hooks"
+import { addAlarm, getStockBaseCodeInfo } from "@/api"
+import { useZForm, useToast } from "@/hooks"
+import StockSelectInput from "@/pages/alarm/components/stock-select-input"
+import { StockRecord } from "@/store"
 import { useQuery } from "@tanstack/react-query"
 import to from "await-to-js"
-import { forwardRef, useEffect, useState } from "react"
-import { FormProvider, useFormContext } from "react-hook-form"
-import { z } from "zod"
-import AlarmList from "../../../components/ai-alarm/alarm-list"
-import StockSelectInput from "./stock-select-input"
-import { StockRecord } from "@/store"
 import Decimal from "decimal.js"
 import { nanoid } from "nanoid"
-import AlarmLog from "../../../components/ai-alarm/alarm-log"
+import { forwardRef, useState, useEffect } from "react"
+import { FormProvider, useFormContext } from "react-hook-form"
+import JknIcon from "../jkn/jkn-icon"
+import { FormField, FormItem, FormLabel, FormControl } from "../ui/form"
+import { Input } from "../ui/input"
+import { z } from "zod"
+import { ToggleGroup, ToggleGroupItem } from "../ui/toggle-group"
+import { Checkbox } from "../ui/checkbox"
+import { Button } from "../ui/button"
+
 const formSchema = z.object({
   symbol: z.string({ message: '股票代码错误' }).min(1, '股票代码错误'),
   rise: z.array(z.string()).optional(),
   fall: z.array(z.string()).optional(),
   frequency: z.string({ message: '周期错误' }),
 })
-const PriceAlarmForm = () => {
-  const [active, setActive] = useState('1')
 
-  return (
-    <div className="h-[800px] overflow-hidden">
-      <div className="p-1 border-0 border-b border-solid border-border">
-        <CapsuleTabs activeKey={active} onChange={setActive}>
-          <CapsuleTabs.Tab label="报警设置" value="1" />
-          <CapsuleTabs.Tab label="报警列表" value="2" />
-          <CapsuleTabs.Tab label="已触发报警" value="3" />
-        </CapsuleTabs>
-      </div>
-      <div>
-        {{
-          1: <PriceAlarmSetting />,
-          2: <AlarmList type={AlarmType.PRICE} />,
-          3: <AlarmLog type={AlarmType.PRICE} />
-        }[active] ?? null}
-      </div>
-    </div>
-  )
+interface PriceAlarmSetting {
+  code?: string
 }
 
-const PriceAlarmSetting = () => {
+export const PriceAlarmSetting = (props: PriceAlarmSetting) => {
   const form = useZForm(formSchema, {
-    symbol: '',
+    symbol: props.code ?? '',
     rise: [],
     fall: [],
     frequency: '1'
@@ -71,8 +57,8 @@ const PriceAlarmSetting = () => {
         frequency: +form.getValues('frequency')
       }
     }
-    console.log(params)
-    if((params.condition.rise.length + params.condition.fall.length) === 0){
+
+    if ((params.condition.rise.length + params.condition.fall.length) === 0) {
       toast({ description: '股价设置条件必须要一个以上' })
       return
     }
@@ -259,6 +245,3 @@ const FrequencySelect = forwardRef((props: FrequencySelectProps, _) => {
     </ToggleGroup>
   )
 })
-
-
-export default PriceAlarmForm

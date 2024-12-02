@@ -2,6 +2,7 @@ import { StockChartInterval, type StockRawRecord, getLargeCapIndexes, getStockCh
 import StockDownIcon from '@/assets/icon/stock_down.png'
 import StockUpIcon from '@/assets/icon/stock_up.png'
 import { CapsuleTabs } from "@/components"
+import { useSubscribe } from "@/hooks"
 import { StockRecord, type StockTrading, useStock, useTime } from "@/store"
 import { getTradingPeriod } from "@/utils/date"
 import echarts, { type ECOption } from "@/utils/echarts"
@@ -49,12 +50,12 @@ const LargeCap = () => {
     if(largeCap.data){
       setActiveKey(largeCap.data[1].category_name)
       setActiveStock(largeCap.data[1].stocks[0].symbol)
-
-      // for (const d of largeCap.data) {
-      //   wsManager.subscribe(d.stocks.map(item => item.symbol))
-      // }
     }
   }, [largeCap.data])
+  
+  useSubscribe(activeStock ?? '', (data) => {
+    console.log(data)
+  })
 
   const tabs = useMemo(() => {
     return largeCap.data?.map(item => ({

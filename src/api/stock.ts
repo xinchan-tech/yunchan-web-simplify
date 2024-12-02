@@ -1160,11 +1160,53 @@ export const getStockNewsList = (symbol: string) => {
 }
 getStockNewsList.cacheKey = 'stock:newslist'
 
+type GetStockNoticeResult = {
+  event: {
+    time: number
+    title: string
+    url?: string
+  }[]
+}
 
 /**
  * 公告
  */
 export const getStockNotice = (symbol: string) => {
-  return request.get('/stock/notice', { params: { symbol: symbol } }).then(r => r.data)
+  return request.get<GetStockNoticeResult>('/stock/notice', { params: { symbol: symbol } }).then(r => r.data)
 }
 getStockNotice.cacheKey = 'stock:notice'
+
+interface GetStockRelatedResult {
+  plates?: {
+    id: string
+    name: string
+  }[]
+  stocks: {
+    name: string
+    symbol: string
+    stock: StockRawRecord
+  }[]
+}
+
+interface GetStockRelatedParams {
+  symbol: string
+  plate_id?: string
+  extend?: StockExtend[]
+}
+
+/**
+ * 相关股票列表
+ */
+export const getStockRelated = (params: GetStockRelatedParams) => {
+  return request.get<GetStockRelatedResult>('/stock/relates', { params }).then(r => r.data)
+}
+getStockRelated.cacheKey = 'stock:relates'
+
+
+/**
+ * 买卖点位
+ */
+export const getStockTrades = (symbol: string) => {
+  return request.get<{p: number, t: string, v: number}[]>(`/trades/${symbol}`).then(r => r.data)
+}
+getStockTrades.cacheKey = 'stock:trades'

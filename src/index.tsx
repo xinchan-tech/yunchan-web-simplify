@@ -12,6 +12,7 @@ import { persistQueryClient, removeOldestQuery } from '@tanstack/react-query-per
 import { createSyncStoragePersister } from '@tanstack/query-sync-storage-persister'
 import { compress, decompress } from 'lz-string'
 import { StrictMode } from "react"
+import '@/plugins/decimal-plugin'
 
 dayjs.extend(utc)
 dayjs.extend(tz)
@@ -33,6 +34,8 @@ const localStoragePersister = createSyncStoragePersister({
   serialize: (data: any) => compress(JSON.stringify(data)),
   deserialize: (data: any) => JSON.parse(decompress(data))
 })
+
+
 
 persistQueryClient({
   queryClient,
