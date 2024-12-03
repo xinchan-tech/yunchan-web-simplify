@@ -10,12 +10,7 @@ import Decimal from "decimal.js"
 import Autoplay from "embla-carousel-autoplay"
 import { nanoid } from "nanoid"
 import { useCallback, useEffect, useMemo, useState } from "react"
-
-const useSymbolQuery = () => {
-  const queryParams = useQueryParams()
-
-  return queryParams.get('symbol') ?? 'QQQ'
-}
+import { useSymbolQuery } from "./lib"
 export const StockInfo = () => {
   const [active, setActive] = useState<'quote' | 'news'>('quote')
   const queryParams = useQueryParams()
@@ -331,7 +326,7 @@ const StockRelated = () => {
     {
       header: '涨跌幅%', accessorKey: 'percent', meta: { align: 'right', width: '30%' },
       cell: ({ row }) => (
-        <NumSpan className="text-xs" block decimal={2} value={Decimal.create(row.getValue<number>('percent')).toNumber()} isPositive={Decimal.create(row.getValue<number>('percent')).gte(0)} symbol percent />
+        <NumSpan className="text-xs" block decimal={2} value={Decimal.create(row.getValue<number>('percent')).mul(100).toNumber()} isPositive={Decimal.create(row.getValue<number>('percent')).gte(0)} symbol percent />
       )
     },
     {

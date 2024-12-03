@@ -1,6 +1,6 @@
 import { type StockExtend, addStockCollectCate, type getStockCollectCates, getStockCollects, removeStockCollect, removeStockCollectCate, updateStockCollectCate } from "@/api"
 import { AiAlarm, Button, CapsuleTabs, Checkbox, JknAlert, JknIcon, JknTable, type JknTableProps, NumSpan, Popover, PopoverAnchor, PopoverContent, ScrollArea, StockView, useFormModal, useModal } from "@/components"
-import { useToast, useZForm } from "@/hooks"
+import { useSubscribe, useToast, useZForm } from "@/hooks"
 import { useCollectCates, useStock } from "@/store"
 import { numToFixed, priceToCnUnit } from "@/utils/price"
 import { cn } from "@/utils/style"
@@ -10,6 +10,7 @@ import to from "await-to-js"
 import { useMemo, useState } from "react"
 import type { z } from "zod"
 import { GoldenPoolForm, poolSchema } from "./components/golden-pool-form"
+import { stockManager } from "@/utils/stock"
 
 const baseExtends: StockExtend[] = ['total_share', 'basic_index', 'day_basic', 'alarm_ai', 'alarm_all', 'financials']
 type CollectCate = Awaited<ReturnType<typeof getStockCollectCates>>[0]
@@ -48,7 +49,7 @@ const GoldenPool = () => {
 
     for (let i = 0; i < collects.data.items.length; i++) {
       const c = collects.data.items[i]
-      const s = stock.getLastRecordByTrading(c.symbol, 'intraDay')
+      const [s] = stockManager.toStockRecord(c)
 
       r.push({
         index: i + 1,
@@ -67,6 +68,10 @@ const GoldenPool = () => {
 
     return r
   })()
+
+  useSubscribe(collects.data?.items.map(item => item.symbol) ?? [], (data) => {
+    console.log(data)
+  })
 
   const onActiveStockChange = (v: string) => {
     setActiveStock(v)

@@ -1,15 +1,16 @@
 import { stockManager } from "@/utils/stock"
 import { useEffect } from "react"
 
-export const useSubscribe = (symbol: string, onUpdate: (data: any) => void) => {
+export const useSubscribe = (symbol: string | string[], onUpdate: (data: any) => void) => {
   useEffect(() => {
-    if (symbol) {
+    const s = [...symbol]
+    if (s) {
 
-      stockManager.subscribe(symbol, onUpdate)
+      stockManager.subscribe(s, onUpdate)
 
       return () => {
-        if (symbol) {
-          stockManager.unsubscribe(symbol, onUpdate)
+        if (s) {
+          stockManager.unsubscribe(s, onUpdate)
         }
       }
     }

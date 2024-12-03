@@ -2,7 +2,7 @@ import { useServers } from "@/store"
 import JknIcon from "../jkn/jkn-icon"
 import { Popover, PopoverAnchor, PopoverContent } from "../ui/popover"
 import { useImmer } from "use-immer"
-import { useBoolean, useMount } from "ahooks"
+import { useBoolean } from "ahooks"
 import { wsManager } from "@/utils/ws"
 import { CheckIcon } from "lucide-react"
 
@@ -11,11 +11,6 @@ export const ServerBar = () => {
   const [open, { setTrue, setFalse }] = useBoolean()
   const [serverTest, setServerTest] = useImmer<{ name: string, ttl: number | undefined }[]>([])
   
-  useMount(() => {
-    if(lastServer){
-      wsManager.create(lastServer.ws)
-    }
-  })
 
   const _onOpenChange = (_open: boolean) => {
     if (_open) {

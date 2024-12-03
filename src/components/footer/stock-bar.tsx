@@ -18,7 +18,7 @@ export const StockBar = () => {
 
     for (const code of codes) {
       const s = stock.getLastRecordByTrading(code, 'intraDay')
-      console.log(s)
+  
       r.push({
         name: code === 'IXIC' ? '纳指' : code === 'SPX' ? '标指' : '道指',
         price: s?.close,

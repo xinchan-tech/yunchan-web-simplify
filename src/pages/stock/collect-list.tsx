@@ -1,5 +1,5 @@
 import { getStockCollects, type StockExtend } from "@/api"
-import { AddCollect, CollectCapsuleTabs, JknIcon, JknTableProps, NumSpan, ScrollArea } from "@/components"
+import { AddCollect, CollectCapsuleTabs, JknIcon, NumSpan, ScrollArea } from "@/components"
 import { useStock } from "@/store"
 import echarts, { type ECOption } from "@/utils/echarts"
 import { numToFixed } from "@/utils/price"
@@ -86,7 +86,7 @@ export const CollectList = () => {
                     {
                       stock.thumbs.length > 0 ? (
                         <div className="absolute left-12 bottom-0 top-0">
-                          <StockChart data={stock.thumbs ?? []} type={(stock.percent ?? 0) >= 0 ? 'up' : 'down'} />
+                          <StockChart data={stock.thumbs.filter(v => +v > 0) ?? []} type={(stock.percent ?? 0) >= 0 ? 'up' : 'down'} />
                         </div>
                       ) : null
                     }

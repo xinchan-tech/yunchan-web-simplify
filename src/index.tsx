@@ -13,6 +13,8 @@ import { createSyncStoragePersister } from '@tanstack/query-sync-storage-persist
 import { compress, decompress } from 'lz-string'
 import { StrictMode } from "react"
 import '@/plugins/decimal-plugin'
+import { wsManager } from "./utils/ws/manager.ts"
+import { useServers } from "./store/servers.ts"
 
 dayjs.extend(utc)
 dayjs.extend(tz)
@@ -34,6 +36,8 @@ const localStoragePersister = createSyncStoragePersister({
   serialize: (data: any) => compress(JSON.stringify(data)),
   deserialize: (data: any) => JSON.parse(decompress(data))
 })
+
+wsManager.create(useServers.getState().lastServer.ws)
 
 
 

@@ -11,7 +11,6 @@ class StockManager {
 
   constructor() {
     const ws = wsManager.getActiveWs()
-
     if (ws) {
       ws.on('message', (data: any) => {
         console.log(data)
@@ -23,8 +22,9 @@ class StockManager {
     return StockRecord.create(data)
   }
 
-  public subscribe(code: string, handler: StockSubscribeHandler) {
-    this.subscribed.on(code, handler)
+  public subscribe(code: string | string[], handler: StockSubscribeHandler) {
+    // biome-ignore lint/complexity/noForEach: <explanation>
+    Array.isArray(code) ? code.forEach(item => this.subscribed.on(item, handler)) : this.subscribed.on(code, handler)
 
     const ws = wsManager.getActiveWs()
 
@@ -32,27 +32,53 @@ class StockManager {
       ws.send({
         event: 'subscribe',
         data: {
-          symbols: [code]
+          symbols: Array.isArray(code) ? code : [code]
         },
         msg_id: nanoid()
       })
     }
   }
 
-  public unsubscribe(code: string, handler: StockSubscribeHandler) {
-    this.subscribed.off(code, handler)
+  public unsubscribe(code: string | string[], handler: StockSubscribeHandler) {
+    // biome-ignore lint/complexity/noForEach: <explanation>
+    Array.isArray(code) ? code.forEach(item => this.subscribed.off(item, handler)) : this.subscribed.off(code, handler)
 
-    if (this.subscribed.all.get(code)?.length === 0) {
-      const ws = wsManager.getActiveWs()
+    if (Array.isArray(code)) {
+      const unsubscribed = code.filter(item => this.subscribed.all.get(item)?.length === 0)
 
-      if (ws) {
-        ws.send({
-          event: 'unsubscribe',
-          data: {
-            symbols: [code]
-          },
-          msg_id: nanoid()
-        })
+      if (unsubscribed.length === 0) return
+      setTimeout(() => {
+        const unsubscribed = code.filter(item => this.subscribed.all.get(item)?.length === 0)
+        if (unsubscribed.length === 0) return
+
+        const ws = wsManager.getActiveWs()
+
+        if (ws) {
+          ws.send({
+            event: 'unsubscribe',
+            data: {
+              symbols: unsubscribed
+            },
+            msg_id: nanoid()
+          })
+        }
+      })
+    } else {
+      if (this.subscribed.all.get(code)?.length === 0) {
+        setTimeout(() => {
+          // 再次判断是否有订阅者
+          if (this.subscribed.all.get(code) && this.subscribed.all.get(code)!.length > 0) return
+          const ws = wsManager.getActiveWs()
+          if (ws) {
+            ws.send({
+              event: 'unsubscribe',
+              data: {
+                symbols: [code]
+              },
+              msg_id: nanoid()
+            })
+          }
+        }, 3000)
       }
     }
   }

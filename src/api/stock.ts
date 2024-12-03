@@ -115,12 +115,25 @@ export enum StockChartInterval {
   INTRA_DAY = 0,
   PRE_MARKET = -1,
   AFTER_HOURS = -2,
-  DAY = 1440,
   FIVE_DAY = 7200,
+  ONE_MIN = 1,
+  TWO_MIN = 2,
+  THREE_MIN = 3,
+  FIVE_MIN = 5,
+  TEN_MIN = 10,
+  FIFTEEN_MIN = 15,
+  THIRTY_MIN = 30,
+  FORTY_FIVE_MIN = 45,
+  ONE_HOUR = 60,
+  TWO_HOUR = 120,
+  THREE_HOUR = 180,
+  FOUR_HOUR = 240,
+  DAY = 1440,
   WEEK = 10080,
   MONTH = 43200,
   QUARTER = 129600,
-  HALF_YEAR = 259200
+  HALF_YEAR = 259200,
+  YEAR = 518400
 }
 
 export enum StockChartType {
@@ -149,7 +162,7 @@ type GetStockChartParams = {
   /**
    * 测试-是否压缩
    */
-  gzencode?: string
+  gzencode?: boolean
   /**
    * 0：盘中分时图，-1：盘前分时图，-2：盘后分时图，小于1440-任意分钟的分钟线, 1440-日线, 7200：5日分时图, 10080-周线, 43200-月线,
    * 129600-季线, 259200-半年线
@@ -183,6 +196,7 @@ type GetStockChartResult = {
  * 股票K线数据
  */
 export const getStockChart = async (params: GetStockChartParams) => {
+  console.log(1)
   //   生成sign的步骤：
   // 步骤 1: 请求参数排序
   // 按照请求参数的名称，对所有的请求参数进行升序排序。
@@ -214,7 +228,8 @@ export const getStockChart = async (params: GetStockChartParams) => {
     })
     .then(r => r.data)
 
-  useStock.getState().insertRawByRecords(r.history.map(item => ({ symbol: params.ticker, stock: item })))
+  // useStock.getState().insertRawByRecords(r.history.map(item => ({ symbol: params.ticker, stock: item })))
+ 
   return r
 }
 getStockChart.cacheKey = 'stock:chart'

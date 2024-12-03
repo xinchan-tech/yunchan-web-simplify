@@ -1,12 +1,6 @@
 import { useServers } from '@/store'
-import { Ws, type MessageEvent } from '.'
+import { Ws } from '.'
 
-export type MessageReceived<T> = {
-  event: MessageEvent
-  data: T[]
-  msg_id: string
-  time: number
-}
 
 export class WsManager {
   private cache: Map<string, Ws>
@@ -48,7 +42,11 @@ export class WsManager {
   }
 
   getActiveWs() {
-    return this.cache.get(useServers.getState().lastServer.ws)
+    const ws = this.cache.get(useServers.getState().lastServer.ws)
+
+    if(!ws) return this.create(useServers.getState().lastServer.ws)
+
+    return ws
   }
 }
 

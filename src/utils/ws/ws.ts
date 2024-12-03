@@ -10,6 +10,16 @@ export type MessageEvent =
   | 'chat'
   | 'newMessage'
   | 'shout_order'
+  | 'ack'
+  | 'default'
+
+  export type MessageReceived<T> = {
+    event: MessageEvent
+    data: T[]
+    msg_id: string
+    time: number
+  }
+  
 
 const sleep = async (ms: number) => {
   return new Promise(resolve => setTimeout(resolve, ms))
@@ -85,7 +95,13 @@ export class Ws {
       if (ev.data === 'pong') {
         this.event.emit('beat', ev)
       } else {
-        this.event.emit('message', ev.data as globalThis.MessageEvent<MessageEvent>)
+        const data = JSON.parse(ev.data) as MessageReceived<MessageEvent>
+     
+        if(data.event === 'ack' || data.event === 'default'){
+          return
+        }
+
+        this.event.emit('message', data)
       }
     }
 
