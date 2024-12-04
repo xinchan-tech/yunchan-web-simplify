@@ -3,6 +3,9 @@ import { createJSONStorage, persist } from 'zustand/middleware'
 
 type Language = 'zh_CN' | 'en'
 
+const red = '#ff3f4d'
+const green = '#009e45'
+
 interface ConfigStore {
   language: Language
   hasSelected: boolean
@@ -34,11 +37,12 @@ interface ConfigStore {
   }
   setSetting: (setting: Partial<ConfigStore['setting']>) => void
   setServers: (service: ConfigStore['servers']) => void
+  getStockColor: (up?: boolean) => '#009e45' | '#ff3f4d'
 }
 
 export const useConfig = create<ConfigStore>()(
   persist(
-    set => ({
+    (set, get) => ({
       language: 'zh_CN',
       hasSelected: false,
       servers: [{ name: 'Conn_us1', host: 'http://us.mgjkn.com', ws: 'ws://us.ws.mgjkn.com' }],
@@ -58,7 +62,15 @@ export const useConfig = create<ConfigStore>()(
       setConsults: consults => set(() => ({ consults })),
       setLanguage: language => set(() => ({ language })),
       setHasSelected: () => set(() => ({ hasSelected: true })),
-      setServers: servers => set(s => ({ servers: [...s.servers, ...servers ] }))
+      setServers: servers => set(s => ({ servers: [...s.servers, ...servers] })),
+      getStockColor: (up = true) =>
+        up
+          ? get().setting.upOrDownColor === 'upGreenAndDownRed'
+            ? green
+            : red
+          : get().setting.upOrDownColor === 'upGreenAndDownRed'
+            ? red
+            : green
     }),
     { name: 'config', storage: createJSONStorage(() => localStorage) }
   )

@@ -33,8 +33,7 @@ const queryClient = new QueryClient({
 const localStoragePersister = createSyncStoragePersister({
   storage: window.localStorage,
   retry: removeOldestQuery,
-  serialize: (data: any) => compress(JSON.stringify(data)),
-  deserialize: (data: any) => JSON.parse(decompress(data))
+
 })
 
 wsManager.create(useServers.getState().lastServer.ws)

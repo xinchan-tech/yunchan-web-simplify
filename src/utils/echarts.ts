@@ -16,7 +16,13 @@ import {
   MarkLineComponent,
   type MarkLineComponentOption,
   LegendComponent,
-  type LegendComponentOption
+  type LegendComponentOption,
+  ToolboxComponent,
+  type ToolboxComponentOption,
+  DataZoomInsideComponent,
+  DataZoomSliderComponent,
+  DataZoomComponent,
+  type DataZoomComponentOption,
 } from 'echarts/components'
 
 import { LabelLayout, UniversalTransition } from 'echarts/features';
@@ -36,7 +42,11 @@ echarts.use([
   SVGRenderer,
   MarkLineComponent,
   TreemapChart,
-  LegendComponent
+  ToolboxComponent,
+  LegendComponent,
+  DataZoomInsideComponent,
+  DataZoomSliderComponent,
+  DataZoomComponent,
 ])
 
 export type ECOption = echarts.ComposeOption<
@@ -49,6 +59,8 @@ export type ECOption = echarts.ComposeOption<
   | MarkLineComponentOption
   | TreemapSeriesOption
   | LegendComponentOption
+  | ToolboxComponentOption
+  | DataZoomComponentOption
 >
 
 export default echarts

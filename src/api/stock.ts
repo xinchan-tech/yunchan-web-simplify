@@ -6,6 +6,7 @@ import dayjs from 'dayjs'
 import { md5 } from 'js-md5'
 import { sha256 } from 'js-sha256'
 import { customAlphabet } from 'nanoid'
+import pako from 'pako'
 
 type StockTime = string
 type StockOpen = number
@@ -196,7 +197,6 @@ type GetStockChartResult = {
  * 股票K线数据
  */
 export const getStockChart = async (params: GetStockChartParams) => {
-  console.log(1)
   //   生成sign的步骤：
   // 步骤 1: 请求参数排序
   // 按照请求参数的名称，对所有的请求参数进行升序排序。
@@ -221,15 +221,25 @@ export const getStockChart = async (params: GetStockChartParams) => {
 
   const sign = md5(sha256(paramsStr))
 
-  const r = await request
+  let r = await request
     .get<GetStockChartResult>('/stock/chart', {
       params,
       headers: { sign, 'Content-Type': 'application/x-www-form-urlencoded' }
     })
     .then(r => r.data)
 
-  // useStock.getState().insertRawByRecords(r.history.map(item => ({ symbol: params.ticker, stock: item })))
- 
+  if (params.gzencode) {
+    const data = atob(r as unknown as string)
+
+    const dataUint8 = new Uint8Array(data.length)
+
+    for (let i = 0; i < data.length; i++) {
+      dataUint8[i] = data.charCodeAt(i)
+    }
+
+    r = JSON.parse(pako.inflate(dataUint8, { to: 'string' })) as GetStockChartResult
+  }
+
   return r
 }
 getStockChart.cacheKey = 'stock:chart'
@@ -1217,11 +1227,10 @@ export const getStockRelated = (params: GetStockRelatedParams) => {
 }
 getStockRelated.cacheKey = 'stock:relates'
 
-
 /**
  * 买卖点位
  */
 export const getStockTrades = (symbol: string) => {
-  return request.get<{p: number, t: string, v: number}[]>(`/trades/${symbol}`).then(r => r.data)
+  return request.get<{ p: number; t: string; v: number }[]>(`/trades/${symbol}`).then(r => r.data)
 }
 getStockTrades.cacheKey = 'stock:trades'

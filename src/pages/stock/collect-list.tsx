@@ -1,8 +1,8 @@
 import { getStockCollects, type StockExtend } from "@/api"
 import { AddCollect, CollectCapsuleTabs, JknIcon, NumSpan, ScrollArea } from "@/components"
-import { useStock } from "@/store"
 import echarts, { type ECOption } from "@/utils/echarts"
 import { numToFixed } from "@/utils/price"
+import { stockManager } from "@/utils/stock"
 import { useQuery } from "@tanstack/react-query"
 import { useMount, useUnmount, useUpdateEffect } from "ahooks"
 import { useRef, useState } from "react"
@@ -21,7 +21,7 @@ type TableDataType = {
 }
 export const CollectList = () => {
   const [collect, setCollect] = useState('1')
-  const { getLastRecordByTrading } = useStock()
+  // const { getLastRecordByTrading } = useStock()
   const navigate = useNavigate()
   const stocks = useQuery({
     queryKey: [getStockCollects.cacheKey, collect, extend],
@@ -37,13 +37,14 @@ export const CollectList = () => {
 
     if (!stocks.data) return r
 
-    for (const { symbol, name } of stocks.data.items) {
-      const lastStock = getLastRecordByTrading(symbol, 'intraDay')
-      const afterStock = getLastRecordByTrading(symbol, 'afterHours')
+    for (const s of stocks.data.items) {
+      const [lastStock, _, afterStock] = stockManager.toStockRecord(s)
+      // const lastStock = getLastRecordByTrading(symbol, 'intraDay')
+      // const afterStock = getLastRecordByTrading(symbol, 'afterHours')
 
       r.push({
-        name: name,
-        code: symbol,
+        name: s.name,
+        code: s.symbol,
         price: lastStock?.close,
         percent: lastStock?.percent,
         thumbs: lastStock?.thumbs ?? [],
