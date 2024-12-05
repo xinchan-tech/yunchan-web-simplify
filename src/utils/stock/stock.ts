@@ -47,6 +47,10 @@ export class StockRecord {
    * 涨幅
    */
   percent: number
+  /**
+   *  涨跌额
+   */
+  percentAmount: number
 
   static isValid(data: any): data is StockRawRecord {
     return Array.isArray(data) && (data.length === 8 || data.length === 10)
@@ -108,6 +112,7 @@ export class StockRecord {
     }
 
     this.percent = this.calcPercent()
+    this.percentAmount = Decimal.create(this.close).minus(this.prevClose).toNumber()
 
     if (extend) {
       this.calcExtend(extend)
@@ -135,6 +140,7 @@ export class StockRecord {
       this.prevClose = data[7]
     }
     this.percent = this.calcPercent()
+    this.percentAmount = Decimal.create(this.close).minus(this.prevClose).toNumber()
     if (extend) {
       this.calcExtend(extend)
     }

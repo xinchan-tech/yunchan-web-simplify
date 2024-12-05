@@ -9,11 +9,11 @@ export const hourMinToNum = (str: string) => {
   return Number.parseInt(str.replace(':', ''))
 }
 
-export const dateToWeek = (date: Dayjs | string) => {
+export const dateToWeek = (date: Dayjs | string, unit = '星期') => {
   const language = useConfig.getState().language
   const weeks =
     language === 'zh_CN'
-      ? ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六']
+      ? ['日', '一', '二', '三', '四', '五', '六'].map(item => unit + item)
       : ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
   if (dayjs.isDayjs(date)) {

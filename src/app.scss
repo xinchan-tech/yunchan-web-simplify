@@ -144,29 +144,8 @@ body {
   scrollbar-gutter: 'stable';
 }
 
-
-.custom-model {
-  &.ant-modal-content {
-    border: 1px solid #333333;
-    padding: 0;
-    overflow: hidden;
-  }
-
-  .ant-modal-footer {
-    padding: 16px;
+@for $i from 1 through 9 {
+  .chart-item-#{$i} {
+    grid-area: chart-#{$i};
   }
 }
-
-.custom-static-model{
-  .ant-modal-content {
-    border: 1px solid var(--border-color);
-    background-color: var(--bg-color);
-    padding: 0;
-    overflow: hidden;
-  }
-
-  .ant-modal-confirm-btns {
-    padding: 16px;
-  }
-}
-

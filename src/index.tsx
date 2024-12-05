@@ -25,25 +25,25 @@ dayjs.tz.setDefault('America/New_York')
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      gcTime: 1000 * 60 * 60 * 24
+      gcTime: 1000 * 60 * 60 * 6
     }
   }
 })
 
-const localStoragePersister = createSyncStoragePersister({
-  storage: window.localStorage,
-  retry: removeOldestQuery,
+// const localStoragePersister = createSyncStoragePersister({
+//   storage: window.localStorage,
+//   retry: removeOldestQuery,
 
-})
+// })
 
 wsManager.create(useServers.getState().lastServer.ws)
 
 
 
-persistQueryClient({
-  queryClient,
-  persister: localStoragePersister
-})
+// persistQueryClient({
+//   queryClient,
+//   persister: localStoragePersister
+// })
 
 const rootEl = document.getElementById('root')
 if (rootEl) {

@@ -1,6 +1,6 @@
 import * as echarts from 'echarts/core'
 
-import { LineChart, type LineSeriesOption, TreemapChart, type TreemapSeriesOption } from 'echarts/charts'
+import { LineChart, type LineSeriesOption, TreemapChart, type TreemapSeriesOption, CandlestickChart, type CandlestickSeriesOption } from 'echarts/charts'
 
 
 import {
@@ -22,7 +22,7 @@ import {
   DataZoomInsideComponent,
   DataZoomSliderComponent,
   DataZoomComponent,
-  type DataZoomComponentOption,
+  type DataZoomComponentOption
 } from 'echarts/components'
 
 import { LabelLayout, UniversalTransition } from 'echarts/features';
@@ -47,6 +47,7 @@ echarts.use([
   DataZoomInsideComponent,
   DataZoomSliderComponent,
   DataZoomComponent,
+  CandlestickChart
 ])
 
 export type ECOption = echarts.ComposeOption<
@@ -61,6 +62,7 @@ export type ECOption = echarts.ComposeOption<
   | LegendComponentOption
   | ToolboxComponentOption
   | DataZoomComponentOption
+  | CandlestickSeriesOption
 >
 
 export default echarts
