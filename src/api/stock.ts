@@ -1234,3 +1234,69 @@ export const getStockTrades = (symbol: string) => {
   return request.get<{ p: number; t: string; v: number }[]>(`/trades/${symbol}`).then(r => r.data)
 }
 getStockTrades.cacheKey = 'stock:trades'
+
+export type StockIndicator = {
+  authorized: 1 | 0
+  category_id: string
+  db_type: 'system' | 'user'
+  formula?: string
+  id: string
+  type: string
+  value: string
+  name?: string
+  param?: string | any[][]
+}
+
+type GetStockIndicatorsResult = {
+  main: {
+    db_type: 'system' | 'user'
+    id: string
+    indicators:
+      | {
+          authorized: 1 | 0
+          id: string
+          name: string
+          items: StockIndicator[]
+        }[]
+      | StockIndicator[]
+    name: string
+  }[]
+  secondary: GetStockIndicatorsResult['main']
+}
+
+/**
+ * 指标列表
+ */
+export const getStockIndicators = () => {
+  return request.get<GetStockIndicatorsResult>('/stock/indicators').then(r => r.data)
+}
+getStockIndicators.cacheKey = 'stock:indicators'
+
+type GetStockIndicatorDataParams = {
+  symbol: string
+  id: string
+  cycle: StockChartInterval
+  start_at?: string
+  params?: string
+  db_type: string
+}
+
+type GetStockIndicatorDataResult = {
+  result: {
+    name: string
+    data: any[]
+    draw?: string
+    style?: {
+      color: string
+      style_type?: string
+      linethick: 1
+    }
+  }[]
+}
+
+/**
+ * 获取用户自编指标绘图数据
+ */
+export const getStockIndicatorData = (params: GetStockIndicatorDataParams) => {
+  return request.get<GetStockIndicatorDataResult>('/stock/indicator/data', { params }).then(r => r.data)
+}

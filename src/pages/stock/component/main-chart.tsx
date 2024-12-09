@@ -1,13 +1,15 @@
 import { useEffect, useState } from "react"
-import { type KChartContext, useKChartContext, useSymbolQuery } from "../lib"
+import { useKChartContext, useSymbolQuery } from "../lib"
 import dayjs from "dayjs"
-import { useConfig, useTime } from "@/store"
+import { useTime } from "@/store"
 import { useQuery } from "@tanstack/react-query"
-import { getStockChart, StockChartInterval } from "@/api"
+import { getStockChart, getStockIndicatorData, StockChartInterval } from "@/api"
 import { useMount, useUpdateEffect } from "ahooks"
 import { useChart } from "@/hooks"
-import { options, renderCandlestick, renderLine, renderMarkLine } from "../lib/render"
-import { StockRecord } from "@/utils/stock"
+import { options, renderChart, renderSecondary } from "../lib/render"
+import { SecondaryIndicator } from "./secondary-indicator"
+import { nanoid } from "nanoid"
+import { renderUtils } from "../lib/utils"
 
 const getStartTime = (usTime: number, time: StockChartInterval) => {
   if (time >= StockChartInterval.DAY || time <= StockChartInterval.INTRA_DAY) return undefined
@@ -21,14 +23,12 @@ interface MainChartProps {
 
 export const MainChart = (props: MainChartProps) => {
   const symbol = useSymbolQuery()
-  const { getStockColor } = useConfig()
   const [symbolSelected, setSymbolSelected] = useState(symbol)
   const [chart, dom] = useChart()
-  const { state: ctxState, activeChartIndex } = useKChartContext()
+  const { state: ctxState, setState } = useKChartContext()
   const { usTime } = useTime()
   const state = ctxState[props.index - 1]
   const startTime = getStartTime(usTime, state.timeIndex)
-  const isActiveChart = props.index === activeChartIndex
   const isTimeIndexChart = () => [StockChartInterval.PRE_MARKET, StockChartInterval.AFTER_HOURS, StockChartInterval.INTRA_DAY, StockChartInterval.FIVE_DAY].includes(state.timeIndex)
 
   useEffect(() => {
@@ -47,50 +47,73 @@ export const MainChart = (props: MainChartProps) => {
     queryFn: () => getStockChart(params)
   })
 
+  useMount(() => {
+    chart.current?.setOption(options)
+    chart.current?.setOption(renderChart(state, query.data))
+  })
 
-  const setData = () => {
-    chart.current?.setOption({
-      xAxis: [],
-      dataset: [
-        {
-          source: query.data?.history ?? []
+  useEffect(() => {
+    if (!query.data) {
+      setState(prev => {
+        prev.state[props.index - 1].mainData = {
+          history: [],
+          coiling_data: [],
+          md5: ''
         }
-      ],
+      })
+    } else {
+      setState(prev => {
+        prev.state[props.index - 1].mainData = query.data
+      })
+    }
+  }, [query.data, props.index, setState])
+
+  useUpdateEffect(() => {
+    if (!chart.current) return
+    chart.current?.clear()
+    const _options = renderChart(state, query.data)
+    renderSecondary(_options, state)
+    chart.current.setOption(_options)
+
+    setTimeout(() => {
+      setSecondaryIndicatorsCount(state.secondaryIndicators.length)
+    }, 0)
+
+  }, [state])
+
+  const [secondaryIndicatorsCount, setSecondaryIndicatorsCount] = useState(state.secondaryIndicators.length)
+
+
+  const onChangeSecondaryIndicators = async (params: { value: string, index: number }) => {
+    setState(prev => {
+      renderUtils.cleanSecondaryIndicators(prev, props.index, params.index)
+    })
+    const r = await getStockIndicatorData({ symbol: symbol, cycle: state.timeIndex, id: params.value, db_type: 'system' })
+
+    if (!r) return
+
+    setState(prev => {
+      prev.state[props.index - 1].secondaryIndicatorsData[params.index - 1] = r.result
     })
   }
 
-  const renderChart = () => {
-    const lastData = query.data?.history[query.data?.history.length - 1]
-    if(!lastData) return
-    const s = StockRecord.of('','', lastData!)
-
-    if (state.type === 'k-line') {
-      renderCandlestick(chart.current)
-    } else {
-      renderLine(chart.current, isTimeIndexChart(), s.percentAmount >= 0)
-    }
-
-    renderMarkLine(
-      lastData ? lastData[2] >= +lastData[lastData?.length - 1] : false,
-      query.data?.history[query.data?.history.length - 1][2] ?? 0,
-      chart.current
-    )
-  }
-
-  useMount(() => {
-    chart.current?.setOption(options)
-    setData()
-    renderChart()
-  })
-
-  useUpdateEffect(() => {
-    setData()
-    renderChart()
-  }, [query.data, state])
-
 
   return (
-    <div className="w-full h-full" ref={dom}>
+    <div className="w-full h-full relative">
+      <div className="w-full h-full" ref={dom}>
+
+      </div>
+
+      {
+        Array.from(new Array(secondaryIndicatorsCount).fill(() => nanoid())).map((item, index) => (
+          <div key={item + index.toString()}
+            className="absolute rounded-sm left-2"
+            style={{ top: `calc(${(chart.current?.getOption() as any)?.grid[index + 1]?.top ?? 0} + 10px)` }}
+          >
+            <SecondaryIndicator onIndicatorChange={onChangeSecondaryIndicators} index={index + 1} mainIndex={props.index} />
+          </div>
+        ))
+      }
 
     </div>
   )

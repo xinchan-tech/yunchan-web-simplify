@@ -1,5 +1,5 @@
 import { Button, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, JknIcon } from "@/components"
-import { type KChartContext, useKChartContext } from "../lib"
+import { createDefaultChartState, type KChartContext, useKChartContext } from "../lib"
 import { StockChartInterval } from "@/api"
 
 const getViewMode = (s: KChartContext['viewMode']) => {
@@ -39,10 +39,7 @@ export const ViewModeSelect = () => {
         state.state = state.state.slice(0, count)
       }else{
         for(let i = state.state.length; i < count; i++) {
-          state.state.push({
-            timeIndex: StockChartInterval.DAY,
-            type: 'k-line'
-          })
+          state.state.push(createDefaultChartState())
         }
       }
       state.viewMode = s

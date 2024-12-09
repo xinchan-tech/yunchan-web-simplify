@@ -1,42 +1,30 @@
-import type { StockRawRecord } from '@/api'
+import type { getStockChart, StockRawRecord } from '@/api'
 import { useConfig } from '@/store'
-import { dateToWeek } from "@/utils/date"
-import type echarts from '@/utils/echarts'
+import { dateToWeek } from '@/utils/date'
 import type { ECOption } from '@/utils/echarts'
-import { numToFixed } from "@/utils/price"
+import { numToFixed } from '@/utils/price'
 import { StockRecord } from '@/utils/stock'
-import { colorUtil } from "@/utils/style"
-import dayjs from "dayjs"
-import Decimal from "decimal.js"
+import { colorUtil } from '@/utils/style'
+import dayjs from 'dayjs'
+import Decimal from 'decimal.js'
+import { isTimeIndexChart, type KChartState } from './ctx'
+import { cloneDeep } from 'lodash-es'
+import type { CandlestickSeriesOption, LineSeriesOption } from 'echarts/charts'
+import { drawerLine } from './drawer'
+
+const MAIN_CHART_NAME = 'kChart'
+
 
 /**
  * 主图通用配置
  */
 export const options: ECOption = {
   animation: false,
-  dataset: [
-    {
-      dimensions: ['date', 'open', 'close', 'lowest', 'highest'],
-      source: []
-    }
-  ],
   grid: [
     {
       left: 0,
       right: '6%',
-      height: '60%'
-    },
-    {
-      left: 0,
-      right: '8%',
-      top: '60%',
-      height: '20%'
-    },
-    {
-      left: 0,
-      right: '8%',
-      top: '80%',
-      height: '20%'
+      height: '97%'
     }
   ],
   tooltip: {
@@ -52,10 +40,12 @@ export const options: ECOption = {
       color: '#fff'
     },
     formatter: (v: any) => {
-      const data = v[0]?.data as StockRawRecord
-      const stock = new StockRecord('', '', data)
+      const errData = (v as any[]).find(_v => _v.axisId === 'main-x')
+      const data = errData?.seriesType === 'candlestick' ? errData?.value.slice(1) : errData.value as StockRawRecord
+     
+      const stock = StockRecord.of('', '', data)
       let time = dayjs(stock.time).format('MM-DD hh:mm') + dateToWeek(stock.time, '周')
-      if(stock.time.slice(11) === '00:00:00'){
+      if (stock.time.slice(11) === '00:00:00') {
         time = stock.time.slice(0, 11) + dateToWeek(stock.time, '周')
       }
 
@@ -63,11 +53,11 @@ export const options: ECOption = {
           <span class="text-xs">
            ${time}<br/>
           开盘&nbsp;&nbsp;${numToFixed(stock.open, 3)}<br/>
-          收盘&nbsp;&nbsp;${numToFixed(stock.close)}<br/>
           最高&nbsp;&nbsp;${numToFixed(stock.high)}<br/>
           最低&nbsp;&nbsp;${numToFixed(stock.low)}<br/>
-          涨跌额&nbsp;&nbsp;${`<span class="${stock.percentAmount >=0 ? 'text-stock-up': 'text-stock-down'}">${stock.percentAmount >= 0 ? '+': ''}${numToFixed(stock.percentAmount, 3)}</span>`}<br/>
-          涨跌幅&nbsp;&nbsp;${`<span class="${stock.percentAmount >=0 ? 'text-stock-up': 'text-stock-down'}">${stock.percentAmount >= 0 ? '+': ''}${Decimal.create(stock.percent).mul(100).toFixed(2)}%</span>`}<br/>
+          收盘&nbsp;&nbsp;${numToFixed(stock.close)}<br/>
+          涨跌额&nbsp;&nbsp;${`<span class="${stock.percentAmount >= 0 ? 'text-stock-up' : 'text-stock-down'}">${stock.percentAmount >= 0 ? '+' : ''}${numToFixed(stock.percentAmount, 3)}</span>`}<br/>
+          涨跌幅&nbsp;&nbsp;${`<span class="${stock.percentAmount >= 0 ? 'text-stock-up' : 'text-stock-down'}">${stock.percentAmount >= 0 ? '+' : ''}${Decimal.create(stock.percent).mul(100).toFixed(2)}%</span>`}<br/>
           成交量&nbsp;&nbsp;${stock.volume}<br/>
           </span>
           `
@@ -87,21 +77,26 @@ export const options: ECOption = {
       }
     ],
     label: {
-      backgroundColor: '#777'
-    }
-  },
-  toolbox: {
-    feature: {
-      dataZoom: {
-        yAxisIndex: false
+      formatter: params => {
+        if (params.axisDimension === 'x') {
+          let time = dayjs(params.value).format('MM-DD hh:mm') + dateToWeek(params.value as string, '周')
+          if ((params.value as string).slice(11) === '00:00:00') {
+            time = (params.value as string).slice(0, 11) + dateToWeek(params.value as string, '周')
+          }
+
+          return time
+        }
+
+        return Decimal.create(params.value as string).toFixed(3)
       }
     }
   },
+  toolbox: {},
   xAxis: [
     {
       type: 'category',
+      id: 'main-x',
       gridIndex: 0,
-
       axisLine: { onZero: false, show: false },
       axisTick: {
         show: false
@@ -126,6 +121,7 @@ export const options: ECOption = {
   ],
   yAxis: [
     {
+      id: 'main-y',
       scale: true,
       gridIndex: 0,
       position: 'right',
@@ -140,16 +136,16 @@ export const options: ECOption = {
     {
       minSpan: 2,
       type: 'inside',
-      xAxisIndex: [0, 1],
+      xAxisIndex: [0, 1, 2, 3, 4, 5],
       start: 90,
       end: 100
     },
     {
       minSpan: 2,
       show: true,
-      xAxisIndex: [0, 1],
+      xAxisIndex: [0, 1, 2, 3, 4, 5],
       type: 'slider',
-      top: '90%',
+      bottom: 0,
       start: 90,
       end: 100,
       backgroundColor: 'transparent',
@@ -161,141 +157,294 @@ export const options: ECOption = {
       borderColor: 'rgb(31, 32, 33)'
     }
   ],
-  series: [
-    {
-      name: 'kChart',
-      type: 'candlestick'
-    }
-  ]
+  series: []
 }
 
-export const renderMarkLine = (up: boolean, yIndex: number, chart?: echarts.ECharts) => {
-  if (!chart) return
-  const { getStockColor } = useConfig.getState()
-
-  const lineColor = getStockColor(up)
-
-  chart.setOption({
-    series: [
-      {
-        markLine: {
-          symbol: ['none', 'none'],
-          lineStyle: {
-            color: lineColor
-          },
-          label: {
-            color: '#fff',
-            borderRadius: 2,
-            padding: [2, 4],
-            backgroundColor: lineColor,
-            formatter: (params: { data: { yAxis: number } }) => {
-              return params.data.yAxis.toFixed(3)
-            }
-          },
-          silent: true,
-          data: [
-            [
-              {
-                xAxis: 'max',
-                yAxis: yIndex
-              },
-              {
-                yAxis: yIndex,
-                x: '94%'
-              }
-            ]
-          ]
-        }
-      }
-    ]
-  })
-}
+type ChartRender = (
+  options: ECOption,
+  state: KChartState['state'][0],
+  data?: Awaited<ReturnType<typeof getStockChart>>,
+  secondary?: boolean
+) => void
 
 /**
- * 渲染K线图
- * @param chart
- * @returns
+ * 渲染图表
  */
-export const renderCandlestick = (chart?: echarts.ECharts) => {
-  if (!chart) return
+export const renderChart = (
+  state: KChartState['state'][0],
+  data?: Awaited<ReturnType<typeof getStockChart>>
+): ECOption => {
+  const chain: ChartRender[] = [renderGrid, renderMainChart, renderMarkLine]
+  const _options = cloneDeep(options)
 
-  const { getStockColor } = useConfig.getState()
-
-  chart.setOption({
-    series: [
-      {
-        name: 'kChart',
-        type: 'candlestick',
-        datasetIndex: 0,
-        yAxisIndex: 0,
-        xAxisIndex: 0,
-        encode: {
-          x: 0,
-          y: [1, 2, 4, 3]
-        },
-        itemStyle: {
-          color: getStockColor(true),
-          color0: getStockColor(false),
-          borderColor: getStockColor(true),
-          borderColor0: getStockColor(false)
-        }
-      }
-    ]
-  })
-}
-
-/**
- * 绘制线形图
- * @param chart echart实例
- * @param isTimeIndex 是否是分时图, 分时图会根据最后一组数据的涨跌渲染颜色
- * @param isUp 是否是涨
- * @returns
- */
-export const renderLine = (chart?: echarts.ECharts, isTimeIndex?: boolean, isUp?: boolean) => {
-  if (!chart) return
-  let color = Object.values(colorUtil.hexToRGB('#4a65bf') ?? {}).join(',')
-  if(isTimeIndex){
-    const _color = useConfig.getState().getStockColor(isUp)
-
-    color = Object.values(colorUtil.hexToRGB(_color) ?? {}).join(',')
+  for (const fn of chain) {
+    fn(_options, state, data)
   }
 
-  chart.setOption({
-    series: [
-      {
-        showSymbol: false,
-        name: 'kChart',
-        type: 'line',
-        encode: {
-          y: 'close'
-        },
-        xAxisIndex: 0,
-        yAxisIndex: 0,
-        datasetIndex: 0,
-        color: `rgba(${color})`,
-        areaStyle: {
-          color: {
-            x: 0,
-            y: 0,
-            x2: 0,
-            y2: 1,
-            colorStops: [
-              {
-                offset: 0,
-                color: `rgba(${color}, .35)` /* 0% 处的颜色*/ 
-              },
-              {
-                offset: 0.6,
-                color: `rgba(${color}, .2)` /* 100% 处的颜色*/ 
-              },
-              {
-                offset: 1,
-                color: 'transparent' // 100% 处的颜色
-              }
-            ]
+  return _options
+}
+
+/**
+ * 渲染布局
+ */
+export const renderGrid: ChartRender = (options, state) => {
+  const grid = []
+  if (state.secondaryIndicators.length === 0) {
+    grid.push({
+      top: 4,
+      left: 0,
+      right: 60,
+      height: '97%'
+    })
+  } else if (state.secondaryIndicators.length <= 3) {
+    grid.push({
+      top: 4,
+      left: 0,
+      right: 60,
+      height: `${20 * (5 - state.secondaryIndicators.length)}%`
+    })
+
+    for (let i = 0; i < state.secondaryIndicators.length; i++) {
+      grid.push({
+        left: 0,
+        right: 60,
+        top: `${20 * (5 - state.secondaryIndicators.length) + 20 * i}%`,
+        height: '20%'
+      })
+    }
+  } else {
+    grid.push({
+      top: 4,
+      left: 0,
+      right: 60,
+      height: '40%'
+    })
+
+    for (let i = 0; i < state.secondaryIndicators.length; i++) {
+      // 60%平均分
+      grid.push({
+        left: 0,
+        right: 60,
+        top: `${40 + (60 / state.secondaryIndicators.length) * i}%`,
+        height: `${60 / state.secondaryIndicators.length}%`
+      })
+    }
+  }
+
+  options.grid = grid
+
+  for (let i = 0; i < state.secondaryIndicators.length; i++) {
+    renderSecondaryAxis(options, state, i + 1)
+  }
+  return options
+}
+
+/**
+ * 渲染主图
+ */
+export const renderMainChart: ChartRender = (options, state, data) => {
+  const mainSeries = { name: MAIN_CHART_NAME } as LineSeriesOption | CandlestickSeriesOption
+  mainSeries.yAxisIndex = 0
+  mainSeries.xAxisIndex = 0
+  const { getStockColor } = useConfig.getState()
+
+  if (!data) return options
+
+  if (state.type === 'k-line') {
+    mainSeries.type = 'candlestick'
+    mainSeries.itemStyle = {
+      color: getStockColor(true),
+      color0: getStockColor(false),
+      borderColor: getStockColor(true),
+      borderColor0: getStockColor(false)
+    }
+    mainSeries.data = state.mainData.history ?? []
+    mainSeries.encode = {
+      x: [1],
+      y: [2, 3, 5, 4]
+    }
+  } else {
+    let color = Object.values(colorUtil.hexToRGB('#4a65bf') ?? {}).join(',')
+
+    const lastData = StockRecord.of('', '', data.history[data.history.length - 1])
+
+    if (isTimeIndexChart(state.timeIndex)) {
+      const _color = getStockColor(lastData.isUp)
+
+      color = Object.values(colorUtil.hexToRGB(_color) ?? {}).join(',')
+    }
+    const _mainSeries = mainSeries as LineSeriesOption
+    _mainSeries.type = 'line'
+    _mainSeries.showSymbol = false
+    _mainSeries.encode = {
+      x: [0],
+      y: [2]
+    }
+    _mainSeries.data = state.mainData.history ?? []
+    mainSeries.color = `rgba(${color})`
+    ;(mainSeries as any).areaStyle = {
+      color: {
+        x: 0,
+        y: 0,
+        x2: 0,
+        y2: 1,
+        colorStops: [
+          {
+            offset: 0,
+            color: `rgba(${color}, .35)` /* 0% 处的颜色*/
+          },
+          {
+            offset: 0.6,
+            color: `rgba(${color}, .2)` /* 100% 处的颜色*/
+          },
+          {
+            offset: 1,
+            color: 'transparent' // 100% 处的颜色
+          }
+        ]
+      }
+    }
+  }
+  ;(options.series as any)?.push(mainSeries)
+
+  // 如果grid > 1 ，取消显示axisPointer标签
+  if (Array.isArray(options.xAxis)) {
+    const xAxis = options.xAxis.find(y => y.id === 'main-x')
+
+    if (xAxis) {
+      ;(xAxis as any).data = state.mainData.history.map(item => item[0])
+
+      if (Array.isArray(options.grid) && options.grid.length > 1) {
+        xAxis.axisPointer = {
+          label: {
+            show: false
           }
         }
       }
+    }
+  }
+
+  return options
+}
+
+/**
+ * 渲染标记线
+ */
+export const renderMarkLine: ChartRender = (options, _, data) => {
+  if (!options.series && !Array.isArray(options.series)) return options
+  if (!data) return options
+
+  const mainSeries = (options.series as any[]).find(s => s.name === MAIN_CHART_NAME)!
+
+  const { getStockColor } = useConfig.getState()
+  const lastData = StockRecord.of('', '', data.history[data.history.length - 1])
+
+  const lineColor = getStockColor(lastData.percentAmount >= 0)
+
+  mainSeries.markLine = {
+    symbol: ['none', 'none'],
+    lineStyle: {
+      color: lineColor
+    },
+    label: {
+      color: '#fff',
+      borderRadius: 2,
+      padding: [2, 4],
+      backgroundColor: lineColor,
+      formatter: (params: { data: { yAxis: number } }) => {
+        return params.data.yAxis.toFixed(3)
+      }
+    },
+    silent: true,
+    data: [
+      [
+        {
+          xAxis: 'max',
+          yAxis: data?.history[data?.history.length - 1][2] ?? 0
+        },
+        {
+          yAxis: data?.history[data?.history.length - 1][2] ?? 0,
+          x: '96%'
+        }
+      ]
     ]
-  })
+  }
+}
+
+export const renderSecondary: ChartRender = (options, state) => {
+  for (let i = 0; i < state.secondaryIndicatorsData.length; i++) {
+    if (state.secondaryIndicatorsData[i] !== null) {
+      for (let j = 0; j < state.secondaryIndicatorsData[i]!.length; j++) {
+        const d = state.secondaryIndicatorsData[i]![j]
+        if (!d.draw) {
+          drawerLine(options, {
+            extra: {
+              color: d.style?.color
+            },
+            index: i + 1,
+            data: state.mainData.history.map((h, index) => ([h[0], d.data[index]]))
+          })
+        }
+      }
+    }
+  }
+}
+
+/**
+ * 渲染坐标轴
+ */
+const renderSecondaryAxis = (options: ECOption, state: KChartState['state'][0], index: number) => {
+  Array.isArray(options.xAxis) &&
+    options.xAxis.push({
+      type: 'category',
+      gridIndex: index,
+      axisLine: {
+        onZero: false,
+        lineStyle: {
+          color: 'rgb(31, 32, 33)'
+        }
+      },
+      axisTick: {
+        show: false
+      },
+      axisLabel: {
+        show: false
+      },
+      splitLine: {
+        show: true,
+        lineStyle: {
+          color: 'rgb(31, 32, 33)'
+        }
+      },
+      min: 'dataMin',
+      max: v => {
+        return Math.round(v.max * 1.01)
+      },
+      axisPointer: {
+        z: 100,
+        label: {
+          show: index === state.secondaryIndicators.length
+        }
+      }
+    })
+
+  Array.isArray(options.yAxis) &&
+    options.yAxis.push({
+      scale: true,
+      gridIndex: index,
+      position: 'right',
+      axisLine: { onZero: false, show: false },
+      axisTick: {
+        show: false
+      },
+      axisPointer: {
+        label: {
+          show: false
+        }
+      },
+      axisLabel: { show: false },
+      splitLine: {
+        show: false
+      }
+    })
 }

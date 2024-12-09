@@ -52,6 +52,14 @@ export class StockRecord {
    */
   percentAmount: number
 
+
+  /**
+   * 是否涨
+   */
+  get isUp() {
+    return this.percent >= 0
+  }
+
   static isValid(data: any): data is StockRawRecord {
     return Array.isArray(data) && (data.length === 8 || data.length === 10)
   }

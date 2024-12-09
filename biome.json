@@ -44,5 +44,8 @@
         "noExplicitAny": "off"
       }
     }
+  },
+  "files": {
+    "ignore": ["draw_func.json"]
   }
 }

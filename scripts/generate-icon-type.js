@@ -22,7 +22,7 @@ const walk = (dir) => {
 
 const writeTypes = () => {
   const content = `
-  export type IconName = ${r.map(i => `'${i}'`).join(' | ')}
+  declare type IconName = ${r.map(i => `'${i}'`).join(' | ')}
   `
   fs.writeFileSync(outputPath, content)
 }

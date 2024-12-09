@@ -1,23 +1,33 @@
-import { StockChartInterval } from "@/api"
+import { getStockIndicators, StockChartInterval, type StockIndicator } from "@/api"
 import { Button, CapsuleTabs, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, JknIcon, Separator } from "@/components"
 import { useMemo, useState } from "react"
 import { Fragment } from "react/jsx-runtime"
 import { useImmer } from "use-immer"
-import { KChartContext, type KChartState, timeIndex, useKChartContext, useSymbolQuery } from "./lib"
+import { createDefaultChartState, KChartContext, type KChartState, timeIndex, useKChartContext, useSymbolQuery } from "./lib"
 import { MainChart } from "./component/main-chart"
 import { cn } from "@/utils/style"
 import { ViewModeSelect } from "./component/view-mode-select"
+import { useQuery } from "@tanstack/react-query"
+import { MainIndicator } from "./component/main-indicator"
+import { useUpdateEffect } from "ahooks"
+import { ChartContextMenu } from "./component/chart-context-menu"
 
 const leftMenu = ['盘前分时', '盘中分时', '盘后分时', '多日分时']
 const rightMenu = ['周线', '月线', '季线', '半年', '年线']
 
 const rightMenuStartIndex = timeIndex.length - rightMenu.length
 export const KChart = () => {
-  const [context, setContext] = useImmer<KChartState>({ viewMode: 'single', state: [{ type: 'k-line', timeIndex: StockChartInterval.DAY }], activeChartIndex: 1 })
-  const symbol = useSymbolQuery()
+  const [context, setContext] = useImmer<KChartState>({
+    viewMode: 'single',
+    secondaryIndicators: ['9', '10'],
+    state:
+      [
+        createDefaultChartState()
+      ],
+    activeChartIndex: 1
+  })
 
   const chartCount = useMemo(() => {
-    console.log(context.viewMode)
     switch (context.viewMode) {
       case 'single':
         return 1
@@ -52,16 +62,15 @@ export const KChart = () => {
             <TimeIndexSelect />
           </div>
           <ChartToolSelect />
-          <ChartChanTool />
         </div>
         <div className={cn('flex-1 overflow-hidden main-chart', `main-chart-${context.viewMode}`)} >
 
           {
             Array.from({ length: chartCount }).map((_, index) => (
               // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
-              <div className={cn(`chart-item-${index + 1}`)} key={index}>
+              <ChartContextMenu key={index} index={index + 1}>
                 <MainChart index={index + 1} />
-              </div>
+              </ChartContextMenu>
             ))
           }
 
@@ -80,14 +89,14 @@ export const KChart = () => {
 
          .main-chart-double {
            grid-template-areas: 'chart-1 chart-2';
-           grid-template-columns: 1fr 1fr;
+           grid-template-columns: 50% 50%;
          }
 
          .main-chart-double-vertical {
            grid-template-areas: 
-           'chart1'
-           'chart2';
-           grid-template-rows: 1fr 1fr;
+           'chart-1'
+           'chart-2';
+           grid-template-rows: 50% 50%;
            grid-template-columns: 1fr;
          }
       `}</style>
@@ -190,38 +199,81 @@ const ChartToolSelect = () => {
     if ([StockChartInterval.PRE_MARKET, StockChartInterval.AFTER_HOURS, StockChartInterval.INTRA_DAY, StockChartInterval.FIVE_DAY].includes(activeChart.timeIndex)) return
     setState(d => { d.state[d.activeChartIndex - 1].type = activeChart.type === 'k-line' ? 'line' : 'k-line' })
   }
+  const indicators = useQuery({
+    queryKey: [getStockIndicators.cacheKey],
+    queryFn: () => getStockIndicators()
+  })
+
+  useUpdateEffect(() => {
+    const s = indicators.data?.main.find(i => i.name === '缠论系统')
+    if (s) {
+      const activeSystem = state[activeChartIndex - 1].system
+      if (s.indicators.find(i => i.id === activeSystem)?.authorized !== 1) {
+        const newSys = s.indicators.find(i => i.authorized === 1)?.id
+        if (!newSys) return
+        setState(d => { d.state[activeChartIndex - 1].system = newSys })
+      }
+    }
+
+  }, [indicators.data, activeChartIndex, state])
+
+  const indicatorItems = (indicators.data?.main.find(o => o.name === '缠论系统')?.indicators.find(o => o.id === activeChart.system) as any)?.items as StockIndicator[] | undefined
+
+  const onChangeMainIndicator = (id: string) => {
+    setState(d => {
+      const index = d.state[d.activeChartIndex - 1].mainIndicators.indexOf(id)
+      if (index === -1) {
+        d.state[d.activeChartIndex - 1].mainIndicators.push(id)
+      } else {
+        d.state[d.activeChartIndex - 1].mainIndicators.splice(index, 1)
+      }
+    })
+  }
   return (
-    <div className="border-style-primary flex items-center px-2 !border-t-0">
-      <div className="flex items-center space-x-3 border-0 border-r border-solid border-border pr-4">
+    <>
+      <div className="border-style-primary flex items-center px-2 !border-t-0">
+        <div className="flex items-center space-x-3 border-0 border-r border-solid border-border pr-4">
+          {
+            CHART_TOOL.map((item, index) => (
+              <JknIcon key={item} label={item} className="w-4 h-4 py-1.5" name={`stock_${index + 1}` as IconName} checked={toolType === item} onClick={() => setToolType(item)} />
+            ))
+          }
+        </div>
+        <div className="pl-4 h-[30px] flex items-center">
+          {{
+            '主图指标': <MainIndicator data={indicators.data} />,
+
+            '线型切换': (
+              <div className="flex items-center space-x-3 text-xs">
+                <div
+                  onClick={onChangeMainChartType} onKeyDown={() => { }}
+                  className={cn('flex items-center cursor-pointer', activeChart.type === 'line' && 'text-primary')}><JknIcon name="line_type_1" className="w-4 h-4 mr-1" checked={activeChart.type === 'line'} />折线图</div>
+                <div
+                  onClick={onChangeMainChartType} onKeyDown={() => { }}
+                  className={cn('flex items-center cursor-pointer', activeChart.type === 'k-line' && 'text-primary')}><JknIcon name="line_type_2" className="w-4 h-4 mr-1" checked={activeChart.type === 'k-line'} />蜡烛图</div>
+              </div>
+            ),
+            '多图模式': <ViewModeSelect />
+          }[toolType] ?? null}
+        </div>
+      </div>
+      <div className="border-style-primary flex items-center px-2 !border-t-0 space-x-4">
         {
-          CHART_TOOL.map((item, index) => (
-            <JknIcon key={item} label={item} className="w-4 h-4 py-1.5" name={`stock_${index + 1}` as IconName} checked={toolType === item} onClick={() => setToolType(item)} />
-          ))
+          indicatorItems ? (
+            indicatorItems.map(item => (
+              <div key={item.id} className="flex items-center space-x-1">
+                <JknIcon.Checkbox
+                  onClick={() => onChangeMainIndicator(item.id)}
+                  checked={activeChart.mainIndicators.includes(item.id)}
+                  checkedIcon={`chan_tool_${item.id}_sel` as IconName}
+                  uncheckedIcon={`chan_tool_${item.id}_nor` as IconName}
+                  className="w-6 h-6 rounded-none" />
+                <div className="text-xs">{item.name}</div>
+              </div>
+            ))
+          ) : null
         }
       </div>
-      <div className="pl-4 h-[30px] flex items-center">
-        {{
-          '线型切换': (
-            <div className="flex items-center space-x-3 text-xs">
-              <div
-                onClick={onChangeMainChartType} onKeyDown={() => { }}
-                className={cn('flex items-center cursor-pointer', activeChart.type === 'line' && 'text-primary')}><JknIcon name="line_type_1" className="w-4 h-4 mr-1" checked={activeChart.type === 'line'} />折线图</div>
-              <div
-                onClick={onChangeMainChartType} onKeyDown={() => { }}
-                className={cn('flex items-center cursor-pointer', activeChart.type === 'k-line' && 'text-primary')}><JknIcon name="line_type_2" className="w-4 h-4 mr-1" checked={activeChart.type === 'k-line'} />蜡烛图</div>
-            </div>
-          ),
-          '多图模式': <ViewModeSelect />
-        }[toolType] ?? null}
-      </div>
-    </div>
-  )
-}
-
-const ChartChanTool = () => {
-  return (
-    <div className="border-style-primary flex items-center px-2 !border-t-0">
-      <JknIcon name="chan_pen_nor" className="w-4 h-4 py-1.5" />
-    </div>
+    </>
   )
 }
