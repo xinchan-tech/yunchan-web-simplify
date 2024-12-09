@@ -1,9 +1,9 @@
-import type { ECOption } from "@/utils/echarts"
-import type { LineSeriesOption } from "echarts/charts"
-import { exists } from "i18next"
-import { renderUtils } from "./utils"
+import type { ECOption } from '@/utils/echarts'
+import type { CustomSeriesOption, LineSeriesOption } from 'echarts/charts'
+import type { KChartState } from './ctx'
+import echarts from "@/utils/echarts"
 
-type DrawerFuncOptions<T = any> ={
+type DrawerFuncOptions<T = any> = {
   /**
    * 画在第几个数据集上
    */
@@ -18,13 +18,12 @@ type DrawerFuncOptions<T = any> ={
   extra?: Record<string, any>
 }
 
-type DrawerFunc<T = any> = (options: ECOption,  params: DrawerFuncOptions<T>) => ECOption
-
+type DrawerFunc<T = any> = (options: ECOption, state: KChartState['state'][0], params: DrawerFuncOptions<T>) => ECOption
 
 /**
  * 画一条线
  */
-export const drawerLine: DrawerFunc<[string, number][]> = (options, {index, data, extra}) => {
+export const drawerLine: DrawerFunc<[string, number][]> = (options, _, { index, data, extra }) => {
   const line: LineSeriesOption = {
     xAxisIndex: index,
     yAxisIndex: index,
@@ -36,11 +35,40 @@ export const drawerLine: DrawerFunc<[string, number][]> = (options, {index, data
 
   Array.isArray(options.series) && options.series.push(line)
 
-  const xAxis = renderUtils.getXAxisIndex(options, index)
+  return options
+}
 
-  if(xAxis){
-    ;(xAxis as any).data = data.map((item: any) => item[0])
+/**
+ * 文本
+ * 值类型为 [x, y, text]
+ */
+export const drawerText: DrawerFunc<[string, number, string]> = (options, state, { index, data }) => {
+
+  const line: CustomSeriesOption = {
+    xAxisIndex: index,
+    yAxisIndex: index,
+    type: 'custom',
+    coordinateSystem: 'cartesian2d',
+    renderItem: (params, api) => {
+      console.log("🚀 ~ (params, api:", params, api)
+      const x = api.value(0)
+      const y = api.value(1)
+      const text = api.value(2)
+
+
+      return {
+        type: 'jknText',
+        shape: {
+          x: api.coord([x, y])[0],
+          y: api.coord([x, y])[1],
+          text
+        }
+      }
+    },
+    data: [data]
   }
+
+  Array.isArray(options.series) && options.series.push(line)
 
   return options
 }

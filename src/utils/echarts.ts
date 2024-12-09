@@ -1,7 +1,15 @@
 import * as echarts from 'echarts/core'
 
-import { LineChart, type LineSeriesOption, TreemapChart, type TreemapSeriesOption, CandlestickChart, type CandlestickSeriesOption } from 'echarts/charts'
-
+import {
+  LineChart,
+  type LineSeriesOption,
+  TreemapChart,
+  type TreemapSeriesOption,
+  CandlestickChart,
+  type CandlestickSeriesOption,
+  CustomChart,
+  type CustomSeriesOption
+} from 'echarts/charts'
 
 import {
   TitleComponent,
@@ -22,12 +30,14 @@ import {
   DataZoomInsideComponent,
   DataZoomSliderComponent,
   DataZoomComponent,
-  type DataZoomComponentOption
+  type DataZoomComponentOption,
+  GraphicComponent,
+  type GraphicComponentOption
 } from 'echarts/components'
 
-import { LabelLayout, UniversalTransition } from 'echarts/features';
+import { LabelLayout, UniversalTransition } from 'echarts/features'
 // 引入 Canvas 渲染器，注意引入 CanvasRenderer 或者 SVGRenderer 是必须的一步
-import { CanvasRenderer, SVGRenderer } from 'echarts/renderers';
+import { CanvasRenderer } from 'echarts/renderers'
 
 echarts.use([
   TitleComponent,
@@ -39,7 +49,6 @@ echarts.use([
   LabelLayout,
   UniversalTransition,
   CanvasRenderer,
-  SVGRenderer,
   MarkLineComponent,
   TreemapChart,
   ToolboxComponent,
@@ -47,7 +56,9 @@ echarts.use([
   DataZoomInsideComponent,
   DataZoomSliderComponent,
   DataZoomComponent,
-  CandlestickChart
+  CandlestickChart,
+  GraphicComponent,
+  CustomChart
 ])
 
 export type ECOption = echarts.ComposeOption<
@@ -63,6 +74,27 @@ export type ECOption = echarts.ComposeOption<
   | ToolboxComponentOption
   | DataZoomComponentOption
   | CandlestickSeriesOption
+  | GraphicComponentOption
+  | CustomSeriesOption
 >
+
+/**
+ * 注册一个文字组件
+ */
+const textShape = echarts.graphic.extendShape({
+  shape: {
+    x: 0,
+    y: 0,
+    text: ''
+  },
+  buildPath: (ctx: CanvasRenderingContext2D, shape) => {
+    console.log(ctx)
+    ctx.textBaseline = 'bottom'
+    ctx.font = '12px Arial'
+    ctx.fillText(shape.text, shape.x, shape.y)
+  }
+})
+
+echarts.graphic.registerShape('jknText', textShape)
 
 export default echarts

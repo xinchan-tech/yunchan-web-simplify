@@ -10,7 +10,7 @@ import Decimal from 'decimal.js'
 import { isTimeIndexChart, type KChartState } from './ctx'
 import { cloneDeep } from 'lodash-es'
 import type { CandlestickSeriesOption, LineSeriesOption } from 'echarts/charts'
-import { drawerLine } from './drawer'
+import { drawerLine, drawerText } from './drawer'
 
 const MAIN_CHART_NAME = 'kChart'
 
@@ -42,7 +42,9 @@ export const options: ECOption = {
     formatter: (v: any) => {
       const errData = (v as any[]).find(_v => _v.axisId === 'main-x')
       const data = errData?.seriesType === 'candlestick' ? errData?.value.slice(1) : errData.value as StockRawRecord
-     
+
+      data[0] = dayjs(+data[0]).format('YYYY-MM-DD HH:mm:ss')
+
       const stock = StockRecord.of('', '', data)
       let time = dayjs(stock.time).format('MM-DD hh:mm') + dateToWeek(stock.time, '周')
       if (stock.time.slice(11) === '00:00:00') {
@@ -132,31 +134,6 @@ export const options: ECOption = {
       }
     }
   ],
-  dataZoom: [
-    {
-      minSpan: 2,
-      type: 'inside',
-      xAxisIndex: [0, 1, 2, 3, 4, 5],
-      start: 90,
-      end: 100
-    },
-    {
-      minSpan: 2,
-      show: true,
-      xAxisIndex: [0, 1, 2, 3, 4, 5],
-      type: 'slider',
-      bottom: 0,
-      start: 90,
-      end: 100,
-      backgroundColor: 'transparent',
-      dataBackground: {
-        lineStyle: {
-          color: 'rgb(31, 32, 33)'
-        }
-      },
-      borderColor: 'rgb(31, 32, 33)'
-    }
-  ],
   series: []
 }
 
@@ -172,10 +149,39 @@ type ChartRender = (
  */
 export const renderChart = (
   state: KChartState['state'][0],
-  data?: Awaited<ReturnType<typeof getStockChart>>
+  data?: Awaited<ReturnType<typeof getStockChart>>,
+  init?: boolean
 ): ECOption => {
   const chain: ChartRender[] = [renderGrid, renderMainChart, renderMarkLine]
   const _options = cloneDeep(options)
+
+  if(init){
+    options.dataZoom = [
+      {
+        minSpan: 2,
+        type: 'inside',
+        xAxisIndex: [0, 1, 2, 3, 4, 5],
+        start: 90,
+        end: 100
+      },
+      {
+        minSpan: 2,
+        show: true,
+        xAxisIndex: [0, 1, 2, 3, 4, 5],
+        type: 'slider',
+        bottom: 0,
+        start: 90,
+        end: 100,
+        backgroundColor: 'transparent',
+        dataBackground: {
+          lineStyle: {
+            color: 'rgb(31, 32, 33)'
+          }
+        },
+        borderColor: 'rgb(31, 32, 33)'
+      }
+    ]
+  }
 
   for (const fn of chain) {
     fn(_options, state, data)
@@ -376,18 +382,37 @@ export const renderSecondary: ChartRender = (options, state) => {
     if (state.secondaryIndicatorsData[i] !== null) {
       for (let j = 0; j < state.secondaryIndicatorsData[i]!.length; j++) {
         const d = state.secondaryIndicatorsData[i]![j]
+
         if (!d.draw) {
-          drawerLine(options, {
+          drawerLine(options, state, {
             extra: {
               color: d.style?.color
             },
             index: i + 1,
             data: state.mainData.history.map((h, index) => ([h[0], d.data[index]]))
           })
+        }else if(d.draw === 'DRAWTEXT'){
+          const data: [string, number, string] = ['', 0, '']
+        
+
+          if (Object.keys(d.data).length > 0) {
+            const x = +Object.keys(d.data)[0] as number
+            data[0] = state.mainData.history[x][0] as string
+            data[1] = 98.09 as number
+            data[2] = d.data[x][1] as string
+          }
+
+          
+          drawerText(options, state, {
+            index: i + 1,
+            data:  data
+          })
         }
       }
     }
   }
+
+  return options
 }
 
 /**
@@ -398,6 +423,7 @@ const renderSecondaryAxis = (options: ECOption, state: KChartState['state'][0], 
     options.xAxis.push({
       type: 'category',
       gridIndex: index,
+      data: state.mainData.history.map(item => item[0]),
       axisLine: {
         onZero: false,
         lineStyle: {
@@ -447,4 +473,17 @@ const renderSecondaryAxis = (options: ECOption, state: KChartState['state'][0], 
         show: false
       }
     })
+}
+
+
+/**
+ * 配置缩放
+ */
+export const renderZoom = (options: ECOption, zoom: [number, number]) => {
+  if(Array.isArray(options.dataZoom)){
+    for (const z of options.dataZoom) {
+      z.start = zoom[0]
+      z.end = zoom[1]
+    }
+  }
 }

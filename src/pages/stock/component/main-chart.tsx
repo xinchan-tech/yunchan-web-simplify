@@ -3,13 +3,14 @@ import { useKChartContext, useSymbolQuery } from "../lib"
 import dayjs from "dayjs"
 import { useTime } from "@/store"
 import { useQuery } from "@tanstack/react-query"
-import { getStockChart, getStockIndicatorData, StockChartInterval } from "@/api"
-import { useMount, useUpdateEffect } from "ahooks"
+import { getStockChart, getStockIndicatorData, StockChartInterval, StockRawRecord } from "@/api"
+import { useMount, useUnmount, useUpdateEffect } from "ahooks"
 import { useChart } from "@/hooks"
-import { options, renderChart, renderSecondary } from "../lib/render"
+import { options, renderChart, renderSecondary, renderZoom } from "../lib/render"
 import { SecondaryIndicator } from "./secondary-indicator"
 import { nanoid } from "nanoid"
 import { renderUtils } from "../lib/utils"
+import type echarts from "@/utils/echarts"
 
 const getStartTime = (usTime: number, time: StockChartInterval) => {
   if (time >= StockChartInterval.DAY || time <= StockChartInterval.INTRA_DAY) return undefined
@@ -29,7 +30,6 @@ export const MainChart = (props: MainChartProps) => {
   const { usTime } = useTime()
   const state = ctxState[props.index - 1]
   const startTime = getStartTime(usTime, state.timeIndex)
-  const isTimeIndexChart = () => [StockChartInterval.PRE_MARKET, StockChartInterval.AFTER_HOURS, StockChartInterval.INTRA_DAY, StockChartInterval.FIVE_DAY].includes(state.timeIndex)
 
   useEffect(() => {
     setSymbolSelected(symbol)
@@ -48,8 +48,12 @@ export const MainChart = (props: MainChartProps) => {
   })
 
   useMount(() => {
-    chart.current?.setOption(options)
-    chart.current?.setOption(renderChart(state, query.data))
+    if (chart.current) {
+      setState(prev => {
+        prev.state[props.index - 1].getChart = () => chart.current as echarts.ECharts
+      })
+    }
+    chart.current?.setOption(renderChart(state, query.data, true))
   })
 
   useEffect(() => {
@@ -62,24 +66,39 @@ export const MainChart = (props: MainChartProps) => {
         }
       })
     } else {
+  
       setState(prev => {
-        prev.state[props.index - 1].mainData = query.data
+        prev.state[props.index - 1].mainData = {
+          history: query.data.history.map(h => [dayjs(h[0]).valueOf().toString(), ...h.slice(1)]) as unknown as StockRawRecord[],
+          coiling_data: query.data.coiling_data,
+          md5: query.data.md5
+        }
       })
     }
   }, [query.data, props.index, setState])
 
   useUpdateEffect(() => {
     if (!chart.current) return
+
+    const [start, end] = renderUtils.getZoom(chart.current.getOption())
+
     chart.current?.clear()
+
     const _options = renderChart(state, query.data)
-    renderSecondary(_options, state)
+    renderZoom(_options, [start, end])
+
     chart.current.setOption(_options)
 
     setTimeout(() => {
+      renderSecondary(_options, state)
+      console.log(_options)
+      chart.current?.setOption(_options)
+
       setSecondaryIndicatorsCount(state.secondaryIndicators.length)
     }, 0)
 
   }, [state])
+
 
   const [secondaryIndicatorsCount, setSecondaryIndicatorsCount] = useState(state.secondaryIndicators.length)
 

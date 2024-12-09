@@ -1,5 +1,7 @@
 import type { ECOption } from '@/utils/echarts'
-import type { KChartContext, KChartState } from './ctx'
+import type { KChartState } from './ctx'
+import type { ECBasicOption } from "echarts/types/dist/shared"
+import type { WritableDraft } from "immer"
 
 export const renderUtils = {
   getXAxisIndex: (options: ECOption, index: number) => {
@@ -27,7 +29,11 @@ export const renderUtils = {
       return options.tooltip[index]
     }
   },
-  cleanSecondaryIndicators: (state: KChartState, mainIndex: number, index: number) => {
+  cleanSecondaryIndicators: (state: WritableDraft<KChartState>, mainIndex: number, index: number) => {
     state.state[mainIndex - 1].secondaryIndicatorsData[index - 1] = null
+  },
+  getZoom: (options: ECBasicOption) => {
+    const zoom = options.dataZoom as any[]
+    return [zoom?.[0]?.start ?? 90, zoom?.[0]?.end ?? 100]
   }
 }

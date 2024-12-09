@@ -1,4 +1,5 @@
 import { type getStockChart, type getStockIndicatorData, StockChartInterval } from '@/api'
+import type echarts from "@/utils/echarts"
 import { createContext, useContext } from 'react'
 import type { Updater } from 'use-immer'
 
@@ -45,6 +46,11 @@ type MainChartState = {
    * 主图数据
    */
   mainData: Awaited<ReturnType<typeof getStockChart>>
+  /**
+   * chart实例
+   */
+  getChart?: () => echarts.ECharts
+
 }
 
 export interface KChartContext {
@@ -57,7 +63,6 @@ export interface KChartContext {
    * 该值应持久化到本地存储
    */
   secondaryIndicators: string[]
-
   setState: Updater<KChartState>
 }
 
