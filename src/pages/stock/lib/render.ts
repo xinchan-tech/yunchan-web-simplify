@@ -10,10 +10,9 @@ import Decimal from 'decimal.js'
 import { isTimeIndexChart, type KChartState } from './ctx'
 import { cloneDeep } from 'lodash-es'
 import type { CandlestickSeriesOption, LineSeriesOption } from 'echarts/charts'
-import { drawerLine, drawerText } from './drawer'
+import { drawerLine, drawerRect, drawerText } from './drawer'
 
 const MAIN_CHART_NAME = 'kChart'
-
 
 /**
  * 主图通用配置
@@ -41,7 +40,7 @@ export const options: ECOption = {
     },
     formatter: (v: any) => {
       const errData = (v as any[]).find(_v => _v.axisId === 'main-x')
-      const data = errData?.seriesType === 'candlestick' ? errData?.value.slice(1) : errData.value as StockRawRecord
+      const data = errData?.seriesType === 'candlestick' ? errData?.value.slice(1) : (errData.value as StockRawRecord)
 
       data[0] = dayjs(+data[0]).format('YYYY-MM-DD HH:mm:ss')
 
@@ -155,16 +154,18 @@ export const renderChart = (
   const chain: ChartRender[] = [renderGrid, renderMainChart, renderMarkLine]
   const _options = cloneDeep(options)
 
-  if(init){
+  if (init) {
     options.dataZoom = [
       {
         minSpan: 2,
         type: 'inside',
         xAxisIndex: [0, 1, 2, 3, 4, 5],
         start: 90,
-        end: 100
+        end: 100,
+        filterMode: 'weakFilter'
       },
       {
+        fillerColor: 'weakFilter',
         minSpan: 2,
         show: true,
         xAxisIndex: [0, 1, 2, 3, 4, 5],
@@ -214,7 +215,7 @@ export const renderGrid: ChartRender = (options, state) => {
       grid.push({
         left: 0,
         right: 60,
-        top: `${20 * (5 - state.secondaryIndicators.length) + 20 * i}%`,
+        top: `${20 * (5 - state.secondaryIndicators.length) + 20 * i + 0.4}%`,
         height: '20%'
       })
     }
@@ -382,31 +383,59 @@ export const renderSecondary: ChartRender = (options, state) => {
     if (state.secondaryIndicatorsData[i] !== null) {
       for (let j = 0; j < state.secondaryIndicatorsData[i]!.length; j++) {
         const d = state.secondaryIndicatorsData[i]![j]
-
+        if(d.style?.style_type === 'NODRAW'){
+          continue
+        }
         if (!d.draw) {
+          
           drawerLine(options, state, {
             extra: {
-              color: d.style?.color
+              color: d.style?.color || '#ffffff'
             },
             index: i + 1,
-            data: state.mainData.history.map((h, index) => ([h[0], d.data[index]]))
+            data: state.mainData.history.map((h, index) => [h[0], d.data[index]])
           })
-        }else if(d.draw === 'DRAWTEXT'){
-          const data: [string, number, string] = ['', 0, '']
-        
-
+        } else if (d.draw === 'DRAWTEXT') {
           if (Object.keys(d.data).length > 0) {
-            const x = +Object.keys(d.data)[0] as number
-            data[0] = state.mainData.history[x][0] as string
-            data[1] = 98.09 as number
-            data[2] = d.data[x][1] as string
-          }
+            const data = state.mainData.history.map((h, index) => {
+              const data: [string, number, string, boolean] = [h[0], 0, '', false]
+              if (d.data[index]) {
+                data[1] = d.data[index][0]
+                data[2] = d.data[index][1]
+                data[3] = true
+              }
 
-          
-          drawerText(options, state, {
-            index: i + 1,
-            data:  data
-          })
+              return data
+            })
+    
+            drawerText(options, state, {
+              index: i + 1,
+              data: data
+            })
+          }
+        } else if(d.draw === 'STICKLINE') {
+          if (Object.keys(d.data).length > 0) {
+            const data = state.mainData.history.map((h, index) => {
+              const data: [string, number, number, number, number, boolean] = [h[0], 0, 0, 0, 0, false]
+              if (d.data[index]) {
+                data[1] = d.data[index][0]
+                data[2] = d.data[index][1]
+                data[3] = d.data[index][2]
+                data[4] = d.data[index][3]
+                data[5] = true
+              }
+
+              return data
+            })
+    
+            drawerRect(options, state, {
+              index: i + 1,
+              data: data,
+              extra: {
+                color: d.style?.color
+              }
+            })
+          }
         }
       }
     }
@@ -475,12 +504,11 @@ const renderSecondaryAxis = (options: ECOption, state: KChartState['state'][0], 
     })
 }
 
-
 /**
  * 配置缩放
  */
 export const renderZoom = (options: ECOption, zoom: [number, number]) => {
-  if(Array.isArray(options.dataZoom)){
+  if (Array.isArray(options.dataZoom)) {
     for (const z of options.dataZoom) {
       z.start = zoom[0]
       z.end = zoom[1]

@@ -81,20 +81,20 @@ export type ECOption = echarts.ComposeOption<
 /**
  * 注册一个文字组件
  */
-const textShape = echarts.graphic.extendShape({
-  shape: {
-    x: 0,
-    y: 0,
-    text: ''
-  },
-  buildPath: (ctx: CanvasRenderingContext2D, shape) => {
-    console.log(ctx)
-    ctx.textBaseline = 'bottom'
-    ctx.font = '12px Arial'
-    ctx.fillText(shape.text, shape.x, shape.y)
-  }
-})
+// const textShape = echarts.graphic.extendShape({
+//   shape: {
+//     x: 0,
+//     y: 0,
+//     text: ''
+//   },
+//   buildPath: (ctx: CanvasRenderingContext2D, shape) => {
+//     ctx._ctx.textBaseline = 'bottom'
+//     ctx._ctx.font = '12px Arial'
+//     ctx._ctx.fillStyle = 'red'
+//     ctx._ctx.fillText(shape.text, shape.x, shape.y)
+//   }
+// })
 
-echarts.graphic.registerShape('jknText', textShape)
+// echarts.graphic.registerShape('jknText', textShape)
 
 export default echarts

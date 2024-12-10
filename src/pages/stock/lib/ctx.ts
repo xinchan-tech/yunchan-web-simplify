@@ -49,7 +49,7 @@ type MainChartState = {
   /**
    * chart实例
    */
-  getChart?: () => echarts.ECharts
+  getChart: () => echarts.ECharts | undefined
 
 }
 
@@ -81,6 +81,7 @@ export const createDefaultChartState = (): MainChartState => ({
   type: 'k-line',
   timeIndex: StockChartInterval.DAY,
   system: 'pro',
+  getChart: () => undefined,
   /**
    * 9: 底部信号
    * 10: 买卖点位

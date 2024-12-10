@@ -1284,7 +1284,7 @@ type GetStockIndicatorDataParams = {
 type GetStockIndicatorDataResult = {
   result: {
     name: string
-    data: any[]
+    data: any[] | any
     draw?: string
     style?: {
       color: string

@@ -3,10 +3,10 @@ import { useKChartContext, useSymbolQuery } from "../lib"
 import dayjs from "dayjs"
 import { useTime } from "@/store"
 import { useQuery } from "@tanstack/react-query"
-import { getStockChart, getStockIndicatorData, StockChartInterval, StockRawRecord } from "@/api"
-import { useMount, useUnmount, useUpdateEffect } from "ahooks"
+import { getStockChart, getStockIndicatorData, StockChartInterval, type StockRawRecord } from "@/api"
+import { useMount, useUpdateEffect } from "ahooks"
 import { useChart } from "@/hooks"
-import { options, renderChart, renderSecondary, renderZoom } from "../lib/render"
+import { renderChart, renderSecondary, renderZoom } from "../lib/render"
 import { SecondaryIndicator } from "./secondary-indicator"
 import { nanoid } from "nanoid"
 import { renderUtils } from "../lib/utils"
@@ -91,7 +91,6 @@ export const MainChart = (props: MainChartProps) => {
 
     setTimeout(() => {
       renderSecondary(_options, state)
-      console.log(_options)
       chart.current?.setOption(_options)
 
       setSecondaryIndicatorsCount(state.secondaryIndicators.length)
@@ -120,9 +119,7 @@ export const MainChart = (props: MainChartProps) => {
   return (
     <div className="w-full h-full relative">
       <div className="w-full h-full" ref={dom}>
-
       </div>
-
       {
         Array.from(new Array(secondaryIndicatorsCount).fill(() => nanoid())).map((item, index) => (
           <div key={item + index.toString()}
