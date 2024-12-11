@@ -3,6 +3,7 @@ import type { CustomSeriesOption, LineSeriesOption } from 'echarts/charts'
 import type { KChartState } from './ctx'
 import echarts from '@/utils/echarts'
 import { renderUtils } from './utils'
+import { colorUtil } from "@/utils/style"
 
 type DrawerFuncOptions<T = any> = {
   /**
@@ -45,18 +46,16 @@ export const drawerLine: DrawerFunc<[string, number][]> = (options, _, { index, 
  * 文本
  * 值类型为 [x, y, text]
  */
-export const drawerText: DrawerFunc<[string, number, string, boolean][]> = (options, _, { index, data, extra }) => {
+export const drawerText: DrawerFunc<[string, number, string][]> = (options, _, { index, data, extra }) => {
   const line: CustomSeriesOption = {
     xAxisIndex: index,
     yAxisIndex: index,
     type: 'custom',
     renderItem: (_, api) => {
-      if (!api.value(3)) return null
       const x = api.value(0)
       const y = api.value(1) as number
       const text = api.value(2) as string
       const point = api.coord([x, y])
- 
 
       return {
         type: 'text',
@@ -84,7 +83,7 @@ export const drawerText: DrawerFunc<[string, number, string, boolean][]> = (opti
  * 值类型为 [x, bottom, top, width, empty, render]
  * @example ['2030-01-01', 0, 111380, 0.8, 0]
  */
-export const drawerRect: DrawerFunc<[string, number, number, number, number, boolean][]> = (
+export const drawerRect: DrawerFunc<[string, number, number, number, number][]> = (
   options,
   _,
   { index, data, extra }
@@ -98,21 +97,15 @@ export const drawerRect: DrawerFunc<[string, number, number, number, number, boo
     },
     type: 'custom',
     renderItem: (_, api) => {
-      if (!api.value(5)) return null
       const x = api.value(0) as number
       const y1 = api.value(1) as number
       const y2 = api.value(2) as number
-      const top = Math.max(y1, y2)
       const bottom = Math.min(y1, y2)
-      const yValue = bottom - top
+      const yValue = Math.abs(y1 - y2)
       const start = api.coord([x, bottom])
-      const width = (api.value(3) as number) * 10
+      const width = (api.value(3) as number) * ((api.size!(20) as any)[0] as number)
       const size = api.size!([x, yValue]) as number[]
       const empty = api.value(4) as number
- 
-      // const start = api.coord([x, api.value(2)])
-
-      // const size = api.size!([x - width / 2, start[1]]) as number[]
 
       return {
         type: 'rect',
@@ -123,9 +116,10 @@ export const drawerRect: DrawerFunc<[string, number, number, number, number, boo
           height: -size[1]
         },
         z: 10,
+        emphasisDisabled: true,
         style: {
-          fill: empty === 0 ? extra?.color ?? '#00943c' : 'transparent',
-          stroke: empty !== 0 ? extra?.color ?? '#00943c' : 'transparent',
+          fill: empty === 0 ? (extra?.color ?? '#00943c') : 'transparent',
+          stroke: empty !== 0 ? (extra?.color ?? '#00943c') : 'transparent',
           lineWidth: 1
         }
       }
@@ -134,6 +128,78 @@ export const drawerRect: DrawerFunc<[string, number, number, number, number, boo
   }
 
   Array.isArray(options.series) && options.series.push(line)
+
+  return options
+}
+
+type GradientData = {
+  x: string
+  y: number
+}
+
+/**
+ * 填充渐变
+ */
+export const drawerGradient: DrawerFunc<[string, GradientData[], string[]][]> = (options, _, { index, data }) => {
+  const right = Number.parseFloat(renderUtils.getGridIndex(options, index)?.right?.toString() ?? '60')
+
+  const points: CustomSeriesOption[] = data
+    .filter(item => !!item[0])
+    .map(item => ({
+      yAxisIndex: index,
+      xAxisIndex: index,
+      type: 'custom',
+      encode: {
+        x: [0],
+        y: [1]
+      },
+      renderItem: (params, api) => {
+        if (params.context.rendered) return
+        const rightMax = api.getWidth() - right
+        params.context.rendered = true
+
+        const colors = (item[2] as unknown as string[]).map(colorUtil.hexToRGBA)
+        const c = ['transparent', 'transparent']
+        colors.forEach((color, index) => {
+          if (color) {
+            c[index] = `rgba(${color.r}, ${color.g}, ${color.b}, ${color.a})`
+          }
+        })
+      
+        const _points: number[][] = []
+
+        item[1].forEach(p => {
+          const po = api.coord([p.x, p.y])
+
+          if (po[0] > rightMax) {
+            po[0] = rightMax
+          }
+          _points.push(po)
+        })
+
+        return {
+          type: 'polygon',
+          shape: {
+            points: [..._points]
+          },
+          style: {
+            fill: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+              {
+                offset: 0,
+                color: c[0]
+              },
+              {
+                offset: 1,
+                color: c[1]
+              }
+            ])
+          }
+        }
+      },
+      data: item[1].map(p => [p.x, p.y])
+    }))
+
+  Array.isArray(options.series) && options.series.push(...points)
 
   return options
 }

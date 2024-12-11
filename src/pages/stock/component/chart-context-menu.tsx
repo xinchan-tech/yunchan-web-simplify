@@ -2,7 +2,6 @@ import { ContextMenu, ContextMenuTrigger, ContextMenuContent, ContextMenuItem, C
 import { cn } from "@/utils/style"
 import type { PropsWithChildren } from "react"
 import { useKChartContext } from "../lib"
-import { curry } from 'lodash-es'
 
 interface ChartContextMenuProps {
   index: number
@@ -22,6 +21,9 @@ export const ChartContextMenu = (props: PropsWithChildren<ChartContextMenuProps>
       }
 
       draft.state[props.index - 1].secondaryIndicators = newIndicators
+
+      // 清除附图数据，避免渲染出错
+      draft.state[props.index - 1].secondaryIndicatorsData = draft.state[props.index - 1].secondaryIndicatorsData.slice(0, count)
       if (props.index === 1) {
         draft.secondaryIndicators = newIndicators
       }

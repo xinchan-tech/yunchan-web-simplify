@@ -10,7 +10,7 @@ import Decimal from 'decimal.js'
 import { isTimeIndexChart, type KChartState } from './ctx'
 import { cloneDeep } from 'lodash-es'
 import type { CandlestickSeriesOption, LineSeriesOption } from 'echarts/charts'
-import { drawerLine, drawerRect, drawerText } from './drawer'
+import { drawerGradient, drawerLine, drawerRect, drawerText } from './drawer'
 
 const MAIN_CHART_NAME = 'kChart'
 
@@ -378,7 +378,12 @@ export const renderMarkLine: ChartRender = (options, _, data) => {
   }
 }
 
+/**
+ * 渲染副图
+ * TODO: 合并绘制
+ */
 export const renderSecondary: ChartRender = (options, state) => {
+  
   for (let i = 0; i < state.secondaryIndicatorsData.length; i++) {
     if (state.secondaryIndicatorsData[i] !== null) {
       for (let j = 0; j < state.secondaryIndicatorsData[i]!.length; j++) {
@@ -387,7 +392,6 @@ export const renderSecondary: ChartRender = (options, state) => {
           continue
         }
         if (!d.draw) {
-          
           drawerLine(options, state, {
             extra: {
               color: d.style?.color || '#ffffff'
@@ -397,16 +401,7 @@ export const renderSecondary: ChartRender = (options, state) => {
           })
         } else if (d.draw === 'DRAWTEXT') {
           if (Object.keys(d.data).length > 0) {
-            const data = state.mainData.history.map((h, index) => {
-              const data: [string, number, string, boolean] = [h[0], 0, '', false]
-              if (d.data[index]) {
-                data[1] = d.data[index][0]
-                data[2] = d.data[index][1]
-                data[3] = true
-              }
-
-              return data
-            })
+            const data : [string, number, string][] = Object.keys(d.data).map((key) => [state.mainData.history[+key][0], ...d.data[key]]) as any[]
     
             drawerText(options, state, {
               index: i + 1,
@@ -414,28 +409,36 @@ export const renderSecondary: ChartRender = (options, state) => {
             })
           }
         } else if(d.draw === 'STICKLINE') {
-          if (Object.keys(d.data).length > 0) {
-            const data = state.mainData.history.map((h, index) => {
-              const data: [string, number, number, number, number, boolean] = [h[0], 0, 0, 0, 0, false]
-              if (d.data[index]) {
-                data[1] = d.data[index][0]
-                data[2] = d.data[index][1]
-                data[3] = d.data[index][2]
-                data[4] = d.data[index][3]
-                data[5] = true
-              }
+          const data: [string, number, number, number, number][] = Object.keys(d.data).map((key) => [state.mainData.history[+key][0], ...d.data[key]]) as any[]
+          drawerRect(options, state, {
+            index: i + 1,
+            data: data,
+            extra: {
+              color: d.style?.color
+            }
+          })
+        } else if (d.draw === 'DRAWGRADIENT'){
+          const data = Object.keys(d.data).map((key) => {
+            const points: {x: string, y: number}[] = []
+            const p2: {x: string, y: number}[] = []
+            d.data[key][0].forEach((item: number, i: number) => {
+              points.push({x: state.mainData.history[+key + i][0], y: item})
+            })
+            d.data[key][1].forEach((item: number, i: number) => {
+              p2.unshift({x: state.mainData.history[+key + i][0], y: item})
+            })
 
-              return data
-            })
-    
-            drawerRect(options, state, {
-              index: i + 1,
-              data: data,
-              extra: {
-                color: d.style?.color
-              }
-            })
-          }
+            return [
+              points[0].x,
+              [...points, ...p2],
+              [d.data[key][2], d.data[key][3]]
+            ]
+          })
+          drawerGradient(options, state, {
+            index: i + 1,
+            data: data as any
+          })
+
         }
       }
     }

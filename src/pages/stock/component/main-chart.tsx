@@ -2,7 +2,7 @@ import { useEffect, useState } from "react"
 import { useKChartContext, useSymbolQuery } from "../lib"
 import dayjs from "dayjs"
 import { useTime } from "@/store"
-import { useQuery } from "@tanstack/react-query"
+import { useQueries, useQuery } from "@tanstack/react-query"
 import { getStockChart, getStockIndicatorData, StockChartInterval, type StockRawRecord } from "@/api"
 import { useMount, useUpdateEffect } from "ahooks"
 import { useChart } from "@/hooks"
@@ -47,6 +47,26 @@ export const MainChart = (props: MainChartProps) => {
     queryFn: () => getStockChart(params)
   })
 
+  const secondaryIndicators = useQueries({
+    queries: state.secondaryIndicators.map((item, index) => ({
+      queryKey: [getStockIndicatorData.cacheKey, { symbol: symbol, cycle: state.timeIndex, id: item, db_type: 'system', index: index }],
+      queryFn: () => getStockIndicatorData({ symbol: symbol, cycle: state.timeIndex, id: item, db_type: 'system' }),
+      placeholderData: { result: [] }
+    }))
+  })
+
+  useEffect(() => {
+    setState(prev => {
+      secondaryIndicators.forEach((item, index) => {
+        if(item.data){
+          prev.state[props.index - 1].secondaryIndicatorsData[index] = item.data?.result
+        }
+      })
+    })
+  }, [secondaryIndicators, props.index, setState])
+
+
+
   useMount(() => {
     if (chart.current) {
       setState(prev => {
@@ -66,7 +86,7 @@ export const MainChart = (props: MainChartProps) => {
         }
       })
     } else {
-  
+
       setState(prev => {
         prev.state[props.index - 1].mainData = {
           history: query.data.history.map(h => [dayjs(h[0]).valueOf().toString(), ...h.slice(1)]) as unknown as StockRawRecord[],
@@ -86,15 +106,13 @@ export const MainChart = (props: MainChartProps) => {
 
     const _options = renderChart(state, query.data)
     renderZoom(_options, [start, end])
-
+    renderSecondary(_options, state)
     chart.current.setOption(_options)
 
-    setTimeout(() => {
-      renderSecondary(_options, state)
-      chart.current?.setOption(_options)
+    // chart.current?.setOption(_options)
 
-      setSecondaryIndicatorsCount(state.secondaryIndicators.length)
-    }, 0)
+    setSecondaryIndicatorsCount(state.secondaryIndicators.length)
+
 
   }, [state])
 
@@ -102,17 +120,17 @@ export const MainChart = (props: MainChartProps) => {
   const [secondaryIndicatorsCount, setSecondaryIndicatorsCount] = useState(state.secondaryIndicators.length)
 
 
-  const onChangeSecondaryIndicators = async (params: { value: string, index: number }) => {
+  const onChangeSecondaryIndicators = async (params: { value: string, index: number, type: string }) => {
     setState(prev => {
       renderUtils.cleanSecondaryIndicators(prev, props.index, params.index)
     })
-    const r = await getStockIndicatorData({ symbol: symbol, cycle: state.timeIndex, id: params.value, db_type: 'system' })
 
-    if (!r) return
 
-    setState(prev => {
-      prev.state[props.index - 1].secondaryIndicatorsData[params.index - 1] = r.result
-    })
+    // if (!r) return
+
+    // setState(prev => {
+    //   prev.state[props.index - 1].secondaryIndicatorsData[params.index - 1] = r.result
+    // })
   }
 
 

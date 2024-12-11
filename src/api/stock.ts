@@ -1300,3 +1300,4 @@ type GetStockIndicatorDataResult = {
 export const getStockIndicatorData = (params: GetStockIndicatorDataParams) => {
   return request.get<GetStockIndicatorDataResult>('/stock/indicator/data', { params }).then(r => r.data)
 }
+getStockIndicatorData.cacheKey = 'stock:indicator:data'

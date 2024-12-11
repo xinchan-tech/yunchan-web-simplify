@@ -18,7 +18,7 @@ interface SecondaryIndicatorProps {
   /**
    * 附图的指标
    */
-  onIndicatorChange: (params: { value: string, index: number }) => void
+  onIndicatorChange: (params: { value: string, index: number, type: string }) => void
 }
 
 export const SecondaryIndicator = (props: SecondaryIndicatorProps) => {
@@ -34,7 +34,19 @@ export const SecondaryIndicator = (props: SecondaryIndicatorProps) => {
 
   const _onChange = (v: string) => {
     setState(d => { d.state[props.mainIndex - 1].secondaryIndicators[props.index - 1] = v })
-    props.onIndicatorChange({ value: v, index: props.index })
+    const indicator = findIndicator(v)
+    
+    props.onIndicatorChange({ value: v, index: props.index , type: (indicator as any)?.db_type})
+  }
+
+  const findIndicator = (id: string) => {
+    for (const item of indicators.data ?? []) {
+      for (const ele of item.indicators) {
+        if (ele.id === id) {
+          return ele
+        }
+      }
+    }
   }
 
   const list = (() => {
