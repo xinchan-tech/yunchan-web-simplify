@@ -1,4 +1,3 @@
-// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 declare type AnyRecord = Record<string, any>
 
 declare type PageResult<T> = {
@@ -14,3 +13,7 @@ declare type PageResult<T> = {
   total_nums: number
   total_pages: number
 }
+
+declare type NormalizedRecord<T = any> = Record<string, T>
+
+declare type ArrayItem<T> = T extends Array<infer U> ? U : never

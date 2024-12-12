@@ -7,12 +7,12 @@ import { useKChartContext } from "../lib"
 interface SecondaryIndicatorProps {
   /**
    * 附图的序号
-   * 从1开始
+   * 从0开始
    */
   index: number
   /**
    * 主图的序号
-   * 从1开始
+   * 从0开始
    */
   mainIndex: number
   /**
@@ -30,10 +30,10 @@ export const SecondaryIndicator = (props: SecondaryIndicatorProps) => {
   const [searchKey, setSearchKey] = useState('')
   const { state, setState } = useKChartContext()
 
-  const currentSecondaryIndicator = state[props.mainIndex - 1].secondaryIndicators[props.index - 1]
+  const currentSecondaryIndicator = state[props.mainIndex ].secondaryIndicators[props.index ]
 
   const _onChange = (v: string) => {
-    setState(d => { d.state[props.mainIndex - 1].secondaryIndicators[props.index - 1] = v })
+    setState(d => { d.state[props.mainIndex].secondaryIndicators[props.index] = v })
     const indicator = findIndicator(v)
     
     props.onIndicatorChange({ value: v, index: props.index , type: (indicator as any)?.db_type})

@@ -18,7 +18,7 @@
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-
+    "checkJs": true,
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"]

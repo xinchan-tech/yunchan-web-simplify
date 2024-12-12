@@ -7,7 +7,7 @@ import { StockRecord } from '@/utils/stock'
 import { colorUtil } from '@/utils/style'
 import dayjs from 'dayjs'
 import Decimal from 'decimal.js'
-import { isTimeIndexChart, type KChartState } from './ctx'
+import { Indicator, IndicatorData, isTimeIndexChart, type KChartState } from './ctx'
 import { cloneDeep } from 'lodash-es'
 import type { CandlestickSeriesOption, LineSeriesOption } from 'echarts/charts'
 import { drawerGradient, drawerLine, drawerRect, drawerText } from './drawer'
@@ -376,6 +376,51 @@ export const renderMarkLine: ChartRender = (options, _, data) => {
       ]
     ]
   }
+}
+
+/**
+ * 渲染主图指标
+ */
+export const renderMainIndicators = (options: ECOption, indicators: Indicator[], data: IndicatorData[]) => {
+  console.log("🚀 ~ file: render.ts ~ line 318 ~ renderMainIndicators ~ indicators", indicators, data)
+  indicators.forEach((indicator, index) => {
+    if(!data[index]){
+      return
+    }
+
+    const indicatorData = data[index]
+    console.log(indicatorData)
+    indicatorData.forEach((d) => {
+      if(typeof d === 'string'){
+        return
+      }
+
+      if(d.style?.style_type === 'NODRAW'){
+        return
+      }
+
+      if(!d.draw){
+        drawerLine(options, {} as any, {
+          extra: {
+            color: d.style?.color || '#ffffff'
+          },
+          index: 0,
+          data: (d.data as number[]).map((s, i) => [i.toString(), s])
+        })
+      } else if(d.draw === 'STICKLINE') {
+        const data: [string, number, number, number, number][] = Object.keys(d.data).map((key) => [+key, ...(d.data as NormalizedRecord<number[]>)[key]]) as any[]
+        drawerRect(options, {} as any, {
+          index: 0,
+          data: data,
+          extra: {
+            color: d.style?.color
+          }
+        })
+      }
+
+    })
+  
+  })
 }
 
 /**
