@@ -1,4 +1,4 @@
-import { ContextMenu, ContextMenuTrigger, ContextMenuContent, ContextMenuItem, ContextMenuSub, ContextMenuSubTrigger, ContextMenuSubContent, ContextMenuSeparator, ContextMenuCheckboxItem, ContextMenuRadioGroup, ContextMenuLabel, ContextMenuRadioItem } from "@/components"
+import { ContextMenu, ContextMenuTrigger, ContextMenuContent, ContextMenuItem, ContextMenuSub, ContextMenuSubTrigger, ContextMenuSubContent, ContextMenuSeparator } from "@/components"
 import { cn } from "@/utils/style"
 import type { PropsWithChildren } from "react"
 import { useKChartContext } from "../lib"
@@ -8,26 +8,10 @@ interface ChartContextMenuProps {
 }
 
 export const ChartContextMenu = (props: PropsWithChildren<ChartContextMenuProps>) => {
-  const { setState } = useKChartContext()
-
+  const { activeChart, setSecondaryIndicatorsCount } = useKChartContext()
+  const chart = activeChart(props.index)
   const onChangeSecondaryIndicators = (count: number) => () => {
-    setState(draft => {
-      const current = draft.state[props.index - 1].secondaryIndicators
-      let newIndicators = []
-      if (current.length > count) {
-        newIndicators = current.slice(0, count)
-      } else {
-        newIndicators = current.concat(Array(count - current.length).fill('9'))
-      }
-
-      draft.state[props.index - 1].secondaryIndicators = newIndicators
-
-      // 清除附图数据，避免渲染出错
-      draft.state[props.index - 1].secondaryIndicatorsData = draft.state[props.index - 1].secondaryIndicatorsData.slice(0, count)
-      if (props.index === 1) {
-        draft.secondaryIndicators = newIndicators
-      }
-    })
+    setSecondaryIndicatorsCount({ count, index: props.index, indicator: { id: '9', type: 'system', timeIndex: chart.timeIndex, symbol: chart.symbol } })
   }
 
 

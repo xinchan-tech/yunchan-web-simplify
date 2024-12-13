@@ -7,10 +7,17 @@ import { StockRecord } from '@/utils/stock'
 import { colorUtil } from '@/utils/style'
 import dayjs from 'dayjs'
 import Decimal from 'decimal.js'
-import { Indicator, IndicatorData, isTimeIndexChart, type KChartState } from './ctx'
+import { type Indicator, type IndicatorData, isTimeIndexChart, type KChartState } from './ctx'
 import { cloneDeep } from 'lodash-es'
 import type { CandlestickSeriesOption, LineSeriesOption } from 'echarts/charts'
-import { drawerGradient, drawerLine, drawerRect, drawerText } from './drawer'
+import {
+  drawerGradient,
+  drawerLine,
+  drawerRect,
+  type DrawerRectShape,
+  drawerText,
+  type DrawerTextShape
+} from './drawer'
 
 const MAIN_CHART_NAME = 'kChart'
 
@@ -154,35 +161,33 @@ export const renderChart = (
   const chain: ChartRender[] = [renderGrid, renderMainChart, renderMarkLine]
   const _options = cloneDeep(options)
 
-  if (init) {
-    options.dataZoom = [
-      {
-        minSpan: 2,
-        type: 'inside',
-        xAxisIndex: [0, 1, 2, 3, 4, 5],
-        start: 90,
-        end: 100,
-        filterMode: 'weakFilter'
+  options.dataZoom = [
+    {
+      minSpan: 2,
+      type: 'inside',
+      xAxisIndex: [0, 1, 2, 3, 4, 5],
+      start: 90,
+      end: 100,
+      filterMode: 'weakFilter'
+    },
+    {
+      fillerColor: 'weakFilter',
+      minSpan: 2,
+      show: true,
+      xAxisIndex: [0, 1, 2, 3, 4, 5],
+      type: 'slider',
+      bottom: 0,
+      start: 90,
+      end: 100,
+      backgroundColor: 'transparent',
+      dataBackground: {
+        lineStyle: {
+          color: 'rgb(31, 32, 33)'
+        }
       },
-      {
-        fillerColor: 'weakFilter',
-        minSpan: 2,
-        show: true,
-        xAxisIndex: [0, 1, 2, 3, 4, 5],
-        type: 'slider',
-        bottom: 0,
-        start: 90,
-        end: 100,
-        backgroundColor: 'transparent',
-        dataBackground: {
-          lineStyle: {
-            color: 'rgb(31, 32, 33)'
-          }
-        },
-        borderColor: 'rgb(31, 32, 33)'
-      }
-    ]
-  }
+      borderColor: 'rgb(31, 32, 33)'
+    }
+  ]
 
   for (const fn of chain) {
     fn(_options, state, data)
@@ -382,112 +387,150 @@ export const renderMarkLine: ChartRender = (options, _, data) => {
  * 渲染主图指标
  */
 export const renderMainIndicators = (options: ECOption, indicators: Indicator[], data: IndicatorData[]) => {
-  console.log("🚀 ~ file: render.ts ~ line 318 ~ renderMainIndicators ~ indicators", indicators, data)
-  indicators.forEach((indicator, index) => {
-    if(!data[index]){
+  /** 合并绘制 */
+  const stickLineData: DrawerRectShape[] = []
+  const textData: DrawerTextShape[] = []
+
+  indicators.forEach((_, index) => {
+    if (!data[index]) {
       return
     }
 
     const indicatorData = data[index]
-    console.log(indicatorData)
-    indicatorData.forEach((d) => {
-      if(typeof d === 'string'){
+
+    indicatorData.forEach(d => {
+      if (typeof d === 'string') {
         return
       }
 
-      if(d.style?.style_type === 'NODRAW'){
+      if (d.style?.style_type === 'NODRAW') {
         return
       }
 
-      if(!d.draw){
+      if (!d.draw) {
         drawerLine(options, {} as any, {
           extra: {
             color: d.style?.color || '#ffffff'
           },
           index: 0,
-          data: (d.data as number[]).map((s, i) => [i.toString(), s])
+          data: (d.data as number[]).map((s, i) => [i, s])
         })
-      } else if(d.draw === 'STICKLINE') {
-        const data: [string, number, number, number, number][] = Object.keys(d.data).map((key) => [+key, ...(d.data as NormalizedRecord<number[]>)[key]]) as any[]
-        drawerRect(options, {} as any, {
-          index: 0,
-          data: data,
-          extra: {
-            color: d.style?.color
-          }
-        })
+      } else if (d.draw === 'STICKLINE') {
+        const data: DrawerRectShape[] = Object.keys(d.data).map(key => [
+          +key,
+          ...(d.data as NormalizedRecord<number[]>)[key],
+          d.style.color
+        ]) as any[]
+        stickLineData.push(...data)
+      } else if (d.draw === 'DRAWTEXT') {
+        const data: DrawerTextShape[] = Object.keys(d.data).map(key => [
+          +key,
+          ...(d.data as NormalizedRecord<number[]>)[key],
+          d.style.color
+        ]) as any[]
+        textData.push(...data)
       }
-
     })
-  
   })
+
+  if (stickLineData.length > 0) {
+    drawerRect(options, {} as any, {
+      index: 0,
+      data: stickLineData
+    })
+  }
+
+  if (textData.length > 0) {
+    drawerText(options, {} as any, {
+      index: 0,
+      data: textData
+    })
+  }
 }
 
 /**
  * 渲染副图
- * TODO: 合并绘制
  */
-export const renderSecondary: ChartRender = (options, state) => {
-  
-  for (let i = 0; i < state.secondaryIndicatorsData.length; i++) {
-    if (state.secondaryIndicatorsData[i] !== null) {
-      for (let j = 0; j < state.secondaryIndicatorsData[i]!.length; j++) {
-        const d = state.secondaryIndicatorsData[i]![j]
-        if(d.style?.style_type === 'NODRAW'){
-          continue
-        }
-        if (!d.draw) {
-          drawerLine(options, state, {
-            extra: {
-              color: d.style?.color || '#ffffff'
-            },
-            index: i + 1,
-            data: state.mainData.history.map((h, index) => [h[0], d.data[index]])
-          })
-        } else if (d.draw === 'DRAWTEXT') {
-          if (Object.keys(d.data).length > 0) {
-            const data : [string, number, string][] = Object.keys(d.data).map((key) => [state.mainData.history[+key][0], ...d.data[key]]) as any[]
-    
-            drawerText(options, state, {
-              index: i + 1,
-              data: data
-            })
-          }
-        } else if(d.draw === 'STICKLINE') {
-          const data: [string, number, number, number, number][] = Object.keys(d.data).map((key) => [state.mainData.history[+key][0], ...d.data[key]]) as any[]
-          drawerRect(options, state, {
-            index: i + 1,
-            data: data,
-            extra: {
-              color: d.style?.color
-            }
-          })
-        } else if (d.draw === 'DRAWGRADIENT'){
-          const data = Object.keys(d.data).map((key) => {
-            const points: {x: string, y: number}[] = []
-            const p2: {x: string, y: number}[] = []
-            d.data[key][0].forEach((item: number, i: number) => {
-              points.push({x: state.mainData.history[+key + i][0], y: item})
-            })
-            d.data[key][1].forEach((item: number, i: number) => {
-              p2.unshift({x: state.mainData.history[+key + i][0], y: item})
-            })
+export const renderSecondary = (options: ECOption, indicators: Indicator[], data: IndicatorData[]) => {
+  /** 合并绘制 */
+  const stickLineData: DrawerRectShape[] = []
+  const textData: DrawerTextShape[] = []
 
-            return [
-              points[0].x,
-              [...points, ...p2],
-              [d.data[key][2], d.data[key][3]]
-            ]
-          })
-          drawerGradient(options, state, {
-            index: i + 1,
-            data: data as any
-          })
-
-        }
-      }
+  indicators.forEach((_, index) => {
+    if (!data[index]) {
+      return
     }
-  }
+
+    const indicatorData = data[index]
+
+    indicatorData.forEach(d => {
+      if (typeof d === 'string') {
+        return
+      }
+
+      if (d.style?.style_type === 'NODRAW') {
+        return
+      }
+
+      if (!d.draw) {
+        drawerLine(options, {} as any, {
+          extra: {
+            color: d.style?.color || '#ffffff'
+          },
+          index: index + 1,
+          data: (d.data as number[]).map((s, i) => [i, s])
+        })
+      } else if (d.draw === 'STICKLINE') {
+        const data: DrawerRectShape[] = Object.keys(d.data).map(key => [
+          +key,
+          ...(d.data as NormalizedRecord<number[]>)[key],
+          d.style.color
+        ]) as any[]
+        stickLineData.push(...data)
+      } else if (d.draw === 'DRAWTEXT') {
+        const data: DrawerTextShape[] = Object.keys(d.data).map(key => [
+          +key,
+          ...(d.data as NormalizedRecord<number[]>)[key],
+          d.style.color
+        ]) as any[]
+        textData.push(...data)
+      } else if (d.draw === 'DRAWGRADIENT') {
+        const _data = d.data as NormalizedRecord<number[][]>
+        const data = Object.keys(d.data).map(key => {
+          const start = Number.parseInt(key)
+          const points: { x: number; y: number }[] = []
+          const p2: { x: number; y: number }[] = []
+          _data[key][0].forEach((item: number, i: number) => {
+            points.push({ x: i + start, y: item })
+          })
+          _data[key][1].forEach((item: number, i: number) => {
+            p2.unshift({ x: i + start, y: item })
+          })
+
+          return [points[0].x, [...points, ...p2], [_data[key][2], _data[key][3]]]
+        })
+    
+        drawerGradient(options, {} as any, {
+          index: index + 1,
+          data: data as any
+        })
+      }
+    })
+
+    if (stickLineData.length > 0) {
+      drawerRect(options, {} as any, {
+        index: index + 1,
+        data: stickLineData
+      })
+    }
+
+    if (textData.length > 0) {
+      drawerText(options, {} as any, {
+        index: index + 1,
+        data: textData
+      })
+    }
+  })
 
   return options
 }

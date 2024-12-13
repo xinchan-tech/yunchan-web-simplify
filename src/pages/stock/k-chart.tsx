@@ -1,25 +1,33 @@
 import { cn } from "@/utils/style"
-import { useMemo, useRef } from "react"
+import { useCallback, useMemo, useRef } from "react"
 import { useImmer } from "use-immer"
 import { ChartContextMenu } from "./component/chart-context-menu"
 import { ChartToolSelect } from "./component/chart-tool"
 import { MainChart } from "./component/main-chart"
 import { TimeIndexSelect } from "./component/time-index"
-import { type IndicatorCache,  KChartContext, type KChartState, createDefaultChartState, isTimeIndexChart } from "./lib"
+import { type Indicator, type IndicatorCache, KChartContext, type KChartState, createDefaultChartState, isTimeIndexChart } from "./lib"
+import { StockChartInterval } from "@/api"
 
 
 
 export const KChart = () => {
   const [context, setContext] = useImmer<KChartState>({
     viewMode: 'single',
-    secondaryIndicators: ['9', '10'],
+    secondaryIndicators: [
+      { id: '9', type: 'system', timeIndex: StockChartInterval.DAY, symbol: 'QQQ' },
+      { id: '10', type: 'system', timeIndex: StockChartInterval.DAY, symbol: 'QQQ' }
+    ],
     state:
       [
-        createDefaultChartState()
+        createDefaultChartState({
+          index: 0,
+          symbol: 'QQQ'
+        })
       ],
     activeChartIndex: 0
   })
   const indicatorCache = useRef<IndicatorCache>(new WeakMap())
+  const indicatorMap = useRef(new Map())
 
   const setMainSystem: KChartContext['setMainSystem'] = ({ index, system }) => {
     setContext(d => {
@@ -35,7 +43,16 @@ export const KChart = () => {
 
       _indicators.forEach(({ id, type, timeIndex, symbol }) => {
         if (!chart.mainIndicators[id]) {
-          const idt = { id: id, type, timeIndex, symbol }
+          const cacheKey = `${symbol}-${timeIndex}-${id}-${type}`
+
+          let idt = { id: id, type, timeIndex, symbol }
+
+          if (indicatorMap.current.has(cacheKey)) {
+            idt = indicatorMap.current.get(cacheKey)
+          } else {
+            indicatorMap.current.set(cacheKey, idt)
+          }
+
           chart.mainIndicators[id] = idt
         }
       })
@@ -83,20 +100,95 @@ export const KChart = () => {
     return context.state[index]
   }
 
-  const setMainIndicatorData: KChartContext['setMainIndicatorData'] = ({ index, id, data }) => {
-    const chart = context.state[index ?? context.activeChartIndex]
-    const indicator = chart.mainIndicators[id]
-    if (!indicator) return
+  // const setMainIndicatorData: KChartContext['setMainIndicatorData'] = ({ index, id, data }) => {
+  //   const chart = context.state[index ?? context.activeChartIndex]
+  //   const indicator = chart.mainIndicators[id]
+  //   if (!indicator) return
 
-    indicatorCache.current.set(indicator, data)
+  //   indicatorCache.current.set(indicator, data)
+  // }
+
+  // const getMainIndicatorData: KChartContext['getMainIndicatorData'] = ({ index, id }) => {
+  //   const chart = context.state[index ?? context.activeChartIndex]
+  //   const indicator = chart.mainIndicators[id]
+
+  //   return indicatorCache.current.get(indicator)
+  // }
+
+  const setSecondaryIndicatorsCount: KChartContext['setSecondaryIndicatorsCount'] = ({ index, count, indicator }) => {
+    setContext(d => {
+      const chart = d.state[index ?? context.activeChartIndex]
+      let newIndicators: Indicator[] = []
+
+      if (chart.secondaryIndicators.length > count) {
+        newIndicators = chart.secondaryIndicators.slice(0, count)
+      } else {
+        for (let i = 0; i < count - chart.secondaryIndicators.length; i++) {
+          newIndicators.push(indicator)
+        }
+      }
+
+      chart.secondaryIndicators = newIndicators
+
+      if (index === 1) {
+        d.secondaryIndicators = newIndicators
+      }
+    })
   }
 
-  const getMainIndicatorData: KChartContext['getMainIndicatorData'] = ({ index, id }) => {
-    const chart = context.state[index ?? context.activeChartIndex]
-    const indicator = chart.mainIndicators[id]
+  const setSecondaryIndicator: KChartContext['setSecondaryIndicator'] = ({ index, indicatorIndex, indicator }) => {
+    setContext(d => {
+      const chart = d.state[index ?? context.activeChartIndex]
+      const cacheKey = `${indicator.symbol}-${indicator.timeIndex}-${indicator.id}-${indicator.type}`
 
+      let idt = indicator
+      if (indicatorMap.current.has(cacheKey)) {
+        idt = indicatorMap.current.get(cacheKey)
+      }else{
+        indicatorMap.current.set(cacheKey, idt)
+      }
+
+      chart.secondaryIndicators[indicatorIndex] = idt
+
+      if (index === 1) {
+        d.secondaryIndicators = chart.secondaryIndicators
+      }
+    })
+  }
+
+  const setMainData: KChartContext['setMainData'] = useCallback(({ index, data }) => {
+    setContext(d => {
+      const chart = d.state[index ?? d.activeChartIndex]
+      chart.mainData = data ?? {
+        history: [],
+        coiling_data: [],
+        md5: ''
+      }
+    })
+  }, [setContext])
+
+  const setIndicatorData: KChartContext['setIndicatorData'] = useCallback(({ indicator, data }) => {
+    const cacheKey = `${indicator.symbol}-${indicator.timeIndex}-${indicator.id}-${indicator.type}`
+
+    let idt = indicator
+
+    if (indicatorMap.current.has(cacheKey)) {
+      idt = indicatorMap.current.get(cacheKey)
+    }
+
+    indicatorCache.current.set(idt, data)
+  }, [])
+
+  const getIndicatorData: KChartContext['getIndicatorData'] = useCallback(({ indicator }) => {
+    const cacheKey = `${indicator.symbol}-${indicator.timeIndex}-${indicator.id}-${indicator.type}`
+
+    if (indicatorMap.current.has(cacheKey)) {
+      return indicatorCache.current.get(indicatorMap.current.get(cacheKey))
+    }
     return indicatorCache.current.get(indicator)
-  }
+  }, [])
+
+
 
   const chartCount = useMemo(() => {
     switch (context.viewMode) {
@@ -130,7 +222,8 @@ export const KChart = () => {
       <KChartContext.Provider value={{
         ...context,
         setState: setContext, setMainIndicators, setMainSystem, toggleMainChartType, setMainCoiling, setTimeIndex, activeChart,
-        setMainIndicatorData, getMainIndicatorData
+        setSecondaryIndicatorsCount, setSecondaryIndicator, setMainData,
+        setIndicatorData, getIndicatorData
       }}>
         <div className="w-full flex-shrink-0">
           <div className="flex border border-solid border-border px-4">

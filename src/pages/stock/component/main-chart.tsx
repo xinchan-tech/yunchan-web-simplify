@@ -26,11 +26,11 @@ export const MainChart = (props: MainChartProps) => {
   const symbol = useSymbolQuery()
   const [symbolSelected, setSymbolSelected] = useState(symbol)
   const [chart, dom] = useChart()
-  const { state: ctxState, setState, setMainIndicatorData, getMainIndicatorData } = useKChartContext()
+  const { state: ctxState, setMainData, setIndicatorData, getIndicatorData, setSecondaryIndicator, activeChart } = useKChartContext()
   const { usTime } = useTime()
   const state = ctxState[props.index]
   const startTime = getStartTime(usTime, state.timeIndex)
-  const update = useUpdate()
+
 
   useEffect(() => {
     setSymbolSelected(symbol)
@@ -53,7 +53,7 @@ export const MainChart = (props: MainChartProps) => {
       {
         queryKey: [getStockIndicatorData.cacheKey, { symbol: symbol, cycle: state.timeIndex, id: item, db_type: state.mainIndicators[item].type }],
         queryFn: () => getStockIndicatorData({ symbol: symbol, cycle: state.timeIndex, id: item, db_type: state.mainIndicators[item].type }).then(r => {
-          setMainIndicatorData({ index: props.index, id: item, data: r.result })
+          setIndicatorData({ indicator: state.mainIndicators[item], data: r.result })
           return r
         }),
         placeholderData: { result: [] }
@@ -61,68 +61,57 @@ export const MainChart = (props: MainChartProps) => {
     ))
   })
 
-  const mainIndicatorsQuery = mainIndicators.every(query => !query.isLoading && !query.isFetching);
+  const mainIndicatorsQuery = mainIndicators.every(query => !query.isLoading && !query.isFetching)
 
   const secondaryIndicators = useQueries({
-    queries: state.secondaryIndicators.map((item, index) => ({
-      queryKey: [getStockIndicatorData.cacheKey, { symbol: symbol, cycle: state.timeIndex, id: item, db_type: 'system', index: index }],
-      queryFn: () => getStockIndicatorData({ symbol: symbol, cycle: state.timeIndex, id: item, db_type: 'system' }),
+    queries: state.secondaryIndicators.map((item) => ({
+      queryKey: [getStockIndicatorData.cacheKey, { symbol: symbol, cycle: state.timeIndex, id: item.id, db_type: item.type }],
+      queryFn: () => getStockIndicatorData({ symbol: symbol, cycle: state.timeIndex, id: item.id, db_type: item.type }).then(r => {
+        setIndicatorData({ indicator: item, data: r.result })
+        return r
+      }),
       placeholderData: { result: [] }
     }))
   })
 
-  useEffect(() => {
-    setState(prev => {
-      secondaryIndicators.forEach((item, index) => {
-        if (item.data) {
-          prev.state[props.index].secondaryIndicatorsData[index] = item.data?.result
-        }
-      })
-    })
-  }, [secondaryIndicators, props.index, setState])
+  const secondaryIndicatorsQuery = secondaryIndicators.every(query => !query.isLoading && !query.isFetching)
+
 
   useEffect(() => {
-    if(!mainIndicatorsQuery) return
+    if (!mainIndicatorsQuery && !secondaryIndicatorsQuery) return
 
     render()
-  }, [mainIndicatorsQuery])
+  }, [mainIndicatorsQuery, secondaryIndicatorsQuery])
 
 
+  useEffect(() => {
+
+  })
 
   useMount(() => {
     if (chart.current) {
-      setState(prev => {
-        prev.state[props.index].getChart = () => chart.current as echarts.ECharts
-      })
+      render()
     }
-    chart.current?.setOption(renderChart(state, query.data, true))
   })
 
   useEffect(() => {
-    if (!query.data) {
-      setState(prev => {
-        prev.state[props.index].mainData = {
-          history: [],
-          coiling_data: [],
-          md5: ''
-        }
-      })
-    } else {
+    setMainData({ index: props.index, data: query.data })
+  }, [query.data, props.index, setMainData])
 
-      setState(prev => {
-        prev.state[props.index].mainData = {
-          history: query.data.history.map(h => [dayjs(h[0]).valueOf().toString(), ...h.slice(1)]) as unknown as StockRawRecord[],
-          coiling_data: query.data.coiling_data,
-          md5: query.data.md5
-        }
-      })
-    }
-  }, [query.data, props.index, setState])
+
+  // useMount(() => {
+
+  //   if (chart.current) {
+  //     chart.current?.setOption(renderChart(state, query.data, true))
+  //   }
+
+
+  // }, [query.data, props.index, setState])
 
   const render = () => {
     if (!chart.current) return
 
-    const [start, end] = chart.current.getOption() ? renderUtils.getZoom(chart.current.getOption()): [90, 100]
+    const [start, end] = chart.current.getOption() ? renderUtils.getZoom(chart.current.getOption()) : [90, 100]
 
     chart.current?.clear()
 
@@ -131,13 +120,11 @@ export const MainChart = (props: MainChartProps) => {
     /**
      * 画主图指标
      */
-    renderMainIndicators(_options, Object.values(state.mainIndicators), Object.keys(state.mainIndicators).map(v => getMainIndicatorData({ index: props.index, id: v })))
+    renderMainIndicators(_options, Object.values(state.mainIndicators), Object.keys(state.mainIndicators).map(v => getIndicatorData({ indicator: state.mainIndicators[v] })))
 
-    renderSecondary(_options, state)
- 
+    renderSecondary(_options, state.secondaryIndicators, state.secondaryIndicators.map(v => getIndicatorData({ indicator: v })))
+
     chart.current.setOption(_options)
-
-    setSecondaryIndicatorsCount(state.secondaryIndicators.length)
   }
 
   useUpdateEffect(() => {
@@ -145,14 +132,15 @@ export const MainChart = (props: MainChartProps) => {
   }, [state])
 
 
-  const [secondaryIndicatorsCount, setSecondaryIndicatorsCount] = useState(state.secondaryIndicators.length)
 
 
   const onChangeSecondaryIndicators = async (params: { value: string, index: number, type: string }) => {
-    setState(prev => {
-      renderUtils.cleanSecondaryIndicators(prev, props.index, params.index)
+    const chart = activeChart()
+    setSecondaryIndicator({
+      index: props.index,
+      indicatorIndex: params.index,
+      indicator: { id: params.value, type: params.type, timeIndex: chart.timeIndex, symbol: chart.symbol }
     })
-
   }
 
 
@@ -161,7 +149,7 @@ export const MainChart = (props: MainChartProps) => {
       <div className="w-full h-full" ref={dom}>
       </div>
       {
-        Array.from(new Array(secondaryIndicatorsCount).fill(() => nanoid())).map((item, index) => (
+        activeChart().secondaryIndicators.map((item, index) => (
           <div key={item + index.toString()}
             className="absolute rounded-sm left-2"
             style={{ top: `calc(${(chart.current?.getOption() as any)?.grid[index + 1]?.top ?? 0} + 10px)` }}

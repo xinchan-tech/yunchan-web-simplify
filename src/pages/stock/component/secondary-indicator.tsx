@@ -28,15 +28,15 @@ export const SecondaryIndicator = (props: SecondaryIndicatorProps) => {
     select: data => data?.secondary ?? []
   })
   const [searchKey, setSearchKey] = useState('')
-  const { state, setState } = useKChartContext()
+  const { state } = useKChartContext()
 
-  const currentSecondaryIndicator = state[props.mainIndex ].secondaryIndicators[props.index ]
+  const currentSecondaryIndicator = state[props.mainIndex].secondaryIndicators[props.index]
 
   const _onChange = (v: string) => {
-    setState(d => { d.state[props.mainIndex].secondaryIndicators[props.index] = v })
+
     const indicator = findIndicator(v)
-    
-    props.onIndicatorChange({ value: v, index: props.index , type: (indicator as any)?.db_type})
+
+    props.onIndicatorChange({ value: v, index: props.index, type: (indicator as any)?.db_type })
   }
 
   const findIndicator = (id: string) => {
@@ -62,7 +62,7 @@ export const SecondaryIndicator = (props: SecondaryIndicatorProps) => {
   const name = (() => {
     for (const item of indicators.data ?? []) {
       for (const ele of item.indicators) {
-        if (ele.id === currentSecondaryIndicator) {
+        if (ele.id === currentSecondaryIndicator.id) {
           return ele.name
         }
       }
@@ -86,7 +86,7 @@ export const SecondaryIndicator = (props: SecondaryIndicatorProps) => {
                 <div key={item.id} className="flex flex-col w-48">
                   <div className="border-0 border-b border-t border-solid border-border text-center py-1 bg-background">{item.name}</div>
                   <ScrollArea className="h-[300px]">
-                    <RadioGroup value={currentSecondaryIndicator} onValueChange={_onChange}>
+                    <RadioGroup value={currentSecondaryIndicator.id} onValueChange={_onChange}>
                       {item.indicators.map((ele) => (
                         <div
                           className="hover:bg-primary cursor-pointer px-2 flex items-center w-full"

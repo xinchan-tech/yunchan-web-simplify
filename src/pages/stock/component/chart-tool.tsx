@@ -1,4 +1,4 @@
-import { StockChartInterval, getStockIndicators, type StockIndicator } from "@/api"
+import { getStockIndicators, type StockIndicator } from "@/api"
 import { HoverCard, HoverCardContent, HoverCardTrigger, JknIcon } from "@/components"
 import { cn } from "@/utils/style"
 import { useQuery } from "@tanstack/react-query"

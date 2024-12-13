@@ -1,5 +1,6 @@
 import { type getStockChart, type getStockIndicatorData, StockChartInterval } from '@/api'
 import type echarts from '@/utils/echarts'
+import { nanoid } from "nanoid"
 import { createContext, useContext } from 'react'
 import type { Updater } from 'use-immer'
 
@@ -40,9 +41,9 @@ export interface KChartContext {
   /**
    * 附图指标，多窗口模式下新建的窗口附图数量根据这个值来确定
    * 正常情况下应该与第一个窗口的附图指标一致
-   * 该值应持久化到本地存储
+   * TODO: 该值应持久化到本地存储
    */
-  secondaryIndicators: string[]
+  secondaryIndicators: Indicator[]
 
   /**
    * 设置状态
@@ -79,15 +80,6 @@ export interface KChartContext {
    */
   setMainIndicators: (params: { index?: number; indicators: Indicator[] | Indicator}) => void
 
-  /**
-   * 设置主图指标数据
-   */
-  setMainIndicatorData: (params: { index?: number; id: string; data: any[] }) => void
-
-  /**
-   * 获取主图指标数据
-   */
-  getMainIndicatorData: (params: { index?: number; id: string }) => any
 
   /**
    * 切换主图的线型
@@ -101,6 +93,42 @@ export interface KChartContext {
    * 修改主图缠论
    */
   setMainCoiling: (params: { index?: number; coiling: string[] }) => void
+
+  /**
+   * 修改附图数量
+   * @param params
+   * @param params.index 窗口索引, 默认为当前激活的窗口
+   * @param params.count 附图数量
+   * @param params.indicator 附图指标, 新修改的附图数量大于当前附图数量时，会用这个指标填充，默认为第一个附图指标
+   */
+  setSecondaryIndicatorsCount: (params: { index?: number,  count: number, indicator: Indicator }) => void
+
+  /**
+   * 修改附图指标
+   * @param params
+   * @param params.index 窗口索引, 默认为当前激活的窗口
+   * @param params.indicatorIndex 附图索引
+   * @param params.indicator 指标
+   */
+  setSecondaryIndicator: (params: { index?: number, indicatorIndex: number, indicator: Indicator }) => void
+
+  /**
+   * 设置主图数据
+   */
+  setMainData: (params: { index?: number; data?: Awaited<ReturnType<typeof getStockChart>> }) => void
+
+  /**
+   * 设置指标数据，主图和附图的指标数据都可以设置，多个窗口时不需要指定窗口索引
+   * @param params
+   * @param params.indicator 指标
+   * @param params.data 数据
+   */
+  setIndicatorData: (params: { indicator: Indicator, data: any }) => void
+
+  /**
+   * 获取指标数据
+   */
+  getIndicatorData: (params: { indicator: Indicator }) => IndicatorData
 }
 
 /**
@@ -132,6 +160,8 @@ export type IndicatorCache = WeakMap<Indicator, IndicatorData>
  * 一个实例对应一个窗口
  */
 type MainChartState = {
+  id: string
+  index: number
   /**
    * 股票代码
    */
@@ -151,11 +181,11 @@ type MainChartState = {
   /**
    * 附图的指标，有几个指标就有几个附图
    */
-  secondaryIndicators: string[]
-  /**
-   * 附图指标数据, 一定要是长度为5的数组，分别对应5个附图
-   */
-  secondaryIndicatorsData: (Awaited<ReturnType<typeof getStockIndicatorData>>['result'] | null)[]
+  secondaryIndicators: Indicator[]
+  // /**
+  //  * 附图指标数据, 一定要是长度为5的数组，分别对应5个附图
+  //  */
+  // secondaryIndicatorsData: (Awaited<ReturnType<typeof getStockIndicatorData>>['result'] | null)[]
   /**
    * 主图的指标
    */
@@ -184,10 +214,17 @@ export const useKChartContext = () => {
 
 /**
  * 创建默认的图表状态
+ * @param opts
+ * @param opts.symbol 股票代码
+ * @param opts.index 窗口索引
+ * @returns 图表实例状态
+ * 
  */
-export const createDefaultChartState = (): MainChartState => ({
-  symbol: 'QQQ',
+export const createDefaultChartState = (opts: {symbol?: string, index: number}): MainChartState => ({
+  symbol: opts.symbol ?? 'QQQ',
   type: 'k-line',
+  id: nanoid(),
+  index: opts.index,
   timeIndex: StockChartInterval.DAY,
   system: 'pro',
   getChart: () => undefined,
@@ -195,8 +232,7 @@ export const createDefaultChartState = (): MainChartState => ({
    * 9: 底部信号
    * 10: 买卖点位
    */
-  secondaryIndicators: ['9', '10'],
-  secondaryIndicatorsData: [null, null, null, null, null],
+  secondaryIndicators: [{ id: '9', type: 'system', timeIndex: StockChartInterval.DAY, symbol: opts.symbol ?? 'QQQ' }, { id: '10', type: 'system', timeIndex: StockChartInterval.DAY, symbol: opts.symbol ?? 'QQQ' }],
   mainIndicators: {},
   mainCoiling: ['1', '227', '228', '229'],
   mainData: {
