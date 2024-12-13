@@ -1,4 +1,6 @@
+import { StockChartInterval } from "@/api"
 import type { ECOption } from '@/utils/echarts'
+import dayjs from "dayjs"
 import type { ECBasicOption } from "echarts/types/dist/shared"
 
 export const renderUtils = {
@@ -41,5 +43,11 @@ export const renderUtils = {
     const offset = (bottom - top) * (100 - percent) / 100
  
     return top + offset
+  },
+
+  getStartTime: (usTime: number, time: StockChartInterval) => {
+    if (time >= StockChartInterval.DAY || time <= StockChartInterval.INTRA_DAY) return undefined
+  
+    return dayjs(usTime).tz('America/New_York').add(-15 * time, 'day').format('YYYY-MM-DD')
   }
 }

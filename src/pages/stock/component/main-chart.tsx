@@ -1,22 +1,15 @@
 import { useEffect, useState } from "react"
 import { useKChartContext, useSymbolQuery } from "../lib"
-import dayjs from "dayjs"
 import { useTime } from "@/store"
 import { useQueries, useQuery } from "@tanstack/react-query"
-import { getStockChart, getStockIndicatorData, StockChartInterval, type StockRawRecord } from "@/api"
-import { useMount, useUpdate, useUpdateEffect } from "ahooks"
+import { getStockChart, getStockIndicatorData } from "@/api"
+import { useMount, useUpdateEffect } from "ahooks"
 import { useChart } from "@/hooks"
 import { renderChart, renderMainIndicators, renderSecondary, renderZoom } from "../lib/render"
 import { SecondaryIndicator } from "./secondary-indicator"
-import { nanoid } from "nanoid"
 import { renderUtils } from "../lib/utils"
-import type echarts from "@/utils/echarts"
 
-const getStartTime = (usTime: number, time: StockChartInterval) => {
-  if (time >= StockChartInterval.DAY || time <= StockChartInterval.INTRA_DAY) return undefined
 
-  return dayjs(usTime).tz('America/New_York').add(-15 * time, 'day').format('YYYY-MM-DD')
-}
 
 interface MainChartProps {
   index: number
@@ -29,8 +22,7 @@ export const MainChart = (props: MainChartProps) => {
   const { state: ctxState, setMainData, setIndicatorData, getIndicatorData, setSecondaryIndicator, activeChart } = useKChartContext()
   const { usTime } = useTime()
   const state = ctxState[props.index]
-  const startTime = getStartTime(usTime, state.timeIndex)
-
+  const startTime = renderUtils.getStartTime(usTime, state.timeIndex)
 
   useEffect(() => {
     setSymbolSelected(symbol)
@@ -40,7 +32,7 @@ export const MainChart = (props: MainChartProps) => {
     start_at: startTime,
     ticker: symbolSelected,
     interval: state.timeIndex,
-    gzencode: true
+    gzencode: false
   }
 
   const query = useQuery({
@@ -49,14 +41,16 @@ export const MainChart = (props: MainChartProps) => {
   })
 
   const mainIndicators = useQueries({
-    queries: Array.from(Reflect.ownKeys(state.mainIndicators).map(v => v.toString())).map((item) => (
+    queries: Array.from(Reflect.ownKeys(state.mainIndicators).map(v => v.toString())).map((item, idx) => (
       {
-        queryKey: [getStockIndicatorData.cacheKey, { symbol: symbol, cycle: state.timeIndex, id: item, db_type: state.mainIndicators[item].type }],
-        queryFn: () => getStockIndicatorData({ symbol: symbol, cycle: state.timeIndex, id: item, db_type: state.mainIndicators[item].type }).then(r => {
+        queryKey: [getStockIndicatorData.cacheKey, { symbol: symbol, cycle: state.timeIndex, id: item, db_type: state.mainIndicators[item].type }, idx],
+        queryFn: () => getStockIndicatorData({
+          symbol: symbol, cycle: state.timeIndex, id: item, db_type: state.mainIndicators[item].type, start_at: startTime
+        }).then(r => {
           setIndicatorData({ indicator: state.mainIndicators[item], data: r.result })
           return r
         }),
-        placeholderData: { result: [] }
+        placeholderData: () => ({ result: [] })
       }
     ))
   })
@@ -64,13 +58,13 @@ export const MainChart = (props: MainChartProps) => {
   const mainIndicatorsQuery = mainIndicators.every(query => !query.isLoading && !query.isFetching)
 
   const secondaryIndicators = useQueries({
-    queries: state.secondaryIndicators.map((item) => ({
-      queryKey: [getStockIndicatorData.cacheKey, { symbol: symbol, cycle: state.timeIndex, id: item.id, db_type: item.type }],
-      queryFn: () => getStockIndicatorData({ symbol: symbol, cycle: state.timeIndex, id: item.id, db_type: item.type }).then(r => {
+    queries: state.secondaryIndicators.map((item, idx) => ({
+      queryKey: [getStockIndicatorData.cacheKey, { symbol: symbol, cycle: state.timeIndex, id: item.id, db_type: item.type }, idx],
+      queryFn: () => getStockIndicatorData({ symbol: symbol, cycle: state.timeIndex, id: item.id, db_type: item.type, start_at: startTime }).then(r => {
         setIndicatorData({ indicator: item, data: r.result })
         return r
       }),
-      placeholderData: { result: [] }
+      placeholderData: () => ({ result: [] })
     }))
   })
 
@@ -98,16 +92,6 @@ export const MainChart = (props: MainChartProps) => {
     setMainData({ index: props.index, data: query.data })
   }, [query.data, props.index, setMainData])
 
-
-  // useMount(() => {
-
-  //   if (chart.current) {
-  //     chart.current?.setOption(renderChart(state, query.data, true))
-  //   }
-
-
-  // }, [query.data, props.index, setState])
-
   const render = () => {
     if (!chart.current) return
 
@@ -120,10 +104,11 @@ export const MainChart = (props: MainChartProps) => {
     /**
      * 画主图指标
      */
+ 
     renderMainIndicators(_options, Object.values(state.mainIndicators), Object.keys(state.mainIndicators).map(v => getIndicatorData({ indicator: state.mainIndicators[v] })))
 
     renderSecondary(_options, state.secondaryIndicators, state.secondaryIndicators.map(v => getIndicatorData({ indicator: v })))
-
+  
     chart.current.setOption(_options)
   }
 

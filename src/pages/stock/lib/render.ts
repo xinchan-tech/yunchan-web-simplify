@@ -8,7 +8,7 @@ import { colorUtil } from '@/utils/style'
 import dayjs from 'dayjs'
 import Decimal from 'decimal.js'
 import { type Indicator, type IndicatorData, isTimeIndexChart, type KChartState } from './ctx'
-import { cloneDeep } from 'lodash-es'
+import { cloneDeep, slice } from 'lodash-es'
 import type { CandlestickSeriesOption, LineSeriesOption } from 'echarts/charts'
 import {
   drawerGradient,
@@ -47,10 +47,11 @@ export const options: ECOption = {
     },
     formatter: (v: any) => {
       const errData = (v as any[]).find(_v => _v.axisId === 'main-x')
+      if(!errData) return ''
       const data = errData?.seriesType === 'candlestick' ? errData?.value.slice(1) : (errData.value as StockRawRecord)
-
+    
       data[0] = dayjs(+data[0]).format('YYYY-MM-DD HH:mm:ss')
-
+  
       const stock = StockRecord.of('', '', data)
       let time = dayjs(stock.time).format('MM-DD hh:mm') + dateToWeek(stock.time, '周')
       if (stock.time.slice(11) === '00:00:00') {
@@ -110,7 +111,10 @@ export const options: ECOption = {
         show: false
       },
       axisLabel: {
-        show: false
+        show: false,
+        formatter: (v: any) => {
+          return dayjs(v).format('MM-DD')
+        }
       },
       splitLine: {
         show: true,
@@ -145,7 +149,7 @@ export const options: ECOption = {
 
 type ChartRender = (
   options: ECOption,
-  state: KChartState['state'][0],
+  state: ArrayItem<KChartState['state']>,
   data?: Awaited<ReturnType<typeof getStockChart>>,
   secondary?: boolean
 ) => void
@@ -154,9 +158,8 @@ type ChartRender = (
  * 渲染图表
  */
 export const renderChart = (
-  state: KChartState['state'][0],
-  data?: Awaited<ReturnType<typeof getStockChart>>,
-  init?: boolean
+  state: ArrayItem<KChartState['state']>,
+  data?: Awaited<ReturnType<typeof getStockChart>>
 ): ECOption => {
   const chain: ChartRender[] = [renderGrid, renderMainChart, renderMarkLine]
   const _options = cloneDeep(options)
@@ -185,7 +188,10 @@ export const renderChart = (
           color: 'rgb(31, 32, 33)'
         }
       },
-      borderColor: 'rgb(31, 32, 33)'
+      borderColor: 'rgb(31, 32, 33)',
+      labelFormatter: (_, e) => {
+        return e
+      }
     }
   ]
 
@@ -200,35 +206,49 @@ export const renderChart = (
  * 渲染布局
  */
 export const renderGrid: ChartRender = (options, state) => {
+  /**
+   * 布局策略
+   * 1. 无副图 -> 主图占满, 底部留出24显示标签
+   * 2. 副图 <= 3 -> 副图占20% * 副图数量，底部留24标签
+   */
   const grid = []
   if (state.secondaryIndicators.length === 0) {
     grid.push({
-      top: 4,
+      top: 1,
       left: 0,
-      right: 60,
-      height: '97%'
+      right: '4%',
+      bottom: 24
     })
   } else if (state.secondaryIndicators.length <= 3) {
     grid.push({
       top: 4,
       left: 0,
-      right: 60,
+      right: '4%',
       height: `${20 * (5 - state.secondaryIndicators.length)}%`
     })
 
     for (let i = 0; i < state.secondaryIndicators.length; i++) {
-      grid.push({
-        left: 0,
-        right: 60,
-        top: `${20 * (5 - state.secondaryIndicators.length) + 20 * i + 0.4}%`,
-        height: '20%'
-      })
+      if (i !== state.secondaryIndicators.length - 1) {
+        grid.push({
+          left: 0,
+          right: '4%',
+          top: `${20 * (5 - state.secondaryIndicators.length) + 20 * i + 0.4}%`,
+          height: '20%'
+        })
+      } else {
+        grid.push({
+          left: 0,
+          right: '4%',
+          top: `${20 * (5 - state.secondaryIndicators.length) + 20 * i + 0.4}%`,
+          bottom: 24
+        })
+      }
     }
   } else {
     grid.push({
       top: 4,
       left: 0,
-      right: 60,
+      right: '4%',
       height: '40%'
     })
 
@@ -236,7 +256,7 @@ export const renderGrid: ChartRender = (options, state) => {
       // 60%平均分
       grid.push({
         left: 0,
-        right: 60,
+        right: '4%',
         top: `${40 + (60 / state.secondaryIndicators.length) * i}%`,
         height: `${60 / state.secondaryIndicators.length}%`
       })
@@ -246,7 +266,7 @@ export const renderGrid: ChartRender = (options, state) => {
   options.grid = grid
 
   for (let i = 0; i < state.secondaryIndicators.length; i++) {
-    renderSecondaryAxis(options, state, i + 1)
+    renderSecondaryAxis(options, state, i)
   }
   return options
 }
@@ -324,14 +344,20 @@ export const renderMainChart: ChartRender = (options, state, data) => {
     const xAxis = options.xAxis.find(y => y.id === 'main-x')
 
     if (xAxis) {
+
       ;(xAxis as any).data = state.mainData.history.map(item => item[0])
 
       if (Array.isArray(options.grid) && options.grid.length > 1) {
         xAxis.axisPointer = {
           label: {
-            show: false
+            show: false,
+            formatter: (v: any) => {
+              return v.value.slice(5, 11)
+            }
           }
         }
+      } else {
+        xAxis.axisLabel!.show = true
       }
     }
   }
@@ -509,7 +535,7 @@ export const renderSecondary = (options: ECOption, indicators: Indicator[], data
 
           return [points[0].x, [...points, ...p2], [_data[key][2], _data[key][3]]]
         })
-    
+
         drawerGradient(options, {} as any, {
           index: index + 1,
           data: data as any
@@ -539,10 +565,11 @@ export const renderSecondary = (options: ECOption, indicators: Indicator[], data
  * 渲染坐标轴
  */
 const renderSecondaryAxis = (options: ECOption, state: KChartState['state'][0], index: number) => {
+
   Array.isArray(options.xAxis) &&
     options.xAxis.push({
       type: 'category',
-      gridIndex: index,
+      gridIndex: index + 1,
       data: state.mainData.history.map(item => item[0]),
       axisLine: {
         onZero: false,
@@ -550,10 +577,14 @@ const renderSecondaryAxis = (options: ECOption, state: KChartState['state'][0], 
           color: 'rgb(31, 32, 33)'
         }
       },
-      axisTick: {
-        show: false
-      },
       axisLabel: {
+        show: index === state.secondaryIndicators.length - 1,
+        color: '#fff',
+        formatter: (v: any) => {
+          return dayjs(v).format('MM-DD')
+        }
+      },
+      axisTick: {
         show: false
       },
       splitLine: {
@@ -569,7 +600,7 @@ const renderSecondaryAxis = (options: ECOption, state: KChartState['state'][0], 
       axisPointer: {
         z: 100,
         label: {
-          show: index === state.secondaryIndicators.length
+          show: index + 1 === state.secondaryIndicators.length
         }
       }
     })
@@ -577,7 +608,7 @@ const renderSecondaryAxis = (options: ECOption, state: KChartState['state'][0], 
   Array.isArray(options.yAxis) &&
     options.yAxis.push({
       scale: true,
-      gridIndex: index,
+      gridIndex: index + 1,
       position: 'right',
       axisLine: { onZero: false, show: false },
       axisTick: {
@@ -593,6 +624,8 @@ const renderSecondaryAxis = (options: ECOption, state: KChartState['state'][0], 
         show: false
       }
     })
+
+  return options
 }
 
 /**

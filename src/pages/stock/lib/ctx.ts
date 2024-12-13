@@ -47,6 +47,7 @@ export interface KChartContext {
 
   /**
    * 设置状态
+   * @deprecated 
    */
   setState: Updater<KChartState>
 
@@ -139,6 +140,7 @@ export type Indicator = {
   type: string
   timeIndex: StockChartInterval
   symbol: string
+  start_at?: string
 }
 
 /**
@@ -204,9 +206,11 @@ type MainChartState = {
   getChart: () => echarts.ECharts | undefined
 }
 
+export const KChartContext = createContext<KChartContext>({} as unknown as KChartContext)
+
 export type KChartState = Pick<KChartContext, 'activeChartIndex' | 'state' | 'secondaryIndicators' | 'viewMode'>
 
-export const KChartContext = createContext<KChartContext>({} as unknown as KChartContext)
+
 
 export const useKChartContext = () => {
   return useContext(KChartContext)

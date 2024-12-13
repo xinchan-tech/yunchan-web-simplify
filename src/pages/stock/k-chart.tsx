@@ -7,6 +7,7 @@ import { MainChart } from "./component/main-chart"
 import { TimeIndexSelect } from "./component/time-index"
 import { type Indicator, type IndicatorCache, KChartContext, type KChartState, createDefaultChartState, isTimeIndexChart } from "./lib"
 import { StockChartInterval } from "@/api"
+import dayjs from "dayjs"
 
 
 
@@ -37,32 +38,35 @@ export const KChart = () => {
   }
 
   const setMainIndicators: KChartContext['setMainIndicators'] = ({ index, indicators }) => {
+    const _indicators = Array.isArray(indicators) ? indicators : [indicators]
+    const _indicatorsMap: NormalizedRecord<Indicator> = {}
+   
+
+    
+    _indicators.forEach(({ id, type, timeIndex, symbol }) => {
+      const cacheKey = `${symbol}-${timeIndex}-${id}-${type}`
+
+      let idt = { id: id, type, timeIndex, symbol }
+      console.log("🚀 ~ KChart ~ idt:", idt)
+      if (indicatorMap.current.has(cacheKey)) {
+        idt = indicatorMap.current.get(cacheKey)
+      } else {
+        indicatorMap.current.set(cacheKey, idt)
+      }
+
+      _indicatorsMap[id] = idt
+    })
+    
+
+    // Array.from(Reflect.ownKeys(chart.mainIndicators)).forEach((id) => {
+    //   if (!_indicators.some(i => i.id === id)) {
+    //     indicatorCache.current.delete(chart.mainIndicators[id.toString()])
+    //     delete chart.mainIndicators[id.toString()]
+    //   }
+    // })
+
     setContext(d => {
-      const chart = d.state[index ?? d.activeChartIndex]
-      const _indicators = Array.isArray(indicators) ? indicators : [indicators]
-
-      _indicators.forEach(({ id, type, timeIndex, symbol }) => {
-        if (!chart.mainIndicators[id]) {
-          const cacheKey = `${symbol}-${timeIndex}-${id}-${type}`
-
-          let idt = { id: id, type, timeIndex, symbol }
-
-          if (indicatorMap.current.has(cacheKey)) {
-            idt = indicatorMap.current.get(cacheKey)
-          } else {
-            indicatorMap.current.set(cacheKey, idt)
-          }
-
-          chart.mainIndicators[id] = idt
-        }
-      })
-
-      Array.from(Reflect.ownKeys(chart.mainIndicators)).forEach((id) => {
-        if (!_indicators.some(i => i.id === id)) {
-          indicatorCache.current.delete(chart.mainIndicators[id.toString()])
-          delete chart.mainIndicators[id.toString()]
-        }
-      })
+      d.state[index ?? d.activeChartIndex].mainIndicators = _indicatorsMap
     })
   }
 
@@ -82,9 +86,17 @@ export const KChart = () => {
   }
 
   const setTimeIndex: KChartContext['setTimeIndex'] = ({ index, timeIndex }) => {
+    const newMainIndicators = Object.values(context.state[index ?? context.activeChartIndex].mainIndicators).map(v => ({...v, timeIndex}))
     setContext(d => {
       const chart = d.state[index ?? d.activeChartIndex]
       chart.timeIndex = timeIndex
+    })
+    setMainIndicators({ index, indicators: newMainIndicators})
+
+    const newSecondaryIndicators = context.state[index ?? context.activeChartIndex].secondaryIndicators.map(v => ({...v, timeIndex}))
+
+    newSecondaryIndicators.forEach((indicator, idx) => {
+      setSecondaryIndicator({ indicator, index, indicatorIndex: idx })
     })
   }
 
@@ -100,25 +112,11 @@ export const KChart = () => {
     return context.state[index]
   }
 
-  // const setMainIndicatorData: KChartContext['setMainIndicatorData'] = ({ index, id, data }) => {
-  //   const chart = context.state[index ?? context.activeChartIndex]
-  //   const indicator = chart.mainIndicators[id]
-  //   if (!indicator) return
-
-  //   indicatorCache.current.set(indicator, data)
-  // }
-
-  // const getMainIndicatorData: KChartContext['getMainIndicatorData'] = ({ index, id }) => {
-  //   const chart = context.state[index ?? context.activeChartIndex]
-  //   const indicator = chart.mainIndicators[id]
-
-  //   return indicatorCache.current.get(indicator)
-  // }
 
   const setSecondaryIndicatorsCount: KChartContext['setSecondaryIndicatorsCount'] = ({ index, count, indicator }) => {
     setContext(d => {
       const chart = d.state[index ?? context.activeChartIndex]
-      let newIndicators: Indicator[] = []
+      let newIndicators: Indicator[] = [...chart.secondaryIndicators]
 
       if (chart.secondaryIndicators.length > count) {
         newIndicators = chart.secondaryIndicators.slice(0, count)
@@ -159,7 +157,7 @@ export const KChart = () => {
   const setMainData: KChartContext['setMainData'] = useCallback(({ index, data }) => {
     setContext(d => {
       const chart = d.state[index ?? d.activeChartIndex]
-      chart.mainData = data ?? {
+      chart.mainData = data ? {...data, history: data.history.map(v => [dayjs(v[0]).valueOf().toString(), ...v.slice(1)])} as any : {
         history: [],
         coiling_data: [],
         md5: ''
