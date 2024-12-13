@@ -479,13 +479,14 @@ export const renderMainIndicators = (options: ECOption, indicators: Indicator[],
  */
 export const renderSecondary = (options: ECOption, indicators: Indicator[], data: IndicatorData[]) => {
   /** 合并绘制 */
-  const stickLineData: DrawerRectShape[] = []
-  const textData: DrawerTextShape[] = []
+
 
   indicators.forEach((_, index) => {
     if (!data[index]) {
       return
     }
+    const stickLineData: DrawerRectShape[] = []
+    const textData: DrawerTextShape[] = []
 
     const indicatorData = data[index]
 
