@@ -7,7 +7,7 @@ type Server = {
   ws: string
 }
 
-const defaultServers: Server = { name: 'Conn_us1', host: 'http://localhost:3000/api', ws: 'ws://localhost:3000/ws' }
+const defaultServers: Server = { name: 'Conn_us1', host: '/api', ws: 'ws://localhost:3000/ws' }
 
 interface ServersStore {
   servers: Server[]

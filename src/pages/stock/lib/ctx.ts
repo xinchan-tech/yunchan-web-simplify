@@ -1,6 +1,6 @@
-import { type getStockChart, type getStockIndicatorData, StockChartInterval } from '@/api'
+import { type getStockChart, type getStockTabList, StockChartInterval } from '@/api'
 import type echarts from '@/utils/echarts'
-import { nanoid } from "nanoid"
+import { nanoid } from 'nanoid'
 import { createContext, useContext } from 'react'
 import type { Updater } from 'use-immer'
 
@@ -26,7 +26,7 @@ export interface KChartContext {
    * 视图模式
    */
   viewMode: ViewMode
-  
+
   /**
    * 窗口状态
    */
@@ -47,7 +47,7 @@ export interface KChartContext {
 
   /**
    * 设置状态
-   * @deprecated 
+   * @deprecated
    */
   setState: Updater<KChartState>
 
@@ -55,6 +55,11 @@ export interface KChartContext {
    * 获取当前激活的窗口或者切换当前激活的窗口
    */
   activeChart: (index?: StockChartInterval) => MainChartState
+
+  /**
+   * 叠加标记列表
+   */
+  overMarkList: Awaited<ReturnType<typeof getStockTabList>>
 
   /**
    * 修改分时图
@@ -79,8 +84,7 @@ export interface KChartContext {
    * @param params.index 窗口索引, 默认为当前激活的窗口
    * @param params.indicators 主图指标
    */
-  setMainIndicators: (params: { index?: number; indicators: Indicator[] | Indicator}) => void
-
+  setMainIndicators: (params: { index?: number; indicators: Indicator[] | Indicator }) => void
 
   /**
    * 切换主图的线型
@@ -102,7 +106,7 @@ export interface KChartContext {
    * @param params.count 附图数量
    * @param params.indicator 附图指标, 新修改的附图数量大于当前附图数量时，会用这个指标填充，默认为第一个附图指标
    */
-  setSecondaryIndicatorsCount: (params: { index?: number,  count: number, indicator: Indicator }) => void
+  setSecondaryIndicatorsCount: (params: { index?: number; count: number; indicator: Indicator }) => void
 
   /**
    * 修改附图指标
@@ -111,7 +115,7 @@ export interface KChartContext {
    * @param params.indicatorIndex 附图索引
    * @param params.indicator 指标
    */
-  setSecondaryIndicator: (params: { index?: number, indicatorIndex: number, indicator: Indicator }) => void
+  setSecondaryIndicator: (params: { index?: number; indicatorIndex: number; indicator: Indicator }) => void
 
   /**
    * 设置主图数据
@@ -124,12 +128,32 @@ export interface KChartContext {
    * @param params.indicator 指标
    * @param params.data 数据
    */
-  setIndicatorData: (params: { indicator: Indicator, data: any }) => void
+  setIndicatorData: (params: { indicator: Indicator; data: any }) => void
 
   /**
    * 获取指标数据
    */
   getIndicatorData: (params: { indicator: Indicator }) => IndicatorData
+
+  /**
+   * 修改视图模式
+   */
+  setViewMode: (params: { index?: number; viewMode: ViewMode }) => void
+
+  /**
+   * 添加股票PK叠加的股票
+   */
+  addOverlayStock: (params: { index?: number, symbol: string}) => void
+
+  /**
+   * 移除股票PK叠加的股票
+   */
+  removeOverlayStock: (params: { index?: number, symbol: string }) => void
+
+  /**
+   * 设置叠加标记
+   */
+  setOverlayMark: (params: { index?: number, mark: string, type: string, title: string }) => Promise<void>
 }
 
 /**
@@ -146,11 +170,19 @@ export type Indicator = {
 /**
  * 指标数据
  */
-export type IndicatorData = string[] | {name: string, draw?: string, data: string[] | NormalizedRecord<any>, style: {
-  color?: string
-  linethick: number
-  style_type?: string
-}}[] | undefined
+export type IndicatorData =
+  | string[]
+  | {
+      name: string
+      draw?: string
+      data: string[] | NormalizedRecord<any>
+      style: {
+        color?: string
+        linethick: number
+        style_type?: string
+      }
+    }[]
+  | undefined
 
 /**
  * 指标缓存
@@ -204,13 +236,26 @@ type MainChartState = {
    * chart实例
    */
   getChart: () => echarts.ECharts | undefined
+  /**
+   * 叠加股票数据
+   */
+  overlayStock: {
+    symbol: string
+    data: Awaited<ReturnType<typeof getStockChart>>
+  }[]
+  /**
+   * 叠加标记
+   */
+  overlayMark?: {
+    mark: string
+    title: string
+    data?: any[]
+  }
 }
 
 export const KChartContext = createContext<KChartContext>({} as unknown as KChartContext)
 
 export type KChartState = Pick<KChartContext, 'activeChartIndex' | 'state' | 'secondaryIndicators' | 'viewMode'>
-
-
 
 export const useKChartContext = () => {
   return useContext(KChartContext)
@@ -222,9 +267,9 @@ export const useKChartContext = () => {
  * @param opts.symbol 股票代码
  * @param opts.index 窗口索引
  * @returns 图表实例状态
- * 
+ *
  */
-export const createDefaultChartState = (opts: {symbol?: string, index: number}): MainChartState => ({
+export const createDefaultChartState = (opts: { symbol?: string; index: number }): MainChartState => ({
   symbol: opts.symbol ?? 'QQQ',
   type: 'k-line',
   id: nanoid(),
@@ -236,14 +281,19 @@ export const createDefaultChartState = (opts: {symbol?: string, index: number}):
    * 9: 底部信号
    * 10: 买卖点位
    */
-  secondaryIndicators: [{ id: '9', type: 'system', timeIndex: StockChartInterval.DAY, symbol: opts.symbol ?? 'QQQ' }, { id: '10', type: 'system', timeIndex: StockChartInterval.DAY, symbol: opts.symbol ?? 'QQQ' }],
+  secondaryIndicators: [
+    { id: '9', type: 'system', timeIndex: StockChartInterval.DAY, symbol: opts.symbol ?? 'QQQ' },
+    { id: '10', type: 'system', timeIndex: StockChartInterval.DAY, symbol: opts.symbol ?? 'QQQ' }
+  ],
   mainIndicators: {},
   mainCoiling: ['1', '227', '228', '229'],
   mainData: {
     history: [],
     coiling_data: [],
     md5: ''
-  }
+  },
+  overlayStock: [],
+  overlayMark: undefined
 })
 
 /**

@@ -1,4 +1,4 @@
-import type { getStockChart, StockRawRecord } from '@/api'
+import type { StockRawRecord, getStockChart } from '@/api'
 import { useConfig } from '@/store'
 import { dateToWeek } from '@/utils/date'
 import type { ECOption } from '@/utils/echarts'
@@ -7,16 +7,17 @@ import { StockRecord } from '@/utils/stock'
 import { colorUtil } from '@/utils/style'
 import dayjs from 'dayjs'
 import Decimal from 'decimal.js'
-import { type Indicator, type IndicatorData, isTimeIndexChart, type KChartState } from './ctx'
-import { cloneDeep, slice } from 'lodash-es'
 import type { CandlestickSeriesOption, LineSeriesOption } from 'echarts/charts'
+import { cloneDeep } from 'lodash-es'
+import { type Indicator, type IndicatorData, type KChartState, isTimeIndexChart } from './ctx'
 import {
-  drawerGradient,
-  drawerLine,
-  drawerRect,
   type DrawerRectShape,
-  drawerText,
-  type DrawerTextShape
+  type DrawerTextShape,
+  drawGradient,
+  drawLine,
+  drawOverlayMark,
+  drawRect,
+  drawText
 } from './drawer'
 
 const MAIN_CHART_NAME = 'kChart'
@@ -47,11 +48,11 @@ export const options: ECOption = {
     },
     formatter: (v: any) => {
       const errData = (v as any[]).find(_v => _v.axisId === 'main-x')
-      if(!errData) return ''
+      if (!errData) return ''
       const data = errData?.seriesType === 'candlestick' ? errData?.value.slice(1) : (errData.value as StockRawRecord)
-    
+
       data[0] = dayjs(+data[0]).format('YYYY-MM-DD HH:mm:ss')
-  
+
       const stock = StockRecord.of('', '', data)
       let time = dayjs(stock.time).format('MM-DD hh:mm') + dateToWeek(stock.time, '周')
       if (stock.time.slice(11) === '00:00:00') {
@@ -344,7 +345,6 @@ export const renderMainChart: ChartRender = (options, state, data) => {
     const xAxis = options.xAxis.find(y => y.id === 'main-x')
 
     if (xAxis) {
-
       ;(xAxis as any).data = state.mainData.history.map(item => item[0])
 
       if (Array.isArray(options.grid) && options.grid.length > 1) {
@@ -434,7 +434,7 @@ export const renderMainIndicators = (options: ECOption, indicators: Indicator[],
       }
 
       if (!d.draw) {
-        drawerLine(options, {} as any, {
+        drawLine(options, {} as any, {
           extra: {
             color: d.style?.color || '#ffffff'
           },
@@ -460,14 +460,14 @@ export const renderMainIndicators = (options: ECOption, indicators: Indicator[],
   })
 
   if (stickLineData.length > 0) {
-    drawerRect(options, {} as any, {
+    drawRect(options, {} as any, {
       index: 0,
       data: stickLineData
     })
   }
 
   if (textData.length > 0) {
-    drawerText(options, {} as any, {
+    drawText(options, {} as any, {
       index: 0,
       data: textData
     })
@@ -475,11 +475,138 @@ export const renderMainIndicators = (options: ECOption, indicators: Indicator[],
 }
 
 /**
+ * 股票叠加
+ */
+export const renderOverlay = (options: ECOption, data?: ArrayItem<KChartState['state']>['overlayStock']) => {
+  if (!data || data.length === 0) return options
+
+  data.forEach(stock => {
+    const series: LineSeriesOption = {
+      name: stock.symbol,
+      smooth: true,
+      symbol: 'none',
+      type: 'line',
+      data: stock.data.history.map(o => [dayjs(o[0]).valueOf().toString(), ...o.slice(1)]),
+      encode: {
+        x: [0],
+        y: [2]
+      },
+      yAxisIndex: 0,
+      xAxisIndex: 0
+    }
+
+    if (!options.series) {
+      options.series = [series]
+    } else {
+      Array.isArray(options.series) && options.series.push(series)
+    }
+  })
+
+  /**
+   * 添加legend
+   */
+  if (!options.legend) {
+    options.legend = {
+      data: data.map(stock => stock.symbol),
+      icon: 'rect',
+      itemWidth: 10,
+      itemHeight: 10,
+      itemStyle: {
+        borderRadius: 0
+      },
+      textStyle: {
+        color: '#fff'
+      }
+    }
+  }
+
+  return options
+}
+
+/**
+ * 主图叠加标记
+ */
+export const renderOverlayMark = (options: ECOption, state: ArrayItem<KChartState['state']>) => {
+  const mark = state.overlayMark
+  if(!mark || !mark.mark || !mark.data) return options
+
+  if(!Array.isArray(options.series)) return options
+
+  const series = options.series.find(item => item.name === 'kChart')
+
+  if(!series) return options
+
+  const data = mark.data.map((item: any) => {
+    const x = dayjs(item.date).hour(0).minute(0).second(0).valueOf().toString() 
+    const y = (series.data as any[])?.find(s => s[0] === x)?.[2] as number | undefined
+
+    return [x, y, item.event_zh]
+  }).filter(v => !!v[1]) as [string, number, string][]
+
+  // 画一条虚拟线
+  const virtualLine = cloneDeep(series) as LineSeriesOption
+  virtualLine.name = `${MAIN_CHART_NAME}-virtual`
+  virtualLine.type = 'line'
+
+  virtualLine.encode = {
+    x: [0],
+    y: [2]
+  }
+  virtualLine.markLine = {
+    symbol: ['none', 'none'],
+    lineStyle: {
+      color: '#949596'
+    },
+    label: {
+      formatter: (v) => {
+        const x = (v.data as any)?.xAxis as string
+        const date = dayjs(new Date(+x)).format('YYYY-MM-DD')
+
+        return `{date|${date}}{abg|}\n{title|${mark.title}}`
+      },
+      backgroundColor: '#eeeeee',
+      rich: {
+        date: {
+          color: '#fff',
+          align: 'center',
+          padding: [0, 10, 0, 10]
+        },
+        abg: {
+          backgroundColor: '#e91e63',
+          width: '100%',
+          align: 'right',
+          height: 25,
+          padding: [0, 10, 0, 10]
+        },
+        title: {
+          height: 20,
+          align: 'left',
+          padding: [0, 10, 0, 10]
+        }
+      }
+    },
+    silent: true,
+    data: data.map(d => [
+      { xAxis: d[0], yAxis: d[1] },
+      { xAxis: d[0], y: 46 }
+    ])
+  }
+  virtualLine.color = 'rgba(0,0,0,0)'
+  virtualLine.itemStyle = {}
+  virtualLine.symbol = 'none'
+
+
+  options.series.push(virtualLine)
+  
+
+
+}
+
+/**
  * 渲染副图
  */
 export const renderSecondary = (options: ECOption, indicators: Indicator[], data: IndicatorData[]) => {
   /** 合并绘制 */
-
 
   indicators.forEach((_, index) => {
     if (!data[index]) {
@@ -500,7 +627,7 @@ export const renderSecondary = (options: ECOption, indicators: Indicator[], data
       }
 
       if (!d.draw) {
-        drawerLine(options, {} as any, {
+        drawLine(options, {} as any, {
           extra: {
             color: d.style?.color || '#ffffff'
           },
@@ -537,7 +664,7 @@ export const renderSecondary = (options: ECOption, indicators: Indicator[], data
           return [points[0].x, [...points, ...p2], [_data[key][2], _data[key][3]]]
         })
 
-        drawerGradient(options, {} as any, {
+        drawGradient(options, {} as any, {
           index: index + 1,
           data: data as any
         })
@@ -545,14 +672,14 @@ export const renderSecondary = (options: ECOption, indicators: Indicator[], data
     })
 
     if (stickLineData.length > 0) {
-      drawerRect(options, {} as any, {
+      drawRect(options, {} as any, {
         index: index + 1,
         data: stickLineData
       })
     }
 
     if (textData.length > 0) {
-      drawerText(options, {} as any, {
+      drawText(options, {} as any, {
         index: index + 1,
         data: textData
       })
@@ -566,7 +693,6 @@ export const renderSecondary = (options: ECOption, indicators: Indicator[], data
  * 渲染坐标轴
  */
 const renderSecondaryAxis = (options: ECOption, state: KChartState['state'][0], index: number) => {
-
   Array.isArray(options.xAxis) &&
     options.xAxis.push({
       type: 'category',
@@ -628,6 +754,8 @@ const renderSecondaryAxis = (options: ECOption, state: KChartState['state'][0], 
 
   return options
 }
+
+
 
 /**
  * 配置缩放

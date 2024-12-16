@@ -5,7 +5,7 @@ import { useQueries, useQuery } from "@tanstack/react-query"
 import { getStockChart, getStockIndicatorData } from "@/api"
 import { useMount, useUpdateEffect } from "ahooks"
 import { useChart } from "@/hooks"
-import { renderChart, renderMainIndicators, renderSecondary, renderZoom } from "../lib/render"
+import { renderChart, renderMainIndicators, renderOverlay, renderOverlayMark, renderSecondary, renderZoom } from "../lib/render"
 import { SecondaryIndicator } from "./secondary-indicator"
 import { renderUtils } from "../lib/utils"
 
@@ -19,7 +19,7 @@ export const MainChart = (props: MainChartProps) => {
   const symbol = useSymbolQuery()
   const [symbolSelected, setSymbolSelected] = useState(symbol)
   const [chart, dom] = useChart()
-  const { state: ctxState, setMainData, setIndicatorData, getIndicatorData, setSecondaryIndicator, activeChart } = useKChartContext()
+  const { state: ctxState, setMainData, setIndicatorData, getIndicatorData, setSecondaryIndicator, activeChart, removeOverlayStock } = useKChartContext()
   const { usTime } = useTime()
   const state = ctxState[props.index]
   const startTime = renderUtils.getStartTime(usTime, state.timeIndex)
@@ -78,12 +78,14 @@ export const MainChart = (props: MainChartProps) => {
   }, [mainIndicatorsQuery, secondaryIndicatorsQuery])
 
 
-  useEffect(() => {
-
-  })
 
   useMount(() => {
     if (chart.current) {
+      chart.current.on('legendselectchanged', (e: any) => {
+        if (!e.selected[e.name]) {
+          removeOverlayStock({ index: props.index, symbol: e.name })
+        }
+      })
       render()
     }
   })
@@ -104,11 +106,11 @@ export const MainChart = (props: MainChartProps) => {
     /**
      * 画主图指标
      */
- 
+    renderOverlay(_options, state.overlayStock)
     renderMainIndicators(_options, Object.values(state.mainIndicators), Object.keys(state.mainIndicators).map(v => getIndicatorData({ indicator: state.mainIndicators[v] })))
-
+    renderOverlayMark(_options, state)
     renderSecondary(_options, state.secondaryIndicators, state.secondaryIndicators.map(v => getIndicatorData({ indicator: v })))
-  
+
     chart.current.setOption(_options)
   }
 

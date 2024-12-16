@@ -4,6 +4,7 @@ import { useState, type ReactNode } from "react"
 interface BaseSearchListProps {
   data: { label: string, value: string, extra: NormalizedRecord }[]
   name: string
+  search?: boolean
   children?: (value: string, item: { label: string, value: string }) => ReactNode
 }
 
@@ -57,7 +58,11 @@ export const SearchList = <T extends 'single' | 'multi'>(props: SearchListProps<
 
   return (
     <div className="text-sm">
-      <Input placeholder="搜索指标" className="border-none placeholder:text-tertiary" value={searchKey} onChange={(e) => setSearchKey(e.target.value)} />
+      {
+        props.search !== false ? (
+          <Input placeholder="搜索指标" className="border-none placeholder:text-tertiary" value={searchKey} onChange={(e) => setSearchKey(e.target.value)} />
+        ): null
+      }
       <div className="border-0 border-b border-t border-solid border-border text-center py-1 bg-background">{name}</div>
       <ScrollArea className="h-[300px]">
         <RadioGroup>

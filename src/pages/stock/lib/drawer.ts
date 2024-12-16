@@ -3,14 +3,13 @@ import type { CustomSeriesOption, LineSeriesOption } from 'echarts/charts'
 import type { KChartState } from './ctx'
 import echarts from '@/utils/echarts'
 import { renderUtils } from './utils'
-import { colorUtil } from "@/utils/style"
+import { colorUtil } from '@/utils/style'
 
-type XAxis =  number
+type XAxis = number
 type YAxis = number
 type width = number
 type empty = 0 | 1
 type DrawerColor = number
-
 
 type DrawerFuncOptions<T = any> = {
   /**
@@ -32,7 +31,7 @@ type DrawerFunc<T = any> = (options: ECOption, state: KChartState['state'][0], p
 /**
  * 画一条线
  */
-export const drawerLine: DrawerFunc<[XAxis, number][]> = (options, _, { index, data, extra }) => {
+export const drawLine: DrawerFunc<[XAxis, number][]> = (options, _, { index, data, extra }) => {
   const line: LineSeriesOption = {
     xAxisIndex: index,
     yAxisIndex: index,
@@ -55,17 +54,17 @@ export type DrawerTextShape = [XAxis, YAxis, string, DrawerColor]
  * 文本
  * 值类型为 [x, y, text]
  * @param options echarts配置
- * @param state 当前窗口状态 
+ * @param state 当前窗口状态
  * @param opts 画图参数
  * @param opts.index 画在第几个数据集上
  * @param opts.data 对应的数据
  * @param opts.extra 额外的数据
  * @returns echarts配置
- * 
+ *
  * @example ['2030-01-01', 111380, 'text', '#00943c']
- * 
+ *
  */
-export const drawerText: DrawerFunc<DrawerTextShape[]> = (options, _, { index, data }) => {
+export const drawText: DrawerFunc<DrawerTextShape[]> = (options, _, { index, data }) => {
   const line: CustomSeriesOption = {
     xAxisIndex: index,
     yAxisIndex: index,
@@ -75,7 +74,7 @@ export const drawerText: DrawerFunc<DrawerTextShape[]> = (options, _, { index, d
       const y = api.value(1) as number
       const text = api.value(2) as string
       const point = api.coord([x, y])
-      const color = api.value(3) as string ?? '#00943c'
+      const color = (api.value(3) as string) ?? '#00943c'
 
       return {
         type: 'text',
@@ -98,7 +97,6 @@ export const drawerText: DrawerFunc<DrawerTextShape[]> = (options, _, { index, d
   return options
 }
 
-
 export type DrawerRectShape = [XAxis, YAxis, YAxis, width, empty, DrawerColor]
 
 /**
@@ -106,11 +104,7 @@ export type DrawerRectShape = [XAxis, YAxis, YAxis, width, empty, DrawerColor]
  * 值类型为 [x, bottom, top, width, empty, render]
  * @example ['2030-01-01', 0, 111380, 0.8, 0]
  */
-export const drawerRect: DrawerFunc<DrawerRectShape[]> = (
-  options,
-  _,
-  { index, data }
-) => {
+export const drawRect: DrawerFunc<DrawerRectShape[]> = (options, _, { index, data }) => {
   const line: CustomSeriesOption = {
     xAxisIndex: index,
     yAxisIndex: index,
@@ -129,7 +123,7 @@ export const drawerRect: DrawerFunc<DrawerRectShape[]> = (
       const width = (api.value(3) as number) * ((api.size!(20) as any)[0] as number)
       const size = api.size!([x, yValue]) as number[]
       const empty = api.value(4) as number
-      const color = api.value(5) as string ?? '#00943c'
+      const color = (api.value(5) as string) ?? '#00943c'
       return {
         type: 'rect',
         shape: {
@@ -163,7 +157,7 @@ type GradientData = {
 /**
  * 填充渐变
  */
-export const drawerGradient: DrawerFunc<[XAxis, GradientData[], string[]][]> = (options, _, { index, data }) => {
+export const drawGradient: DrawerFunc<[XAxis, GradientData[], string[]][]> = (options, _, { index, data }) => {
   const right = Number.parseFloat(renderUtils.getGridIndex(options, index)?.right?.toString() ?? '60')
 
   const points: CustomSeriesOption[] = data
@@ -188,7 +182,7 @@ export const drawerGradient: DrawerFunc<[XAxis, GradientData[], string[]][]> = (
             c[index] = `rgba(${color.r}, ${color.g}, ${color.b}, ${color.a})`
           }
         })
-      
+
         const _points: number[][] = []
 
         item[1].forEach(p => {

@@ -1,5 +1,5 @@
 import { getStockIndicators, type StockIndicator } from "@/api"
-import { HoverCard, HoverCardContent, HoverCardTrigger, JknIcon } from "@/components"
+import { HoverCard, HoverCardContent, HoverCardTrigger, JknIcon, StockSelect } from "@/components"
 import { cn } from "@/utils/style"
 import { useQuery } from "@tanstack/react-query"
 import { useUpdateEffect } from "ahooks"
@@ -13,7 +13,7 @@ const CHART_TOOL = ['主图指标', '线型切换', '多图模式', '股票PK', 
 
 export const ChartToolSelect = () => {
   const [toolType, setToolType] = useState<string>('主图指标')
-  const { state, activeChartIndex, toggleMainChartType, setMainSystem, setMainIndicators, setMainCoiling } = useKChartContext()
+  const { state, activeChartIndex, toggleMainChartType, setMainSystem, setMainIndicators, setMainCoiling, addOverlayStock } = useKChartContext()
 
   const activeChart = state[activeChartIndex]
   const onChangeMainChartType = () => {
@@ -52,6 +52,10 @@ export const ChartToolSelect = () => {
 
   const onChangeMainIndicator = (_: any, data: any[]) => {
     setMainIndicators({ indicators: data.map(v => ({ id: v.value, type: v.extra.db_type, timeIndex: activeChart.timeIndex, symbol: activeChart.symbol })) })
+  }
+
+  const onOverlayClick = (symbol: string) => {
+    addOverlayStock({ symbol })
   }
 
   return (
@@ -97,7 +101,9 @@ export const ChartToolSelect = () => {
                   className={cn('flex items-center cursor-pointer', activeChart.type === 'k-line' && 'text-primary')}><JknIcon name="line_type_2" className="w-4 h-4 mr-1" checked={activeChart.type === 'k-line'} />蜡烛图</div>
               </div>
             ),
-            '多图模式': <ViewModeSelect />
+            '多图模式': <ViewModeSelect />,
+            '股票PK': <div className="flex items-center space-x-4 text-sm"><span>叠加股票</span><StockSelect size="mini" onChange={onOverlayClick} /></div>,
+            '叠加标记': <MarkList />
           }[toolType] ?? null}
         </div>
       </div>
@@ -119,5 +125,34 @@ export const ChartToolSelect = () => {
         }
       </div>
     </>
+  )
+}
+
+
+const MarkList = () => {
+  const { overMarkList, activeChart, setOverlayMark } = useKChartContext()
+
+
+
+
+  return (
+    <div className="flex items-center space-x-4">
+      {
+        overMarkList.map(mark => (
+          <HoverCard key={mark.key} openDelay={100} closeDelay={200}>
+            <HoverCardTrigger className="">
+              <span className="text-sm flex items-center cursor-pointer">
+                <span>{mark.title}</span>
+                <JknIcon name="arrow_down" className="w-3 h-3 ml-1" />
+              </span>
+            </HoverCardTrigger>
+            <HoverCardContent side="top" className="w-fit p-0">
+              <SearchList search={false} onChange={(v, d) => { setOverlayMark({mark: v, type: mark.key, title: d.label}) }} type="single" key={mark.key} data={mark.value.map(t => ({ label: t.name, value: t.key, extra: {title: t.name} }))} name={mark.title} value={activeChart().overlayMark?.mark} />
+            </HoverCardContent>
+          </HoverCard>
+
+        ))
+      }
+    </div>
   )
 }

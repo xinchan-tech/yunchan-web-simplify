@@ -1,0 +1,297 @@
+"""
+绘图函数(PLOYLINE、STICKLINE、DRAWTEXT等)
+这些绘图函数很蛋疼的里面有个条件参数,可能需要计算(比较)是否满足这个条件才进行绘制
+所以还是需要进入解析里面的,只不过返回的数据类型得酌情处理
+"""
+from dsxindexer.configer import DSX_FIELD_STR
+from dsxindexer.sindexer.base_sindexer import BaseSindexer
+
+   def PLOYLINE(self:BaseSindexer,COND:DSX_FIELD_STR,PRICE:DSX_FIELD_STR):
+    """绘制折线段.
+
+    用法:
+     PLOYLINE(COND,PRICE),当COND条件满足时,以PRICE位置为顶点画折线连接.
+    例如:
+     PLOYLINE(HIGH>=HHV(HIGH,20),HIGH)表示在创20天新高点之间画折线
+    """
+    cond = self.GET(COND)
+    price = 0
+    if cond:
+        price = self.GET(PRICE)
+    if self.cursor.index>0 and not cond: return None
+    return ['PLOYLINE', cond, price]
+
+   def DRAWSL(self:BaseSindexer,COND:DSX_FIELD_STR,PRICE:DSX_FIELD_STR,SLOPE:DSX_FIELD_STR,LEN:DSX_FIELD_STR,DIRECT:int):
+    """绘制斜线.
+
+    用法:
+     DRAWSL(COND,PRICE,SLOPE,LEN,DIRECT),当COND条件满足时,在PRICE位置画斜线,SLOPE为斜率,LEN为长度,DIRECT为0向右延伸,1向左延伸,2双向延伸.
+    注意:
+     1.K线间的纵向高度差为SLOPE;
+     2.SLOPE为0时,为水平线;
+     3.SLOPE为10000时,为垂直线,LEN为向上的像素高度,DIRECT表示向上或向下延伸;
+     4.SLOPE和LEN支持变量;
+    """
+    cond = self.GET(COND)
+    price = 0
+    slope,_len = 0,0
+    if cond:
+        price = self.GET(PRICE)
+        slope = self.GET(SLOPE)
+        _len = self.GET(LEN)
+    return ['DRAWSL',cond,price,slope,_len,DIRECT]
+
+def DRAWKLINE(self:BaseSindexer,HIGH:DSX_FIELD_STR,OPEN:DSX_FIELD_STR,LOW:DSX_FIELD_STR,CLOSE:DSX_FIELD_STR):
+    """用法:
+
+    以HIGH为最高价,OPEN为开盘价,LOW为最低,CLOSE收盘画K线
+    """
+    h = self.GET(HIGH)
+    o = self.GET(OPEN)
+    l = self.GET(LOW)
+    c = self.GET(CLOSE)
+    return ['DRAWKLINE',h,o,l,c]
+
+   def STICKLINE(self:BaseSindexer,COND:DSX_FIELD_STR,PRICE1:DSX_FIELD_STR,PRICE2:DSX_FIELD_STR,WIDTH,EMPTY):
+    """绘制柱线.
+    
+    用法:
+     STICKLINE(COND,PRICE1,PRICE2,WIDTH,EMPTY),当COND条件满足时,在PRICE1和PRICE2位置之间画柱状线,宽度为WIDTH(10为标准间距),EMPTH为0画实心柱,-1画虚线空心柱,否则画实线空心柱.
+    例如:
+     STICKLINE(CLOSE>OPEN,CLOSE,OPEN,0.8,1)表示画K线中阳线的空心柱体部分.
+    """
+    cond = self.GET(COND)
+    p1,p2 = 0,0
+    if cond:
+        p1 = self.GET(PRICE1)
+        p2 = self.GET(PRICE2)
+    return ['STICKLINE',cond,p1,p2,WIDTH,EMPTY]
+
+   def DRAWICON(self:BaseSindexer,COND:DSX_FIELD_STR,PRICE:DSX_FIELD_STR,TYPE:int):
+    """绘制小图标.
+
+    用法:
+     DRAWICON(COND,PRICE,TYPE),当COND条件满足时,在PRICE位置画TYPE号图标(TYPE为1--46).
+    例如:
+     DRAWICON(CLOSE>OPEN,LOW,1)表示当收阳时在最低价位置画1号图标.
+    """
+    cond = self.GET(COND)
+    price = 0
+    if cond:
+        price = self.GET(PRICE)
+    return ['DRAWICON', cond, price, TYPE]
+
+   def DRAWTEXT(self:BaseSindexer,COND:DSX_FIELD_STR,PRICE:DSX_FIELD_STR,TEXT):
+    """显示文字.
+
+    用法:
+     DRAWTEXT(COND,PRICE,TEXT),当COND条件满足时,在PRICE位置书写文字TEXT.
+    例如:
+     DRAWTEXT(CLOSE/OPEN>1.08,LOW,'大阳线')表示当日实体阳线大于8%时在最低价位置显示'大阳线'字样.
+    """
+    cond = self.GET(COND)
+    price = 0
+    if cond:
+        price = self.GET(PRICE)
+    return ['DRAWTEXT', cond, price, TEXT]
+
+   def DRAWTEXT_FIX(self:BaseSindexer,COND:DSX_FIELD_STR,X,Y,TYPE,TEXT):
+    """固定位置显示文字.
+
+    用法:
+     DRAWTEXT_FIX(COND,X,Y,TYPE,TEXT),当COND条件满足时,在当前指标窗口内(X,Y)位置书写文字TEXT,X,Y为书写点在窗口中相对于左上角的百分比,TYPE:0为左对齐,1为右对齐.
+    例如:
+     DRAWTEXT_FIX(CURRBARSCOUNT=1 AND CLOSE/OPEN>1.08,0.5,0.5,0,'大阳线')表示最后一个交易日实体阳线大于8%时在窗口中间位置显示'大阳线'字样.
+    """
+    cond = self.GET(COND)
+    if not cond: return None
+    return ['DRAWTEXT_FIX',cond,X,Y,TYPE,TEXT]
+
+   def DRAWNUMBER(self:BaseSindexer,COND:DSX_FIELD_STR,PRICE:DSX_FIELD_STR,NUMBER:DSX_FIELD_STR):
+    """画出数字.
+
+    用法:
+     DRAWNUMBER(COND,PRICE,NUMBER),当COND条件满足时,在PRICE位置书写数字NUMBER.
+    例如:
+     DRAWNUMBER(CLOSE/OPEN>1.08,LOW,C)表示当日实体阳线大于8%时在最低价位置显示收盘价.
+    """
+    cond = self.GET(COND)
+    price = 0
+    num = 0
+    if cond:
+        price = self.GET(PRICE)
+        num = self.GET(NUMBER)
+    return ['DRAWNUMBER', cond, price, num]
+
+   def DRAWNUMBER_FIX(self:BaseSindexer,COND:DSX_FIELD_STR,X,Y,TYPE,NUMBER:DSX_FIELD_STR):
+    """固定位置显示数字.
+
+    用法:
+     DRAWNUMBER_FIX(COND,X,Y,TYPE,NUMBER),当COND条件满足时,在当前指标窗口内(X,Y)位置书写数字NUMBER,X,Y为书写点在窗口中相对于左上角的百分比,TYPE:0为左对齐,1为右对齐.
+    例如:
+     DRAWNUMBER_FIX(CURRBARSCOUNT=1 AND CLOSE/OPEN>1.08,0.5,0.5,0,C)表示最后一个交易日实体阳线大于8%时在窗口中间位置显示收盘价.
+    """
+    cond = self.GET(COND)
+    num = 0
+    if cond:
+        num = self.GET(NUMBER)
+    return ['DRAWNUMBER_FIX', cond, X,Y,TYPE, num]
+
+def RGB(self:BaseSindexer,Red,Green,Blue):
+    """将自定颜色作为数值输出.
+    用法:
+     RGB(Red,Green,Blue),输出为0XBBGGRR,参数使用十进制数,范围为0至255,以最近一个周期数值为准.
+    例如:
+     RGB(0,0,255)输出结果为16进制的0XFF0000.
+    """
+    b = hex(Blue)[2:]
+    if b.__len__()<2: b = f'0{b}'
+    g = hex(Green)[2:]
+    if g.__len__()<2: g = f'0{g}'
+    r = hex(Red)[2:]
+    if r.__len__()<2: r = f'0{r}'
+    rgb = f'0x{b}{g}{r}'.upper()
+    return rgb
+
+   def DRAWBAND(self:BaseSindexer,VAL1:DSX_FIELD_STR,COLOR1,VAL2:DSX_FIELD_STR,COLOR2):
+    """画出带状线.
+
+    用法:
+     DRAWBAND(VAL1,COLOR1,VAL2,COLOR2),当VAL1>VAL2时,在VAL1和VAL2之间填充COLOR1;当VAL1<VAL2时,填充COLOR2,这里的颜色均使用RGB函数计算得到.
+    例如:
+     DRAWBAND(OPEN,RGB(0,224,224),CLOSE,RGB(255,96,96));
+    """
+    v1 = self.GET(VAL1)
+    v2 = self.GET(VAL2)
+    c1 = self.GET(COLOR1)
+    if c1==None: c1=COLOR1
+    c2 = self.GET(COLOR2)
+    if c2==None: c2=COLOR2
+    return ['DRAWBAND',v1,c1,v2,c2]
+
+def DRAWNULL(self:BaseSindexer, index):
+    """返回无效数.
+
+    用法:
+     DRAWNULL
+    例如:
+     IF(CLOSE>REF(CLOSE,1),CLOSE,DRAWNULL)表示下跌时不画线
+    """
+    return None
+
+   def DRAWLINE(self:BaseSindexer,COND1:DSX_FIELD_STR,PRICE1:DSX_FIELD_STR,COND2:DSX_FIELD_STR,PRICE2:DSX_FIELD_STR,EXPAND:int):
+    """属于未来函数,绘制直线段.\n
+    用法:
+     DRAWLINE(COND1,PRICE1,COND2,PRICE2,EXPAND),当COND1条件满足时,在PRICE1位置画直线起点,当COND2条件满足时,在PRICE2位置画直线终点,EXPAND为延长类型.
+    例如:
+     DRAWLINE(HIGH>=HHV(HIGH,20),HIGH,LOW<=LLV(LOW,20),LOW,1)表示在创20天新高与创20天新低之间画直线并且向右延长.
+    """
+    cond1 = self.GET(COND1)
+    if cond1:
+        for index in range(self.cursor.index+1,self.cursor.count):
+            cond2 = self.GET(COND2,index)
+            if cond2:
+                price1 = self.GET(PRICE1,index)
+                price2 = self.GET(PRICE2,index)
+                # ['DRAWLINE',条件1结果,PRICE1,COND2满足的位置,PRICE2,EXPAND]
+                return ['DRAWLINE',1,price1, index,price2, EXPAND]
+
+    return ['DRAWLINE',0,0,0,0,EXPAND]
+
+"""
+交易信号函数和绘图函数有些类似, 基本也是满足什么条件, 在对于位置进行标记
+所以交易信号函数也放在绘图函数这个边了
+"""
+   def BUY(self:BaseSindexer,COND:DSX_FIELD_STR,X:DSX_FIELD_STR):
+    """多头建仓(买入开仓).
+    参数1为触发条件,参数2为标记放置位置.
+
+    例如:BUY(CROSS(A,B),LOW),当A上穿B时,在LOW处画标记,同时突出提示或直接下单,如果LOW改为DRAWNULL,就不画标记.(分时图上不支持)
+    """
+    cond = self.GET(COND)
+    val = self.GET(X)
+    return ['BUY',cond,val]
+
+   def BUYSHORT(self:BaseSindexer,COND:DSX_FIELD_STR,X:DSX_FIELD_STR):
+    """空头平仓(买入平仓).
+    参数1为触发条件,参数2为标记放置位置.
+
+    例如:BUYSHORT(CROSS(A,B),LOW),当A上穿B时,在LOW处画标记,同时突出提示或直接下单,如果LOW改为DRAWNULL,就不画标记.(分时图上不支持)
+    """
+    cond = self.GET(COND)
+    val = self.GET(X)
+    return ['BUYSHORT',cond,val]
+
+   def BUYSHORT_BUY(self:BaseSindexer,COND:DSX_FIELD_STR,X:DSX_FIELD_STR):
+    """先平空仓再开多仓.
+    参数1为触发条件,参数2为标记放置位置.
+
+    例如: BUYSHORT_BUY(CROSS(O,C),LOW),当A上穿B时,在LOW处画标记,同时突出提示或直接下单,如果LOW改为DRAWNULL,就不画标记.(分时图上不支持)
+
+    独立池时,反手时平掉所有的原来仓位
+    """
+    cond = self.GET(COND)
+    val = self.GET(X)
+    return ['BUYSHORT_BUY',cond,val]
+
+   def SELL(self:BaseSindexer,COND:DSX_FIELD_STR,X:DSX_FIELD_STR):
+    """多头平仓(卖出平仓).
+    参数1为触发条件,参数2为标记放置位置.
+
+    例如:SELL(CROSS(O,C),HIGH),当A上穿B时,在HIGH处画标记,同时突出提示或直接下单,如果HIGH改为DRAWNULL,就不画标记.(分时图上不支持)
+    """
+    cond = self.GET(COND)
+    val = self.GET(X)
+    return ['SELL',cond,val]
+
+   def SELLSHORT(self:BaseSindexer,COND:DSX_FIELD_STR,X:DSX_FIELD_STR):
+    """空头建仓(卖出开仓).
+    参数1为触发条件,参数2为标记放置位置.
+
+    例如: SELLSHORT(CROSS(O,C),HIGH),当A上穿B时,在HIGH处画标记,同时突出提示或直接下单,如果HIGH改为DRAWNULL,就不画标记.(分时图上不支持)
+    """
+    cond = self.GET(COND)
+    val = self.GET(X)
+    return ['SELLSHORT',cond,val]
+
+   def SELL_SELLSHORT(self:BaseSindexer,COND:DSX_FIELD_STR,X:DSX_FIELD_STR):
+    """先平多仓再开空仓.
+    参数1为触发条件,参数2为标记放置位置.
+
+    例如: SELL_SELLSHORT(CROSS(O,C),HIGH),当A上穿B时,在HIGH处画标记,同时突出提示或直接下单,如果HIGH改为DRAWNULL,就不画标记.(分时图上不支持)
+
+    独立池时,反手时平掉所有的原来仓位
+    """
+    cond = self.GET(COND)
+    val = self.GET(X)
+    return ['SELL_SELLSHORT',cond,val]
+
+   def CLOSEALLD(self:BaseSindexer,COND:DSX_FIELD_STR,X:DSX_FIELD_STR):
+    """平掉所有多头仓位.
+    参数1为触发条件,参数2为标记放置位置.
+
+    例如: CLOSEALLD(CROSS(O,C),HIGH),当A上穿B时,在HIGH处画标记,同时突出提示或直接下单,如果HIGH改为DRAWNULL,就不画标记.(分时图上不支持)
+    """
+    cond = self.GET(COND)
+    val = self.GET(X)
+    return ['CLOSEALLD',cond,val]
+
+   def CLOSEALLK(self:BaseSindexer,COND:DSX_FIELD_STR,X:DSX_FIELD_STR):
+    """平掉所有空头仓位.
+    参数1为触发条件,参数2为标记放置位置.
+
+    例如: CLOSEALLK(CROSS(A,B),LOW),当A上穿B时,在LOW处画标记,同时突出提示或直接下单,如果LOW改为DRAWNULL,就不画标记.(分时图上不支持)
+    """
+    cond = self.GET(COND)
+    val = self.GET(X)
+    return ['CLOSEALLK',cond,val]
+24
+
+   def DRAWRECTREL(self:BaseSindexer,LEFT,TOP,RIGHT,BOTTOM,COLOR):
+    """相对位置上画矩形.\n
+    用法:
+     DRAWRECTREL(LEFT,TOP,RIGHT,BOTTOM,COLOR),以图形窗口(LEFT,TOP)为左上角,(RIGHT,BOTTOM)为右下角绘制矩形,坐标单位是窗口沿水平和垂直方向的1/1000,取值范围是0—999,超出范围则可能显示在图形窗口外,矩形中间填充颜色COLOR,COLOR为0表示不填充.
+    例如:
+     DRAWRECTREL(0,0,500,500,RGB(255,255,0))表示在图形最左上部1/4位置用黄色绘制矩形
+    """
+    return ['DRAWRECTREL',LEFT,TOP,RIGHT,BOTTOM,COLORRRGGBB]

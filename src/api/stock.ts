@@ -1301,3 +1301,45 @@ export const getStockIndicatorData = (params: GetStockIndicatorDataParams) => {
   return request.get<GetStockIndicatorDataResult>('/stock/indicator/data', { params }).then(r => r.data)
 }
 getStockIndicatorData.cacheKey = 'stock:indicator:data'
+
+type GetStockTabListResult = {
+  key: string
+  title: string
+  value: {
+    name: string
+    key: string
+  }[]
+}
+
+/**
+ * 获取叠加标记列表
+ */
+export const getStockTabList = () => {
+  return request.get<GetStockTabListResult[]>('/stock/tab/list').then(r => r.data)
+}
+getStockTabList.cacheKey = 'stock:tab:list'
+
+type GetStockTabDataResult = {
+  [key: string]: {
+    date: string
+    event_zh: string
+    event_en: string
+    category: string
+  }[]
+}
+
+/**
+ * 获取叠加标签数据
+ */
+export const getStockTabData = (params: {
+  start?: string
+  ticker: string
+  param: {
+    finance?: string[]
+    economic?: string[]
+    event?: string[]
+  }
+}) => {
+  return request.post<GetStockTabDataResult>('/stock/economic/tab',  params).then(r => r.data)
+}
+getStockTabData.cacheKey = 'stock:tab:data'

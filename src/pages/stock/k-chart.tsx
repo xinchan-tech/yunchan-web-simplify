@@ -1,15 +1,22 @@
 import { cn } from "@/utils/style"
-import { useCallback, useMemo, useRef } from "react"
+import { useCallback, useEffect, useMemo, useRef } from "react"
 import { useImmer } from "use-immer"
 import { ChartContextMenu } from "./component/chart-context-menu"
 import { ChartToolSelect } from "./component/chart-tool"
 import { MainChart } from "./component/main-chart"
 import { TimeIndexSelect } from "./component/time-index"
 import { type Indicator, type IndicatorCache, KChartContext, type KChartState, createDefaultChartState, isTimeIndexChart } from "./lib"
-import { StockChartInterval } from "@/api"
+import { getStockChart, getStockTabData, getStockTabList, StockChartInterval } from "@/api"
 import dayjs from "dayjs"
+import { renderUtils } from "./lib/utils"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { useTime } from "@/store"
 
 
+/**
+ * @examples
+ * @returns 
+ */
 
 export const KChart = () => {
   const [context, setContext] = useImmer<KChartState>({
@@ -29,6 +36,14 @@ export const KChart = () => {
   })
   const indicatorCache = useRef<IndicatorCache>(new WeakMap())
   const indicatorMap = useRef(new Map())
+  const queryClient = useQueryClient()
+  const { usTime } = useTime()
+
+  const tabList = useQuery({
+    queryKey: [getStockTabList.cacheKey],
+    queryFn: () => getStockTabList(),
+    placeholderData: () => ([])
+  })
 
   const setMainSystem: KChartContext['setMainSystem'] = ({ index, system }) => {
     setContext(d => {
@@ -40,14 +55,13 @@ export const KChart = () => {
   const setMainIndicators: KChartContext['setMainIndicators'] = ({ index, indicators }) => {
     const _indicators = Array.isArray(indicators) ? indicators : [indicators]
     const _indicatorsMap: NormalizedRecord<Indicator> = {}
-   
 
-    
+
+
     _indicators.forEach(({ id, type, timeIndex, symbol }) => {
       const cacheKey = `${symbol}-${timeIndex}-${id}-${type}`
 
       let idt = { id: id, type, timeIndex, symbol }
-      console.log("🚀 ~ KChart ~ idt:", idt)
       if (indicatorMap.current.has(cacheKey)) {
         idt = indicatorMap.current.get(cacheKey)
       } else {
@@ -56,14 +70,6 @@ export const KChart = () => {
 
       _indicatorsMap[id] = idt
     })
-    
-
-    // Array.from(Reflect.ownKeys(chart.mainIndicators)).forEach((id) => {
-    //   if (!_indicators.some(i => i.id === id)) {
-    //     indicatorCache.current.delete(chart.mainIndicators[id.toString()])
-    //     delete chart.mainIndicators[id.toString()]
-    //   }
-    // })
 
     setContext(d => {
       d.state[index ?? d.activeChartIndex].mainIndicators = _indicatorsMap
@@ -86,14 +92,14 @@ export const KChart = () => {
   }
 
   const setTimeIndex: KChartContext['setTimeIndex'] = ({ index, timeIndex }) => {
-    const newMainIndicators = Object.values(context.state[index ?? context.activeChartIndex].mainIndicators).map(v => ({...v, timeIndex}))
+    const newMainIndicators = Object.values(context.state[index ?? context.activeChartIndex].mainIndicators).map(v => ({ ...v, timeIndex }))
     setContext(d => {
       const chart = d.state[index ?? d.activeChartIndex]
       chart.timeIndex = timeIndex
     })
-    setMainIndicators({ index, indicators: newMainIndicators})
+    setMainIndicators({ index, indicators: newMainIndicators })
 
-    const newSecondaryIndicators = context.state[index ?? context.activeChartIndex].secondaryIndicators.map(v => ({...v, timeIndex}))
+    const newSecondaryIndicators = context.state[index ?? context.activeChartIndex].secondaryIndicators.map(v => ({ ...v, timeIndex }))
 
     newSecondaryIndicators.forEach((indicator, idx) => {
       setSecondaryIndicator({ indicator, index, indicatorIndex: idx })
@@ -142,7 +148,7 @@ export const KChart = () => {
       let idt = indicator
       if (indicatorMap.current.has(cacheKey)) {
         idt = indicatorMap.current.get(cacheKey)
-      }else{
+      } else {
         indicatorMap.current.set(cacheKey, idt)
       }
 
@@ -157,7 +163,7 @@ export const KChart = () => {
   const setMainData: KChartContext['setMainData'] = useCallback(({ index, data }) => {
     setContext(d => {
       const chart = d.state[index ?? d.activeChartIndex]
-      chart.mainData = data ? {...data, history: data.history.map(v => [dayjs(v[0]).valueOf().toString(), ...v.slice(1)])} as any : {
+      chart.mainData = data ? { ...data, history: data.history.map(v => [dayjs(v[0]).valueOf().toString(), ...v.slice(1)]) } as any : {
         history: [],
         coiling_data: [],
         md5: ''
@@ -186,42 +192,90 @@ export const KChart = () => {
     return indicatorCache.current.get(indicator)
   }, [])
 
+  const setViewMode: KChartContext['setViewMode'] = ({ viewMode }) => {
+    const count = renderUtils.getViewMode(viewMode)
 
+    setContext(d => {
+      const chart = d.state[d.activeChartIndex]
+      d.viewMode = viewMode
+      if (d.state.length > count) {
+        d.state = d.state.slice(0, count)
+      } else {
+        for (let i = d.state.length; i < count; i++) {
+          d.state.push(createDefaultChartState({
+            index: i,
+            symbol: chart.symbol
+          }))
+        }
+      }
+    })
+  }
 
-  const chartCount = useMemo(() => {
-    switch (context.viewMode) {
-      case 'single':
-        return 1
-      case 'double':
-        return 2
-      case 'double-vertical':
-        return 2
-      case 'three-left-single':
-        return 3
-      case 'three-right-single':
-        return 3
-      case 'three-vertical-top-single':
-        return 3
-      case 'three-vertical-bottom-single':
-        return 3
-      case 'four':
-        return 4
-      case 'six':
-        return 6
-      case 'nine':
-        return 9
-      default:
-        return 1
+  const addOverlayStock: KChartContext['addOverlayStock'] = ({ index, symbol }) => {
+    const chart = context.state[index ?? context.activeChartIndex]
+
+    if (chart.overlayStock.find(o => o.symbol === symbol)) return
+    const startTime = renderUtils.getStartTime(usTime, chart.timeIndex)
+    const params = {
+      start_at: startTime,
+      ticker: symbol,
+      interval: chart.timeIndex,
+      gzencode: true
     }
-  }, [context.viewMode])
+
+    queryClient.ensureQueryData({
+      queryKey: [getStockChart.cacheKey, params],
+      queryFn: () => getStockChart(params)
+    }).then(r => {
+      setContext(d => {
+        const chart = d.state[index ?? d.activeChartIndex]
+        chart.overlayStock.push({ symbol, data: r })
+        queryClient.invalidateQueries({
+          queryKey: [getStockChart.cacheKey, params]
+        })
+      })
+    })
+
+  }
+
+  const removeOverlayStock: KChartContext['removeOverlayStock'] = ({ index, symbol }) => {
+    setContext(d => {
+      const chart = d.state[index ?? d.activeChartIndex]
+      const overlayStock = chart.overlayStock.filter(o => o.symbol !== symbol)
+      chart.overlayStock = overlayStock
+    })
+  }
+
+  const setOverlayMark: KChartContext['setOverlayMark'] = async ({ index, mark, type, title }) => {
+    const chart = context.state[index ?? context.activeChartIndex]
+    if (chart.overlayMark?.mark === mark) return
+
+    setContext(d => {
+      const chart = d.state[index ?? d.activeChartIndex]
+      chart.overlayMark = { mark, title }
+    })
+
+    const r = await queryClient.ensureQueryData({
+      queryKey: [getStockTabData.cacheKey, { type, mark, symbol: chart.symbol }],
+      queryFn: () => getStockTabData({ param: {[type]: [mark]}, ticker: chart.symbol, start: '2010-01-01' }),
+      revalidateIfStale: true
+    })
+
+    setContext(d => {
+      const chart = d.state[index ?? d.activeChartIndex]
+      chart.overlayMark = { mark, data: r[type], title }
+    })
+  }
+
+  const chartCount = useMemo(() => renderUtils.getViewMode(context.viewMode), [context.viewMode])
 
   return (
     <div className="h-full overflow-hidden flex flex-col">
       <KChartContext.Provider value={{
         ...context,
         setState: setContext, setMainIndicators, setMainSystem, toggleMainChartType, setMainCoiling, setTimeIndex, activeChart,
-        setSecondaryIndicatorsCount, setSecondaryIndicator, setMainData,
-        setIndicatorData, getIndicatorData
+        setSecondaryIndicatorsCount, setSecondaryIndicator, setMainData, addOverlayStock, removeOverlayStock, setOverlayMark,
+        setIndicatorData, getIndicatorData, setViewMode, overMarkList: tabList.data ?? []
       }}>
         <div className="w-full flex-shrink-0">
           <div className="flex border border-solid border-border px-4">
@@ -241,28 +295,85 @@ export const KChart = () => {
         </div>
       </KChartContext.Provider>
       <style jsx>{`
-         .main-chart {
+        .main-chart {
            display: grid;
            grid-template-columns: 1fr;
            grid-template-rows: 1fr;
-         }
+        }
 
-         .main-chart-single{
+        .main-chart-single{
           grid-template-areas: 'chart-1';
-         }
+        }
 
-         .main-chart-double {
+        .main-chart-double {
            grid-template-areas: 'chart-1 chart-2';
            grid-template-columns: 50% 50%;
-         }
+        }
 
-         .main-chart-double-vertical {
+        .main-chart-double-vertical {
            grid-template-areas: 
            'chart-1'
            'chart-2';
            grid-template-rows: 50% 50%;
            grid-template-columns: 1fr;
-         }
+        }
+
+        .main-chart-three-left-single {
+            grid-template-areas: 
+            'chart-1 chart-2'
+            'chart-1 chart-3';
+            grid-template-rows: 50% 50%;
+            grid-template-columns: 50% 50%;
+        }
+
+        .main-chart-three-right-single {
+              grid-template-areas: 
+              'chart-2 chart-1'
+              'chart-3 chart-1';
+              grid-template-rows: 50% 50%;
+              grid-template-columns: 50% 50%;
+        }
+
+        .main-chart-three-vertical-top-single {
+              grid-template-areas: 
+              'chart-1 chart-1'
+              'chart-2 chart-3';
+              grid-template-rows: 1fr 1fr;
+              grid-template-columns: 1fr 1fr;
+        }
+
+        .main-chart-three-vertical-bottom-single {
+              grid-template-areas: 
+              'chart-2 chart-3'
+              'chart-1 chart-1';
+              grid-template-rows: 1fr 1fr;
+              grid-template-columns: 1fr  1fr;
+        }
+
+        .main-chart-four {
+              grid-template-areas: 
+              'chart-1 chart-2'
+              'chart-3 chart-4';
+              grid-template-rows: 50% 50%;
+              grid-template-columns: 50% 50%;
+        }
+
+        .main-chart-six {
+              grid-template-areas: 
+              'chart-1 chart-2 chart-3'
+              'chart-4 chart-5 chart-6';
+              grid-template-rows: 50% 50%;
+              grid-template-columns: 33.3% 33.3% 33.3%;
+        }
+
+        .main-chart-nine {
+              grid-template-areas: 
+              'chart-1 chart-2 chart-3'
+              'chart-4 chart-5 chart-6'
+              'chart-7 chart-8 chart-9';
+              grid-template-rows: 33.33% 33.33% 33.33%;
+              grid-template-columns: 33.33% 33.33% 33.33%;
+        }
       `}</style>
     </div >
   )
