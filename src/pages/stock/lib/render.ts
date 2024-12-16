@@ -15,7 +15,6 @@ import {
   type DrawerTextShape,
   drawGradient,
   drawLine,
-  drawOverlayMark,
   drawRect,
   drawText
 } from './drawer'
@@ -595,11 +594,7 @@ export const renderOverlayMark = (options: ECOption, state: ArrayItem<KChartStat
   virtualLine.itemStyle = {}
   virtualLine.symbol = 'none'
 
-
   options.series.push(virtualLine)
-  
-
-
 }
 
 /**

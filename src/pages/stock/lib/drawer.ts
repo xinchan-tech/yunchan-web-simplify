@@ -159,21 +159,40 @@ type GradientData = {
  */
 export const drawGradient: DrawerFunc<[XAxis, GradientData[], string[]][]> = (options, _, { index, data }) => {
   const right = Number.parseFloat(renderUtils.getGridIndex(options, index)?.right?.toString() ?? '60')
-
-  const points: CustomSeriesOption[] = data
+  const points = data
     .filter(item => !!item[0])
-    .map(item => ({
-      yAxisIndex: index,
-      xAxisIndex: index,
-      type: 'custom',
-      encode: {
-        x: [0],
-        y: [1]
-      },
-      renderItem: (params, api) => {
-        if (params.context.rendered) return
-        const rightMax = api.getWidth() - right
-        params.context.rendered = true
+    .map((item, index) => {
+      const start = item[0]
+      const ps = item[1]
+
+      const mid = ps[Math.round(ps.length / 2)]
+
+      return [start, mid.x, index]
+    })
+
+
+  /**
+   * 两种方法性能未知，待测试
+   * 方法一
+   */
+  const series: CustomSeriesOption = {
+    type: 'custom',
+    xAxisIndex: index,
+    yAxisIndex: index,
+    encode: {
+      x: [0, 1],
+      y: [2]
+    },
+    renderItem: (params, api) => {
+      if (params.context.rendered) return
+      params.context.rendered = true
+    
+      const rightMax = api.getWidth() - right
+      const polygons: {color: string[], points: number[][]}[] = []
+
+      points.forEach(p => {
+
+        const item: [XAxis, GradientData[], string[]] = data[p[2]]
 
         const colors = (item[2] as unknown as string[]).map(colorUtil.hexToRGBA)
         const c = ['transparent', 'transparent']
@@ -191,33 +210,112 @@ export const drawGradient: DrawerFunc<[XAxis, GradientData[], string[]][]> = (op
           if (po[0] > rightMax) {
             po[0] = rightMax
           }
+
+          if(po[0] < 0) {
+            return
+          }
           _points.push(po)
         })
 
-        return {
+        if(_points.length <= 0){
+          return
+        }
+
+        polygons.push({
+          color: c,
+          points: _points
+        })
+      })
+
+      return {
+        type: 'group',
+        children: polygons.map(polygon => ({
           type: 'polygon',
           shape: {
-            points: [..._points]
+            points: [...polygon.points]
           },
           emphasisDisabled: true,
           style: {
             fill: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
               {
                 offset: 0,
-                color: c[0]
+                color: polygon.color[0]
               },
               {
                 offset: 1,
-                color: c[1]
+                color: polygon.color[1]
               }
             ])
           }
-        }
-      },
-      data: item[1].map(p => [p.x, p.y])
-    }))
+        }))
+      }
+    },
+    data: points
+  }
 
-  Array.isArray(options.series) && options.series.push(...points)
+  /**
+   * 方法二
+   */
+  // const series: CustomSeriesOption = {
+  //   type: 'custom',
+  //   xAxisIndex: index,
+  //   yAxisIndex: index,
+  //   encode: {
+  //     x: [0, 1],
+  //     y: [2]
+  //   },
+  //   renderItem: (_, api) => {
+  //     const y = api.value(2) as number
+  //     const item: [XAxis, GradientData[], string[]] = data[y]
+
+  //     const colors = (item[2] as unknown as string[]).map(colorUtil.hexToRGBA)
+  //     const c = ['transparent', 'transparent']
+  //     colors.forEach((color, index) => {
+  //       if (color) {
+  //         c[index] = `rgba(${color.r}, ${color.g}, ${color.b}, ${color.a})`
+  //       }
+  //     })
+
+  //     const _points: number[][] = []
+  //     const rightMax = api.getWidth() - right
+
+  //     item[1].forEach(p => {
+  //       const po = api.coord([p.x, p.y])
+
+  //       if (po[0] > rightMax) {
+  //         po[0] = rightMax
+  //       }
+
+  //       _points.push(po)
+  //     })
+      
+  //     return {
+  //       type: 'polygon',
+  //       shape: {
+  //         points: [..._points]
+  //       },
+  //       emphasisDisabled: true,
+  //       style: {
+  //         fill: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+  //           {
+  //             offset: 0,
+  //             color: c[0]
+  //           },
+  //           {
+  //             offset: 1,
+  //             color: c[1]
+  //           }
+  //         ])
+  //       }
+  //     }
+  //   },
+  //   data: points
+  // }
+
+  Array.isArray(options.series) && options.series.push(series)
+
+  // console.log(data
+  //   .filter(item => !!item[0]))
 
   return options
 }
