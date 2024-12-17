@@ -165,7 +165,7 @@ export const KChart = () => {
       const chart = d.state[index ?? d.activeChartIndex]
       chart.mainData = data ? { ...data, history: data.history.map(v => [dayjs(v[0]).valueOf().toString(), ...v.slice(1)]) } as any : {
         history: [],
-        coiling_data: [],
+        coiling_data: undefined,
         md5: ''
       }
     })

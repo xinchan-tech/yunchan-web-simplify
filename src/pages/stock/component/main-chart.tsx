@@ -5,7 +5,7 @@ import { useQueries, useQuery } from "@tanstack/react-query"
 import { getStockChart, getStockIndicatorData } from "@/api"
 import { useMount, useUpdateEffect } from "ahooks"
 import { useChart } from "@/hooks"
-import { renderChart, renderMainIndicators, renderOverlay, renderOverlayMark, renderSecondary, renderZoom } from "../lib/render"
+import { renderChart, renderMainCoiling, renderMainIndicators, renderOverlay, renderOverlayMark, renderSecondary, renderZoom } from "../lib/render"
 import { SecondaryIndicator } from "./secondary-indicator"
 import { renderUtils } from "../lib/utils"
 
@@ -107,6 +107,7 @@ export const MainChart = (props: MainChartProps) => {
      * 画主图指标
      */
     renderOverlay(_options, state.overlayStock)
+    renderMainCoiling(_options, state)
     renderMainIndicators(_options, Object.values(state.mainIndicators), Object.keys(state.mainIndicators).map(v => getIndicatorData({ indicator: state.mainIndicators[v] })))
     renderOverlayMark(_options, state)
     renderSecondary(_options, state.secondaryIndicators, state.secondaryIndicators.map(v => getIndicatorData({ indicator: v })))

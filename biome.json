@@ -49,6 +49,6 @@
     }
   },
   "files": {
-    "ignore": ["draw_func.json"]
+    "ignore": ["examples"]
   }
 }

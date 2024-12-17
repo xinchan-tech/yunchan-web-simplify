@@ -18,6 +18,35 @@ type ViewMode =
 
 type MainChartType = 'line' | 'k-line'
 
+export enum CoilingIndicatorId {
+  PEN = '1',
+  ONE_TYPE = '227',
+  TWO_TYPE = '228',
+  THREE_TYPE = '229',
+  /**
+   * 中枢
+   */
+  PIVOT = '2',
+  PIVOT_PRICE = '230',
+  PIVOT_NUM = '231',
+  /**
+   * 反转点
+   */
+  REVERSAL = '232',
+  /**
+   * 重叠
+   */
+  OVERLAP = '233',
+  /**
+   * 短线
+   */
+  SHORT_LINE = '234',
+  /**
+   * 主力
+   */
+  MAIN = '235'
+}
+
 /**
  * K线图上下文
  */
@@ -227,7 +256,7 @@ type MainChartState = {
   /**
    * 主图缠论
    */
-  mainCoiling: string[]
+  mainCoiling: CoilingIndicatorId[]
   /**
    * 主图数据
    */
@@ -286,10 +315,15 @@ export const createDefaultChartState = (opts: { symbol?: string; index: number }
     { id: '10', type: 'system', timeIndex: StockChartInterval.DAY, symbol: opts.symbol ?? 'QQQ' }
   ],
   mainIndicators: {},
-  mainCoiling: ['1', '227', '228', '229'],
+  mainCoiling: [
+    CoilingIndicatorId.PEN,
+    CoilingIndicatorId.ONE_TYPE,
+    CoilingIndicatorId.TWO_TYPE,
+    CoilingIndicatorId.THREE_TYPE
+  ],
   mainData: {
     history: [],
-    coiling_data: [],
+    coiling_data: undefined,
     md5: ''
   },
   overlayStock: [],

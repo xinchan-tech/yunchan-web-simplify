@@ -7,9 +7,18 @@ import { colorUtil } from '@/utils/style'
 
 type XAxis = number
 type YAxis = number
-type width = number
+type Width = number
 type empty = 0 | 1
 type DrawerColor = number
+/**
+ * 线型
+ * 0: 实线
+ * 1: 虚线
+ */
+export enum LineType {
+  SOLID = 0,
+  DASH = 1
+}
 
 type DrawerFuncOptions<T = any> = {
   /**
@@ -41,6 +50,52 @@ export const drawLine: DrawerFunc<[XAxis, number][]> = (options, _, { index, dat
     z: 0,
     color: extra?.color,
     data: [...data.map(item => item[1])]
+  }
+
+  Array.isArray(options.series) && options.series.push(line)
+
+  return options
+}
+
+/**
+ * 画折线
+ */
+export const drawPolyline: DrawerFunc<[XAxis, YAxis, XAxis, YAxis, LineType][]> = (
+  options,
+  _,
+  { index, data, extra }
+) => {
+  const line: CustomSeriesOption = {
+    xAxisIndex: index,
+    yAxisIndex: index,
+    type: 'custom',
+    encode: {
+      x: [0, 2],
+      y: [1, 3]
+    },
+    renderItem: (_, api) => {
+      const start = api.coord([api.value(0), api.value(1)])
+      const end = api.coord([api.value(2), api.value(3)])
+      const lineType = api.value(4) as LineType
+      return {
+        type: 'line',
+        shape: {
+          x1: start[0],
+          y1: start[1],
+          x2: end[0],
+          y2: end[1]
+        },
+        emphasisDisabled: true,
+        z: 100,
+        z2: 1,
+        style: {
+          stroke: extra?.color,
+          lineDash: lineType === LineType.DASH ? 'dashed' : 'solid',
+          lineWidth: 1
+        }
+      }
+    },
+    data: data
   }
 
   Array.isArray(options.series) && options.series.push(line)
@@ -97,11 +152,17 @@ export const drawText: DrawerFunc<DrawerTextShape[]> = (options, _, { index, dat
   return options
 }
 
-export type DrawerRectShape = [XAxis, YAxis, YAxis, width, empty, DrawerColor]
+export type DrawerRectShape = [XAxis, YAxis, YAxis, Width, empty, DrawerColor]
 
 /**
  * 画一个矩形
- * 值类型为 [x, bottom, top, width, empty, render]
+ * 值类型为 [x, bottom, top, width, empty, color]
+ * x: x轴坐标
+ * bottom: 底部y轴坐标
+ * top: 顶部y轴坐标
+ * width: 宽度
+ * empty: 是否为空
+ * color: 颜色
  * @example ['2030-01-01', 0, 111380, 0.8, 0]
  */
 export const drawRect: DrawerFunc<DrawerRectShape[]> = (options, _, { index, data }) => {
@@ -170,7 +231,6 @@ export const drawGradient: DrawerFunc<[XAxis, GradientData[], string[]][]> = (op
       return [start, mid.x, index]
     })
 
-
   /**
    * 两种方法性能未知，待测试
    * 方法一
@@ -186,12 +246,11 @@ export const drawGradient: DrawerFunc<[XAxis, GradientData[], string[]][]> = (op
     renderItem: (params, api) => {
       if (params.context.rendered) return
       params.context.rendered = true
-    
+
       const rightMax = api.getWidth() - right
-      const polygons: {color: string[], points: number[][]}[] = []
+      const polygons: { color: string[]; points: number[][] }[] = []
 
       points.forEach(p => {
-
         const item: [XAxis, GradientData[], string[]] = data[p[2]]
 
         const colors = (item[2] as unknown as string[]).map(colorUtil.hexToRGBA)
@@ -211,13 +270,13 @@ export const drawGradient: DrawerFunc<[XAxis, GradientData[], string[]][]> = (op
             po[0] = rightMax
           }
 
-          if(po[0] < 0) {
+          if (po[0] < 0) {
             return
           }
           _points.push(po)
         })
 
-        if(_points.length <= 0){
+        if (_points.length <= 0) {
           return
         }
 
@@ -288,7 +347,7 @@ export const drawGradient: DrawerFunc<[XAxis, GradientData[], string[]][]> = (op
 
   //       _points.push(po)
   //     })
-      
+
   //     return {
   //       type: 'polygon',
   //       shape: {
@@ -316,6 +375,196 @@ export const drawGradient: DrawerFunc<[XAxis, GradientData[], string[]][]> = (op
 
   // console.log(data
   //   .filter(item => !!item[0]))
+
+  return options
+}
+
+type DrawPivotsShape = {
+  start: [XAxis, YAxis]
+  end: [XAxis, YAxis]
+  bgColor: string
+  mark: string
+  color: string
+}
+
+/**
+ * 绘制主图中枢区域
+ */
+export const drawPivots: DrawerFunc<DrawPivotsShape[]> = (options, _, { index, data }) => {
+  const pivots: CustomSeriesOption = {
+    xAxisIndex: index,
+    yAxisIndex: index,
+    encode: {
+      x: [0, 2],
+      y: [1, 3]
+    },
+    type: 'custom',
+    renderItem: (_, api) => {
+      const startPoint = [api.value(0), api.value(1)] as [XAxis, YAxis]
+      const endPoint = [api.value(2), api.value(3)] as [XAxis, YAxis]
+      const start = api.coord(startPoint)
+      const end = api.coord(endPoint)
+      const width = end[0] - start[0]
+      const height = end[1] - start[1]
+      const bgColor = api.value(5) as string
+      const [positive, ascii, __, mark] = (api.value(4) as string).split('_')
+      const color = api.value(6) as string
+
+      const group = {
+        type: 'group',
+        emphasisDisabled: true,
+        children: [
+          {
+            type: 'rect',
+            shape: {
+              x: start[0],
+              y: start[1],
+              width: width,
+              height: height
+            },
+            z: 1,
+            emphasisDisabled: true,
+            style: {
+              fill: bgColor,
+              lineWidth: 1
+            }
+          }
+        ]
+      } as any
+
+      group.children.push({
+        type: 'text',
+        emphasisDisabled: true,
+        style: {
+          text: `${positive}${String.fromCharCode(+ascii)}`,
+          fill: color,
+          font: 'bold 24px SimHei',
+          textVerticalAlign: 'bottom'
+        },
+        position: [end[0] + 4, start[1]]
+      })
+
+      if (mark) {
+        group.children.push({
+          type: 'text',
+          emphasisDisabled: true,
+          style: {
+            text: mark,
+            fill: color,
+            font: 'bold 12px SimHei',
+            textVerticalAlign: 'bottom'
+          },
+          position: [end[0] + 44, start[1] - 10]
+        })
+      }
+
+      return group
+    },
+    data: data.map(item => [
+      item.start[0],
+      item.start[1],
+      item.end[0],
+      item.end[1],
+      item.mark,
+      item.bgColor,
+      item.color
+    ])
+  }
+
+  Array.isArray(options.series) && options.series.push(pivots)
+
+  return options
+}
+
+type DrawTradePointsShape = {
+  xIndex: XAxis
+  y: YAxis
+  large: boolean
+  buy: boolean
+  positive: number,
+  color: string
+}
+
+/**
+ * 绘制主图买卖点
+ */
+export const drawTradePoints: DrawerFunc<DrawTradePointsShape[]> = (
+  options,
+  _,
+  { index, data }
+) => {
+  const series: CustomSeriesOption = {
+    xAxisIndex: index,
+    yAxisIndex: index,
+    encode: {
+      x: [0],
+      y: [1]
+    },
+    type: 'custom',
+    renderItem: (_, api) => {
+      const x = api.value(0) as number
+      const y = api.value(1) as number
+      const positive = api.value(4) as number
+      const buy = api.value(3) as number
+   
+      const height = !buy ? -40 : 40
+   
+      const start = api.coord([x, y])
+      const cStart = [start[0], start[1] + height + (!buy ? -12 : 12)]
+      const color = api.value(5) as string
+ 
+      return {
+        type: 'group',
+        children: [
+          {
+            type: 'line',
+            shape: {
+              x1: start[0],
+              y1: start[1],
+              x2: start[0],
+              y2: start[1] + height
+            },
+            z2: 10,
+            style: {
+              stroke: color,
+              lineDash: 'dashed',
+              lineWidth: 1
+            }
+          },
+          {
+            type: 'circle',
+            shape: {
+              cx: cStart[0],
+              cy: cStart[1],
+              r: 12
+            },
+            z2: 10,
+            style: {
+              fill: color
+            }
+          },
+          {
+            type: 'text',
+            position: [cStart[0], cStart[1]],
+            z2: 10,
+            style: {
+              text: buy ? '买' : '卖',
+              // text: x.toString(),
+              fill: '#fff',
+              font: 'bold 12px SimHei',
+              textAlign: 'center',
+              textVerticalAlign: 'middle'
+            },
+          }
+        ]
+      }
+    },
+    data: data.map(item => [item.xIndex, item.y, item.large, item.buy, item.positive, item.color])
+  }
+
+  console.log(data.map(item => [item.xIndex, item.y, item.large, item.buy, item.positive, item.color]))
+
+  Array.isArray(options.series) && options.series.push(series)
 
   return options
 }

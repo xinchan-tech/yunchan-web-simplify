@@ -9,17 +9,24 @@ import dayjs from 'dayjs'
 import Decimal from 'decimal.js'
 import type { CandlestickSeriesOption, LineSeriesOption } from 'echarts/charts'
 import { cloneDeep } from 'lodash-es'
-import { type Indicator, type IndicatorData, type KChartState, isTimeIndexChart } from './ctx'
+import { CoilingIndicatorId, type Indicator, type IndicatorData, type KChartState, isTimeIndexChart } from './ctx'
 import {
   type DrawerRectShape,
   type DrawerTextShape,
   drawGradient,
   drawLine,
+  drawPivots,
+  drawPolyline,
   drawRect,
-  drawText
+  drawText,
+  drawTradePoints,
+  LineType
 } from './drawer'
 
 const MAIN_CHART_NAME = 'kChart'
+const MAIN_CHART_NAME_VIRTUAL = 'kChart-virtual'
+
+type ChartState = ArrayItem<KChartState['state']>
 
 /**
  * 主图通用配置
@@ -149,7 +156,7 @@ export const options: ECOption = {
 
 type ChartRender = (
   options: ECOption,
-  state: ArrayItem<KChartState['state']>,
+  state: ChartState,
   data?: Awaited<ReturnType<typeof getStockChart>>,
   secondary?: boolean
 ) => void
@@ -157,10 +164,7 @@ type ChartRender = (
 /**
  * 渲染图表
  */
-export const renderChart = (
-  state: ArrayItem<KChartState['state']>,
-  data?: Awaited<ReturnType<typeof getStockChart>>
-): ECOption => {
+export const renderChart = (state: ChartState, data?: Awaited<ReturnType<typeof getStockChart>>): ECOption => {
   const chain: ChartRender[] = [renderGrid, renderMainChart, renderMarkLine]
   const _options = cloneDeep(options)
 
@@ -406,6 +410,93 @@ export const renderMarkLine: ChartRender = (options, _, data) => {
       ]
     ]
   }
+
+  // 虚拟线
+  const virtualLine = cloneDeep(mainSeries) as LineSeriesOption
+  virtualLine.name = MAIN_CHART_NAME_VIRTUAL
+  virtualLine.type = 'line'
+
+  virtualLine.encode = {
+    x: [0],
+    y: [2]
+  }
+
+  virtualLine.color = 'transparent'
+  virtualLine.symbol = 'none'
+  virtualLine.itemStyle = {}
+
+  virtualLine.markLine = {
+    symbol: ['none', 'none'],
+    lineStyle: {
+      color: '#949596'
+    },
+    label: {
+      formatter: (v: any) => {
+        const x = (v.data as any)?.xAxis as string
+        const date = dayjs(new Date(+x)).format('YYYY-MM-DD')
+
+        return `{date|${date}}{abg|}\n{title|${v.data.name}}`
+      },
+      backgroundColor: '#eeeeee',
+      rich: {
+        date: {
+          color: '#fff',
+          align: 'center',
+          padding: [0, 10, 0, 10]
+        },
+        abg: {
+          backgroundColor: '#e91e63',
+          width: '100%',
+          align: 'right',
+          height: 25,
+          padding: [0, 10, 0, 10]
+        },
+        title: {
+          height: 20,
+          align: 'left',
+          padding: [0, 10, 0, 10]
+        }
+      }
+    },
+    silent: true,
+    data: []
+  }
+
+  Array.isArray(options.series) && options.series.push(virtualLine)
+}
+
+/**
+ * 主图缠论
+ */
+export const renderMainCoiling = (options: ECOption, state: ChartState) => {
+  if (state.mainCoiling.length === 0) return options
+  const points = getCoilingPoints(state.mainData.history, state.mainData.coiling_data)
+  const pivots = getCoilingPivots(state.mainData.coiling_data, points)
+  const expands = getCoilingPivotsExpands(state.mainData.coiling_data, points)
+  state.mainCoiling.forEach(coiling => {
+    if (coiling === CoilingIndicatorId.PEN) {
+      const p: any[] = []
+      points.slice(1).forEach((point, index) => {
+        const prev = points[index]
+        p.push([
+          prev.xIndex,
+          prev.y,
+          point.xIndex,
+          point.y,
+          index === points.length - 2 && state.mainData.coiling_data?.status !== 1 ? LineType.DASH : LineType.SOLID
+        ])
+      })
+      drawPolyline(options, {} as any, { index: 0, data: p, extra: { color: '#ffffff' } })
+    } else if (coiling === CoilingIndicatorId.PIVOT) {
+      drawPivots(options, {} as any, { index: 0, data: expands as any })
+      drawPivots(options, {} as any, { index: 0, data: pivots as any })
+    } else if (
+      [CoilingIndicatorId.ONE_TYPE, CoilingIndicatorId.TWO_TYPE, CoilingIndicatorId.THREE_TYPE].includes(coiling)
+    ) {
+      const tradePoints = getTradePoints(state.mainData.coiling_data, points, coiling as any)
+      drawTradePoints(options, {} as any, { index: 0, data: tradePoints })
+    }
+  })
 }
 
 /**
@@ -476,7 +567,7 @@ export const renderMainIndicators = (options: ECOption, indicators: Indicator[],
 /**
  * 股票叠加
  */
-export const renderOverlay = (options: ECOption, data?: ArrayItem<KChartState['state']>['overlayStock']) => {
+export const renderOverlay = (options: ECOption, data?: ChartState['overlayStock']) => {
   if (!data || data.length === 0) return options
 
   data.forEach(stock => {
@@ -525,76 +616,31 @@ export const renderOverlay = (options: ECOption, data?: ArrayItem<KChartState['s
 /**
  * 主图叠加标记
  */
-export const renderOverlayMark = (options: ECOption, state: ArrayItem<KChartState['state']>) => {
+export const renderOverlayMark = (options: ECOption, state: ChartState) => {
   const mark = state.overlayMark
-  if(!mark || !mark.mark || !mark.data) return options
+  if (!mark || !mark.mark || !mark.data) return options
 
-  if(!Array.isArray(options.series)) return options
+  if (!Array.isArray(options.series)) return options
 
-  const series = options.series.find(item => item.name === 'kChart')
+  const series = options.series.find(item => item.name === MAIN_CHART_NAME_VIRTUAL)
 
-  if(!series) return options
+  if (!series) return options
 
-  const data = mark.data.map((item: any) => {
-    const x = dayjs(item.date).hour(0).minute(0).second(0).valueOf().toString() 
-    const y = (series.data as any[])?.find(s => s[0] === x)?.[2] as number | undefined
+  const data = mark.data
+    .map((item: any) => {
+      const x = dayjs(item.date).hour(0).minute(0).second(0).valueOf().toString()
+      const y = (series.data as any[])?.find(s => s[0] === x)?.[2] as number | undefined
 
-    return [x, y, item.event_zh]
-  }).filter(v => !!v[1]) as [string, number, string][]
+      return [x, y, item.event_zh]
+    })
+    .filter(v => !!v[1]) as [string, number, string][]
 
-  // 画一条虚拟线
-  const virtualLine = cloneDeep(series) as LineSeriesOption
-  virtualLine.name = `${MAIN_CHART_NAME}-virtual`
-  virtualLine.type = 'line'
-
-  virtualLine.encode = {
-    x: [0],
-    y: [2]
-  }
-  virtualLine.markLine = {
-    symbol: ['none', 'none'],
-    lineStyle: {
-      color: '#949596'
-    },
-    label: {
-      formatter: (v) => {
-        const x = (v.data as any)?.xAxis as string
-        const date = dayjs(new Date(+x)).format('YYYY-MM-DD')
-
-        return `{date|${date}}{abg|}\n{title|${mark.title}}`
-      },
-      backgroundColor: '#eeeeee',
-      rich: {
-        date: {
-          color: '#fff',
-          align: 'center',
-          padding: [0, 10, 0, 10]
-        },
-        abg: {
-          backgroundColor: '#e91e63',
-          width: '100%',
-          align: 'right',
-          height: 25,
-          padding: [0, 10, 0, 10]
-        },
-        title: {
-          height: 20,
-          align: 'left',
-          padding: [0, 10, 0, 10]
-        }
-      }
-    },
-    silent: true,
-    data: data.map(d => [
-      { xAxis: d[0], yAxis: d[1] },
+  series.markLine?.data?.push(
+    ...(data.map(d => [
+      { xAxis: d[0], yAxis: d[1], name: mark.title },
       { xAxis: d[0], y: 46 }
-    ])
-  }
-  virtualLine.color = 'rgba(0,0,0,0)'
-  virtualLine.itemStyle = {}
-  virtualLine.symbol = 'none'
-
-  options.series.push(virtualLine)
+    ]) as any)
+  )
 }
 
 /**
@@ -750,7 +796,190 @@ const renderSecondaryAxis = (options: ECOption, state: KChartState['state'][0], 
   return options
 }
 
+/**
+ * 获取1类买卖点数据
+ */
+export const getOneTypeTradePoints = {}
 
+type CoilingPoint = {
+  /**
+   * x轴索引
+   */
+  xIndex: number
+  /**
+   * 最高价或者最低价
+   */
+  y: number
+}
+
+const getCoilingPoints = (
+  history: ChartState['mainData']['history'],
+  coiling: ChartState['mainData']['coiling_data']
+): CoilingPoint[] => {
+  if (!coiling) return []
+  let isTop = coiling.istop
+
+  return coiling.points.map(v => {
+    const p = {
+      xIndex: v,
+      y: isTop ? history[v][3] : history[v][4]
+    }
+
+    isTop = !isTop
+
+    return p
+  })
+}
+
+const getTradePoints = (
+  coiling: ChartState['mainData']['coiling_data'],
+  points: ReturnType<typeof getCoilingPoints>,
+  type: CoilingIndicatorId.ONE_TYPE | CoilingIndicatorId.TWO_TYPE | CoilingIndicatorId.THREE_TYPE
+) => {
+  if (!coiling) return []
+
+  let data: number[][] = []
+
+  if (type === CoilingIndicatorId.ONE_TYPE) {
+    data = coiling.class_1_trade_points
+  } else if (type === CoilingIndicatorId.TWO_TYPE) {
+    data = coiling.class_2_trade_points
+  } else if (type === CoilingIndicatorId.THREE_TYPE) {
+    data = coiling.class_3_trade_points
+  }
+  console.log(coiling)
+
+  if (!data) return []
+
+  let color = colorUtil.rgbaToString(colorUtil.argbToRGBA('FFF323C5'))
+
+  return data.map(v => {
+    return {
+      xIndex: points[v[0]].xIndex,
+      y: points[v[0]].y,
+      large: Boolean(v[1]),
+      buy: Boolean(v[2]),
+      positive: v[3],
+      color
+    }
+  })
+}
+
+/**
+ * 获取中枢数据
+ * @description 中枢数据格式, 具体算法查看examples/coiling.js/readPivots
+ */
+const SEGMENT_NUM_LIMIT = 7
+
+export const getCoilingPivots = (
+  coiling: ChartState['mainData']['coiling_data'],
+  points: ReturnType<typeof getCoilingPoints>
+) => {
+  if (!coiling) return []
+
+  return coiling.pivots.map(p => {
+    // 中枢的起始位置，points索引
+    const start = Number(p[0])
+    // 中枢的结束位置，points索引
+    const end = Number(p[1])
+    // 中枢的顶，points索引
+    const top = Number(p[2])
+    // 中枢的底，points索引
+    const bottom = Number(p[3])
+    // 中枢方向（向上或向下）
+    const direction = Number(p[4])
+    // 中枢结束方向，1为正向结束，-1为反向结束
+    const positive = Number(p[5])
+    const segmentNum = end - start
+    // 中枢标记
+    const mark = `${direction === 1 ? '↑' : '↓'}_${Number(p[6])}_0_${segmentNum >= 9 ? 2 : ''}`
+
+    let bgColor = ''
+    let color = ''
+    // 中枢背景颜色
+    if (direction === 1) {
+      if (segmentNum <= SEGMENT_NUM_LIMIT) {
+        bgColor = colorUtil.rgbaToString(colorUtil.argbToRGBA('B2007C37'))
+        color = colorUtil.rgbaToString(colorUtil.argbToRGBA('FF007C37'))
+      } else {
+        bgColor = colorUtil.rgbaToString(colorUtil.argbToRGBA('CB315FFF'))
+        color = colorUtil.rgbaToString(colorUtil.argbToRGBA('FF315FFF'))
+      }
+    } else {
+      if (segmentNum <= SEGMENT_NUM_LIMIT) {
+        bgColor = colorUtil.rgbaToString(colorUtil.argbToRGBA('9DF50D0D'))
+        color = colorUtil.rgbaToString(colorUtil.argbToRGBA('FFF50D0D'))
+      } else {
+        bgColor = colorUtil.rgbaToString(colorUtil.argbToRGBA('BCFF1DFC'))
+        color = colorUtil.rgbaToString(colorUtil.argbToRGBA('FFFF1DFC'))
+      }
+    }
+
+    return {
+      start: [points[start].xIndex, points[bottom].y],
+      end: [points[end].xIndex, points[top].y],
+      direction,
+      positive,
+      mark,
+      segmentNum,
+      bgColor,
+      color
+    }
+  })
+}
+
+const PIVOTS_EXPAND_LIMIT = 2
+
+export const getCoilingPivotsExpands = (
+  coiling: ChartState['mainData']['coiling_data'],
+  points: ReturnType<typeof getCoilingPoints>
+) => {
+  if (!coiling) return []
+
+  return coiling.expands.map(p => {
+    const start = Number(p[0])
+    const end = Number(p[1])
+    const top = Number(p[2])
+    const bottom = Number(p[3])
+    const direction = Number(p[4])
+    // 中枢扩展级数
+    const level = Number(p[5])
+    // 中枢标记
+    const segmentNum = end - start
+    const mark = `${direction === 1 ? '↑' : '↓'}_${65}_1_${level >= 2 ? level : ''}`
+
+    let bgColor = 'transparent'
+    let color = 'transparent'
+    // 中枢背景颜色
+    if (direction === 1) {
+      if (segmentNum === PIVOTS_EXPAND_LIMIT) {
+        bgColor = colorUtil.rgbaToString(colorUtil.argbToRGBA('BCFF1DFC'))
+        color = colorUtil.rgbaToString(colorUtil.argbToRGBA('FFFF1DFC'))
+      } else if (segmentNum > PIVOTS_EXPAND_LIMIT) {
+        bgColor = colorUtil.rgbaToString(colorUtil.argbToRGBA('CB315FFF'))
+        color = colorUtil.rgbaToString(colorUtil.argbToRGBA('FF315FFF'))
+      }
+    } else {
+      if (segmentNum === PIVOTS_EXPAND_LIMIT) {
+        bgColor = colorUtil.rgbaToString(colorUtil.argbToRGBA('CB315FFF'))
+        color = colorUtil.rgbaToString(colorUtil.argbToRGBA('FF315FFF'))
+      } else if (segmentNum > PIVOTS_EXPAND_LIMIT) {
+        bgColor = colorUtil.rgbaToString(colorUtil.argbToRGBA('BCFF1DFC'))
+        color = colorUtil.rgbaToString(colorUtil.argbToRGBA('FFFF1DFC'))
+      }
+    }
+
+    return {
+      start: [points[start].xIndex, points[bottom].y],
+      end: [points[end].xIndex, points[top].y],
+      direction,
+      mark,
+      bgColor,
+      level,
+      color
+    }
+  })
+}
 
 /**
  * 配置缩放

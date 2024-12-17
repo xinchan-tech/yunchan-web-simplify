@@ -189,7 +189,17 @@ type GetStockChartParams = {
 
 type GetStockChartResult = {
   history: StockRawRecord[]
-  coiling_data: unknown[]
+  coiling_data?: {
+    istop: boolean
+    md5: string
+    status: number
+    points: number[]
+    pivots: number[][]
+    expands: number[][]
+    class_1_trade_points: number[][]
+    class_2_trade_points: number[][]
+    class_3_trade_points: number[][]
+  }
   md5: string
 }
 

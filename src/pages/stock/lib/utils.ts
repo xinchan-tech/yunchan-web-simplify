@@ -2,7 +2,9 @@ import { StockChartInterval } from '@/api'
 import type { ECOption } from '@/utils/echarts'
 import dayjs from 'dayjs'
 import type { ECBasicOption } from 'echarts/types/dist/shared'
-import { KChartContext } from './ctx'
+import type { KChartContext } from './ctx'
+
+type ChartData = ArrayItem<KChartContext['state']>['mainData']
 
 export const renderUtils = {
   getXAxisIndex: (options: ECOption, index: number) => {
