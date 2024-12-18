@@ -22,6 +22,14 @@ import {
   drawTradePoints,
   LineType
 } from './drawer'
+import {
+  calcBottomSignal,
+  calcCoilingPivots,
+  calcCoilingPivotsExpands,
+  calcCoilingPoints,
+  calcTradePoints
+} from './coilling'
+import { renderUtils } from './utils'
 
 const MAIN_CHART_NAME = 'kChart'
 const MAIN_CHART_NAME_VIRTUAL = 'kChart-virtual'
@@ -470,9 +478,9 @@ export const renderMarkLine: ChartRender = (options, _, data) => {
  */
 export const renderMainCoiling = (options: ECOption, state: ChartState) => {
   if (state.mainCoiling.length === 0) return options
-  const points = getCoilingPoints(state.mainData.history, state.mainData.coiling_data)
-  const pivots = getCoilingPivots(state.mainData.coiling_data, points)
-  const expands = getCoilingPivotsExpands(state.mainData.coiling_data, points)
+  const points = calcCoilingPoints(state.mainData.history, state.mainData.coiling_data)
+  const pivots = calcCoilingPivots(state.mainData.coiling_data, points)
+  const expands = calcCoilingPivotsExpands(state.mainData.coiling_data, points)
   state.mainCoiling.forEach(coiling => {
     if (coiling === CoilingIndicatorId.PEN) {
       const p: any[] = []
@@ -493,7 +501,7 @@ export const renderMainCoiling = (options: ECOption, state: ChartState) => {
     } else if (
       [CoilingIndicatorId.ONE_TYPE, CoilingIndicatorId.TWO_TYPE, CoilingIndicatorId.THREE_TYPE].includes(coiling)
     ) {
-      const tradePoints = getTradePoints(state.mainData.coiling_data, points, coiling as any)
+      const tradePoints = calcTradePoints(state.mainData.coiling_data, points, coiling as any)
       drawTradePoints(options, {} as any, { index: 0, data: tradePoints })
     }
   })
@@ -731,6 +739,41 @@ export const renderSecondary = (options: ECOption, indicators: Indicator[], data
 }
 
 /**
+ *
+ */
+export const renderSecondaryLocalIndicators = (options: ECOption, indicators: Indicator[], state: ChartState) => {
+  if (!state.mainData.history.length) return options
+
+  indicators.forEach((indicator, index) => {
+    if (!renderUtils.isLocalIndicator(indicator.id)) return
+    if (indicator.id === '9') {
+      const { result } = calcBottomSignal(state.mainData.history)
+
+      result.forEach(d => {
+        if (d.draw === 'STICKLINE') {
+          drawRect(options, {} as any, {
+            index: index + 1,
+            data: d.data,
+            extra: {
+              color: d.style?.color
+            }
+          })
+        } else {
+          drawLine(options, {} as any, {
+            extra: {
+              color: d.style?.color,
+              type: d.style?.style_type
+            },
+            index: index + 1,
+            data: (d.data as number[]).map((s, i) => [i, s])
+          })
+        }
+      })
+    }
+  })
+}
+
+/**
  * 渲染坐标轴
  */
 const renderSecondaryAxis = (options: ECOption, state: KChartState['state'][0], index: number) => {
@@ -794,191 +837,6 @@ const renderSecondaryAxis = (options: ECOption, state: KChartState['state'][0], 
     })
 
   return options
-}
-
-/**
- * 获取1类买卖点数据
- */
-export const getOneTypeTradePoints = {}
-
-type CoilingPoint = {
-  /**
-   * x轴索引
-   */
-  xIndex: number
-  /**
-   * 最高价或者最低价
-   */
-  y: number
-}
-
-const getCoilingPoints = (
-  history: ChartState['mainData']['history'],
-  coiling: ChartState['mainData']['coiling_data']
-): CoilingPoint[] => {
-  if (!coiling) return []
-  let isTop = coiling.istop
-
-  return coiling.points.map(v => {
-    const p = {
-      xIndex: v,
-      y: isTop ? history[v][3] : history[v][4]
-    }
-
-    isTop = !isTop
-
-    return p
-  })
-}
-
-const getTradePoints = (
-  coiling: ChartState['mainData']['coiling_data'],
-  points: ReturnType<typeof getCoilingPoints>,
-  type: CoilingIndicatorId.ONE_TYPE | CoilingIndicatorId.TWO_TYPE | CoilingIndicatorId.THREE_TYPE
-) => {
-  if (!coiling) return []
-
-  let data: number[][] = []
-
-  if (type === CoilingIndicatorId.ONE_TYPE) {
-    data = coiling.class_1_trade_points
-  } else if (type === CoilingIndicatorId.TWO_TYPE) {
-    data = coiling.class_2_trade_points
-  } else if (type === CoilingIndicatorId.THREE_TYPE) {
-    data = coiling.class_3_trade_points
-  }
-  console.log(coiling)
-
-  if (!data) return []
-
-  let color = colorUtil.rgbaToString(colorUtil.argbToRGBA('FFF323C5'))
-
-  return data.map(v => {
-    return {
-      xIndex: points[v[0]].xIndex,
-      y: points[v[0]].y,
-      large: Boolean(v[1]),
-      buy: Boolean(v[2]),
-      positive: v[3],
-      color
-    }
-  })
-}
-
-/**
- * 获取中枢数据
- * @description 中枢数据格式, 具体算法查看examples/coiling.js/readPivots
- */
-const SEGMENT_NUM_LIMIT = 7
-
-export const getCoilingPivots = (
-  coiling: ChartState['mainData']['coiling_data'],
-  points: ReturnType<typeof getCoilingPoints>
-) => {
-  if (!coiling) return []
-
-  return coiling.pivots.map(p => {
-    // 中枢的起始位置，points索引
-    const start = Number(p[0])
-    // 中枢的结束位置，points索引
-    const end = Number(p[1])
-    // 中枢的顶，points索引
-    const top = Number(p[2])
-    // 中枢的底，points索引
-    const bottom = Number(p[3])
-    // 中枢方向（向上或向下）
-    const direction = Number(p[4])
-    // 中枢结束方向，1为正向结束，-1为反向结束
-    const positive = Number(p[5])
-    const segmentNum = end - start
-    // 中枢标记
-    const mark = `${direction === 1 ? '↑' : '↓'}_${Number(p[6])}_0_${segmentNum >= 9 ? 2 : ''}`
-
-    let bgColor = ''
-    let color = ''
-    // 中枢背景颜色
-    if (direction === 1) {
-      if (segmentNum <= SEGMENT_NUM_LIMIT) {
-        bgColor = colorUtil.rgbaToString(colorUtil.argbToRGBA('B2007C37'))
-        color = colorUtil.rgbaToString(colorUtil.argbToRGBA('FF007C37'))
-      } else {
-        bgColor = colorUtil.rgbaToString(colorUtil.argbToRGBA('CB315FFF'))
-        color = colorUtil.rgbaToString(colorUtil.argbToRGBA('FF315FFF'))
-      }
-    } else {
-      if (segmentNum <= SEGMENT_NUM_LIMIT) {
-        bgColor = colorUtil.rgbaToString(colorUtil.argbToRGBA('9DF50D0D'))
-        color = colorUtil.rgbaToString(colorUtil.argbToRGBA('FFF50D0D'))
-      } else {
-        bgColor = colorUtil.rgbaToString(colorUtil.argbToRGBA('BCFF1DFC'))
-        color = colorUtil.rgbaToString(colorUtil.argbToRGBA('FFFF1DFC'))
-      }
-    }
-
-    return {
-      start: [points[start].xIndex, points[bottom].y],
-      end: [points[end].xIndex, points[top].y],
-      direction,
-      positive,
-      mark,
-      segmentNum,
-      bgColor,
-      color
-    }
-  })
-}
-
-const PIVOTS_EXPAND_LIMIT = 2
-
-export const getCoilingPivotsExpands = (
-  coiling: ChartState['mainData']['coiling_data'],
-  points: ReturnType<typeof getCoilingPoints>
-) => {
-  if (!coiling) return []
-
-  return coiling.expands.map(p => {
-    const start = Number(p[0])
-    const end = Number(p[1])
-    const top = Number(p[2])
-    const bottom = Number(p[3])
-    const direction = Number(p[4])
-    // 中枢扩展级数
-    const level = Number(p[5])
-    // 中枢标记
-    const segmentNum = end - start
-    const mark = `${direction === 1 ? '↑' : '↓'}_${65}_1_${level >= 2 ? level : ''}`
-
-    let bgColor = 'transparent'
-    let color = 'transparent'
-    // 中枢背景颜色
-    if (direction === 1) {
-      if (segmentNum === PIVOTS_EXPAND_LIMIT) {
-        bgColor = colorUtil.rgbaToString(colorUtil.argbToRGBA('BCFF1DFC'))
-        color = colorUtil.rgbaToString(colorUtil.argbToRGBA('FFFF1DFC'))
-      } else if (segmentNum > PIVOTS_EXPAND_LIMIT) {
-        bgColor = colorUtil.rgbaToString(colorUtil.argbToRGBA('CB315FFF'))
-        color = colorUtil.rgbaToString(colorUtil.argbToRGBA('FF315FFF'))
-      }
-    } else {
-      if (segmentNum === PIVOTS_EXPAND_LIMIT) {
-        bgColor = colorUtil.rgbaToString(colorUtil.argbToRGBA('CB315FFF'))
-        color = colorUtil.rgbaToString(colorUtil.argbToRGBA('FF315FFF'))
-      } else if (segmentNum > PIVOTS_EXPAND_LIMIT) {
-        bgColor = colorUtil.rgbaToString(colorUtil.argbToRGBA('BCFF1DFC'))
-        color = colorUtil.rgbaToString(colorUtil.argbToRGBA('FFFF1DFC'))
-      }
-    }
-
-    return {
-      start: [points[start].xIndex, points[bottom].y],
-      end: [points[end].xIndex, points[top].y],
-      direction,
-      mark,
-      bgColor,
-      level,
-      color
-    }
-  })
 }
 
 /**

@@ -5,7 +5,7 @@ import { useQueries, useQuery } from "@tanstack/react-query"
 import { getStockChart, getStockIndicatorData } from "@/api"
 import { useMount, useUpdateEffect } from "ahooks"
 import { useChart } from "@/hooks"
-import { renderChart, renderMainCoiling, renderMainIndicators, renderOverlay, renderOverlayMark, renderSecondary, renderZoom } from "../lib/render"
+import { renderChart, renderMainCoiling, renderMainIndicators, renderOverlay, renderOverlayMark, renderSecondary, renderSecondaryLocalIndicators, renderZoom } from "../lib/render"
 import { SecondaryIndicator } from "./secondary-indicator"
 import { renderUtils } from "../lib/utils"
 
@@ -58,7 +58,7 @@ export const MainChart = (props: MainChartProps) => {
   const mainIndicatorsQuery = mainIndicators.every(query => !query.isLoading && !query.isFetching)
 
   const secondaryIndicators = useQueries({
-    queries: state.secondaryIndicators.map((item, idx) => ({
+    queries: state.secondaryIndicators.filter(v => !renderUtils.isLocalIndicator(v.id)).map((item, idx) => ({
       queryKey: [getStockIndicatorData.cacheKey, { symbol: symbol, cycle: state.timeIndex, id: item.id, db_type: item.type }, idx],
       queryFn: () => getStockIndicatorData({ symbol: symbol, cycle: state.timeIndex, id: item.id, db_type: item.type, start_at: startTime }).then(r => {
         setIndicatorData({ indicator: item, data: r.result })
@@ -111,6 +111,7 @@ export const MainChart = (props: MainChartProps) => {
     renderMainIndicators(_options, Object.values(state.mainIndicators), Object.keys(state.mainIndicators).map(v => getIndicatorData({ indicator: state.mainIndicators[v] })))
     renderOverlayMark(_options, state)
     renderSecondary(_options, state.secondaryIndicators, state.secondaryIndicators.map(v => getIndicatorData({ indicator: v })))
+    renderSecondaryLocalIndicators(_options, state.secondaryIndicators, state)
 
     chart.current.setOption(_options)
   }

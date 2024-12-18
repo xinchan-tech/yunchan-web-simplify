@@ -38673,7 +38673,7 @@ function readCoilingData()
 //     console.log(expands);
 }
 
-readCoilingData()
+// readCoilingData()
 // 海底捞月
 function hdly(candlesticks)
 {
@@ -38747,6 +38747,8 @@ function hdly(candlesticks)
 
     return VAR7_arr;
 }
+
+console.log(hdly(stockChartData.data.history));
 
 // 月亮线
 function monthLine(candlesticks)

@@ -126,7 +126,7 @@ export interface KChartContext {
   /**
    * 修改主图缠论
    */
-  setMainCoiling: (params: { index?: number; coiling: string[] }) => void
+  setMainCoiling: (params: { index?: number; coiling: CoilingIndicatorId[] }) => void
 
   /**
    * 修改附图数量
@@ -319,7 +319,8 @@ export const createDefaultChartState = (opts: { symbol?: string; index: number }
     CoilingIndicatorId.PEN,
     CoilingIndicatorId.ONE_TYPE,
     CoilingIndicatorId.TWO_TYPE,
-    CoilingIndicatorId.THREE_TYPE
+    CoilingIndicatorId.THREE_TYPE,
+    CoilingIndicatorId.PIVOT,
   ],
   mainData: {
     history: [],

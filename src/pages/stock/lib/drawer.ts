@@ -49,6 +49,9 @@ export const drawLine: DrawerFunc<[XAxis, number][]> = (options, _, { index, dat
     connectNulls: true,
     z: 0,
     color: extra?.color,
+    lineStyle: {
+      type: extra?.type ?? 'solid'
+    },
     data: [...data.map(item => item[1])]
   }
 
@@ -165,7 +168,8 @@ export type DrawerRectShape = [XAxis, YAxis, YAxis, Width, empty, DrawerColor]
  * color: 颜色
  * @example ['2030-01-01', 0, 111380, 0.8, 0]
  */
-export const drawRect: DrawerFunc<DrawerRectShape[]> = (options, _, { index, data }) => {
+export const drawRect: DrawerFunc<DrawerRectShape[]> = (options, _, { index, data, extra }) => {
+  const extraColor = extra?.color
   const line: CustomSeriesOption = {
     xAxisIndex: index,
     yAxisIndex: index,
@@ -181,10 +185,11 @@ export const drawRect: DrawerFunc<DrawerRectShape[]> = (options, _, { index, dat
       const bottom = Math.min(y1, y2)
       const yValue = Math.abs(y1 - y2)
       const start = api.coord([x, bottom])
-      const width = (api.value(3) as number) * ((api.size!(20) as any)[0] as number)
+      const width = (api.value(3) as number)
       const size = api.size!([x, yValue]) as number[]
       const empty = api.value(4) as number
-      const color = (api.value(5) as string) ?? '#00943c'
+      const color = (api.value(5) as string) || extraColor || '#00943c'
+
       return {
         type: 'rect',
         shape: {
@@ -407,8 +412,9 @@ export const drawPivots: DrawerFunc<DrawPivotsShape[]> = (options, _, { index, d
       const width = end[0] - start[0]
       const height = end[1] - start[1]
       const bgColor = api.value(5) as string
-      const [positive, ascii, __, mark] = (api.value(4) as string).split('_')
+      const [positive, text, extend, mark] = (api.value(4) as string).split('_')
       const color = api.value(6) as string
+      const offset = extend === '1' ? 5 : 0
 
       const group = {
         type: 'group',
@@ -417,15 +423,18 @@ export const drawPivots: DrawerFunc<DrawPivotsShape[]> = (options, _, { index, d
           {
             type: 'rect',
             shape: {
-              x: start[0],
-              y: start[1],
-              width: width,
-              height: height
+              x: start[0] - offset,
+              y: start[1] + offset,
+              width: width + offset * 2,
+              height: height - offset * 2
             },
             z: 1,
             emphasisDisabled: true,
             style: {
-              fill: bgColor,
+              // 抄客户端的逻辑
+              fill: extend === '1' && text !== 'A²' ? 'transparent' : bgColor ,
+              stroke: !(extend === '1' && text !== 'A²') ? 'transparent' : bgColor,
+              lineDash: 'dashed',
               lineWidth: 1
             }
           }
@@ -436,7 +445,7 @@ export const drawPivots: DrawerFunc<DrawPivotsShape[]> = (options, _, { index, d
         type: 'text',
         emphasisDisabled: true,
         style: {
-          text: `${positive}${String.fromCharCode(+ascii)}`,
+          text: `${positive}${text}`,
           fill: color,
           font: 'bold 24px SimHei',
           textVerticalAlign: 'bottom'
@@ -481,18 +490,15 @@ type DrawTradePointsShape = {
   y: YAxis
   large: boolean
   buy: boolean
-  positive: number,
+  positive: number
   color: string
+  type: number
 }
 
 /**
  * 绘制主图买卖点
  */
-export const drawTradePoints: DrawerFunc<DrawTradePointsShape[]> = (
-  options,
-  _,
-  { index, data }
-) => {
+export const drawTradePoints: DrawerFunc<DrawTradePointsShape[]> = (options, _, { index, data }) => {
   const series: CustomSeriesOption = {
     xAxisIndex: index,
     yAxisIndex: index,
@@ -504,15 +510,14 @@ export const drawTradePoints: DrawerFunc<DrawTradePointsShape[]> = (
     renderItem: (_, api) => {
       const x = api.value(0) as number
       const y = api.value(1) as number
-      const positive = api.value(4) as number
+      const type = api.value(6) as string
       const buy = api.value(3) as number
-   
       const height = !buy ? -40 : 40
-   
+
       const start = api.coord([x, y])
       const cStart = [start[0], start[1] + height + (!buy ? -12 : 12)]
       const color = api.value(5) as string
- 
+
       return {
         type: 'group',
         children: [
@@ -548,21 +553,19 @@ export const drawTradePoints: DrawerFunc<DrawTradePointsShape[]> = (
             position: [cStart[0], cStart[1]],
             z2: 10,
             style: {
-              text: buy ? '买' : '卖',
+              text: type + (buy ? '买' : '卖'),
               // text: x.toString(),
               fill: '#fff',
               font: 'bold 12px SimHei',
               textAlign: 'center',
               textVerticalAlign: 'middle'
-            },
+            }
           }
         ]
       }
     },
-    data: data.map(item => [item.xIndex, item.y, item.large, item.buy, item.positive, item.color])
+    data: data.map(item => [item.xIndex, item.y, item.large, item.buy, item.positive, item.color, item.type])
   }
-
-  console.log(data.map(item => [item.xIndex, item.y, item.large, item.buy, item.positive, item.color]))
 
   Array.isArray(options.series) && options.series.push(series)
 

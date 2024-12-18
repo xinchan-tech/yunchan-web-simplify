@@ -82,5 +82,12 @@ export const renderUtils = {
       default:
         return 1
     }
+  },
+
+  /**
+   * 是否是本地计算的指标
+   */
+  isLocalIndicator: (indicatorId: string) => {
+    return indicatorId === '9' || indicatorId === '10'
   }
 }
