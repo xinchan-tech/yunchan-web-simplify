@@ -10,8 +10,8 @@ const rightMenu = ['周线', '月线', '季线', '半年', '年线']
 const rightMenuStartIndex = timeIndex.length - rightMenu.length
 
 export const TimeIndexSelect = () => {
-  const { setTimeIndex, activeChart } = useKChartContext()
-  const _activeChart = activeChart()
+  const { setTimeIndex, state, activeChartIndex } = useKChartContext()
+  const _activeChart = state[activeChartIndex]
   const setActiveMin = (min: StockChartInterval) => {
     setTimeIndex({ timeIndex: min })
   }

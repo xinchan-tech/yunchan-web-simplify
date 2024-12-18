@@ -8,7 +8,7 @@ interface MainIndicatorProps {
 }
 export const MainIndicator = (props: MainIndicatorProps) => {
   //TODO, 修改缠论系统版本时，去除不在目标版本里的指标
-  const { setMainSystem, activeChart } = useKChartContext()
+  const { setMainSystem, state, activeChartIndex } = useKChartContext()
 
   return (
 
@@ -23,7 +23,7 @@ export const MainIndicator = (props: MainIndicatorProps) => {
         <SearchList
           data={props.data?.main.find(i => i.name === '缠论系统')?.indicators.map(item => ({ label: item.name ?? '', value: item.id, extra: item })) ?? []}
           name="缠论系统"
-          value={activeChart().system}
+          value={state[activeChartIndex].system}
           onChange={(system) => setMainSystem({ system })}
           type="single"
         />

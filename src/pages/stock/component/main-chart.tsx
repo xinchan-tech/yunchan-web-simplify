@@ -8,9 +8,8 @@ import { useChart } from "@/hooks"
 import { renderChart, renderMainCoiling, renderMainIndicators, renderOverlay, renderOverlayMark, renderSecondary, renderSecondaryLocalIndicators, renderWatermark, renderZoom } from "../lib/render"
 import { SecondaryIndicator } from "./secondary-indicator"
 import { renderUtils } from "../lib/utils"
-import { nanoid } from "nanoid"
-
-
+import { StockSelect } from "@/components"
+import { cn } from "@/utils/style"
 
 interface MainChartProps {
   index: number
@@ -20,7 +19,7 @@ export const MainChart = (props: MainChartProps) => {
   const symbol = useSymbolQuery()
   const [symbolSelected, setSymbolSelected] = useState(symbol)
   const [chart, dom] = useChart()
-  const { state: ctxState, setMainData, setIndicatorData, getIndicatorData, setSecondaryIndicator, activeChart, removeOverlayStock } = useKChartContext()
+  const { state: ctxState, setMainData, setIndicatorData, setSecondaryIndicator, removeOverlayStock, setActiveChart, activeChartIndex } = useKChartContext()
   const { usTime } = useTime()
   const state = ctxState[props.index]
   const startTime = renderUtils.getStartTime(usTime, state.timeIndex)
@@ -41,42 +40,45 @@ export const MainChart = (props: MainChartProps) => {
     queryFn: () => getStockChart(params)
   })
 
-  const mainIndicators = useQueries({
-    queries: Array.from(Reflect.ownKeys(state.mainIndicators).map(v => v.toString())).map((item, idx) => (
+  useQueries({
+    queries: Reflect.ownKeys(state.mainIndicators).map(v => v.toString()).map((item, idx) => (
       {
         queryKey: [getStockIndicatorData.cacheKey, { symbol: symbol, cycle: state.timeIndex, id: item, db_type: state.mainIndicators[item].type }, idx],
-        queryFn: () => getStockIndicatorData({
-          symbol: symbol, cycle: state.timeIndex, id: item, db_type: state.mainIndicators[item].type, start_at: startTime
-        }).then(r => {
-          setIndicatorData({ indicator: state.mainIndicators[item], data: r.result })
+        queryFn: async () => {
+          const r = await getStockIndicatorData({
+            symbol: symbol, cycle: state.timeIndex, id: item, db_type: state.mainIndicators[item].type, start_at: startTime
+          })
+
+          setIndicatorData({ index: props.index, indicatorId: item, data: r.result })
+
           return r
-        }),
+        },
         placeholderData: () => ({ result: [] })
       }
     ))
   })
 
-  const mainIndicatorsQuery = mainIndicators.every(query => !query.isLoading && !query.isFetching)
+  const secondaryIndicatorQueries = useQueries({
+    queries: Array.from(new Set(state.secondaryIndicators.filter(v => !renderUtils.isLocalIndicator(v.id)).map(v => `${v.id}_${v.type}`))).map((item) => {
+      const [id, type] = item.split('_')
 
-  const secondaryIndicators = useQueries({
-    queries: state.secondaryIndicators.filter(v => !renderUtils.isLocalIndicator(v.id)).map((item, idx) => ({
-      queryKey: [getStockIndicatorData.cacheKey, { symbol: symbol, cycle: state.timeIndex, id: item.id, db_type: item.type }, idx],
-      queryFn: () => getStockIndicatorData({ symbol: symbol, cycle: state.timeIndex, id: item.id, db_type: item.type, start_at: startTime }).then(r => {
-        setIndicatorData({ indicator: item, data: r.result })
-        return r
-      }),
-      placeholderData: () => ({ result: [] })
-    }))
+      return {
+        queryKey: [getStockIndicatorData.cacheKey, { symbol: symbol, cycle: state.timeIndex, id: id, db_type: type }],
+        queryFn: () => getStockIndicatorData({
+          symbol: symbol, cycle: state.timeIndex, id: id, db_type: type, start_at: startTime
+        }).then(r => ({ id: id, data: r.result })),
+        placeholderData: () => ({ id: id, data: undefined })
+      }
+    })
   })
 
-  const secondaryIndicatorsQuery = secondaryIndicators.every(query => !query.isLoading && !query.isFetching)
-
-
   useEffect(() => {
-    if (!mainIndicatorsQuery && !secondaryIndicatorsQuery) return
+    secondaryIndicatorQueries.forEach((query) => {
 
-    render()
-  }, [mainIndicatorsQuery, secondaryIndicatorsQuery])
+      if (!query.data) return
+      setIndicatorData({ index: props.index, indicatorId: query.data.id, data: query.data.data })
+    })
+  }, [secondaryIndicatorQueries, setIndicatorData, props.index])
 
 
 
@@ -109,9 +111,9 @@ export const MainChart = (props: MainChartProps) => {
      */
     renderOverlay(_options, state.overlayStock)
     renderMainCoiling(_options, state)
-    renderMainIndicators(_options, Object.values(state.mainIndicators), Object.keys(state.mainIndicators).map(v => getIndicatorData({ indicator: state.mainIndicators[v] })))
+    renderMainIndicators(_options, Object.values(state.mainIndicators))
     renderOverlayMark(_options, state)
-    renderSecondary(_options, state.secondaryIndicators, state.secondaryIndicators.map(v => getIndicatorData({ indicator: v })))
+    renderSecondary(_options, state.secondaryIndicators)
     renderSecondaryLocalIndicators(_options, state.secondaryIndicators, state)
     renderWatermark(_options, state.timeIndex)
     chart.current.setOption(_options)
@@ -125,31 +127,39 @@ export const MainChart = (props: MainChartProps) => {
 
 
   const onChangeSecondaryIndicators = async (params: { value: string, index: number, type: string }) => {
-    const chart = activeChart()
+
     setSecondaryIndicator({
       index: props.index,
       indicatorIndex: params.index,
-      indicator: { id: params.value, type: params.type, timeIndex: chart.timeIndex, symbol: chart.symbol, key: nanoid() }
+      indicator: { id: params.value, type: params.type, timeIndex: state.timeIndex, symbol: state.symbol, key: state.secondaryIndicators[params.index].key }
     })
   }
-
-
+  // TODO: 切换主图时，指标从新加载
   return (
-    <div className="w-full h-full relative">
+    <div className={
+      cn(
+        'w-full h-full relative border border-transparent border-solid',
+        ctxState.length > 1 && activeChartIndex === props.index ? 'border-primary' : ''
+      )
+    } onClick={() => setActiveChart(props.index)} onKeyDown={() => { }}>
       <div className="w-full h-full" ref={dom}>
       </div>
       {
-        console.log(activeChart().secondaryIndicators)
-      }
-      {
-        activeChart().secondaryIndicators.map((item, index) => (
+        state.secondaryIndicators.map((item, index, arr) => (
           <div key={item.key}
             className="absolute rounded-sm left-2"
-            style={{ top: `calc(${(chart.current?.getOption() as any)?.grid[index + 1]?.top ?? 0} + 10px)` }}
+            style={{ top: `calc(${renderUtils.calcGridTopByGridIndex(arr.length)[index]}% + 10px)` }}
           >
             <SecondaryIndicator onIndicatorChange={onChangeSecondaryIndicators} index={index} mainIndex={props.index} />
           </div>
         ))
+      }
+      {
+        ctxState.length > 1 ? (
+          <div className="absolute top-2 left-2">
+            <StockSelect onChange={setSymbolSelected} value={symbolSelected} />
+          </div>
+        ) : null
       }
 
     </div>

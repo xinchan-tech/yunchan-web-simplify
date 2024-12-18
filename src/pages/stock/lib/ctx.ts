@@ -68,22 +68,16 @@ export interface KChartContext {
   activeChartIndex: number
 
   /**
-   * 附图指标，多窗口模式下新建的窗口附图数量根据这个值来确定
-   * 正常情况下应该与第一个窗口的附图指标一致
-   * TODO: 该值应持久化到本地存储
-   */
-  secondaryIndicators: Indicator[]
-
-  /**
    * 设置状态
    * @deprecated
    */
   setState: Updater<KChartState>
 
   /**
-   * 获取当前激活的窗口或者切换当前激活的窗口
+   * 切换当前激活的窗口
    */
-  activeChart: (index?: StockChartInterval) => MainChartState
+  setActiveChart: (index: StockChartInterval) => void
+  
 
   /**
    * 叠加标记列表
@@ -157,12 +151,7 @@ export interface KChartContext {
    * @param params.indicator 指标
    * @param params.data 数据
    */
-  setIndicatorData: (params: { indicator: Indicator; data: any }) => void
-
-  /**
-   * 获取指标数据
-   */
-  getIndicatorData: (params: { indicator: Indicator }) => IndicatorData
+  setIndicatorData: (params: {index: number, indicatorId: string; data: any }) => void
 
   /**
    * 修改视图模式
@@ -172,17 +161,17 @@ export interface KChartContext {
   /**
    * 添加股票PK叠加的股票
    */
-  addOverlayStock: (params: { index?: number, symbol: string}) => void
+  addOverlayStock: (params: { index?: number; symbol: string }) => void
 
   /**
    * 移除股票PK叠加的股票
    */
-  removeOverlayStock: (params: { index?: number, symbol: string }) => void
+  removeOverlayStock: (params: { index?: number; symbol: string }) => void
 
   /**
    * 设置叠加标记
    */
-  setOverlayMark: (params: { index?: number, mark: string, type: string, title: string }) => Promise<void>
+  setOverlayMark: (params: { index?: number; mark: string; type: string; title: string }) => Promise<void>
 }
 
 /**
@@ -195,6 +184,7 @@ export type Indicator = {
   symbol: string
   start_at?: string
   key: string
+  data?: IndicatorData
 }
 
 /**
@@ -285,7 +275,7 @@ type MainChartState = {
 
 export const KChartContext = createContext<KChartContext>({} as unknown as KChartContext)
 
-export type KChartState = Pick<KChartContext, 'activeChartIndex' | 'state' | 'secondaryIndicators' | 'viewMode'>
+export type KChartState = Pick<KChartContext, 'activeChartIndex' | 'state' | 'viewMode'>
 
 export const useKChartContext = () => {
   return useContext(KChartContext)
@@ -299,38 +289,45 @@ export const useKChartContext = () => {
  * @returns 图表实例状态
  *
  */
-export const createDefaultChartState = (opts: { symbol?: string; index: number }): MainChartState => ({
-  symbol: opts.symbol ?? 'QQQ',
-  type: 'k-line',
-  id: nanoid(),
-  index: opts.index,
-  timeIndex: StockChartInterval.DAY,
-  system: 'pro',
-  getChart: () => undefined,
-  /**
-   * 9: 底部信号
-   * 10: 买卖点位
-   */
-  secondaryIndicators: [
-    { id: '9', type: 'system', timeIndex: StockChartInterval.DAY, symbol: opts.symbol ?? 'QQQ', key: nanoid() },
-    { id: '10', type: 'system', timeIndex: StockChartInterval.DAY, symbol: opts.symbol ?? 'QQQ', key: nanoid() }
-  ],
-  mainIndicators: {},
-  mainCoiling: [
-    CoilingIndicatorId.PEN,
-    CoilingIndicatorId.ONE_TYPE,
-    CoilingIndicatorId.TWO_TYPE,
-    CoilingIndicatorId.THREE_TYPE,
-    CoilingIndicatorId.PIVOT,
-  ],
-  mainData: {
-    history: [],
-    coiling_data: undefined,
-    md5: ''
-  },
-  overlayStock: [],
-  overlayMark: undefined
-})
+export const createDefaultChartState = (opts: { symbol?: string; index: number }): ArrayItem<KChartState['state']> => {
+  const defaultState = JSON.parse(localStorage.getItem('k-chart-state') ?? 'null') as ArrayItem<
+    KChartState['state']
+  > | null
+  return {
+    symbol: opts.symbol ?? 'QQQ',
+    type: 'k-line',
+    id: nanoid(),
+    index: opts.index,
+    timeIndex: StockChartInterval.DAY,
+    system: 'pro',
+    getChart: () => undefined,
+    /**
+     * 9: 底部信号
+     * 10: 买卖点位
+     */
+    secondaryIndicators: defaultState?.secondaryIndicators ? [
+      ...defaultState.secondaryIndicators.map(item => ({ ...item, key: nanoid() }))
+    ] : [
+      { id: '9', type: 'system', timeIndex: StockChartInterval.DAY, symbol: opts.symbol ?? 'QQQ', key: nanoid() },
+      { id: '10', type: 'system', timeIndex: StockChartInterval.DAY, symbol: opts.symbol ?? 'QQQ', key: nanoid() }
+    ],
+    mainIndicators: {},
+    mainCoiling: defaultState?.mainCoiling ? [...defaultState.mainCoiling] :  [
+      CoilingIndicatorId.PEN,
+      CoilingIndicatorId.ONE_TYPE,
+      CoilingIndicatorId.TWO_TYPE,
+      CoilingIndicatorId.THREE_TYPE,
+      CoilingIndicatorId.PIVOT
+    ],
+    mainData: {
+      history: [],
+      coiling_data: undefined,
+      md5: ''
+    },
+    overlayStock: [],
+    overlayMark: undefined
+  }
+}
 
 /**
  * 判断是否是分时图

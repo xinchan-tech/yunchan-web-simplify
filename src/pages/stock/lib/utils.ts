@@ -4,8 +4,6 @@ import dayjs from 'dayjs'
 import type { ECBasicOption } from 'echarts/types/dist/shared'
 import type { KChartContext } from './ctx'
 
-type ChartData = ArrayItem<KChartContext['state']>['mainData']
-
 export const renderUtils = {
   getXAxisIndex: (options: ECOption, index: number) => {
     if (Array.isArray(options.xAxis)) {
@@ -37,15 +35,14 @@ export const renderUtils = {
     return [zoom?.[0]?.start ?? 90, zoom?.[0]?.end ?? 100]
   },
 
-  getHeightByGridIndex: (options: ECOption, index: number, percent: number, height: number) => {
-    const grid = renderUtils.getGridIndex(options, index)
-    if (!grid) return 0
-    const top = (Number.parseFloat((grid.top as string) ?? '0') * height) / 100
-    const bottom = (Number.parseFloat((grid.height as string) ?? '0') * height) / 100 + top
+  calcGridTopByGridIndex: (secondaryIndicatorLen: number) => {
+    if(secondaryIndicatorLen === 0) return [0]
 
-    const offset = ((bottom - top) * (100 - percent)) / 100
+    if(secondaryIndicatorLen <= 3) {
+      return Array.from({length: secondaryIndicatorLen}, (_, i) => 20 * (5 - secondaryIndicatorLen) + 20 * i + 0.4)
+    }
 
-    return top + offset
+    return Array.from({length: secondaryIndicatorLen}, (_, i) => 40 + (60 / secondaryIndicatorLen) * i + 0.4)
   },
 
   getStartTime: (usTime: number, time: StockChartInterval) => {

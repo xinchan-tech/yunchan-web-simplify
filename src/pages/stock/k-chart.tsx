@@ -1,17 +1,18 @@
 import { cn } from "@/utils/style"
-import { useCallback, useEffect, useMemo, useRef } from "react"
+import { useCallback, useEffect, useMemo } from "react"
 import { useImmer } from "use-immer"
 import { ChartContextMenu } from "./component/chart-context-menu"
 import { ChartToolSelect } from "./component/chart-tool"
 import { MainChart } from "./component/main-chart"
 import { TimeIndexSelect } from "./component/time-index"
-import { type Indicator, type IndicatorCache, KChartContext, type KChartState, createDefaultChartState, isTimeIndexChart } from "./lib"
-import { getStockChart, getStockTabData, getStockTabList, StockChartInterval } from "@/api"
+import { CoilingIndicatorId, type Indicator, KChartContext, type KChartState, createDefaultChartState, isTimeIndexChart, useSymbolQuery } from "./lib"
+import { getStockChart, getStockIndicatorData, getStockTabData, getStockTabList } from "@/api"
 import dayjs from "dayjs"
 import { renderUtils } from "./lib/utils"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { useTime } from "@/store"
 import { nanoid } from "nanoid"
+import { cloneDeep } from "lodash-es"
 
 
 /**
@@ -20,25 +21,43 @@ import { nanoid } from "nanoid"
  */
 
 export const KChart = () => {
+ 
+  const symbol = useSymbolQuery()
+ 
   const [context, setContext] = useImmer<KChartState>({
     viewMode: 'single',
-    secondaryIndicators: [
-      { id: '9', type: 'system', timeIndex: StockChartInterval.DAY, symbol: 'QQQ', key: nanoid() },
-      { id: '10', type: 'system', timeIndex: StockChartInterval.DAY, symbol: 'QQQ', key: nanoid() }
-    ],
     state:
       [
         createDefaultChartState({
           index: 0,
-          symbol: 'QQQ'
+          symbol: symbol
         })
       ],
     activeChartIndex: 0
   })
-  const indicatorCache = useRef<IndicatorCache>(new WeakMap())
-  const indicatorMap = useRef(new Map())
+
   const queryClient = useQueryClient()
   const { usTime } = useTime()
+
+  useEffect(() => {
+    if(!context.state[0]) return
+    const cloneData = cloneDeep(context.state[0])
+    cloneData.mainData = {
+      history: [],
+      coiling_data: undefined,
+      md5: ''
+    }
+    cloneData.overlayStock = []
+    cloneData.overlayMark = undefined
+    cloneData.secondaryIndicators.forEach(v => {
+      v.data = undefined
+    })
+    cloneData.mainIndicators = {}
+    const str = JSON.stringify(cloneData)
+    
+    localStorage.setItem('k-chart-state', str)
+  }, [context.state[0]])
+
 
   const tabList = useQuery({
     queryKey: [getStockTabList.cacheKey],
@@ -57,17 +76,8 @@ export const KChart = () => {
     const _indicators = Array.isArray(indicators) ? indicators : [indicators]
     const _indicatorsMap: NormalizedRecord<Indicator> = {}
 
-    _indicators.forEach(({ id, type, timeIndex, symbol }) => {
-      const cacheKey = `${symbol}-${timeIndex}-${id}-${type}`
-
-      let idt = { id: id, type, timeIndex, symbol, key: nanoid() }
-      if (indicatorMap.current.has(cacheKey)) {
-        idt = indicatorMap.current.get(cacheKey)
-      } else {
-        indicatorMap.current.set(cacheKey, idt)
-      }
-
-      _indicatorsMap[id] = idt
+    _indicators.forEach(indicator => {
+      _indicatorsMap[indicator.id] = indicator
     })
 
     setContext(d => {
@@ -96,7 +106,7 @@ export const KChart = () => {
       const chart = d.state[index ?? d.activeChartIndex]
       chart.timeIndex = timeIndex
 
-      if(isTimeIndexChart(timeIndex )) {
+      if (isTimeIndexChart(timeIndex)) {
         chart.type = 'line'
       }
 
@@ -111,16 +121,10 @@ export const KChart = () => {
     })
   }
 
-  const activeChart: KChartContext['activeChart'] = (index) => {
-    if (index === undefined) {
-      return context.state[context.activeChartIndex]
-    }
-
-    if (index > context.state.length) {
-      throw new Error('index out of range')
-    }
-
-    return context.state[index]
+  const setActiveChart: KChartContext['setActiveChart'] = (index) => {
+    setContext(d => {
+      d.activeChartIndex = index
+    })
   }
 
 
@@ -133,35 +137,27 @@ export const KChart = () => {
         newIndicators = chart.secondaryIndicators.slice(0, count)
       } else {
         for (let i = 0; i < count - chart.secondaryIndicators.length; i++) {
-          newIndicators.push(indicator)
+          newIndicators.push({ ...indicator, key: nanoid() })
         }
       }
 
       chart.secondaryIndicators = newIndicators
-
-      if (index === 1) {
-        d.secondaryIndicators = newIndicators
-      }
     })
   }
 
   const setSecondaryIndicator: KChartContext['setSecondaryIndicator'] = ({ index, indicatorIndex, indicator }) => {
+    const queryKey = [getStockIndicatorData.cacheKey, { symbol: indicator.symbol, cycle: indicator.timeIndex, id: indicator.id, db_type: indicator.type }]
+    const queryData = queryClient.getQueryData(queryKey) as { id: string, data: any[] }
+
     setContext(d => {
       const chart = d.state[index ?? context.activeChartIndex]
-      const cacheKey = `${indicator.symbol}-${indicator.timeIndex}-${indicator.id}-${indicator.type}`
 
-      let idt = indicator
-      if (indicatorMap.current.has(cacheKey)) {
-        idt = indicatorMap.current.get(cacheKey)
-      } else {
-        indicatorMap.current.set(cacheKey, idt)
+      if (queryData) {
+        indicator.data = queryData.data as any
+        queryClient.invalidateQueries({ queryKey })
       }
 
-      chart.secondaryIndicators[indicatorIndex] = idt
-
-      if (index === 1) {
-        d.secondaryIndicators = chart.secondaryIndicators
-      }
+      chart.secondaryIndicators[indicatorIndex] = indicator
     })
   }
 
@@ -176,26 +172,25 @@ export const KChart = () => {
     })
   }, [setContext])
 
-  const setIndicatorData: KChartContext['setIndicatorData'] = useCallback(({ indicator, data }) => {
-    const cacheKey = `${indicator.symbol}-${indicator.timeIndex}-${indicator.id}-${indicator.type}`
+  const setIndicatorData: KChartContext['setIndicatorData'] = useCallback(({index, indicatorId, data }) => {
+    setContext(d => {
+      const chart = d.state[index ?? d.activeChartIndex]
+      const indicators = []
 
-    let idt = indicator
+      if (chart.mainIndicators[indicatorId]) {
+        indicators.push(chart.mainIndicators[indicatorId])
+      }
+      
+      indicators.push(...chart.secondaryIndicators.filter(v => v.id === indicatorId))
 
-    if (indicatorMap.current.has(cacheKey)) {
-      idt = indicatorMap.current.get(cacheKey)
-    }
+      if (!indicators.length) return
 
-    indicatorCache.current.set(idt, data)
-  }, [])
+      indicators.forEach(indicator => {
+        indicator.data = data
+      })
+    })
+  }, [setContext])
 
-  const getIndicatorData: KChartContext['getIndicatorData'] = useCallback(({ indicator }) => {
-    const cacheKey = `${indicator.symbol}-${indicator.timeIndex}-${indicator.id}-${indicator.type}`
-
-    if (indicatorMap.current.has(cacheKey)) {
-      return indicatorCache.current.get(indicatorMap.current.get(cacheKey))
-    }
-    return indicatorCache.current.get(indicator)
-  }, [])
 
   const setViewMode: KChartContext['setViewMode'] = ({ viewMode }) => {
     const count = renderUtils.getViewMode(viewMode)
@@ -262,7 +257,7 @@ export const KChart = () => {
 
     const r = await queryClient.ensureQueryData({
       queryKey: [getStockTabData.cacheKey, { type, mark, symbol: chart.symbol }],
-      queryFn: () => getStockTabData({ param: {[type]: [mark]}, ticker: chart.symbol, start: '2010-01-01' }),
+      queryFn: () => getStockTabData({ param: { [type]: [mark] }, ticker: chart.symbol, start: '2010-01-01' }),
       revalidateIfStale: true
     })
 
@@ -278,9 +273,9 @@ export const KChart = () => {
     <div className="h-full overflow-hidden flex flex-col">
       <KChartContext.Provider value={{
         ...context,
-        setState: setContext, setMainIndicators, setMainSystem, toggleMainChartType, setMainCoiling, setTimeIndex, activeChart,
+        setState: setContext, setMainIndicators, setMainSystem, toggleMainChartType, setMainCoiling, setTimeIndex, setActiveChart,
         setSecondaryIndicatorsCount, setSecondaryIndicator, setMainData, addOverlayStock, removeOverlayStock, setOverlayMark,
-        setIndicatorData, getIndicatorData, setViewMode, overMarkList: tabList.data ?? []
+        setIndicatorData, setViewMode, overMarkList: tabList.data ?? []
       }}>
         <div className="w-full flex-shrink-0">
           <div className="flex border border-solid border-border px-4">

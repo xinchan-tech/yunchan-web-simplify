@@ -9,7 +9,7 @@ import dayjs from 'dayjs'
 import Decimal from 'decimal.js'
 import type { CandlestickSeriesOption, LineSeriesOption } from 'echarts/charts'
 import { cloneDeep } from 'lodash-es'
-import { CoilingIndicatorId, type Indicator, type IndicatorData, type KChartState, isTimeIndexChart } from './ctx'
+import { CoilingIndicatorId, type Indicator, type KChartState, isTimeIndexChart } from './ctx'
 import {
   type DrawerRectShape,
   type DrawerTextShape,
@@ -129,7 +129,7 @@ export const options: ECOption = {
       axisLabel: {
         show: false,
         formatter: (v: any) => {
-          return dayjs(v).format('MM-DD')
+          return v ? dayjs(v).format('MM-DD') : ''
         }
       },
       splitLine: {
@@ -226,6 +226,7 @@ export const renderGrid: ChartRender = (options, state) => {
    * 2. 副图 <= 3 -> 副图占20% * 副图数量，底部留24标签
    */
   const grid = []
+  const tops = renderUtils.calcGridTopByGridIndex(state.secondaryIndicators.length)
   if (state.secondaryIndicators.length === 0) {
     grid.push({
       top: 1,
@@ -246,14 +247,14 @@ export const renderGrid: ChartRender = (options, state) => {
         grid.push({
           left: 0,
           right: '4%',
-          top: `${20 * (5 - state.secondaryIndicators.length) + 20 * i + 0.4}%`,
+          top: `${tops[i]}%`,
           height: '20%'
         })
       } else {
         grid.push({
           left: 0,
           right: '4%',
-          top: `${20 * (5 - state.secondaryIndicators.length) + 20 * i + 0.4}%`,
+          top: `${tops[i]}%`,
           bottom: 24
         })
       }
@@ -271,7 +272,7 @@ export const renderGrid: ChartRender = (options, state) => {
       grid.push({
         left: 0,
         right: '4%',
-        top: `${40 + (60 / state.secondaryIndicators.length) * i}%`,
+        top: `${tops[i]}%`,
         height: `${60 / state.secondaryIndicators.length}%`
       })
     }
@@ -512,19 +513,17 @@ export const renderMainCoiling = (options: ECOption, state: ChartState) => {
 /**
  * 渲染主图指标
  */
-export const renderMainIndicators = (options: ECOption, indicators: Indicator[], data: IndicatorData[]) => {
+export const renderMainIndicators = (options: ECOption, indicators: Indicator[]) => {
   /** 合并绘制 */
   const stickLineData: DrawerRectShape[] = []
   const textData: DrawerTextShape[] = []
 
-  indicators.forEach((_, index) => {
-    if (!data[index]) {
+  indicators.forEach((indicator) => {
+    if (!indicator.data) {
       return
     }
 
-    const indicatorData = data[index]
-
-    indicatorData.forEach(d => {
+    indicator.data.forEach(d => {
       if (typeof d === 'string') {
         return
       }
@@ -656,19 +655,17 @@ export const renderOverlayMark = (options: ECOption, state: ChartState) => {
 /**
  * 渲染副图
  */
-export const renderSecondary = (options: ECOption, indicators: Indicator[], data: IndicatorData[]) => {
+export const renderSecondary = (options: ECOption, indicators: Indicator[]) => {
   /** 合并绘制 */
 
-  indicators.forEach((_, index) => {
-    if (!data[index]) {
+  indicators.forEach((indicator, index) => {
+    if (!indicator.data) {
       return
     }
     const stickLineData: DrawerRectShape[] = []
     const textData: DrawerTextShape[] = []
 
-    const indicatorData = data[index]
-
-    indicatorData.forEach(d => {
+    indicator.data.forEach(d => {
       if (typeof d === 'string') {
         return
       }
@@ -794,7 +791,7 @@ const renderSecondaryAxis = (options: ECOption, state: KChartState['state'][0], 
         show: index === state.secondaryIndicators.length - 1,
         color: '#fff',
         formatter: (v: any) => {
-          return dayjs(v).format('MM-DD')
+          return v ? dayjs(v).format('MM-DD'): ''
         }
       },
       axisTick: {
