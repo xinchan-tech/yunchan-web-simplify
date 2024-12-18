@@ -194,6 +194,7 @@ export type Indicator = {
   timeIndex: StockChartInterval
   symbol: string
   start_at?: string
+  key: string
 }
 
 /**
@@ -311,8 +312,8 @@ export const createDefaultChartState = (opts: { symbol?: string; index: number }
    * 10: 买卖点位
    */
   secondaryIndicators: [
-    { id: '9', type: 'system', timeIndex: StockChartInterval.DAY, symbol: opts.symbol ?? 'QQQ' },
-    { id: '10', type: 'system', timeIndex: StockChartInterval.DAY, symbol: opts.symbol ?? 'QQQ' }
+    { id: '9', type: 'system', timeIndex: StockChartInterval.DAY, symbol: opts.symbol ?? 'QQQ', key: nanoid() },
+    { id: '10', type: 'system', timeIndex: StockChartInterval.DAY, symbol: opts.symbol ?? 'QQQ', key: nanoid() }
   ],
   mainIndicators: {},
   mainCoiling: [

@@ -11,6 +11,7 @@ import dayjs from "dayjs"
 import { renderUtils } from "./lib/utils"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { useTime } from "@/store"
+import { nanoid } from "nanoid"
 
 
 /**
@@ -22,8 +23,8 @@ export const KChart = () => {
   const [context, setContext] = useImmer<KChartState>({
     viewMode: 'single',
     secondaryIndicators: [
-      { id: '9', type: 'system', timeIndex: StockChartInterval.DAY, symbol: 'QQQ' },
-      { id: '10', type: 'system', timeIndex: StockChartInterval.DAY, symbol: 'QQQ' }
+      { id: '9', type: 'system', timeIndex: StockChartInterval.DAY, symbol: 'QQQ', key: nanoid() },
+      { id: '10', type: 'system', timeIndex: StockChartInterval.DAY, symbol: 'QQQ', key: nanoid() }
     ],
     state:
       [
@@ -56,12 +57,10 @@ export const KChart = () => {
     const _indicators = Array.isArray(indicators) ? indicators : [indicators]
     const _indicatorsMap: NormalizedRecord<Indicator> = {}
 
-
-
     _indicators.forEach(({ id, type, timeIndex, symbol }) => {
       const cacheKey = `${symbol}-${timeIndex}-${id}-${type}`
 
-      let idt = { id: id, type, timeIndex, symbol }
+      let idt = { id: id, type, timeIndex, symbol, key: nanoid() }
       if (indicatorMap.current.has(cacheKey)) {
         idt = indicatorMap.current.get(cacheKey)
       } else {
@@ -96,7 +95,13 @@ export const KChart = () => {
     setContext(d => {
       const chart = d.state[index ?? d.activeChartIndex]
       chart.timeIndex = timeIndex
+
+      if(isTimeIndexChart(timeIndex )) {
+        chart.type = 'line'
+      }
+
     })
+
     setMainIndicators({ index, indicators: newMainIndicators })
 
     const newSecondaryIndicators = context.state[index ?? context.activeChartIndex].secondaryIndicators.map(v => ({ ...v, timeIndex }))

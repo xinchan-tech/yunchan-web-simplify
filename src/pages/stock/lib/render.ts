@@ -1,4 +1,4 @@
-import type { StockRawRecord, getStockChart } from '@/api'
+import { StockChartInterval, type StockRawRecord, type getStockChart } from '@/api'
 import { useConfig } from '@/store'
 import { dateToWeek } from '@/utils/date'
 import type { ECOption } from '@/utils/echarts'
@@ -30,6 +30,7 @@ import {
   calcTradePoints
 } from './coilling'
 import { renderUtils } from './utils'
+import type { GraphicComponentOption } from "echarts/components"
 
 const MAIN_CHART_NAME = 'kChart'
 const MAIN_CHART_NAME_VIRTUAL = 'kChart-virtual'
@@ -152,6 +153,7 @@ export const options: ECOption = {
       scale: true,
       gridIndex: 0,
       position: 'right',
+      max: renderUtils.calcAxisMax,
       splitLine: {
         lineStyle: {
           color: 'rgb(31, 32, 33)'
@@ -178,7 +180,7 @@ export const renderChart = (state: ChartState, data?: Awaited<ReturnType<typeof 
 
   options.dataZoom = [
     {
-      minSpan: 2,
+      minSpan: 1,
       type: 'inside',
       xAxisIndex: [0, 1, 2, 3, 4, 5],
       start: 90,
@@ -820,6 +822,9 @@ const renderSecondaryAxis = (options: ECOption, state: KChartState['state'][0], 
     options.yAxis.push({
       scale: true,
       gridIndex: index + 1,
+      max: v => {
+        return Math.round(v.max * 1.1)
+      },
       position: 'right',
       axisLine: { onZero: false, show: false },
       axisTick: {
@@ -837,6 +842,37 @@ const renderSecondaryAxis = (options: ECOption, state: KChartState['state'][0], 
     })
 
   return options
+}
+
+/**
+ * 渲染水印
+ * 只有在盘前盘中盘后显示
+ */
+export const renderWatermark = (options: ECOption, timeIndex: ChartState['timeIndex']) => {
+  if(!isTimeIndexChart(timeIndex)) return
+
+  if(timeIndex === StockChartInterval.FIVE_DAY) return
+
+  const watermark: GraphicComponentOption = {
+    type: 'text',
+    left: 'center',
+    top: '25%',
+    z2: 0,
+    style: {
+      text: timeIndex === StockChartInterval.PRE_MARKET ? '盘前交易' : timeIndex === StockChartInterval.AFTER_HOURS ? '盘后交易' : '盘中交易',
+      fill: 'rgba(255, 255, 255, 0.05)',
+      font: 'bold 96px sans-serif',
+      align: 'center',
+    }
+  }
+
+  if(!options.graphic) {
+    options.graphic = [watermark]
+  }else if(Array.isArray(options.graphic)) {
+    options.graphic.push(watermark)
+  }else{
+    options.graphic = [options.graphic, watermark]
+  }
 }
 
 /**

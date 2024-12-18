@@ -2,6 +2,7 @@ import { ContextMenu, ContextMenuTrigger, ContextMenuContent, ContextMenuItem, C
 import { cn } from "@/utils/style"
 import type { PropsWithChildren } from "react"
 import { useKChartContext } from "../lib"
+import { nanoid } from "nanoid"
 
 interface ChartContextMenuProps {
   index: number
@@ -11,7 +12,7 @@ export const ChartContextMenu = (props: PropsWithChildren<ChartContextMenuProps>
   const { activeChart, setSecondaryIndicatorsCount } = useKChartContext()
   const chart = activeChart(props.index)
   const onChangeSecondaryIndicators = (count: number) => () => {
-    setSecondaryIndicatorsCount({ count, index: props.index, indicator: { id: '9', type: 'system', timeIndex: chart.timeIndex, symbol: chart.symbol } })
+    setSecondaryIndicatorsCount({ count, index: props.index, indicator: { id: '9', type: 'system', timeIndex: chart.timeIndex, symbol: chart.symbol, key: nanoid() } })
   }
 
 

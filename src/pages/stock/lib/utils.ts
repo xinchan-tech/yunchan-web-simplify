@@ -89,5 +89,19 @@ export const renderUtils = {
    */
   isLocalIndicator: (indicatorId: string) => {
     return indicatorId === '9' || indicatorId === '10'
+  },
+
+  /**
+   * 计算刻度最大值
+   */
+  calcAxisMax: ({max, min}: {max: number, min: number}) => {
+    const diff = max - min
+    if(diff < 10){
+      return (max + diff * 0.1).toFixed(1)
+    }
+    if(diff < 100){
+      return (max + diff * 0.05).toFixed(1)
+    }
+    return max * 1.1
   }
 }

@@ -5,9 +5,10 @@ import { useQueries, useQuery } from "@tanstack/react-query"
 import { getStockChart, getStockIndicatorData } from "@/api"
 import { useMount, useUpdateEffect } from "ahooks"
 import { useChart } from "@/hooks"
-import { renderChart, renderMainCoiling, renderMainIndicators, renderOverlay, renderOverlayMark, renderSecondary, renderSecondaryLocalIndicators, renderZoom } from "../lib/render"
+import { renderChart, renderMainCoiling, renderMainIndicators, renderOverlay, renderOverlayMark, renderSecondary, renderSecondaryLocalIndicators, renderWatermark, renderZoom } from "../lib/render"
 import { SecondaryIndicator } from "./secondary-indicator"
 import { renderUtils } from "../lib/utils"
+import { nanoid } from "nanoid"
 
 
 
@@ -112,7 +113,7 @@ export const MainChart = (props: MainChartProps) => {
     renderOverlayMark(_options, state)
     renderSecondary(_options, state.secondaryIndicators, state.secondaryIndicators.map(v => getIndicatorData({ indicator: v })))
     renderSecondaryLocalIndicators(_options, state.secondaryIndicators, state)
-
+    renderWatermark(_options, state.timeIndex)
     chart.current.setOption(_options)
   }
 
@@ -128,7 +129,7 @@ export const MainChart = (props: MainChartProps) => {
     setSecondaryIndicator({
       index: props.index,
       indicatorIndex: params.index,
-      indicator: { id: params.value, type: params.type, timeIndex: chart.timeIndex, symbol: chart.symbol }
+      indicator: { id: params.value, type: params.type, timeIndex: chart.timeIndex, symbol: chart.symbol, key: nanoid() }
     })
   }
 
@@ -138,8 +139,11 @@ export const MainChart = (props: MainChartProps) => {
       <div className="w-full h-full" ref={dom}>
       </div>
       {
+        console.log(activeChart().secondaryIndicators)
+      }
+      {
         activeChart().secondaryIndicators.map((item, index) => (
-          <div key={item + index.toString()}
+          <div key={item.key}
             className="absolute rounded-sm left-2"
             style={{ top: `calc(${(chart.current?.getOption() as any)?.grid[index + 1]?.top ?? 0} + 10px)` }}
           >

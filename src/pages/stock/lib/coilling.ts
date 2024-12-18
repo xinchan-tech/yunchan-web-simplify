@@ -500,7 +500,7 @@ export const calcBottomSignal = (
     }
   ])
   const hdlyData = hdly(candlesticks).map((item, index) => [index, 0, item, 18, 0, '']).filter(v => v[2] > 0)
-  console.log("🚀 ~ hdlyData:", hdlyData)
+
   const monthLineData = monthLine(candlesticks)
   const horizonData = horizon(candlesticks)
   const topLine = candlesticks.map((_, index) => [index, 100])
