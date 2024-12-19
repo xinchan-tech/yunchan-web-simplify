@@ -87,3 +87,38 @@ export const TimeIndexSelect = () => {
     </>
   )
 }
+
+interface TimeIndexMenuProps {
+  index: number
+}
+
+const menus = ['盘前分时', '盘中分时', '盘后分时', '多日分时', '1分', '2分', '3分', '5分', '10分', '15分', '30分', '45分', '1小时', '2小时', '3小时', '4小时', '日线', '周线', '月线', '季线', '半年', '年线']
+
+export const TimeIndexMenu = (props: TimeIndexMenuProps) => {
+  const { setTimeIndex, state } = useKChartContext()
+  const _activeChart = state[props.index]
+  const setActiveMin = (min: StockChartInterval) => {
+    setTimeIndex({ index: props.index, timeIndex: min })
+  }
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <div>
+          <Button reset className="text-xs font-normal">
+            {
+              menus[timeIndex.findIndex(v => v === _activeChart.timeIndex)]
+            }
+          </Button>
+        </div>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent>
+        {
+          menus.map((item, index) => (
+            <DropdownMenuItem className="justify-center" key={item} onClick={() => setActiveMin(timeIndex[index])}>{item}</DropdownMenuItem>
+          ))
+        }
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+}

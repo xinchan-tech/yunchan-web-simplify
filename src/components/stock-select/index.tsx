@@ -8,12 +8,13 @@ import JknIcon from "../jkn/jkn-icon"
 import { Input, type InputProps } from "../ui/input"
 import { Popover, PopoverAnchor, PopoverContent } from "../ui/popover"
 import { ScrollArea } from "../ui/scroll-area"
+import { cn } from "@/utils/style"
 
 interface StockSelectProps extends Omit<InputProps, 'onChange'> {
   onChange?: (symbol: string) => void
 }
 
-const StockSelect = ({ onChange, ...props }: StockSelectProps) => {
+const StockSelect = ({ onChange, className, width, ...props }: StockSelectProps) => {
   const [open, { setTrue, setFalse }] = useBoolean(false)
   const stockList = useStockList()
   const [keyword, setKeyword] = useState('')
@@ -41,10 +42,10 @@ const StockSelect = ({ onChange, ...props }: StockSelectProps) => {
   }
 
   return (
-    <div className="w-48">
+    <div className="w-48" style={{ width }}>
       <Popover modal open={open} onOpenChange={v => !v && setFalse()}>
         <PopoverAnchor asChild>
-          <div className="border border-solid border-dialog-border rounded-sm flex items-center px-2">
+          <div className={cn('border border-solid border-dialog-border rounded-sm flex items-center px-2', className)}>
             <JknIcon className="w-4 h-4" name="ic_search" />
             <Input value={keyword} onChange={e => setKeyword(e.target.value)} className="border-none" size="sm" onClick={() => setTrue()} placeholder="请输入股票代码" {...props} />
           </div>

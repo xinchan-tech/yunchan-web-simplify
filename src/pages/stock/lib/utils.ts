@@ -36,13 +36,13 @@ export const renderUtils = {
   },
 
   calcGridTopByGridIndex: (secondaryIndicatorLen: number) => {
-    if(secondaryIndicatorLen === 0) return [0]
+    if (secondaryIndicatorLen === 0) return [0]
 
-    if(secondaryIndicatorLen <= 3) {
-      return Array.from({length: secondaryIndicatorLen}, (_, i) => 20 * (5 - secondaryIndicatorLen) + 20 * i + 0.4)
+    if (secondaryIndicatorLen <= 3) {
+      return Array.from({ length: secondaryIndicatorLen }, (_, i) => 20 * (5 - secondaryIndicatorLen) + 20 * i + 0.4)
     }
 
-    return Array.from({length: secondaryIndicatorLen}, (_, i) => 40 + (60 / secondaryIndicatorLen) * i + 0.4)
+    return Array.from({ length: secondaryIndicatorLen }, (_, i) => 40 + (60 / secondaryIndicatorLen) * i + 0.4)
   },
 
   getStartTime: (usTime: number, time: StockChartInterval) => {
@@ -52,6 +52,73 @@ export const renderUtils = {
       .tz('America/New_York')
       .add(-15 * time, 'day')
       .format('YYYY-MM-DD')
+  },
+
+  /**
+   * 布局策略
+   * 1. 无副图 -> 主图占满, 底部留出24显示标签
+   * 2. 副图 <= 3 -> 副图占20% * 副图数量，底部留24标签
+   * 3. 副图 > 3 -> 副图占60%平均分，底部留24标签
+   *
+   * 左右留出50px显示标签
+   */
+  calcGridSize: (size: [number, number], secondaryIndicatorLen: number, hasLeft: boolean) => {
+    const Y_AXIS_WIDTH = 50
+    const X_AXIS_HEIGHT = 24
+    const TOP_OFFSET = 10
+    const [width, height] = size
+  
+    const gridLeft = hasLeft ? Y_AXIS_WIDTH: 0
+  
+    const gridSize = [
+      width - Y_AXIS_WIDTH - gridLeft,
+      height - X_AXIS_HEIGHT - TOP_OFFSET
+    ]
+
+    const grid: {left: number, top: number, width: number, height: number}[] = []
+
+    if(secondaryIndicatorLen === 0) {
+      grid.push({
+        left: gridLeft,
+        top: TOP_OFFSET,
+        width: gridSize[0],
+        height: gridSize[1]
+      })
+    }else if(secondaryIndicatorLen <= 3){
+      grid.push({
+        left: gridLeft,
+        top: TOP_OFFSET,
+        width: gridSize[0],
+        height: gridSize[1] * (5 - secondaryIndicatorLen) / 5
+      })
+
+      Array.from({ length: secondaryIndicatorLen }, (_) => {
+        grid.push({
+          left: gridLeft,
+          top: grid.reduce((acc, cur) => acc + cur.height, 0),
+          width: gridSize[0],
+          height: gridSize[1] / 5
+        })
+      })
+    }else {
+      grid.push({
+        left: gridLeft,
+        top: TOP_OFFSET,
+        width: gridSize[0],
+        height: gridSize[1] * 0.4
+      })
+
+      Array.from({ length: secondaryIndicatorLen }, (_) => {
+        grid.push({
+          left: gridLeft,
+          top: grid.reduce((acc, cur) => acc + cur.height, 0),
+          width: gridSize[0],
+          height: gridSize[1] / 5
+        })
+      })
+    }
+
+    return grid
   },
 
   getViewMode: (s: KChartContext['viewMode']) => {
@@ -91,12 +158,12 @@ export const renderUtils = {
   /**
    * 计算刻度最大值
    */
-  calcAxisMax: ({max, min}: {max: number, min: number}) => {
+  calcAxisMax: ({ max, min }: { max: number; min: number }) => {
     const diff = max - min
-    if(diff < 10){
+    if (diff < 10) {
       return (max + diff * 0.1).toFixed(1)
     }
-    if(diff < 100){
+    if (diff < 100) {
       return (max + diff * 0.05).toFixed(1)
     }
     return max * 1.1

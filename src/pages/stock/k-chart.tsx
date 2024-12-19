@@ -5,7 +5,7 @@ import { ChartContextMenu } from "./component/chart-context-menu"
 import { ChartToolSelect } from "./component/chart-tool"
 import { MainChart } from "./component/main-chart"
 import { TimeIndexSelect } from "./component/time-index"
-import { CoilingIndicatorId, type Indicator, KChartContext, type KChartState, createDefaultChartState, isTimeIndexChart, useSymbolQuery } from "./lib"
+import { type Indicator, KChartContext, type KChartState, createDefaultChartState, isTimeIndexChart, useSymbolQuery } from "./lib"
 import { getStockChart, getStockIndicatorData, getStockTabData, getStockTabList } from "@/api"
 import dayjs from "dayjs"
 import { renderUtils } from "./lib/utils"
@@ -13,6 +13,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { useTime } from "@/store"
 import { nanoid } from "nanoid"
 import { cloneDeep } from "lodash-es"
+import { useUpdateEffect } from "ahooks"
+import { useNavigate } from "react-router"
 
 
 /**
@@ -21,9 +23,9 @@ import { cloneDeep } from "lodash-es"
  */
 
 export const KChart = () => {
- 
+
   const symbol = useSymbolQuery()
- 
+
   const [context, setContext] = useImmer<KChartState>({
     viewMode: 'single',
     state:
@@ -40,7 +42,7 @@ export const KChart = () => {
   const { usTime } = useTime()
 
   useEffect(() => {
-    if(!context.state[0]) return
+    if (!context.state[0]) return
     const cloneData = cloneDeep(context.state[0])
     cloneData.mainData = {
       history: [],
@@ -54,9 +56,18 @@ export const KChart = () => {
     })
     cloneData.mainIndicators = {}
     const str = JSON.stringify(cloneData)
-    
+
     localStorage.setItem('k-chart-state', str)
   }, [context.state[0]])
+
+  useUpdateEffect(() => {
+    setSymbol({ symbol })
+  }, [symbol])
+
+  const navigate = useNavigate()
+  useUpdateEffect(() => {
+    navigate(`/stock?symbol=${context.state[context.activeChartIndex].symbol}`)
+  }, [context.state, context.activeChartIndex])
 
 
   const tabList = useQuery({
@@ -72,12 +83,18 @@ export const KChart = () => {
     })
   }
 
+  const setSymbol: KChartContext['setSymbol'] = ({ index, symbol }) => {
+    setContext(d => {
+      d.state[index ?? d.activeChartIndex].symbol = symbol
+    })
+  }
+
   const setMainIndicators: KChartContext['setMainIndicators'] = ({ index, indicators }) => {
     const _indicators = Array.isArray(indicators) ? indicators : [indicators]
     const _indicatorsMap: NormalizedRecord<Indicator> = {}
-
+    const chart = context.state[index ?? context.activeChartIndex]
     _indicators.forEach(indicator => {
-      _indicatorsMap[indicator.id] = indicator
+      _indicatorsMap[indicator.id] = chart.mainIndicators[indicator.id] ?? indicator
     })
 
     setContext(d => {
@@ -153,15 +170,16 @@ export const KChart = () => {
       const chart = d.state[index ?? context.activeChartIndex]
 
       if (queryData) {
-        indicator.data = queryData.data as any
+        chart.secondaryIndicators[indicatorIndex] = { ...indicator, data: queryData.data }
         queryClient.invalidateQueries({ queryKey })
+      } else {
+        chart.secondaryIndicators[indicatorIndex] = indicator
       }
-
-      chart.secondaryIndicators[indicatorIndex] = indicator
     })
   }
 
   const setMainData: KChartContext['setMainData'] = useCallback(({ index, data }) => {
+ 
     setContext(d => {
       const chart = d.state[index ?? d.activeChartIndex]
       chart.mainData = data ? { ...data, history: data.history.map(v => [dayjs(v[0]).valueOf().toString(), ...v.slice(1)]) } as any : {
@@ -172,7 +190,7 @@ export const KChart = () => {
     })
   }, [setContext])
 
-  const setIndicatorData: KChartContext['setIndicatorData'] = useCallback(({index, indicatorId, data }) => {
+  const setIndicatorData: KChartContext['setIndicatorData'] = useCallback(({ index, indicatorId, data }) => {
     setContext(d => {
       const chart = d.state[index ?? d.activeChartIndex]
       const indicators = []
@@ -180,7 +198,7 @@ export const KChart = () => {
       if (chart.mainIndicators[indicatorId]) {
         indicators.push(chart.mainIndicators[indicatorId])
       }
-      
+
       indicators.push(...chart.secondaryIndicators.filter(v => v.id === indicatorId))
 
       if (!indicators.length) return
@@ -200,6 +218,7 @@ export const KChart = () => {
       d.viewMode = viewMode
       if (d.state.length > count) {
         d.state = d.state.slice(0, count)
+        d.activeChartIndex = d.state.length - 1
       } else {
         for (let i = d.state.length; i < count; i++) {
           d.state.push(createDefaultChartState({
@@ -267,6 +286,13 @@ export const KChart = () => {
     })
   }
 
+  const setYAxis: KChartContext['setYAxis'] = ({ index, yAxis }) => {
+    setContext(d => {
+      const chart = d.state[index ?? d.activeChartIndex]
+      chart.yAxis = yAxis
+    })
+  }
+
   const chartCount = useMemo(() => renderUtils.getViewMode(context.viewMode), [context.viewMode])
 
   return (
@@ -275,7 +301,7 @@ export const KChart = () => {
         ...context,
         setState: setContext, setMainIndicators, setMainSystem, toggleMainChartType, setMainCoiling, setTimeIndex, setActiveChart,
         setSecondaryIndicatorsCount, setSecondaryIndicator, setMainData, addOverlayStock, removeOverlayStock, setOverlayMark,
-        setIndicatorData, setViewMode, overMarkList: tabList.data ?? []
+        setIndicatorData, setViewMode, setYAxis, setSymbol, overMarkList: tabList.data ?? []
       }}>
         <div className="w-full flex-shrink-0">
           <div className="flex border border-solid border-border px-4">

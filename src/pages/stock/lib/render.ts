@@ -30,7 +30,8 @@ import {
   calcTradePoints
 } from './coilling'
 import { renderUtils } from './utils'
-import type { GraphicComponentOption } from "echarts/components"
+import type { GraphicComponentOption } from 'echarts/components'
+import type { YAXisOption } from 'echarts/types/dist/shared'
 
 const MAIN_CHART_NAME = 'kChart'
 const MAIN_CHART_NAME_VIRTUAL = 'kChart-virtual'
@@ -63,12 +64,14 @@ export const options: ECOption = {
     },
     formatter: (v: any) => {
       const errData = (v as any[]).find(_v => _v.axisId === 'main-x')
+
       if (!errData) return ''
       const data = errData?.seriesType === 'candlestick' ? errData?.value.slice(1) : (errData.value as StockRawRecord)
 
       data[0] = dayjs(+data[0]).format('YYYY-MM-DD HH:mm:ss')
 
       const stock = StockRecord.of('', '', data)
+
       let time = dayjs(stock.time).format('MM-DD hh:mm') + dateToWeek(stock.time, '周')
       if (stock.time.slice(11) === '00:00:00') {
         time = stock.time.slice(0, 11) + dateToWeek(stock.time, '周')
@@ -149,12 +152,32 @@ export const options: ECOption = {
   ],
   yAxis: [
     {
-      id: 'main-y',
+      id: 'main-price',
       scale: true,
+      gridIndex: 0,
+      position: 'left',
+      show: true,
+      axisPointer: {
+        label: {
+          show: false
+        }
+      },
+      max: renderUtils.calcAxisMax,
+      splitLine: {
+        lineStyle: {
+          color: 'rgb(31, 32, 33)'
+        }
+      }
+    },
+    {
+      id: 'main-right',
+      scale: true,
+      show: true,
       gridIndex: 0,
       position: 'right',
       max: renderUtils.calcAxisMax,
       splitLine: {
+        show: false,
         lineStyle: {
           color: 'rgb(31, 32, 33)'
         }
@@ -174,8 +197,7 @@ type ChartRender = (
 /**
  * 渲染图表
  */
-export const renderChart = (state: ChartState, data?: Awaited<ReturnType<typeof getStockChart>>): ECOption => {
-  const chain: ChartRender[] = [renderGrid, renderMainChart, renderMarkLine]
+export const renderChart = (): ECOption => {
   const _options = cloneDeep(options)
 
   options.dataZoom = [
@@ -209,76 +231,46 @@ export const renderChart = (state: ChartState, data?: Awaited<ReturnType<typeof 
     }
   ]
 
-  for (const fn of chain) {
-    fn(_options, state, data)
-  }
-
   return _options
 }
 
 /**
  * 渲染布局
  */
-export const renderGrid: ChartRender = (options, state) => {
+export const renderGrid = (options: ECOption, state: ChartState, size: [number, number]) => {
   /**
    * 布局策略
    * 1. 无副图 -> 主图占满, 底部留出24显示标签
    * 2. 副图 <= 3 -> 副图占20% * 副图数量，底部留24标签
+   * 3. 副图 > 3 -> 副图占60%平均分，底部留24标签
+   *
+   * 左右留出50px显示标签
    */
-  const grid = []
-  const tops = renderUtils.calcGridTopByGridIndex(state.secondaryIndicators.length)
-  if (state.secondaryIndicators.length === 0) {
-    grid.push({
-      top: 1,
-      left: 0,
-      right: '4%',
-      bottom: 24
-    })
-  } else if (state.secondaryIndicators.length <= 3) {
-    grid.push({
-      top: 4,
-      left: 0,
-      right: '4%',
-      height: `${20 * (5 - state.secondaryIndicators.length)}%`
-    })
+  // const Y_AXIS_WIDTH = 50
+  // const X_AXIS_HEIGHT = 24
+  // const [width, height] = size
 
-    for (let i = 0; i < state.secondaryIndicators.length; i++) {
-      if (i !== state.secondaryIndicators.length - 1) {
-        grid.push({
-          left: 0,
-          right: '4%',
-          top: `${tops[i]}%`,
-          height: '20%'
-        })
-      } else {
-        grid.push({
-          left: 0,
-          right: '4%',
-          top: `${tops[i]}%`,
-          bottom: 24
-        })
-      }
-    }
-  } else {
-    grid.push({
-      top: 4,
-      left: 0,
-      right: '4%',
-      height: '40%'
-    })
+  // const gridLeft = state.yAxis.left ? Y_AXIS_WIDTH: 0
 
-    for (let i = 0; i < state.secondaryIndicators.length; i++) {
-      // 60%平均分
-      grid.push({
-        left: 0,
-        right: '4%',
-        top: `${tops[i]}%`,
-        height: `${60 / state.secondaryIndicators.length}%`
-      })
+  // const gridSize = [
+  //   width - Y_AXIS_WIDTH - gridLeft,
+  //   height - X_AXIS_HEIGHT
+  // ]
+
+  // const grid = []
+
+  // const tops = renderUtils.calcGridTopByGridIndex(state.secondaryIndicators.length)
+  const grids = renderUtils.calcGridSize(size, state.secondaryIndicators.length, !!state.yAxis.left)
+  options.grid = grids
+
+  const yAxis = options.yAxis as YAXisOption[]
+
+  if (state.yAxis.left) {
+    const left = yAxis.find(axis => axis.id === 'main-price')
+    if (left) {
+      // left.show = true
     }
   }
-
-  options.grid = grid
 
   for (let i = 0; i < state.secondaryIndicators.length; i++) {
     renderSecondaryAxis(options, state, i)
@@ -289,13 +281,15 @@ export const renderGrid: ChartRender = (options, state) => {
 /**
  * 渲染主图
  */
-export const renderMainChart: ChartRender = (options, state, data) => {
+export const renderMainChart: ChartRender = (options, state) => {
   const mainSeries = { name: MAIN_CHART_NAME } as LineSeriesOption | CandlestickSeriesOption
   mainSeries.yAxisIndex = 0
   mainSeries.xAxisIndex = 0
   const { getStockColor } = useConfig.getState()
 
-  if (!data) return options
+  const data = state.mainData.history
+
+  if (!data || data.length === 0) return options
 
   if (state.type === 'k-line') {
     mainSeries.type = 'candlestick'
@@ -306,20 +300,23 @@ export const renderMainChart: ChartRender = (options, state, data) => {
       borderColor0: getStockColor(false)
     }
     mainSeries.data = state.mainData.history ?? []
+    mainSeries.yAxisId = 'main-price'
     mainSeries.encode = {
       x: [1],
       y: [2, 3, 5, 4]
     }
+ 
   } else {
     let color = Object.values(colorUtil.hexToRGB('#4a65bf') ?? {}).join(',')
 
-    const lastData = StockRecord.of('', '', data.history[data.history.length - 1])
+    const lastData = StockRecord.of('', '', data[data.length - 1])
 
     if (isTimeIndexChart(state.timeIndex)) {
       const _color = getStockColor(lastData.isUp)
 
       color = Object.values(colorUtil.hexToRGB(_color) ?? {}).join(',')
     }
+
     const _mainSeries = mainSeries as LineSeriesOption
     _mainSeries.type = 'line'
     _mainSeries.showSymbol = false
@@ -327,8 +324,10 @@ export const renderMainChart: ChartRender = (options, state, data) => {
       x: [0],
       y: [2]
     }
+    mainSeries.yAxisId = 'main-price'
     _mainSeries.data = state.mainData.history ?? []
     mainSeries.color = `rgba(${color})`
+
     ;(mainSeries as any).areaStyle = {
       color: {
         x: 0,
@@ -353,6 +352,27 @@ export const renderMainChart: ChartRender = (options, state, data) => {
     }
   }
   ;(options.series as any)?.push(mainSeries)
+
+  const stocks = data
+    .map(item => StockRecord.of('', '', item))
+    .map(stock => [stock.time, state.yAxis.right === 'price' ? stock.close : stock.percent])
+
+  Array.isArray(options.series) &&
+    options.series.push({
+      name: 'price',
+      type: 'line',
+      data: stocks,
+      encode: {
+        x: [0],
+        y: [1]
+      },
+      xAxisIndex: 0,
+      yAxisId: 'main-right',
+      showSymbol: false,
+      lineStyle: {
+        color: 'transparent'
+      }
+    })
 
   // 如果grid > 1 ，取消显示axisPointer标签
   if (Array.isArray(options.xAxis)) {
@@ -382,14 +402,15 @@ export const renderMainChart: ChartRender = (options, state, data) => {
 /**
  * 渲染标记线
  */
-export const renderMarkLine: ChartRender = (options, _, data) => {
+export const renderMarkLine: ChartRender = (options, state) => {
   if (!options.series && !Array.isArray(options.series)) return options
-  if (!data) return options
+  const data = state.mainData.history
+  if (!data || data.length === 0) return options
 
   const mainSeries = (options.series as any[]).find(s => s.name === MAIN_CHART_NAME)!
 
   const { getStockColor } = useConfig.getState()
-  const lastData = StockRecord.of('', '', data.history[data.history.length - 1])
+  const lastData = StockRecord.of('', '', data[data.length - 1])
 
   const lineColor = getStockColor(lastData.percentAmount >= 0)
 
@@ -412,10 +433,10 @@ export const renderMarkLine: ChartRender = (options, _, data) => {
       [
         {
           xAxis: 'max',
-          yAxis: data?.history[data?.history.length - 1][2] ?? 0
+          yAxis: data[data.length - 1][2] ?? 0
         },
         {
-          yAxis: data?.history[data?.history.length - 1][2] ?? 0,
+          yAxis: data[data.length - 1][2] ?? 0,
           x: '96%'
         }
       ]
@@ -497,15 +518,15 @@ export const renderMainCoiling = (options: ECOption, state: ChartState) => {
           index === points.length - 2 && state.mainData.coiling_data?.status !== 1 ? LineType.DASH : LineType.SOLID
         ])
       })
-      drawPolyline(options, {} as any, { index: 0, data: p, extra: { color: '#ffffff' } })
+      drawPolyline(options, {} as any, { xAxisIndex: 0, yAxisIndex: 0, data: p, extra: { color: '#ffffff' } })
     } else if (coiling === CoilingIndicatorId.PIVOT) {
-      drawPivots(options, {} as any, { index: 0, data: expands as any })
-      drawPivots(options, {} as any, { index: 0, data: pivots as any })
+      drawPivots(options, {} as any, { xAxisIndex: 0, yAxisIndex: 0, data: expands as any })
+      drawPivots(options, {} as any, { xAxisIndex: 0, yAxisIndex: 0, data: pivots as any })
     } else if (
       [CoilingIndicatorId.ONE_TYPE, CoilingIndicatorId.TWO_TYPE, CoilingIndicatorId.THREE_TYPE].includes(coiling)
     ) {
       const tradePoints = calcTradePoints(state.mainData.coiling_data, points, coiling as any)
-      drawTradePoints(options, {} as any, { index: 0, data: tradePoints })
+      drawTradePoints(options, {} as any, { xAxisIndex: 0, yAxisIndex: 0, data: tradePoints })
     }
   })
 }
@@ -518,7 +539,7 @@ export const renderMainIndicators = (options: ECOption, indicators: Indicator[])
   const stickLineData: DrawerRectShape[] = []
   const textData: DrawerTextShape[] = []
 
-  indicators.forEach((indicator) => {
+  indicators.forEach(indicator => {
     if (!indicator.data) {
       return
     }
@@ -537,7 +558,8 @@ export const renderMainIndicators = (options: ECOption, indicators: Indicator[])
           extra: {
             color: d.style?.color || '#ffffff'
           },
-          index: 0,
+          xAxisIndex: 0,
+          yAxisIndex: 0,
           data: (d.data as number[]).map((s, i) => [i, s])
         })
       } else if (d.draw === 'STICKLINE') {
@@ -560,14 +582,16 @@ export const renderMainIndicators = (options: ECOption, indicators: Indicator[])
 
   if (stickLineData.length > 0) {
     drawRect(options, {} as any, {
-      index: 0,
+      xAxisIndex: 0,
+      yAxisIndex: 0,
       data: stickLineData
     })
   }
 
   if (textData.length > 0) {
     drawText(options, {} as any, {
-      index: 0,
+      xAxisIndex: 0,
+      yAxisIndex: 0,
       data: textData
     })
   }
@@ -679,7 +703,8 @@ export const renderSecondary = (options: ECOption, indicators: Indicator[]) => {
           extra: {
             color: d.style?.color || '#ffffff'
           },
-          index: index + 1,
+          xAxisIndex: index + 1,
+          yAxisIndex: index + 2,
           data: (d.data as number[]).map((s, i) => [i, s])
         })
       } else if (d.draw === 'STICKLINE') {
@@ -713,7 +738,8 @@ export const renderSecondary = (options: ECOption, indicators: Indicator[]) => {
         })
 
         drawGradient(options, {} as any, {
-          index: index + 1,
+          xAxisIndex: index + 1,
+          yAxisIndex: index + 2,
           data: data as any
         })
       }
@@ -721,14 +747,16 @@ export const renderSecondary = (options: ECOption, indicators: Indicator[]) => {
 
     if (stickLineData.length > 0) {
       drawRect(options, {} as any, {
-        index: index + 1,
+        xAxisIndex: index + 1,
+        yAxisIndex: index + 2,
         data: stickLineData
       })
     }
 
     if (textData.length > 0) {
       drawText(options, {} as any, {
-        index: index + 1,
+        xAxisIndex: index + 1,
+        yAxisIndex: index + 2,
         data: textData
       })
     }
@@ -751,7 +779,8 @@ export const renderSecondaryLocalIndicators = (options: ECOption, indicators: In
       result.forEach(d => {
         if (d.draw === 'STICKLINE') {
           drawRect(options, {} as any, {
-            index: index + 1,
+            xAxisIndex: index + 1,
+            yAxisIndex: index + 2,
             data: d.data,
             extra: {
               color: d.style?.color
@@ -763,7 +792,8 @@ export const renderSecondaryLocalIndicators = (options: ECOption, indicators: In
               color: d.style?.color,
               type: d.style?.style_type
             },
-            index: index + 1,
+            xAxisIndex: index + 1,
+            yAxisIndex: index + 2,
             data: (d.data as number[]).map((s, i) => [i, s])
           })
         }
@@ -791,7 +821,7 @@ const renderSecondaryAxis = (options: ECOption, state: KChartState['state'][0], 
         show: index === state.secondaryIndicators.length - 1,
         color: '#fff',
         formatter: (v: any) => {
-          return v ? dayjs(v).format('MM-DD'): ''
+          return v ? dayjs(v).format('MM-DD') : ''
         }
       },
       axisTick: {
@@ -823,6 +853,7 @@ const renderSecondaryAxis = (options: ECOption, state: KChartState['state'][0], 
         return Math.round(v.max * 1.1)
       },
       position: 'right',
+      id: `secondary-${index}`,
       axisLine: { onZero: false, show: false },
       axisTick: {
         show: false
@@ -846,9 +877,9 @@ const renderSecondaryAxis = (options: ECOption, state: KChartState['state'][0], 
  * 只有在盘前盘中盘后显示
  */
 export const renderWatermark = (options: ECOption, timeIndex: ChartState['timeIndex']) => {
-  if(!isTimeIndexChart(timeIndex)) return
+  if (!isTimeIndexChart(timeIndex)) return
 
-  if(timeIndex === StockChartInterval.FIVE_DAY) return
+  if (timeIndex === StockChartInterval.FIVE_DAY) return
 
   const watermark: GraphicComponentOption = {
     type: 'text',
@@ -856,18 +887,23 @@ export const renderWatermark = (options: ECOption, timeIndex: ChartState['timeIn
     top: '25%',
     z2: 0,
     style: {
-      text: timeIndex === StockChartInterval.PRE_MARKET ? '盘前交易' : timeIndex === StockChartInterval.AFTER_HOURS ? '盘后交易' : '盘中交易',
+      text:
+        timeIndex === StockChartInterval.PRE_MARKET
+          ? '盘前交易'
+          : timeIndex === StockChartInterval.AFTER_HOURS
+            ? '盘后交易'
+            : '盘中交易',
       fill: 'rgba(255, 255, 255, 0.05)',
       font: 'bold 96px sans-serif',
-      align: 'center',
+      align: 'center'
     }
   }
 
-  if(!options.graphic) {
+  if (!options.graphic) {
     options.graphic = [watermark]
-  }else if(Array.isArray(options.graphic)) {
+  } else if (Array.isArray(options.graphic)) {
     options.graphic.push(watermark)
-  }else{
+  } else {
     options.graphic = [options.graphic, watermark]
   }
 }

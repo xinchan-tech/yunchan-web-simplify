@@ -2,7 +2,6 @@ import type { ECOption } from '@/utils/echarts'
 import type { CustomSeriesOption, LineSeriesOption } from 'echarts/charts'
 import type { KChartState } from './ctx'
 import echarts from '@/utils/echarts'
-import { renderUtils } from './utils'
 import { colorUtil } from '@/utils/style'
 
 type XAxis = number
@@ -22,9 +21,18 @@ export enum LineType {
 
 type DrawerFuncOptions<T = any> = {
   /**
+   * @deprecated
    * 画在第几个数据集上
    */
-  index: number
+  index?: number
+  /**
+   * X轴序号
+   */
+  xAxisIndex: number
+  /**
+   * Y轴序号
+   */
+  yAxisIndex: number
   /**
    * 对应的数据
    */
@@ -40,12 +48,13 @@ type DrawerFunc<T = any> = (options: ECOption, state: KChartState['state'][0], p
 /**
  * 画一条线
  */
-export const drawLine: DrawerFunc<[XAxis, number][]> = (options, _, { index, data, extra }) => {
+export const drawLine: DrawerFunc<[XAxis, number][]> = (options, _, { xAxisIndex, yAxisIndex, data, extra }) => {
   const line: LineSeriesOption = {
-    xAxisIndex: index,
-    yAxisIndex: index,
+    xAxisIndex: xAxisIndex,
+    yAxisIndex: yAxisIndex,
     type: 'line',
     showSymbol: false,
+    symbol: 'none',
     connectNulls: true,
     z: 0,
     color: extra?.color,
@@ -66,11 +75,11 @@ export const drawLine: DrawerFunc<[XAxis, number][]> = (options, _, { index, dat
 export const drawPolyline: DrawerFunc<[XAxis, YAxis, XAxis, YAxis, LineType][]> = (
   options,
   _,
-  { index, data, extra }
+  { xAxisIndex, yAxisIndex, data, extra }
 ) => {
   const line: CustomSeriesOption = {
-    xAxisIndex: index,
-    yAxisIndex: index,
+    xAxisIndex: xAxisIndex,
+    yAxisIndex: yAxisIndex,
     type: 'custom',
     encode: {
       x: [0, 2],
@@ -122,10 +131,10 @@ export type DrawerTextShape = [XAxis, YAxis, string, DrawerColor]
  * @example ['2030-01-01', 111380, 'text', '#00943c']
  *
  */
-export const drawText: DrawerFunc<DrawerTextShape[]> = (options, _, { index, data }) => {
+export const drawText: DrawerFunc<DrawerTextShape[]> = (options, _, { xAxisIndex, yAxisIndex, data }) => {
   const line: CustomSeriesOption = {
-    xAxisIndex: index,
-    yAxisIndex: index,
+    xAxisIndex: xAxisIndex,
+    yAxisIndex: yAxisIndex,
     type: 'custom',
     renderItem: (_, api) => {
       const x = api.value(0)
@@ -168,11 +177,11 @@ export type DrawerRectShape = [XAxis, YAxis, YAxis, Width, empty, DrawerColor]
  * color: 颜色
  * @example ['2030-01-01', 0, 111380, 0.8, 0]
  */
-export const drawRect: DrawerFunc<DrawerRectShape[]> = (options, _, { index, data, extra }) => {
+export const drawRect: DrawerFunc<DrawerRectShape[]> = (options, _, { xAxisIndex, yAxisIndex, data, extra }) => {
   const extraColor = extra?.color
   const line: CustomSeriesOption = {
-    xAxisIndex: index,
-    yAxisIndex: index,
+    xAxisIndex: xAxisIndex,
+    yAxisIndex: yAxisIndex,
     encode: {
       x: [0],
       y: [1, 2]
@@ -223,8 +232,8 @@ type GradientData = {
 /**
  * 填充渐变
  */
-export const drawGradient: DrawerFunc<[XAxis, GradientData[], string[]][]> = (options, _, { index, data }) => {
-  const right = Number.parseFloat(renderUtils.getGridIndex(options, index)?.right?.toString() ?? '60')
+export const drawGradient: DrawerFunc<[XAxis, GradientData[], string[]][]> = (options, _, { xAxisIndex, yAxisIndex, data }) => {
+  const right = 50
   const points = data
     .filter(item => !!item[0])
     .map((item, index) => {
@@ -242,8 +251,8 @@ export const drawGradient: DrawerFunc<[XAxis, GradientData[], string[]][]> = (op
    */
   const series: CustomSeriesOption = {
     type: 'custom',
-    xAxisIndex: index,
-    yAxisIndex: index,
+    xAxisIndex: xAxisIndex,
+    yAxisIndex: yAxisIndex,
     encode: {
       x: [0, 1],
       y: [2]
@@ -395,10 +404,10 @@ type DrawPivotsShape = {
 /**
  * 绘制主图中枢区域
  */
-export const drawPivots: DrawerFunc<DrawPivotsShape[]> = (options, _, { index, data }) => {
+export const drawPivots: DrawerFunc<DrawPivotsShape[]> = (options, _, { xAxisIndex, yAxisIndex, data }) => {
   const pivots: CustomSeriesOption = {
-    xAxisIndex: index,
-    yAxisIndex: index,
+    xAxisIndex: xAxisIndex,
+    yAxisIndex: yAxisIndex,
     encode: {
       x: [0, 2],
       y: [1, 3]
@@ -498,10 +507,10 @@ type DrawTradePointsShape = {
 /**
  * 绘制主图买卖点
  */
-export const drawTradePoints: DrawerFunc<DrawTradePointsShape[]> = (options, _, { index, data }) => {
+export const drawTradePoints: DrawerFunc<DrawTradePointsShape[]> = (options, _, { xAxisIndex, yAxisIndex, data }) => {
   const series: CustomSeriesOption = {
-    xAxisIndex: index,
-    yAxisIndex: index,
+    xAxisIndex: xAxisIndex,
+    yAxisIndex: yAxisIndex,
     encode: {
       x: [0],
       y: [1]

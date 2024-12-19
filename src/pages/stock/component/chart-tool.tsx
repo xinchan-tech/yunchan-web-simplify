@@ -4,10 +4,11 @@ import { cn } from "@/utils/style"
 import { useQuery } from "@tanstack/react-query"
 import { useUpdateEffect } from "ahooks"
 import { useState } from "react"
-import { useKChartContext } from "../lib"
+import { type CoilingIndicatorId, useKChartContext } from "../lib"
 import { MainIndicator } from "./main-indicator"
 import { ViewModeSelect } from "./view-mode-select"
 import { SearchList } from "./search-list"
+import { nanoid } from "nanoid"
 
 const CHART_TOOL = ['主图指标', '线型切换', '多图模式', '股票PK', '叠加标记', '画线工具']
 
@@ -37,9 +38,9 @@ export const ChartToolSelect = () => {
 
   }, [indicators.data, activeChartIndex, state])
 
-  const indicatorItems = (indicators.data?.main.find(o => o.name === '缠论系统')?.indicators.find(o => o.id === activeChart.system) as any)?.items as StockIndicator[] | undefined
+  const indicatorItems = (indicators.data?.main.find(o => o.name === '缠论系统')?.indicators.find(o => o.id === activeChart?.system) as any)?.items as StockIndicator[] | undefined
 
-  const onChangeMainCoiling = (id: string) => {
+  const onChangeMainCoiling = (id: CoilingIndicatorId) => {
     const coiling = [...activeChart.mainCoiling]
     const index = coiling.indexOf(id)
     if (index === -1) {
@@ -51,7 +52,7 @@ export const ChartToolSelect = () => {
   }
 
   const onChangeMainIndicator = (_: any, data: any[]) => {
-    setMainIndicators({ indicators: data.map(v => ({ id: v.value, type: v.extra.db_type, timeIndex: activeChart.timeIndex, symbol: activeChart.symbol })) })
+    setMainIndicators({ indicators: data.map(v => ({ id: v.value, type: v.extra.db_type, timeIndex: activeChart.timeIndex, symbol: activeChart.symbol, key: nanoid() })) })
   }
 
   const onOverlayClick = (symbol: string) => {
@@ -113,8 +114,8 @@ export const ChartToolSelect = () => {
             indicatorItems.map(item => (
               <div key={item.id} className="flex items-center space-x-1">
                 <JknIcon.Checkbox
-                  onClick={() => onChangeMainCoiling(item.id)}
-                  checked={activeChart.mainCoiling.includes(item.id)}
+                  onClick={() => onChangeMainCoiling(item.id as any)}
+                  checked={activeChart.mainCoiling.includes(item.id as any)}
                   checkedIcon={`chan_tool_${item.id}_sel` as IconName}
                   uncheckedIcon={`chan_tool_${item.id}_nor` as IconName}
                   className="w-6 h-6 rounded-none" />
@@ -130,8 +131,9 @@ export const ChartToolSelect = () => {
 
 
 const MarkList = () => {
-  const { overMarkList, activeChart, setOverlayMark } = useKChartContext()
+  const { overMarkList, state, activeChartIndex, setOverlayMark } = useKChartContext()
 
+  const activeChart = state[activeChartIndex]
 
 
 
@@ -147,7 +149,7 @@ const MarkList = () => {
               </span>
             </HoverCardTrigger>
             <HoverCardContent side="top" className="w-fit p-0">
-              <SearchList search={false} onChange={(v, d) => { setOverlayMark({mark: v, type: mark.key, title: d.label}) }} type="single" key={mark.key} data={mark.value.map(t => ({ label: t.name, value: t.key, extra: {title: t.name} }))} name={mark.title} value={activeChart().overlayMark?.mark} />
+              <SearchList search={false} onChange={(v, d) => { setOverlayMark({mark: v, type: mark.key, title: d.label}) }} type="single" key={mark.key} data={mark.value.map(t => ({ label: t.name, value: t.key, extra: {title: t.name} }))} name={mark.title} value={activeChart.overlayMark?.mark} />
             </HoverCardContent>
           </HoverCard>
 

@@ -74,6 +74,15 @@ export interface KChartContext {
   setState: Updater<KChartState>
 
   /**
+   * 设置图表symbol
+   * @param params
+   * @param params.index 窗口索引, 默认为当前激活的窗口
+   * @param params.symbol 股票代码
+   * @returns 
+   */
+  setSymbol: (params: { index?: number; symbol: string }) => void
+
+  /**
    * 切换当前激活的窗口
    */
   setActiveChart: (index: StockChartInterval) => void
@@ -146,8 +155,9 @@ export interface KChartContext {
   setMainData: (params: { index?: number; data?: Awaited<ReturnType<typeof getStockChart>> }) => void
 
   /**
-   * 设置指标数据，主图和附图的指标数据都可以设置，多个窗口时不需要指定窗口索引
+   * 设置指标数据，主图和附图的指标数据都可以设置
    * @param params
+   * @param params.index 窗口索引, 默认为当前激活的窗口
    * @param params.indicator 指标
    * @param params.data 数据
    */
@@ -172,6 +182,11 @@ export interface KChartContext {
    * 设置叠加标记
    */
   setOverlayMark: (params: { index?: number; mark: string; type: string; title: string }) => Promise<void>
+
+  /**
+   * 设置坐标轴
+   */
+  setYAxis: (params: { index?: number; yAxis: {left?: MainYAxis, right: MainYAxis} }) => void
 }
 
 /**
@@ -205,9 +220,10 @@ export type IndicatorData =
   | undefined
 
 /**
- * 指标缓存
+ * 坐标轴
  */
-export type IndicatorCache = WeakMap<Indicator, IndicatorData>
+type MainYAxis = 'price' | 'percent'
+
 
 /**
  * K线图实例状态
@@ -271,6 +287,14 @@ type MainChartState = {
     title: string
     data?: any[]
   }
+
+  /**
+   * 主图坐标轴
+   */
+  yAxis: {
+    left?: MainYAxis
+    right: MainYAxis
+  }
 }
 
 export const KChartContext = createContext<KChartContext>({} as unknown as KChartContext)
@@ -325,7 +349,10 @@ export const createDefaultChartState = (opts: { symbol?: string; index: number }
       md5: ''
     },
     overlayStock: [],
-    overlayMark: undefined
+    overlayMark: undefined,
+    yAxis: {
+      right: 'price'
+    }
   }
 }
 

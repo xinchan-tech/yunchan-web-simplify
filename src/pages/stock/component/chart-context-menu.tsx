@@ -9,12 +9,13 @@ interface ChartContextMenuProps {
 }
 
 export const ChartContextMenu = (props: PropsWithChildren<ChartContextMenuProps>) => {
-  const { state, setSecondaryIndicatorsCount } = useKChartContext()
+  const { state, setSecondaryIndicatorsCount, setYAxis } = useKChartContext()
   const chart = state[props.index]
   const onChangeSecondaryIndicators = (count: number) => () => {
     setSecondaryIndicatorsCount({ count, index: props.index, indicator: { id: '9', type: 'system', timeIndex: chart.timeIndex, symbol: chart.symbol, key: nanoid() } })
   }
 
+  const _setYAxis = (type: Parameters<typeof setYAxis>[0]['yAxis']) => () => setYAxis({ index: props.index, yAxis: type })
 
   return (
     <ContextMenu>
@@ -27,9 +28,9 @@ export const ChartContextMenu = (props: PropsWithChildren<ChartContextMenuProps>
         <ContextMenuSub>
           <ContextMenuSubTrigger>主图坐标</ContextMenuSubTrigger>
           <ContextMenuSubContent className="w-24 border border-solid border-dialog-border" sideOffset={10}>
-            <ContextMenuItem>价格坐标</ContextMenuItem>
-            <ContextMenuItem>涨幅坐标</ContextMenuItem>
-            <ContextMenuItem>双边坐标</ContextMenuItem>
+            <ContextMenuItem onClick={_setYAxis({ right: 'price' })}>价格坐标</ContextMenuItem>
+            <ContextMenuItem onClick={_setYAxis({ right: 'percent' })}>涨幅坐标</ContextMenuItem>
+            <ContextMenuItem onClick={_setYAxis({ left: 'price', right: 'percent' })}>双边坐标</ContextMenuItem>
           </ContextMenuSubContent>
         </ContextMenuSub>
         <ContextMenuSeparator />
