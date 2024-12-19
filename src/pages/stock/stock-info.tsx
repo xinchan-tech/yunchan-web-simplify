@@ -1,7 +1,7 @@
-import { type StockExtend, getStockBaseCodeInfo, getStockBrief, getStockNotice, getStockQuote, getStockRelated, getStockTrades } from "@/api"
+import { type StockExtend, StockRawRecord, getStockBaseCodeInfo, getStockBrief, getStockNotice, getStockQuote, getStockRelated, getStockTrades } from "@/api"
 import { AiAlarm, Button, CapsuleTabs, Carousel, CarouselContent, CollectStar, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, HoverCard, HoverCardContent, HoverCardTrigger, JknIcon, JknTable, type JknTableProps, NumSpan, PriceAlarm, ScrollArea, Separator } from "@/components"
 import { useQueryParams } from "@/hooks"
-import { numToFixed } from "@/utils/price"
+import { numToFixed, priceToCnUnit } from "@/utils/price"
 import { StockRecord, stockManager } from "@/utils/stock"
 import { cn } from "@/utils/style"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
@@ -9,7 +9,7 @@ import dayjs from "dayjs"
 import Decimal from "decimal.js"
 import Autoplay from "embla-carousel-autoplay"
 import { nanoid } from "nanoid"
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useSymbolQuery } from "./lib"
 export const StockInfo = () => {
   const [active, setActive] = useState<'quote' | 'news'>('quote')
@@ -141,20 +141,20 @@ const extend: StockExtend[] = ['collect', 'alarm_ai', 'alarm_all', 'day_basic', 
 
 const StockQuote = () => {
   const code = useSymbolQuery()
-  const queryClient = useQueryClient()
 
   const quote = useQuery({
     queryKey: [getStockQuote.cacheKey, code],
     queryFn: () => getStockQuote(code)
   })
 
+  const codeInfo = useQuery({
+    queryKey: [getStockBaseCodeInfo.cacheKey, code, extend],
+    queryFn: () => getStockBaseCodeInfo({ symbol: code, extend })
+  })
+
+  const [stock, _, __] = codeInfo.data ? stockManager.toStockRecord(codeInfo.data) : []
 
 
-  const onSubscribe = useCallback((data) => {
-    console.log(data)
-  }, [])
-
-  // useSubscribe(codeInfo.data?.symbol ?? '', onSubscribe)
 
 
 
@@ -187,19 +187,19 @@ const StockQuote = () => {
         </div>
         <div>
           <span className="text-tertiary">总市值&nbsp;&nbsp;</span>
-          <span>{numToFixed(+(quote.data?.market_cap ?? '0'))}</span>
+          <span>{priceToCnUnit(+(stock?.marketValue ?? '0'))}</span>
         </div>
         <div>
           <span className="text-tertiary">换手率&nbsp;&nbsp;</span>
-          <span>{ }</span>
+          <span>{Decimal.create(stock?.turnOverRate).mul(100).toFixed(2)}%</span>
         </div>
         <div>
           <span className="text-tertiary">市盈率&nbsp;&nbsp;</span>
-          <span>{ }</span>
+          <span>{stock?.pe ? Decimal.create(stock.pe).toFixed(2) : '--'}</span>
         </div>
         <div>
           <span className="text-tertiary">市净率&nbsp;&nbsp;</span>
-          <span>{ }</span>
+          <span>{stock?.pb ? Decimal.create(stock.pb).toFixed(2) : '--'}</span>
         </div>
         <div>
           <span className="text-tertiary">52周高&nbsp;&nbsp;</span>
