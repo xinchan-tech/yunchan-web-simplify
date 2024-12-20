@@ -9,7 +9,7 @@ import { cn } from "@/utils/style"
 import { nanoid } from "nanoid"
 import { appEvent } from "@/utils/event"
 
-export interface JknTableProps<TData extends Record<string, unknown> = Record<string, unknown>, TValue = unknown> {
+export interface JknTableProps<TData extends Record<any, unknown> = Record<string, unknown>, TValue = unknown> {
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
   rowKey?: string
@@ -18,7 +18,6 @@ export interface JknTableProps<TData extends Record<string, unknown> = Record<st
   onRowClick?: (data: TData, row: Row<TData>) => void
   onSelection?: (params: string[]) => void
   onSortingChange?: (params: ColumnSort) => void
-  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
   onEvent?: (arg: { event: string, params: any }) => void
 }
 

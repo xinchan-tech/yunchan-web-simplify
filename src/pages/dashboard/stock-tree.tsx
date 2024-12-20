@@ -5,8 +5,8 @@ import { getHotSectors, getPlateList, getUsStocks } from "@/api"
 import TreeMap from "./components/tree-map"
 import Decimal from "decimal.js"
 import { CapsuleTabs } from "@/components"
-import { StockRecord } from "@/store/stock/stock"
 import { useQuery } from "@tanstack/react-query"
+import { stockManager, StockRecord } from "@/utils/stock"
 
 type StockTreeType = 'industry' | 'concept' | 'bull' | 'etf' | 'industry-heatmap' | 'etf-heatmap'
 type StockTreeDate = 'day' | 'week' | 'month'
@@ -62,10 +62,10 @@ const StockTree = () => {
 
       for (const t of node.tops) {
         if (StockRecord.isValid(t.stock)) {
-          const stockRecord = new StockRecord(t.stock)
-          const _color = getColorByStep(stockRecord.percent)
+          const stockRecord = stockManager.toSimpleStockRecord(t.stock)
+          const _color = getColorByStep(stockRecord.percent ?? 0)
           if(!colors.includes(_color)) continue
-          const child = { name: t.symbol, value: stockRecord.turnover, data: stockRecord.percent, color: getColorByStep(stockRecord.percent) }
+          const child = { name: t.symbol, value: stockRecord.turnover!, data: stockRecord.percent, color: getColorByStep(stockRecord.percent ?? 0) }
           dataset[child.name + t.plate_id] = child
           n.children.push(child as never)
         } else {
@@ -137,7 +137,6 @@ const StockTree = () => {
 
 
   const dataStock = useMemo(() => {
-    // biome-ignore lint/suspicious/noExplicitAny: <explanation>
     const r: any[] = []
 
     if (!queryStock.data) return []
@@ -148,10 +147,10 @@ const StockTree = () => {
 
     for (const stock of queryStock.data.items) {
       if (StockRecord.isValid(stock.stock)) {
-        const stockRecord = new StockRecord(stock.stock)
-        const _color = getColorByStep(stockRecord.percent)
+        const stockRecord = stockManager.toSimpleStockRecord(stock.stock)
+        const _color = getColorByStep(stockRecord.percent ?? 0)
         if(!colors.includes(_color)) continue
-        const child = { name: stock.symbol, value: stockRecord.turnover, data: stockRecord.percent, color: getColorByStep(stockRecord.percent) }
+        const child = { name: stock.symbol, value: stockRecord.turnover ?? 0, data: stockRecord.percent, color: getColorByStep(stockRecord.percent ?? 0) }
         dataset[child.name] = child
         r.push(child as never)
       } else {

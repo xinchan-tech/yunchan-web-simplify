@@ -44,7 +44,7 @@ interface NumSpanProps extends React.HTMLAttributes<HTMLSpanElement>, VariantPro
   /**
    * 值
    */
-  value: number | string
+  value: number | string | Decimal | undefined
   /**
    * 百分比
    */
@@ -76,7 +76,7 @@ const NumSpan = ({ isPositive, block, percent, value, symbol, className, arrow, 
   const { setting: { upOrDownColor } } = useConfig()
 
   if (!value && value !== 0) return '-'
-  const num = new Decimal(value)
+  const num = Decimal.isDecimal(value) ? value : new Decimal(value)
 
   return (
     <span className={cn(
@@ -86,7 +86,7 @@ const NumSpan = ({ isPositive, block, percent, value, symbol, className, arrow, 
       <span className={cn(numSpanVariants({ isPositive, block, className }))} {...props}>
         {symbol && num.gte(0) ? '+' : ''}
         {
-          unit !== false ? priceToCnUnit(num.toNumber(), decimal) : num.toFixed(decimal)
+          unit !== false ? num.toDecimalPlaces(decimal).toShortCN() : num.toFixed(decimal)
         }
         {percent && '%'}
       </span>

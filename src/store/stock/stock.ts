@@ -11,33 +11,28 @@ export type StockResultRecord = {
   extend?: StockExtendResultMap
 }
 
-export class StockRecord {
-  time: string // 时间
-  open: number // 开盘价
-  close: number // 收盘价（最新价）
-  high: number // 最高价
-  low: number // 最低价
-  volume: number // 当前时段成交量
-  turnover: number // 当前时段成交额
-  cumulativeVolume: number // 当日累计成交量
-  cumulativeTurnover: number // 当日累计成交额
-  prevClose: number // 前收盘价
-  trading: StockTrading
-  // 市值
-  marketValue: number
-  // 换手率
-  turnOverRate: number
-  // 所属行业
-  industry: string
-  // 市盈率
-  pe: number
-  // 市净率
-  pb: number
-  //
-  totalShare: number
-  // 缩略走势图
-  thumbs: string[] = []
 
+
+export class StockRecord {
+  time: string
+  open: number
+  close: number
+  high: number
+  low: number
+  volume: number
+  turnover: number
+  cumulativeVolume: number
+  cumulativeTurnover: number
+  prevClose: number
+  trading: StockTrading
+  marketValue: number
+  turnOverRate: number
+  industry: string
+  pe: number
+  pb: number
+  totalShare: number
+  thumbs: string[] 
+  [key: string]: any 
   //涨幅
   get percent() {
     const m = new Decimal(this.close).minus(this.prevClose)
@@ -86,7 +81,7 @@ export class StockRecord {
     this.pe = 0
     this.pb = 0
     this.totalShare = 0
-
+    this.thumbs = []
     this.marketValue = 0
     this.turnOverRate = 0
     if (data.length === 10) {
@@ -103,6 +98,7 @@ export class StockRecord {
       this.calcExtend(extend)
     }
   }
+
 
   update(data: StockRawRecord, extend?: StockExtendResultMap) {
     this.time = StockRecord.parseTime(data[0])

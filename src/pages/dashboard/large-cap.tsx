@@ -187,14 +187,12 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
     let lastPercent = 0
     for (const s of data.history) {
       const t = stockManager.toSimpleStockRecord(s)
-      prevClose = t.prevClose
-      lastPercent = t.percent
-      dataset.push([t.time, t.close, t.percent])
+      prevClose = t.prevClose!
+      lastPercent = t.percent!
+      dataset.push([t.time!, t.close!, t.percent!])
     }
-
-    const xAxisData = getTradingPeriod(intervalToTradingMap[type] ?? 'intraDay', dataset[0] ? dataset[0][0] : '')
-
-
+    
+    const xAxisData = getTradingPeriod(intervalToTradingMap[interval] ?? 'intraDay', dataset[0] ? dataset[0][0] : '')
 
     const style = colorUtil.hexToRGB(lastPercent > 0 ? stockUpColor : stockDownColor)!
 
@@ -202,7 +200,6 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
       axisPointer: {
         label: {
           formatter: (params: any) => {
-            console.log(params.axisIndex, params.axisDimension, params.value)
             if (params.axisDimension !== 'y') return ''
 
             const v = Decimal.create(params.value)

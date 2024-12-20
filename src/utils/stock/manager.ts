@@ -28,7 +28,6 @@ class StockManager {
   }
 
   public subscribe(code: string | string[], handler: StockSubscribeHandler) {
-    // biome-ignore lint/complexity/noForEach: <explanation>
     Array.isArray(code) ? code.forEach(item => this.subscribed.on(item, handler)) : this.subscribed.on(code, handler)
 
     const ws = wsManager.getActiveWs()

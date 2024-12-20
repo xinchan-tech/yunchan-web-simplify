@@ -15,42 +15,43 @@ export type StockResultRecord = {
 export class StockRecord {
   name = ''
   code = ''
-  time: string // 时间
-  open: number // 开盘价
-  close: number // 收盘价（最新价）
-  high: number // 最高价
-  low: number // 最低价
-  volume: number // 当前时段成交量
-  turnover: number // 当前时段成交额
-  cumulativeVolume: number // 当日累计成交量
-  cumulativeTurnover: number // 当日累计成交额
-  prevClose: number // 前收盘价
-  trading: StockTrading
+  time?: string // 时间
+  open?: number // 开盘价
+  close?: number // 收盘价（最新价）
+  high?: number // 最高价
+  low?: number // 最低价
+  volume?: number // 当前时段成交量
+  turnover?: number // 当前时段成交额
+  cumulativeVolume?: number // 当日累计成交量
+  cumulativeTurnover?: number // 当日累计成交额
+  prevClose?: number // 前收盘价
+  trading?: StockTrading
   // 市值
-  marketValue: number
+  marketValue?: number
   // 换手率
-  turnOverRate: number
+  turnOverRate?: number
   // 所属行业
-  industry: string
+  industry?: string
   // 市盈率
-  pe: number
+  pe?: number
   // 市净率
-  pb: number
+  pb?: number
   //
-  totalShare: number
+  totalShare?: number
   // 缩略走势图
-  thumbs: string[] = []
+  thumbs?: string[]
+  collect?: 0 | 1
 
-  collect: 0 | 1 = 0
+  [key: string]: any 
 
   /**
    * 涨幅
    */
-  percent: number
+  percent?: number
   /**
    *  涨跌额
    */
-  percentAmount: number
+  percentAmount?: number
 
   get symbol() {
     return this.code
@@ -60,32 +61,20 @@ export class StockRecord {
    * 是否涨
    */
   get isUp() {
-    return this.percent >= 0
+    return this.percent !== undefined && this.percent >= 0
   }
 
   static isValid(data: any): data is StockRawRecord {
     return Array.isArray(data) && (data.length === 8 || data.length === 10)
   }
 
-  static create(record: StockResultRecord): [StockRecord?, StockRecord?, StockRecord?] {
-    const r: [StockRecord?, StockRecord?, StockRecord?] = []
-    if (StockRecord.isValid(record.stock)) {
-      r.push(new StockRecord(record.symbol, record.name, record.stock, record.extend))
-    } else {
-      r.push(undefined)
-    }
+  static create(record: StockResultRecord): [StockRecord, StockRecord, StockRecord] {
+    const r: [StockRecord, StockRecord, StockRecord] = [
+      StockRecord.of(record.symbol, record.name, record.stock, record.extend),
+      StockRecord.of(record.symbol, record.name, record.extend?.stock_before),
+      StockRecord.of(record.symbol, record.name, record.extend?.stock_after)
+    ]
 
-    if (record.extend?.stock_before && StockRecord.isValid(record.extend.stock_before)) {
-      r.push(new StockRecord(record.symbol, record.name, record.extend.stock_before))
-    } else {
-      r.push(undefined)
-    }
-
-    if (record.extend?.stock_after && StockRecord.isValid(record.extend.stock_after)) {
-      r.push(new StockRecord(record.symbol, record.name, record.extend.stock_after))
-    } else {
-      r.push(undefined)
-    }
     return r
   }
 
@@ -93,9 +82,14 @@ export class StockRecord {
     return new StockRecord(code, name, data, extend)
   }
 
-  constructor(code: string, name: string, data: StockRawRecord, extend?: StockExtendResultMap) {
+  constructor(code: string, name: string, data?: StockRawRecord, extend?: StockExtendResultMap) {
     this.code = code
     this.name = name
+
+    if(!data || !StockRecord.isValid(data)) {
+      return
+    }
+
     this.time = StockRecord.parseTime(data[0])
     this.open = data[1]
     this.close = data[2]
@@ -111,6 +105,9 @@ export class StockRecord {
 
     this.marketValue = 0
     this.turnOverRate = 0
+
+    this.thumbs = []
+    this.collect = 0
 
     if (data.length === 10) {
       this.cumulativeVolume = data[7]
@@ -158,18 +155,23 @@ export class StockRecord {
   }
 
   private calcPercent() {
-    const m = new Decimal(this.close).minus(this.prevClose)
+    const m = Decimal.create(this.close).minus(this.prevClose ?? 0)
     if (m.eq(0)) {
       return 0
     }
+
+    if(this.prevClose === 0 || this.prevClose === undefined) {
+      return 0
+    }
+
     return m.div(this.prevClose).toNumber()
   }
 
   private calcExtend(extend: StockExtendResultMap) {
     if (extend.total_share) {
       this.totalShare = extend.total_share
-      this.marketValue = extend.total_share * this.close
-      this.turnOverRate = this.turnover / this.marketValue
+      this.marketValue = extend.total_share * (this.close ?? 0)
+      this.turnOverRate = (this.turnover ?? 0) / this.marketValue
 
       if (extend.net_income_loss) {
         this.pe = this.marketValue / extend.net_income_loss
@@ -182,7 +184,7 @@ export class StockRecord {
       // 股票市价 = 股票当前的市场价格
       // 每股净资产 = (公司总资产 - 总负债) / 总股本
       if (extend.liabilities_and_equity && extend.liabilities) {
-        this.pb = this.close / ((extend.liabilities_and_equity - extend.liabilities) / extend.total_share)
+        this.pb = (this.close ?? 0) / ((extend.liabilities_and_equity - extend.liabilities) / extend.total_share)
       }
     }
 
@@ -213,110 +215,4 @@ export class StockRecord {
     }
     return time
   }
-}
-
-export class Stock {
-  private records: StockRecord[] = []
-  public name: string
-  public symbol: string
-
-  constructor(symbol: string, name: string) {
-    this.symbol = symbol
-    this.name = name
-  }
-
-  public getRecords() {
-    return this.records
-  }
-  public insertRaw(raw: StockRawRecord, extend?: StockExtendResultMap) {
-    if (this.records.length === 0) {
-      this.records.push()
-    } else {
-      if (hasIndex(this.records, StockRecord.parseTime(raw[0]))) {
-        const record = this.records.find(record => record.time === StockRecord.parseTime(raw[0]))
-        record?.update(raw, extend)
-      } else {
-        const index = getInsertIndex(this.records, StockRecord.parseTime(raw[0]))
-
-        this.records.splice(index, 0, new StockRecord(this.symbol, this.name, raw, extend))
-      }
-    }
-  }
-
-  public getLastRecord() {
-    return this.records?.[this.records.length - 1]
-  }
-
-  public getLastRecordByTrading(trading: StockTrading) {
-    return this.records?.filter(record => record.trading === trading).slice(-1)[0]
-  }
-
-  public getLastRecords(trading: StockTrading) {
-    const r = []
-    for (let index = this.records.length - 1; index >= 0; index--) {
-      if (r.length !== 0) {
-        if (this.records[index].time.slice(0, 8) !== r[r.length - 1].time.slice(0, 8)) {
-          return r
-        }
-      }
-      if (this.records[index].trading === trading) {
-        r.unshift(this.records[index])
-      }
-    }
-
-    return r
-  }
-  public insertRawByRecords(record: StockResultRecord[]) {
-    for (const s of record) {
-      if (StockRecord.isValid(s.stock)) {
-        this.insertRaw(s.stock, s.extend)
-      }
-
-      if (s.extend?.stock_after && StockRecord.isValid(s.extend.stock_after)) {
-        this.insertRaw(s.extend.stock_after, s.extend)
-      }
-      if (s.extend?.stock_before && StockRecord.isValid(s.extend.stock_before)) {
-        this.insertRaw(s.extend.stock_before, s.extend)
-      }
-    }
-  }
-}
-
-//根据二分法查找
-const hasIndex = (times: StockRecord[], time: string) => {
-  let left = 0
-  let right = times.length - 1
-  while (left <= right) {
-    const mid = Math.floor((left + right) / 2)
-    if (times[mid].time === time) {
-      return true
-    }
-
-    if (times[mid].time > time) {
-      right = mid - 1
-    } else {
-      left = mid + 1
-    }
-  }
-  return false
-}
-
-//根据二分查找获取时间列表的插入下标
-const getInsertIndex = (times: StockRecord[], time: string) => {
-  let left = 0
-  let right = times.length - 1
-  while (left <= right) {
-    const mid = Math.floor((left + right) / 2)
-    if (times[mid].time === time) {
-      return mid
-    }
-
-    if (times[mid].time > time) {
-      right = mid - 1
-    } else {
-      left = mid + 1
-    }
-  }
-
-  return left
 }

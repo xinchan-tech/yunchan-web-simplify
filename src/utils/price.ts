@@ -3,6 +3,7 @@ import Decimal from "decimal.js"
 /**
  * 1000000 -> 100万
  * 1000000000 -> 10亿
+ * @deprecated
  */
 export const priceToCnUnit = (price?: number, decimal = 3) => {
   const unit = ['', '万', '亿', '万亿']
@@ -27,6 +28,12 @@ export const priceToCnUnit = (price?: number, decimal = 3) => {
   return num.div(new Decimal(unitSteps[3])).toFixed(2) + unit[3]
 }
 
+/**
+ * @deprecated
+ * @param price 
+ * @param fixed 
+ * @returns 
+ */
 export const numToFixed = (price?: number, fixed = 3) => {
   if(!price && price !== 0){
     return undefined

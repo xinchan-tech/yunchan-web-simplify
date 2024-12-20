@@ -5,4 +5,8 @@ declare module 'decimal.js' {
   namespace Decimal {
     function create(value?: string | number): Decimal;
   }
+
+  interface Decimal {
+    toShortCN(): string;
+  }
 }
