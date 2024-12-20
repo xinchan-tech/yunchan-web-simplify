@@ -114,7 +114,7 @@ const VirtualizedTable = <TData extends Record<string, unknown>, TValue>({ class
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id} className="flex w-full">
               {headerGroup.headers.map((header) => {
-                const { align, width } = header.column.columnDef.meta ?? {}
+                const { align, width = 'full' } = header.column.columnDef.meta ?? {}
                 return (
                   <TableHead key={header.id} className="flex flex-shrink-0" style={{
                     width: width === 'full' ? 'auto' : (width || header.column.getSize()),
@@ -173,7 +173,7 @@ const VirtualizedTable = <TData extends Record<string, unknown>, TValue>({ class
                       }}
                     >
                       {row.getVisibleCells().map((cell) => {
-                        const { align, width } = cell.column.columnDef.meta ?? {}
+                        const { align, width = 'full' } = cell.column.columnDef.meta ?? {}
                         return (
                           <TableCell className="flex items-center flex-shrink-0" key={cell.id} style={{
                             textAlign: align as undefined, width: width === 'full' ? 'auto' : (width || cell.column.getSize()),

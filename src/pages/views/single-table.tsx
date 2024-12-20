@@ -79,7 +79,7 @@ const SingleTable = (props: SingleTableProps) => {
 
   })
 
-  const data = (() => {
+  const data = useMemo(() => {
     const r: TableDataType[] = []
 
     if (!query.data) return []
@@ -108,7 +108,7 @@ const SingleTable = (props: SingleTableProps) => {
 
     return r
 
-  })()
+  }, [query.data])
 
   const onSortChange: JknTableProps<TableDataType>['onSortingChange'] = (e) => {
     const columnMap: Record<string, UsStockColumn> = {
@@ -130,19 +130,19 @@ const SingleTable = (props: SingleTableProps) => {
   const columns: JknTableProps<TableDataType>['columns'] = useMemo(() => ([
     { header: '序号', enableSorting: false, accessorKey: 'index', meta: { align: 'center', width: 40, }, cell: ({ row }) => row.index + 1 },
     {
-      header: '名称代码', accessorKey: 'name', meta: { align: 'left', width: '20%' },
+      header: '名称代码', accessorKey: 'name', meta: { align: 'left', width: 'full' },
       cell: ({ row }) => (
-        <StockView name={row.getValue('name')} code={row.original.symbol as string} />
+        <StockView  name={row.getValue('name')} code={row.original.symbol as string} />
       )
     },
     {
-      header: '现价', accessorKey: 'price', meta: { align: 'right', width: '10%' },
+      header: '现价', accessorKey: 'price', meta: { align: 'right', width: '8%' },
       cell: ({ row }) => (
         <NumSpan value={row.getValue<number>('price')} decimal={2} isPositive={row.original.isUp} />
       )
     },
     {
-      header: '涨跌幅', accessorKey: 'percent', meta: { align: 'right', width: '12%' },
+      header: '涨跌幅', accessorKey: 'percent', meta: { align: 'right', width: 120 },
       cell: ({ row }) => (
         <div className="inline-block">
           <NumSpan block className="py-0.5 w-20" decimal={2} value={`${row.getValue<number>('percent') * 100}`} percent isPositive={row.getValue<number>('percent') >= 0} symbol />
@@ -150,38 +150,38 @@ const SingleTable = (props: SingleTableProps) => {
       )
     },
     {
-      header: '成交额', accessorKey: 'amount', meta: { align: 'right', width: '17%' },
+      header: '成交额', accessorKey: 'amount', meta: { align: 'right', width: '8%' },
       cell: ({ row }) => Decimal.create(row.getValue<number>('amount')).toDecimalPlaces(2).toShortCN()
     },
     {
-      header: '总市值', accessorKey: 'total', meta: { align: 'right', width: '20%' },
+      header: '总市值', accessorKey: 'total', meta: { align: 'right', width: '8%' },
       cell: ({ row }) => Decimal.create(row.getValue<number>('total')).toDecimalPlaces(2).toShortCN()
     },
     {
-      header: '所属行业', enableSorting: false, accessorKey: 'industry', meta: { width: '17%', align: 'right' }
+      header: '所属行业', enableSorting: false, accessorKey: 'industry', meta: { width: '8%', align: 'right' }
     },
     {
-      header: '盘前涨跌幅', accessorKey: 'prePercent', meta: { width: '15%', align: 'right' },
+      header: '盘前涨跌幅', accessorKey: 'prePercent', meta: { width: '8%', align: 'right' },
       cell: ({ row }) => (
         <NumSpan symbol decimal={2} percent value={row.getValue<number>('prePercent')} isPositive={row.original.isUp} />
       )
     },
     {
-      header: '盘后涨跌幅', accessorKey: 'afterPercent', meta: { width: '15%', align: 'right' },
+      header: '盘后涨跌幅', accessorKey: 'afterPercent', meta: { width: '8%', align: 'right' },
       cell: ({ row }) => (
         <NumSpan symbol decimal={2} percent value={row.getValue<number>('afterPercent')} isPositive={row.original.isUp} />
       )
     },
     {
-      header: '换手率', accessorKey: 'turnoverRate', meta: { width: '10%', align: 'right' },
+      header: '换手率', accessorKey: 'turnoverRate', meta: { width: '8%', align: 'right' },
       cell: ({ row }) => `${Decimal.create(row.getValue<number>('turnoverRate')).toFixed(2)}%`
     },
     {
-      header: '市盈率', enableSorting: false, accessorKey: 'pe', meta: { width: '10%', align: 'right' },
+      header: '市盈率', enableSorting: false, accessorKey: 'pe', meta: { width: '8%', align: 'right' },
       cell: ({ row }) => `${Decimal.create(row.getValue<number>('pe')).toFixed(2)}`
     },
     {
-      header: '市净率', enableSorting: false, accessorKey: 'pb', meta: { width: '10%', align: 'right' },
+      header: '市净率', enableSorting: false, accessorKey: 'pb', meta: { width: '8%', align: 'right' },
       cell: ({ row }) => `${Decimal.create(row.getValue<number>('pb')).toFixed(2)}`
     },
     {
@@ -260,10 +260,10 @@ const SingleTable = (props: SingleTableProps) => {
   }
 
   return (
-    <ScrollArea className="h-[calc(100%-32px)]">
-      <JknTable loading={query.isLoading} manualSorting rowKey="symbol" onSortingChange={onSortChange} columns={columns} data={data}>
-      </JknTable>
-    </ScrollArea>
+
+    <JknTable.Virtualizer className="h-[calc(100%-32px)] overflow-hidden" loading={query.isLoading} manualSorting rowKey="symbol" onSortingChange={onSortChange} columns={columns} data={data}>
+    </JknTable.Virtualizer>
+
   )
 }
 

@@ -176,9 +176,7 @@ const PlateStocks = (props: PlateStocksProps) => {
       rowKey="symbol"
       columns={columns}
       data={data}
-    // onSortingChange={(s) => setSort(d => { d.type = s.id; d.order = s.desc ? 'desc' : 'asc' })} 
     />
-
   )
 }
 
