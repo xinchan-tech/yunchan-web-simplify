@@ -1,18 +1,19 @@
-import { StockChartInterval, type StockRawRecord, getLargeCapIndexes, getStockChart } from "@/api"
+import { StockChartInterval, getLargeCapIndexes, getStockChart } from "@/api"
 import StockDownIcon from '@/assets/icon/stock_down.png'
 import StockUpIcon from '@/assets/icon/stock_up.png'
 import { CapsuleTabs } from "@/components"
 import { useSubscribe } from "@/hooks"
-import { StockRecord, type StockTrading, useStock, useTime } from "@/store"
+import { type StockTrading, useConfig, useTime } from "@/store"
 import { getTradingPeriod } from "@/utils/date"
 import echarts, { type ECOption } from "@/utils/echarts"
 import { numToFixed } from "@/utils/price"
-import { cn } from "@/utils/style"
-import { wsManager } from "@/utils/ws"
+import { stockManager } from "@/utils/stock"
+import { cn, colorUtil } from "@/utils/style"
 import { useQuery } from "@tanstack/react-query"
 import { useMount, useSize, useUnmount, useUpdateEffect } from "ahooks"
 import clsx from "clsx"
 import dayjs from "dayjs"
+import Decimal from "decimal.js"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 
@@ -23,7 +24,7 @@ const tradingToIntervalMap: Record<StockTrading, StockChartInterval> = {
   close: StockChartInterval.AFTER_HOURS,
 }
 
-const intervalToTradingMap: Record<StockChartInterval, StockTrading> = {
+const intervalToTradingMap: Partial<Record<StockChartInterval, StockTrading>> = {
   [StockChartInterval.INTRA_DAY]: 'intraDay',
   [StockChartInterval.PRE_MARKET]: 'preMarket',
   [StockChartInterval.AFTER_HOURS]: 'afterHours',
@@ -47,12 +48,12 @@ const LargeCap = () => {
   })
 
   useEffect(() => {
-    if(largeCap.data){
+    if (largeCap.data) {
       setActiveKey(largeCap.data[1].category_name)
       setActiveStock(largeCap.data[1].stocks[0].symbol)
     }
   }, [largeCap.data])
-  
+
   useSubscribe(activeStock ?? '', (data) => {
     console.log(data)
   })
@@ -73,22 +74,10 @@ const LargeCap = () => {
     }
   }
 
-  const list = useMemo(() => {
-    if (!activeKey) return []
+  const stocks = useMemo(() => {
+    if (!activeKey || !largeCap.data) return []
 
-    const codes = largeCap.data?.find(item => item.category_name === activeKey)?.stocks.map(item => [item.symbol, item.name, item.stock]) ?? []
-
-    const r = []
-
-    for (const [code, name, stock] of codes) {
-      r.push({
-        name: name as string,
-        code: code as string,
-        stock: new StockRecord(stock as StockRawRecord)
-      })
-    }
-
-    return r
+    return largeCap.data.find(item => item.category_name === activeKey)?.stocks.map(item => stockManager.toSimpleStockRecord(item.stock, item.symbol, item.name)) ?? []
   }, [activeKey, largeCap.data])
 
   const onActiveKeyChange = (key: string) => {
@@ -110,29 +99,29 @@ const LargeCap = () => {
       </div>
       <div className="flex p-1.5 border-style-primary justify-between space-x-2 h-[100px] box-border">
         {
-          list.map(item => (
+          stocks.map(stock => (
             <div
-              key={item.name}
+              key={stock.name}
               className={cn(
                 'border-style-primary  flex-1 hover:bg-hover text-center py-2 cursor-pointer transition-all duration-300',
                 {
-                  'bg-accent': activeStock === item.code
+                  'bg-accent': activeStock === stock.symbol
                 }
               )}
-              onClick={() => onActiveStockChange(item.code)}
+              onClick={() => onActiveStockChange(stock.symbol)}
               onKeyDown={() => { }}
             >
-              <div className="text-center"><span>{item.name}</span></div>
+              <div className="text-center"><span>{stock.name}</span></div>
               <div
                 className={clsx(
                   'font-black text-[15px]',
-                  (item.stock?.percent ?? 0) >= 0 ? 'text-stock-up' : 'text-stock-down'
+                  (stock.percent ?? 0) >= 0 ? 'text-stock-up' : 'text-stock-down'
                 )}>
                 <div className="flex items-center justify-center mt-1">
-                  {numToFixed(item.stock?.close ?? 0)}
-                  <img className="w-5" src={(item.stock?.percent ?? 0) >= 0 ? StockUpIcon : StockDownIcon} alt="" />
+                  {numToFixed(stock.close ?? 0)}
+                  <img className="w-5" src={(stock.percent ?? 0) >= 0 ? StockUpIcon : StockDownIcon} alt="" />
                 </div>
-                <div className="">{numToFixed((item.stock?.percent ?? 0) * 100, 2)}%</div>
+                <div className="">{numToFixed((stock.percent ?? 0) * 100, 2)}%</div>
               </div>
             </div>
           ))
@@ -162,123 +151,114 @@ interface LargeCapChartProps {
 }
 
 const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
-  const stock = useStock() 
   const chartRef = useRef<echarts.ECharts>()
   const chartDomRef = useRef<HTMLDivElement>(null)
-  useQuery({
+  const { getStockColor } = useConfig()
+  const stockUpColor = getStockColor()
+  const stockDownColor = getStockColor(false)
+  const interval = ((c, t) => {
+    if (['SPX', 'IXIC', 'DJI'].includes(c!)) {
+      return StockChartInterval.INTRA_DAY
+    }
+    return t
+  })(code, type)
+
+
+  const queryData = useQuery({
     queryKey: [getStockChart.cacheKey, code, type],
-    queryFn: () => getStockChart({ticker: code!, interval: ((c, t) => {
-      
-      if (['SPX', 'IXIC', 'DJI'].includes(c!)) {
-        return StockChartInterval.INTRA_DAY
-      }
-      return t
-    })(code, type)}),
+    queryFn: () => getStockChart({ ticker: code!, interval: interval }),
     enabled: !!code && type !== undefined,
     refetchInterval: 60 * 1000,
+    placeholderData: () => ({
+      history: [],
+      coiling_data: {} as any,
+      md5: ''
+    })
   })
 
-
   useUpdateEffect(() => {
-    chartRef.current?.setOption({
-      xAxis: {
-        data: getTradingPeriod(intervalToTradingMap[type]),
-      }
-    })
-  }, [type])
+    renderChart(queryData.data)
+  }, [queryData.data])
 
-  const getTrading = (t: StockChartInterval): StockTrading => {
-    switch (t) {
-      case StockChartInterval.PRE_MARKET:
-        return 'preMarket'
-      case StockChartInterval.AFTER_HOURS:
-        return 'afterHours'
-      default:
-        return 'intraDay'
-    }
-  }
-
-  const _getTrading = () => {
-    let trading = getTrading(+type)
-    if (code && ['SPX', 'IXIC', 'DJI'].includes(code)) {
-      trading = 'intraDay'
-    }
- 
-    return trading
-  }
-
-  useUpdateEffect(() => {
-    const stockRecords = code ? stock.getLastRecords(code, _getTrading()) : undefined
-    setChartData(stockRecords)
-
-    if (!stockRecords || stockRecords.length === 0) {
-      setChartAreaStyle('up')
-    } else {
-      const lastRecord = stockRecords[stockRecords.length - 1]
-      setChartAreaStyle(lastRecord.percent > 0 ? 'up' : 'down')
-
+  const renderChart = (data: typeof queryData.data) => {
+    if (!data) return
+    const dataset: [string, number, number][] = []
+    let prevClose = 0
+    let lastPercent = 0
+    for (const s of data.history) {
+      const t = stockManager.toSimpleStockRecord(s)
+      prevClose = t.prevClose
+      lastPercent = t.percent
+      dataset.push([t.time, t.close, t.percent])
     }
 
-  }, [stock, type, code])
+    const xAxisData = getTradingPeriod(intervalToTradingMap[type] ?? 'intraDay', dataset[0] ? dataset[0][0] : '')
 
-  const setChartAreaStyle = (type: 'down' | 'up') => {
-    const style = type === 'up' ? '0, 171, 67' : '255, 30, 58'
 
+
+    const style = colorUtil.hexToRGB(lastPercent > 0 ? stockUpColor : stockDownColor)!
 
     chartRef.current?.setOption({
-      series: [{
-        color: `rgb(${style})`,
-        areaStyle: {
-          color: {
+      axisPointer: {
+        label: {
+          formatter: (params: any) => {
+            console.log(params.axisIndex, params.axisDimension, params.value)
+            if (params.axisDimension !== 'y') return ''
 
-            colorStops: [{
-              offset: 0, color: `rgba(${style}, .35)` // 0% 处的颜色
-            }, {
-              offset: .6, color: `rgba(${style}, .2)` // 100% 处的颜色
-            }, {
-              offset: 1, color: 'transparent' // 100% 处的颜色
-            }]
+            const v = Decimal.create(params.value)
+            const perv = v.minus(prevClose).div(prevClose).mul(100)
+            if (params.axisIndex === 0) {
+              return `{${perv.gte(0) ? 'u' : 'd'}|${v.toFixed(2)}}`
+            }
+            return `{${perv.gte(0) ? 'u' : 'd'}|${perv.gte(0) ? '+' : ''}${perv.toFixed(2)}%}`
           }
         }
-      }]
-    })
-  }
-
-  const setChartData = (records?: StockRecord[]) => {
-    if (!records) return
-    let prevClose = 0
-
-    const dataset: (string | number)[][] = []
-
-    for (const s of records) {
-      dataset.push([s.time, s.close, s.percent])
-      prevClose = s.prevClose
-    }
-
-    const xAxisData = getTradingPeriod(_getTrading(), dataset[0]?.[0] as string)
-
-    chartRef.current?.setOption({
+      },
       yAxis: [
         {
           axisLabel: {
             color: (v: number) => {
-              return v >= prevClose ? '#00ab43' : '#ff1e3a'
+              return v >= prevClose ? stockUpColor : stockDownColor
             }
-          }
+          },
         }, {
           axisLabel: {
+            formatter: (v: number) => {
+              const perv = Decimal.create(v).minus(prevClose).div(prevClose).mul(100)
+              return `${perv.gte(0) ? '+' : ''}${perv.toFixed(2)}%`
+            },
             color: (v: number) => {
-              return v >= 0 ? '#00ab43' : '#ff1e3a'
+              const perv = Decimal.create(v).minus(prevClose).div(prevClose).mul(100)
+              return perv.gte(0) ? stockUpColor : stockDownColor
             }
-          }
+          },
         }
       ],
       xAxis: {
-        min: dayjs(xAxisData[0]).valueOf(),
-        max: dayjs(xAxisData[xAxisData.length - 1]).valueOf()
+        data: xAxisData
       },
       series: [{
-        data: dataset.map(item => [item[0], item[1]]),
+        data: dataset,
+        encode: {
+          x: [0],
+          y: [1]
+        },
+        color: `rgba(${style.r}, ${style.g}, ${style.b} , 1)`,
+        areaStyle: {
+          color: {
+            x: 0,
+            y: 0,
+            x2: 0,
+            y2: 1,
+            colorStops: [{
+              offset: 0, color: `rgba(${style.r}, ${style.g}, ${style.b}, .35)` // 0% 处的颜色
+            }, {
+              offset: .6, color: `rgba(${style.r}, ${style.g}, ${style.b}, .2)` // 100% 处的颜色
+            }, {
+              offset: 1, color: 'transparent' // 100% 处的颜色
+            }]
+          }
+        },
         markLine: {
           symbol: 'none',
           silent: true,
@@ -295,20 +275,22 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
           }]
         }
       }, {
-        data: dataset.map(item => [item[0], item[2]])
+        data: dataset,
+        encode: {
+          x: [0],
+          y: [1]
+        }
       }]
     })
   }
 
 
-
   const options: ECOption = {
     grid: {
-      left: '0',
-      right: '0',
+      left: 50,
+      right: 50,
       top: '15',
-      bottom: '0',
-      containLabel: true
+      bottom: 24,
     },
     tooltip: {
       trigger: 'axis',
@@ -322,9 +304,9 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
       }
     },
     xAxis: {
-      type: 'time',
-      minInterval: 30 * 60 * 1000,
-      maxInterval: 30 * 60 * 1000,
+      type: 'category',
+      data: [],
+
       splitLine: {
         show: true,
         lineStyle: {
@@ -343,12 +325,42 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
         }
       },
       axisLabel: {
+        interval(index) {
+          return index % 15 === 0
+        },
         showMinLabel: true,
         formatter: (value, index) => {
-          return index % 2 === 0 ? dayjs(value).format('HH:mm') : ''
+          return index % 30 === 0 ? dayjs(value).format('HH:mm') : ''
         },
         color: '#999999',
         fontSize: 10
+      }
+    },
+    axisPointer: {
+      link: [{ yAxisIndex: 'all', xAxisIndex: 'all' }],
+      label: {
+        position: 'right',
+        backgroundColor: '#777',
+        color: '#fff',
+        padding: [0, 0, 0, 0],
+        borderRadius: 4,
+        fontSize: 10,
+        rich: {
+          u: {
+            backgroundColor: stockUpColor,
+            width: '100%',
+            color: '#fff',
+            padding: [2, 4, 2, 4],
+            borderRadius: 4
+          },
+          d: {
+            backgroundColor: stockDownColor,
+            width: '100%',
+            color: '#fff',
+            padding: [2, 4, 2, 4],
+            borderRadius: 4
+          }
+        }
       }
     },
     yAxis: [
@@ -371,11 +383,8 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
         },
         axisLabel: {
           formatter: (v: number) => v <= -9999 ? '-' : v.toFixed(2),
-          color: '#00ab43',
+          color: stockUpColor,
           fontSize: 10
-        },
-        axisPointer: {
-
         }
       }, {
         splitNumber: 8,
@@ -391,52 +400,27 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
         splitLine: {
           show: false,
         },
-        // alignTicks: true,
         axisLabel: {
-          formatter: (v: number) => v <= -9999 ? '-' : `${(v * 100).toFixed(2)}%`,
-          color: '#00ab43',
+          formatter: (v: number) => {
+            return v <= -9999 ? '-' : v.toFixed(2)
+          },
+          color: stockUpColor,
           fontSize: 10
-        },
-        axisPointer: {
-          label: {
-            formatter: (v) => {
-              return v.value ? `${(+v.value * 100).toFixed(2)}%` : ''
-            },
-          }
         }
       },
     ],
     series: [{
       type: 'line',
-      color: '#00ab43',
+      color: stockUpColor,
       lineStyle: { width: 1 },
       symbol: 'none',
-      areaStyle: {
-        color: {
-          type: 'linear',
-          x: 0,
-          y: 0,
-          x2: 0,
-          y2: 1,
-          colorStops: [{
-            offset: 0, color: 'rgba(0, 167, 78, .35)' // 0% 处的颜色
-          }, {
-            offset: .6, color: 'rgba(0, 167, 78, .2)' // 100% 处的颜色
-          }
-            , {
-            offset: 1, color: 'transparent' // 100% 处的颜色
-          }],
-          global: false
-        }
-      }
     }, { type: 'line', yAxisIndex: 1, showSymbol: false, color: 'transparent' }]
   }
 
   useMount(() => {
     chartRef.current = echarts.init(chartDomRef.current)
     chartRef.current.setOption(options)
-    const stockRecords = code ? stock.getLastRecords(code, _getTrading()) : undefined
-    setChartData(stockRecords)
+    renderChart(queryData.data)
   })
 
   useUnmount(() => {

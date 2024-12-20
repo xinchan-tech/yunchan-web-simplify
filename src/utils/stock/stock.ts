@@ -52,6 +52,9 @@ export class StockRecord {
    */
   percentAmount: number
 
+  get symbol() {
+    return this.code
+  }
 
   /**
    * 是否涨

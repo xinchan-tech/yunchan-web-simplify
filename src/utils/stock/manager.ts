@@ -2,6 +2,7 @@ import { wsManager } from '../ws'
 import { nanoid } from 'nanoid'
 import mitt from 'mitt'
 import { StockRecord, type StockResultRecord } from './stock'
+import type { StockRawRecord } from '@/api'
 
 type StockSubscribeHandler = (data: any) => void
 
@@ -20,6 +21,10 @@ class StockManager {
 
   public toStockRecord(data: StockResultRecord) {
     return StockRecord.create(data)
+  }
+
+  public toSimpleStockRecord(data: StockRawRecord, symbol?: string, name?: string) {
+    return StockRecord.of(symbol ?? '', name ?? '', data)
   }
 
   public subscribe(code: string | string[], handler: StockSubscribeHandler) {
