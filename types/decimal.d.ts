@@ -7,6 +7,6 @@ declare module 'decimal.js' {
   }
 
   interface Decimal {
-    toShortCN(): string;
+    toShortCN(decimal?: number): string;
   }
 }

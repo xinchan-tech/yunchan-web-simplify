@@ -20,7 +20,6 @@ export interface JknTableProps<TData extends Record<string, unknown> = Record<st
   manualSorting?: boolean
   style?: CSSProperties
   className?: string
-  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
   onEvent?: (arg: { event: string, params: any }) => void
 }
 
@@ -46,7 +45,6 @@ const VirtualizedTable = <TData extends Record<string, unknown>, TValue>({ class
   }, [rowSelection])
 
   const eventTopic = useRef(`table:${nanoid(8)}`)
-  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
   const emitEvent = (arg: { event: string, params: any }) => {
     if (eventTopic.current) {
       appEvent.emit(eventTopic.current, arg)
@@ -169,7 +167,7 @@ const VirtualizedTable = <TData extends Record<string, unknown>, TValue>({ class
                       data-state={row.getIsSelected() && "selected"}
                       ref={node => rowVirtualizer.measureElement(node)}
                       onClick={() => _onRowClick(row)}
-                      className="bg-muted hover:bg-accent transition-all duration-200 flex absolute w-full z-0"
+                      className="hover:bg-accent transition-all duration-200 flex absolute w-full z-0"
                       style={{
                         transform: `translateY(${virtualRow.start}px)` //this should always be a `style` as it changes on scroll
                       }}
@@ -204,10 +202,14 @@ const VirtualizedTable = <TData extends Record<string, unknown>, TValue>({ class
             <TableBody>
               <TableRow>
                 <TableCell colSpan={props.columns.length} className="h-24 text-center">
-                  <Skeleton className="h-4 w-full" />
-                  <Skeleton className="h-4 w-full" />
-                  <Skeleton className="h-4 w-full" />
-                  <Skeleton className="h-4 w-full" />
+                  <div className="space-y-2 my-2">
+                    {
+                      Array.from({ length: 8 }).map((_, i) => (
+                        // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
+                        <Skeleton key={i} className="h-6" />
+                      ))
+                    }
+                  </div>
                 </TableCell>
               </TableRow>
             </TableBody>

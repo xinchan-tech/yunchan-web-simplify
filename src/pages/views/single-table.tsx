@@ -1,10 +1,11 @@
 import { type StockExtend, type UsStockColumn, addStockCollect, getIndexGapAmplitude, getIndexRecommends, getUsStocks } from "@/api"
 import { AiAlarm, Button, Checkbox, CollectStar, JknAlert, JknIcon, JknTable, type JknTableProps, NumSpan, Popover, PopoverAnchor, PopoverContent, ScrollArea, StockView } from "@/components"
 import { useToast } from "@/hooks"
-import { useCollectCates, useStock } from "@/store"
-import { numToFixed, priceToCnUnit } from "@/utils/price"
+import { useCollectCates } from "@/store"
+import { stockManager } from "@/utils/stock"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import to from "await-to-js"
+import Decimal from "decimal.js"
 import { useMemo } from "react"
 import { useImmer } from "use-immer"
 
@@ -13,28 +14,29 @@ interface SingleTableProps {
 }
 
 type TableDataType = {
-  code: string
+  symbol: string
   name: string
-  price: number
+  price?: number
   // 涨跌幅
-  percent: number
+  percent?: number
   // 成交额
-  amount: number
+  amount?: number
   // 总市值
-  total: number
+  total?: number
   // 所属行业
-  industry: string
+  industry?: string
   // 盘前涨跌幅
-  prePercent: number
+  prePercent?: number
   // 盘后涨跌幅
-  afterPercent: number
+  afterPercent?: number
   // 换手率
-  turnoverRate: number
+  turnoverRate?: number
   // 市盈率
-  pe: number
+  pe?: number
   // 市净率
-  pb: number
+  pb?: number
   collect: 1 | 0
+  isUp: boolean
 }
 //单表格
 const SingleTable = (props: SingleTableProps) => {
@@ -77,22 +79,18 @@ const SingleTable = (props: SingleTableProps) => {
 
   })
 
-  const stock = useStock()
-
   const data = (() => {
     const r: TableDataType[] = []
 
     if (!query.data) return []
 
-    for (const { stock: _stock, name, symbol, extend } of query.data) {
-      const lastData = stock.getLastRecordByTrading(symbol, 'intraDay')
-      const beforeData = stock.getLastRecordByTrading(symbol, 'preMarket')
-      const afterData = stock.getLastRecordByTrading(symbol, 'afterHours')
+    for (const item of query.data) {
+      const [lastData, beforeData, afterData] = stockManager.toStockRecord(item)
 
       if (!lastData) continue
       r.push({
-        code: symbol,
-        name: name,
+        symbol: item.symbol,
+        name: item.name,
         price: lastData.close,
         percent: lastData.percent,
         total: lastData.marketValue,
@@ -100,10 +98,11 @@ const SingleTable = (props: SingleTableProps) => {
         industry: lastData.industry,
         prePercent: (beforeData?.percent ?? 0) * 100,
         afterPercent: (afterData?.percent ?? 0) * 100,
-        turnoverRate: lastData.turnOverRate * 100,
+        turnoverRate: lastData.turnOverRate ? (lastData.turnOverRate) : undefined,
         pe: lastData.pe,
         pb: lastData.pb,
-        collect: extend.collect
+        collect: lastData.collect ?? 0,
+        isUp: lastData.isUp
       })
     }
 
@@ -128,36 +127,35 @@ const SingleTable = (props: SingleTableProps) => {
     })
   }
 
-
-
-
   const columns: JknTableProps<TableDataType>['columns'] = useMemo(() => ([
     { header: '序号', enableSorting: false, accessorKey: 'index', meta: { align: 'center', width: 40, }, cell: ({ row }) => row.index + 1 },
     {
       header: '名称代码', accessorKey: 'name', meta: { align: 'left', width: '20%' },
       cell: ({ row }) => (
-        <StockView name={row.getValue('name')} code={row.original.code as string} />
+        <StockView name={row.getValue('name')} code={row.original.symbol as string} />
       )
     },
     {
       header: '现价', accessorKey: 'price', meta: { align: 'right', width: '10%' },
       cell: ({ row }) => (
-        <NumSpan value={numToFixed(row.getValue<number>('price')) ?? 0} isPositive={row.getValue<number>('percent') >= 0} />
+        <NumSpan value={row.getValue<number>('price')} decimal={2} isPositive={row.original.isUp} />
       )
     },
     {
       header: '涨跌幅', accessorKey: 'percent', meta: { align: 'right', width: '12%' },
       cell: ({ row }) => (
-        <NumSpan percent block decimal={2} value={row.getValue<number>('percent') * 100} isPositive={row.getValue<number>('percent') >= 0} symbol />
+        <div className="inline-block">
+          <NumSpan block className="py-0.5 w-20" decimal={2} value={`${row.getValue<number>('percent') * 100}`} percent isPositive={row.getValue<number>('percent') >= 0} symbol />
+        </div>
       )
     },
     {
       header: '成交额', accessorKey: 'amount', meta: { align: 'right', width: '17%' },
-      cell: ({ row }) => priceToCnUnit(row.getValue<number>('amount'))
+      cell: ({ row }) => Decimal.create(row.getValue<number>('amount')).toDecimalPlaces(2).toShortCN()
     },
     {
       header: '总市值', accessorKey: 'total', meta: { align: 'right', width: '20%' },
-      cell: ({ row }) => priceToCnUnit(row.getValue<number>('total'))
+      cell: ({ row }) => Decimal.create(row.getValue<number>('total')).toDecimalPlaces(2).toShortCN()
     },
     {
       header: '所属行业', enableSorting: false, accessorKey: 'industry', meta: { width: '17%', align: 'right' }
@@ -165,41 +163,41 @@ const SingleTable = (props: SingleTableProps) => {
     {
       header: '盘前涨跌幅', accessorKey: 'prePercent', meta: { width: '15%', align: 'right' },
       cell: ({ row }) => (
-        <NumSpan symbol decimal={2} percent value={row.getValue<number>('prePercent')} isPositive={row.getValue<number>('prePercent') >= 0} />
+        <NumSpan symbol decimal={2} percent value={row.getValue<number>('prePercent')} isPositive={row.original.isUp} />
       )
     },
     {
       header: '盘后涨跌幅', accessorKey: 'afterPercent', meta: { width: '15%', align: 'right' },
       cell: ({ row }) => (
-        <NumSpan symbol decimal={2} percent value={row.getValue<number>('afterPercent')} isPositive={row.getValue<number>('afterPercent') >= 0} />
+        <NumSpan symbol decimal={2} percent value={row.getValue<number>('afterPercent')} isPositive={row.original.isUp} />
       )
     },
     {
       header: '换手率', accessorKey: 'turnoverRate', meta: { width: '10%', align: 'right' },
-      cell: ({ row }) => `${numToFixed(row.getValue<number>('turnoverRate'), 2)}%`
+      cell: ({ row }) => `${Decimal.create(row.getValue<number>('turnoverRate')).toFixed(2)}%`
     },
     {
       header: '市盈率', enableSorting: false, accessorKey: 'pe', meta: { width: '10%', align: 'right' },
-      cell: ({ row }) => `${numToFixed(row.getValue<number>('pe'), 2) ?? '-'}`
+      cell: ({ row }) => `${Decimal.create(row.getValue<number>('pe')).toFixed(2)}`
     },
     {
       header: '市净率', enableSorting: false, accessorKey: 'pb', meta: { width: '10%', align: 'right' },
-      cell: ({ row }) => `${numToFixed(row.getValue<number>('pb'), 2) ?? '-'}`
+      cell: ({ row }) => `${Decimal.create(row.getValue<number>('pb')).toFixed(2)}`
     },
     {
       header: '+股票金池', enableSorting: false, accessorKey: 'collect', meta: { width: 80, align: 'center' },
       cell: ({ row }) => (
         <div>
           <CollectStar
-            onUpdate={(checked) => updateCollectMutation.mutate({ code: row.original.code, checked })}
+            onUpdate={(checked) => updateCollectMutation.mutate({ code: row.original.symbol, checked })}
             checked={row.getValue<boolean>('collect')}
-            code={row.original.code} />
+            code={row.original.symbol} />
         </div>
       )
     },
     {
       header: '+AI报警', enableSorting: false, accessorKey: 't9', meta: { width: 80, align: 'center' },
-      cell: ({ row }) => <AiAlarm code={row.original.code}><JknIcon name="ic_add" /></AiAlarm>
+      cell: ({ row }) => <AiAlarm code={row.original.symbol}><JknIcon className="rounded-none" name="ic_add" /></AiAlarm>
     },
     {
       header: ({ table }) => (
@@ -219,7 +217,7 @@ const SingleTable = (props: SingleTableProps) => {
                     collects.map((cate) => (
                       <div key={cate.id} className="flex space-x-2 items-center">
                         <div>{cate.name}</div>
-                        <div onClick={() => onCreateStockToCollects(cate.id, table.getSelectedRowModel().rows.map(item => item.original.code))} onKeyDown={() => { }}>
+                        <div onClick={() => onCreateStockToCollects(cate.id, table.getSelectedRowModel().rows.map(item => item.original.symbol))} onKeyDown={() => { }}>
                           <Button className="text-tertiary" size="mini" variant="outline">添加</Button>
                         </div>
                       </div>
@@ -261,10 +259,9 @@ const SingleTable = (props: SingleTableProps) => {
     })
   }
 
-
   return (
     <ScrollArea className="h-[calc(100%-32px)]">
-      <JknTable loading={query.isLoading} manualSorting rowKey="code" onSortingChange={onSortChange} columns={columns} data={data}>
+      <JknTable loading={query.isLoading} manualSorting rowKey="symbol" onSortingChange={onSortChange} columns={columns} data={data}>
       </JknTable>
     </ScrollArea>
   )

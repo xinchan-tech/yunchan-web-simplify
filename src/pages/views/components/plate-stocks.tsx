@@ -1,34 +1,17 @@
 import { addStockCollect, getPlateStocks } from "@/api"
 import { AiAlarm, Button, Checkbox, CollectStar, JknAlert, JknIcon, JknTable, NumSpan, Popover, PopoverAnchor, PopoverContent, StockView, type JknTableProps } from "@/components"
 import { useToast } from "@/hooks"
-import { useCollectCates, useStock } from "@/store"
-import { numToFixed, priceToCnUnit } from "@/utils/price"
+import { useCollectCates } from "@/store"
+import { stockManager, type StockRecord } from "@/utils/stock"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import to from "await-to-js"
+import Decimal from "decimal.js"
 import { useMemo } from "react"
 
 interface PlateStocksProps {
   plateId?: number
 }
 
-export type PlateStockTableDataType = {
-  code: string
-  name: string
-  price?: number
-  // 涨跌幅
-  percent?: number
-  // 成交额
-  amount?: number
-  // 总市值
-  total?: number
-  // 换手率
-  turnoverRate?: number
-  // 市盈率
-  pe?: number
-  // 市净率
-  pb?: number
-  collect: 1 | 0
-}
 const PlateStocks = (props: PlateStocksProps) => {
   const plateStocks = useQuery({
     queryKey: [getPlateStocks.cacheKey, props.plateId],
@@ -36,38 +19,10 @@ const PlateStocks = (props: PlateStocksProps) => {
     enabled: !!props.plateId
   })
 
-  const stock = useStock()
+
   const collects = useCollectCates(s => s.collects)
 
-  // useUpdateEffect(() => {
-  //   if (!props.plateId) return
-  //   plateStocks.run(props.plateId, ['alarm_ai', 'alarm_all', 'collect', 'day_basic', 'total_share', 'financials'])
-  // }, [props.plateId])
-
-  const data = (() => {
-    const r: PlateStockTableDataType[] = []
-
-    if (!plateStocks.data) return r
-
-    for (const { stock: _stock, name, symbol, extend } of plateStocks.data) {
-      const lastData = stock.getLastRecordByTrading(symbol, 'intraDay')
-      r.push({
-        code: symbol,
-        name: name,
-        price: lastData?.close,
-        percent: lastData?.percent,
-        total: lastData?.marketValue,
-        amount: lastData?.turnover,
-        turnoverRate: lastData?.turnOverRate,
-        pe: lastData?.pe,
-        pb: lastData?.pb,
-        collect: extend.collect as 0 | 1
-      })
-    }
-
-    return r
-
-  })()
+  const data = useMemo(() => plateStocks.data?.map(item => stockManager.toStockRecord(item)[0]) ?? [], [plateStocks.data])
 
   const { toast } = useToast()
 
@@ -108,7 +63,7 @@ const PlateStocks = (props: PlateStocksProps) => {
 
 
 
-  const columns = useMemo<JknTableProps<PlateStockTableDataType>['columns']>(() => [
+  const columns = useMemo<JknTableProps<StockRecord>['columns']>(() => [
     { header: '序号', enableSorting: false, accessorKey: 'index', meta: { align: 'center', width: 60, }, cell: ({ row }) => row.index + 1 },
     {
       header: '名称代码', accessorKey: 'name', meta: { align: 'left', width: 'full' },
@@ -117,36 +72,36 @@ const PlateStocks = (props: PlateStocksProps) => {
       )
     },
     {
-      header: '现价', accessorKey: 'price', meta: { align: 'right', width: '10%' },
+      header: '现价', accessorKey: 'close', meta: { align: 'right', width: '10%' },
       cell: ({ row }) => (
-        <NumSpan value={numToFixed(row.getValue<number>('price')) ?? 0} isPositive={row.getValue<number>('percent') >= 0} />
+        <NumSpan value={row.getValue<number>('close')} decimal={3} isPositive={row.original.isUp} />
       )
     },
     {
-      header: '涨跌幅', accessorKey: 'percent', meta: { align: 'right', width: '10%' },
+      header: '涨跌幅', accessorKey: 'percent', meta: { align: 'right', width: 100 },
       cell: ({ row }) => (
-        <NumSpan percent block decimal={2} value={row.getValue<number>('percent') * 100} isPositive={row.getValue<number>('percent') >= 0} symbol />
+        <NumSpan percent block decimal={2} value={row.getValue<number>('percent') * 100} isPositive={row.original.isUp} symbol />
       )
     },
     {
-      header: '成交额', accessorKey: 'amount', meta: { align: 'right', width: '10%' },
-      cell: ({ row }) => priceToCnUnit(row.getValue<number>('amount'))
+      header: '总市值', accessorKey: 'marketValue', meta: { align: 'right', width: '10%' },
+      cell: ({ row }) => Decimal.create(row.original.marketValue).toShortCN()
     },
     {
-      header: '总市值', accessorKey: 'total', meta: { align: 'right', width: '10%' },
-      cell: ({ row }) => priceToCnUnit(row.getValue<number>('total'))
+      header: '成交额', accessorKey: 'turnover', meta: { align: 'right', width: '10%' },
+      cell: ({ row }) => Decimal.create(row.original.turnover).toShortCN()
     },
     {
-      header: '换手率', accessorKey: 'turnoverRate', meta: { align: 'right', width: '7%' },
-      cell: ({ row }) => `${numToFixed(row.getValue<number>('turnoverRate'), 2)}%`
+      header: '换手率', accessorKey: 'turnOverRate', meta: { align: 'right', width: '7%' },
+      cell: ({ row }) => `${Decimal.create(row.original.turnOverRate).mul(100).toFixed(2)}%`
     },
     {
       header: '市盈率', enableSorting: false, accessorKey: 'pe', meta: { align: 'right', width: '7%' },
-      cell: ({ row }) => `${numToFixed(row.getValue<number>('pe'), 2)}`
+      cell: ({ row }) => Decimal.create(row.getValue<number>('pe')).toFixed(2)
     },
     {
       header: '市净率', enableSorting: false, accessorKey: 'pb', meta: { align: 'right', width: '7%' },
-      cell: ({ row }) => `${numToFixed(row.getValue<number>('pb'), 2)}`
+      cell: ({ row }) => Decimal.create(row.getValue<number>('pb')).toFixed(2)
     },
     {
       header: '+股票金池', enableSorting: false, accessorKey: 'collect', meta: { width: 80, align: 'center' },
@@ -161,7 +116,7 @@ const PlateStocks = (props: PlateStocksProps) => {
     },
     {
       header: '+AI报警', enableSorting: false, accessorKey: 't9', meta: { width: 80, align: 'center' },
-      cell: ({ row }) => <AiAlarm code={row.original.code}><JknIcon name="ic_add" /></AiAlarm>
+      cell: ({ row }) => <AiAlarm code={row.original.code}><JknIcon className="rounded-none" name="ic_add" /></AiAlarm>
     },
     {
       header: ({ table }) => (
@@ -218,7 +173,7 @@ const PlateStocks = (props: PlateStocksProps) => {
   return (
     <JknTable.Virtualizer className="h-full"
       onEvent={_onEvent}
-      rowKey="code"
+      rowKey="symbol"
       columns={columns}
       data={data}
     // onSortingChange={(s) => setSort(d => { d.type = s.id; d.order = s.desc ? 'desc' : 'asc' })} 

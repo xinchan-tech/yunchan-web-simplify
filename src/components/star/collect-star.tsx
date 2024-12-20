@@ -1,5 +1,5 @@
 
-import { HoverCard, HoverCardTrigger, HoverCardContent } from "@radix-ui/react-hover-card"
+import { HoverCard, HoverCardTrigger, HoverCardContent, HoverCardPortal } from "../ui/hover-card"
 import { Button } from "../ui/button"
 import Star from "./index"
 import { useCollectCates } from "@/store"
@@ -111,31 +111,33 @@ const CollectStar = (props: CollectStarProps) => {
         <HoverCardTrigger asChild>
           <div className="flex justify-center items-center"><Star checked={props.checked} /></div>
         </HoverCardTrigger>
-        <HoverCardContent align="center" side="left"
-          className="p-0 w-48 bg-muted z-20 border-dialog-border border border-solid"
-        >
-          <div className="bg-background py-2 text-center">加入金池</div>
-          <ScrollArea className="h-[240px] space-y-2 ">
-            {
-              collects.map(item => (
-                <div key={item.id} onClick={() => onCheck(item)} onKeyDown={() => { }} className="flex cursor-pointer items-center pl-4 space-x-4 hover:bg-primary py-1">
-                  {
-                    <Checkbox checked={cateQuery.data?.some(cate => cate.id === item.id && cate.active === 1)} />
-                  }
-                  <span>{item.name}</span>
-                </div>
-              ))
-            }
-          </ScrollArea>
-          <div className="w-full">
-            <AddCollect sideOffset={-100}>
-              <Button block className="rounded-none w-48">
-                新建金池
-              </Button>
-            </AddCollect>
+        <HoverCardPortal>
+          <HoverCardContent align="center" side="left" sideOffset={-10}
+            className="p-0 w-48 bg-muted z-20 border-dialog-border border border-solid"
+          >
+            <div className="bg-background py-2 text-center">加入金池</div>
+            <ScrollArea className="h-[240px] space-y-2 ">
+              {
+                collects.map(item => (
+                  <div key={item.id} onClick={() => onCheck(item)} onKeyDown={() => { }} className="flex cursor-pointer items-center pl-4 space-x-4 hover:bg-primary py-1">
+                    {
+                      <Checkbox checked={cateQuery.data?.some(cate => cate.id === item.id && cate.active === 1)} />
+                    }
+                    <span>{item.name}</span>
+                  </div>
+                ))
+              }
+            </ScrollArea>
+            <div className="w-full">
+              <AddCollect sideOffset={-100}>
+                <Button block className="rounded-none w-48">
+                  新建金池
+                </Button>
+              </AddCollect>
 
-          </div>
-        </HoverCardContent>
+            </div>
+          </HoverCardContent>
+        </HoverCardPortal>
       </HoverCard>
     </div>
   )

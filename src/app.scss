@@ -1,4 +1,5 @@
 @use '@/theme/utilities';
+@use 'sass:math';
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -142,10 +143,4 @@ body {
   //涨幅颜色
   scrollbar-width: 'thin';
   scrollbar-gutter: 'stable';
-}
-
-@for $i from 1 through 9 {
-  .chart-item-#{$i} {
-    grid-area: chart-#{$i};
-  }
 }

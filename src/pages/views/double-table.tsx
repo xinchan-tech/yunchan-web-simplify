@@ -1,11 +1,11 @@
 import { getPlateList } from "@/api"
 import { JknTable, type JknTableProps, NumSpan, ScrollArea } from "@/components"
-import { priceToCnUnit } from "@/utils/price"
 import { useUpdateEffect } from "ahooks"
 import { useMemo, useState } from "react"
 import { useImmer } from "use-immer"
 import PlateStocks from "./components/plate-stocks"
 import { useQuery } from "@tanstack/react-query"
+import Decimal from "decimal.js"
 
 interface DoubleTableProps {
   type: 1 | 2
@@ -36,7 +36,7 @@ const DoubleTable = (props: DoubleTableProps) => {
     <div className="flex overflow-hidden h-full">
       <div className="w-[25%]">
         <ScrollArea className="h-full">
-          <PlateList data={plate.data ?? []} onRowClick={onClickPlate} />
+          <PlateList loading={plate.isLoading} data={plate.data ?? []} onRowClick={onClickPlate} />
         </ScrollArea>
       </div>
       <div className="w-[75%]">
@@ -59,6 +59,7 @@ type PlateDataType = {
 interface PlateListProps {
   data: PlateDataType[]
   onRowClick: (row: PlateDataType) => void
+  loading?: boolean
 }
 
 const PlateList = (props: PlateListProps) => {
@@ -82,22 +83,23 @@ const PlateList = (props: PlateListProps) => {
 
   })()
 
+
   const column = useMemo<JknTableProps<PlateDataType>['columns']>(() => [
     { header: '序号', enableSorting: false, accessorKey: 'index', meta: { align: 'center', width: 40 }, cell: ({ row }) => row.index + 1 },
     { header: '行业', enableSorting: false, accessorKey: 'name', meta: { width: 'auto' } },
     {
       header: '涨跌幅', accessorKey: 'change',
       meta: { width: 100 },
-      cell: ({ row }) => <NumSpan block percent value={row.original.change} isPositive={row.original.change > 0} />
+      cell: ({ row }) => <NumSpan block percent symbol value={row.original.change} isPositive={row.original.change > 0} />
     },
     {
       header: '成交额', accessorKey: 'amount',
       meta: { align: 'right', width: 100 },
-      cell: ({ row }) => priceToCnUnit(row.original.amount)
+      cell: ({ row }) => <span>{Decimal.create(row.original.amount).toShortCN()}</span>
     }
   ], [])
   return (
-    <JknTable onRowClick={props.onRowClick} columns={column} data={data} onSortingChange={(s) => setSort(d => { d.type = s.id; d.order = s.desc ? 'desc' : 'asc' })} />
+    <JknTable loading={props.loading} onRowClick={props.onRowClick} columns={column} data={data} onSortingChange={(s) => setSort(d => { d.type = s.id; d.order = s.desc ? 'desc' : 'asc' })} />
   )
 }
 

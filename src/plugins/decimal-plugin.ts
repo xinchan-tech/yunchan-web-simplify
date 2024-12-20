@@ -4,8 +4,8 @@ Decimal.create = (value?: string | number) => {
   return new Decimal(value ?? '0')
 }
 
-Decimal.prototype.toShortCN = function() {
-  return priceToCnUnit(this, this.decimalPlaces())
+Decimal.prototype.toShortCN = function(decimal?: number) {
+  return priceToCnUnit(this, decimal ?? 2)
 }
 
 const priceToCnUnit = (price: Decimal, decimal = 3) => {
@@ -13,7 +13,6 @@ const priceToCnUnit = (price: Decimal, decimal = 3) => {
   const unitSteps = ['1', '10000', '100000000', '1000000000000']
 
   if(price.isNaN()) return '--'
-
 
   for (let i = 0; i < unitSteps.length - 1; i++) {
     const step = new Decimal(unitSteps[i])
@@ -23,5 +22,5 @@ const priceToCnUnit = (price: Decimal, decimal = 3) => {
     }
   }
 
-  return price.div(unitSteps[3]).toFixed(2) + unit[3]
+  return price.div(unitSteps[3]).toFixed(decimal) + unit[3]
 }

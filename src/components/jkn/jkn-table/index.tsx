@@ -47,7 +47,7 @@ const _JknTable = <TData extends Record<string, unknown>, TValue>(props: JknTabl
     props.onSelection?.(Object.keys(rowSelection))
   }, [rowSelection])
 
-  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+
   const emitEvent = (arg: { event: string, params: any }) => {
     if (eventTopic.current) {
       appEvent.emit(eventTopic.current, arg)
@@ -99,12 +99,11 @@ const _JknTable = <TData extends Record<string, unknown>, TValue>(props: JknTabl
               {headerGroup.headers.map((header) => {
                 const { align, width } = header.column.columnDef.meta ?? {}
                 return (
-                  <TableHead  key={header.id} style={{ width: width || header.getSize() }} >
+                  <TableHead key={header.id} style={{ width: width || header.getSize() }} >
                     {header.isPlaceholder
                       ? null
                       : (
                         <div className="inline-flex items-center w-full space-x-1">
-                          {/* biome-ignore lint/suspicious/noExplicitAny: <explanation> */}
                           <div className="flex-1" style={{ textAlign: align as any }}>
                             {
                               flexRender(
@@ -168,10 +167,14 @@ const _JknTable = <TData extends Record<string, unknown>, TValue>(props: JknTabl
             <TableBody>
               <TableRow>
                 <TableCell colSpan={props.columns.length} className="h-24 text-center">
-                  <Skeleton className="h-4 w-full" />
-                  <Skeleton className="h-4 w-full" />
-                  <Skeleton className="h-4 w-full" />
-                  <Skeleton className="h-4 w-full" />
+                  <div className="space-y-2 my-2">
+                    {
+                      Array.from({ length: 8 }).map((_, i) => (
+                        // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
+                        <Skeleton key={i} className="h-6" />
+                      ))
+                    }
+                  </div>
                 </TableCell>
               </TableRow>
             </TableBody>
