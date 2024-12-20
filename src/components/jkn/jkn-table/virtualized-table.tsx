@@ -109,7 +109,7 @@ const VirtualizedTable = <TData extends Record<string, unknown>, TValue>({ class
 
   return (
     <ScrollArea ref={scrollRef} className={cn('w-full relative', className)} style={style}>
-      <Table className="w-full mt-[-1px] grid">
+      <Table className="w-full mt-[-1px] grid overflow-x-hidden">
         <TableHeader className="sticky top-0 z-10 grid">
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id} className="flex w-full">
@@ -200,8 +200,8 @@ const VirtualizedTable = <TData extends Record<string, unknown>, TValue>({ class
             </TableBody>
           ) : (
             <TableBody>
-              <TableRow>
-                <TableCell colSpan={props.columns.length} className="h-24 text-center">
+              <TableRow className="absolute flex w-full z-0">
+                <TableCell colSpan={props.columns.length} className="text-center flex-1">
                   <div className="space-y-2 my-2">
                     {
                       Array.from({ length: 8 }).map((_, i) => (

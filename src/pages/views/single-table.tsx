@@ -261,7 +261,7 @@ const SingleTable = (props: SingleTableProps) => {
 
   return (
 
-    <JknTable.Virtualizer className="h-[calc(100%-32px)] overflow-hidden" loading={query.isLoading} manualSorting rowKey="symbol" onSortingChange={onSortChange} columns={columns} data={data}>
+    <JknTable.Virtualizer  className="h-[calc(100%-32px)] overflow-hidden" loading={query.isLoading} manualSorting rowKey="symbol" onSortingChange={onSortChange} columns={columns} data={data}>
     </JknTable.Virtualizer>
 
   )
