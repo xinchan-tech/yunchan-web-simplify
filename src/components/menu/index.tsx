@@ -1,9 +1,10 @@
-import { navWithAuth } from "@/utils/nav"
 import JknIcon from "../jkn/jkn-icon"
 import { cn } from "@/utils/style"
 import { router } from "@/router"
-import { type ReactNode, useEffect, useState } from "react"
+import { type ReactNode, useEffect, useMemo, useState } from "react"
 import { Settings } from "lucide-react"
+import { useToken } from "@/store"
+import { useToast } from "@/hooks"
 
 type MenuItem = {
   icon: IconName | ReactNode
@@ -14,6 +15,8 @@ type MenuItem = {
 
 const Menu = () => {
   const [pathname, setPathname] = useState(router.state.location.pathname)
+  const { token } = useToken()
+  const { toast } = useToast()
 
   useEffect(() => {
     const s = router.subscribe((s) => {
@@ -25,7 +28,7 @@ const Menu = () => {
     }
   }, [])
 
-  const menus: MenuItem[] = [
+  const menus: MenuItem[] = useMemo(() => [
     {
       icon: 'left_menu_1@2x',
       title: '首页',
@@ -71,19 +74,30 @@ const Menu = () => {
       title: '设置',
       path: '/setting'
     }
-  ]
+  ], [])
+
+  
 
   const onNav = (path: string) => {
-    navWithAuth(path)
+    if (!token && path !== '/') {
+      toast({
+        title: '请先登录'
+      })
+      return
+    }
+
+    return router.navigate(path)
   }
 
+
+  // return router.navigate(...args)
   return (
     <div className="h-full flex flex-col items-center">
       {menus.map((item) => (
         <div key={item.title} onClick={() => onNav(item.path)} onKeyDown={() => { }}
           className={cn(
             'mb-4 flex flex-col items-center cursor-pointer',
-            item.title === '设置' ? 'mt-auto': ''
+            item.title === '设置' ? 'mt-auto' : ''
           )}
         >
           <div className={cn(pathname === item.path && 'active-icon')}>

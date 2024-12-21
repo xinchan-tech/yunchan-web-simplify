@@ -1,13 +1,13 @@
-import { getPlateList, getPlateStocks, getRecommendIndex, getStockCollects, type StockExtend } from "@/api"
-import { Checkbox, JknIcon, JknTable, NumSpan, ScrollArea, StockView, ToggleGroup, ToggleGroupItem, type JknTableProps } from "@/components"
-import { useCollectCates, useStock } from "@/store"
-import { numToFixed, priceToCnUnit } from "@/utils/price"
+import { type StockExtend, getPlateList, getPlateStocks, getStockCollects } from "@/api"
+import { Checkbox, JknIcon, JknTable, type JknTableProps, NumSpan, ScrollArea, StockView, ToggleGroup, ToggleGroupItem } from "@/components"
+import { useCollectCates } from "@/store"
+import { stockManager } from "@/utils/stock"
 import { cn } from "@/utils/style"
-import { useMount, useUnmount, useUpdateEffect } from "ahooks"
-import { useContext, useMemo, useRef, useState } from "react"
-import { useImmer } from "use-immer"
 import { useQuery } from '@tanstack/react-query'
 import type { Row } from "@tanstack/react-table"
+import { useMount, useUnmount, useUpdateEffect } from "ahooks"
+import Decimal from "decimal.js"
+import { useContext, useMemo, useRef, useState } from "react"
 import { SuperStockContext } from "../ctx"
 
 const baseExtends: StockExtend[] = ['total_share', 'basic_index', 'day_basic', 'alarm_ai', 'alarm_all', 'financials']
@@ -135,31 +135,9 @@ const GoldenPoolList = (props: GoldenPoolListProps) => {
     enabled: !!props.cateId
   })
 
-  const stock = useStock()
+  const data = useMemo(() => query.data?.items.map(o => stockManager.toStockRecord(o)[0]) ?? [], [query.data])
 
-
-  const data = useMemo(() => {
-    if (!query.data) return []
-
-    const r = []
-
-    for (const { stock: _stock, name, symbol } of query.data.items) {
-      const lastData = stock.getLastRecordByTrading(symbol, 'intraDay')
-      r.push({
-        code: symbol,
-        name: name,
-        price: lastData?.close,
-        percent: lastData?.percent,
-        total: lastData?.marketValue,
-        amount: lastData?.turnover,
-      })
-    }
-
-    return r
-
-  }, [query.data, stock])
-
-  const columns: JknTableProps['columns'] = [
+  const columns: JknTableProps<ArrayItem<typeof data>>['columns'] = [
     {
       header: '序号',
       accessorKey: 'index',
@@ -179,31 +157,31 @@ const GoldenPoolList = (props: GoldenPoolListProps) => {
     },
     {
       header: '现价',
-      accessorKey: 'price',
-      meta: { align: 'right', },
+      accessorKey: 'close',
+      meta: { align: 'right', width: 90 },
       cell: ({ row }) => (
-        <NumSpan value={numToFixed(row.getValue<number>('price')) ?? 0} isPositive={row.getValue<number>('percent') >= 0} />
+        <NumSpan value={row.getValue<number>('close') ?? 0} decimal={3} isPositive={row.original.isUp} />
       )
     },
     {
       header: '涨跌幅',
       accessorKey: 'percent',
-      meta: { align: 'right', },
+      meta: { align: 'right', width: 90 },
       cell: ({ row }) => (
-        <NumSpan percent block decimal={2} value={row.getValue<number>('percent') * 100} isPositive={row.getValue<number>('percent') >= 0} symbol />
+        <NumSpan percent block decimal={2} value={row.getValue<number>('percent') * 100} isPositive={row.original.isUp} symbol />
       )
     },
     {
       header: '成交额',
-      accessorKey: 'amount',
-      meta: { align: 'right', width: 120 },
-      cell: ({ row }) => priceToCnUnit(row.getValue<number>('amount'))
+      accessorKey: 'turnover',
+      meta: { align: 'right', width: 90 },
+      cell: ({ row }) => Decimal.create(row.getValue<number>('turnover')).toShortCN(3)
     },
     {
       header: '总市值',
-      accessorKey: 'total',
-      meta: { align: 'right', width: 120 },
-      cell: ({ row }) => priceToCnUnit(row.getValue<number>('total'))
+      accessorKey: 'marketValue',
+      meta: { align: 'right', width: 90 },
+      cell: ({ row }) => Decimal.create(row.getValue<number>('marketValue')).toShortCN(3)
     }
   ]
   return (
@@ -253,11 +231,12 @@ const Plate = (props: { type: 1 | 2 }) => {
   })
 
   useUpdateEffect(() => {
+
     setActivePlate(undefined)
     if (plate.data && plate.data.length > 0) {
       setActivePlate(plate.data[0].id)
     }
-  }, [plate.data, activePlate])
+  }, [plate.data])
 
   const onClickPlate = (row: PlateDataType) => {
     setActivePlate(row.id)
@@ -294,10 +273,6 @@ interface PlateListProps {
 }
 
 const PlateList = (props: PlateListProps) => {
-  const [sort, setSort] = useImmer<{ type?: string, order?: 'asc' | 'desc' }>({
-    type: undefined,
-    order: undefined
-  })
 
   const ctx = useContext(SuperStockContext)
   const selection = useRef<string[]>([])
@@ -310,21 +285,6 @@ const PlateList = (props: PlateListProps) => {
     ctx.unregister('sectors')
     selection.current = []
   })
-
-  const data = useMemo(() => {
-    if (!sort.type) return [...props.data]
-    const newData = [...props.data]
-    newData.sort((a, b) => {
-      const aValue = a[sort.type as keyof PlateDataType]
-      const bValue = b[sort.type as keyof PlateDataType]
-      if (aValue > bValue) return sort.order === 'asc' ? 1 : -1
-      if (aValue < bValue) return sort.order === 'asc' ? -1 : 1
-      return 0
-    })
-
-    return newData
-
-  }, [props.data, sort])
 
   const _onRowClick = (data: PlateDataType, row: Row<PlateDataType>) => {
     props.onRowClick(data)
@@ -351,17 +311,17 @@ const PlateList = (props: PlateListProps) => {
     },
     {
       header: '涨跌幅', accessorKey: 'change',
-      meta: { width: 120 },
+      meta: { width: 90 },
       cell: ({ row }) => <NumSpan block percent value={row.original.change} isPositive={row.original.change > 0} />
     },
     {
       header: '成交额', accessorKey: 'amount',
-      meta: { align: 'right', width: 90 },
-      cell: ({ row }) => priceToCnUnit(row.original.amount, 2)
+      meta: { align: 'right', width: 120 },
+      cell: ({ row }) => Decimal.create(row.original.amount).toShortCN(3)
     }
   ], [])
   return (
-    <JknTable onSelection={v => { selection.current = v }} onRowClick={_onRowClick} columns={column} data={data} onSortingChange={(s) => setSort(d => { d.type = s.id; d.order = s.desc ? 'desc' : 'asc' })} />
+    <JknTable onSelection={v => { selection.current = v }} onRowClick={_onRowClick} columns={column} data={props.data} />
   )
 }
 
@@ -394,37 +354,11 @@ const PlateStocks = (props: PlateStocksProps) => {
     enabled: !!props.plateId
   })
 
-  const stock = useStock()
+  
 
-  const data = useMemo(() => {
-    const r: PlateStockTableDataType[] = []
+  const data = useMemo(() => plateStocks.data?.map(o => stockManager.toStockRecord(o)[0]) ?? [], [plateStocks.data])
 
-    if (!plateStocks.data) return r
-
-    for (const { stock: _stock, name, symbol, extend } of plateStocks.data) {
-      const lastData = stock.getLastRecordByTrading(symbol, 'intraDay')
-      r.push({
-        code: symbol,
-        name: name,
-        price: lastData?.close,
-        percent: lastData?.percent,
-        total: lastData?.marketValue,
-        amount: lastData?.turnover,
-        turnoverRate: lastData?.turnOverRate,
-        pe: lastData?.pe,
-        pb: lastData?.pb,
-        collect: extend.collect as 0 | 1
-      })
-    }
-
-    return r
-
-  }, [plateStocks.data, stock])
-
-
-
-
-  const columns = useMemo<JknTableProps<PlateStockTableDataType>['columns']>(() => [
+  const columns = useMemo<JknTableProps<ArrayItem<typeof data>>['columns']>(() => [
     { header: '序号', enableSorting: false, accessorKey: 'index', meta: { align: 'center', width: 60, }, cell: ({ row }) => row.index + 1 },
     {
       header: '名称代码', accessorKey: 'name', meta: { align: 'left', width: 'auto' },
@@ -433,30 +367,30 @@ const PlateStocks = (props: PlateStocksProps) => {
       )
     },
     {
-      header: '现价', accessorKey: 'price', meta: { align: 'right', width: 'auto' },
+      header: '现价', accessorKey: 'close', meta: { align: 'right', width: 'auto' },
       cell: ({ row }) => (
-        <NumSpan value={numToFixed(row.getValue<number>('price')) ?? 0} isPositive={row.getValue<number>('percent') >= 0} />
+        <NumSpan value={row.getValue<number>('close') ?? 0} decimal={3} isPositive={row.original.isUp} />
       )
     },
     {
-      header: '涨跌幅', accessorKey: 'percent', meta: { align: 'right', width: 'auto' },
+      header: '涨跌幅', accessorKey: 'percent', meta: { align: 'right', width: 90 },
       cell: ({ row }) => (
-        <NumSpan percent block decimal={2} value={row.getValue<number>('percent') * 100} isPositive={row.getValue<number>('percent') >= 0} symbol />
+        <NumSpan percent block decimal={2} value={row.getValue<number>('percent') * 100} isPositive={row.original.isUp} symbol />
       )
     },
     {
-      header: '成交额', accessorKey: 'amount', meta: { align: 'right', width: 'auto' },
-      cell: ({ row }) => priceToCnUnit(row.getValue<number>('amount'))
+      header: '成交额', accessorKey: 'turnover', meta: { align: 'right', width: 'auto' },
+      cell: ({ row }) => Decimal.create(row.getValue<number>('turnover')).toShortCN(3)
     },
     {
-      header: '总市值', accessorKey: 'total', meta: { align: 'right', width: 'auto' },
-      cell: ({ row }) => priceToCnUnit(row.getValue<number>('total'))
+      header: '总市值', accessorKey: 'marketValue', meta: { align: 'right', width: 'auto' },
+      cell: ({ row }) => Decimal.create(row.getValue<number>('marketValue')).toShortCN(3)
     },
   ], [])
   return (
     <div>
       <JknTable
-        rowKey="code"
+        rowKey="symbol"
         columns={columns}
         data={data}
       // onSortingChange={(s) => setSort(d => { d.type = s.id; d.order = s.desc ? 'desc' : 'asc' })} 

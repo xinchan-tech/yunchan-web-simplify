@@ -8,9 +8,6 @@ import isSameOrAfter from 'dayjs/plugin/isSameOrAfter'
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore'
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
-import { persistQueryClient, removeOldestQuery } from '@tanstack/react-query-persist-client'
-import { createSyncStoragePersister } from '@tanstack/query-sync-storage-persister'
-import { compress, decompress } from 'lz-string'
 import { StrictMode } from "react"
 import '@/plugins/decimal-plugin'
 import { wsManager } from "./utils/ws/manager.ts"

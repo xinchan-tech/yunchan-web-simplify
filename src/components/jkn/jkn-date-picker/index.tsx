@@ -40,7 +40,6 @@ function JknDatePicker({ children, onChange, ...props }: DatePickerProps) {
           mode="single"
           selected={dayjs(date).toDate()}
           onSelect={_onSelect}
-          initialFocus
         />
       </PopoverContent>
     </Popover>

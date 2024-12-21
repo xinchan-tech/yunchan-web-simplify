@@ -11,6 +11,8 @@ import { z } from "zod"
 import { useZForm } from "@/hooks"
 import { GoldenPoolForm } from "@/pages/golden-pool/components/golden-pool-form"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { produce } from "immer"
+import { CollectStarBatch } from "./collect-star-batch"
 
 
 interface CollectStarProps {
@@ -24,7 +26,7 @@ const poolSchema = z.object({
   name: z.string()
 })
 
-const CollectStar = (props: CollectStarProps) => {
+const _CollectStar = (props: CollectStarProps) => {
   const { collects, setCollects } = useCollectCates()
   const queryClient = useQueryClient()
   const cateQuery = useQuery({
@@ -34,30 +36,39 @@ const CollectStar = (props: CollectStarProps) => {
   })
 
   const updateCollectMutation = useMutation({
-    mutationFn: async (cates: number[]) => {
+    mutationFn: (cates: number[]) => {
       props.onUpdate?.(cates.length > 0)
 
-      const [err] = await to(addStockCollectBatch({
+      return addStockCollectBatch({
         symbol: props.code,
         cate_ids: cates
-      }))
-
-      if (err) {
-        toast({ description: err.message })
-        return
-      }
+      })
     },
     onMutate: async (cates: number[]) => {
-      queryClient.setQueryData([getStockCollectCates.cacheKey, props.code], (s: typeof cateQuery.data) => {
-        return s?.map(item => {
-          item.active = cates.includes(+item.id) ? 1 : 0
-          return item
+      await queryClient.cancelQueries({ queryKey: [getStockCollectCates.cacheKey, props.code] })
+
+      const previous = queryClient.getQueryData([getStockCollectCates.cacheKey, props.code])
+
+      if (previous) {
+        queryClient.setQueryData([getStockCollectCates.cacheKey, props.code], (s: typeof cateQuery.data) => {
+          return s?.map(produce(draft => {
+            draft.active = cates.includes(+draft.id) ? 1 : 0
+          }))
         })
-      })
+      }
+
+      return { previous }
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: [getStockCollectCates.cacheKey, props.code] })
     },
+    onError: (err, _, context) => {
+      toast({ description: err.message })
+      if (context?.previous) {
+        queryClient.setQueryData([getStockCollectCates.cacheKey, props.code], context.previous)
+        props.onUpdate?.((context.previous as any).some((item: any) => item.active === 1))
+      }
+    }
   })
 
   const { toast } = useToast()
@@ -71,11 +82,6 @@ const CollectStar = (props: CollectStarProps) => {
     }
 
     updateCollectMutation.mutate(cates)
-
-
-
-    // cateQuery.refresh()
-
   }
 
   const form = useZForm(poolSchema, {
@@ -111,9 +117,9 @@ const CollectStar = (props: CollectStarProps) => {
         <HoverCardTrigger asChild>
           <div className="flex justify-center items-center"><Star checked={props.checked} /></div>
         </HoverCardTrigger>
-        <HoverCardPortal>
+        <HoverCardPortal >
           <HoverCardContent align="center" side="left" sideOffset={-10}
-            className="p-0 w-48 bg-muted z-20 border-dialog-border border border-solid"
+            className="p-0 w-48 bg-muted border-dialog-border border border-solid"
           >
             <div className="bg-background py-2 text-center">加入金池</div>
             <ScrollArea className="h-[240px] space-y-2 ">
@@ -142,5 +148,11 @@ const CollectStar = (props: CollectStarProps) => {
     </div>
   )
 }
+
+const CollectStar = _CollectStar as typeof _CollectStar & {
+  Batch: typeof CollectStarBatch
+}
+
+CollectStar.Batch = CollectStarBatch
 
 export default CollectStar

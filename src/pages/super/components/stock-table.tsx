@@ -1,10 +1,12 @@
 import { addStockCollect, type getStockSelection } from "@/api"
-import { type JknTableProps, StockView, NumSpan, Checkbox, CollectStar, JknIcon, Button, JknAlert, JknTable } from "@/components"
+import { type JknTableProps, StockView, NumSpan, Checkbox, CollectStar, JknIcon, Button, JknAlert, JknTable, AiAlarm } from "@/components"
 import { useToast } from "@/hooks"
-import { StockRecord, useCollectCates } from "@/store"
-import { numToFixed, priceToCnUnit } from "@/utils/price"
+import { useCollectCates } from "@/store"
+import { stockManager } from "@/utils/stock"
 import { Popover, PopoverAnchor, PopoverContent } from "@radix-ui/react-popover"
 import to from "await-to-js"
+import Decimal from "decimal.js"
+import { nanoid } from "nanoid"
 import { useMemo } from "react"
 
 type TableDataType = {
@@ -13,14 +15,16 @@ type TableDataType = {
   name: string
   stock_cycle: number
   indicator_name: string
-  price: number
-  percent: number
-  total: number
-  amount: number
-  industry: string
+  price?: number
+  percent?: number
+  bottom?: string
+  total?: number
+  amount?: number
+  industry?: string
   prePercent: number
   afterPercent: number
   collect: 1 | 0
+  key: string
 }
 
 interface StockTableProps {
@@ -32,15 +36,14 @@ const StockTable = (props: StockTableProps) => {
     const r: TableDataType[] = []
 
     let index = 0
-    for (const { stock: _stock, name, symbol, stock_cycle, indicator_name, extend } of props.data) {
-      const lastData = new StockRecord(_stock, extend)
-      const beforeData = StockRecord.isValid(extend?.stock_before) ? new StockRecord(extend.stock_before) : {} as StockRecord
-      const afterData = StockRecord.isValid(extend?.stock_after) ? new StockRecord(extend.stock_after) : {} as StockRecord
-
+    for (const { indicator_name_hdly, indicator_name, stock_cycle, ...item} of props.data) {
+      const [lastData, beforeData, afterData] = stockManager.toStockRecord(item)
       r.push({
         index: index++,
-        code: symbol,
-        name: name,
+        key: nanoid(),
+        code: lastData.symbol,
+        name: lastData.name,
+        bottom: indicator_name_hdly,
         price: lastData.close,
         percent: lastData.percent,
         total: lastData.marketValue,
@@ -48,7 +51,7 @@ const StockTable = (props: StockTableProps) => {
         industry: lastData.industry,
         prePercent: (beforeData?.percent ?? 0) * 100,
         afterPercent: (afterData?.percent ?? 0) * 100,
-        collect: extend.collect,
+        collect: lastData.collect ?? 0,
         stock_cycle,
         indicator_name
       })
@@ -58,24 +61,6 @@ const StockTable = (props: StockTableProps) => {
     return r
 
   }, [props.data])
-
-  const onSortChange: JknTableProps<TableDataType>['onSortingChange'] = (e) => {
-    // const columnMap: Record<string, string> = {
-    //   code: 'symbol',
-    //   price: 'close',
-    //   amount: 'amount',
-    //   percent: "increase",
-    //   total: "total_mv",
-    //   prePercent: "stock_before",
-    //   afterPercent: "stock_after",
-    //   turnoverRate: "turnover_rate",
-    // }
-    // Object.assign(query.params[0] ?? {}, { column: columnMap[e.id as string] ?? 'total_mv', order: e.desc === undefined ? 'desc' : e.desc ? 'desc' : 'asc' })
-    // query.refresh()
-  }
-
-
-
 
   const columns: JknTableProps<TableDataType>['columns'] = useMemo(() => ([
     { header: '序号', enableSorting: false, accessorKey: 'index', meta: { align: 'center', width: 40 }, cell: ({ row }) => row.index + 1 },
@@ -91,13 +76,13 @@ const StockTable = (props: StockTableProps) => {
       header: '信号类型', enableSorting: false, accessorKey: 'indicator_name', meta: { align: 'center', width: 60 },
       cell: ({ row }) => row.getValue('indicator_name')
     }, {
-      header: '底部类型', accessorKey: 'price', meta: { align: 'center', width: 60},
-      cell: ({ row }) => '-'
+      header: '底部类型', accessorKey: 'bottom', meta: { align: 'center', width: 60},
+      cell: ({ row }) => row.getValue('bottom') ?? '-'
     },
     {
       header: '现价', accessorKey: 'price', meta: { align: 'right', width: 80 },
       cell: ({ row }) => (
-        <NumSpan value={numToFixed(row.getValue<number>('price')) ?? 0} isPositive={row.getValue<number>('percent') >= 0} />
+        <NumSpan value={row.getValue<number>('price')} decimal={2} isPositive={row.getValue<number>('percent') >= 0} />
       )
     },
     {
@@ -108,11 +93,11 @@ const StockTable = (props: StockTableProps) => {
     },
     {
       header: '成交额', accessorKey: 'amount', meta: { align: 'right', width: 100 },
-      cell: ({ row }) => priceToCnUnit(row.getValue<number>('amount'))
+      cell: ({ row }) => Decimal.create(row.getValue<number>('amount')).toShortCN(3)
     },
     {
       header: '总市值', accessorKey: 'total', meta: { align: 'right', width: 100 },
-      cell: ({ row }) => priceToCnUnit(row.getValue<number>('total'))
+      cell: ({ row }) => Decimal.create(row.getValue<number>('total')).toShortCN(3)
     },
     {
       header: '所属行业', enableSorting: false, accessorKey: 'industry', meta: { width: 120, align: 'right' }
@@ -142,7 +127,7 @@ const StockTable = (props: StockTableProps) => {
     },
     {
       header: '+AI报警', enableSorting: false, accessorKey: 't9', meta: { width: 50, align: 'center' },
-      cell: ({ row }) => <div><JknIcon name="ic_add" /></div>
+      cell: ({ row }) => <AiAlarm code={row.original.code} ><JknIcon className="rounded-none" name="ic_add" /></AiAlarm>
     },
     {
       header: ({ table }) => (
@@ -206,7 +191,7 @@ const StockTable = (props: StockTableProps) => {
 
 
   return (
-    <JknTable rowKey="index" onSortingChange={onSortChange} columns={columns} data={data}>
+    <JknTable rowKey="key" columns={columns} data={data}>
     </JknTable>
   )
 }

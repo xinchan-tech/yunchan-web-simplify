@@ -2,7 +2,6 @@ import { AiAlarm, CapsuleTabs, JknIcon, PriceAlarm, useModal } from "@/component
 import { useState } from "react"
 import AlarmList from "../../components/ai-alarm/alarm-list"
 import AiAlarmForm from "../../components/ai-alarm/ai-alarm-form"
-import { useMount } from "ahooks"
 import PriceAlarmForm from "../../components/ai-alarm/price-alarm-form"
 import AlarmLog from "../../components/ai-alarm/alarm-log"
 import { AlarmType } from "@/api"

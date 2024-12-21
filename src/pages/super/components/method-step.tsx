@@ -4,6 +4,7 @@ import type { StockCategory } from "@/api"
 import { cn } from "@/utils/style"
 import { JknIcon, ToggleGroup, ToggleGroupItem } from "@/components"
 import { useMount, useUnmount } from "ahooks"
+import { appEvent } from "@/utils/event"
 
 const MethodStep = () => {
   const ctx = useContext(SuperStockContext)
@@ -20,8 +21,12 @@ const MethodStep = () => {
 
 
   const children = (method?.children ?? []) as unknown as StockCategory[]
-  
+
   const _onValueChange = (e: string[], type: string) => {
+    if(type === '32'){
+      appEvent.emit('cleanPickerStockFactor')
+    }
+    
     if (e.length <= 0) {
       setValue([])
       selection.current = []
@@ -40,10 +45,8 @@ const MethodStep = () => {
     setValue([lastData])
     selection.current = [lastData]
     lastType.current = type
+
   }
-
-
-
 
   useMount(() => {
     ctx.register('category_ids', 3, () => [...selection.current], () => selection.current.length > 0)
@@ -56,6 +59,22 @@ const MethodStep = () => {
     setValue([])
   })
 
+  // 待优化 临时方案
+  useMount(() => {
+    appEvent.on('cleanPickerStockMethod', () => {
+      // magic number
+      if(lastType.current === '32'){
+        setValue([])
+        selection.current = []
+        lastType.current = undefined
+      }
+    })
+  })
+
+  useUnmount(() => {
+    appEvent.off('cleanPickerStockMethod')
+    
+  })
 
   return (
     <div className="min-h-64 flex  border-0 border-b border-solid border-background items-stretch">
@@ -69,13 +88,22 @@ const MethodStep = () => {
               <div
                 key={item.id}
                 className={cn(
-                  'h-10 leading-10 w-40 mb-2 text-center rounded-sm text-secondary transition-all cursor-pointer bg-accent',
+                  'h-10 leading-10 w-40 mb-2 text-center rounded-sm text-secondary transition-all cursor-pointer bg-accent relative',
                   method?.id === item.id && 'bg-primary text-foreground'
                 )}
                 onClick={() => setMethod(item)}
                 onKeyDown={() => { }}
               >
                 {item.name}
+                {
+                  value.length > 0 ? (
+                    <span className="absolute -right-2 -top-2 w-4 h-4 leading-4 rounded-full text-xs text-white bg-[#ff4757]">
+                      {
+                        value.length
+                      }
+                    </span>
+                  ) : null
+                }
               </div>
             ))
           }

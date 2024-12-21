@@ -1,8 +1,7 @@
 import { type StockExtend, addStockCollectCate, type getStockCollectCates, getStockCollects, removeStockCollect, removeStockCollectCate, updateStockCollectCate } from "@/api"
 import { AiAlarm, Button, CapsuleTabs, Checkbox, JknAlert, JknIcon, JknTable, type JknTableProps, NumSpan, Popover, PopoverAnchor, PopoverContent, ScrollArea, StockView, useFormModal, useModal } from "@/components"
 import { useSubscribe, useToast, useZForm } from "@/hooks"
-import { useCollectCates, useStock } from "@/store"
-import { numToFixed, priceToCnUnit } from "@/utils/price"
+import { useCollectCates } from "@/store"
 import { cn } from "@/utils/style"
 import { useQuery } from "@tanstack/react-query"
 import { useMount } from "ahooks"
@@ -10,26 +9,14 @@ import to from "await-to-js"
 import { useMemo, useState } from "react"
 import type { z } from "zod"
 import { GoldenPoolForm, poolSchema } from "./components/golden-pool-form"
-import { stockManager } from "@/utils/stock"
+import { stockManager, type StockRecord } from "@/utils/stock"
+import Decimal from "decimal.js"
 
 const baseExtends: StockExtend[] = ['total_share', 'basic_index', 'day_basic', 'alarm_ai', 'alarm_all', 'financials']
 type CollectCate = Awaited<ReturnType<typeof getStockCollectCates>>[0]
 
-type DataType = {
-  index: number
-  key: string
-  code: string
-  name: string
-  price?: number
-  percent?: number
-  turnover?: number
-  marketValue?: number
-  dataIndex: string
-  pe?: number
-  turnoverRate?: number
-}
 const GoldenPool = () => {
-  const stock = useStock()
+
   const cates = useCollectCates()
   const [activeStock, setActiveStock] = useState<string>('1')
 
@@ -42,32 +29,7 @@ const GoldenPool = () => {
     queryFn: () => getStockCollects({ cate_id: +activeStock, limit: 300, extend: baseExtends }),
   })
 
-  const data: DataType[] = (() => {
-    const r: DataType[] = []
-
-    if (!collects.data) return r
-
-    for (let i = 0; i < collects.data.items.length; i++) {
-      const c = collects.data.items[i]
-      const [s] = stockManager.toStockRecord(c)
-
-      r.push({
-        index: i + 1,
-        key: c.symbol,
-        code: c.symbol,
-        name: c.name,
-        price: s?.close,
-        percent: s?.percent,
-        turnover: s?.turnover,
-        marketValue: s?.marketValue,
-        dataIndex: c.extend?.basic_index as string ?? '-',
-        turnoverRate: s?.turnOverRate,
-        pe: s?.pe
-      })
-    }
-
-    return r
-  })()
+  const data = useMemo(() => collects.data?.items.map(o => stockManager.toStockRecord(o)[0]) ?? [], [collects.data])
 
   useSubscribe(collects.data?.items.map(item => item.symbol) ?? [], (data) => {
     console.log(data)
@@ -119,7 +81,7 @@ const GoldenPool = () => {
   }
 
 
-  const columns: JknTableProps<DataType>['columns'] = useMemo(() => [
+  const columns: JknTableProps<StockRecord>['columns'] = useMemo(() => [
     { header: '序号', accessorKey: 'index', enableSorting: false, meta: { align: 'center', width: 60 } },
     {
       header: '名称代码', accessorKey: 'name', meta: { width: '25%' },
@@ -129,7 +91,7 @@ const GoldenPool = () => {
     {
       header: '现价', accessorKey: 'price', meta: { width: '10%', align: 'right' },
       cell: ({ row }) => <span className={cn(row.getValue<number>('percent') >= 0 ? 'text-stock-up' : 'text-stock-down')}>
-        {numToFixed(row.getValue<number>('price'))}
+        {Decimal.create(row.getValue<number>('price')).toFixed(2)}
       </span>
     },
     {
@@ -140,26 +102,26 @@ const GoldenPool = () => {
     },
     {
       header: '成交额', accessorKey: 'turnover', meta: { align: 'right', width: '10%' },
-      cell: ({ row }) => priceToCnUnit(row.getValue<number>('turnover'))
+      cell: ({ row }) => Decimal.create(row.getValue<number>('turnover')).toShortCN(2)
     },
     {
       header: '总市值', accessorKey: 'marketValue', meta: { align: 'right', width: '10%' },
-      cell: ({ row }) => priceToCnUnit(row.getValue<number>('marketValue'))
+      cell: ({ row }) => Decimal.create(row.getValue<number>('marketValue')).toShortCN(2)
     },
     {
       header: '换手率', accessorKey: 'turnoverRate', meta: { width: '15%', align: 'right' },
-      cell: ({ row }) => `${numToFixed(row.getValue<number>('turnoverRate'), 2)}%`
+      cell: ({ row }) => `${Decimal.create(row.getValue<number>('turnoverRate')).toFixed(2)}%`
     },
     {
       header: '市盈率', enableSorting: false, accessorKey: 'pe', meta: { width: '15%', align: 'right' },
-      cell: ({ row }) => `${numToFixed(row.getValue<number>('pe'), 2) ?? '-'}`
+      cell: ({ row }) => `${Decimal.create(row.getValue<number>('pe')).toFixed(2) ?? '-'}`
     },
     {
-      header: '行业板块', accessorKey: 'dataIndex', meta: { width: '19%', align: 'right' },
+      header: '行业板块', accessorKey: 'industry', meta: { width: '19%', align: 'right' },
     },
     {
       header: '+AI报警', accessorKey: 'ai', meta: { width: 80, align: 'center' }, enableSorting: false,
-      cell: ({ row }) => <AiAlarm code={row.original.code} ><JknIcon name="ic_add" /></AiAlarm>
+      cell: ({ row }) => <AiAlarm code={row.original.code} ><JknIcon name="ic_add" className="rounded-none" /></AiAlarm>
     },
     {
       header: '移除',

@@ -1,11 +1,11 @@
 import { AlarmType, getAlarmsGroup, getAlarms, deleteAlarm } from "@/api"
 import { type JknTableProps, StockView, NumSpan, JknIcon, JknTable, Popover, PopoverAnchor, PopoverClose, PopoverContent, PopoverTrigger, ScrollArea, Button } from "@/components"
 import { useToast } from "@/hooks"
-import { useStock } from "@/store"
-import { numToFixed, priceToCnUnit } from "@/utils/price"
+import { stockManager } from "@/utils/stock"
 import { cn } from "@/utils/style"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import dayjs from "dayjs"
+import Decimal from "decimal.js"
 import { useEffect, useMemo, useState } from "react"
 
 interface AlarmListProps {
@@ -14,7 +14,7 @@ interface AlarmListProps {
 }
 
 const AlarmList = (props: AlarmListProps) => {
-  const [activeSymbol, setActiveSymbol] = useState('')
+  const [activeSymbol, setActiveSymbol] = useState<string>()
   return (
     <div className="flex h-full">
       <div className="flex-1 flex-shrink-0 overflow-hidden">
@@ -33,7 +33,7 @@ export default AlarmList
 interface AlarmItemProps {
   type: AlarmType
   options?: boolean
-  onChange?: (symbol: string) => void
+  onChange?: (symbol?: string) => void
 }
 const GroupAlarm = (props: AlarmItemProps) => {
   const options = {
@@ -41,45 +41,37 @@ const GroupAlarm = (props: AlarmItemProps) => {
     queryFn: () => getAlarmsGroup({ type: +props.type, extend: ['total_share'] })
   }
   const query = useQuery(options)
-  const stock = useStock()
 
   useEffect(() => {
     if (query.data) {
-      props.onChange?.(query.data.items[0].symbol)
+      props.onChange?.(query.data.items[0]?.symbol)
     }
   }, [query.data, props.onChange])
 
-  type TableDataType = {
-    code: string
-    name: string
-    price: number
-    percent: number
-    volume: number
-    marketValue: number
-  }
+  const data = useMemo(() => query.data?.items.map(item => stockManager.toStockRecord(item)[0]) ?? [], [query.data])
 
   const columns = useMemo(() => {
-    const c: JknTableProps<TableDataType>['columns'] = [
+    const c: JknTableProps<ArrayItem<typeof data>>['columns'] = [
       { header: '序号', accessorKey: 'index', enableSorting: false, cell: ({ row }) => <span className="block py-1">{row.index + 1}</span>, meta: { align: 'center', width: 40 } },
       {
         header: '股票代码', accessorKey: 'name', meta: { width: '32%' },
         cell: ({ row }) => <StockView code={row.original.code} name={row.original.name} />
       },
       {
-        header: '现价', accessorKey: 'price', meta: { align: 'right', width: '17%' },
-        cell: ({ row }) => <NumSpan value={numToFixed(row.original.price, 2) ?? 0} isPositive={row.original.percent > 0} />
+        header: '现价', accessorKey: 'close', meta: { align: 'right', width: '17%' },
+        cell: ({ row }) => <NumSpan value={row.original.close} decimal={2} isPositive={row.original.isUp} />
       },
       {
         header: '涨跌幅', accessorKey: 'percent', meta: { align: 'right', width: '21%' },
-        cell: ({ row }) => <NumSpan symbol block percent decimal={2} value={numToFixed(row.original.percent, 3) ?? 0} isPositive={row.original.percent > 0} />
+        cell: ({ row }) => <NumSpan symbol block percent decimal={2} value={row.original.percent} isPositive={row.original.isUp} />
       },
       {
         header: '成交额', accessorKey: 'volume', meta: { align: 'right', width: '17%' },
-        cell: ({ row }) => <span >{priceToCnUnit(row.original.volume)} </span>
+        cell: ({ row }) => <span >{Decimal.create(row.original.volume).toShortCN(3)} </span>
       },
       {
         header: '总市值', accessorKey: 'marketValue', meta: { align: 'right', width: '19%' },
-        cell: ({ row }) => <NumSpan unit value={row.original.marketValue} isPositive={row.original.percent > 0} />
+        cell: ({ row }) => <NumSpan unit value={row.original.marketValue} isPositive={row.original.isUp} />
       },
     ]
 
@@ -115,16 +107,16 @@ const GroupAlarm = (props: AlarmItemProps) => {
                 </div>
               </PopoverContent>
             </Popover>
-            <JknIcon name={row.table.getSelectedRowModel().rows.length > 0 ? 'checkbox_mult_sel' : 'checkbox_mult_nor'} />
+            <JknIcon.Checkbox checked={row.table.getSelectedRowModel().rows.length > 0} className="rounded-none" checkedIcon="checkbox_mult_sel" uncheckedIcon="checkbox_mult_nor" />
           </div>
         ),
-        enableSorting: false, size: 60, accessorKey: 'action', meta: { align: 'center' },
+        enableSorting: false, size: 90, accessorKey: 'action', meta: { align: 'center' },
         cell: ({ row, table }) => (
           <div className="flex justify-center gap-2">
             <Popover>
               <PopoverTrigger asChild>
                 <Button variant="icon">
-                  <JknIcon name="del" className="w-4 h-4" />
+                  <JknIcon name="del" className="w-4 h-4 rounded-none" />
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto">
@@ -143,7 +135,7 @@ const GroupAlarm = (props: AlarmItemProps) => {
               </PopoverContent>
             </Popover>
 
-            <JknIcon onClick={() => row.toggleSelected()} name={row.getIsSelected() ? 'checkbox_mult_sel' : 'checkbox_mult_nor'} />
+            <JknIcon.Checkbox className="rounded-none" checked={row.getIsSelected()} onClick={() => row.toggleSelected()} checkedIcon="checkbox_mult_sel" uncheckedIcon="checkbox_mult_nor" />
           </div>
         )
       })
@@ -153,22 +145,6 @@ const GroupAlarm = (props: AlarmItemProps) => {
 
     return c
   }, [props.options])
-
-  const data = (() => {
-    const r: TableDataType[] = []
-    for (const { name, symbol } of query.data?.items || []) {
-      const lastData = stock.getLastRecordByTrading(symbol, 'intraDay')
-      r.push({
-        code: symbol,
-        name: name,
-        price: lastData?.close ?? 0,
-        percent: (lastData?.percent ?? 0) * 100,
-        marketValue: lastData?.marketValue ?? 0,
-        volume: (lastData?.volume ?? 0),
-      })
-    }
-    return r
-  })()
 
   const queryClient = useQueryClient()
   const { toast } = useToast()
@@ -221,7 +197,7 @@ const GroupAlarm = (props: AlarmItemProps) => {
 
 interface AlarmGroupListProps {
   type: AlarmType
-  symbol: string
+  symbol?: string
   options?: boolean
 }
 
@@ -229,7 +205,7 @@ const AlarmGroupList = (props: AlarmGroupListProps) => {
   const options = {
     queryKey: [getAlarms.cacheKey, props.type, props.symbol],
     queryFn: () => getAlarms({ type: +props.type, limit: 1000, page: 1, symbol: props.symbol }),
-    enabled: !!props.options
+    enabled: !!props.options && !!props.symbol
   }
   const query = useQuery(options)
   const queryClient = useQueryClient()
@@ -332,9 +308,11 @@ const AlarmGroupList = (props: AlarmGroupListProps) => {
                 </div>
               </PopoverContent>
             </Popover>
-            <JknIcon onClick={row.table.getToggleAllRowsSelectedHandler()} name={row.table.getSelectedRowModel().rows.length > 0 ? 'checkbox_mult_sel' : 'checkbox_mult_nor'} />
+            <JknIcon.Checkbox
+              className="rounded-none" onClick={row.table.getToggleAllRowsSelectedHandler()} checked={row.table.getSelectedRowModel().rows.length > 0} checkedIcon="checkbox_mult_sel" uncheckedIcon="checkbox_mult_nor"
+            />
           </div>
-        ), size: 90, enableSorting: false, accessorKey: 'action', meta: { align: 'center' },
+        ), enableSorting: false, accessorKey: 'action', meta: { align: 'center', width: 100 },
         cell: ({ row, table }) => (
           <div className="flex justify-center gap-2">
             <Popover>
@@ -359,7 +337,7 @@ const AlarmGroupList = (props: AlarmGroupListProps) => {
               </PopoverContent>
             </Popover>
 
-            <JknIcon onClick={() => row.toggleSelected()} name={row.getIsSelected() ? 'checkbox_mult_sel' : 'checkbox_mult_nor'} />
+            <JknIcon.Checkbox className="rounded-none" onClick={() => row.toggleSelected()} checked={row.getIsSelected()} checkedIcon="checkbox_mult_sel" uncheckedIcon="checkbox_mult_nor" />
           </div>
         )
       })

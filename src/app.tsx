@@ -39,9 +39,6 @@ const App = () => {
     // setServers(configQuery.data?.servers ?? [])
   }, [configQuery.data])
 
-
-
-
   useMount(() => {
     if (!config.hasSelected) {
       config.setHasSelected()

@@ -6,6 +6,7 @@ import StockEvent from "./components/event"
 import StockHolidays from "./components/holidays"
 
 const StockCalendar = () => {
+
   const [active, setActive] = useState('financials')
   return (
     <div className="bg-muted ">

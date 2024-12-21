@@ -30,8 +30,8 @@ const SortNone = () => <JknIcon name="ic_btn_nor" className="w-2 h-4" />
 const VirtualizedTable = <TData extends Record<string, unknown>, TValue>({ className, style, ...props }: JknTableProps<TData, TValue>) => {
   const [sorting, setSorting] = useState<SortingState>([])
   const [rowSelection, setRowSelection] = useState({})
-  const [rowClick, setRowClick] = useState<string | number>()
-
+  // const [rowClick, setRowClick] = useState<string | number>()
+  // console.log('rerender')
   const _onSortCHange: TableOptions<TData>['onSortingChange'] = (e) => {
     setSorting(e)
   }
@@ -47,7 +47,7 @@ const VirtualizedTable = <TData extends Record<string, unknown>, TValue>({ class
   const eventTopic = useRef(`table:${nanoid(8)}`)
   const emitEvent = (arg: { event: string, params: any }) => {
     if (eventTopic.current) {
-      appEvent.emit(eventTopic.current, arg)
+      appEvent.emit(eventTopic.current as any, arg)
     }
   }
 
@@ -90,26 +90,26 @@ const VirtualizedTable = <TData extends Record<string, unknown>, TValue>({ class
 
   useMount(() => {
     if (eventTopic.current) {
-      appEvent.on(eventTopic.current, (props.onEvent as () => void) ?? (() => { }))
+      appEvent.on(eventTopic.current as any, (props.onEvent as () => void) ?? (() => { }))
     }
   })
 
   useUnmount(() => {
     if (eventTopic?.current) {
-      appEvent.off(eventTopic.current)
+      appEvent.off(eventTopic.current as any)
     }
   })
 
   const _onRowClick = (row: Row<TData>) => {
     props.onRowClick?.(row.original, row)
-    setRowClick(rowClick !== undefined ? undefined : row.original[props.rowKey ?? 'id'] as string | number)
+    // setRowClick(rowClick !== undefined ? undefined : row.original[props.rowKey ?? 'id'] as string | number)
   }
 
   const scrollRef = useRef<HTMLDivElement>(null)
 
   return (
     <ScrollArea ref={scrollRef} className={cn('w-full relative', className)} style={style}>
-      <Table className="w-full mt-[-1px] grid overflow-x-hidden">
+      <Table className="w-full mt-[-1px] grid">
         <TableHeader className="sticky top-0 z-10 grid">
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id} className="flex w-full">

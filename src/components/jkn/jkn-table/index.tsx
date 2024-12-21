@@ -50,7 +50,7 @@ const _JknTable = <TData extends Record<string, unknown>, TValue>(props: JknTabl
 
   const emitEvent = (arg: { event: string, params: any }) => {
     if (eventTopic.current) {
-      appEvent.emit(eventTopic.current, arg)
+      appEvent.emit(eventTopic.current as any, arg)
     }
   }
 
@@ -79,13 +79,13 @@ const _JknTable = <TData extends Record<string, unknown>, TValue>(props: JknTabl
 
   useMount(() => {
     if (eventTopic.current) {
-      appEvent.on(eventTopic.current, (props.onEvent as () => void) ?? (() => { }))
+      appEvent.on(eventTopic.current as any, (props.onEvent as () => void) ?? (() => { }))
     }
   })
 
   useUnmount(() => {
     if (eventTopic?.current) {
-      appEvent.off(eventTopic.current)
+      appEvent.off(eventTopic.current as any)
     }
   })
 

@@ -1,6 +1,6 @@
 import mitt from 'mitt'
 
-type EventType = 'login' | 'toast' | string | 'render-secondary-indicator'
+type EventType = 'login' | 'toast' | 'cleanPickerStockMethod' | 'cleanPickerStockFactor'
 
 
 type Events = Record<EventType, unknown>

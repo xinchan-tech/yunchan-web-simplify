@@ -1,8 +1,9 @@
-import { navWithAuth } from "@/utils/nav"
 import JknIcon from "../jkn/jkn-icon"
 import { cn } from "@/utils/style"
 import { router } from "@/router"
 import { useEffect, useState } from "react"
+import { useToken } from "@/store"
+import { useToast } from "@/hooks"
 
 type MenuItem = {
   icon: IconName
@@ -13,12 +14,12 @@ type MenuItem = {
 
 const MenuRight = () => {
   const [pathname, setPathname] = useState(router.state.location.pathname)
-  
+
   useEffect(() => {
     const s = router.subscribe((s) => {
       setPathname(s.location.pathname)
     })
-  
+
     return () => {
       s()
     }
@@ -32,8 +33,18 @@ const MenuRight = () => {
     }
   ]
 
+  const { token } = useToken()
+  const { toast } = useToast()
+
   const onNav = (path: string) => {
-    navWithAuth(path)
+    if (!token && path !== '/') {
+      toast({
+        title: '请先登录'
+      })
+      return
+    }
+
+    return router.navigate(path)
   }
 
   return (

@@ -27,7 +27,6 @@ enum SuperStockType {
 
 type StepRegister = Record<string, {
   step: number
-  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
   getData: () => any
   validate: () => boolean
 }>

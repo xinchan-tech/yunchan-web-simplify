@@ -917,9 +917,9 @@ export const getStockSelection = (params: StockSelectionParams) => {
 }
 
 type GetStockFinancialsParams = {
-  'date[0]': string
-  'date[1]': string
-  page: number
+  'date[0]'?: string
+  'date[1]'?: string
+  page?: number
   limit: number
   symbol?: string
   extend?: StockExtend[]
@@ -935,6 +935,7 @@ type GetStockFinancialsResult = {
     time: string
     extend?: StockExtendResultMap
   }[]
+  dates: string[]
 }
 
 /**
