@@ -170,7 +170,6 @@ const GoldenPool = () => {
   ], [cates.collects, activeStock])
 
   const _onEvent: JknTableProps['onEvent'] = ({ event, params }) => {
-    console.log(event)
     if (event === 'delete') {
       onRemove(params.code, params.name)
       return

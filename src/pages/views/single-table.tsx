@@ -128,9 +128,9 @@ const SingleTable = (props: SingleTableProps) => {
   }
 
   const columns: JknTableProps<TableDataType>['columns'] = useMemo(() => ([
-    { header: '序号', enableSorting: false, accessorKey: 'index', meta: { align: 'center', width: 40, }, cell: ({ row }) => row.index + 1 },
+    { header: '序号', enableSorting: false, accessorKey: 'index', meta: { align: 'center', width: 50, }, cell: ({ row }) => row.index + 1 },
     {
-      header: '名称代码', accessorKey: 'name', meta: { align: 'left', width: 'full' },
+      header: '名称代码', accessorKey: 'name', meta: { align: 'left' },
       cell: ({ row }) => (
         <StockView  name={row.getValue('name')} code={row.original.symbol as string} />
       )
@@ -142,7 +142,7 @@ const SingleTable = (props: SingleTableProps) => {
       )
     },
     {
-      header: '涨跌幅', accessorKey: 'percent', meta: { align: 'right', width: 120 },
+      header: '涨跌幅', accessorKey: 'percent', size: '20%', meta: { align: 'right', width: 120 },
       cell: ({ row }) => (
         <div className="inline-block">
           <NumSpan block className="py-0.5 w-20" decimal={2} value={`${row.getValue<number>('percent') * 100}`} percent isPositive={row.getValue<number>('percent') >= 0} symbol />
@@ -150,7 +150,7 @@ const SingleTable = (props: SingleTableProps) => {
       )
     },
     {
-      header: '成交额', accessorKey: 'amount', meta: { align: 'right', width: '8%' },
+      header: '成交额', accessorKey: 'amount', size: 20, meta: { align: 'right', width: '8%' },
       cell: ({ row }) => Decimal.create(row.getValue<number>('amount')).toDecimalPlaces(2).toShortCN()
     },
     {

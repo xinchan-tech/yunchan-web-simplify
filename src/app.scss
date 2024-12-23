@@ -8,106 +8,71 @@
   :root {
     --background: 0 0% 100%;
     --foreground: 0 0% 100%;
- 
     --muted: 210 40.0% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
- 
     --popover: 225 9% 9%;
     --popover-foreground: 0 0% 100%;
- 
     --border: 0 0% 20%;
     --input: 0 0 20%;
- 
     --card: 0 0% 100%;
     --card-foreground: 222.2 47.4% 11.2%;
- 
     --primary: 222.2 47.4% 11.2%;
     --primary-foreground: 210 40% 98%;
- 
     --secondary: 225 9% 9%;
     --secondary-foreground: 222.2 47.4% 11.2%;
- 
     --accent: 210 40% 96.1%;
     --accent-foreground: 222.2 47.4% 11.2%;
- 
     --destructive: 0 100% 50%;
     --destructive-foreground: 210 40% 98%;
- 
     --ring: 215 20.2% 65.1%;
- 
     --radius: 0.25rem;
-
     --active-color: 229 91% 58%;
-
     --stock-up-color: 148 100% 33%;
-
     --stock-down-color: 355 100 64%;
-
     --text: 0 0% 100%;
-
     --text-secondary: 0 0% 80%;
-
-
   }
- 
+
   .dark {
     --background: 0 0% 4.71%;
     --foreground: 0 0% 92.16%;
- 
     --muted: 225 9.09% 8.63%;
     --muted-foreground: 0 0% 100%;
- 
     --accent: 220 4% 14%;
     --accent-foreground: 210 40% 98%;
- 
     --popover: var(--muted);
     --popover-foreground: var(--foreground);
- 
     --border: 0 0% 12%;
     --input: 0 0% 58%;
- 
     --card: 224 71% 4%;
     --card-foreground: 213 31% 91%;
- 
     --primary: 228.67 90.74% 57.65%;
     --primary-foreground: var(--foreground);
- 
     --secondary: 222.2 47.4% 11.2%;
     --secondary-foreground: 210 40% 98%;
- 
     --destructive: 0 63% 31%;
     --destructive-foreground: 210 40% 98%;
-
     --dialog-border: 0 0% 21%;
- 
     --ring: 216 34% 17%;
- 
     --radius: 0.5rem;
-
-
     --active-color: 229 91% 58%;
-
     --text-secondary: 0 0% 80%;
-
     --text-tertiary: 0 0% 40%;
-
     --table: var(--muted);
-
     --table-header: 220 5% 12%;
-  
   }
 
   .stock-color-reverse {
     --stock-up-color: 354.6 100 58.63%;
-
     --stock-down-color: 148.02 100% 32.75%;
   }
 }
- 
+
 @layer base {
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
@@ -120,12 +85,12 @@ body {
   overflow-y: hidden;
   overflow-x: auto;
 
-  :focus-visible{
+  :focus-visible {
     outline: none;
   }
 }
 
-#root{
+#root {
   overflow-y: hidden;
 }
 
@@ -143,4 +108,37 @@ body {
   //涨幅颜色
   scrollbar-width: 'thin';
   scrollbar-gutter: 'stable';
+}
+
+.jkn-rc-table {
+  table {
+    width: 100%;
+  }
+
+  .rc-table-header {
+    .rc-table-cell {
+      font-weight: normal;
+      background-color: hsl(var(--accent));
+      font-size: 12px;
+      color: hsl(var(--text-secondary));
+      padding: 4px 8px;
+    }
+  }
+
+  .rc-table-body {
+    // 美化滚动条
+    &::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background-color: hsl(var(--muted));
+      border-radius: 4px;
+    }
+
+    .rc-table-cell {
+      font-size: 13px;
+    }
+  }
 }
