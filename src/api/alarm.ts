@@ -1,6 +1,5 @@
 import request from '@/utils/request'
 import type { StockExtend, StockExtendResultMap, StockRawRecord } from './stock'
-import { useStock } from '@/store'
 
 export enum AlarmType {
   AI = 0,
@@ -29,7 +28,6 @@ type GetAlarmsGroupResult = PageResult<{
 }>
 export const getAlarmsGroup = async (params: GetAlarmsGroupParams) => {
   const r = await request.get<GetAlarmsGroupResult>('/alarms/groupAlarms', { params }).then(r => r.data)
-  useStock.getState().insertRawByRecords(r.items)
   return r
 }
 getAlarmsGroup.cacheKey = 'alarms:groupAlarms'

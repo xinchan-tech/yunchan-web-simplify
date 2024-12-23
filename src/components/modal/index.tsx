@@ -3,7 +3,7 @@ import { Cross2Icon } from "@radix-ui/react-icons"
 import { useBoolean, useUpdateEffect } from 'ahooks'
 import to from "await-to-js"
 import type { ReactNode } from "react"
-import { Form, FormProvider, type UseFormReturn } from "react-hook-form"
+import { FormProvider, type UseFormReturn } from "react-hook-form"
 import type { z } from "zod"
 import { Button } from "../ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "../ui/dialog"
@@ -12,7 +12,6 @@ export interface UseModalProps {
   content: ReactNode
   title?: string
   closeIcon?: boolean
-  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
   onOpen?: (...arg: any[]) => void
   className?: string
   footer?: boolean | ReactNode

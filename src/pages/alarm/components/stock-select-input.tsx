@@ -1,9 +1,10 @@
 import { getStockBaseCodeInfo } from "@/api"
 import { JknIcon, StockSelect } from "@/components"
-import { StockRecord, useStockList } from "@/store"
-import { numToFixed } from "@/utils/price"
+import { useStockList } from "@/store"
+import { stockManager } from "@/utils/stock"
 import { cn } from "@/utils/style"
 import { useQuery } from "@tanstack/react-query"
+import Decimal from "decimal.js"
 import { forwardRef, useMemo } from "react"
 
 interface StockSelectInputProps {
@@ -15,7 +16,7 @@ const StockSelectInput = forwardRef((props: StockSelectInputProps, _) => {
   const stockList = useStockList()
 
   const query = useQuery({
-    queryKey: [getStockBaseCodeInfo.cacheKey, props.value, ['total_share'] ],
+    queryKey: [getStockBaseCodeInfo.cacheKey, props.value, ['total_share']],
     queryFn: () => getStockBaseCodeInfo({ symbol: props.value!, extend: ['total_share'] }),
     enabled: !!props.value
   })
@@ -32,9 +33,9 @@ const StockSelectInput = forwardRef((props: StockSelectInputProps, _) => {
     }
 
     if (query.data) {
-      const stock = new StockRecord(query.data.stock, query.data.extend)
-      r.price = stock.close
-      r.percent = stock.percent
+      const stock = stockManager.toStockRecord(query.data)[0]
+      r.price = stock.close ?? 0
+      r.percent = stock.percent ?? 0
     }
 
     return r
@@ -53,7 +54,7 @@ const StockSelectInput = forwardRef((props: StockSelectInputProps, _) => {
               <div >
                 <span>{data.symbol}</span>&nbsp;&nbsp;
                 <span className={cn(data.percent >= 0 ? 'text-stock-up' : 'text-stock-down',)}>
-                  {numToFixed(data.price, 3)} &nbsp;&nbsp; {numToFixed(data.percent * 100, 2)}%
+                  {Decimal.create(data.price).toFixed(3)} &nbsp;&nbsp; {Decimal.create(data.percent * 100).toFixed(2)}%
                 </span>
               </div>
               <div className="text-tertiary text-xs">{data.name}</div>

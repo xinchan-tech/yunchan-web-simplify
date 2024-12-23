@@ -1,7 +1,6 @@
 import { addAlarm, getStockBaseCodeInfo } from "@/api"
 import { useZForm, useToast } from "@/hooks"
 import StockSelectInput from "@/pages/alarm/components/stock-select-input"
-import { StockRecord } from "@/store"
 import { useQuery } from "@tanstack/react-query"
 import to from "await-to-js"
 import Decimal from "decimal.js"
@@ -15,6 +14,7 @@ import { z } from "zod"
 import { ToggleGroup, ToggleGroupItem } from "../ui/toggle-group"
 import { Checkbox } from "../ui/checkbox"
 import { Button } from "../ui/button"
+import { stockManager } from "@/utils/stock"
 
 const formSchema = z.object({
   symbol: z.string({ message: '股票代码错误' }).min(1, '股票代码错误'),
@@ -146,24 +146,22 @@ const PriceSetting = forwardRef((props: PriceSettingProps, _) => {
   const query = useQuery({
     queryKey: [getStockBaseCodeInfo.cacheKey, symbol, ['total_share']],
     queryFn: () => getStockBaseCodeInfo({ symbol: symbol, extend: ['total_share'] }),
-    enabled: !!symbol
+    enabled: !!symbol,
+    select: (data) => stockManager.toStockRecord(data)[0]
   })
 
   useEffect(() => {
     if (query.data) {
-      const stock = new StockRecord(query.data.stock, query.data.extend)
-      const r = new Decimal(stock.close).mul(props.mode === 'rise' ? 1.05 : 0.95).toFixed(2)
-      console.log(r)
+      const r = Decimal.create(query.data.close ?? 0).mul(props.mode === 'rise' ? 1.05 : 0.95).toFixed(2)
       setList([{ checked: false, value: r, id: nanoid(8) }])
     }
   }, [query.data, props.mode])
 
   const calcPercent = (price: string) => {
-    if (!query.data || !price) {
+    if (!query.data || !price || !query.data.close) {
       return '-'
     }
-    const stock = new StockRecord(query.data.stock, query.data.extend)
-    return `${props.mode === 'rise' ? '+' : ''}${new Decimal(price).minus(stock.close).div(stock.close).mul(100).toFixed(2)}%`
+    return `${props.mode === 'rise' ? '+' : ''}${new Decimal(price).minus(query.data.close).div(query.data.close).mul(100).toFixed(2)}%`
   }
 
   const onValueChange = (id: string, value: string) => {

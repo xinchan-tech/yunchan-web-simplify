@@ -8,7 +8,7 @@ type StockSubscribeHandler = (data: any) => void
 
 class StockManager {
   private subscribed = mitt()
-  // private cache: Map<string, Stock> = new Map()
+  private subscribeStock = new Map<symbol, { count: number }>()
 
   constructor() {
     const ws = wsManager.getActiveWs()
@@ -28,7 +28,21 @@ class StockManager {
   }
 
   public subscribe(code: string | string[], handler: StockSubscribeHandler) {
-    Array.isArray(code) ? code.forEach(item => this.subscribed.on(item, handler)) : this.subscribed.on(code, handler)
+    const _code = Array.isArray(code) ? code : [code]
+    if(_code.length === 0) return
+    _code.forEach(item => {
+      const codeKey = Symbol.for(item)
+      let stock = this.subscribeStock.get(codeKey)
+      if (stock) {
+        this.subscribeStock.set(Symbol.for(item), { count: stock.count + 1 })
+      } else {
+        this.subscribeStock.set(Symbol.for(item), { count: 1 })
+      }
+
+      stock = this.subscribeStock.get(codeKey)
+
+      this.subscribed.on(item, handler)
+    })
 
     const ws = wsManager.getActiveWs()
 
@@ -44,47 +58,38 @@ class StockManager {
   }
 
   public unsubscribe(code: string | string[], handler: StockSubscribeHandler) {
-    // biome-ignore lint/complexity/noForEach: <explanation>
-    Array.isArray(code) ? code.forEach(item => this.subscribed.off(item, handler)) : this.subscribed.off(code, handler)
+    const _code = Array.isArray(code) ? code : [code]
 
-    if (Array.isArray(code)) {
-      const unsubscribed = code.filter(item => this.subscribed.all.get(item)?.length === 0)
-
-      if (unsubscribed.length === 0) return
-      setTimeout(() => {
-        const unsubscribed = code.filter(item => this.subscribed.all.get(item)?.length === 0)
-        if (unsubscribed.length === 0) return
-
-        const ws = wsManager.getActiveWs()
-
-        if (ws) {
-          ws.send({
-            event: 'unsubscribe',
-            data: {
-              symbols: unsubscribed
-            },
-            msg_id: nanoid()
-          })
+    _code.forEach(item => {
+      const codeKey = Symbol.for(item)
+      const stock = this.subscribeStock.get(codeKey)
+      if (stock) {
+        if (stock.count === 1) {
+          this.subscribeStock.set(codeKey, { count: 0 })
+        } else {
+          this.subscribeStock.set(codeKey, { count: stock.count - 1 })
         }
-      })
-    } else {
-      if (this.subscribed.all.get(code)?.length === 0) {
-        setTimeout(() => {
-          // 再次判断是否有订阅者
-          if (this.subscribed.all.get(code) && this.subscribed.all.get(code)!.length > 0) return
-          const ws = wsManager.getActiveWs()
-          if (ws) {
-            ws.send({
-              event: 'unsubscribe',
-              data: {
-                symbols: [code]
-              },
-              msg_id: nanoid()
-            })
-          }
-        }, 3000)
       }
-    }
+
+      this.subscribed.off(item, handler)
+    })
+
+    setTimeout(() => {
+      const unsubscribed = Array.from(this.subscribeStock.entries()).filter(([_, value]) => value.count === 0).map(([key]) => key.description)
+      if (unsubscribed.length === 0) return
+
+      const ws = wsManager.getActiveWs()
+
+      if (ws) {
+        ws.send({
+          event: 'unsubscribe',
+          data: {
+            symbols: unsubscribed
+          },
+          msg_id: nanoid()
+        })
+      }
+    }, 3000)
   }
 
   public unsubscribeAll(code: string) {

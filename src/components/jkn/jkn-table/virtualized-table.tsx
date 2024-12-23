@@ -109,14 +109,14 @@ const VirtualizedTable = <TData extends Record<string, unknown>, TValue>({ class
 
   return (
     <ScrollArea ref={scrollRef} className={cn('w-full relative', className)} style={style}>
-      <Table className="w-full mt-[-1px] grid">
+      <Table className="w-full mt-[-1px] grid border border-b-0 border-solid border-background" >
         <TableHeader className="sticky top-0 z-10 grid">
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id} className="flex w-full">
               {headerGroup.headers.map((header) => {
                 const { align, width = 'full' } = header.column.columnDef.meta ?? {}
                 return (
-                  <TableHead key={header.id} className="flex flex-shrink-0" style={{
+                  <TableHead key={header.id} className="flex flex-shrink-0 py-4 border-t-0 border-l-0 border-b border-r last:border-r-0 border-solid border-background" style={{
                     width: width === 'full' ? 'auto' : (width || header.column.getSize()),
                     minWidth: 0,
                     flexGrow: width === 'full' ? 1 : undefined,
@@ -175,7 +175,7 @@ const VirtualizedTable = <TData extends Record<string, unknown>, TValue>({ class
                       {row.getVisibleCells().map((cell) => {
                         const { align, width = 'full' } = cell.column.columnDef.meta ?? {}
                         return (
-                          <TableCell className="flex items-center flex-shrink-0" key={cell.id} style={{
+                          <TableCell className="flex items-center flex-shrink-0 border-t-0 border-l-0 border-b border-r last:border-r-0 border-solid border-background" key={cell.id} style={{
                             textAlign: align as undefined, width: width === 'full' ? 'auto' : (width || cell.column.getSize()),
                             flexGrow: width === 'full' ? 1 : undefined,
                             flexShrink: width === 'full' ? 1 : undefined,
@@ -201,7 +201,7 @@ const VirtualizedTable = <TData extends Record<string, unknown>, TValue>({ class
           ) : (
             <TableBody>
               <TableRow className="absolute flex w-full z-0">
-                <TableCell colSpan={props.columns.length} className="text-center flex-1">
+                <TableCell colSpan={props.columns.length} className="text-center flex-1 jkn-table-cell">
                   <div className="space-y-2 my-2">
                     {
                       Array.from({ length: 8 }).map((_, i) => (
@@ -216,6 +216,15 @@ const VirtualizedTable = <TData extends Record<string, unknown>, TValue>({ class
           )
         }
       </Table>
+      <style jsx>
+        {
+          `
+          .jkn-table-cell{
+            border: 1px solid var(hsl(--background));
+          }
+          `
+        }
+      </style>
     </ScrollArea>
   )
 }

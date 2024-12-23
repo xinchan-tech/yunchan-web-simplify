@@ -39,7 +39,7 @@ const GoldenStockPool = () => {
     },
     {
       header: '现价', accessorKey: 'close', meta: { align: 'right', width: '17%' },
-      cell: ({ row }) => <NumSpan value={row.original.close} decimal={2} block isPositive={row.original.isUp} />
+      cell: ({ row }) => <NumSpan value={row.original.close} decimal={2} isPositive={row.original.isUp} />
     },
     {
       header: '涨跌幅', accessorKey: 'percent', meta: { align: 'right', width: '20%' },
@@ -82,7 +82,7 @@ const GoldenStockPool = () => {
       <ScrollArea className="h-[calc(100%-38px)]">
         {
           token ? (
-            <JknTable rowKey="symbol" data={data} columns={columns}/>
+            <JknTable rowKey="symbol" data={data} columns={columns} />
           ) : (
             <div className="w-full text-center mt-40">
               <div className="mb-4 text-secondary">尚未登录账号</div>

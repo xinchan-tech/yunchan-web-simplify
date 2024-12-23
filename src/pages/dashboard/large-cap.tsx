@@ -3,11 +3,10 @@ import StockDownIcon from '@/assets/icon/stock_down.png'
 import StockUpIcon from '@/assets/icon/stock_up.png'
 import { CapsuleTabs } from "@/components"
 import { useSubscribe } from "@/hooks"
-import { type StockTrading, useConfig, useTime } from "@/store"
+import { useConfig, useTime } from "@/store"
 import { getTradingPeriod } from "@/utils/date"
 import echarts, { type ECOption } from "@/utils/echarts"
-import { numToFixed } from "@/utils/price"
-import { stockManager } from "@/utils/stock"
+import { stockManager, type StockTrading } from "@/utils/stock"
 import { cn, colorUtil } from "@/utils/style"
 import { useQuery } from "@tanstack/react-query"
 import { useMount, useSize, useUnmount, useUpdateEffect } from "ahooks"
@@ -54,7 +53,7 @@ const LargeCap = () => {
     }
   }, [largeCap.data])
 
-  useSubscribe(activeStock ?? '', (data) => {
+  useSubscribe(largeCap.data?.find(o => o.category_name === activeKey)?.stocks.map(s => s.symbol) ?? [], (data) => {
     console.log(data)
   })
 
@@ -118,10 +117,10 @@ const LargeCap = () => {
                   (stock.percent ?? 0) >= 0 ? 'text-stock-up' : 'text-stock-down'
                 )}>
                 <div className="flex items-center justify-center mt-1">
-                  {numToFixed(stock.close ?? 0)}
+                  {Decimal.create(stock.close).toFixed(3)}
                   <img className="w-5" src={(stock.percent ?? 0) >= 0 ? StockUpIcon : StockDownIcon} alt="" />
                 </div>
-                <div className="">{numToFixed((stock.percent ?? 0) * 100, 2)}%</div>
+                <div className="">{Decimal.create((stock.percent ?? 0) * 100).toFixed(2)}%</div>
               </div>
             </div>
           ))
@@ -175,6 +174,8 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
       md5: ''
     })
   })
+
+  
 
   useUpdateEffect(() => {
     renderChart(queryData.data)

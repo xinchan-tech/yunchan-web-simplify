@@ -1,7 +1,6 @@
 export * from './token'
 export * from './config'
 export * from './user'
-export * from './stock'
 export * from './time'
 export * from './collect'
 export * from './stock-list'

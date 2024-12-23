@@ -1,7 +1,4 @@
-import { useStock } from '@/store'
-import type { StockResultRecord } from '@/store/stock/stock'
 import request from '@/utils/request'
-import { stockManager } from '@/utils/stock'
 import dayjs from 'dayjs'
 import { md5 } from 'js-md5'
 import { sha256 } from 'js-sha256'
@@ -76,7 +73,7 @@ export type StockExtendResult =
   | 'net_income_loss' // 净利润？
   | 'bubble'
 
-// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+
 export type StockExtendResultMap = Record<StockExtendResult, any>
 
 export const getAllStocks = async (key?: string) => {
@@ -307,13 +304,6 @@ type GetHotSectorsResult = {
  */
 export const getHotSectors = async (params: GetHotSectorsParams) => {
   const r = await request.get<GetHotSectorsResult[]>('/index/hotSectors', { params }).then(r => r.data)
-  const t: StockResultRecord[] = []
-  for (const res of r) {
-    for (const top of res.tops) {
-      t.push(top)
-    }
-  }
-  useStock.getState().insertRawByRecords(t)
   return r
 }
 getHotSectors.cacheKey = 'index:hot:sector'
@@ -344,7 +334,6 @@ type GetIncreaseTopResult = {
  */
 export const getIncreaseTop = async (params: GetIncreaseTopParams) => {
   const r = await request.get<GetIncreaseTopResult>('/index/increase/top', { params }).then(r => r.data)
-  useStock.getState().insertRawByRecords(r)
   return r
 }
 getIncreaseTop.cacheKey = 'index:increase:top'
@@ -367,12 +356,6 @@ type GetCollectHotResult = {
  */
 export const getCollectHot = async (params: { extend: StockExtend[] }) => {
   const r = await request.get<GetCollectHotResult[]>('/collect/hot', { params }).then(r => r.data)
-  useStock
-    .getState()
-    .insertRawByRecords(
-      r.flatMap(item => item.stocks).map(item => ({ symbol: item.symbol, stock: item.stock, extend: item.extend }))
-    )
-
   return r
 }
 getCollectHot.cacheKey = 'collect:hot'
@@ -445,7 +428,6 @@ type GetStockCollectsResult = {
  */
 export const getStockCollects = async (params: GetStockCollectsParams) => {
   const r = await request.get<GetStockCollectsResult>('/collects', { params }).then(r => r.data)
-  useStock.getState().insertRawByRecords(r.items)
   return r
 }
 getStockCollects.cacheKey = 'getStockCollects'
@@ -608,8 +590,6 @@ type GetUsStocksResult = {
  */
 export const getUsStocks = async (params: GetUsStocksParams) => {
   const r = await request.get<GetUsStocksResult>('/stock/cutom/getUsStocks', { params: params }).then(r => r.data)
-  useStock.getState().insertRawByRecords(r.items)
-
   return r
 }
 getUsStocks.cacheKey = 'stock:cutom:getUsStocks'
@@ -653,7 +633,6 @@ export const getPlateStocks = async (id: number, extend: StockExtend[]) => {
   const r = await request
     .get<GetPlateStocksResult[]>('/plate/stocks', { params: { plate_id: id, extend } })
     .then(r => r.data)
-  useStock.getState().insertRawByRecords(r)
   return r
 }
 getPlateStocks.cacheKey = '/plate/stocks'
@@ -672,7 +651,6 @@ export const getIndexRecommends = async (type: string, extend: StockExtend[]) =>
   const r = await request
     .get<GetIndexRecommendsResult[]>('/index/recommends', { params: { type, extend } })
     .then(r => r.data)
-  useStock.getState().insertRawByRecords(r)
 
   return r
 }

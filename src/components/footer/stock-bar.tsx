@@ -1,41 +1,31 @@
 import { getLargeCapIndexes } from "@/api"
-import { useStock } from "@/store"
 import { cn } from "@/utils/style"
 import { useQuery } from "@tanstack/react-query"
 import NumSpan from "../num-span"
 import JknIcon from "../jkn/jkn-icon"
+import { stockManager } from "@/utils/stock"
 
 const codes = ['IXIC', 'SPX', 'DJI']
 export const StockBar = () => {
-  useQuery({
+  const query = useQuery({
     queryKey: [getLargeCapIndexes.cacheKey],
     queryFn: () => getLargeCapIndexes(),
+    select: data => data?.find(item => item.category_name === '大盘指数')?.stocks.map(item => {
+      const stock = stockManager.toStockRecord(item)[0]
+      return {
+        name: stock.symbol === 'IXIC' ? '纳指' : stock.symbol === 'SPX' ? '标指' : '道指',
+        price: stock?.close,
+        code: stock.symbol,
+        percent: stock?.percent ?? 0,
+        offset: (stock?.close ?? 0) - (stock?.prevClose ?? 0)
+      }
+    })
   })
-  const stock = useStock()
-
-  const data = (() => {
-    const r = []
-
-    for (const code of codes) {
-      const s = stock.getLastRecordByTrading(code, 'intraDay')
-  
-      r.push({
-        name: code === 'IXIC' ? '纳指' : code === 'SPX' ? '标指' : '道指',
-        price: s?.close,
-        code: code,
-        percent: s?.percent ?? 0,
-        offset: (s?.close ?? 0) - (s?.prevClose ?? 0)
-      })
-    }
-
-    return r
-  })()
-
 
   return (
     <div>
       {
-        data.map(item => (
+        query.data?.map(item => (
           <span key={item.code}>
             <span>{item.name}:</span>&nbsp;
             <span className={cn(item.percent >= 0 ? 'text-stock-up' : 'text-stock-down')}>
