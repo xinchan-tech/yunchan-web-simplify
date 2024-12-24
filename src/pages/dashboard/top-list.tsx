@@ -41,7 +41,7 @@ const TopList = () => {
   const columns: JknTableProps<StockRecord>['columns'] = [
     {
       header: '名称代码', accessorKey: 'name',
-      meta: { width: '24%' },
+      meta: { width: '26%' },
       cell: ({ row }) => <StockView code={row.original.code} name={row.getValue('name')} />
 
     },
@@ -50,10 +50,10 @@ const TopList = () => {
       cell: ({ row }) => <NumSpan value={row.getValue('close')} isPositive={row.getValue<number>('percent') >= 0} />
     },
     {
-      header: '盘前涨跌幅', accessorKey: 'percent', meta: { align: 'right', width: '21%' },
+      header: '盘前涨跌幅', accessorKey: 'percent', meta: { align: 'right', width: '19%' },
       cell: ({ row }) => (
         <div className="inline-block">
-          <NumSpan block className="py-0.5 w-20"  decimal={2} value={`${row.getValue<number>('percent') * 100}`} percent isPositive={row.getValue<number>('percent') >= 0} symbol />
+          <NumSpan block className="py-0.5 w-20" decimal={2} value={`${row.getValue<number>('percent') * 100}`} percent isPositive={row.getValue<number>('percent') >= 0} symbol />
         </div>
       )
     },
@@ -72,7 +72,7 @@ const TopList = () => {
     if (!data || data.length === 0) return false
 
     const firstRecord = data[0]
-    if(!firstRecord) return false
+    if (!firstRecord) return false
 
     if (isToday(firstRecord.date)) {
       if (type === IncreaseTopStatus.PRE_MARKET && ['preMarket', 'intraDay', 'afterHours'].includes(trading)) {
@@ -100,14 +100,14 @@ const TopList = () => {
 
 
   return (
-    <div className="w-full h-full">
+    <div className="w-full h-full flex flex-col">
       <div className="border-style-primary px-1 py-2">
         <CapsuleTabs activeKey={type.toString()} onChange={(v) => onTypeChange(+v as IncreaseTopStatus)}>
           <CapsuleTabs.Tab value={IncreaseTopStatus.PRE_MARKET.toString()}
             label={<span className="flex items-center">{`${t('stockChart.before')}热门`}&nbsp;{
               isShowTips() && (
                 <HoverCard>
-                  <HoverCardTrigger  className="flex items-center">
+                  <HoverCardTrigger className="flex items-center">
                     <JknIcon name="ic_tip1" className="w-3 h-3" />
                   </HoverCardTrigger>
                   <HoverCardContent side="top" className="w-fit">
@@ -123,7 +123,7 @@ const TopList = () => {
             label={<span className="flex items-center">{`${t('stockChart.in')}热门`}&nbsp;{
               isShowTips() && (
                 <HoverCard>
-                  <HoverCardTrigger  className="flex items-center">
+                  <HoverCardTrigger className="flex items-center">
                     <JknIcon name="ic_tip1" className="w-3 h-3" />
                   </HoverCardTrigger>
                   <HoverCardContent side="top" className="w-fit">
@@ -151,11 +151,9 @@ const TopList = () => {
           <CapsuleTabs.Tab value={IncreaseTopStatus.WEEK.toString()} label={<span>本周</span>} />
         </CapsuleTabs>
       </div>
-      <ScrollArea className="h-[calc(100%-38px)]">
-        <div>
-          <JknTable rowKey="symbol" columns={columns} data={data} />
-        </div>
-      </ScrollArea>
+      <div className="flex-1">
+        <JknTable rowKey="symbol" columns={columns} data={data} />
+      </div>
     </div>
   )
 }

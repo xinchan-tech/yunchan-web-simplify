@@ -29,11 +29,11 @@ const TopList = () => {
       cell: ({ row }) => <NumSpan value={Decimal.create(row.getValue<number>('close')).toFixed(2)} isPositive={row.original.isUp} />
     },
     {
-      header: '涨跌幅', accessorKey: 'percent', meta: { align: 'right', width: '21%' },
+      header: '涨跌幅', accessorKey: 'percent', meta: { align: 'right', width: '20%' },
       cell: ({ row }) => (
         <div className="inline-block">
-        <NumSpan block className="py-0.5 w-20"  decimal={2} value={`${row.getValue<number>('percent') * 100}`} percent isPositive={row.getValue<number>('percent') >= 0} symbol />
-      </div>
+          <NumSpan block className="py-1 w-20" decimal={2} value={`${row.getValue<number>('percent') * 100}`} percent isPositive={row.getValue<number>('percent') >= 0} symbol />
+        </div>
       )
     },
     {
@@ -52,11 +52,9 @@ const TopList = () => {
           <CapsuleTabs.Tab value="hot" label={<span>热度金池</span>} />
         </CapsuleTabs>
       </div>
-      <ScrollArea className="h-[calc(100%-38px)]">
-        <div>
-          <JknTable rowKey="code" columns={columns} data={data} />
-        </div>
-      </ScrollArea>
+      <div className="h-[calc(100%-38px)]">
+        <JknTable rowKey="code" columns={columns} data={data} />
+      </div>
     </div>
   )
 }

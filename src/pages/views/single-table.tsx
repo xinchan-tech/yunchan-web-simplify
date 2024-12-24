@@ -142,7 +142,7 @@ const SingleTable = (props: SingleTableProps) => {
       )
     },
     {
-      header: '涨跌幅', accessorKey: 'percent', size: '20%', meta: { align: 'right', width: 120 },
+      header: '涨跌幅', accessorKey: 'percent',  meta: { align: 'right', width: 120 },
       cell: ({ row }) => (
         <div className="inline-block">
           <NumSpan block className="py-0.5 w-20" decimal={2} value={`${row.getValue<number>('percent') * 100}`} percent isPositive={row.getValue<number>('percent') >= 0} symbol />

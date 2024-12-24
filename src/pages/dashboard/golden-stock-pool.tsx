@@ -32,17 +32,17 @@ const GoldenStockPool = () => {
     {
       accessorKey: 'name',
       header: '名称代码',
-      meta: { width: '30%' },
+      meta: { width: '27%' },
       cell: ({ row }) => (
         <StockView code={row.original.symbol} name={row.getValue('name')} />
       )
     },
     {
-      header: '现价', accessorKey: 'close', meta: { align: 'right', width: '17%' },
+      header: '现价', accessorKey: 'close', meta: { align: 'right', width: '16%' },
       cell: ({ row }) => <NumSpan value={row.original.close} decimal={2} isPositive={row.original.isUp} />
     },
     {
-      header: '涨跌幅', accessorKey: 'percent', meta: { align: 'right', width: '20%' },
+      header: '涨跌幅', accessorKey: 'percent', meta: { align: 'right', width: '19%' },
       cell: ({ row }) => (
         <div className="inline-block w-20">
           <NumSpan value={row.getValue<number>('percent') * 100} decimal={2} percent isPositive={row.original.isUp} block />
@@ -60,7 +60,7 @@ const GoldenStockPool = () => {
   ]
 
   return (
-    <div className="w-full h-full">
+    <div className="w-full h-full flex flex-col overflow-hidden">
       <div className="border-style-primary px-1 py-2">
         <CapsuleTabs activeKey={type} onChange={(v) => setType(v)}>
           {
@@ -79,7 +79,7 @@ const GoldenStockPool = () => {
           }
         </CapsuleTabs>
       </div>
-      <ScrollArea className="h-[calc(100%-38px)]">
+      <div className="flex-1 overflow-hidden">
         {
           token ? (
             <JknTable rowKey="symbol" data={data} columns={columns} />
@@ -91,7 +91,7 @@ const GoldenStockPool = () => {
 
           )
         }
-      </ScrollArea>
+      </div>
     </div>
   )
 }
