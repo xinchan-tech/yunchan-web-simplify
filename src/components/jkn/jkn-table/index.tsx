@@ -27,7 +27,6 @@ export interface JknTableProps<TData extends Record<any, unknown> = Record<strin
 const _JknTable = <TData extends Record<string, unknown>, TValue>(props: JknTableProps<TData, TValue>) => {
   const [sorting, setSorting] = useState<SortingState>([])
   const [rowSelection, setRowSelection] = useState({})
-  const [rowClick, setRowClick] = useState<string | number>()
   const eventTopic = useRef(`table:${nanoid(8)}`)
   const _onSortCHange: TableOptions<TData>['onSortingChange'] = (e) => {
     setSorting(e)
@@ -35,7 +34,6 @@ const _JknTable = <TData extends Record<string, unknown>, TValue>(props: JknTabl
 
   const _onRowClick = (row: Row<TData>) => {
     props.onRowClick?.(row.original, row)
-    setRowClick(rowClick !== undefined ? undefined : row.original[props.rowKey ?? 'id'] as string | number)
   }
 
   useUpdateEffect(() => {
@@ -92,7 +90,7 @@ const _JknTable = <TData extends Record<string, unknown>, TValue>(props: JknTabl
   const cellWidth = useCellWidth(size?.width, table)
 
   return (
-    <div className="w-full h-full" ref={dom}>
+    <div className="w-full h-full border-background border-solid border" ref={dom}>
       <JknTableHeader table={table} width={cellWidth} />
       {
         !props.loading ? (
@@ -117,8 +115,7 @@ const _JknTable = <TData extends Record<string, unknown>, TValue>(props: JknTabl
                             onClick={() => _onRowClick(row)}
                             onKeyDown={() => { }}
                             className={cn(
-                              'hover:bg-accent transition-all duration-200',
-                              rowClick === row.original[props.rowKey ?? 'id'] && '!bg-accent'
+                              'hover:bg-accent transition-all duration-200 jkn-table-tr',
                             )}
                           >
                             {row.getVisibleCells().map((cell) => {
@@ -129,16 +126,14 @@ const _JknTable = <TData extends Record<string, unknown>, TValue>(props: JknTabl
                                   className="jkn-table-td break-all py-12"
                                   style={{ textAlign: align as undefined }}
                                 >
-                                  <div className="w-full break-all">
-                                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                                  </div>
+                                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
                                 </td>
                               )
                             })}
                           </tr>
                         )
                       ) : (
-                        <tr className="flex">
+                        <tr className="w-full">
                           <td colSpan={props.columns.length} className="h-24 text-center w-full mt-12">
                             暂无数据
                           </td>
@@ -175,6 +170,11 @@ const _JknTable = <TData extends Record<string, unknown>, TValue>(props: JknTabl
 
         .jkn-table-td:last-child {
           border-right: none;
+        }
+
+        .jkn-table-tr:last-child .jkn-table-td {
+          border-bottom: none;
+        }
         `
       }</style>
     </div>

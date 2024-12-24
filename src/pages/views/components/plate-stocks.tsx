@@ -121,31 +121,11 @@ const PlateStocks = (props: PlateStocksProps) => {
     {
       header: ({ table }) => (
         <div>
-          <Popover open={table.getIsSomeRowsSelected() || table.getIsAllRowsSelected()}>
-            <PopoverAnchor asChild>
-              <Checkbox
-                checked={table.getIsSomeRowsSelected() || table.getIsAllRowsSelected()}
-                onCheckedChange={e => table.getToggleAllRowsSelectedHandler()({ target: e })}
-              />
-            </PopoverAnchor>
-            <PopoverContent className="w-60" align="start" side="left">
-              <div className="rounded">
-                <div className="bg-background px-16 py-2">批量操作 {table.getSelectedRowModel().rows.length} 项</div>
-                <div className="text-center px-12 py-4 space-y-4">
-                  {
-                    collects.map((cate) => (
-                      <div key={cate.id} className="flex space-x-2 items-center">
-                        <div>{cate.name}</div>
-                        <div onClick={() => table.options.meta?.emit({ event: 'createFav', params: { id: cate.id, symbols: table.getSelectedRowModel().rows.map(item => item.original.code) } })} onKeyDown={() => { }}>
-                          <Button className="text-tertiary" size="mini" variant="outline">添加</Button>
-                        </div>
-                      </div>
-                    ))
-                  }
-                </div>
-              </div>
-            </PopoverContent>
-          </Popover>
+          <CollectStar.Batch
+            checked={table.getSelectedRowModel().rows.map(item => item.original.symbol)}
+            onCheckChange={e => table.getToggleAllRowsSelectedHandler()({ target: e })}
+            onUpdate={checked => table.options.meta?.emit({ event: 'collect', params: { symbols: table.getSelectedRowModel().rows.map(o => o.id), checked } })}
+          />
         </div>
       ),
       accessorKey: 'check',
@@ -156,7 +136,7 @@ const PlateStocks = (props: PlateStocksProps) => {
         <Checkbox checked={row.getIsSelected()} onCheckedChange={(e) => row.getToggleSelectedHandler()({ target: e })} />
       )
     }
-  ], [collects])
+  ], [])
 
 
   const _onEvent: JknTableProps['onEvent'] = ({ event, params }) => {
@@ -171,7 +151,7 @@ const PlateStocks = (props: PlateStocksProps) => {
   }
 
   return (
-    <JknTable.Virtualizer className="h-full"
+    <JknTable.Virtualizer loading={plateStocks.isLoading} className="h-full"
       onEvent={_onEvent}
       rowKey="symbol"
       columns={columns}

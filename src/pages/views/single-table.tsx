@@ -6,6 +6,7 @@ import { stockManager } from "@/utils/stock"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import to from "await-to-js"
 import Decimal from "decimal.js"
+import { produce } from "immer"
 import { useMemo } from "react"
 import { useImmer } from "use-immer"
 
@@ -59,24 +60,10 @@ const SingleTable = (props: SingleTableProps) => {
   }
 
   const queryClient = useQueryClient()
+
   const query = useQuery({
     queryKey: ['stock-table-view', props.type, sort],
     queryFn: () => QueryFn()
-  })
-
-  const updateCollectMutation = useMutation<void, void, { code: string, checked: boolean }>({
-    mutationFn: () => Promise.resolve(),
-    onMutate: async (f) => {
-      queryClient.setQueryData(['stock-table-view', props.type], (s: typeof query.data) => {
-        const v = s?.find(item => item.symbol === f.code)
-        if (v) {
-          v.extend.collect = f.checked ? 1 : 0
-        }
-
-        return s ? [...s] : undefined
-      })
-    }
-
   })
 
   const data = useMemo(() => {
@@ -132,7 +119,7 @@ const SingleTable = (props: SingleTableProps) => {
     {
       header: '名称代码', accessorKey: 'name', meta: { align: 'left' },
       cell: ({ row }) => (
-        <StockView  name={row.getValue('name')} code={row.original.symbol as string} />
+        <StockView name={row.getValue('name')} code={row.original.symbol as string} />
       )
     },
     {
@@ -142,7 +129,7 @@ const SingleTable = (props: SingleTableProps) => {
       )
     },
     {
-      header: '涨跌幅', accessorKey: 'percent',  meta: { align: 'right', width: 120 },
+      header: '涨跌幅', accessorKey: 'percent', meta: { align: 'right', width: 120 },
       cell: ({ row }) => (
         <div className="inline-block">
           <NumSpan block className="py-0.5 w-20" decimal={2} value={`${row.getValue<number>('percent') * 100}`} percent isPositive={row.getValue<number>('percent') >= 0} symbol />
@@ -186,10 +173,10 @@ const SingleTable = (props: SingleTableProps) => {
     },
     {
       header: '+股票金池', enableSorting: false, accessorKey: 'collect', meta: { width: 80, align: 'center' },
-      cell: ({ row }) => (
+      cell: ({ row, table }) => (
         <div>
           <CollectStar
-            onUpdate={(checked) => updateCollectMutation.mutate({ code: row.original.symbol, checked })}
+            onUpdate={(checked) => table.options.meta?.emit({ event: 'collect', params: { symbols: [row.original.symbol], checked } })}
             checked={row.getValue<boolean>('collect')}
             code={row.original.symbol} />
         </div>
@@ -202,31 +189,11 @@ const SingleTable = (props: SingleTableProps) => {
     {
       header: ({ table }) => (
         <div>
-          <Popover open={table.getIsSomeRowsSelected() || table.getIsAllRowsSelected()}>
-            <PopoverAnchor asChild>
-              <Checkbox
-                checked={table.getIsSomeRowsSelected() || table.getIsAllRowsSelected()}
-                onCheckedChange={e => table.getToggleAllRowsSelectedHandler()({ target: e })}
-              />
-            </PopoverAnchor>
-            <PopoverContent className="w-60" align="start" side="left">
-              <div className="rounded">
-                <div className="bg-background px-16 py-2">批量操作 {table.getSelectedRowModel().rows.length} 项</div>
-                <div className="text-center px-12 py-4 space-y-4">
-                  {
-                    collects.map((cate) => (
-                      <div key={cate.id} className="flex space-x-2 items-center">
-                        <div>{cate.name}</div>
-                        <div onClick={() => onCreateStockToCollects(cate.id, table.getSelectedRowModel().rows.map(item => item.original.symbol))} onKeyDown={() => { }}>
-                          <Button className="text-tertiary" size="mini" variant="outline">添加</Button>
-                        </div>
-                      </div>
-                    ))
-                  }
-                </div>
-              </div>
-            </PopoverContent>
-          </Popover>
+          <CollectStar.Batch
+            checked={table.getSelectedRowModel().rows.map(item => item.original.symbol)}
+            onCheckChange={e => table.getToggleAllRowsSelectedHandler()({ target: e })}
+            onUpdate={checked => table.options.meta?.emit({ event: 'collect', params: { symbols: table.getSelectedRowModel().rows.map(o => o.id), checked } })}
+          />
         </div>
       ),
       accessorKey: 'check',
@@ -237,31 +204,26 @@ const SingleTable = (props: SingleTableProps) => {
         <Checkbox checked={row.getIsSelected()} onCheckedChange={(e) => row.getToggleSelectedHandler()({ target: e })} />
       )
     }
-  ]), [updateCollectMutation.mutate])
+  ]), [])
 
-  const collects = useCollectCates(s => s.collects)
-  const { toast } = useToast()
-  const onCreateStockToCollects = (cateId: string, stockIds: string[]) => {
-    JknAlert.confirm({
-      content: `确定添加到 ${collects.find(c => c.id === cateId)?.name}？`,
-      onAction: async (action) => {
-        if (action !== 'confirm') return
 
-        const [err] = await to(addStockCollect({ symbols: stockIds, cate_ids: [+cateId] }))
-
-        if (err) {
-          toast({ description: err.message })
-          return false
-        }
-
-        query.refetch()
-      }
-    })
+  const onTableEvent: JknTableProps['onEvent'] = ({ event, params }) => {
+    const { symbols = [], checked } = params
+    if (event === 'collect') {
+      queryClient.setQueryData(['stock-table-view', props.type, sort], (data: TableDataType[]) => {
+        return data.map(produce(draft => {
+          console.log(draft.symbol, symbols, symbols.includes(draft.symbol))
+          if (symbols.includes(draft.symbol)) {
+          
+            draft.extend.collect = checked ? 1 : 0
+          }
+        }))
+      })
+    }
   }
-
   return (
 
-    <JknTable.Virtualizer  className="h-[calc(100%-32px)] overflow-hidden" loading={query.isLoading} manualSorting rowKey="symbol" onSortingChange={onSortChange} columns={columns} data={data}>
+    <JknTable.Virtualizer onEvent={onTableEvent} className="h-[calc(100%-32px)] overflow-hidden" loading={query.isLoading} manualSorting rowKey="symbol" onSortingChange={onSortChange} columns={columns} data={data}>
     </JknTable.Virtualizer>
 
   )

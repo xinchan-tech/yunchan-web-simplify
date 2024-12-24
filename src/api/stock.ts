@@ -1332,3 +1332,21 @@ export const getStockTabData = (params: {
   return request.post<GetStockTabDataResult>('/stock/economic/tab',  params).then(r => r.data)
 }
 getStockTabData.cacheKey = 'stock:tab:data'
+
+type GetStockWitchingDayResult = {
+  beforeYear: [number, number, number, number, number],
+  beforeTwoYear: GetStockWitchingDayResult['beforeYear'],
+  beforeThreeYear: GetStockWitchingDayResult['beforeYear'],
+  date: {
+    year: string
+    items: [string, string, string, string]
+  }
+}
+
+/**
+ * 获取巫日数据
+ */
+export const getWitchingDay = () => {
+  return request.get<GetStockWitchingDayResult>('/stock/getQWData').then(r => r.data)
+}
+getWitchingDay.cacheKey = 'stock:getQWData'

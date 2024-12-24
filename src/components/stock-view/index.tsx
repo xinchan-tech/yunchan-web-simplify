@@ -12,7 +12,7 @@ const StockView = ({ code, name }: StockViewProps) => {
   const stock = stockList.list.find(item => item[1] === code)
 
   return (
-    <div className="overflow-hidden flex items-center">
+    <div className="overflow-hidden flex items-center w-full">
       <div>
         {
           stock?.[0] ? (

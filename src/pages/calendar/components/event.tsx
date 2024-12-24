@@ -53,7 +53,7 @@ const StockEvent = () => {
   }, [time])
 
   const columns: JknTableProps<TableDataType>['columns'] = useMemo(() => [
-    { header: '序号', size: 40, enableSorting: false, accessorKey: 'rank', cell: ({ row }) => <span style={{ color: getColor(row.original.date) }}>{row.index + 1}</span>, meta: { align: 'center' } },
+    { header: '序号', enableSorting: false, accessorKey: 'rank', cell: ({ row }) => <span style={{ color: getColor(row.original.date) }}>{row.index + 1}</span>, meta: { align: 'center', width: 60 } },
     {
       header: '名称', accessorKey: 'name', size: 240, enableSorting: false,
       cell: ({ row }) => (<span className="block py-1" style={{ color: getColor(row.original.date) }}>{row.getValue('name')}</span>)
@@ -86,16 +86,13 @@ const StockEvent = () => {
           Array.from(new Array(row.getValue('star'))).map((_, i) => <JknIcon name="ic_star_on" key={i} className="w-3 h-3" />)
         }
       </span>)
-    },
-    {
-      header: '详解', size: 120, enableSorting: false, accessorKey: 'opt', meta: { align: 'center' },
-      cell: ({ row }) => (<span style={{ color: getColor(row.original.date) }}>详解</span>)
     }
   ], [getColor])
 
   return (
-    <div className="bg-background">
+    <div className="">
       <JknTable
+        rowKey="id"
         columns={columns}
         data={data}
       />

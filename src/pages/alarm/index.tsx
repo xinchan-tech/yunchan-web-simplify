@@ -55,17 +55,19 @@ const AlarmPage = () => {
         </div>
 
       </div>
-      <div className="flex-1 ">
+      <div className="flex-1 overflow-hidden flex flex-col">
         <div className="border-0 border-b border-solid border-border py-1">
           <CapsuleTabs type="text" activeKey={viewType} onChange={setViewKey}>
             <CapsuleTabs.Tab label="报警列表" value="list" />
             <CapsuleTabs.Tab label="已触发报警" value="log" />
           </CapsuleTabs>
         </div>
-        {{
-          list: <AlarmList type={alarmType} options />,
-          log: <AlarmLog type={alarmType} />
-        }[viewType]}
+        <div className="flex-1 overflow-hidden">
+          {{
+            list: <AlarmList type={alarmType} options />,
+            log: <AlarmLog type={alarmType} />
+          }[viewType]}
+        </div>
       </div>
       {
         aiForm.context

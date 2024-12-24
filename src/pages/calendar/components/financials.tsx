@@ -192,14 +192,14 @@ const StockFinancials = () => {
             {
               (date, action) =>
                 <span className="inline-block w-24" onClick={action.open} onKeyDown={() => { }}>
-                  <CapsuleTabs.Tab disabled label={active === date ? date : '自定义'} value={date ?? 'manual'} />
+                  <CapsuleTabs.Tab disabled label={active === date ? (date ?? '自定义') : '自定义'} value={date ?? 'manual'} />
                 </span>
             }
           </JknDatePicker>
         </CapsuleTabs>
       </div>
       <div>
-        <JknTable.Virtualizer onEvent={onTableEvent} className="h-[calc(100vh-160px)]" rowKey="id" columns={columns} data={data} />
+        <JknTable.Virtualizer loading={query.isLoading} onEvent={onTableEvent} className="h-[calc(100vh-160px)]" rowKey="id" columns={columns} data={data} />
       </div>
     </div>
   )

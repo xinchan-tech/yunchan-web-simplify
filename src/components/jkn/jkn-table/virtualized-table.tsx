@@ -1,16 +1,11 @@
-import { type ColumnDef, type ColumnSort, type Row, type SortingState, type TableOptions, flexRender, getCoreRowModel, getSortedRowModel, useReactTable } from "@tanstack/react-table"
-import { useMount, useUnmount, useUpdateEffect } from "ahooks"
-import { type CSSProperties, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../ui/table"
-import JknIcon from "../jkn-icon"
-import { ScrollArea, Skeleton } from "@/components"
-import { cn } from "@/utils/style"
-import { useVirtualizer } from '@tanstack/react-virtual'
-import { appEvent } from "@/utils/event"
-import { nanoid } from "nanoid"
+import { Skeleton } from "@/components"
 import { useDomSize } from "@/hooks"
+import { type ColumnDef, type ColumnSort, type Row, type SortingState, type TableOptions, flexRender, getCoreRowModel, getSortedRowModel, useReactTable } from "@tanstack/react-table"
+import { useVirtualizer } from '@tanstack/react-virtual'
+import { useUpdateEffect } from "ahooks"
+import { type CSSProperties, useRef, useState } from "react"
+import { useCellWidth, useTableEvent } from "./lib"
 import { JknTableHeader } from "./table-header"
-import { useCellWidth } from "./lib"
 
 export interface JknTableProps<TData extends Record<string, unknown> = Record<string, unknown>, TValue = unknown> {
   columns: ColumnDef<TData, TValue>[]
@@ -29,8 +24,6 @@ export interface JknTableProps<TData extends Record<string, unknown> = Record<st
 const VirtualizedTable = <TData extends Record<string, unknown>, TValue>({ className, style, ...props }: JknTableProps<TData, TValue>) => {
   const [sorting, setSorting] = useState<SortingState>([])
   const [rowSelection, setRowSelection] = useState({})
-  // const [rowClick, setRowClick] = useState<string | number>()
-  // console.log('rerender')
   const _onSortCHange: TableOptions<TData>['onSortingChange'] = (e) => {
     setSorting(e)
   }
@@ -43,12 +36,7 @@ const VirtualizedTable = <TData extends Record<string, unknown>, TValue>({ class
     props.onSelection?.(Object.keys(rowSelection))
   }, [rowSelection])
 
-  const eventTopic = useRef(`table:${nanoid(8)}`)
-  const emitEvent = (arg: { event: string, params: any }) => {
-    if (eventTopic.current) {
-      appEvent.emit(eventTopic.current as any, arg)
-    }
-  }
+  const emitEvent = useTableEvent(props.onEvent)
 
   const table = useReactTable({
     columns: props.columns,
@@ -68,7 +56,7 @@ const VirtualizedTable = <TData extends Record<string, unknown>, TValue>({ class
     enableRowSelection: true,
     onRowSelectionChange: setRowSelection,
     meta: {
-      emit: emitEvent
+      emit: (...args) => emitEvent.current?.(...args)
     }
   })
 
@@ -85,18 +73,6 @@ const VirtualizedTable = <TData extends Record<string, unknown>, TValue>({ class
         ? element => element?.getBoundingClientRect().height
         : undefined,
     overscan: 10,
-  })
-
-  useMount(() => {
-    if (eventTopic.current) {
-      appEvent.on(eventTopic.current as any, (props.onEvent as () => void) ?? (() => { }))
-    }
-  })
-
-  useUnmount(() => {
-    if (eventTopic?.current) {
-      appEvent.off(eventTopic.current as any)
-    }
   })
 
   const _onRowClick = (row: Row<TData>) => {

@@ -28,8 +28,8 @@ export const JknTableHeader = ({ width, table }: JknTableHeaderProps) => {
               {headerGroup.headers.map((header) => {
                 const { align } = header.column.columnDef.meta ?? {}
                 return (
-                  <th key={header.id} className="jkn-table-virtualized-th" style={{ textAlign: align as undefined }}>
-                    <div className="flex items-center w-full space-x-2 box-border font-normal text-xs py-2 px-1">
+                  <th key={header.id} className="jkn-table-virtualized-th" style={{ textAlign: (align ?? 'left') as any }}>
+                    <div className="inline-flex items-center space-x-2 box-border font-normal text-xs py-2 px-1">
                       {flexRender(header.column.columnDef.header, header.getContext())}
                       {header.column.getCanSort() && (
                         <span className="flex items-center ml-1" onClick={header.column.getToggleSortingHandler()} onKeyDown={() => { }}>

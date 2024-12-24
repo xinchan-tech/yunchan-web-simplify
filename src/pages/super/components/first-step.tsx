@@ -92,7 +92,7 @@ const GoldenPool = (props: GoldenPoolProps) => {
 
   const columns: JknTableProps<{ name: string, id: string }>['columns'] = [
     {
-      header: () => <JknIcon name="checkbox_mult_nor_dis" />,
+      header: () => <JknIcon name="checkbox_mult_nor_dis" className="w-4 h-4" />,
       accessorKey: 'select',
       id: 'select',
       enableSorting: false,
@@ -244,15 +244,11 @@ const Plate = (props: { type: 1 | 2 }) => {
 
   return (
     <div className="flex overflow-hidden h-full">
-      <div className="w-[40%]">
-        <ScrollArea className="h-full">
-          <PlateList data={plate.data ?? []} onRowClick={onClickPlate} />
-        </ScrollArea>
+      <div className="w-[40%] h-full">
+        <PlateList data={plate.data ?? []} onRowClick={onClickPlate} />
       </div>
-      <div className="w-[60%]">
-        <ScrollArea className="h-full">
-          <PlateStocks plateId={activePlate ? +activePlate : undefined} />
-        </ScrollArea>
+      <div className="w-[60%] h-full">
+        <PlateStocks plateId={activePlate ? +activePlate : undefined} />
       </div>
     </div>
   )
@@ -293,7 +289,7 @@ const PlateList = (props: PlateListProps) => {
 
   const column = useMemo<JknTableProps<PlateDataType>['columns']>(() => [
     {
-      header: () => <JknIcon name="checkbox_mult_nor_dis" />,
+      header: () => <JknIcon name="checkbox_mult_nor_dis" className="w-4 h-4" />,
       enableSorting: false,
       accessorKey: 'select',
       id: 'select',
@@ -312,7 +308,7 @@ const PlateList = (props: PlateListProps) => {
     {
       header: '涨跌幅', accessorKey: 'change',
       meta: { width: 90 },
-      cell: ({ row }) => <NumSpan block percent value={row.original.change} isPositive={row.original.change > 0} />
+      cell: ({ row }) => <NumSpan className="w-20" block percent value={row.original.change} isPositive={row.original.change > 0} />
     },
     {
       header: '成交额', accessorKey: 'amount',
@@ -354,7 +350,7 @@ const PlateStocks = (props: PlateStocksProps) => {
     enabled: !!props.plateId
   })
 
-  
+
 
   const data = useMemo(() => plateStocks.data?.map(o => stockManager.toStockRecord(o)[0]) ?? [], [plateStocks.data])
 
@@ -375,7 +371,7 @@ const PlateStocks = (props: PlateStocksProps) => {
     {
       header: '涨跌幅', accessorKey: 'percent', meta: { align: 'right', width: 90 },
       cell: ({ row }) => (
-        <NumSpan percent block decimal={2} value={row.getValue<number>('percent') * 100} isPositive={row.original.isUp} symbol />
+        <NumSpan className="w-20" percent block decimal={2} value={row.getValue<number>('percent') * 100} isPositive={row.original.isUp} symbol />
       )
     },
     {

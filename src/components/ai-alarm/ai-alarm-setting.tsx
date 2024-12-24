@@ -6,7 +6,7 @@ import { FormProvider, useFormContext } from "react-hook-form"
 import { FormField, FormItem, FormLabel, FormControl } from "../ui/form"
 import { cn } from "@/utils/style"
 import { useQuery } from "@tanstack/react-query"
-import { useUpdateEffect } from "ahooks"
+import { useBoolean, useUpdateEffect } from "ahooks"
 import { forwardRef, useState, useMemo, useEffect, type CSSProperties } from "react"
 import JknIcon from "../jkn/jkn-icon"
 import { z } from "zod"
@@ -31,7 +31,7 @@ const AiAlarmSetting = (props: AiAlarmSetting) => {
     categoryIds: [],
     symbol: props.code ?? ''
   })
-
+  const [loading, {toggle}] = useBoolean(false)
 
   const { toast } = useToast()
 
@@ -55,14 +55,18 @@ const AiAlarmSetting = (props: AiAlarmSetting) => {
       }
     }
 
+    toggle()
+
     const [err] = await to(addAlarm(params))
 
     if (err) {
       toast({ description: err.message })
+      toggle()
       return
     }
 
     toast({ description: '添加成功' })
+    toggle()
   }
 
 
@@ -117,7 +121,7 @@ const AiAlarmSetting = (props: AiAlarmSetting) => {
         </form>
       </FormProvider>
       <div className="text-center mt-4">
-        <Button className="w-24" onClick={onSubmit}>确定</Button>
+        <Button className="w-24" loading={loading} onClick={onSubmit}>确定</Button>
       </div>
     </div>
   )

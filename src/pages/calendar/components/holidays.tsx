@@ -15,7 +15,8 @@ const Holidays = () => {
   })
   const columns = useMemo<JknTableProps<TableDataType>['columns']>(() => [
     {
-      header: '交易所', enableSorting: false, accessorKey: 'exchange', meta: { align: 'center' }
+      header: '交易所', enableSorting: false, accessorKey: 'exchange', meta: { align: 'center' },
+      cell: ({ row }) => <span className="text-white inline-block my-4">{row.original.exchange}</span>
     },
     {
       header: '日期', enableSorting: false, accessorKey: 'date', meta: { align: 'center' }

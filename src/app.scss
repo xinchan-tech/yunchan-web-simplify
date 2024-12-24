@@ -142,3 +142,8 @@ body {
     }
   }
 }
+
+// 隐藏全局scrollbar
+::-webkit-scrollbar {
+  display: none;
+}

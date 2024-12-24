@@ -1,5 +1,5 @@
 import { getCollectHot } from "@/api"
-import { CapsuleTabs, JknTable, type JknTableProps, NumSpan, ScrollArea, StockView } from "@/components"
+import { CapsuleTabs, JknTable, type JknTableProps, NumSpan, StockView } from "@/components"
 import { type StockRecord, stockManager } from "@/utils/stock"
 import { useQuery } from "@tanstack/react-query"
 import Decimal from "decimal.js"

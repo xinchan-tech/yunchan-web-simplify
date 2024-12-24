@@ -156,7 +156,7 @@ const SuperStock = () => {
             </div>
           </div>
           {
-            loading && (<div className="fixed w-screen h-screen top-0 bg-background/45 flex items-center justify-center">
+            loading && (<div className="fixed left-0 right-0 bottom-0 top-0 bg-background/45 flex items-center justify-center">
               <div className="w-60 bg-background/95 p-12 flex flex-col items-center">
                 <JknIcon className="w-48 h-48" name="load" />
                 <div className="text-center mt-4">拼命选股中</div>

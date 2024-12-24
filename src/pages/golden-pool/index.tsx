@@ -1,8 +1,7 @@
 import { type StockExtend, addStockCollectCate, type getStockCollectCates, getStockCollects, removeStockCollect, removeStockCollectCate, updateStockCollectCate } from "@/api"
-import { AiAlarm, Button, CapsuleTabs, Checkbox, JknAlert, JknIcon, JknTable, type JknTableProps, NumSpan, Popover, PopoverAnchor, PopoverContent, ScrollArea, StockView, useFormModal, useModal } from "@/components"
+import { AiAlarm, Button, CapsuleTabs, Checkbox, JknAlert, JknIcon, JknTable, type JknTableProps, NumSpan, Popover, PopoverAnchor, PopoverContent, StockView, useFormModal, useModal } from "@/components"
 import { useSubscribe, useToast, useZForm } from "@/hooks"
 import { useCollectCates } from "@/store"
-import { cn } from "@/utils/style"
 import { useQuery } from "@tanstack/react-query"
 import { useMount } from "ahooks"
 import to from "await-to-js"
@@ -82,42 +81,42 @@ const GoldenPool = () => {
 
 
   const columns: JknTableProps<StockRecord>['columns'] = useMemo(() => [
-    { header: '序号', accessorKey: 'index', enableSorting: false, meta: { align: 'center', width: 60 } },
     {
-      header: '名称代码', accessorKey: 'name', meta: { width: '25%' },
-      cell: ({ row }) => <StockView name={row.getValue('name')} code={row.original.code} />
-
+      header: '序号', accessorKey: 'index', enableSorting: false, meta: { align: 'center', width: 60 },
+      cell: ({ row }) => <div className="text-center">{row.index + 1}</div>
     },
     {
-      header: '现价', accessorKey: 'price', meta: { width: '10%', align: 'right' },
-      cell: ({ row }) => <span className={cn(row.getValue<number>('percent') >= 0 ? 'text-stock-up' : 'text-stock-down')}>
-        {Decimal.create(row.getValue<number>('price')).toFixed(2)}
-      </span>
+      header: '名称代码', accessorKey: 'name', meta: {},
+      cell: ({ row }) => <StockView name={row.getValue('name')} code={row.original.code} />
+    },
+    {
+      header: '现价', accessorKey: 'close', meta: { align: 'right' },
+      cell: ({ row }) => <NumSpan value={row.getValue<number>('close')} decimal={3} isPositive={row.original.isUp} />
     },
     {
       header: '涨跌幅', accessorKey: 'percent', meta: { align: 'right', width: 120 },
       cell: ({ row }) => (
-        <NumSpan percent block decimal={2} value={row.getValue<number>('percent') * 100} isPositive={row.getValue<number>('percent') >= 0} symbol />
+        <NumSpan className="w-24" percent block decimal={2} value={row.getValue<number>('percent') * 100} isPositive={row.getValue<number>('percent') >= 0} symbol />
       )
     },
     {
-      header: '成交额', accessorKey: 'turnover', meta: { align: 'right', width: '10%' },
+      header: '成交额', accessorKey: 'turnover', meta: { align: 'right' },
       cell: ({ row }) => Decimal.create(row.getValue<number>('turnover')).toShortCN(2)
     },
     {
-      header: '总市值', accessorKey: 'marketValue', meta: { align: 'right', width: '10%' },
+      header: '总市值', accessorKey: 'marketValue', meta: { align: 'right' },
       cell: ({ row }) => Decimal.create(row.getValue<number>('marketValue')).toShortCN(2)
     },
     {
-      header: '换手率', accessorKey: 'turnoverRate', meta: { width: '15%', align: 'right' },
+      header: '换手率', accessorKey: 'turnoverRate', meta: { align: 'right' },
       cell: ({ row }) => `${Decimal.create(row.getValue<number>('turnoverRate')).toFixed(2)}%`
     },
     {
-      header: '市盈率', enableSorting: false, accessorKey: 'pe', meta: { width: '15%', align: 'right' },
+      header: '市盈率', enableSorting: false, accessorKey: 'pe', meta: { align: 'right' },
       cell: ({ row }) => `${Decimal.create(row.getValue<number>('pe')).toFixed(2) ?? '-'}`
     },
     {
-      header: '行业板块', accessorKey: 'industry', meta: { width: '19%', align: 'right' },
+      header: '行业板块', accessorKey: 'industry', meta: { align: 'right' },
     },
     {
       header: '+AI报警', accessorKey: 'ai', meta: { width: 80, align: 'center' }, enableSorting: false,
@@ -139,7 +138,7 @@ const GoldenPool = () => {
         <Popover open={table.getSelectedRowModel().rows.length > 0}>
           <PopoverAnchor asChild>
             <Checkbox
-              checked={table.getIsSomeRowsSelected() || table.getIsAllRowsSelected()}
+              checked={table.getIsSomeRowsSelected()}
               onCheckedChange={e => table.getToggleAllRowsSelectedHandler()({ target: e })}
             />
           </PopoverAnchor>
@@ -203,9 +202,7 @@ const GoldenPool = () => {
         </div>
       </div>
       <div className="flex-1 overflow-hidden">
-        <ScrollArea className="h-full">
-          <JknTable onEvent={_onEvent} rowKey="code" columns={columns} data={data} />
-        </ScrollArea>
+        <JknTable loading={collects.isLoading} onEvent={_onEvent} rowKey="code" columns={columns} data={data} />
       </div>
       <style jsx>
         {

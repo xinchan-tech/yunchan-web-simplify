@@ -2,7 +2,6 @@ import { AlarmType, getAlarmLogs } from "@/api"
 import { JknIcon, JknTable, type JknTableProps, StockView } from "@/components"
 import { cn } from "@/utils/style"
 import { useQuery } from "@tanstack/react-query"
-import dayjs from "dayjs"
 import { useMemo } from "react"
 
 interface AlarmLogProps {

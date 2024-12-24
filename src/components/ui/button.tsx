@@ -29,7 +29,7 @@ const buttonVariants = cva(
         mini: "h-6 px-2 rounded-sm text-xs",
       },
       loading: {
-        'true': "pointer-events-none cursor-wait opacity-85"
+        'true': "pointer-events-none cursor-wait opacity-65"
       },
       block: {
         'true': "w-full"

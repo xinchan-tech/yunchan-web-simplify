@@ -18,7 +18,7 @@ const tradingToTopStatusMap: Record<StockTrading, IncreaseTopStatus> = {
 
 const TopList = () => {
   const time = useTime()
-  const [type, setType] = useState<IncreaseTopStatus>(tradingToTopStatusMap[time.getTrading()])
+  const [type, setType] = useState<IncreaseTopStatus>(tradingToTopStatusMap[time.getTrading() as keyof typeof tradingToTopStatusMap])
   const { t } = useTranslation()
   const trading = useTime().getTrading()
   const { isToday } = useTime()

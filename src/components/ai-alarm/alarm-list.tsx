@@ -1,5 +1,5 @@
 import { AlarmType, getAlarmsGroup, getAlarms, deleteAlarm } from "@/api"
-import { type JknTableProps, StockView, NumSpan, JknIcon, JknTable, Popover, PopoverAnchor, PopoverClose, PopoverContent, PopoverTrigger, ScrollArea, Button } from "@/components"
+import { type JknTableProps, StockView, NumSpan, JknIcon, JknTable, Popover, PopoverAnchor, PopoverClose, PopoverContent, PopoverTrigger,  Button } from "@/components"
 import { useToast } from "@/hooks"
 import { stockManager } from "@/utils/stock"
 import { cn } from "@/utils/style"
@@ -16,7 +16,7 @@ interface AlarmListProps {
 const AlarmList = (props: AlarmListProps) => {
   const [activeSymbol, setActiveSymbol] = useState<string>()
   return (
-    <div className="flex h-full">
+    <div className="flex h-full overflow-hidden">
       <div className="flex-1 flex-shrink-0 overflow-hidden">
         <GroupAlarm type={props.type} options={props.options} onChange={setActiveSymbol} />
       </div>
@@ -54,23 +54,23 @@ const GroupAlarm = (props: AlarmItemProps) => {
     const c: JknTableProps<ArrayItem<typeof data>>['columns'] = [
       { header: '序号', accessorKey: 'index', enableSorting: false, cell: ({ row }) => <span className="block py-1">{row.index + 1}</span>, meta: { align: 'center', width: 40 } },
       {
-        header: '股票代码', accessorKey: 'name', meta: { width: '32%' },
+        header: '股票代码', accessorKey: 'name', meta: {  },
         cell: ({ row }) => <StockView code={row.original.code} name={row.original.name} />
       },
       {
-        header: '现价', accessorKey: 'close', meta: { align: 'right', width: '17%' },
+        header: '现价', accessorKey: 'close', meta: { align: 'right', width: '10%' },
         cell: ({ row }) => <NumSpan value={row.original.close} decimal={2} isPositive={row.original.isUp} />
       },
       {
-        header: '涨跌幅', accessorKey: 'percent', meta: { align: 'right', width: '21%' },
-        cell: ({ row }) => <NumSpan symbol block percent decimal={2} value={row.original.percent} isPositive={row.original.isUp} />
+        header: '涨跌幅', accessorKey: 'percent', meta: { align: 'right', width: '10%' },
+        cell: ({ row }) => <div className="inline-block"><NumSpan className="w-20 " symbol block percent decimal={2} value={row.original.percent} isPositive={row.original.isUp} /></div>
       },
       {
-        header: '成交额', accessorKey: 'volume', meta: { align: 'right', width: '17%' },
+        header: '成交额', accessorKey: 'volume', meta: { align: 'right', width: '10%' },
         cell: ({ row }) => <span >{Decimal.create(row.original.volume).toShortCN(3)} </span>
       },
       {
-        header: '总市值', accessorKey: 'marketValue', meta: { align: 'right', width: '19%' },
+        header: '总市值', accessorKey: 'marketValue', meta: { align: 'right', width: '10%' },
         cell: ({ row }) => <NumSpan unit value={row.original.marketValue} isPositive={row.original.isUp} />
       },
     ]
@@ -110,7 +110,7 @@ const GroupAlarm = (props: AlarmItemProps) => {
             <JknIcon.Checkbox checked={row.table.getSelectedRowModel().rows.length > 0} className="rounded-none" checkedIcon="checkbox_mult_sel" uncheckedIcon="checkbox_mult_nor" />
           </div>
         ),
-        enableSorting: false, size: 90, accessorKey: 'action', meta: { align: 'center' },
+        enableSorting: false, size: 90, accessorKey: 'action', meta: { align: 'center', width: 100 },
         cell: ({ row, table }) => (
           <div className="flex justify-center gap-2">
             <Popover>
@@ -189,9 +189,9 @@ const GroupAlarm = (props: AlarmItemProps) => {
   }
 
   return (
-    <ScrollArea className="h-full">
+    <div className="h-full overflow-hidden">
       <JknTable rowKey="code" onRowClick={row => props.onChange?.(row.code)} data={data} columns={columns} onEvent={_onEvent} />
-    </ScrollArea>
+    </div>
   )
 }
 
@@ -380,8 +380,8 @@ const AlarmGroupList = (props: AlarmGroupListProps) => {
 
 
   return (
-    <ScrollArea className="h-full">
+    <div className="h-full overflow-hidden">
       <JknTable onEvent={onTableEvent} rowKey="id" data={data} columns={columns} />
-    </ScrollArea>
+    </div>
   )
 }

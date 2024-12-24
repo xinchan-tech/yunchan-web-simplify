@@ -5,6 +5,7 @@ import echarts, { type ECOption } from "@/utils/echarts"
 import { useQuery } from "@tanstack/react-query"
 import { useMount, useUnmount } from "ahooks"
 import dayjs from "dayjs"
+import Decimal from "decimal.js"
 import { useCallback, useEffect, useMemo, useRef } from "react"
 
 type TableDataType = {
@@ -161,8 +162,8 @@ const DetailForm = ({ id, nextDate }: DetailDialogProps) => {
       show: true
     },
     yAxis: [
-      { type: 'value' },
-      { type: 'value', position: 'right' }
+      { type: 'value', axisLabel: {formatter: v => Decimal.create(v).toFixed(2)} },
+      { type: 'value', position: 'right', axisLine: {show: false},  axisLabel: {formatter: v => Decimal.create(v).toFixed(2)} }
     ],
     xAxis: {
       type: 'category',
@@ -230,7 +231,7 @@ const DetailForm = ({ id, nextDate }: DetailDialogProps) => {
         }
       ],
       xAxis: { data: category },
-      series: [{ data: d1 }, { data: d2 }]
+      series: [{ data: d1, symbol: false }, { data: d2, symbol: false }]
     })
 
   }, [query.data])
