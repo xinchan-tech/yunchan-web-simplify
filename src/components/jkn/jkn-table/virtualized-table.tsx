@@ -109,25 +109,23 @@ const VirtualizedTable = <TData extends Record<string, unknown>, TValue>({ class
   const scrollRef = useRef<HTMLDivElement>(null)
   const [size, dom] = useDomSize<HTMLDivElement>()
 
-  const [firstRender, setFirstRender] = useState(true)
-  useLayoutEffect(() => {
+  const cellWidth = useMemo<NormalizedRecord<number>>(() => {
     if (!size?.width) {
-      return
+      return {}
     }
-    setFirstRender(false)
+    const r = {} as NormalizedRecord<number>
     const headers = table.getFlatHeaders()
     const autoHeaders: typeof headers = []
     let totalWidth = 0
     headers.forEach(header => {
       const metaWidth = header.column.columnDef.meta?.width
-      const borderWidth = (header.index === 0  || header.index === headers.length - 1) ? 1 : 1
       if (metaWidth) {
         if (typeof metaWidth === 'number') {
-          header.column.columnDef.size = metaWidth - borderWidth
+          r[header.id] = metaWidth
           totalWidth += metaWidth
         } else if (typeof metaWidth === 'string' && metaWidth.endsWith('%')) {
-          header.column.columnDef.size = size.width * Number.parseFloat(metaWidth) / 100
-          totalWidth += header.column.columnDef.size - borderWidth
+          r[header.id] = size.width * Number.parseFloat(metaWidth) / 100
+          totalWidth += r[header.id]
         } else {
           autoHeaders.push(header)
         }
@@ -139,51 +137,53 @@ const VirtualizedTable = <TData extends Record<string, unknown>, TValue>({ class
     const remainWidth = size.width - totalWidth
 
     autoHeaders.forEach(header => {
-      const borderWidth = (header.index === 0  || header.index === headers.length - 1) ? 1 : 1
-      header.column.columnDef.size = remainWidth / autoHeaders.length  - borderWidth
+      r[header.id] = remainWidth / autoHeaders.length
     })
 
+    return r
   }, [size?.width, table.getFlatHeaders])
 
 
   return (
     <div className="jkn-table-virtualized overflow-hidden h-full" ref={dom}>
+      <div className="jkn-table-virtualized-header overflow-hidden">
+        <table className="table-fixed" cellSpacing={0}>
+          <colgroup>
+            {
+              table.getFlatHeaders().map(header =>
+                <col key={header.id} style={{ width: cellWidth[header.id] ?? 120 }}
+                />)
+            }
+          </colgroup>
+          <thead className="jkn-table-virtualized-thead">
+            {table.getHeaderGroups().map((headerGroup) => (
+              <tr key={headerGroup.id} className="jkn-table-virtualized-tr bg-accent">
+                {headerGroup.headers.map((header) => {
+                  const { align } = header.column.columnDef.meta ?? {}
+                  return (
+                    <th key={header.id} className="jkn-table-virtualized-th" style={{ textAlign: align as undefined }}>
+                      <div className="flex items-center w-full space-x-2 box-border font-normal text-xs py-2 px-1">
+                        {flexRender(header.column.columnDef.header, header.getContext())}
+                        {header.column.getCanSort() && (
+                          <span className="flex items-center ml-1" onClick={header.column.getToggleSortingHandler()} onKeyDown={() => { }}>
+                            {{
+                              asc: <SortUp />,
+                              desc: <SortDown />,
+                            }[header.column.getIsSorted() as string] ?? <SortNone />}
+                          </span>
+                        )}
+                      </div>
+                    </th>
+                  )
+                })}
+              </tr>
+            ))}
+          </thead>
+        </table>
+      </div>
       {
-        !firstRender ? (
+        !props.loading ? (
           <>
-            <div className="jkn-table-virtualized-header overflow-hidden">
-              <table className="table-fixed" cellSpacing={1}>
-                <colgroup>
-                  {
-                    table.getFlatHeaders().map(header => <col key={header.id} style={{ width: Number.isNaN(header.column.getSize()) ? 120 : header.column.getSize() }} />)
-                  }
-                </colgroup>
-                <thead className="jkn-table-virtualized-thead">
-                  {table.getHeaderGroups().map((headerGroup) => (
-                    <tr key={headerGroup.id} className="jkn-table-virtualized-tr bg-accent">
-                      {headerGroup.headers.map((header) => {
-                        const { align } = header.column.columnDef.meta ?? {}
-                        return (
-                          <th key={header.id} className="jkn-table-virtualized-th" style={{ textAlign: align as undefined }}>
-                            <div className="flex items-center w-full space-x-2 box-border font-normal text-xs py-2 px-1">
-                              {flexRender(header.column.columnDef.header, header.getContext())}
-                              {header.column.getCanSort() && (
-                                <span className="flex items-center ml-1" onClick={header.column.getToggleSortingHandler()} onKeyDown={() => { }}>
-                                  {{
-                                    asc: <SortUp />,
-                                    desc: <SortDown />,
-                                  }[header.column.getIsSorted() as string] ?? <SortNone />}
-                                </span>
-                              )}
-                            </div>
-                          </th>
-                        )
-                      })}
-                    </tr>
-                  ))}
-                </thead>
-              </table>
-            </div>
             <div className="jkn-table-virtualized-body overflow-hidden" style={{ height: 'calc(100% - 36px)' }}>
               <div className="overflow-y-auto overflow-x-hidden" style={{ height: '100%', width: 'calc(100% + 18px)' }} ref={scrollRef}>
                 <table className="table-fixed grid relative z-0" style={{ height: `${rowVirtualizer.getTotalSize()}px` }}>
@@ -207,7 +207,7 @@ const VirtualizedTable = <TData extends Record<string, unknown>, TValue>({ class
                             {row.getVisibleCells().map((cell) => {
                               const { align } = cell.column.columnDef.meta ?? {}
                               return (
-                                <td key={cell.id} className="jkn-table-virtualized-td box-border flex items-center flex-shrink-0 border-t-0 border-l-0 border-b border-r last:border-r-0 border-solid border-background" style={{ textAlign: align as undefined, width: cell.column.getSize() }}>
+                                <td key={cell.id} className="jkn-table-virtualized-td" style={{ textAlign: align as undefined, width: cellWidth[cell.column.id] ?? 120 }}>
                                   <div className="w-full">
                                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                                   </div>
@@ -217,15 +217,48 @@ const VirtualizedTable = <TData extends Record<string, unknown>, TValue>({ class
                           </tr>
                         )
                       })
-                    ) : null
+                    ) : (
+                      <tr className="flex">
+                        <td colSpan={props.columns.length} className="h-24 text-center w-full mt-12">
+                          暂无数据
+                        </td>
+                      </tr>
+                    )
                   }
                 </table>
               </div>
-
             </div>
           </>
-        ) : null
+        ) : (
+          <div className="space-y-2 my-2">
+            {
+              Array.from({ length: 8 }).map((_, i) => (
+                // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
+                <Skeleton key={i} className="h-6" />
+              ))
+            }
+          </div>
+        )
       }
+      <style jsx>{
+        `
+        .jkn-table-virtualized-td {
+          display: flex;
+          align-items: center;
+          padding: 0 4px;
+        }
+        .jkn-table-virtualized-th, .jkn-table-virtualized-td {
+          border-width: 0 1px 1px 0;
+          border-color: hsl(var(--background));
+          border-style: solid;
+          box-sizing: border-box;
+          font-size: 13px;
+        }
+
+        .jkn-table-virtualized-th:last-child, .jkn-table-virtualized-td:last-child {
+          border-right: none;
+        `
+      }</style>
     </div>
     // <ScrollArea ref={scrollRef} className={cn('w-full relative', className)} style={style}>
     //   <Table className="w-full mt-[-1px] grid border border-b-0 border-solid border-background" >
