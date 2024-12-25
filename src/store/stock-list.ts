@@ -6,6 +6,7 @@ type StockData = [string, string, string, string]
 interface StockListStore {
   history: StockData[]
   list: StockData[]
+  listMap: NormalizedRecord<StockData>
   appendHistory: (data: StockData[]) => void
   cleanHistory: () => void
   key: string
@@ -17,6 +18,7 @@ export const useStockList = create<StockListStore>()(
     (set, get) => ({
       history: [],
       list: [],
+      listMap: {},
       key: '',
       appendHistory: (data: StockData[]) => {
         const history = get().history
@@ -30,7 +32,11 @@ export const useStockList = create<StockListStore>()(
         set({ history: [] })
       },
       setList: (data: StockData[], key: string) => {
-        set({ list: data, key })
+        const m: NormalizedRecord<StockData> = {}
+        for (const item of data) {
+          m[item[1]] = item
+        }
+        set({ list: data, key, listMap: m })
       },
 
     }),

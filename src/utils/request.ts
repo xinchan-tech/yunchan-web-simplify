@@ -1,5 +1,6 @@
 import { useConfig, useServers, useToken, useUser } from "@/store"
 import axios from "axios"
+import { appEvent } from "./event"
 
 const request = axios.create()
 request.defaults.baseURL = import.meta.env.PUBLIC_BASE_API_URL
@@ -19,7 +20,9 @@ request.interceptors.request.use(config => {
 
 request.interceptors.response.use(response => {
   if(response.data.status === 401){
-    // console.log(modalIns)
+    appEvent.emit('not-login')
+    useToken.getState().removeToken()
+    useUser.getState().reset()
     // if(!modalIns){
     //   modalIns = Modal.error({ 
     //     content: '登录已过期，请重新登录',

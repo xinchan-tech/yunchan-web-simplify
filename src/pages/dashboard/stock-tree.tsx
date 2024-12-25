@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next"
 import { getHotSectors, getPlateList, getUsStocks } from "@/api"
 import TreeMap from "./components/tree-map"
 import Decimal from "decimal.js"
-import { CapsuleTabs } from "@/components"
+import { CapsuleTabs, Skeleton } from "@/components"
 import { useQuery } from "@tanstack/react-query"
 import { stockManager, StockRecord } from "@/utils/stock"
 
@@ -64,7 +64,7 @@ const StockTree = () => {
         if (StockRecord.isValid(t.stock)) {
           const stockRecord = stockManager.toSimpleStockRecord(t.stock)
           const _color = getColorByStep(stockRecord.percent ?? 0)
-          if(!colors.includes(_color)) continue
+          if (!colors.includes(_color)) continue
           const child = { name: t.symbol, value: stockRecord.turnover!, data: stockRecord.percent, color: getColorByStep(stockRecord.percent ?? 0) }
           dataset[child.name + t.plate_id] = child
           n.children.push(child as never)
@@ -104,7 +104,7 @@ const StockTree = () => {
 
     for (const plate of queryPlate.data) {
       const _color = getColorByStep(plate.change / 100)
-      if(!_colors.includes(_color)) continue
+      if (!_colors.includes(_color)) continue
       const n = { name: plate.name, value: plate.amount, data: plate.change / 100, color: getColorByStep(plate.change / 100) }
       dataset[plate.id] = n
       r.push(n)
@@ -149,7 +149,7 @@ const StockTree = () => {
       if (StockRecord.isValid(stock.stock)) {
         const stockRecord = stockManager.toSimpleStockRecord(stock.stock)
         const _color = getColorByStep(stockRecord.percent ?? 0)
-        if(!colors.includes(_color)) continue
+        if (!colors.includes(_color)) continue
         const child = { name: stock.symbol, value: stockRecord.turnover ?? 0, data: stockRecord.percent, color: getColorByStep(stockRecord.percent ?? 0) }
         dataset[child.name] = child
         r.push(child as never)
@@ -196,16 +196,55 @@ const StockTree = () => {
                 <CapsuleTabs.Tab value="month" label={t('stockTree.month')} />
               </CapsuleTabs>
               <div className="flex-1 p-1">
-                <TreeMap data={treeData} />
+                {
+                  !query.isLoading ? (
+                    <TreeMap data={treeData} />
+                  ) : (
+                    <div className="space-y-2">
+                      <Skeleton className="h-4" />
+                      <Skeleton className="h-4" />
+                      <Skeleton className="h-4" />
+                      <Skeleton className="h-4" />
+                      <Skeleton className="h-4" />
+                      <Skeleton className="h-4" />
+                    </div>
+                  )
+                }
               </div>
             </div>
           ) : ['industry-heatmap', 'etf-heatmap'].includes(type) ? (
             <div className="h-full">
-              <TreeMap data={dataPlate} />
+              {
+                !queryPlate.isLoading ? (
+                  <TreeMap data={dataPlate} />
+                ) : (
+                  <div className="space-y-2">
+                    <Skeleton className="h-4" />
+                    <Skeleton className="h-4" />
+                    <Skeleton className="h-4" />
+                    <Skeleton className="h-4" />
+                    <Skeleton className="h-4" />
+                    <Skeleton className="h-4" />
+                  </div>
+                )
+              }
             </div>
           ) : ['bull', 'etf'].includes(type) ? (
             <div className="h-full">
-              <TreeMap data={dataStock} />
+              {
+                !queryStock.isLoading ? (
+                  <TreeMap data={dataStock} />
+                ) : (
+                  <div className="space-y-2">
+                    <Skeleton className="h-4" />
+                    <Skeleton className="h-4" />
+                    <Skeleton className="h-4" />
+                    <Skeleton className="h-4" />
+                    <Skeleton className="h-4" />
+                    <Skeleton className="h-4" />
+                  </div>
+                )
+              }
             </div>
           ) : null
         }

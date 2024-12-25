@@ -329,8 +329,8 @@ const GoldenPoolTable = (props: GoldenPoolTableProps) => {
   }
 
   return (
-    <div >
-      <div className="h-[480px]">
+    <div className="w-full overflow-hidden">
+      <div className="h-[480px] w-full overflow-hidden">
         <JknTable columns={columns} data={props.data} />
       </div>
       <div className="text-center mb-4">

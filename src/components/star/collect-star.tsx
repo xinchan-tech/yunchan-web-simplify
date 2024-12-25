@@ -13,6 +13,7 @@ import { GoldenPoolForm } from "@/pages/golden-pool/components/golden-pool-form"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { produce } from "immer"
 import { CollectStarBatch } from "./collect-star-batch"
+import { useBoolean } from "ahooks"
 
 
 interface CollectStarProps {
@@ -27,12 +28,40 @@ const poolSchema = z.object({
 })
 
 const _CollectStar = (props: CollectStarProps) => {
+  const [render, { setTrue, setFalse }] = useBoolean()
+  return (
+    <HoverCard
+      onOpenChange={open => open ? setTrue() : setFalse()}
+      openDelay={100}
+      closeDelay={0}
+    >
+      <HoverCardTrigger asChild>
+        <div className="flex justify-center items-center"><Star checked={props.checked} /></div>
+      </HoverCardTrigger>
+      <HoverCardPortal >
+        <HoverCardContent align="center" side="left" sideOffset={-10}
+          className="p-0 w-48 bg-muted border-dialog-border border border-solid"
+        >
+          {
+            render ? <CollectList code={props.code} onUpdate={props.onUpdate} /> : null
+          }
+        </HoverCardContent>
+      </HoverCardPortal>
+    </HoverCard>
+  )
+}
+
+interface CollectListProps {
+  code: string
+  onUpdate?: (checked: boolean) => void
+}
+
+const CollectList = (props: CollectListProps) => {
   const { collects, setCollects } = useCollectCates()
   const queryClient = useQueryClient()
   const cateQuery = useQuery({
     queryKey: [getStockCollectCates.cacheKey, props.code],
     queryFn: () => getStockCollectCates(props.code),
-    enabled: false
   })
 
   const updateCollectMutation = useMutation({
@@ -108,44 +137,28 @@ const _CollectStar = (props: CollectStarProps) => {
   })
 
   return (
-    <div className="">
-      <HoverCard
-        onOpenChange={open => open && cateQuery.refetch()}
-        openDelay={100}
-        closeDelay={0}
-      >
-        <HoverCardTrigger asChild>
-          <div className="flex justify-center items-center"><Star checked={props.checked} /></div>
-        </HoverCardTrigger>
-        <HoverCardPortal >
-          <HoverCardContent align="center" side="left" sideOffset={-10}
-            className="p-0 w-48 bg-muted border-dialog-border border border-solid"
-          >
-            <div className="bg-background py-2 text-center">加入金池</div>
-            <ScrollArea className="h-[240px] space-y-2 ">
+    <>
+      <div className="bg-background py-2 text-center">加入金池</div>
+      <ScrollArea className="h-[240px] space-y-2 ">
+        {
+          collects.map(item => (
+            <div key={item.id} onClick={() => onCheck(item)} onKeyDown={() => { }} className="flex cursor-pointer items-center pl-4 space-x-4 hover:bg-primary py-1">
               {
-                collects.map(item => (
-                  <div key={item.id} onClick={() => onCheck(item)} onKeyDown={() => { }} className="flex cursor-pointer items-center pl-4 space-x-4 hover:bg-primary py-1">
-                    {
-                      <Checkbox checked={cateQuery.data?.some(cate => cate.id === item.id && cate.active === 1)} />
-                    }
-                    <span>{item.name}</span>
-                  </div>
-                ))
+                <Checkbox checked={cateQuery.data?.some(cate => cate.id === item.id && cate.active === 1)} />
               }
-            </ScrollArea>
-            <div className="w-full">
-              <AddCollect sideOffset={-100}>
-                <Button block className="rounded-none w-48">
-                  新建金池
-                </Button>
-              </AddCollect>
-
+              <span>{item.name}</span>
             </div>
-          </HoverCardContent>
-        </HoverCardPortal>
-      </HoverCard>
-    </div>
+          ))
+        }
+      </ScrollArea>
+      <div className="w-full">
+        <AddCollect sideOffset={-100}>
+          <Button block className="rounded-none w-48">
+            新建金池
+          </Button>
+        </AddCollect>
+      </div>
+    </>
   )
 }
 

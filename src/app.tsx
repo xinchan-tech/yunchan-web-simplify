@@ -1,19 +1,22 @@
-import { AiAlarmNotice, Footer, HeaderService, HeaderUser, Menu, MenuRight, StockSelect, Toaster } from './components'
+import { AiAlarmNotice, Footer, HeaderService, HeaderUser, JknAlert, Menu, MenuRight, StockSelect, Toaster } from './components'
 import Logo from './assets/icon/icon_jkn@2x.png'
 import './app.scss'
 import { RouterProvider } from "react-router"
-import { router } from "./router"
+import { router, routes } from "./router"
 import { useMount, useUpdateEffect } from "ahooks"
 import { useConfig, useUser } from "./store"
 import { useTranslation } from "react-i18next"
-import { Suspense } from "react"
+import { Suspense, useEffect, useMemo, useRef, useState } from "react"
 import { getConfig, getUser } from "./api"
 import { useQuery } from "@tanstack/react-query"
+import { appEvent } from "./utils/event"
 
 const App = () => {
   const config = useConfig()
   const { t, i18n } = useTranslation()
   const user = useUser()
+  const notLogin = useRef(0)
+
   const query = useQuery({
     queryKey: [getUser.cacheKey],
     queryFn: () => getUser({
@@ -48,6 +51,27 @@ const App = () => {
     i18n.changeLanguage(config.language)
   })
 
+  useEffect(() => {
+    const handler = () => {
+      if (notLogin.current === 0 && window.location.pathname !== '/') {
+        notLogin.current = 1
+        JknAlert.info({
+          content: '请先登录账号',
+          onAction: async () => {
+            notLogin.current = 0
+            window.location.href = '/'
+          }
+        })
+      }
+
+    }
+    appEvent.on('not-login', handler)
+
+    return () => {
+      appEvent.off('not-login', handler)
+    }
+  }, [])
+
   return (
     <div className="container-layout dark">
       <Toaster />
@@ -58,7 +82,7 @@ const App = () => {
 
         <div className="absolute top-0 left-0 h-full w-full text-center flex justify-center items-center -z-10">
           <img src={Logo} alt="logo" className="w-6 h-6 mr-2" />
-          {t('app')}-首页
+          <AppTitle />
         </div>
         <div className="float-right flex items-center h-full space-x-2xl">
           <HeaderService />
@@ -138,6 +162,32 @@ const App = () => {
         `}
       </style>
     </div>
+  )
+}
+
+const AppTitle = () => {
+  const { t } = useTranslation()
+  const [pathname, setPathname] = useState(router.state.location.pathname)
+  
+  useEffect(() => {
+    const s = router.subscribe((s) => {
+      setPathname(s.location.pathname)
+    })
+
+    return () => {
+      s()
+    }
+  }, [])
+
+  const title = useMemo(() => {
+    const route = routes.find((r) => r.path === pathname)
+    return route?.handle?.title
+  }, [pathname])
+
+  return (
+    <span>
+      {t('app')}-{title}
+    </span>
   )
 }
 

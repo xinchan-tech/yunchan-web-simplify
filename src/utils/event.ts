@@ -1,6 +1,6 @@
 import mitt from 'mitt'
 
-type EventType = 'login' | 'toast' | 'cleanPickerStockMethod' | 'cleanPickerStockFactor'
+type EventType = 'login' | 'toast' | 'cleanPickerStockMethod' | 'cleanPickerStockFactor' | 'not-login'
 
 
 type Events = Record<EventType, unknown>

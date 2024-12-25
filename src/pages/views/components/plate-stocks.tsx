@@ -120,13 +120,11 @@ const PlateStocks = (props: PlateStocksProps) => {
     },
     {
       header: ({ table }) => (
-        <div>
-          <CollectStar.Batch
-            checked={table.getSelectedRowModel().rows.map(item => item.original.symbol)}
-            onCheckChange={e => table.getToggleAllRowsSelectedHandler()({ target: e })}
-            onUpdate={checked => table.options.meta?.emit({ event: 'collect', params: { symbols: table.getSelectedRowModel().rows.map(o => o.id), checked } })}
-          />
-        </div>
+        <CollectStar.Batch
+          checked={table.getSelectedRowModel().rows.map(item => item.original.symbol)}
+          onCheckChange={e => table.getToggleAllRowsSelectedHandler()({ target: e })}
+          onUpdate={checked => table.options.meta?.emit({ event: 'collect', params: { symbols: table.getSelectedRowModel().rows.map(o => o.id), checked } })}
+        />
       ),
       accessorKey: 'check',
       id: 'select',

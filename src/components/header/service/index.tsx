@@ -3,17 +3,17 @@ import TelegramPng from '@/assets/icon/telegram.png'
 import WeChatPng from '@/assets/icon/wechat.png'
 import { useTranslation } from "react-i18next"
 import { useConfig } from "@/store"
-import { HoverCard, HoverCardContent, HoverCardTrigger, Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components"
 
 const HeaderService = () => {
   const { t } = useTranslation()
 
   return (
     <div className="mr-4">
-      <HoverCard openDelay={100}>
+      {/* <HoverCard openDelay={100}>
         <HoverCardTrigger asChild><span className="text-sm cursor-pointer">{t('contact')}</span></HoverCardTrigger>
         <HoverCardContent className="w-[400px]" align="end"><Content /></HoverCardContent>
-      </HoverCard>
+      </HoverCard> */}
     </div>
   )
 }
@@ -32,7 +32,7 @@ const Content = () => {
       (t[1].concat as string[]).push(item.contact[1]);
       (t[2].concat as string[]).push(item.contact[2])
     }
-    console.log(t, consults)
+
     return t
   })()
 

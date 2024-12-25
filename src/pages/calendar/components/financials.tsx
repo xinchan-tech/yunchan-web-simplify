@@ -180,7 +180,7 @@ const StockFinancials = () => {
 
 
   return (
-    <div>
+    <div className="h-full flex flex-col">
       <div className="py-1">
         <CapsuleTabs type="text" activeKey={active} onChange={setActive}>
           {
@@ -198,8 +198,8 @@ const StockFinancials = () => {
           </JknDatePicker>
         </CapsuleTabs>
       </div>
-      <div>
-        <JknTable.Virtualizer loading={query.isLoading} onEvent={onTableEvent} className="h-[calc(100vh-160px)]" rowKey="id" columns={columns} data={data} />
+      <div className="flex-1 overflow-hidden">
+        <JknTable loading={query.isLoading} onEvent={onTableEvent} rowKey="id" columns={columns} data={data} />
       </div>
     </div>
   )

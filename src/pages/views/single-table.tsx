@@ -1,10 +1,7 @@
-import { type StockExtend, type UsStockColumn, addStockCollect, getIndexGapAmplitude, getIndexRecommends, getUsStocks } from "@/api"
-import { AiAlarm, Button, Checkbox, CollectStar, JknAlert, JknIcon, JknTable, type JknTableProps, NumSpan, Popover, PopoverAnchor, PopoverContent, ScrollArea, StockView } from "@/components"
-import { useToast } from "@/hooks"
-import { useCollectCates } from "@/store"
+import { type StockExtend, type UsStockColumn, getChineseStocks, getIndexGapAmplitude, getIndexRecommends, getUsStocks } from "@/api"
+import { AiAlarm, CollectStar, JknCheckbox, JknIcon, JknTable, type JknTableProps, NumSpan, StockView } from "@/components"
 import { stockManager } from "@/utils/stock"
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import to from "await-to-js"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 import Decimal from "decimal.js"
 import { produce } from "immer"
 import { useMemo } from "react"
@@ -44,8 +41,12 @@ const SingleTable = (props: SingleTableProps) => {
   const [sort, setSort] = useImmer<{ column: UsStockColumn, order: 'asc' | 'desc' }>({ column: 'total_mv', order: 'desc' })
   const QueryFn = () => {
     const extend: StockExtend[] = ['basic_index', 'stock_before', 'stock_after', 'total_share', 'collect', 'financials']
-    if (!props.type || ['all', 'ixic', 'spx', 'dji', 'etf', 'china'].includes(props.type)) {
+    if (!props.type || ['all', 'ixic', 'spx', 'dji', 'etf'].includes(props.type)) {
       return getUsStocks({ type: props.type === 'all' ? undefined : props.type, column: sort.column, limit: 50, page: 1, order: sort.order, extend }).then(r => r.items)
+    }
+
+    if (['china'].includes(props.type)) {
+      return getChineseStocks(extend)
     }
 
     if (['yesterday_bear', 'yesterday_bull', 'short_amp_up', 'short_amp_d', 'release'].includes(props.type)) {
@@ -188,20 +189,21 @@ const SingleTable = (props: SingleTableProps) => {
     },
     {
       header: ({ table }) => (
-        <div>
-          <CollectStar.Batch
-            checked={table.getSelectedRowModel().rows.map(item => item.original.symbol)}
-            onCheckChange={e => table.getToggleAllRowsSelectedHandler()({ target: e })}
-            onUpdate={checked => table.options.meta?.emit({ event: 'collect', params: { symbols: table.getSelectedRowModel().rows.map(o => o.id), checked } })}
-          />
-        </div>
+        <CollectStar.Batch
+          checked={table.getSelectedRowModel().rows.map(item => item.original.symbol)}
+          onCheckChange={e => table.getToggleAllRowsSelectedHandler()({ target: e })}
+          onUpdate={checked => table.options.meta?.emit({ event: 'collect', params: { symbols: table.getSelectedRowModel().rows.map(o => o.id), checked } })}
+        />
       ),
       accessorKey: 'check',
       id: 'select',
       enableSorting: false,
       meta: { align: 'center', width: 60 },
       cell: ({ row }) => (
-        <Checkbox checked={row.getIsSelected()} onCheckedChange={(e) => row.getToggleSelectedHandler()({ target: e })} />
+        <div className="w-full flex justify-center">
+          <JknCheckbox className="w-5 h-5" checked={row.getIsSelected()} onCheckedChange={(e) => row.getToggleSelectedHandler()({ target: e })} />
+          {/* <Checkbox checked={row.getIsSelected()} onCheckedChange={(e) => row.getToggleSelectedHandler()({ target: e })} /> */}
+        </div>
       )
     }
   ]), [])
@@ -214,7 +216,7 @@ const SingleTable = (props: SingleTableProps) => {
         return data.map(produce(draft => {
           console.log(draft.symbol, symbols, symbols.includes(draft.symbol))
           if (symbols.includes(draft.symbol)) {
-          
+
             draft.extend.collect = checked ? 1 : 0
           }
         }))
@@ -222,10 +224,8 @@ const SingleTable = (props: SingleTableProps) => {
     }
   }
   return (
-
-    <JknTable.Virtualizer onEvent={onTableEvent} className="h-[calc(100%-32px)] overflow-hidden" loading={query.isLoading} manualSorting rowKey="symbol" onSortingChange={onSortChange} columns={columns} data={data}>
+    <JknTable.Virtualizer rowHeight={35.5} onEvent={onTableEvent} loading={query.isLoading} manualSorting rowKey="symbol" onSortingChange={onSortChange} columns={columns} data={data}>
     </JknTable.Virtualizer>
-
   )
 }
 

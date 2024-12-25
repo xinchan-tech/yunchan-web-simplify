@@ -66,7 +66,7 @@ const _JknTable = <TData extends Record<string, unknown>, TValue>(props: JknTabl
     manualSorting: props.manualSorting,
     onSortingChange: _onSortCHange,
     getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
+    // getSortedRowModel: getSortedRowModel(),
     enableRowSelection: true,
     onRowSelectionChange: setRowSelection,
     meta: {
@@ -88,73 +88,79 @@ const _JknTable = <TData extends Record<string, unknown>, TValue>(props: JknTabl
 
   const [size, dom] = useDomSize<HTMLDivElement>()
   const cellWidth = useCellWidth(size?.width, table)
-
+ 
   return (
     <div className="w-full h-full border-background border-solid border" ref={dom}>
-      <JknTableHeader table={table} width={cellWidth} />
       {
-        !props.loading ? (
+        cellWidth ? (
           <>
-            <div className="jkn-table-virtualized-body overflow-hidden" style={{ height: 'calc(100% - 36px)' }}>
-              <ScrollArea className="overflow-x-hidden" style={{ height: '100%' }}>
-                <table className="table-fixed z-0 h-full  w-full" cellSpacing={0}>
-                  <colgroup>
-                    {
-                      table.getFlatHeaders().map((header) => (
-                        <col key={header.id} style={{ width: cellWidth[header.id] }} />
-                      ))
-                    }
-                  </colgroup>
-                  <tbody>
-                    {
-                      table.getRowModel().rows?.length ? (
-                        table.getRowModel().rows.map(row =>
-                          <tr
-                            key={row.id}
-                            data-state={row.getIsSelected() && "selected"}
-                            onClick={() => _onRowClick(row)}
-                            onKeyDown={() => { }}
-                            className={cn(
-                              'hover:bg-accent transition-all duration-200 jkn-table-tr',
-                            )}
-                          >
-                            {row.getVisibleCells().map((cell) => {
-                              const { align } = cell.column.columnDef.meta ?? {}
-                              return (
-                                <td
-                                  key={cell.id}
-                                  className="jkn-table-td break-all py-12"
-                                  style={{ textAlign: align as undefined }}
-                                >
-                                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                                </td>
-                              )
-                            })}
-                          </tr>
-                        )
-                      ) : (
-                        <tr className="w-full">
-                          <td colSpan={props.columns.length} className="h-24 text-center w-full mt-12">
-                            暂无数据
-                          </td>
-                        </tr>
-                      )
-                    }
-                  </tbody>
-                </table>
-              </ScrollArea>
-            </div>
-          </>
-        ) : (
-          <div className="space-y-2 my-2">
+            <JknTableHeader table={table} width={cellWidth} />
             {
-              Array.from({ length: 8 }).map((_, i) => (
-                // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
-                <Skeleton key={i} className="h-6" />
-              ))
+              !props.loading ? (
+                <>
+                  <div className="jkn-table-virtualized-body overflow-hidden" style={{ height: 'calc(100% - 36px)' }}>
+                    <div className="overflow-x-hidden overflow-y-auto" style={{ height: '100%' }}>
+                      <table className="table-fixed z-0  w-full" cellSpacing={0}>
+                        <colgroup>
+                          {
+                            table.getFlatHeaders().map((header) => (
+                              <col key={header.id} style={{ width: cellWidth[header.id] }} />
+                            ))
+                          }
+                        </colgroup>
+                        <tbody>
+                          {
+                            table.getRowModel().rows?.length ? (
+                              table.getRowModel().rows.map(row =>
+                                <tr
+                                  key={row.id}
+                                  data-state={row.getIsSelected() && "selected"}
+                                  onClick={() => _onRowClick(row)}
+                                  onKeyDown={() => { }}
+                                  className={cn(
+                                    'hover:bg-accent transition-all duration-200 jkn-table-tr',
+                                  )}
+                                >
+                                  {row.getVisibleCells().map((cell) => {
+                                    const { align } = cell.column.columnDef.meta ?? {}
+                                    return (
+                                      <td
+                                        key={cell.id}
+                                        className="jkn-table-td break-all py-12"
+                                        style={{ textAlign: align as undefined }}
+                                      >
+                                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                                      </td>
+                                    )
+                                  })}
+                                </tr>
+                              )
+                            ) : (
+                              <tr className="w-full">
+                                <td colSpan={props.columns.length} className="h-24 text-center w-full mt-12">
+                                  暂无数据
+                                </td>
+                              </tr>
+                            )
+                          }
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <div className="space-y-2 my-2">
+                  {
+                    Array.from({ length: 8 }).map((_, i) => (
+                      // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
+                      <Skeleton key={i} className="h-6" />
+                    ))
+                  }
+                </div>
+              )
             }
-          </div>
-        )
+          </>
+        ): null
       }
       <style jsx>{
         `

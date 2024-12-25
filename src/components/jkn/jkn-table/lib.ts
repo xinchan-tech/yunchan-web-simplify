@@ -4,9 +4,9 @@ import { useMemo, useRef } from 'react'
 
 export const useCellWidth = (width: number | undefined, table: Table<any>) => {
   const headers = table.getFlatHeaders()
-  return useMemo<NormalizedRecord<number>>(() => {
+  return useMemo<NormalizedRecord<number> | undefined>(() => {
     if (!width) {
-      return {}
+      return undefined
     }
     const r = {} as NormalizedRecord<number>
 

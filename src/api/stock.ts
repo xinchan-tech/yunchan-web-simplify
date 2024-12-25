@@ -594,6 +594,19 @@ export const getUsStocks = async (params: GetUsStocksParams) => {
 }
 getUsStocks.cacheKey = 'stock:cutom:getUsStocks'
 
+/**
+ * 中概股
+ */
+export const getChineseStocks = async (extend: StockExtend[]) => {
+  const r = await request.get<{
+    extend: StockExtendResultMap
+    symbol: string
+    name: string
+    stock: StockRawRecord
+  }[]>('/stock/cutom/getStocks', { params: {type: 'china', extend} }).then(r => r.data)
+  return r
+}
+
 type GetPlateListResult = {
   amount: number
   change: number

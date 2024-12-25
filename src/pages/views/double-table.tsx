@@ -35,9 +35,9 @@ const DoubleTable = (props: DoubleTableProps) => {
   return (
     <div className="flex overflow-hidden h-full">
       <div className="w-[25%]">
-        <ScrollArea className="h-full">
+        <div className="h-full">
           <PlateList loading={plate.isLoading} data={plate.data ?? []} onRowClick={onClickPlate} />
-        </ScrollArea>
+        </div>
       </div>
       <div className="w-[75%]">
         <div className="h-full overflow-hidden">

@@ -1,4 +1,4 @@
-import { Button, Checkbox, Popover, PopoverAnchor, PopoverContent } from ".."
+import { Button, Checkbox, JknCheckbox, Popover, PopoverAnchor, PopoverContent } from ".."
 import { useCollectCates } from "@/store"
 import { addStockCollect } from "@/api"
 import to from "await-to-js"
@@ -24,10 +24,13 @@ const CollectStarBatchPopover = (props: PropsWithChildren<{ open: boolean, onChe
   return (
     <Popover open={props.open}>
       <PopoverAnchor asChild>
-        <Checkbox
-          checked={props.open}
-          onCheckedChange={props.onCheckChange}
-        />
+        <Button reset className="w-auto h-auto">
+          <JknCheckbox
+            className="w-[17px] h-[17px]"
+            checked={props.open}
+            onCheckedChange={props.onCheckChange}
+          />
+        </Button>
       </PopoverAnchor>
       <PopoverContent className="w-60" align="start" side="left">
         {

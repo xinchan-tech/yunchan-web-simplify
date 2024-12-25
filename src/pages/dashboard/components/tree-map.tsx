@@ -1,6 +1,6 @@
 import { useStockList } from "@/store"
 import { useMount, useSize, useUnmount, useUpdateEffect } from "ahooks"
-import {  useRef } from "react"
+import { useRef } from "react"
 import { select, hierarchy, treemap, type Selection, type HierarchyRectangularNode } from 'd3'
 import { numToFixed } from "@/utils/price"
 
@@ -22,6 +22,7 @@ type TreeMapData = {
 interface TreeMapProps {
   data: TreeMapData[]
   parentLabel?: boolean
+  loading?: boolean
 }
 
 const IMG_LIMIT_MIN = 25
@@ -34,7 +35,7 @@ const TreeMap = (props: TreeMapProps) => {
 
   useMount(() => {
     if (!chartDomRef.current) {
-      console.error('DOM element not found')
+      console.warn('DOM element not found')
       return
     }
 
@@ -44,26 +45,18 @@ const TreeMap = (props: TreeMapProps) => {
       .attr('width', clientWidth)
       .attr('height', clientHeight)
     render()
-    // const root = hierarchy<TreeMapData>({ name: 'root', children: props.data }).sum(d => d.value)
-
-    // treemap<TreeMapData>().size([clientWidth, clientHeight]).padding(1)(root)
-
-    // svg.selectAll('rect').data(root.leaves()).enter().append('rect').attr('x', (d) => d.x0)
-    //   .attr('y', (d) => d.y0)
-    //   .attr('width', (d) => d.x1 - d.x0)
-    //   .attr('height', (d) => d.y1 - d.y0)
 
     chartRef.current = svg
   })
 
   const render = () => {
     if (!chartDomRef.current) {
-      console.error('DOM element not found')
+      console.warn('DOM element not found')
       return
     }
 
     if (!chartRef.current) {
-      console.error('chartRef.current not found')
+      console.warn('chartRef.current not found')
       return
     }
 
@@ -103,7 +96,7 @@ const TreeMap = (props: TreeMapProps) => {
   }
 
   const renderTitles = (root: HierarchyRectangularNode<TreeMapData>) => {
-    if(root.height <= 1){
+    if (root.height <= 1) {
       return
     }
     chartRef.current!.selectAll('titles').data(root.descendants().filter(d => d.depth === 1)).enter()
@@ -214,7 +207,9 @@ const TreeMap = (props: TreeMapProps) => {
       .attr("fill", d => (d.data.data ?? 0) >= 0 ? 'hsl(var(--stock-up-color)' : 'hsl(var(--stock-down-color))')
   }
 
-  return <div ref={chartDomRef} className="w-full h-full overflow-hidden" />
+  return (
+    <div ref={chartDomRef} className="w-full h-full overflow-hidden" />
+  )
 }
 
 export default TreeMap

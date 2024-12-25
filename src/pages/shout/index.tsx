@@ -35,9 +35,9 @@ const Shout = () => {
                   <Avatar className="w-8 h-8 mr-4">
                     <AvatarImage src={order.teacher.avatar} alt={order.teacher.name} />
                   </Avatar>
-                  <div className="bg-[#00b44c] p-4 max-w-[760px] text-black rounded flex-1">
-                    <pre className="w-full break-all whitespace-pre-wrap">
-                    {order.content}
+                  <div className="bg-[#00b44c] p-4 max-w-[760px] text-black rounded flex-1 relative">
+                    <pre className="w-full break-all whitespace-pre-wrap text-base">
+                      {order.content}
                     </pre>
                   </div>
                 </div>

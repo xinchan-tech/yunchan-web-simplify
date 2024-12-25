@@ -6,6 +6,9 @@ export const routes: RouteObject[] = [
     index: true,
     path: "/",
     Component: lazy(() => import('@/pages/dashboard')),
+    handle:{
+      title: '首页'
+    }
   },
   {
     path: "/golden",

@@ -118,9 +118,9 @@ const GoldenPool = (props: GoldenPoolProps) => {
   ]
 
   return (
-    <ScrollArea className="h-[calc(100%-52px)] w-[30%]">
+    <div className="h-[calc(100%-52px)] w-[30%]">
       <JknTable rowKey="id" onSelection={_onSelect} onRowClick={(r, row) => { row.toggleSelected(); props.onChange?.(+r.id) }} data={collects} columns={columns} />
-    </ScrollArea>
+    </div>
   )
 
 }
@@ -185,9 +185,9 @@ const GoldenPoolList = (props: GoldenPoolListProps) => {
     }
   ]
   return (
-    <ScrollArea className="h-[calc(100%-52px)] w-[70%]">
+    <div className="h-[calc(100%-52px)] w-[70%]">
       <JknTable rowKey="code" columns={columns} data={data} />
-    </ScrollArea>
+    </div>
   )
 }
 

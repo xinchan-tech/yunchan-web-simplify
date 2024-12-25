@@ -6,10 +6,12 @@ interface StockViewProps {
   name: string
 }
 
-const StockView = ({ code, name }: StockViewProps) => {
-  const stockList = useStockList()
 
-  const stock = stockList.list.find(item => item[1] === code)
+
+const StockView = ({ code, name }: StockViewProps) => {
+  const {listMap} = useStockList()
+
+  const stock = listMap[code]
 
   return (
     <div className="overflow-hidden flex items-center w-full">

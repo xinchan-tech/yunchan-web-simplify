@@ -113,7 +113,7 @@ export const AiAlarmNotice = () => {
               自动弹出
             </div>
           </div>
-          <ScrollArea className="h-[400px]">
+          <div className="h-[400px]">
             {
               Object.keys(dataByGroup).map(date => (
                 <div key={date}>
@@ -133,7 +133,7 @@ export const AiAlarmNotice = () => {
                 </div>
               ))
             }
-          </ScrollArea>
+          </div>
         </div>
       </PopoverContent>
     </Popover>
