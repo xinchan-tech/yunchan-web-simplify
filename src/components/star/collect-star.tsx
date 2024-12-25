@@ -153,9 +153,9 @@ const CollectList = (props: CollectListProps) => {
       </ScrollArea>
       <div className="w-full">
         <AddCollect sideOffset={-100}>
-          <Button block className="rounded-none w-48">
+          <div className="rounded-none w-48 bg-primary h-10 leading-10">
             新建金池
-          </Button>
+          </div>
         </AddCollect>
       </div>
     </>
