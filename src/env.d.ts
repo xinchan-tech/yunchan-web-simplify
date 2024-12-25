@@ -4,6 +4,7 @@
 
 interface ImportMetaEnv {
   readonly PUBLIC_BASE_API_URL: string
+  readonly PUBLIC_BASE_WS_URL: string
   readonly PUBLIC_BASE_ICON_URL: string
 }
 

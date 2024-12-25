@@ -1,6 +1,6 @@
-import { useServers } from '@/store'
 import { Ws } from '.'
 
+const wsUrl = import.meta.env.PUBLIC_BASE_WS_URL
 
 export class WsManager {
   private cache: Map<string, Ws>
@@ -42,9 +42,9 @@ export class WsManager {
   }
 
   getActiveWs() {
-    const ws = this.cache.get(useServers.getState().lastServer.ws)
+    const ws = this.cache.get(wsUrl)
 
-    if(!ws) return this.create(useServers.getState().lastServer.ws)
+    if(!ws) return this.create(wsUrl)
 
     return ws
   }

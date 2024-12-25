@@ -11,7 +11,7 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { StrictMode } from "react"
 import '@/plugins/decimal-plugin'
 import { wsManager } from "./utils/ws/manager.ts"
-import { useServers } from "./store/servers.ts"
+
 
 dayjs.extend(utc)
 dayjs.extend(tz)
@@ -33,7 +33,7 @@ const queryClient = new QueryClient({
 
 // })
 
-wsManager.create(useServers.getState().lastServer.ws)
+wsManager.create(import.meta.env.PUBLIC_BASE_WS_URL)
 
 
 

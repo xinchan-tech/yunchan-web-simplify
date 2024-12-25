@@ -1,4 +1,4 @@
-import { useConfig, useServers, useToken, useUser } from "@/store"
+import { useConfig, useToken, useUser } from "@/store"
 import axios from "axios"
 import { appEvent } from "./event"
 
@@ -8,7 +8,6 @@ request.defaults.baseURL = import.meta.env.PUBLIC_BASE_API_URL
 request.interceptors.request.use(config => {
   const token = useToken.getState().token
   const language = useConfig.getState().language
-  config.baseURL = useServers.getState().lastServer.host
   config.headers.set('Authorization', token)
   config.headers.set('Accept-Language', language)
   config.headers.set('os', 'windows')

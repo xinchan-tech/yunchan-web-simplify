@@ -2,7 +2,7 @@ import { useConfig } from "@/store"
 import FooterTime from "./footer-time"
 import { StockBar } from "./stock-bar"
 import { useEffect } from "react"
-import { ServerBar } from "./server-bar"
+// import { ServerBar } from "./server-bar"
 
 export const Footer = () => {
   const config = useConfig()
@@ -17,7 +17,7 @@ export const Footer = () => {
         <FooterTime />
       </div>
       <div className="pr-2">
-        <ServerBar />
+        {/* <ServerBar /> */}
       </div>
     </div>
 
