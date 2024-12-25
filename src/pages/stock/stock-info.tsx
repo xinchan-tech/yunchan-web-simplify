@@ -1,7 +1,6 @@
 import { type StockExtend, getStockBaseCodeInfo, getStockBrief, getStockNotice, getStockQuote, getStockRelated, getStockTrades } from "@/api"
 import { AiAlarm, Button, CapsuleTabs, Carousel, CarouselContent, CollectStar, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, HoverCard, HoverCardContent, HoverCardTrigger, JknIcon, JknTable, type JknTableProps, NumSpan, PriceAlarm, ScrollArea, Separator } from "@/components"
 import { useQueryParams } from "@/hooks"
-import { numToFixed, priceToCnUnit } from "@/utils/price"
 import { StockRecord, stockManager } from "@/utils/stock"
 import { cn } from "@/utils/style"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
@@ -107,11 +106,11 @@ const StockBaseInfo = () => {
             <NumSpan decimal={3} symbol isPositive={Decimal.create(lastData?.percent).gte(0)} value={(lastData?.close ?? 0) - (lastData?.prevClose ?? 0)} />
           </span>
           <span>
-            {numToFixed((lastData?.percent ?? 0) * 100, 2)}%
+            {Decimal.create(lastData?.percent).mul(100).toFixed(2)}%
           </span>
           <span className="text-tertiary">
             收盘价
-            {lastData?.time.slice(5, 11).replace('-', '/')}
+            {lastData?.time?.slice(5, 11).replace('-', '/')}
           </span>
         </div>
         <div className={cn(
@@ -124,10 +123,12 @@ const StockBaseInfo = () => {
           <span>
             <NumSpan decimal={3} symbol isPositive={Decimal.create(afterData?.percent).gte(0)} value={(afterData?.close ?? 0) - (afterData?.prevClose ?? 0)} />
           </span>
-          <span>{numToFixed((afterData?.percent ?? 0) * 100, 2)}%</span>
+          <span>
+            {Decimal.create(afterData?.percent).mul(100).toFixed(2)}%
+          </span>
           <span className="text-tertiary">
             盘后价
-            {lastData?.time.slice(5, 11).replace('-', '/')}
+            {lastData?.time?.slice(5, 11).replace('-', '/')}
           </span>
         </div>
       </div>
@@ -163,19 +164,19 @@ const StockQuote = () => {
       <div className="mt-1 py-2 grid grid-cols-2 border-0 border-b border-solid border-border text-xs px-2 gap-y-2">
         <div>
           <span className="text-tertiary">最高价&nbsp;&nbsp;</span>
-          <span>{numToFixed(+(quote.data?.q_high ?? '0'))}</span>
+          <span>{Decimal.create(quote.data?.q_high).toFixed(3)}</span>
         </div>
         <div>
           <span className="text-tertiary">今开价&nbsp;&nbsp;</span>
-          <span>{numToFixed(+(quote.data?.q_open ?? '0'))}</span>
+          <span>{Decimal.create(quote.data?.q_open).toFixed(3)}</span>
         </div>
         <div>
           <span className="text-tertiary">最低价&nbsp;&nbsp;</span>
-          <span>{numToFixed(+(quote.data?.q_low ?? '0'))}</span>
+          <span>{Decimal.create(quote.data?.q_low).toFixed(3)}</span>
         </div>
         <div>
           <span className="text-tertiary">昨收价&nbsp;&nbsp;</span>
-          <span>{numToFixed(+(quote.data?.q_preday_close ?? '0'))}</span>
+          <span>{Decimal.create(quote.data?.q_preday_close).toFixed(3)}</span>
         </div>
         <div>
           <span className="text-tertiary">成交量&nbsp;&nbsp;</span>
@@ -187,7 +188,7 @@ const StockQuote = () => {
         </div>
         <div>
           <span className="text-tertiary">总市值&nbsp;&nbsp;</span>
-          <span>{priceToCnUnit(+(stock?.marketValue ?? '0'))}</span>
+          <span>{Decimal.create(stock?.marketValue).toShortCN(3)}</span>
         </div>
         <div>
           <span className="text-tertiary">换手率&nbsp;&nbsp;</span>
@@ -203,11 +204,11 @@ const StockQuote = () => {
         </div>
         <div>
           <span className="text-tertiary">52周高&nbsp;&nbsp;</span>
-          <span>{numToFixed(+(quote.data?.q_year_high ?? '0'))}</span>
+          <span>{Decimal.create(quote.data?.q_year_high).toFixed(3)}</span>
         </div>
         <div>
           <span className="text-tertiary">52周低&nbsp;&nbsp;</span>
-          <span>{numToFixed(+(quote.data?.q_year_low ?? '0'))}</span>
+          <span>{Decimal.create(quote.data?.q_year_low).toFixed(3)}</span>
         </div>
       </div>
     </div >
@@ -375,12 +376,12 @@ const StockRelated = () => {
           )}>逐笔交易</span>
         </div>
       </div>
-      <ScrollArea className="flex-1">
+      <div className="flex-1 overflow-hidden">
         {
           menuType === 'plates' ? (
             <JknTable rowKey="symbol" data={data} columns={columns} />
           ) : (
-            <div className="flex flex-col text-xs space-y-2 px-2">
+            <ScrollArea className="flex flex-col text-xs space-y-2 px-2 h-full">
               {
                 tradesBySort?.map((item) => (
                   <div key={nanoid()} className="flex items-center">
@@ -390,10 +391,10 @@ const StockRelated = () => {
                   </div>
                 ))
               }
-            </div>
+            </ScrollArea>
           )
         }
-      </ScrollArea>
+      </div>
     </div>
   )
 }

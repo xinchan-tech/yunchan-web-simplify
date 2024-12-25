@@ -1,10 +1,10 @@
 import { getStockCollects, type StockExtend } from "@/api"
 import { AddCollect, CollectCapsuleTabs, JknIcon, NumSpan, ScrollArea } from "@/components"
 import echarts, { type ECOption } from "@/utils/echarts"
-import { numToFixed } from "@/utils/price"
 import { stockManager } from "@/utils/stock"
 import { useQuery } from "@tanstack/react-query"
 import { useMount, useUnmount, useUpdateEffect } from "ahooks"
+import Decimal from "decimal.js"
 import { useRef, useState } from "react"
 import { useNavigate } from "react-router"
 
@@ -39,8 +39,6 @@ export const CollectList = () => {
 
     for (const s of stocks.data.items) {
       const [lastStock, _, afterStock] = stockManager.toStockRecord(s)
-      // const lastStock = getLastRecordByTrading(symbol, 'intraDay')
-      // const afterStock = getLastRecordByTrading(symbol, 'afterHours')
 
       r.push({
         name: s.name,
@@ -110,8 +108,8 @@ export const CollectList = () => {
                     {
                       stock.afterPrice ? (
                         <span>
-                          <span>{numToFixed(stock.afterPrice, 3)}</span>&nbsp;&nbsp;
-                          <span>{numToFixed((stock.afterPercent ?? 0) * 100, 2)}%</span>
+                          <span>{Decimal.create(stock.afterPrice).toFixed(3)}</span>&nbsp;&nbsp;
+                          <span>{Decimal.create(stock.afterPercent).mul(100).toFixed(2)}%</span>
                         </span>
                       ) : '--'
                     }
