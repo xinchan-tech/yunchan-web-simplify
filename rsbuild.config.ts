@@ -1,6 +1,7 @@
 import { defineConfig } from '@rsbuild/core'
 import { pluginReact } from '@rsbuild/plugin-react'
-import { pluginSass } from '@rsbuild/plugin-sass';
+import { pluginSass } from '@rsbuild/plugin-sass'
+import CompressionPlugin from 'compression-webpack-plugin'
 
 export default defineConfig({
   plugins: [pluginReact(),pluginSass()],
@@ -32,6 +33,9 @@ export default defineConfig({
     }
   },
   tools: {
+    rspack: {
+      plugins: [new CompressionPlugin({})]
+    },
     swc: {
       jsc: {
         experimental: {
