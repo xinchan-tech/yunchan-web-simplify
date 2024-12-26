@@ -1,7 +1,7 @@
 import { getAllStocks } from "@/api"
 import { useStockList } from "@/store"
 import { useQuery } from "@tanstack/react-query"
-import { useBoolean, useVirtualList } from "ahooks"
+import { useBoolean, useMount, useVirtualList } from "ahooks"
 import pako from "pako"
 import { useState, useMemo, useEffect, useRef } from "react"
 import JknIcon from "../jkn/jkn-icon"
@@ -18,6 +18,21 @@ const StockSelect = ({ onChange, className, width, ...props }: StockSelectProps)
   const [open, { setTrue, setFalse }] = useBoolean(false)
   const stockList = useStockList()
   const [keyword, setKeyword] = useState('')
+
+  useMount(() => {
+    if(!stockList.key){
+      getAllStocks().then(r => {
+        const data = atob(r.data)
+        const dataUint8 = new Uint8Array(data.length)
+        for (let i = 0; i < data.length; i++) {
+          dataUint8[i] = data.charCodeAt(i)
+        }
+        const res = JSON.parse(pako.inflate(dataUint8, { to: 'string' })) as [string, string, string, string][]
+        res.sort((a, b) => (a[1] as unknown as number) - (b[1] as unknown as number))
+        stockList.setList(res, stockList.key)
+      })
+    }
+  })
 
 
   const _onClick = (symbol: string) => {

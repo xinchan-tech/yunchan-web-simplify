@@ -9,11 +9,6 @@ const green = '#009e45'
 interface ConfigStore {
   language: Language
   hasSelected: boolean
-  servers: {
-    host: string
-    name: string
-    ws: string
-  }[]
   consults: {
     name: string
     contact: string[]
@@ -36,7 +31,6 @@ interface ConfigStore {
     gapShow: '1' | '0'
   }
   setSetting: (setting: Partial<ConfigStore['setting']>) => void
-  setServers: (service: ConfigStore['servers']) => void
   getStockColor: (up?: boolean) => '#009e45' | '#ff3f4d'
 }
 
@@ -45,7 +39,6 @@ export const useConfig = create<ConfigStore>()(
     (set, get) => ({
       language: 'zh_CN',
       hasSelected: false,
-      servers: [{ name: 'Conn_us1', host: 'http://us.mgjkn.com', ws: 'ws://us.ws.mgjkn.com' }],
       consults: [],
       aiAlarmAutoNotice: true,
       setting: {
@@ -62,7 +55,6 @@ export const useConfig = create<ConfigStore>()(
       setConsults: consults => set(() => ({ consults })),
       setLanguage: language => set(() => ({ language })),
       setHasSelected: () => set(() => ({ hasSelected: true })),
-      setServers: servers => set(s => ({ servers: [...s.servers, ...servers] })),
       getStockColor: (up = true) =>
         up
           ? get().setting.upOrDownColor === 'upGreenAndDownRed'
