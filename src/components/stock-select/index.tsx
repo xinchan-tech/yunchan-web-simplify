@@ -29,7 +29,7 @@ const StockSelect = ({ onChange, className, width, ...props }: StockSelectProps)
         }
         const res = JSON.parse(pako.inflate(dataUint8, { to: 'string' })) as [string, string, string, string][]
         res.sort((a, b) => (a[1] as unknown as number) - (b[1] as unknown as number))
-        stockList.setList(res, stockList.key)
+        stockList.setList(res, r.key)
       })
     }
   })

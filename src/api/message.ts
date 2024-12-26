@@ -64,3 +64,11 @@ type GetChatRecordsResult = {
 export const getChatRecords = (params: { uid: string; limit: number; page: 1 }) => {
   return request.get<{items: GetChatRecordsResult[]}>('/chats', { params }).then(r => r.data)
 }
+
+
+/**
+ * 标记消息已读
+ */
+export const markAsRead = (cateId: string ) => {
+  return request.post<void>('/chat/setIsRead', {uid: cateId}).then(r => r.data)
+}
