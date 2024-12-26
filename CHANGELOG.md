@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0](https://github.com/lrdmatrix/yunchan-web/compare/1.1.0...1.2.0) (2024-12-26)
+
+### ✨ Features | 新功能
+
+* 更新 release-it 配置，添加新功能类型以支持更详细的变更日志 ([70f4df1](https://github.com/lrdmatrix/yunchan-web/commit/70f4df1a32aad76ffcddaa732509ea81b4946b40))
+* 添加消息已读标记功能，优化消息中心组件，增加 WebSocket 消息处理 ([2c6855a](https://github.com/lrdmatrix/yunchan-web/commit/2c6855a725cb3928e85009db45486ad7d43ede80))
+
 ## 1.1.0 (2024-12-26)
 
 ### Features
