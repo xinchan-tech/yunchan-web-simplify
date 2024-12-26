@@ -27,20 +27,7 @@ const queryClient = new QueryClient({
   }
 })
 
-// const localStoragePersister = createSyncStoragePersister({
-//   storage: window.localStorage,
-//   retry: removeOldestQuery,
-
-// })
-
 wsManager.create(import.meta.env.PUBLIC_BASE_WS_URL)
-
-
-
-// persistQueryClient({
-//   queryClient,
-//   persister: localStoragePersister
-// })
 
 const rootEl = document.getElementById('root')
 if (rootEl) {

@@ -12,9 +12,9 @@ import { renderUtils } from "./lib/utils"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { useTime } from "@/store"
 import { nanoid } from "nanoid"
-import { cloneDeep } from "lodash-es"
 import { useUpdateEffect } from "ahooks"
 import { useNavigate } from "react-router"
+import { produce } from "immer"
 
 
 /**
@@ -43,18 +43,22 @@ export const KChart = () => {
 
   useEffect(() => {
     if (!context.state[0]) return
-    const cloneData = cloneDeep(context.state[0])
-    cloneData.mainData = {
-      history: [],
-      coiling_data: undefined,
-      md5: ''
-    }
-    cloneData.overlayStock = []
-    cloneData.overlayMark = undefined
-    cloneData.secondaryIndicators.forEach(v => {
-      v.data = undefined
+    const cloneData = produce(context.state[0], draft => {
+      draft.mainData = {
+        history: [],
+        coiling_data: undefined,
+        md5: ''
+      }
+
+      draft.overlayStock = []
+      draft.overlayMark = undefined
+
+      draft.secondaryIndicators.forEach(v => {
+        v.data = undefined
+      })
+      draft.mainIndicators = {}
     })
-    cloneData.mainIndicators = {}
+
     const str = JSON.stringify(cloneData)
 
     localStorage.setItem('k-chart-state', str)
@@ -179,7 +183,7 @@ export const KChart = () => {
   }
 
   const setMainData: KChartContext['setMainData'] = useCallback(({ index, data }) => {
- 
+
     setContext(d => {
       const chart = d.state[index ?? d.activeChartIndex]
       chart.mainData = data ? { ...data, history: data.history.map(v => [dayjs(v[0]).valueOf().toString(), ...v.slice(1)]) } as any : {

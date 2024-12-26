@@ -17,3 +17,7 @@ declare type PageResult<T> = {
 declare type NormalizedRecord<T = any> = Record<string, T>
 
 declare type ArrayItem<T> = T extends Array<infer U> ? U : never
+
+declare const __RELEASE_TAG__: string
+
+declare const __RELEASE_VERSION__: string

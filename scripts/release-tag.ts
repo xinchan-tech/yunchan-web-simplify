@@ -1,0 +1,35 @@
+import type { RsbuildPlugin } from '@rsbuild/core'
+import {execSync} from 'node:child_process'
+import packageJson from '../package.json'
+
+export type ReleaseTagOptions = {
+  outFile?: boolean
+}
+
+export const pluginReleaseTag = (options: ReleaseTagOptions): RsbuildPlugin => ({
+  name: 'plugin-release-tag',
+  setup(api){
+    let version = 'development'
+
+    if(process.env.NODE_ENV === 'production'){
+      const gitVersion = execSync('git rev-parse --short HEAD').toString().trim()
+      const gitBranch = execSync('git rev-parse --abbrev-ref HEAD').toString().trim()
+      const date = new Date().toISOString().split('T')[0].replace(/-/g, '')
+      const gitAuthor = execSync('git log -1 --pretty=format:"%an"').toString().trim()
+      version = `${gitBranch}.${gitVersion}.${gitAuthor}.${date}`
+    }
+
+    api.modifyRsbuildConfig((config) => {
+      if(!config.source){
+        config.source = {}
+      }
+
+      if(!config.source.define){
+        config.source.define = {}
+      }
+
+      config.source.define.__RELEASE_TAG__ = JSON.stringify(version)
+      config.source.define.__RELEASE_VERSION__ = JSON.stringify(packageJson.version)
+    })
+  }
+})

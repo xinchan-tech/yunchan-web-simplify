@@ -2,9 +2,10 @@ import { defineConfig } from '@rsbuild/core'
 import { pluginReact } from '@rsbuild/plugin-react'
 import { pluginSass } from '@rsbuild/plugin-sass'
 import CompressionPlugin from 'compression-webpack-plugin'
+import { pluginReleaseTag } from "./scripts/release-tag"
 
 export default defineConfig({
-  plugins: [pluginReact(),pluginSass()],
+  plugins: [pluginReact(),pluginSass(), pluginReleaseTag({})],
   source: {
     alias: {
       '@': './src'

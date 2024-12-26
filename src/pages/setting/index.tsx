@@ -148,26 +148,31 @@ const SettingPage = () => {
             合作联系：<span className="text-sm">chinajkn@gmail.com</span>
           </div>
 
-          <div data-label="版本信息" className="mt-12 text-lg border-0 border-b border-solid border-dialog-border mb-8 pb-2">版本信息</div>
-          <div className="flex items-center space-x-2">
-            <span>1.0.0</span>
+          <div data-label="版本信息" className="mt-12 text-lg border-0 border-b border-solid border-dialog-border mb-4 pb-2">版本信息</div>
+          <div className="flex flex-col space-y-2 items-start mb-8">
+            <div>
+              当前版本：<span className="text-sm">{__RELEASE_VERSION__}</span>
+            </div>
+            <div>
+              构建信息：<span className="text-sm text-tertiary">{__RELEASE_TAG__}</span>
+            </div>
           </div>
           <SettingItem label="更多平台支持">
             <div className="flex items-center space-x-12 text-[#565656]">
               <div className="cursor-pointer flex flex-col items-center space-y-2" onClick={() => open('https://www.mgjkn.com/download')} onKeyDown={() => { }}>
-                <JknIcon name="ic_windows" className="w-12 h-12" />
+                <JknIcon name="ic_windows" className="w-12 h-12 rounded-none" />
                 <span>Windows</span>
               </div>
               <div className="cursor-pointer flex flex-col items-center space-y-2" onClick={() => open('https://www.mgjkn.com/download')} onKeyDown={() => { }}>
-                <JknIcon name="ic_macos" className="w-12 h-12" />
+                <JknIcon name="ic_macos" className="w-12 h-12 rounded-none" />
                 <span>MacOS</span>
               </div>
               <div className="cursor-pointer flex flex-col items-center space-y-2" onClick={() => open('https://www.mgjkn.com/download')} onKeyDown={() => { }}>
-                <JknIcon name="ic_ios" className="w-12 h-12" />
+                <JknIcon name="ic_ios" className="w-12 h-12 rounded-none" />
                 <span>iOS</span>
               </div>
               <div className="cursor-pointer flex flex-col items-center space-y-2" onClick={() => open('https://www.mgjkn.com/download')} onKeyDown={() => { }}>
-                <JknIcon name="ic_android" className="w-12 h-12" />
+                <JknIcon name="ic_android" className="w-12 h-12 rounded-none" />
                 <span>Android</span>
               </div>
             </div>

@@ -2,13 +2,11 @@ import { StockChartInterval, type StockRawRecord, type getStockChart } from '@/a
 import { useConfig } from '@/store'
 import { dateToWeek } from '@/utils/date'
 import type { ECOption } from '@/utils/echarts'
-import { numToFixed } from '@/utils/price'
 import { StockRecord } from '@/utils/stock'
 import { colorUtil } from '@/utils/style'
 import dayjs from 'dayjs'
 import Decimal from 'decimal.js'
 import type { CandlestickSeriesOption, LineSeriesOption } from 'echarts/charts'
-import { cloneDeep } from 'lodash-es'
 import { CoilingIndicatorId, type Indicator, type KChartState, isTimeIndexChart } from './ctx'
 import {
   type DrawerRectShape,
@@ -32,6 +30,7 @@ import {
 import { renderUtils } from './utils'
 import type { GraphicComponentOption } from 'echarts/components'
 import type { YAXisOption } from 'echarts/types/dist/shared'
+import { produce } from 'immer'
 
 const MAIN_CHART_NAME = 'kChart'
 const MAIN_CHART_NAME_VIRTUAL = 'kChart-virtual'
@@ -72,20 +71,20 @@ export const options: ECOption = {
 
       const stock = StockRecord.of('', '', data)
 
-      let time = dayjs(stock.time).format('MM-DD hh:mm') + dateToWeek(stock.time, '周')
-      if (stock.time.slice(11) === '00:00:00') {
+      let time = stock.time ? dayjs(stock.time).format('MM-DD hh:mm') + dateToWeek(stock.time, '周') : '-'
+      if (stock.time?.slice(11) === '00:00:00') {
         time = stock.time.slice(0, 11) + dateToWeek(stock.time, '周')
       }
 
       return `
           <span class="text-xs">
            ${time}<br/>
-          开盘&nbsp;&nbsp;${numToFixed(stock.open, 3)}<br/>
-          最高&nbsp;&nbsp;${numToFixed(stock.high)}<br/>
-          最低&nbsp;&nbsp;${numToFixed(stock.low)}<br/>
-          收盘&nbsp;&nbsp;${numToFixed(stock.close)}<br/>
-          涨跌额&nbsp;&nbsp;${`<span class="${stock.percentAmount >= 0 ? 'text-stock-up' : 'text-stock-down'}">${stock.percentAmount >= 0 ? '+' : ''}${numToFixed(stock.percentAmount, 3)}</span>`}<br/>
-          涨跌幅&nbsp;&nbsp;${`<span class="${stock.percentAmount >= 0 ? 'text-stock-up' : 'text-stock-down'}">${stock.percentAmount >= 0 ? '+' : ''}${Decimal.create(stock.percent).mul(100).toFixed(2)}%</span>`}<br/>
+          开盘&nbsp;&nbsp;${Decimal.create(stock.open).toFixed(3)}<br/>
+          最高&nbsp;&nbsp;${Decimal.create(stock.high).toFixed()}<br/>
+          最低&nbsp;&nbsp;${Decimal.create(stock.low).toFixed()}<br/>
+          收盘&nbsp;&nbsp;${Decimal.create(stock.close).toFixed()}<br/>
+          涨跌额&nbsp;&nbsp;${`<span class="${stock.isUp ? 'text-stock-up' : 'text-stock-down'}">${stock.isUp ? '+' : ''}${Decimal.create(stock.percentAmount).toFixed(3)}</span>`}<br/>
+          涨跌幅&nbsp;&nbsp;${`<span class="${stock.isUp ? 'text-stock-up' : 'text-stock-down'}">${stock.isUp ? '+' : ''}${Decimal.create(stock.percent).mul(100).toFixed(2)}%</span>`}<br/>
           成交量&nbsp;&nbsp;${stock.volume}<br/>
           </span>
           `
@@ -198,38 +197,38 @@ type ChartRender = (
  * 渲染图表
  */
 export const renderChart = (): ECOption => {
-  const _options = cloneDeep(options)
-
-  options.dataZoom = [
-    {
-      minSpan: 1,
-      type: 'inside',
-      xAxisIndex: [0, 1, 2, 3, 4, 5],
-      start: 90,
-      end: 100,
-      filterMode: 'weakFilter'
-    },
-    {
-      fillerColor: 'weakFilter',
-      minSpan: 2,
-      show: true,
-      xAxisIndex: [0, 1, 2, 3, 4, 5],
-      type: 'slider',
-      bottom: 0,
-      start: 90,
-      end: 100,
-      backgroundColor: 'transparent',
-      dataBackground: {
-        lineStyle: {
-          color: 'rgb(31, 32, 33)'
-        }
+  const _options = produce(options, draft => {
+    draft.dataZoom = [
+      {
+        minSpan: 1,
+        type: 'inside',
+        xAxisIndex: [0, 1, 2, 3, 4, 5],
+        start: 90,
+        end: 100,
+        filterMode: 'weakFilter'
       },
-      borderColor: 'rgb(31, 32, 33)',
-      labelFormatter: (_, e) => {
-        return e
+      {
+        fillerColor: 'weakFilter',
+        minSpan: 2,
+        show: true,
+        xAxisIndex: [0, 1, 2, 3, 4, 5],
+        type: 'slider',
+        bottom: 0,
+        start: 90,
+        end: 100,
+        backgroundColor: 'transparent',
+        dataBackground: {
+          lineStyle: {
+            color: 'rgb(31, 32, 33)'
+          }
+        },
+        borderColor: 'rgb(31, 32, 33)',
+        labelFormatter: (_, e) => {
+          return e
+        }
       }
-    }
-  ]
+    ]
+  })
 
   return _options
 }
@@ -305,7 +304,6 @@ export const renderMainChart: ChartRender = (options, state) => {
       x: [1],
       y: [2, 3, 5, 4]
     }
- 
   } else {
     let color = Object.values(colorUtil.hexToRGB('#4a65bf') ?? {}).join(',')
 
@@ -327,7 +325,6 @@ export const renderMainChart: ChartRender = (options, state) => {
     mainSeries.yAxisId = 'main-price'
     _mainSeries.data = state.mainData.history ?? []
     mainSeries.color = `rgba(${color})`
-
     ;(mainSeries as any).areaStyle = {
       color: {
         x: 0,
@@ -412,7 +409,7 @@ export const renderMarkLine: ChartRender = (options, state) => {
   const { getStockColor } = useConfig.getState()
   const lastData = StockRecord.of('', '', data[data.length - 1])
 
-  const lineColor = getStockColor(lastData.percentAmount >= 0)
+  const lineColor = getStockColor(lastData.isUp)
 
   mainSeries.markLine = {
     symbol: ['none', 'none'],
@@ -444,55 +441,56 @@ export const renderMarkLine: ChartRender = (options, state) => {
   }
 
   // 虚拟线
-  const virtualLine = cloneDeep(mainSeries) as LineSeriesOption
-  virtualLine.name = MAIN_CHART_NAME_VIRTUAL
-  virtualLine.type = 'line'
+  const virtualLine = produce(mainSeries, (draft: LineSeriesOption) => {
+    draft.name = MAIN_CHART_NAME_VIRTUAL
+    draft.type = 'line'
 
-  virtualLine.encode = {
-    x: [0],
-    y: [2]
-  }
+    draft.encode = {
+      x: [0],
+      y: [2]
+    }
 
-  virtualLine.color = 'transparent'
-  virtualLine.symbol = 'none'
-  virtualLine.itemStyle = {}
+    draft.color = 'transparent'
+    draft.symbol = 'none'
+    draft.itemStyle = {}
 
-  virtualLine.markLine = {
-    symbol: ['none', 'none'],
-    lineStyle: {
-      color: '#949596'
-    },
-    label: {
-      formatter: (v: any) => {
-        const x = (v.data as any)?.xAxis as string
-        const date = dayjs(new Date(+x)).format('YYYY-MM-DD')
-
-        return `{date|${date}}{abg|}\n{title|${v.data.name}}`
+    draft.markLine = {
+      symbol: ['none', 'none'],
+      lineStyle: {
+        color: '#949596'
       },
-      backgroundColor: '#eeeeee',
-      rich: {
-        date: {
-          color: '#fff',
-          align: 'center',
-          padding: [0, 10, 0, 10]
+      label: {
+        formatter: (v: any) => {
+          const x = (v.data as any)?.xAxis as string
+          const date = dayjs(new Date(+x)).format('YYYY-MM-DD')
+
+          return `{date|${date}}{abg|}\n{title|${v.data.name}}`
         },
-        abg: {
-          backgroundColor: '#e91e63',
-          width: '100%',
-          align: 'right',
-          height: 25,
-          padding: [0, 10, 0, 10]
-        },
-        title: {
-          height: 20,
-          align: 'left',
-          padding: [0, 10, 0, 10]
+        backgroundColor: '#eeeeee',
+        rich: {
+          date: {
+            color: '#fff',
+            align: 'center',
+            padding: [0, 10, 0, 10]
+          },
+          abg: {
+            backgroundColor: '#e91e63',
+            width: '100%',
+            align: 'right',
+            height: 25,
+            padding: [0, 10, 0, 10]
+          },
+          title: {
+            height: 20,
+            align: 'left',
+            padding: [0, 10, 0, 10]
+          }
         }
-      }
-    },
-    silent: true,
-    data: []
-  }
+      },
+      silent: true,
+      data: []
+    }
+  }) as LineSeriesOption
 
   Array.isArray(options.series) && options.series.push(virtualLine)
 }
