@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.4.0](https://github.com/lrdmatrix/yunchan-web/compare/1.1.0...1.4.0) (2024-12-27)
+
+### ✨ Features | 新功能
+
+* 更新 release-it 配置，添加新功能类型以支持更详细的变更日志 ([70f4df1](https://github.com/lrdmatrix/yunchan-web/commit/70f4df1a32aad76ffcddaa732509ea81b4946b40))
+* 使用 react-query 重构登录表单，优化数据处理逻辑并提升用户体验 ([4834356](https://github.com/lrdmatrix/yunchan-web/commit/483435602861e98315f2d2fb22f68bc43564b89b))
+* 添加财务估值页面，重构股票页面路由，优化查询参数处理 ([7d05e11](https://github.com/lrdmatrix/yunchan-web/commit/7d05e11f911774ce81b9278cdd491820b9d52afc))
+* 添加消息已读标记功能，优化消息中心组件，增加 WebSocket 消息处理 ([2c6855a](https://github.com/lrdmatrix/yunchan-web/commit/2c6855a725cb3928e85009db45486ad7d43ede80))
+
+### 🎫 Chores | 其他更新
+
+* Release v1.2.0 ([aebaabe](https://github.com/lrdmatrix/yunchan-web/commit/aebaabef3e5afccde9c9676be87fc6b24c97d1a6))
+* Release v1.3.0 ([35fc22e](https://github.com/lrdmatrix/yunchan-web/commit/35fc22e5747e1ff83876ae1a3380e30ddca9bbb5))
+
 ## [1.3.0](https://github.com/lrdmatrix/yunchan-web/compare/1.1.0...1.3.0) (2024-12-27)
 
 ### ✨ Features | 新功能
