@@ -30,7 +30,6 @@ import {
 import { renderUtils } from './utils'
 import type { GraphicComponentOption } from 'echarts/components'
 import type { YAXisOption } from 'echarts/types/dist/shared'
-import { produce } from 'immer'
 
 const MAIN_CHART_NAME = 'kChart'
 const MAIN_CHART_NAME_VIRTUAL = 'kChart-virtual'
@@ -40,7 +39,7 @@ type ChartState = ArrayItem<KChartState['state']>
 /**
  * 主图通用配置
  */
-export const options: ECOption = {
+export const createOptions = (): ECOption => ({
   animation: false,
   grid: [
     {
@@ -184,7 +183,7 @@ export const options: ECOption = {
     }
   ],
   series: []
-}
+})
 
 type ChartRender = (
   options: ECOption,
@@ -197,38 +196,38 @@ type ChartRender = (
  * 渲染图表
  */
 export const renderChart = (): ECOption => {
-  const _options = produce(options, draft => {
-    draft.dataZoom = [
-      {
-        minSpan: 1,
-        type: 'inside',
-        xAxisIndex: [0, 1, 2, 3, 4, 5],
-        start: 90,
-        end: 100,
-        filterMode: 'weakFilter'
-      },
-      {
-        fillerColor: 'weakFilter',
-        minSpan: 2,
-        show: true,
-        xAxisIndex: [0, 1, 2, 3, 4, 5],
-        type: 'slider',
-        bottom: 0,
-        start: 90,
-        end: 100,
-        backgroundColor: 'transparent',
-        dataBackground: {
-          lineStyle: {
-            color: 'rgb(31, 32, 33)'
-          }
-        },
-        borderColor: 'rgb(31, 32, 33)',
-        labelFormatter: (_, e) => {
-          return e
+  const _options = createOptions()
+
+  _options.dataZoom = [
+    {
+      minSpan: 1,
+      type: 'inside',
+      xAxisIndex: [0, 1, 2, 3, 4, 5],
+      start: 90,
+      end: 100,
+      filterMode: 'weakFilter'
+    },
+    {
+      fillerColor: 'weakFilter',
+      minSpan: 2,
+      show: true,
+      xAxisIndex: [0, 1, 2, 3, 4, 5],
+      type: 'slider',
+      bottom: 0,
+      start: 90,
+      end: 100,
+      backgroundColor: 'transparent',
+      dataBackground: {
+        lineStyle: {
+          color: 'rgb(31, 32, 33)'
         }
+      },
+      borderColor: 'rgb(31, 32, 33)',
+      labelFormatter: (_, e) => {
+        return e
       }
-    ]
-  })
+    }
+  ]
 
   return _options
 }
@@ -260,6 +259,7 @@ export const renderGrid = (options: ECOption, state: ChartState, size: [number, 
 
   // const tops = renderUtils.calcGridTopByGridIndex(state.secondaryIndicators.length)
   const grids = renderUtils.calcGridSize(size, state.secondaryIndicators.length, !!state.yAxis.left)
+
   options.grid = grids
 
   const yAxis = options.yAxis as YAXisOption[]
@@ -441,56 +441,56 @@ export const renderMarkLine: ChartRender = (options, state) => {
   }
 
   // 虚拟线
-  const virtualLine = produce(mainSeries, (draft: LineSeriesOption) => {
-    draft.name = MAIN_CHART_NAME_VIRTUAL
-    draft.type = 'line'
+  const virtualLine = JSON.parse(JSON.stringify(mainSeries)) as LineSeriesOption
 
-    draft.encode = {
-      x: [0],
-      y: [2]
-    }
+  virtualLine.name = MAIN_CHART_NAME_VIRTUAL
+  virtualLine.type = 'line'
 
-    draft.color = 'transparent'
-    draft.symbol = 'none'
-    draft.itemStyle = {}
+  virtualLine.encode = {
+    x: [0],
+    y: [2]
+  }
 
-    draft.markLine = {
-      symbol: ['none', 'none'],
-      lineStyle: {
-        color: '#949596'
+  virtualLine.color = 'transparent'
+  virtualLine.symbol = 'none'
+  virtualLine.itemStyle = {}
+
+  virtualLine.markLine = {
+    symbol: ['none', 'none'],
+    lineStyle: {
+      color: '#949596'
+    },
+    label: {
+      formatter: (v: any) => {
+        const x = (v.data as any)?.xAxis as string
+        const date = dayjs(new Date(+x)).format('YYYY-MM-DD')
+
+        return `{date|${date}}{abg|}\n{title|${v.data.name}}`
       },
-      label: {
-        formatter: (v: any) => {
-          const x = (v.data as any)?.xAxis as string
-          const date = dayjs(new Date(+x)).format('YYYY-MM-DD')
-
-          return `{date|${date}}{abg|}\n{title|${v.data.name}}`
+      backgroundColor: '#eeeeee',
+      rich: {
+        date: {
+          color: '#fff',
+          align: 'center',
+          padding: [0, 10, 0, 10]
         },
-        backgroundColor: '#eeeeee',
-        rich: {
-          date: {
-            color: '#fff',
-            align: 'center',
-            padding: [0, 10, 0, 10]
-          },
-          abg: {
-            backgroundColor: '#e91e63',
-            width: '100%',
-            align: 'right',
-            height: 25,
-            padding: [0, 10, 0, 10]
-          },
-          title: {
-            height: 20,
-            align: 'left',
-            padding: [0, 10, 0, 10]
-          }
+        abg: {
+          backgroundColor: '#e91e63',
+          width: '100%',
+          align: 'right',
+          height: 25,
+          padding: [0, 10, 0, 10]
+        },
+        title: {
+          height: 20,
+          align: 'left',
+          padding: [0, 10, 0, 10]
         }
-      },
-      silent: true,
-      data: []
-    }
-  }) as LineSeriesOption
+      }
+    },
+    silent: true,
+    data: []
+  }
 
   Array.isArray(options.series) && options.series.push(virtualLine)
 }

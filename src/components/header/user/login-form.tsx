@@ -4,11 +4,10 @@ import LoginLeftImg from '@/assets/image/login_left.png'
 import AppleIcon from '@/assets/icon/apple.png'
 import GoogleIcon from '@/assets/icon/google.png'
 import { useToken, useUser } from "@/store"
-import { useRequest } from "ahooks"
-import to from "await-to-js"
 import { z } from "zod"
 import { Button, Form, FormControl, FormField, FormItem,  Input } from "@/components"
 import { useToast, useZForm } from "@/hooks"
+import { useMutation } from "@tanstack/react-query"
 
 interface LoginFormProps {
   afterLogin?: () => void
@@ -26,26 +25,21 @@ const LoginForm = (props: LoginFormProps) => {
   const form = useZForm(loginSchema, { mobile: '', password: '' })
   const { setUser } = useUser()
   const { setToken } = useToken()
-  const submitLogin = useRequest(login, { manual: true })
   const { toast } = useToast()
-  const onLogin = async (values: LoginForm) => {
-    const [err, res] = await to(submitLogin.runAsync(values))
 
-    if (err) {
-      // toast.error(err.message)
+  const loginMutation = useMutation({
+    mutationFn: login,
+    onSuccess: (res) => {
+      setUser(res.user)
+      setToken(res.token)
+      props.afterLogin?.()
+    },
+    onError: (err) => {
       toast({
         description: err.message,
       })
-      return
     }
-
-    if (res) {
-      setUser(res.user)
-      setToken(res.token)
-    }
-
-    props.afterLogin?.()
-  }
+  })
 
   return (
     <div className="flex login-form">
@@ -56,7 +50,7 @@ const LoginForm = (props: LoginFormProps) => {
       <div className="bg-white h-[400px] w-[280px] box-border flex flex-col px-4">
         <p className="text-[#3861F6] mt-12 text-lg">登录账号</p>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onLogin)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(loginMutation.mutate as any)} className="space-y-4">
             <FormField control={form.control} name="mobile"
               render={({ field }) => (
                 <FormItem>
@@ -75,7 +69,7 @@ const LoginForm = (props: LoginFormProps) => {
                 </FormItem>
               )}
             />
-            <Button block >登录</Button>
+            <Button block loading={loginMutation.isPending}>登录</Button>
           </form>
         </Form>
         <div className="px-4 other-login mt-4" >
