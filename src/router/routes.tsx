@@ -67,7 +67,7 @@ export const routes: RouteObject[] = [
     }
   },
   {
-    path: '/stock',
+    path: '/stock/:type',
     Component: lazy(() => import('@/pages/stock')),
     handle:{
       title: '个股盘口'

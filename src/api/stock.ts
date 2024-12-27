@@ -73,7 +73,6 @@ export type StockExtendResult =
   | 'net_income_loss' // 净利润？
   | 'bubble'
 
-
 export type StockExtendResultMap = Record<StockExtendResult, any>
 
 export const getAllStocks = async (key?: string) => {
@@ -598,12 +597,16 @@ getUsStocks.cacheKey = 'stock:cutom:getUsStocks'
  * 中概股
  */
 export const getChineseStocks = async (extend: StockExtend[]) => {
-  const r = await request.get<{
-    extend: StockExtendResultMap
-    symbol: string
-    name: string
-    stock: StockRawRecord
-  }[]>('/stock/cutom/getStocks', { params: {type: 'china', extend} }).then(r => r.data)
+  const r = await request
+    .get<
+      {
+        extend: StockExtendResultMap
+        symbol: string
+        name: string
+        stock: StockRawRecord
+      }[]
+    >('/stock/cutom/getStocks', { params: { type: 'china', extend } })
+    .then(r => r.data)
   return r
 }
 
@@ -1342,14 +1345,14 @@ export const getStockTabData = (params: {
     event?: string[]
   }
 }) => {
-  return request.post<GetStockTabDataResult>('/stock/economic/tab',  params).then(r => r.data)
+  return request.post<GetStockTabDataResult>('/stock/economic/tab', params).then(r => r.data)
 }
 getStockTabData.cacheKey = 'stock:tab:data'
 
 type GetStockWitchingDayResult = {
-  beforeYear: [number, number, number, number, number],
-  beforeTwoYear: GetStockWitchingDayResult['beforeYear'],
-  beforeThreeYear: GetStockWitchingDayResult['beforeYear'],
+  beforeYear: [number, number, number, number, number]
+  beforeTwoYear: GetStockWitchingDayResult['beforeYear']
+  beforeThreeYear: GetStockWitchingDayResult['beforeYear']
   date: {
     year: string
     items: [string, string, string, string]
@@ -1363,3 +1366,66 @@ export const getWitchingDay = () => {
   return request.get<GetStockWitchingDayResult>('/stock/getQWData').then(r => r.data)
 }
 getWitchingDay.cacheKey = 'stock:getQWData'
+
+type GetStockFinanceTotalResult = {
+  quarter_items: {
+    current_assets: { fiscal_year: string; fiscal_period: string; value: number; rate: number }[]
+    equity: { fiscal_year: string; fiscal_period: string; value: number; rate: number }[]
+    liabilities: { fiscal_year: string; fiscal_period: string; value: number; rate: number }[]
+    liabilities_and_equity: { fiscal_year: string; fiscal_period: string; value: number; rate: number }[]
+    liabilities_rate: { fiscal_year: string; fiscal_period: string; value: number; rate: number }[]
+    net_cash_flow_free: { fiscal_year: string; fiscal_period: string; value: number; rate: number }[]
+    net_income_loss: { fiscal_year: string; fiscal_period: string; value: number; rate: number }[]
+    revenues: { fiscal_year: string; fiscal_period: string; value: number; rate: number }[]
+  }
+  rating: {
+    buy: string
+    hold: string
+    sell: string
+    symbol: string
+    title: string
+    update_at: string
+  }
+  targets: {
+    list: { close: number; datetime: string }[]
+    target: {
+      consensus: string
+      created_at: string
+      high: string
+      id: string
+      low: string
+      median: string
+      ticker: string
+      update_at: string
+    }
+  }
+  totals: {
+    revenues: number
+    net_income_loss: number
+    current_assets: number
+    equity: number
+    liabilities_and_equity: number
+    net_cash_flow_free: number
+    liabilities: number
+    liabilities_rate: number
+    updated_at: string
+  }
+  year_items: {
+    current_assets: { fiscal_year: string; value: number; rate: number }[]
+    equity: { fiscal_year: string; value: number; rate: number }[]
+    liabilities: { fiscal_year: string; value: number; rate: number }[]
+    liabilities_and_equity: { fiscal_year: string; value: number; rate: number }[]
+    liabilities_rate: { fiscal_year: string; value: number; rate: number }[]
+    net_cash_flow_free: { fiscal_year: string; value: number; rate: number }[]
+    net_income_loss: { fiscal_year: string; value: number; rate: number }[]
+    revenues: { fiscal_year: string; value: number; rate: number }[]
+  }
+}
+
+/**
+ * 股票核心财务
+ */
+export const getStockFinanceTotal = (symbol: string) => {
+  return request.get<GetStockFinanceTotalResult>('/stock/financials/total', { params: { symbol } }).then(r => r.data)
+}
+getStockFinanceTotal.cacheKey = 'stock:financials:total'

@@ -29,7 +29,12 @@ const MenuRight = () => {
     {
       icon: 'right_menu_1',
       title: '个股盘口',
-      path: '/stock',
+      path: '/stock/s',
+    },
+    {
+      icon: 'right_menu_4',
+      title: '财务估值',
+      path: '/stock/finance'
     }
   ]
 
@@ -44,7 +49,14 @@ const MenuRight = () => {
       return
     }
 
-    return router.navigate(path)
+    const search = new URLSearchParams(window.location.search)
+    const symbol = search.get('symbol') ?? 'QQQ'
+
+    if(path.startsWith('/stock')){
+      router.navigate(`${path}?symbol=${symbol}`)
+    }else{
+      router.navigate(path)
+    }
   }
 
   return (

@@ -214,7 +214,6 @@ const SingleTable = (props: SingleTableProps) => {
     if (event === 'collect') {
       queryClient.setQueryData(['stock-table-view', props.type, sort], (data: TableDataType[]) => {
         return data.map(produce(draft => {
-          console.log(draft.symbol, symbols, symbols.includes(draft.symbol))
           if (symbols.includes(draft.symbol)) {
 
             draft.extend.collect = checked ? 1 : 0

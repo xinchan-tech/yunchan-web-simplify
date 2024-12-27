@@ -60,9 +60,9 @@ const StockSelect = ({ onChange, className, width, ...props }: StockSelectProps)
     <div className="w-48" style={{ width }}>
       <Popover modal open={open} onOpenChange={v => !v && setFalse()}>
         <PopoverAnchor asChild>
-          <div className={cn('border border-solid border-dialog-border rounded-sm flex items-center px-2', className)}>
+          <div className={cn('border border-solid border-dialog-border rounded-sm flex items-center px-2 bg-accent', className)}>
             <JknIcon className="w-4 h-4" name="ic_search" />
-            <Input value={keyword} onChange={e => setKeyword(e.target.value)} className="border-none" size="sm" onClick={() => setTrue()} placeholder="请输入股票代码" {...props} />
+            <Input value={keyword} onChange={e => setKeyword(e.target.value)} className="border-none placeholder:text-tertiary" size="sm" onClick={() => setTrue()} placeholder="请输入股票代码" {...props} />
           </div>
         </PopoverAnchor>
         <PopoverContent align="start" onOpenAutoFocus={e => e.preventDefault()}>

@@ -1,7 +1,10 @@
 import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
+import { createStoreIndexStorage } from "@/plugins/createStoreIndexStorage"
 
 type StockData = [string, string, string, string]
+
+
 
 interface StockListStore {
   history: StockData[]
@@ -42,7 +45,7 @@ export const useStockList = create<StockListStore>()(
     }),
     {
       name: 'stock-list',
-      storage: createJSONStorage(() => localStorage)
+      storage: createJSONStorage(() => createStoreIndexStorage())
     }
   )
 )

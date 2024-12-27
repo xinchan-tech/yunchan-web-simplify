@@ -1,14 +1,14 @@
 import { cn } from "@/utils/style"
 import { useCallback, useEffect, useMemo } from "react"
 import { useImmer } from "use-immer"
-import { ChartContextMenu } from "./component/chart-context-menu"
-import { ChartToolSelect } from "./component/chart-tool"
-import { MainChart } from "./component/main-chart"
-import { TimeIndexSelect } from "./component/time-index"
-import { type Indicator, KChartContext, type KChartState, createDefaultChartState, isTimeIndexChart, useSymbolQuery } from "./lib"
+import { ChartContextMenu } from "../component/chart-context-menu"
+import { ChartToolSelect } from "../component/chart-tool"
+import { MainChart } from "../component/main-chart"
+import { TimeIndexSelect } from "../component/time-index"
+import { type Indicator, KChartContext, type KChartState, createDefaultChartState, isTimeIndexChart, useSymbolQuery } from "../lib"
 import { getStockChart, getStockIndicatorData, getStockTabData, getStockTabList } from "@/api"
 import dayjs from "dayjs"
-import { renderUtils } from "./lib/utils"
+import { renderUtils } from "../lib/utils"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { useTime } from "@/store"
 import { nanoid } from "nanoid"
@@ -70,7 +70,7 @@ export const KChart = () => {
 
   const navigate = useNavigate()
   useUpdateEffect(() => {
-    navigate(`/stock?symbol=${context.state[context.activeChartIndex].symbol}`)
+    navigate(`/stock/s?symbol=${context.state[context.activeChartIndex].symbol}`)
   }, [context.state, context.activeChartIndex])
 
 

@@ -6,7 +6,6 @@ import { useQuery } from "@tanstack/react-query"
 import { useMount, useUnmount, useUpdateEffect } from "ahooks"
 import Decimal from "decimal.js"
 import { useRef, useState } from "react"
-import { useNavigate } from "react-router"
 
 const extend: StockExtend[] = ['basic_index', 'day_basic', 'alarm_ai', 'alarm_all', 'total_share', 'financials', 'thumbs', 'stock_before', 'stock_after']
 
@@ -19,12 +18,18 @@ type TableDataType = {
   afterPrice?: number
   afterPercent?: number
 }
-export const CollectList = () => {
+
+
+interface CollectListProps {
+  onCollectChange?: (collect: string) => void
+}
+
+export const CollectList = (props: CollectListProps) => {
   const [collect, setCollect] = useState('1')
   // const { getLastRecordByTrading } = useStock()
-  const navigate = useNavigate()
+  // const navigate = useNavigate()
   const stocks = useQuery({
-    queryKey: [getStockCollects.cacheKey, collect, extend],
+    queryKey: [getStockCollects.cacheKey, collect],
     queryFn: () => getStockCollects({
       cate_id: +collect,
       extend,
@@ -75,7 +80,7 @@ export const CollectList = () => {
               <div
                 key={stock.code}
                 className="flex py-3 hover:bg-accent px-1"
-                onClick={() => navigate(`/stock?symbol=${stock.code}`)}
+                onClick={() => props.onCollectChange?.(stock.code)}
                 onKeyDown={() => { }}
               >
                 <div className="flex-1">

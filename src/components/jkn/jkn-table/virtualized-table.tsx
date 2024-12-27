@@ -143,7 +143,7 @@ const VirtualizedTable = <TData extends Record<string, unknown>, TValue>({ class
                   {
                     Array.from({ length: 8 }).map((_, i) => (
                       // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
-                      <Skeleton key={i} className="h-6" />
+                      <Skeleton key={i} className="h-5" />
                     ))
                   }
                 </div>

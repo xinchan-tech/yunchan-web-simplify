@@ -1,6 +1,5 @@
-import { type StockExtend, getStockBaseCodeInfo, getStockBrief, getStockNotice, getStockQuote, getStockRelated, getStockTrades } from "@/api"
+import { getStockBaseCodeInfo, getStockBrief, getStockNotice, getStockQuote, getStockRelated, getStockTrades } from "@/api"
 import { AiAlarm, Button, CapsuleTabs, Carousel, CarouselContent, CollectStar, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, HoverCard, HoverCardContent, HoverCardTrigger, JknIcon, JknTable, type JknTableProps, NumSpan, PriceAlarm, ScrollArea, Separator } from "@/components"
-import { useQueryParams } from "@/hooks"
 import { StockRecord, stockManager } from "@/utils/stock"
 import { cn } from "@/utils/style"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
@@ -9,11 +8,10 @@ import Decimal from "decimal.js"
 import Autoplay from "embla-carousel-autoplay"
 import { nanoid } from "nanoid"
 import { useEffect, useMemo, useState } from "react"
-import { useSymbolQuery } from "./lib"
+import { stockBaseCodeInfoExtend, useSymbolQuery } from "../lib"
 export const StockInfo = () => {
   const [active, setActive] = useState<'quote' | 'news'>('quote')
-  const queryParams = useQueryParams()
-  const code = queryParams.get('symbol') ?? 'QQQ'
+  const code = useSymbolQuery()
 
 
   return (
@@ -62,8 +60,8 @@ export const StockInfo = () => {
 const StockBaseInfo = () => {
   const code = useSymbolQuery()
   const queryOptions = {
-    queryKey: [getStockBaseCodeInfo.cacheKey, code, extend],
-    queryFn: () => getStockBaseCodeInfo({ symbol: code, extend })
+    queryKey: [getStockBaseCodeInfo.cacheKey, code, stockBaseCodeInfoExtend],
+    queryFn: () => getStockBaseCodeInfo({ symbol: code, extend: stockBaseCodeInfoExtend })
   }
   const queryClient = useQueryClient()
 
@@ -136,7 +134,7 @@ const StockBaseInfo = () => {
   )
 }
 
-const extend: StockExtend[] = ['collect', 'alarm_ai', 'alarm_all', 'day_basic', 'total_share', 'financials', 'bubble', 'stock_before', 'stock_after']
+
 
 
 
@@ -149,8 +147,8 @@ const StockQuote = () => {
   })
 
   const codeInfo = useQuery({
-    queryKey: [getStockBaseCodeInfo.cacheKey, code, extend],
-    queryFn: () => getStockBaseCodeInfo({ symbol: code, extend })
+    queryKey: [getStockBaseCodeInfo.cacheKey, code, stockBaseCodeInfoExtend],
+    queryFn: () => getStockBaseCodeInfo({ symbol: code, extend: stockBaseCodeInfoExtend })
   })
 
   const [stock, _, __] = codeInfo.data ? stockManager.toStockRecord(codeInfo.data) : []

@@ -1,4 +1,4 @@
-import { Button, CapsuleTabs, JknTable, type JknTableProps, NumSpan, ScrollArea, StockView } from "@/components"
+import { Button, CapsuleTabs, JknTable, type JknTableProps, NumSpan, StockView } from "@/components"
 import { useCollectCates, useToken } from "@/store"
 import { appEvent } from "@/utils/event"
 import { useMemo, useState } from "react"
@@ -20,7 +20,8 @@ const GoldenStockPool = () => {
       cate_id: +type,
       extend: ['total_share', 'basic_index', 'day_basic', 'alarm_ai', 'alarm_all', 'financials', 'thumbs', 'stock_after', 'stock_before'],
       limit: 300
-    })
+    }),
+    enabled: !!token
   })
 
   const data = useMemo(() => query.data?.items.map(item => stockManager.toStockRecord(item)[0]!) ?? [], [query.data])
@@ -82,7 +83,7 @@ const GoldenStockPool = () => {
       <div className="flex-1 overflow-hidden">
         {
           token ? (
-            <JknTable rowKey="symbol" data={data} columns={columns} />
+            <JknTable loading={query.isLoading} rowKey="symbol" data={data} columns={columns} />
           ) : (
             <div className="w-full text-center mt-40">
               <div className="mb-4 text-secondary">尚未登录账号</div>

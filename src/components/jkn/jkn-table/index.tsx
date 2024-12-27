@@ -153,7 +153,7 @@ const _JknTable = <TData extends Record<string, unknown>, TValue>(props: JknTabl
                   {
                     Array.from({ length: 8 }).map((_, i) => (
                       // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
-                      <Skeleton key={i} className="h-6" />
+                      <Skeleton key={i} className="h-5" />
                     ))
                   }
                 </div>
