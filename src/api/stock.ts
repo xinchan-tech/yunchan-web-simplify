@@ -1429,3 +1429,35 @@ export const getStockFinanceTotal = (symbol: string) => {
   return request.get<GetStockFinanceTotalResult>('/stock/financials/total', { params: { symbol } }).then(r => r.data)
 }
 getStockFinanceTotal.cacheKey = 'stock:financials:total'
+
+type GetStockValuationResult = {
+  foam: string
+  total_mv: {
+    items: [string, number][]
+    current: number
+    max: number
+    min: number
+  }
+  pe_ttm: GetStockValuationResult['total_mv']
+  pb: GetStockValuationResult['total_mv']
+  revenues: {
+    geographic: {
+      name: string
+      revenue: number
+      ratio: number
+    }[];
+    product: GetStockValuationResult['revenues']['geographic']
+  }
+  options: {
+    period: string
+    year: string
+  }[]
+}
+
+/**
+ * 股票财务估值
+ */
+export const getStockValuation = (symbol: string, dates: [string, string]) => {
+  return request.get<GetStockValuationResult>('/stock/valuation', { params: { symbol, dates } }).then(r => r.data)
+}
+getStockValuation.cacheKey = 'stock:valuation'

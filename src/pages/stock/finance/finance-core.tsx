@@ -245,6 +245,8 @@ export const FinanceCore = () => {
           <FinanceTarget data={stockFinance?.targets} />
         </div>
       </div>
+
+
     </div>
   )
 
