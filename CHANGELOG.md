@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.5.0](https://github.com/lrdmatrix/yunchan-web/compare/1.4.0...1.5.0) (2024-12-28)
+
+### ✨ Features | 新功能
+
+* 添加进度条组件，更新主题颜色变量，修复类型定义，优化样式处理 ([ba8fb1a](https://github.com/lrdmatrix/yunchan-web/commit/ba8fb1a7fda9b09e218df0e93efd152454ceacb6))
+
 ## [1.4.0](https://github.com/lrdmatrix/yunchan-web/compare/1.1.0...1.4.0) (2024-12-27)
 
 ### ✨ Features | 新功能
