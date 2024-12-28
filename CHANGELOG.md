@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.5.0](https://github.com/lrdmatrix/yunchan-web/compare/1.4.0...null) (2024-12-28)
+
+### ✨ Features | 新功能
+
+* 添加股票财务估值功能，更新财务页面路由，优化切换标签 ([781c824](https://github.com/lrdmatrix/yunchan-web/commit/781c824f8e3870682f82b14a3a77db5b8f772a2c))
+* 添加进度条组件，更新主题颜色变量，修复类型定义，优化样式处理 ([ba8fb1a](https://github.com/lrdmatrix/yunchan-web/commit/ba8fb1a7fda9b09e218df0e93efd152454ceacb6))
+
+### 🐛 Bug Fixes | Bug 修复
+
+* 修复类型定义，更新组件导入方式 ([dafffdf](https://github.com/lrdmatrix/yunchan-web/commit/dafffdf6e4cda56ff4206aa3f86c44c72623acba))
+
+### 🎫 Chores | 其他更新
+
+* Release v1.5.0 ([ec321f7](https://github.com/lrdmatrix/yunchan-web/commit/ec321f70ec3ae04aad23e3daf85fa1ed1e8ee1be))
+
 ## [1.5.0](https://github.com/lrdmatrix/yunchan-web/compare/1.4.0...1.5.0) (2024-12-28)
 
 ### ✨ Features | 新功能
