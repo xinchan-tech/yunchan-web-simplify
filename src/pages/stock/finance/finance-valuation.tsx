@@ -1,5 +1,5 @@
 import { getStockBaseCodeInfo, getStockValuation } from "@/api"
-import { Button, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, JknIcon, JknTable, JknTableProps, NumSpan, StockSelect, ToggleGroup, ToggleGroupItem } from "@/components"
+import { Button, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, JknIcon, JknTable, type JknTableProps, NumSpan, StockSelect, ToggleGroup, ToggleGroupItem } from "@/components"
 import { useChart, useQueryParams } from "@/hooks"
 import { useQuery } from "@tanstack/react-query"
 import dayjs from "dayjs"
