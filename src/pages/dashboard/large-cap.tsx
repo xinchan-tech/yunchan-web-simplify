@@ -40,7 +40,7 @@ const LargeCap = () => {
   const [activeStock, setActiveStock] = useState<string>()
   const time = useTime()
 
-  const [stockType, setStockType] = useState<StockChartInterval>(tradingToIntervalMap[time.getTrading()])
+  const [stockType, setStockType] = useState<StockChartInterval>(tradingToIntervalMap[time.getTrading() as StockTrading])
   const largeCap = useQuery({
     queryKey: [getLargeCapIndexes.cacheKey],
     queryFn: () => getLargeCapIndexes(),

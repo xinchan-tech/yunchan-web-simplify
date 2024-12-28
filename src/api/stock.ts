@@ -1384,7 +1384,7 @@ type GetStockFinanceTotalResult = {
     sell: string
     symbol: string
     title: string
-    update_at: string
+    updated_at: string
   }
   targets: {
     list: { close: number; datetime: string }[]
@@ -1396,7 +1396,7 @@ type GetStockFinanceTotalResult = {
       low: string
       median: string
       ticker: string
-      update_at: string
+      updated_at: string
     }
   }
   totals: {

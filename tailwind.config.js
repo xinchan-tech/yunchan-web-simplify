@@ -10,7 +10,9 @@ module.exports = {
       colors: {
         stock: {
           up: 'hsl(var(--stock-up-color))',
-          down: 'hsl(var(--stock-down-color))'
+          down: 'hsl(var(--stock-down-color))',
+          green: 'hsl(var(--color-stock-green))',
+          red: 'hsl(var(--color-stock-red))',
         },
         active: 'hsl(var(--active-color))',
         border: "hsl(var(--border))",

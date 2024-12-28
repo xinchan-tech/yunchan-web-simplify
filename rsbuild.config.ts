@@ -2,19 +2,20 @@ import { defineConfig } from '@rsbuild/core'
 import { pluginReact } from '@rsbuild/plugin-react'
 import { pluginSass } from '@rsbuild/plugin-sass'
 import CompressionPlugin from 'compression-webpack-plugin'
-import { pluginReleaseTag } from "./scripts/release-tag"
+import { pluginReleaseTag } from './scripts/release-tag'
+import { pluginTypedCSSModules } from '@rsbuild/plugin-typed-css-modules'
 
 export default defineConfig({
-  plugins: [pluginReact(),pluginSass(), pluginReleaseTag({})],
+  plugins: [pluginReact(), pluginSass(), pluginReleaseTag({}), pluginTypedCSSModules()],
   source: {
     alias: {
       '@': './src'
     }
   },
-  html:{
+  html: {
     template: './public/index.html'
   },
-  server:{
+  server: {
     host: '0.0.0.0',
     proxy: {
       '/api': {

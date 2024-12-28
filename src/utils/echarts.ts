@@ -8,7 +8,9 @@ import {
   CandlestickChart,
   type CandlestickSeriesOption,
   CustomChart,
-  type CustomSeriesOption
+  type CustomSeriesOption,
+  BarChart,
+  type BarSeriesOption
 } from 'echarts/charts'
 
 import {
@@ -58,7 +60,8 @@ echarts.use([
   DataZoomComponent,
   CandlestickChart,
   GraphicComponent,
-  CustomChart
+  CustomChart,
+  BarChart
 ])
 
 export type ECOption = echarts.ComposeOption<
@@ -76,6 +79,7 @@ export type ECOption = echarts.ComposeOption<
   | CandlestickSeriesOption
   | GraphicComponentOption
   | CustomSeriesOption
+  | BarSeriesOption
 >
 
 /**

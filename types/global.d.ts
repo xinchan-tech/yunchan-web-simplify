@@ -1,5 +1,7 @@
 declare type AnyRecord = Record<string, any>
 
+declare module '*.scss'
+
 declare type PageResult<T> = {
   items: T[]
   before: number
