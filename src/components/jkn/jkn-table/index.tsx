@@ -126,7 +126,7 @@ const _JknTable = <TData extends Record<string, unknown>, TValue>(props: JknTabl
                                     return (
                                       <td
                                         key={cell.id}
-                                        className="jkn-table-td break-all py-12"
+                                        className="jkn-table-td break-all py-12 h-1"
                                         style={{ textAlign: align as undefined }}
                                       >
                                         {flexRender(cell.column.columnDef.cell, cell.getContext())}

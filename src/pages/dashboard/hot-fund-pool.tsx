@@ -26,7 +26,7 @@ const TopList = () => {
     },
     {
       header: '现价', accessorKey: 'close', meta: { align: 'right', width: '17%' },
-      cell: ({ row }) => <NumSpan value={Decimal.create(row.getValue<number>('close')).toFixed(2)} isPositive={row.original.isUp} />
+      cell: ({ row }) => <NumSpan blink value={Decimal.create(row.getValue<number>('close')).toFixed(2)} isPositive={row.original.isUp} align="right" />
     },
     {
       header: '涨跌幅', accessorKey: 'percent', meta: { align: 'right', width: '20%' },

@@ -1,6 +1,6 @@
 import { getChatContacts, getChatRecords, getNoticeList, getNoticeTypes, markAsRead } from "@/api"
 import { JknAvatar, ScrollArea } from "@/components"
-import { useWsMessage } from "@/hooks"
+import { useWsChat, useWsMessage } from "@/hooks"
 import { useUser } from "@/store"
 import { dateToWeek } from "@/utils/date"
 import { cn } from "@/utils/style"
@@ -146,7 +146,7 @@ const MessageContent = (props: MessageContentProps) => {
     enabled: props.type === 'chat' && !!props.msgKey
   })
 
-  const ws = useWsMessage((d) => {
+  const ws = useWsChat((d) => {
     
   })
 

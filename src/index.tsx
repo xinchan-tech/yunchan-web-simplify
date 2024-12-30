@@ -10,7 +10,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { StrictMode } from "react"
 import '@/plugins/decimal-plugin'
-import { wsManager } from "./utils/ws/manager.ts"
+import {} from '@/utils/stock'
 
 
 dayjs.extend(utc)
@@ -27,7 +27,6 @@ const queryClient = new QueryClient({
   }
 })
 
-wsManager.create(import.meta.env.PUBLIC_BASE_WS_URL)
 
 const rootEl = document.getElementById('root')
 if (rootEl) {

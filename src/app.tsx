@@ -4,12 +4,14 @@ import './app.scss'
 import { RouterProvider } from "react-router"
 import { router, routes } from "./router"
 import { useMount, useUpdateEffect } from "ahooks"
-import { useConfig, useUser } from "./store"
+import { useConfig, useToken, useUser } from "./store"
 import { useTranslation } from "react-i18next"
 import { Suspense, useEffect, useMemo, useRef, useState } from "react"
 import { getConfig, getUser } from "./api"
 import { useQuery } from "@tanstack/react-query"
 import { appEvent } from "./utils/event"
+import { wsManager } from "./utils/ws"
+import { uid } from "radash"
 
 const App = () => {
   const config = useConfig()
@@ -39,7 +41,6 @@ const App = () => {
 
   useUpdateEffect(() => {
     config.setConsults(configQuery.data?.consults ?? [])
-    // setServers(configQuery.data?.servers ?? [])
   }, [configQuery.data])
 
   useMount(() => {
@@ -169,6 +170,31 @@ const AppTitle = () => {
   const { t } = useTranslation()
   const [pathname, setPathname] = useState(router.state.location.pathname)
   
+  const { token } = useToken()
+
+  useEffect(() => {
+    if(token){
+      wsManager.send({
+        event: "login",
+        data: {
+            "token": token
+        },
+        msg_id: uid(20)
+      })
+      const close = wsManager.on('connect', () => {
+        wsManager.send({
+          event: "login",
+          data: {
+              "token": token
+          },
+          msg_id: uid(20)
+        })
+      })
+
+      return close
+    }
+  }, [token])
+
   useEffect(() => {
     const s = router.subscribe((s) => {
       setPathname(s.location.pathname)

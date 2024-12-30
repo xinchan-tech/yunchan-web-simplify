@@ -2,6 +2,7 @@ import dayjs from 'dayjs'
 import { getTrading } from '../date'
 import type { StockExtendResultMap, StockRawRecord } from '@/api'
 import Decimal from 'decimal.js'
+import { isNumber } from "radash"
 
 export type StockTrading = 'preMarket' | 'intraDay' | 'afterHours' | 'close'
 
@@ -208,11 +209,25 @@ export class StockRecord {
   /**
    * 判断时间数据
    * 2024-09-10 不带时间默认为盘中数据，自动补齐
+   * @param time 添加时间戳
    */
   static parseTime(time: string) {
+    if(time.replace('-', '').length === time.length) {
+      if(time.length === 10) {
+        return dayjs(+time * 1000).format('YYYY-MM-DD HH:mm:ss')
+      }
+      return dayjs(+time).format('YYYY-MM-DD HH:mm:ss')
+    }
     if (time.length === 10) {
       return `${dayjs(time).format('YYYY-MM-DD')} 15:59:00`
     }
     return time
+  }
+
+  /**
+   * 转换为dayjs
+   */
+  toDayjs() {
+    return dayjs(this.time)
   }
 }

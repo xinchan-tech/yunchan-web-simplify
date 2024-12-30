@@ -1,18 +1,19 @@
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { useKChartContext } from "../lib"
 import { useTime } from "@/store"
-import { useQueries, useQuery } from "@tanstack/react-query"
-import { getStockChart, getStockIndicatorData } from "@/api"
+import { useQueries, useQuery, useQueryClient } from "@tanstack/react-query"
+import { getStockChart, getStockIndicatorData, StockChartInterval } from "@/api"
 import { useMount, useUnmount, useUpdateEffect } from "ahooks"
-import { useChart, useDomSize } from "@/hooks"
+import { useDomSize, useStockBarSubscribe } from "@/hooks"
 import { renderChart, renderGrid, renderMainChart, renderMainCoiling, renderMainIndicators, renderMarkLine, renderOverlay, renderOverlayMark, renderSecondary, renderSecondaryLocalIndicators, renderWatermark, renderZoom } from "../lib/render"
 import { SecondaryIndicator } from "./secondary-indicator"
 import { renderUtils } from "../lib/utils"
 import { StockSelect } from "@/components"
 import { cn } from "@/utils/style"
 import { TimeIndexMenu } from "./time-index"
-import { useNavigate } from "react-router"
 import echarts from "@/utils/echarts"
+import { stockManager } from "@/utils/stock"
+import dayjs from "dayjs"
 
 interface MainChartProps {
   index: number
@@ -21,6 +22,7 @@ interface MainChartProps {
 export const MainChart = (props: MainChartProps) => {
   const [size, dom] = useDomSize<HTMLDivElement>()
   const chart = useRef<echarts.ECharts>()
+  const queryClient = useQueryClient()
 
   useMount(() => {
     chart.current = echarts.init(dom.current)
@@ -29,7 +31,6 @@ export const MainChart = (props: MainChartProps) => {
   useUnmount(() => {
     chart.current?.dispose()
   })
-
 
   const { state: ctxState, setMainData, setIndicatorData, setSecondaryIndicator, removeOverlayStock, setActiveChart, setSymbol, activeChartIndex } = useKChartContext()
   const { usTime } = useTime()
@@ -42,10 +43,33 @@ export const MainChart = (props: MainChartProps) => {
     interval: state.timeIndex,
     gzencode: false
   }
-
+  const queryKey = [getStockChart.cacheKey, params]
   const query = useQuery({
-    queryKey: [getStockChart.cacheKey, params],
+    queryKey,
     queryFn: () => getStockChart(params)
+  })
+
+
+  const subscribeSymbol = useMemo(() => `${state.symbol}@${state.timeIndex}` , [state.symbol, state.timeIndex])
+
+  useStockBarSubscribe([subscribeSymbol], (data) => {
+    const stock = stockManager.toSimpleStockRecord(data.rawRecord)
+    const qData = queryClient.getQueryData(queryKey) as typeof query.data
+
+    if(!qData || qData.history.length === 0) return
+
+    const lastData = stockManager.toSimpleStockRecord(qData.history[qData.history.length - 1])
+    console.log(state.timeIndex)
+    if(state.timeIndex === StockChartInterval.ONE_MIN){
+      // 当前分钟大于最后一条数据的分钟
+      if(lastData.toDayjs().isBefore(stock.toDayjs(), 'minute')){
+        queryClient.setQueryData(queryKey, {
+          ...qData,
+          history: [...qData.history, data.rawRecord]
+        })
+      }
+    }
+    // console.log(dayjs(new Date(+stock.time)).format('YYYY-MM-DD HH:mm:ss'), stock.close)
   })
 
   const mainQueryIndicatorQueries = useQueries({

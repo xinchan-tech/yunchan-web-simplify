@@ -1,53 +1,99 @@
+import mitt, { type Emitter } from 'mitt'
 import { Ws } from '.'
+
+export type MessageReceived<T> = {
+  event: WsEvent
+  data: T
+  msg_id: string
+  time: number
+}
 
 const wsUrl = import.meta.env.PUBLIC_BASE_WS_URL
 
+type WsEvent =
+  | 'connect'
+  | 'error'
+  | 'close'
+  | 'login'
+  | 'message'
+  | 'beat'
+  | 'exist'
+  | 'subscribe'
+  | 'unsubscribe'
+  | 'latest'
+  | 'notice'
+  | 'alarm'
+  | 'chat'
+  | 'newMessage'
+  | 'shout_order'
+  | 'ack'
+  | 'default'
+
+type DefaultEventResult = {
+  cluster_name: string
+  data: {
+    msg: string
+  }
+  event: 'default'
+  fd: number
+  msg_id: string
+  time: string
+}
+
+type LoginEventResult = MessageReceived<{
+  msg: string
+  token: string
+  user: {
+    id: number
+    user_type: number
+  }
+}>
+type EventResult<T extends WsEvent> = T extends 'default'
+  ? DefaultEventResult
+  : T extends 'login'
+    ? LoginEventResult
+    : MessageReceived<any>
+
 export class WsManager {
-  private cache: Map<string, Ws>
+  private url: string
+  private ws: Ws
+  private event: Emitter<Record<WsEvent, any>>
+  constructor(url: string) {
+    this.url = url
+    this.event = mitt<Record<WsEvent, any>>()
+    this.ws = new Ws(this.url, {
+      onClose: ev => {
+        this.event.emit('close', ev)
+      },
+      onError: ev => {
+        this.event.emit('error', ev)
+      },
+      onMessage: ev => {
+        const data = JSON.parse(ev.data) as MessageReceived<any>
 
-  constructor() {
-    this.cache = new Map()
-  }
-
-  get(url: string) {
-    return this.cache.get(url)
-  }
-
-  create(url: string) {
-    if (this.cache.get(url)) return this.cache.get(url)!
-    const ws = new Ws(url)
-    this.cache.set(url, ws)
-    return ws
-  }
-
-  async test(url: string): Promise<number | undefined> {
-    return new Promise(resolve => {
-      if (this.cache.get(url)) {
-        const ws = this.cache.get(url)
-        resolve(ws?.delay)
-      } else {
-        const ws = this.create(url)
-        ws?.on('connect', () => {
-          resolve(ws.delay)
-          ws.off('*')
-          ws.close()
-          this.cache.delete(url)
-        })
+        this.event.emit(data.event, data)
+      },
+      onOpen: ev => {
+        this.event.emit('connect', ev)
       }
     })
   }
 
-  async testAll() {
-    return await Promise.all(Array.from(this.cache.keys()).map(async url => this.test(url)))
+  public on<T extends WsEvent>(event: T, handler: (data: EventResult<T>) => void) {
+    this.event.on(event, handler)
+
+    return () => {
+      this.off(event, handler)
+    }
   }
 
-  getActiveWs() {
-    const ws = this.cache.get(wsUrl)
+  public off<T extends WsEvent>(event: T, handler: (data: EventResult<T>) => void) {
+    this.event.off(event, handler)
+  }
 
-    if(!ws) return this.create(wsUrl)
-
-    return ws
+  public send(data: any) {
+    this.ws.send(data)
   }
 }
 
-export const wsManager = new WsManager()
+export const wsManager = new WsManager(wsUrl)

@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
+import theme from '@/theme/variables.module.scss'
 
 type Language = 'zh_CN' | 'en'
 
@@ -31,7 +32,7 @@ interface ConfigStore {
     gapShow: '1' | '0'
   }
   setSetting: (setting: Partial<ConfigStore['setting']>) => void
-  getStockColor: (up?: boolean) => '#009e45' | '#ff3f4d'
+  getStockColor: (up?: boolean, format?: 'hex' | 'hsl') => string
 }
 
 export const useConfig = create<ConfigStore>()(
@@ -55,14 +56,22 @@ export const useConfig = create<ConfigStore>()(
       setConsults: consults => set(() => ({ consults })),
       setLanguage: language => set(() => ({ language })),
       setHasSelected: () => set(() => ({ hasSelected: true })),
-      getStockColor: (up = true) =>
+      getStockColor: (up = true, format = 'hsl') =>
         up
           ? get().setting.upOrDownColor === 'upGreenAndDownRed'
-            ? green
-            : red
+            ? format === 'hsl'
+              ? `${theme.colorStockGreen}`
+              : green
+            : format === 'hsl'
+              ? `${theme.colorStockRed}`
+              : red
           : get().setting.upOrDownColor === 'upGreenAndDownRed'
-            ? red
-            : green
+            ? format === 'hsl'
+              ? `${theme.colorStockRed}`
+              : red
+            : format === 'hsl'
+              ? `${theme.colorStockGreen}`
+              : green
     }),
     { name: 'config', storage: createJSONStorage(() => localStorage) }
   )

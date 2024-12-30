@@ -9,15 +9,8 @@ type StockSubscribeHandler = (data: any) => void
 class StockManager {
   private subscribed = mitt()
   private subscribeStock = new Map<symbol, { count: number }>()
+  private subscribeTopic: string[] = []
 
-  constructor() {
-    const ws = wsManager.getActiveWs()
-    if (ws) {
-      ws.on('message', (data: any) => {
-        console.log(data)
-      })
-    }
-  }
 
   public toStockRecord(data: StockResultRecord) {
     return StockRecord.create(data)
@@ -44,17 +37,17 @@ class StockManager {
       this.subscribed.on(item, handler)
     })
 
-    const ws = wsManager.getActiveWs()
+    // const ws = wsManager.getActiveWs()
 
-    if (ws) {
-      ws.send({
-        event: 'subscribe',
-        data: {
-          symbols: Array.isArray(code) ? code : [code]
-        },
-        msg_id: nanoid()
-      })
-    }
+    // if (ws) {
+    //   ws.send({
+    //     event: 'subscribe',
+    //     data: {
+    //       symbols: Array.isArray(code) ? code : [code]
+    //     },
+    //     msg_id: nanoid()
+    //   })
+    // }
   }
 
   public unsubscribe(code: string | string[], handler: StockSubscribeHandler) {
@@ -78,32 +71,32 @@ class StockManager {
       const unsubscribed = Array.from(this.subscribeStock.entries()).filter(([_, value]) => value.count === 0).map(([key]) => key.description)
       if (unsubscribed.length === 0) return
 
-      const ws = wsManager.getActiveWs()
+      // const ws = wsManager.getActiveWs()
 
-      if (ws) {
-        ws.send({
-          event: 'unsubscribe',
-          data: {
-            symbols: unsubscribed
-          },
-          msg_id: nanoid()
-        })
-      }
+      // if (ws) {
+      //   ws.send({
+      //     event: 'unsubscribe',
+      //     data: {
+      //       symbols: unsubscribed
+      //     },
+      //     msg_id: nanoid()
+      //   })
+      // }
     }, 3000)
   }
 
   public unsubscribeAll(code: string) {
     this.subscribed.off(code)
-    const ws = wsManager.getActiveWs()
-    if (ws) {
-      ws.send({
-        event: 'unsubscribe',
-        data: {
-          symbols: [code]
-        },
-        msg_id: nanoid()
-      })
-    }
+    // const ws = wsManager.getActiveWs()
+    // if (ws) {
+    //   ws.send({
+    //     event: 'unsubscribe',
+    //     data: {
+    //       symbols: [code]
+    //     },
+    //     msg_id: nanoid()
+    //   })
+    // }
   }
 }
 

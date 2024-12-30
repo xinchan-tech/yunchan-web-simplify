@@ -153,8 +153,9 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
   const chartRef = useRef<echarts.ECharts>()
   const chartDomRef = useRef<HTMLDivElement>(null)
   const { getStockColor } = useConfig()
-  const stockUpColor = getStockColor()
-  const stockDownColor = getStockColor(false)
+  const stockUpColor = `hsl(${getStockColor()})`
+  const stockDownColor = `hsl(${getStockColor(false)})`
+
   const interval = ((c, t) => {
     if (['SPX', 'IXIC', 'DJI'].includes(c!)) {
       return StockChartInterval.INTRA_DAY
@@ -195,7 +196,7 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
     
     const xAxisData = getTradingPeriod(intervalToTradingMap[interval] ?? 'intraDay', dataset[0] ? dataset[0][0] : '')
 
-    const style = colorUtil.hexToRGB(lastPercent > 0 ? stockUpColor : stockDownColor)!
+    const style = colorUtil.hexToRGB(getStockColor(lastPercent >= 0, 'hex'))!
 
     chartRef.current?.setOption({
       axisPointer: {

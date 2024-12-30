@@ -293,10 +293,10 @@ export const renderMainChart: ChartRender = (options, state) => {
   if (state.type === 'k-line') {
     mainSeries.type = 'candlestick'
     mainSeries.itemStyle = {
-      color: getStockColor(true),
-      color0: getStockColor(false),
-      borderColor: getStockColor(true),
-      borderColor0: getStockColor(false)
+      color: `hsl(${getStockColor(true)})`,
+      color0: `hsl(${getStockColor(false)})`,
+      borderColor: `hsl(${getStockColor(true)})`,
+      borderColor0: `hsl(${getStockColor(false)})`
     }
     mainSeries.data = state.mainData.history ?? []
     mainSeries.yAxisId = 'main-price'
@@ -305,14 +305,13 @@ export const renderMainChart: ChartRender = (options, state) => {
       y: [2, 3, 5, 4]
     }
   } else {
-    let color = Object.values(colorUtil.hexToRGB('#4a65bf') ?? {}).join(',')
+    let color = getStockColor()
 
     const lastData = StockRecord.of('', '', data[data.length - 1])
 
     if (isTimeIndexChart(state.timeIndex)) {
-      const _color = getStockColor(lastData.isUp)
 
-      color = Object.values(colorUtil.hexToRGB(_color) ?? {}).join(',')
+      color = getStockColor(lastData.isUp)
     }
 
     const _mainSeries = mainSeries as LineSeriesOption
@@ -334,11 +333,11 @@ export const renderMainChart: ChartRender = (options, state) => {
         colorStops: [
           {
             offset: 0,
-            color: `rgba(${color}, .35)` /* 0% 处的颜色*/
+            color: `hsl(${color} / 100)` /* 0% 处的颜色*/
           },
           {
             offset: 0.6,
-            color: `rgba(${color}, .2)` /* 100% 处的颜色*/
+            color: `hsl(${color} / 20)` /* 100% 处的颜色*/
           },
           {
             offset: 1,
@@ -409,7 +408,7 @@ export const renderMarkLine: ChartRender = (options, state) => {
   const { getStockColor } = useConfig.getState()
   const lastData = StockRecord.of('', '', data[data.length - 1])
 
-  const lineColor = getStockColor(lastData.isUp)
+  const lineColor = `hsl(${getStockColor(lastData.isUp)})`
 
   mainSeries.markLine = {
     symbol: ['none', 'none'],

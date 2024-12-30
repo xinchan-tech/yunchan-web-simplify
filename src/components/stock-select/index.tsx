@@ -19,22 +19,6 @@ const StockSelect = ({ onChange, className, width, ...props }: StockSelectProps)
   const stockList = useStockList()
   const [keyword, setKeyword] = useState('')
 
-  useMount(() => {
-    if(!stockList.key){
-      getAllStocks().then(r => {
-        const data = atob(r.data)
-        const dataUint8 = new Uint8Array(data.length)
-        for (let i = 0; i < data.length; i++) {
-          dataUint8[i] = data.charCodeAt(i)
-        }
-        const res = JSON.parse(pako.inflate(dataUint8, { to: 'string' })) as [string, string, string, string][]
-        res.sort((a, b) => (a[1] as unknown as number) - (b[1] as unknown as number))
-        stockList.setList(res, r.key)
-      })
-    }
-  })
-
-
   const _onClick = (symbol: string) => {
     setFalse()
 

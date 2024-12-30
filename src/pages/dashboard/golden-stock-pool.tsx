@@ -7,6 +7,7 @@ import { getStockCollects } from "@/api"
 import { type StockRecord, stockManager } from "@/utils/stock"
 import { useQuery } from "@tanstack/react-query"
 import Decimal from "decimal.js"
+import { useStockQuoteSubscribe } from "@/hooks"
 
 const GoldenStockPool = () => {
   const { collects } = useCollectCates()
@@ -28,6 +29,8 @@ const GoldenStockPool = () => {
   const onLogin = () => {
     appEvent.emit('login')
   }
+
+  useStockQuoteSubscribe(['TSLA@1'])
 
   const columns: JknTableProps<StockRecord>['columns'] = [
     {

@@ -31,6 +31,10 @@ export default defineConfig({
         pathRewrite: {
           '^/ws': ''
         }
+      },
+      '/websocket': {
+        target: 'ws://192.168.2.105:8082',
+        ws: true
       }
     }
   },

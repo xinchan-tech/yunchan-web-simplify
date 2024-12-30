@@ -1,0 +1,127 @@
+import { Ws, wsManager } from '../ws'
+import { nanoid } from 'nanoid'
+import mitt from 'mitt'
+import { StockRecord, type StockResultRecord } from './stock'
+import type { StockRawRecord } from '@/api'
+import { uid } from "radash"
+
+const barActionResultParser = (data: any) => {
+  const action = data.ev as string
+  const [topic, ...raws] = data.b.split(',')
+  const rawRecord = raws.map((raw: string, index: number) => index === 0 ? raw : Number.parseFloat(raw as string)) as StockRawRecord
+
+  return {
+    action,
+    topic: topic as string,
+    rawRecord,
+    extra: data.d as string
+  }
+}
+
+export type StockSubscribeHandler = (data: ReturnType<typeof barActionResultParser>) => void
+
+export type SubscribeActionType = 'bar' | 'quote'
+// export type UnsubscribeAction = 'bar_remove_symbols' | 'quote_remove_symbols'
+
+
+
+class StockSubscribe {
+  private subscribed = mitt<Record<string, any>>()
+  private subscribeTopic: {
+    [key: string]: {
+      count: number
+    }
+  }
+
+  private url: string
+  private ws: Ws
+  private cid: string
+  constructor(url: string) {
+    this.url = url
+    this.subscribeTopic = {}
+    this.cid = uid(16)
+    this.ws = new Ws(`${this.url}&cid=${this.cid}`, {
+      beat: false,
+      onMessage: ev => {
+        const data = JSON.parse(ev.data)
+        if (data.ev) {
+          const parserData = barActionResultParser(data)
+          this.subscribed.emit(parserData.action, parserData)
+        }
+      }
+    })
+    this.unSubscribeStockIdle()
+  }
+
+  public subscribe(action: SubscribeActionType, params: string[]) {
+    const _action = `${action}_add_symbols`
+    params.forEach(symbol => {
+      const topic = `${action}:${symbol}`
+      if (this.subscribeTopic[topic]) {
+        this.subscribeTopic[topic].count++
+      } else {
+        this.subscribeTopic[topic] = { count: 1 }
+      }
+    })
+
+    this.ws.send({
+      action: _action,
+      cid: this.cid,
+      params
+    })
+
+    return () => {
+      this.unsubscribe(action, params)
+    }
+  }
+
+  public unsubscribe(action: SubscribeActionType, params: string[]) {
+
+    params.forEach(symbol => {
+      const topic = `${action}:${symbol}`
+      if (this.subscribeTopic[topic]) {
+        this.subscribeTopic[topic].count--
+      }
+    })
+  }
+
+  public unsubscribeAll(code: string) {
+    this.subscribed.off(code)
+  }
+
+  public unSubscribeStockIdle() {
+    const cleanTopic: Record<string, string[]> = {}
+
+    for (const [key, value] of Object.entries(this.subscribeTopic)) {
+      if (value.count === 0) {
+        delete this.subscribeTopic[key]
+        const [action, symbol] = key.split(':')
+        if(!cleanTopic[action]){
+          cleanTopic[action] = []
+        }
+        cleanTopic[action].push(symbol)
+      }
+    }
+
+    Object.entries(cleanTopic).forEach(([action, symbols]) => {
+      this.ws.send({
+        action: `${action}_remove_symbols`,
+        params: symbols
+      })
+    })
+
+    requestIdleCallback(() => {
+      this.unSubscribeStockIdle()
+    })
+  }
+
+  public on(action: SubscribeActionType, handler: StockSubscribeHandler) {
+    this.subscribed.on(action, handler)
+  }
+
+  public off(action: SubscribeActionType, handler: StockSubscribeHandler) {
+    this.subscribed.off(action, handler)
+  }
+}
+
+export const stockSubscribe = new StockSubscribe(`${import.meta.env.PUBLIC_BASE_WS_STOCK_URL}?token=shipeijun`)

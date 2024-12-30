@@ -1,5 +1,6 @@
 import { getStockCollects, type StockExtend } from "@/api"
 import { AddCollect, CollectCapsuleTabs, JknIcon, NumSpan, ScrollArea } from "@/components"
+import { useStockBarSubscribe } from "@/hooks"
 import echarts, { type ECOption } from "@/utils/echarts"
 import { stockManager } from "@/utils/stock"
 import { useQuery } from "@tanstack/react-query"
@@ -26,8 +27,6 @@ interface CollectListProps {
 
 export const CollectList = (props: CollectListProps) => {
   const [collect, setCollect] = useState('1')
-  // const { getLastRecordByTrading } = useStock()
-  // const navigate = useNavigate()
   const stocks = useQuery({
     queryKey: [getStockCollects.cacheKey, collect],
     queryFn: () => getStockCollects({
@@ -36,6 +35,8 @@ export const CollectList = (props: CollectListProps) => {
       limit: 300
     })
   })
+
+  // useStockBarSubscribe(['TSLA@1'])
 
   const stockList = (() => {
     const r: TableDataType[] = []
