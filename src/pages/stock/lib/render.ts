@@ -25,7 +25,9 @@ import {
   calcCoilingPivots,
   calcCoilingPivotsExpands,
   calcCoilingPoints,
-  calcTradePoints
+  calcTradePoints,
+  calculateMA,
+  calculateTradingPoint
 } from './coilling'
 import { renderUtils } from './utils'
 import type { GraphicComponentOption } from 'echarts/components'
@@ -310,7 +312,6 @@ export const renderMainChart: ChartRender = (options, state) => {
     const lastData = StockRecord.of('', '', data[data.length - 1])
 
     if (isTimeIndexChart(state.timeIndex)) {
-
       color = getStockColor(lastData.isUp)
     }
 
@@ -524,6 +525,71 @@ export const renderMainCoiling = (options: ECOption, state: ChartState) => {
     ) {
       const tradePoints = calcTradePoints(state.mainData.coiling_data, points, coiling as any)
       drawTradePoints(options, {} as any, { xAxisIndex: 0, yAxisIndex: 0, data: tradePoints })
+    } else if (coiling === CoilingIndicatorId.SHORT_LINE) {
+      const cma = calculateMA(20, state.mainData.history)
+      const cma2 = calculateMA(30, state.mainData.history)
+      drawLine(options, {} as any, {
+        yAxisIndex: 0,
+        xAxisIndex: 0,
+        data: cma.map((s, i) => [i, s]),
+        extra: {
+          color: 'rgb(186, 64, 127)'
+        }
+      })
+      drawLine(options, {} as any, {
+        yAxisIndex: 0,
+        xAxisIndex: 0,
+        data: cma2.map((s, i) => [i, s]),
+        extra: {
+          color: 'rgb(156, 171, 232)'
+        }
+      })
+    } else if (coiling === CoilingIndicatorId.MAIN) {
+      const cma = calculateMA(55, state.mainData.history)
+      const cma1 = calculateMA(60, state.mainData.history)
+      const cma2 = calculateMA(65, state.mainData.history)
+      const cma3 = calculateMA(120, state.mainData.history)
+      const cma4 = calculateMA(250, state.mainData.history)
+      drawLine(options, {} as any, {
+        yAxisIndex: 0,
+        xAxisIndex: 0,
+        data: cma.map((s, i) => [i, s]),
+        extra: {
+          color: 'rgb(250,28,19)'
+        }
+      })
+      drawLine(options, {} as any, {
+        yAxisIndex: 0,
+        xAxisIndex: 0,
+        data: cma1.map((s, i) => [i, s]),
+        extra: {
+          color: 'rgb(255,255,255)'
+        }
+      })
+      drawLine(options, {} as any, {
+        yAxisIndex: 0,
+        xAxisIndex: 0,
+        data: cma2.map((s, i) => [i, s]),
+        extra: {
+          color: 'rgb(51,251,41)'
+        }
+      })
+      drawLine(options, {} as any, {
+        yAxisIndex: 0,
+        xAxisIndex: 0,
+        data: cma3.map((s, i) => [i, s]),
+        extra: {
+          color: 'rgb(51,251,41)'
+        }
+      })
+      drawLine(options, {} as any, {
+        yAxisIndex: 0,
+        xAxisIndex: 0,
+        data: cma4.map((s, i) => [i, s]),
+        extra: {
+          color: 'rgb(249,42,251)'
+        }
+      })
     }
   })
 }
@@ -794,6 +860,36 @@ export const renderSecondaryLocalIndicators = (options: ECOption, indicators: In
             data: (d.data as number[]).map((s, i) => [i, s])
           })
         }
+      })
+    } else if (indicator.id === '10') {
+      const { S1, S2, X0, Z } = calculateTradingPoint(state.mainData.history)
+      drawRect(options, {} as any, {
+        xAxisIndex: index + 1,
+        yAxisIndex: index + 2,
+        data: [
+          ...X0.map((x, i) => [i, 0, x, 20, 0, x > 0 ? 'magenta' : 'cyan'] as any),
+          ...Z.map((z, i) => [i, 0, z, 20, 0, z > 0 ? 'magenta' : 'cyan'] as any)
+        ]
+      })
+      drawLine(options, {} as any, {
+        extra: {
+          color: 'magenta',
+          type: 'solid',
+          z: 10
+        },
+        xAxisIndex: index + 1,
+        yAxisIndex: index + 2,
+        data: S1.map((s, i) => [i, s])
+      })
+      drawLine(options, {} as any, {
+        extra: {
+          color: 'white',
+          type: 'solid',
+          z: 10
+        },
+        xAxisIndex: index + 1,
+        yAxisIndex: index + 2,
+        data: S2.map((s, i) => [i, s])
       })
     }
   })

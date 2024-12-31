@@ -38907,12 +38907,13 @@ function horizon(candlesticks)
         horizon[i] = MA;
     }
 
-    for (i = horizon.size() - 1; i >= 0; --i) {
+    for (i = horizon.length - 1; i >= 0; --i) {
         horizon[i] = Math.round(horizon[i] * 100) / 100;
     }
 
     return horizon;
 }
+
 
 function calculateMACD(candlesticks)
 	{
@@ -38957,6 +38958,9 @@ function calculateMACD(candlesticks)
    }
 
     // 买卖点
+      // 买卖点
+    // X0画柱体, 值大于0，柱体颜色为magenta，值小于0，柱体颜色为cyan
+    // S1和S2画线条，S1颜色为magenta，S2颜色为white
     function calculateTradingPoint(candlesticks)
 	{
 		let X0_arr = [];
@@ -39002,4 +39006,25 @@ function calculateMACD(candlesticks)
 		}
 		return { X0: X0_arr, S1: S1_arr, S2: S2_arr, Z: Z_arr };
 	}
-        
+
+   // 平均线
+    // 短线王DXW: MA20 rgb(186, 64, 127); MA30 rgb(156, 171, 232)
+    // 波段王BDW: MA30 rgb(186, 64, 127); MA60 rgb(156, 171, 232)
+    // 主力三区ZLSQ: MA120 rgb(0, 158, 202); MA250 rgb(203,158,129)
+    // 主力趋势ZLQS: MA55 rgb(250,28,19); MA60 rgb(255,255,255); MA65 rgb(51,251,41); MA120 rgb(51,251,41) 线宽4; MA250 rgb(249,42,251) 线宽6
+
+    function calculateMA(days, candlesticks) {
+      var result = [];
+      for (var i = 0, len = data.length; i < len; i++) {
+          if (i < days) {
+              result.push('-');  // 不画
+              continue;
+          }
+          var sum = 0;
+          for (var j = 0; j < days; j++) {
+              sum += parseFloat(data.values[i - j][2]);  // +收盘价
+          }
+          result.push(+(sum / days).toFixed(3));
+      }
+      return result;
+  }

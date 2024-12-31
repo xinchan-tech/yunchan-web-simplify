@@ -1,4 +1,4 @@
-import type { getStockChart, getStockIndicatorData } from '@/api'
+import type { getStockChart, getStockIndicatorData, StockRawRecord } from '@/api'
 import { CoilingIndicatorId } from './ctx'
 import { colorUtil } from '@/utils/style'
 import Decimal from 'decimal.js'
@@ -499,7 +499,9 @@ export const calcBottomSignal = (
       color: 'rgb(255, 0, 102)'
     }
   ])
-  const hdlyData = hdly(candlesticks).map((item, index) => [index, 0, item, 18, 0, '']).filter(v => v[2] > 0)
+  const hdlyData = hdly(candlesticks)
+    .map((item, index) => [index, 0, item, 18, 0, ''])
+    .filter(v => v[2] > 0)
 
   const monthLineData = monthLine(candlesticks)
   const horizonData = horizon(candlesticks)
@@ -546,4 +548,80 @@ export const calcBottomSignal = (
       }
     ]
   }
+}
+
+/**
+ * 计算均线
+ * 短线王DXW: MA20 rgb(186, 64, 127); MA30 rgb(156, 171, 232)
+ * 波段王BDW: MA30 rgb(186, 64, 127); MA60 rgb(156, 171, 232)
+ * 主力三区ZLSQ: MA120 rgb(0, 158, 202); MA250 rgb(203,158,129)
+ * 主力趋势ZLQS: MA55 rgb(250,28,19); MA60 rgb(255,255,255); MA65 rgb(51,251,41); MA120 rgb(51,251,41) 线宽4; MA250 rgb(249,42,251) 线宽6
+ * @param dayCount
+ * @param data
+ * @returns
+ */
+export const calculateMA = (dayCount: number, data: StockData['history']) => {
+  const result = []
+  for (let i = 0, len = data.length; i < len; i++) {
+    if (i < dayCount) {
+      result.push(null)
+      continue
+    }
+    let sum = 0
+    for (let j = 0; j < dayCount; j++) {
+      sum += data[i - j][2]
+    }
+    result.push(+(sum / dayCount).toFixed(3))
+  }
+  return result
+}
+
+/**
+ * 计算买卖点
+ * 附图买卖点位
+ * X0画柱体, 值大于0，柱体颜色为magenta，值小于0，柱体颜色为cyan
+ * S1和S2画线条，S1颜色为magenta，S2颜色为white
+ */
+export const calculateTradingPoint = (candlesticks: StockData['history']) => {
+  const X0_arr: number[] = []
+  const S1_arr: number[] = []
+  const S2_arr: number[] = []
+  const Z_arr: number[] = []
+
+  const length = candlesticks.length
+  if (length < 1) return { X0: X0_arr, S1: S1_arr, S2: S2_arr, Z: Z_arr }
+  let WY1001 = (2 * candlesticks[0][1] + candlesticks[0][2] + candlesticks[0][4]) / 4 // (2 * 开盘价 + 收盘价 + 最低价) / 4
+  let WY1002 = WY1001
+  let WY1003 = WY1002
+  let WY1004 = WY1003
+  let X0 = 0
+  let S1 = 0
+  let S2 = 0
+  X0_arr.push(0)
+  S1_arr.push(0)
+  S2_arr.push(0)
+  Z_arr.push(0)
+
+  const n = 4
+  for (let i = 1; i < length; ++i) {
+    WY1001 = (2 * candlesticks[i][1] + candlesticks[i][2] + candlesticks[i][4]) / 4 // (2 * 开盘价 + 收盘价 + 最低价) / 4
+    WY1002 = (2 * WY1001 + (n - 1) * WY1002) / (n + 1)
+    WY1003 = (2 * WY1002 + (n - 1) * WY1003) / (n + 1)
+    const WY1004_REF = WY1004
+    WY1004 = (2 * WY1003 + (n - 1) * WY1004) / (n + 1)
+
+    const X0_REF = X0
+    if (WY1004_REF < 0.001) {
+      X0 = 0
+    } else {
+      X0 = ((WY1004 - WY1004_REF) / WY1004_REF) * 100
+    }
+    X0_arr.push(X0)
+    S1 = (X0_REF + X0) / 2
+    S2 = X0
+    S1_arr.push(S1)
+    S2_arr.push(S2)
+    Z_arr.push(0)
+  }
+  return { X0: X0_arr, S1: S1_arr, S2: S2_arr, Z: Z_arr }
 }

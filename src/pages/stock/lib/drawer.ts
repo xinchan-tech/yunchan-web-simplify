@@ -48,7 +48,7 @@ type DrawerFunc<T = any> = (options: ECOption, state: KChartState['state'][0], p
 /**
  * 画一条线
  */
-export const drawLine: DrawerFunc<[XAxis, number][]> = (options, _, { xAxisIndex, yAxisIndex, data, extra }) => {
+export const drawLine: DrawerFunc<[XAxis, number | null][]> = (options, _, { xAxisIndex, yAxisIndex, data, extra }) => {
   const line: LineSeriesOption = {
     xAxisIndex: xAxisIndex,
     yAxisIndex: yAxisIndex,
@@ -56,7 +56,7 @@ export const drawLine: DrawerFunc<[XAxis, number][]> = (options, _, { xAxisIndex
     showSymbol: false,
     symbol: 'none',
     connectNulls: true,
-    z: 0,
+    z: extra?.z ?? 0,
     color: extra?.color,
     lineStyle: {
       type: extra?.type ?? 'solid'
@@ -205,7 +205,7 @@ export const drawRect: DrawerFunc<DrawerRectShape[]> = (options, _, { xAxisIndex
           x: start[0] - width / 2,
           y: start[1],
           width: width,
-          height: -size[1]
+          height: -size[1] 
         },
         z: 10,
         emphasisDisabled: true,
