@@ -1,20 +1,19 @@
-import { type ColumnDef, type ColumnSort, type Row, type SortingState, type TableOptions, flexRender, getCoreRowModel, getSortedRowModel, useReactTable } from "@tanstack/react-table"
-import { useMount, useUnmount, useUpdateEffect } from "ahooks"
-import { useMemo, useRef, useState } from "react"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../ui/table"
-import { ScrollArea, Skeleton } from "@/components"
-import VirtualizedTable from './virtualized-table'
-import { cn } from "@/utils/style"
-import { nanoid } from "nanoid"
-import { appEvent } from "@/utils/event"
+import { Skeleton } from "@/components"
 import { useDomSize } from "@/hooks"
-import { JknTableHeader } from "./table-header"
+import { appEvent } from "@/utils/event"
+import { cn } from "@/utils/style"
+import { type ColumnDef, type ColumnSort, type Row, type SortingState, type TableOptions, flexRender, getCoreRowModel, useReactTable } from "@tanstack/react-table"
+import { useMount, useUnmount, useUpdateEffect } from "ahooks"
+import { nanoid } from "nanoid"
+import { useRef, useState } from "react"
 import { useCellWidth } from "./lib"
+import { JknTableHeader } from "./table-header"
+import VirtualizedTable from './virtualized-table'
 
 export interface JknTableProps<TData extends Record<any, unknown> = Record<string, unknown>, TValue = unknown> {
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
-  rowKey?: string
+  rowKey?: string | ((row: TData) => string)
   loading?: boolean
   manualSorting?: boolean
   onRowClick?: (data: TData, row: Row<TData>) => void
@@ -59,7 +58,7 @@ const _JknTable = <TData extends Record<string, unknown>, TValue>(props: JknTabl
       sorting,
       rowSelection,
     },
-    getRowId: (row) => row[props.rowKey ?? 'id'] as string,
+    getRowId: (row) => typeof props.rowKey === 'function' ? props.rowKey(row) : row[props.rowKey ?? 'id'] as string,
     enableMultiSort: false,
     enableSorting: true,
     sortDescFirst: true,
@@ -103,7 +102,7 @@ const _JknTable = <TData extends Record<string, unknown>, TValue>(props: JknTabl
                       <table className="table-fixed z-0  w-full" cellSpacing={0}>
                         <colgroup>
                           {
-                            table.getFlatHeaders().map((header) => (
+                            table.getFlatHeaders().filter(i => !i.isPlaceholder && i.subHeaders.length === 0).map((header) => (
                               <col key={header.id} style={{ width: cellWidth[header.id] }} />
                             ))
                           }
@@ -122,11 +121,11 @@ const _JknTable = <TData extends Record<string, unknown>, TValue>(props: JknTabl
                                   )}
                                 >
                                   {row.getVisibleCells().map((cell) => {
-                                    const { align } = cell.column.columnDef.meta ?? {}
+                                    const { align, cellClassName } = cell.column.columnDef.meta ?? {}
                                     return (
                                       <td
                                         key={cell.id}
-                                        className="jkn-table-td break-all py-12 h-1"
+                                        className={cn('jkn-table-td break-all py-12', cellClassName)}
                                         style={{ textAlign: align as undefined }}
                                       >
                                         {flexRender(cell.column.columnDef.cell, cell.getContext())}

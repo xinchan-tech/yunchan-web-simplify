@@ -1,14 +1,13 @@
-import { getStockBaseCodeInfo, getStockValuation } from "@/api"
+import { getStockValuation } from "@/api"
 import { Button, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, JknIcon, JknTable, type JknTableProps, NumSpan, StockSelect, ToggleGroup, ToggleGroupItem } from "@/components"
 import { useChart, useQueryParams } from "@/hooks"
+import { useStockList } from "@/store"
+import type { ECOption } from "@/utils/echarts"
+import type { StockRecord } from "@/utils/stock"
 import { useQuery } from "@tanstack/react-query"
 import dayjs from "dayjs"
 import Decimal from "decimal.js"
-import { stockBaseCodeInfoExtend } from "../lib"
 import { useEffect, useMemo, useState } from "react"
-import { useStockList } from "@/store"
-import { stockManager } from "@/utils/stock"
-import type { ECOption } from "@/utils/echarts"
 
 const convertDate = (date: string): [string, string] => {
   const current = dayjs()
@@ -29,19 +28,18 @@ const convertDate = (date: string): [string, string] => {
   }
 }
 
+interface FinanceValuationProps {
+  stock?: StockRecord
+}
 
-export const FinanceValuation = () => {
+
+export const FinanceValuation = (props: FinanceValuationProps) => {
   const [queryParams, setQueryParams] = useQueryParams<{ symbol: string }>()
   const { symbol } = queryParams ?? 'QQQ'
   const [date, setDate] = useState('最近三个月')
   const [chartType, setChartType] = useState<'pb' | 'pe'>('pe')
   const dates = useMemo(() => convertDate(date), [date])
 
-  const stockBaseInfo = useQuery({
-    queryKey: [getStockBaseCodeInfo.cacheKey, symbol, stockBaseCodeInfoExtend],
-    queryFn: () => getStockBaseCodeInfo({ symbol, extend: stockBaseCodeInfoExtend }),
-    enabled: !!symbol
-  })
 
   const { data: valuation } = useQuery({
     queryKey: [getStockValuation.cacheKey, symbol, dates],
@@ -53,8 +51,6 @@ export const FinanceValuation = () => {
 
   const stockIcon = listMap[symbol]
 
-  const stock = useMemo(() => stockBaseInfo.data ? stockManager.toStockRecord(stockBaseInfo.data)[0] : undefined, [stockBaseInfo.data])
-
   return (
     <div className="lg:w-[80%] md:w-[960px] mx-auto">
       <div className="flex items-center py-2 space-x-4 text-sm w-full mt-12">
@@ -62,9 +58,9 @@ export const FinanceValuation = () => {
           <JknIcon stock={stockIcon?.[0]} className="w-8 h-8" />
           <span>{stockIcon?.[1]}</span>
         </div>
-        <NumSpan value={stock?.close} isPositive={stock?.isUp} decimal={3} />
-        <NumSpan value={stock?.percentAmount} isPositive={stock?.isUp} decimal={3} symbol />
-        <NumSpan value={Decimal.create(stock?.percent).mul(100)} isPositive={stock?.isUp} decimal={2} symbol percent />
+        <NumSpan value={props.stock?.close} isPositive={props.stock?.isUp} decimal={3} />
+        <NumSpan value={props.stock?.percentAmount} isPositive={props.stock?.isUp} decimal={3} symbol />
+        <NumSpan value={Decimal.create(props.stock?.percent).mul(100)} isPositive={props.stock?.isUp} decimal={2} symbol percent />
         <span className="text-base">
           <span>泡沫系数：</span>
           <span className="text-stock-red">{valuation ? valuation.foam : '---'}</span>

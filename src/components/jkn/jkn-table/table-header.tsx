@@ -17,7 +17,7 @@ export const JknTableHeader = ({ width, table }: JknTableHeaderProps) => {
       <table className="table-fixed" cellSpacing={0}>
         <colgroup>
           {
-            table.getFlatHeaders().map(header =>
+            table.getFlatHeaders().filter(i => !i.isPlaceholder && i.subHeaders.length === 0).map(header =>
               <col key={header.id} style={{ width: width[header.id] ?? 120 }}
               />)
           }
@@ -26,9 +26,14 @@ export const JknTableHeader = ({ width, table }: JknTableHeaderProps) => {
           {table.getHeaderGroups().map((headerGroup) => (
             <tr key={headerGroup.id} className="jkn-table-virtualized-tr bg-accent">
               {headerGroup.headers.map((header) => {
-                const { align } = header.column.columnDef.meta ?? {}
+                const { align, rowSpan = 1 } = header.column.columnDef.meta ?? {}
+
+                if(header.depth - header.column.depth > 1){
+                  return null
+                }
+
                 return (
-                  <th key={header.id} className="jkn-table-virtualized-th" style={{ textAlign: (align ?? 'left') as any }}>
+                  <th key={header.id} colSpan={header.colSpan} rowSpan={rowSpan} className="jkn-table-virtualized-th" style={{ textAlign: (align ?? 'left') as any }}>
                     <div className="inline-flex items-center space-x-2 box-border font-normal text-xs py-2 px-1">
                       {flexRender(header.column.columnDef.header, header.getContext())}
                       {header.column.getCanSort() && (

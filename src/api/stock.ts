@@ -1445,7 +1445,7 @@ type GetStockValuationResult = {
       name: string
       revenue: number
       ratio: number
-    }[];
+    }[]
     product: GetStockValuationResult['revenues']['geographic']
   }
   options: {
@@ -1461,3 +1461,127 @@ export const getStockValuation = (symbol: string, dates: [string, string]) => {
   return request.get<GetStockValuationResult>('/stock/valuation', { params: { symbol, dates } }).then(r => r.data)
 }
 getStockValuation.cacheKey = 'stock:valuation'
+
+type GetStockFinancialsStatisticsResult = {
+  latest_date: string
+  items: {
+    symbol: string
+    /**
+     * 当日振幅
+     */
+    amplitude: string
+    /**
+     * 当日涨幅
+     */
+    increase: string
+    /**
+     * 财报前一周（五日）涨幅
+     */
+    last_five_increase: string
+    /**
+     * 财报前一天涨幅
+     */
+    last_one_increase: string
+    /**
+     * 合并净利润
+     */
+    net_income_loss: string
+    /**
+     * 净利润 同比增长
+     */
+    net_income_loss_rate: string
+    /**
+     * 财报后一周（五日）涨幅
+     */
+    next_five_increase: string
+    /**
+     * 财报后一天涨幅
+     */
+    next_one_increase: string
+    /**
+     * 发布时间
+     */
+    report_date: string
+    /**
+     * 总营收
+     */
+    revenues: string
+    /**
+     * 上年 总营收
+     */
+    revenues_last: string
+    /**
+     * 总营收 同比增长
+     */
+    revenues_rate: string
+    /**
+     * 总市值
+     */
+    total_mv: string
+  }[]
+}
+
+/**
+ * 财报统计
+ */
+export const getStockFinancialsStatistics = (symbol: string) => {
+  return request
+    .get<GetStockFinancialsStatisticsResult>('/stock/financials/total/code', { params: { symbol } })
+    .then(r => r.data)
+}
+getStockFinancialsStatistics.cacheKey = 'stock:financials:total:code'
+
+type GetStockFinancialsStatisticsCateResult = {
+  release_num: number
+  unrelease_num: number
+  rise_rate: number
+  latest_date: string
+  plates: {
+    id: string
+    name: string
+  }[]
+  items: GetStockFinancialsStatisticsResult['items']
+}
+/**
+ * 同行对比
+ */
+export const getStockFinancialsStatisticsCate = (params: { symbol: string; plate_id?: string; quarter?: string }) => {
+  return request
+    .get<GetStockFinancialsStatisticsCateResult>('/stock/financials/total/cate', { params })
+    .then(r => r.data)
+}
+getStockFinancialsStatisticsCate.cacheKey = 'stock:financials:total:cate'
+
+type GetStockFinancialsPKResult = {
+  quarter_data: {
+    fiscal_period: string
+    fiscal_year: string
+    revenues: string
+    liabilities: string
+    liabilities_and_equity: string
+    net_cash_flow_from_operating_activities: string
+    net_income_loss: string
+    liabilities_rate: string
+    market_cap: string
+    net_cash_flow_free: string
+  }[]
+  valuation: {
+    foam: string
+    pb: {
+      current: number
+      max: number
+      min: number
+      items: [string, number][]
+    }
+    pe_ttm: GetStockFinancialsPKResult['valuation']['pb']
+    total_mv: GetStockFinancialsPKResult['valuation']['pb']
+  }
+  year_data: GetStockFinancialsPKResult['quarter_data']
+}
+/**
+ * 财务PK
+ */
+export const getStockFinancialsPK = (symbol: string) => {
+  return request.get<GetStockFinancialsPKResult>('/stock/revenues/pk', { params: { symbol } }).then(r => r.data)
+}
+getStockFinancialsPK.cacheKey = 'stock:revenues:pk'

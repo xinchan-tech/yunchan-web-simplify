@@ -3,7 +3,8 @@ import { useUpdateEffect } from 'ahooks'
 import { useMemo, useRef } from 'react'
 
 export const useCellWidth = (width: number | undefined, table: Table<any>) => {
-  const headers = table.getFlatHeaders()
+  const headers = table.getFlatHeaders().filter(i => !i.isPlaceholder && i.subHeaders.length === 0)
+
   return useMemo<NormalizedRecord<number> | undefined>(() => {
     if (!width) {
       return undefined

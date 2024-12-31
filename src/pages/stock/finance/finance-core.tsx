@@ -1,32 +1,30 @@
-import { getStockBaseCodeInfo, getStockFinanceTotal } from "@/api"
+import { getStockFinanceTotal } from "@/api"
 import { Button, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, JknIcon, NumSpan, Progress, StockSelect, ToggleGroup, ToggleGroupItem } from "@/components"
 import { useChart, useQueryParams } from "@/hooks"
 import { useStockList } from "@/store"
-import { stockManager } from "@/utils/stock"
+import type {  StockRecord } from "@/utils/stock"
 import { useQuery } from "@tanstack/react-query"
 import { useMount } from "ahooks"
 import dayjs from "dayjs"
 import Decimal from "decimal.js"
 import { mapValues } from "radash"
 import { useCallback, useEffect, useMemo, useState } from "react"
-import { stockBaseCodeInfoExtend, useSymbolQuery } from "../lib"
+import { useSymbolQuery } from "../lib"
 import type { ECOption } from "@/utils/echarts"
 import echarts from "@/utils/echarts"
 import theme from "@/theme/variables.module.scss"
 
 type FinanceData = Awaited<ReturnType<typeof getStockFinanceTotal>>
 
-export const FinanceCore = () => {
+interface FinanceCoreProps {
+  stock?: StockRecord
+}
+
+export const FinanceCore = (props: FinanceCoreProps) => {
   const symbol = useSymbolQuery()
   const [period, setPeriod] = useState<'quarter' | 'year'>('quarter')
   const [chartType, setChartType] = useState<'revenue' | 'incomeLoss' | 'cashFlowFree' | 'rate'>('revenue')
   const [_, setQueryParams] = useQueryParams()
-
-  const stockBaseInfo = useQuery({
-    queryKey: [getStockBaseCodeInfo.cacheKey, symbol, stockBaseCodeInfoExtend],
-    queryFn: () => getStockBaseCodeInfo({ symbol, extend: stockBaseCodeInfoExtend }),
-    enabled: !!symbol
-  })
 
   const { data: stockFinance } = useQuery({
     queryKey: [getStockFinanceTotal.cacheKey, symbol],
@@ -37,8 +35,6 @@ export const FinanceCore = () => {
   const { listMap } = useStockList()
 
   const stockIcon = listMap[symbol]
-
-  const stock = useMemo(() => stockBaseInfo.data ? stockManager.toStockRecord(stockBaseInfo.data)[0] : undefined, [stockBaseInfo.data])
 
   const stockFinanceTotal = useMemo(() => {
     if (!stockFinance) return undefined
@@ -175,9 +171,9 @@ export const FinanceCore = () => {
           <JknIcon stock={stockIcon?.[0]} className="w-8 h-8" />
           <span>{stockIcon?.[1]}</span>
         </div>
-        <NumSpan value={stock?.close} isPositive={stock?.isUp} decimal={3} />
-        <NumSpan value={stock?.percentAmount} isPositive={stock?.isUp} decimal={3} symbol />
-        <NumSpan value={Decimal.create(stock?.percent).mul(100)} isPositive={stock?.isUp} decimal={2} symbol percent />
+        <NumSpan value={props.stock?.close} isPositive={props.stock?.isUp} decimal={3} />
+        <NumSpan value={props.stock?.percentAmount} isPositive={props.stock?.isUp} decimal={3} symbol />
+        <NumSpan value={Decimal.create(props.stock?.percent).mul(100)} isPositive={props.stock?.isUp} decimal={2} symbol percent />
 
         <span className="!ml-auto text-tertiary text-xs flex items-center space-x-4">
           <span>更新时间: {dayjs(stockFinance?.totals.updated_at).format('YYYY-MM-DD')}</span>

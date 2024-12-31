@@ -29,7 +29,7 @@ const MenuRight = () => {
     {
       icon: 'right_menu_1',
       title: '个股盘口',
-      path: '/stock/s',
+      path: '/stock/s'
     },
     {
       icon: 'right_menu_4',

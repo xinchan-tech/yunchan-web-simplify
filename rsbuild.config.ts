@@ -33,7 +33,7 @@ export default defineConfig({
         }
       },
       '/websocket': {
-        target: 'ws://192.168.2.105:8082',
+        target: 'ws://18.235.81.170:8082',
         ws: true
       }
     }

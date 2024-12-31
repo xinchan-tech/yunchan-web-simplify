@@ -1,8 +1,9 @@
 import { getStockCollects, type StockExtend } from "@/api"
 import { AddCollect, CollectCapsuleTabs, JknIcon, NumSpan, ScrollArea } from "@/components"
-import { useStockBarSubscribe } from "@/hooks"
+import { useConfig } from "@/store"
 import echarts, { type ECOption } from "@/utils/echarts"
 import { stockManager } from "@/utils/stock"
+import { colorUtil } from "@/utils/style"
 import { useQuery } from "@tanstack/react-query"
 import { useMount, useUnmount, useUpdateEffect } from "ahooks"
 import Decimal from "decimal.js"
@@ -35,8 +36,6 @@ export const CollectList = (props: CollectListProps) => {
       limit: 300
     })
   })
-
-  // useStockBarSubscribe(['TSLA@1'])
 
   const stockList = (() => {
     const r: TableDataType[] = []
@@ -137,13 +136,14 @@ interface StockChartProps {
 
 const StockChart = (props: StockChartProps) => {
   const charts = useRef<echarts.ECharts>()
+  const { getStockColor } = useConfig()
   const dom = useRef<HTMLDivElement>(null)
   const setChartAreaStyle = () => {
-    const style = props.type === 'up' ? '0, 171, 67' : '255, 30, 58'
-
+    const color = colorUtil.hexToRGB(getStockColor(props.type === 'up', 'hex'))!
+ 
     charts.current?.setOption({
       series: [{
-        color: `rgb(${style})`,
+        color: colorUtil.rgbaToString({...color, a: 1}),
         areaStyle: {
           color: {
             type: 'linear',
@@ -152,9 +152,9 @@ const StockChart = (props: StockChartProps) => {
             x2: 0,
             y2: 1,
             colorStops: [{
-              offset: 0, color: `rgba(${style}, .35)` // 0% 处的颜色
+              offset: 0, color: colorUtil.rgbaToString({...color, a: .35}) // 0% 处的颜色
             }, {
-              offset: .7, color: `rgba(${style}, .2)` // 100% 处的颜色
+              offset: .7, color: colorUtil.rgbaToString({...color, a: .2}) // 100% 处的颜色
             }, {
               offset: 1, color: 'transparent' // 100% 处的颜色
             }]
