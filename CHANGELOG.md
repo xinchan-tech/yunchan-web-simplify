@@ -1,5 +1,25 @@
 # Changelog
 
+## [1.8.0](https://github.com/lrdmatrix/yunchan-web/compare/1.4.0...1.8.0) (2024-12-31)
+
+### ✨ Features | 新功能
+
+* 添加财务统计功能，更新财务页面路由，优化表格组件 ([2011050](https://github.com/lrdmatrix/yunchan-web/commit/201105096035ee3dcde74ab1b76bd109b18eca4f))
+* 添加股票 WebSocket 支持，更新环境变量，优化组件导入 ([ecdbe39](https://github.com/lrdmatrix/yunchan-web/commit/ecdbe39179804f0b6e57be65806c6a8a8ffb9d9e))
+* 添加股票财务估值功能，更新财务页面路由，优化切换标签 ([781c824](https://github.com/lrdmatrix/yunchan-web/commit/781c824f8e3870682f82b14a3a77db5b8f772a2c))
+* 添加进度条组件，更新主题颜色变量，修复类型定义，优化样式处理 ([ba8fb1a](https://github.com/lrdmatrix/yunchan-web/commit/ba8fb1a7fda9b09e218df0e93efd152454ceacb6))
+* 添加均线计算和买卖点计算功能，优化相关逻辑和类型定义 ([373bdd3](https://github.com/lrdmatrix/yunchan-web/commit/373bdd39c320db51a487f3f86d6acb25d679e50b))
+
+### 🐛 Bug Fixes | Bug 修复
+
+* 修复类型定义，更新组件导入方式 ([dafffdf](https://github.com/lrdmatrix/yunchan-web/commit/dafffdf6e4cda56ff4206aa3f86c44c72623acba))
+
+### 🎫 Chores | 其他更新
+
+* Release v1.5.0 ([ec321f7](https://github.com/lrdmatrix/yunchan-web/commit/ec321f70ec3ae04aad23e3daf85fa1ed1e8ee1be))
+* Release v1.6.0 ([1f1ec90](https://github.com/lrdmatrix/yunchan-web/commit/1f1ec90f3f18331c10c8a57406fdff48555ae8c7))
+* Release v1.7.0 ([a570920](https://github.com/lrdmatrix/yunchan-web/commit/a5709201f90e24fcb04df93a6f6d4f247d614576))
+
 ## [1.7.0](https://github.com/lrdmatrix/yunchan-web/compare/1.4.0...1.7.0) (2024-12-31)
 
 ### ✨ Features | 新功能
