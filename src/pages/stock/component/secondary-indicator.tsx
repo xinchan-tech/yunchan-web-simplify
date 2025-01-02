@@ -76,9 +76,9 @@ export const SecondaryIndicator = (props: SecondaryIndicatorProps) => {
     title: '指标参数编辑',
   })
 
-  useMount(() => {
-    indicatorParamsForm.modal.open()
-  })
+  // useMount(() => {
+  //   indicatorParamsForm.modal.open()
+  // })
 
   return (
     <div>
@@ -89,7 +89,7 @@ export const SecondaryIndicator = (props: SecondaryIndicatorProps) => {
         <PopoverTrigger className="" asChild>
           <div className="px-2 py-1 rounded-sm hover:text-secondary cursor-pointer hover:border-dialog-border left-2 top-0 border border-solid border-border text-sm text-tertiary">
             <span>{name}</span>
-            <JknIcon name="arrow_down" className="w-3 h-3 ml-1" />
+            <JknIcon onClick={() => indicatorParamsForm.modal.open()} name="arrow_down" className="w-3 h-3 ml-1" />
           </div>
         </PopoverTrigger>
         <PopoverContent align="start" side="top" sideOffset={10} alignOffset={-10} className="w-fit p-0">
