@@ -152,7 +152,6 @@ export const createOptions = (): ECOption => ({
   ],
   yAxis: [
     {
-      id: 'main-price',
       scale: true,
       gridIndex: 0,
       position: 'left',
@@ -170,17 +169,13 @@ export const createOptions = (): ECOption => ({
       }
     },
     {
-      id: 'main-right',
       scale: true,
       show: true,
       gridIndex: 0,
       position: 'right',
       max: renderUtils.calcAxisMax,
       splitLine: {
-        show: false,
-        lineStyle: {
-          color: 'rgb(31, 32, 33)'
-        }
+        show: false
       }
     }
   ],
@@ -246,20 +241,6 @@ export const renderGrid = (options: ECOption, state: ChartState, size: [number, 
    *
    * 左右留出50px显示标签
    */
-  // const Y_AXIS_WIDTH = 50
-  // const X_AXIS_HEIGHT = 24
-  // const [width, height] = size
-
-  // const gridLeft = state.yAxis.left ? Y_AXIS_WIDTH: 0
-
-  // const gridSize = [
-  //   width - Y_AXIS_WIDTH - gridLeft,
-  //   height - X_AXIS_HEIGHT
-  // ]
-
-  // const grid = []
-
-  // const tops = renderUtils.calcGridTopByGridIndex(state.secondaryIndicators.length)
   const grids = renderUtils.calcGridSize(size, state.secondaryIndicators.length, !!state.yAxis.left)
 
   options.grid = grids
@@ -292,29 +273,32 @@ export const renderMainChart: ChartRender = (options, state) => {
 
   if (!data || data.length === 0) return options
 
+  const upColor = getStockColor(true, 'hex')
+  const downColor = getStockColor(false, 'hex')
+
   if (state.type === 'k-line') {
     mainSeries.type = 'candlestick'
     mainSeries.itemStyle = {
-      color: `hsl(${getStockColor(true)})`,
-      color0: `hsl(${getStockColor(false)})`,
-      borderColor: `hsl(${getStockColor(true)})`,
-      borderColor0: `hsl(${getStockColor(false)})`
+      color: upColor,
+      color0: downColor,
+      borderColor: upColor,
+      borderColor0: downColor
     }
     mainSeries.data = state.mainData.history ?? []
-    mainSeries.yAxisId = 'main-price'
+    mainSeries.yAxisIndex = 0
     mainSeries.encode = {
       x: [1],
       y: [2, 3, 5, 4]
     }
   } else {
-    let color = getStockColor()
+    let color = '#4784cf'
 
     const lastData = StockRecord.of('', '', data[data.length - 1])
 
     if (isTimeIndexChart(state.timeIndex)) {
-      color = getStockColor(lastData.isUp)
+      color = getStockColor(lastData.isUp, 'hex')
     }
-
+    const rgbColor = colorUtil.hexToRGB(color)
     const _mainSeries = mainSeries as LineSeriesOption
     _mainSeries.type = 'line'
     _mainSeries.showSymbol = false
@@ -322,9 +306,9 @@ export const renderMainChart: ChartRender = (options, state) => {
       x: [0],
       y: [2]
     }
-    mainSeries.yAxisId = 'main-price'
+    mainSeries.yAxisIndex = 0
     _mainSeries.data = state.mainData.history ?? []
-    mainSeries.color = `rgba(${color})`
+    mainSeries.color = color
     ;(mainSeries as any).areaStyle = {
       color: {
         x: 0,
@@ -334,11 +318,11 @@ export const renderMainChart: ChartRender = (options, state) => {
         colorStops: [
           {
             offset: 0,
-            color: `hsl(${color} / 100)` /* 0% 处的颜色*/
+            color:  color/* 0% 处的颜色*/
           },
           {
             offset: 0.6,
-            color: `hsl(${color} / 20)` /* 100% 处的颜色*/
+            color: `rgba(${rgbColor?.r}, ${rgbColor?.g}, ${rgbColor?.b}, .2)` /* 100% 处的颜色*/
           },
           {
             offset: 1,
@@ -349,11 +333,10 @@ export const renderMainChart: ChartRender = (options, state) => {
     }
   }
   ;(options.series as any)?.push(mainSeries)
-
-  const stocks = data
-    .map(item => StockRecord.of('', '', item))
-    .map(stock => [stock.time, state.yAxis.right === 'price' ? stock.close : stock.percent])
-
+  const firstData = state.mainData.history[0]
+  const stocks = state.mainData.history
+    .map(stock => [stock[0], state.yAxis.right === 'price' ? stock[2] : (stock[2] - firstData[2])/firstData[2]])
+  // console
   Array.isArray(options.series) &&
     options.series.push({
       name: 'price',
@@ -364,7 +347,7 @@ export const renderMainChart: ChartRender = (options, state) => {
         y: [1]
       },
       xAxisIndex: 0,
-      yAxisId: 'main-right',
+      yAxisIndex: 1,
       showSymbol: false,
       lineStyle: {
         color: 'transparent'
@@ -409,7 +392,7 @@ export const renderMarkLine: ChartRender = (options, state) => {
   const { getStockColor } = useConfig.getState()
   const lastData = StockRecord.of('', '', data[data.length - 1])
 
-  const lineColor = `hsl(${getStockColor(lastData.isUp)})`
+  const lineColor = getStockColor(lastData.isUp, 'hex')
 
   mainSeries.markLine = {
     symbol: ['none', 'none'],
@@ -1012,3 +995,5 @@ export const renderZoom = (options: ECOption, zoom: [number, number]) => {
     }
   }
 }
+
+

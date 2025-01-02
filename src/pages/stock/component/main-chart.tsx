@@ -13,8 +13,7 @@ import { cn } from "@/utils/style"
 import { TimeIndexMenu } from "./time-index"
 import echarts from "@/utils/echarts"
 import { stockManager } from "@/utils/stock"
-import dayjs from "dayjs"
-import { mapEntries } from "radash"
+
 
 interface MainChartProps {
   index: number
@@ -167,9 +166,9 @@ export const MainChart = (props: MainChartProps) => {
     renderMainChart(_options, state)
     renderMarkLine(_options, state)
     renderZoom(_options, [start, end])
-    // /**
-    //  * 画主图指标
-    //  */
+    /**
+     * 画主图指标
+     */
     renderOverlay(_options, state.overlayStock)
     renderMainCoiling(_options, state)
 
@@ -178,6 +177,7 @@ export const MainChart = (props: MainChartProps) => {
     renderSecondary(_options, state.secondaryIndicators)
     renderSecondaryLocalIndicators(_options, state.secondaryIndicators, state)
     renderWatermark(_options, state.timeIndex)
+
     chart.current.setOption(_options)
   }
 
@@ -199,6 +199,49 @@ export const MainChart = (props: MainChartProps) => {
   useUpdateEffect(() => {
     setSelectSymbol(state.symbol)
   }, [state.symbol])
+
+
+  /**
+   * 监听dataZoom事件
+   * TODO
+   */
+  useEffect(() => {
+    if(!chart.current) return
+
+    if(state.yAxis.right !== 'percent') return
+
+    chart.current.on('dataZoom', (e: any) => {
+      let startIndex = e.start
+      let endIndex = e.end
+      if(e.batch){
+        startIndex = Math.round((e.batch[0].start / 100) * (state.mainData.history.length - 1))
+        endIndex = Math.round((e.batch[0].end / 100) * (state.mainData.history.length - 1))
+      }
+    
+      console.log(startIndex, endIndex, e)
+      const start = state.mainData.history[startIndex][2]
+
+      const max = Math.max(...state.mainData.history.slice(startIndex, endIndex).map(v => v[2]))
+      const min = Math.min(...state.mainData.history.slice(startIndex, endIndex).map(v => v[2]))
+
+      const maxPercent = ((max - start) / start) * 100
+      const minPercent = ((min - start) / start) * 100
+
+      chart.current?.setOption({
+        yAxis: [
+          {},
+          {
+            min: minPercent,
+            max: maxPercent
+          }
+        ]
+      })
+    })
+
+    return () => {
+      chart.current?.off('dataZoom')
+    }
+  }, [chart, state])
 
   return (
     <div className={
