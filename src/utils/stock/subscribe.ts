@@ -7,6 +7,7 @@ import { uid } from "radash"
 
 const barActionResultParser = (data: any) => {
   const action = data.ev as string
+  console.log(data)
   const [topic, ...raws] = data.b.split(',')
   const rawRecord = raws.map((raw: string, index: number) => index === 0 ? raw : Number.parseFloat(raw as string)) as StockRawRecord
 
@@ -18,7 +19,22 @@ const barActionResultParser = (data: any) => {
   }
 }
 
-export type StockSubscribeHandler = (data: ReturnType<typeof barActionResultParser>) => void
+const quoteActionResultParser = (data: any) => {
+  const action = data.ev as string
+  const [topic, ...raws] = data.q.split(',')
+  const rawRecord = raws.map((raw: string, index: number) => index === 0 ? raw : Number.parseFloat(raw as string)) as StockRawRecord
+
+  return {
+    action,
+    topic: topic as string,
+    rawRecord,
+    extra: data.d as string
+  }
+}
+
+
+
+export type StockSubscribeHandler<T extends SubscribeActionType> = T extends 'bar' ? (data: ReturnType<typeof barActionResultParser>) => void : (data: ReturnType<typeof quoteActionResultParser>) => void
 
 export type SubscribeActionType = 'bar' | 'quote'
 // export type UnsubscribeAction = 'bar_remove_symbols' | 'quote_remove_symbols'
@@ -45,8 +61,13 @@ class StockSubscribe {
       onMessage: ev => {
         const data = JSON.parse(ev.data)
         if (data.ev) {
+         if(data.b){
           const parserData = barActionResultParser(data)
           this.subscribed.emit(parserData.action, parserData)
+         }else{
+          const parserData = quoteActionResultParser(data)
+          this.subscribed.emit(parserData.action, parserData)
+         }
         }
       }
     })
@@ -115,11 +136,11 @@ class StockSubscribe {
     })
   }
 
-  public on(action: SubscribeActionType, handler: StockSubscribeHandler) {
+  public on<T extends SubscribeActionType>(action: T, handler: StockSubscribeHandler<T>) {
     this.subscribed.on(action, handler)
   }
 
-  public off(action: SubscribeActionType, handler: StockSubscribeHandler) {
+  public off<T extends SubscribeActionType>(action: T, handler: StockSubscribeHandler<T>) {
     this.subscribed.off(action, handler)
   }
 }

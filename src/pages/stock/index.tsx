@@ -7,6 +7,9 @@ import { useParams } from "react-router"
 import { Finance } from "./finance"
 
 
+/**
+ * TODO 分时图X轴需要单独处理
+ */
 const StockPage = () => {
   const [_, setQueryParams] = useQueryParams()
   const params = useParams<{ type: string }>()

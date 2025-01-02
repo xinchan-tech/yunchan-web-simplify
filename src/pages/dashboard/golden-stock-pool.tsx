@@ -5,7 +5,7 @@ import { useMemo, useState } from "react"
 
 import { getStockCollects } from "@/api"
 import { type StockRecord, stockManager } from "@/utils/stock"
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 import Decimal from "decimal.js"
 import { useStockQuoteSubscribe } from "@/hooks"
 
@@ -13,6 +13,7 @@ const GoldenStockPool = () => {
   const { collects } = useCollectCates()
   const [type, setType] = useState(collects[0].id)
   const { token } = useToken()
+  const queryClient = useQueryClient()
 
   const query = useQuery({
     queryKey: [getStockCollects.cacheKey, type],
@@ -30,7 +31,31 @@ const GoldenStockPool = () => {
     appEvent.emit('login')
   }
 
-  useStockQuoteSubscribe(['TSLA@1'])
+  useStockQuoteSubscribe(data.map(d => d.symbol), (data) => {
+    queryClient.setQueryData([getStockCollects.cacheKey, type], (old: typeof query.data) => {
+      if (!old) return old
+      const items = old.items.map((item) => {
+        if (item.symbol === data.topic) {
+          const newStock = [...item.stock]
+          newStock[0] = data.rawRecord[0]
+          newStock[2] = data.rawRecord[1]
+          newStock[9] = data.rawRecord[2]
+          newStock[5] = data.rawRecord[3]
+          newStock[6] = data.rawRecord[4]
+          return {
+            ...item,
+            stock: newStock
+          }
+        }
+        return item
+      })
+
+      return {
+        ...old,
+        items
+      }
+    })
+  })
 
   const columns: JknTableProps<StockRecord>['columns'] = [
     {
@@ -43,7 +68,7 @@ const GoldenStockPool = () => {
     },
     {
       header: '现价', accessorKey: 'close', meta: { align: 'right', width: '16%' },
-      cell: ({ row }) => <NumSpan value={row.original.close} decimal={2} isPositive={row.original.isUp} />
+      cell: ({ row }) => <NumSpan blink value={row.original.close} decimal={2} isPositive={row.original.isUp} />
     },
     {
       header: '涨跌幅', accessorKey: 'percent', meta: { align: 'right', width: '19%' },

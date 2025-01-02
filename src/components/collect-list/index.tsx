@@ -1,6 +1,7 @@
-import { getStockCollects, type StockExtend } from "@/api"
+import { getLargeCapIndexes, getStockCollects, type StockExtend } from "@/api"
 import { AddCollect, CollectCapsuleTabs, JknIcon, NumSpan, ScrollArea } from "@/components"
 import { useConfig } from "@/store"
+import { getTradingPeriod } from "@/utils/date"
 import echarts, { type ECOption } from "@/utils/echarts"
 import { stockManager } from "@/utils/stock"
 import { colorUtil } from "@/utils/style"
@@ -30,6 +31,7 @@ export const CollectList = (props: CollectListProps) => {
   const [collect, setCollect] = useState('1')
   const stocks = useQuery({
     queryKey: [getStockCollects.cacheKey, collect],
+    refetchInterval: 60 * 1000,
     queryFn: () => getStockCollects({
       cate_id: +collect,
       extend,
@@ -134,6 +136,8 @@ interface StockChartProps {
   type: 'up' | 'down'
 }
 
+const xAxisData = getTradingPeriod('intraDay')
+
 const StockChart = (props: StockChartProps) => {
   const charts = useRef<echarts.ECharts>()
   const { getStockColor } = useConfig()
@@ -174,7 +178,7 @@ const StockChart = (props: StockChartProps) => {
     },
     xAxis: {
       type: 'category',
-      data: [],
+      data: xAxisData,
       show: false
     },
     yAxis: {
@@ -183,14 +187,24 @@ const StockChart = (props: StockChartProps) => {
       show: false
     },
     series: [{
-      type: 'line', data: []
+      type: 'line', data: [], symbol: 'none'
     }]
+  }
+
+  const calcXAxisData = (data: typeof props.data) => {
+    if(data.length < xAxisData.length * 0.1){
+      return xAxisData.slice(0, Math.round(xAxisData.length * 0.12))
+    }
+    return xAxisData
   }
 
   useMount(() => {
     charts.current = echarts.init(dom.current)
     charts.current.setOption(options)
     charts.current.setOption({
+      xAxis: {
+        data: calcXAxisData(props.data)
+      },
       series: [{
         data: props.data
       }]
@@ -200,6 +214,9 @@ const StockChart = (props: StockChartProps) => {
 
   useUpdateEffect(() => {
     charts.current?.setOption({
+      xAxis: {
+        data: calcXAxisData(props.data)
+      },
       series: [{
         data: props.data
       }]

@@ -1,5 +1,6 @@
 import { IncreaseTopStatus, getIncreaseTop } from "@/api"
 import { CapsuleTabs, HoverCard, HoverCardContent, HoverCardTrigger, JknIcon, JknTable, type JknTableProps, NumSpan, ScrollArea, StockView } from "@/components"
+import { useStockQuoteSubscribe } from "@/hooks"
 import { useTime } from "@/store"
 import { dateToWeek } from "@/utils/date"
 import { stockManager, type StockTrading, type StockRecord } from "@/utils/stock"
@@ -37,6 +38,31 @@ const TopList = () => {
   }
 
   const data = useMemo(() => query.data?.map(d => stockManager.toStockRecord(d)[0]!) ?? [], [query.data])
+
+  useStockQuoteSubscribe(data.map(d => d.symbol), (data) => {
+    if(tradingToTopStatusMap[time.getTrading() as keyof typeof tradingToTopStatusMap] !== type) return
+
+     queryClient.setQueryData([getIncreaseTop.cacheKey, type], (old: typeof query.data) => {
+          if (!old) return old
+          const items = old.map((item) => {
+            if (item.symbol === data.topic) {
+              const newStock = [...item.stock]
+              newStock[0] = data.rawRecord[0]
+              newStock[2] = data.rawRecord[1]
+              newStock[9] = data.rawRecord[2]
+              newStock[5] = data.rawRecord[3]
+              newStock[6] = data.rawRecord[4]
+              return {
+                ...item,
+                stock: newStock
+              }
+            }
+            return item
+          })
+    
+          return items
+        })
+  })
 
   const columns: JknTableProps<StockRecord>['columns'] = [
     {

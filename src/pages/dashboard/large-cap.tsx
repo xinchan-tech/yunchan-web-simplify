@@ -53,9 +53,9 @@ const LargeCap = () => {
     }
   }, [largeCap.data])
 
-  useSubscribe(largeCap.data?.find(o => o.category_name === activeKey)?.stocks.map(s => s.symbol) ?? [], (data) => {
-    console.log(data)
-  })
+  // useSubscribe(largeCap.data?.find(o => o.category_name === activeKey)?.stocks.map(s => s.symbol) ?? [], (data) => {
+  //   console.log(data)
+  // })
 
   const tabs = useMemo(() => {
     return largeCap.data?.map(item => ({

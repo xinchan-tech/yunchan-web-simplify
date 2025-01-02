@@ -1,5 +1,6 @@
-import { type StockTrading, useConfig } from '@/store'
+import { useConfig } from '@/store'
 import dayjs, { type Dayjs } from 'dayjs'
+import { StockTrading } from "./stock"
 
 /**
  * 将小时和分钟转换为数字
