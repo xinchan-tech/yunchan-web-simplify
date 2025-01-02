@@ -10,7 +10,7 @@ import { getStockChart, getStockIndicatorData, getStockTabData, getStockTabList 
 import dayjs from "dayjs"
 import { renderUtils } from "../lib/utils"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
-import { useTime } from "@/store"
+import { useIndicator, useTime } from "@/store"
 import { nanoid } from "nanoid"
 import { useUpdateEffect } from "ahooks"
 import { useNavigate } from "react-router"
@@ -166,8 +166,15 @@ export const KChart = () => {
     })
   }
 
+    const { isDefaultIndicatorParams, getIndicatorQueryParams } = useIndicator()
+
   const setSecondaryIndicator: KChartContext['setSecondaryIndicator'] = ({ index, indicatorIndex, indicator }) => {
-    const queryKey = [getStockIndicatorData.cacheKey, { symbol: indicator.symbol, cycle: indicator.timeIndex, id: indicator.id, db_type: indicator.type }]
+    const queryKey = [getStockIndicatorData.cacheKey, { symbol: indicator.symbol, cycle: indicator.timeIndex, id: indicator.id, db_type: indicator.type }] as any[]
+
+    if (!isDefaultIndicatorParams(indicator.id)) {
+      queryKey.push(getIndicatorQueryParams(indicator.id))
+    }
+
     const queryData = queryClient.getQueryData(queryKey) as { id: string, data: any[] }
 
     setContext(d => {

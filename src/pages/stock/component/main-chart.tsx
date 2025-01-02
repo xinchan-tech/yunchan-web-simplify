@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 import { useKChartContext } from "../lib"
-import { useTime } from "@/store"
+import { useIndicator, useTime } from "@/store"
 import { useQueries, useQuery, useQueryClient } from "@tanstack/react-query"
 import { getStockChart, getStockIndicatorData, StockChartInterval } from "@/api"
 import { useMount, useUnmount, useUpdateEffect } from "ahooks"
@@ -14,6 +14,7 @@ import { TimeIndexMenu } from "./time-index"
 import echarts from "@/utils/echarts"
 import { stockManager } from "@/utils/stock"
 import dayjs from "dayjs"
+import { mapEntries } from "radash"
 
 interface MainChartProps {
   index: number
@@ -50,42 +51,50 @@ export const MainChart = (props: MainChartProps) => {
   })
 
 
-  const subscribeSymbol = useMemo(() => `${state.symbol}@${state.timeIndex}` , [state.symbol, state.timeIndex])
+  const subscribeSymbol = useMemo(() => `${state.symbol}@${state.timeIndex}`, [state.symbol, state.timeIndex])
 
   useStockBarSubscribe([subscribeSymbol], (data) => {
     const stock = stockManager.toSimpleStockRecord(data.rawRecord)
     const qData = queryClient.getQueryData(queryKey) as typeof query.data
 
-    if(!qData || qData.history.length === 0) return
+    if (!qData || qData.history.length === 0) return
 
     const lastData = stockManager.toSimpleStockRecord(qData.history[qData.history.length - 1])
-    console.log(state.timeIndex)
-    if(state.timeIndex === StockChartInterval.ONE_MIN){
+    if (state.timeIndex === StockChartInterval.ONE_MIN) {
       // 当前分钟大于最后一条数据的分钟
-      if(lastData.toDayjs().isBefore(stock.toDayjs(), 'minute')){
+      if (lastData.toDayjs().isBefore(stock.toDayjs(), 'minute')) {
         queryClient.setQueryData(queryKey, {
           ...qData,
           history: [...qData.history, data.rawRecord]
         })
       }
     }
-    // console.log(dayjs(new Date(+stock.time)).format('YYYY-MM-DD HH:mm:ss'), stock.close)
   })
 
+  const { isDefaultIndicatorParams, getIndicatorQueryParams } = useIndicator()
+
   const mainQueryIndicatorQueries = useQueries({
-    queries: Reflect.ownKeys(state.mainIndicators).map(v => v.toString()).map((item) => (
-      {
-        queryKey: [getStockIndicatorData.cacheKey, { symbol: state.symbol, cycle: state.timeIndex, id: item, db_type: state.mainIndicators[item].type }],
+    queries: Reflect.ownKeys(state.mainIndicators).map(v => v.toString()).map((item) => {
+      const queryKey = [getStockIndicatorData.cacheKey, { symbol: state.symbol, cycle: state.timeIndex, id: item, db_type: state.mainIndicators[item].type }] as any[]
+      let params: NormalizedRecord<number> | undefined
+      if (!isDefaultIndicatorParams(item)) {
+        params = getIndicatorQueryParams(item)
+        queryKey.push(params)
+      }
+  
+      return {
+        queryKey,
         queryFn: async () => {
           const r = await getStockIndicatorData({
-            symbol: state.symbol, cycle: state.timeIndex, id: item, db_type: state.mainIndicators[item].type, start_at: startTime
+            symbol: state.symbol, cycle: state.timeIndex, id: item, db_type: state.mainIndicators[item].type, start_at: startTime,
+            param: JSON.stringify(params)
           })
 
           return { id: item, data: r.result }
         },
         placeholderData: () => ({ id: item, data: undefined })
       }
-    ))
+    })
   })
 
   useEffect(() => {
@@ -99,11 +108,17 @@ export const MainChart = (props: MainChartProps) => {
   const secondaryIndicatorQueries = useQueries({
     queries: Array.from(new Set(state.secondaryIndicators.filter(v => !renderUtils.isLocalIndicator(v.id)).map(v => `${v.id}_${v.type}`))).map((item) => {
       const [id, type] = item.split('_')
+      const queryKey = [getStockIndicatorData.cacheKey, { symbol: state.symbol, cycle: state.timeIndex, id: id, db_type: type }] as any[]
+      let params: NormalizedRecord<number> | undefined
+      if (!isDefaultIndicatorParams(id)) {
+        params = getIndicatorQueryParams(id)
+        queryKey.push(params)
+      }
 
       return {
-        queryKey: [getStockIndicatorData.cacheKey, { symbol: state.symbol, cycle: state.timeIndex, id: id, db_type: type }],
+        queryKey,
         queryFn: () => getStockIndicatorData({
-          symbol: state.symbol, cycle: state.timeIndex, id: id, db_type: type, start_at: startTime
+          symbol: state.symbol, cycle: state.timeIndex, id: id, db_type: type, start_at: startTime, param: JSON.stringify(params)
         }).then(r => ({ id: id, data: r.result })),
         placeholderData: () => ({ id: id, data: undefined })
       }

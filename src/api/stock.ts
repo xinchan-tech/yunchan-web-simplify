@@ -1282,7 +1282,7 @@ type GetStockIndicatorDataParams = {
   id: string
   cycle: StockChartInterval
   start_at?: string
-  params?: string
+  param?: string
   db_type: string
 }
 

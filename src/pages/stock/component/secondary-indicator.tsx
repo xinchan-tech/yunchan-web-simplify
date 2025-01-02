@@ -1,10 +1,13 @@
-import { Input, JknIcon, Label, Popover, PopoverContent, PopoverTrigger, RadioGroup, RadioGroupItem, ScrollArea, useModal } from "@/components"
+import { Button, Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage, Input, JknIcon, Label, Popover, PopoverContent, PopoverTrigger, RadioGroup, RadioGroupItem, ScrollArea, useModal } from "@/components"
 import { getStockIndicators } from "@/api"
 import { useQuery } from "@tanstack/react-query"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useKChartContext } from "../lib"
 import { useIndicator } from "@/store"
-import { useMount } from "ahooks"
+import { useFieldArray } from "react-hook-form"
+import { z } from "zod"
+import { useToast, useZForm } from "@/hooks"
+import Decimal from "decimal.js"
 
 interface SecondaryIndicatorProps {
   /**
@@ -74,11 +77,16 @@ export const SecondaryIndicator = (props: SecondaryIndicatorProps) => {
   const indicatorParamsForm = useModal({
     content: <IndicatorParamsForm />,
     title: '指标参数编辑',
+    footer: null,
+    closeIcon: true
   })
 
-  // useMount(() => {
-  //   indicatorParamsForm.modal.open()
-  // })
+
+
+  const onOpenIndicatorParams = () => {
+    indicatorParamsForm.modal.open()
+  }
+
 
   return (
     <div>
@@ -86,10 +94,10 @@ export const SecondaryIndicator = (props: SecondaryIndicatorProps) => {
         indicatorParamsForm.context
       }
       <Popover>
-        <PopoverTrigger className="" asChild>
+        <PopoverTrigger asChild>
           <div className="px-2 py-1 rounded-sm hover:text-secondary cursor-pointer hover:border-dialog-border left-2 top-0 border border-solid border-border text-sm text-tertiary">
             <span>{name}</span>
-            <JknIcon onClick={() => indicatorParamsForm.modal.open()} name="arrow_down" className="w-3 h-3 ml-1" />
+            <JknIcon name="arrow_down" className="w-3 h-3 ml-1" />
           </div>
         </PopoverTrigger>
         <PopoverContent align="start" side="top" sideOffset={10} alignOffset={-10} className="w-fit p-0">
@@ -98,7 +106,7 @@ export const SecondaryIndicator = (props: SecondaryIndicatorProps) => {
               <div className="flex-1">
                 <Input placeholder="搜索指标" className="border-none placeholder:text-tertiary" value={searchKey} onChange={(e) => setSearchKey(e.target.value)} />
               </div>
-              <JknIcon name="ic_settings" className="w-4 h-4 cursor-pointer" />
+              <JknIcon onClick={onOpenIndicatorParams} name="ic_settings" className="w-4 h-4 cursor-pointer" />
             </div>
             <div className="flex">
               {
@@ -133,29 +141,125 @@ export const SecondaryIndicator = (props: SecondaryIndicatorProps) => {
   )
 }
 
+const indicatorParamsSchema = z.object({
+  params: z.array(z.object({
+    min: z.string().optional(),
+    max: z.string().optional(),
+    default: z.string(),
+    name: z.string(),
+    value: z.string()
+  }).refine((v) => {
+    if (!v.value) return false
+    console.log(v.max && v.value > v.max, v.max, v.value)
+    if (v.min && Decimal.create(v.value).lt(v.min)) return
+
+    if (v.max && Decimal.create(v.value).gt(v.max)) return false
+
+    return true
+  }, { message: '参数值不在范围内' }))
+})
 
 const IndicatorParamsForm = () => {
-  const { indicatorParams } = useIndicator()
+  const { indicatorParams, setIndicatorParams } = useIndicator()
+  const form = useZForm(indicatorParamsSchema, {
+    params: []
+  })
+  const [indicator, setIndicator] = useState(indicatorParams[0].id)
+  const arrayFields = useFieldArray({
+    control: form.control,
+    name: 'params'
+  })
+
+  useEffect(() => {
+    const params = indicatorParams.find(item => item.id === indicator)?.params ?? []
+    form.setValue('params', params)
+  }, [indicator, indicatorParams, form])
+
+  const onResetDefault = () => {
+    const params = indicatorParams.find(item => item.id === indicator)?.params ?? []
+    form.setValue('params', params.map(item => ({ ...item, value: item.default })))
+  }
+
+  const { toast } = useToast()
+
+  const submitParams = async () => {
+    const valid = await form.trigger()
+
+    if (!valid) {
+      for (const err of Object.keys(form.formState.errors) as unknown as (keyof typeof form.formState.errors)[]) {
+        toast({ description: (form.formState.errors[err] as any)[0].root.message })
+        return
+      }
+    }
+
+    const values = form.getValues()
+
+    setIndicatorParams({
+      id: indicator,
+      params: values.params
+    })
+
+    toast({ description: '保存成功' })
+
+  }
 
   return (
-    <div>
-      {
-        indicatorParams.map((item) => (
-          <div key={item.id}>
-            <div>{item.id}</div>
+    <div className="flex text-sm">
+      <div className="h-[50vh] overflow-y-auto">
+        {
+          indicatorParams.map((item) => (
+            <div key={item.id} className="data-[state=active]:bg-accent hover:!bg-primary py-2 w-60 px-2 box-border" data-state={indicator === item.id ? 'active' : ''} onClick={() => setIndicator(item.id)} onKeyDown={() => { }}>
+              {item.name}
+            </div>
+          ))
+        }
+      </div>
+      <div className="w-96 h-[50vh] overflow-y-auto box-border p-4">
+        <div className="mb-4">
+          参数列表
+        </div>
+        <Form  {...form}>
+          <form className="space-y-4">
             {
-              item.params.map((ele) => (
-                <div key={ele.name}>
-                  <div>{ele.name}</div>
-                  <div>{ele.value}</div>
-                  <div>{ele.min}</div>
-                  <div>{ele.max}</div>
-                </div>
-              ))
+              arrayFields.fields.map((field, index) => {
+                return (
+                  <FormField
+                    key={field.id}
+                    control={form.control}
+                    rules={{ min: 1 }}
+                    name={`params.${index}.value`}
+                    render={({ field }) => {
+                      const name = arrayFields.fields[index].name
+                      const param = indicatorParams.find(item => item.id === indicator)?.params.find(item => item.name === name)
+                      return (
+                        (
+                          <FormItem>
+                            <FormLabel className="font-normal">
+                              参数名：&nbsp;&nbsp;{name} <span className="text-xs text-tertiary">(默认:{param?.default}, 最小:{param?.min}, 最大:{param?.max})</span>
+                            </FormLabel>
+                            <div className="flex items-center">
+                              <span className="w-20">参数值：</span>
+                              <FormControl>
+                                <Input className="border-border" size="sm" {...field} />
+                              </FormControl>
+                            </div>
+                            <FormDescription />
+                            <FormMessage />
+                          </FormItem>
+                        )
+                      )
+                    }}
+                  />
+                )
+              })
             }
-          </div>
-        ))
-      }
+          </form>
+          <div className="hover:text-primary cursor-pointer mt-2 text-xs text-tertiary" onClick={onResetDefault} onKeyDown={() => { }}>恢复默认值</div>
+        </Form>
+        <div className=" text-center mt-4">
+          <Button size="sm" className="w-24" onClick={submitParams}>保存</Button>
+        </div>
+      </div>
     </div>
   )
 }

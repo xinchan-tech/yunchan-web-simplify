@@ -32,13 +32,14 @@ export const useModal = ({ content, onOpen, title, closeIcon, className, footer,
       toggleModalVisible()
     }
   }
-  console.log(modalVisible)
+
   useUpdateEffect(() => {
     if (!modalVisible) {
       setTimeout(() => {
         setFalse()
       }, 200)
     }
+
   }, [modalVisible])
 
   const render = () => {
@@ -93,7 +94,7 @@ export const useModal = ({ content, onOpen, title, closeIcon, className, footer,
 
   const modal: UseModalAction = {
     open: (...arg: unknown[]) => {
-      console.log('open')
+
       toggleModalVisible()
       setTrue()
       onOpen?.(...arg)
