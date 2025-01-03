@@ -31,7 +31,7 @@ import {
 } from './coilling'
 import { renderUtils } from './utils'
 import type { GraphicComponentOption } from 'echarts/components'
-import type { YAXisOption } from 'echarts/types/dist/shared'
+import type { DataZoomComponentOption, YAXisOption } from 'echarts/types/dist/shared'
 
 const MAIN_CHART_NAME = 'kChart'
 const MAIN_CHART_NAME_VIRTUAL = 'kChart-virtual'
@@ -64,7 +64,7 @@ export const createOptions = (): ECOption => ({
     },
     formatter: (v: any) => {
       const errData = (v as any[]).find(_v => _v.seriesName === MAIN_CHART_NAME)
-      const priceData = (v as any[]).find(_v => _v.seriesName === 'price')
+      const priceData = (v as any[]).find(_v => _v.seriesName === MAIN_CHART_NAME_VIRTUAL)
       if (!errData) return ''
       const data = errData?.seriesType === 'candlestick' ? errData?.value.slice(1) : (errData.value as StockRawRecord)
 
@@ -147,7 +147,6 @@ export const createOptions = (): ECOption => ({
           show: false
         }
       },
-      max: renderUtils.calcAxisMax,
       splitLine: {
         lineStyle: {
           color: 'rgb(31, 32, 33)'
@@ -159,9 +158,11 @@ export const createOptions = (): ECOption => ({
       show: true,
       gridIndex: 0,
       position: 'right',
-      max: renderUtils.calcAxisMax,
       splitLine: {
         show: false
+      },
+      axisLabel: {
+        
       }
     }
   ],
@@ -281,6 +282,17 @@ export const renderGrid = (options: ECOption, state: ChartState, size: [number, 
     }
   }
 
+  const {getStockColor} = useConfig.getState()
+
+  yAxis[1].axisLabel!.rich = {
+    u: {
+      color: getStockColor(true, 'hex')
+    },
+    d: {
+      color: getStockColor(false, 'hex')
+    },
+  }
+
   for (let i = 0; i < state.secondaryIndicators.length; i++) {
     renderSecondaryAxis(options, state, i)
   }
@@ -303,6 +315,8 @@ export const renderMainChart: ChartRender = (options, state) => {
   const upColor = getStockColor(true, 'hex')
   const downColor = getStockColor(false, 'hex')
 
+  const yAxisIndex = state.yAxis.right === 'price' ? 1 : 0
+
   if (state.type === 'k-line') {
     mainSeries.type = 'candlestick'
     mainSeries.itemStyle = {
@@ -312,7 +326,7 @@ export const renderMainChart: ChartRender = (options, state) => {
       borderColor0: downColor
     }
     mainSeries.data = data
-    mainSeries.yAxisIndex = 0
+    mainSeries.yAxisIndex = yAxisIndex
     mainSeries.encode = {
       x: [1],
       y: [2, 3, 5, 4]
@@ -333,7 +347,7 @@ export const renderMainChart: ChartRender = (options, state) => {
       x: [0],
       y: [2]
     }
-    mainSeries.yAxisIndex = 0
+    mainSeries.yAxisIndex = yAxisIndex
     _mainSeries.data = data
     mainSeries.color = color
     ;(mainSeries as any).areaStyle = {
@@ -361,24 +375,67 @@ export const renderMainChart: ChartRender = (options, state) => {
   }
   ;(options.series as any)?.push(mainSeries)
 
-  const stocks = state.mainData.history.map(stock => [stock[0], state.yAxis.right === 'price' ? stock[2] : stock[2]])
-  // console
-  Array.isArray(options.series) &&
-    options.series.push({
-      name: 'price',
-      type: 'line',
-      data: stocks,
-      encode: {
-        x: [0],
-        y: [1]
+  // 用来给叠加标记定位的虚拟线
+  const virtualLine = JSON.parse(JSON.stringify(mainSeries)) as LineSeriesOption
+
+  virtualLine.name = MAIN_CHART_NAME_VIRTUAL
+  virtualLine.type = 'line'
+
+  virtualLine.encode = {
+    x: [0],
+    y: [2]
+  }
+
+  virtualLine.color = 'transparent'
+  virtualLine.symbol = 'none'
+  virtualLine.itemStyle = {}
+
+  virtualLine.markLine = {
+    symbol: ['none', 'none'],
+    lineStyle: {
+      color: '#949596'
+    },
+    label: {
+      formatter: (v: any) => {
+        const x = (v.data as any)?.xAxis as string
+        const date = dayjs(new Date(+x)).format('YYYY-MM-DD')
+
+        return `{date|${date}}{abg|}\n{title|${v.data.name}}`
       },
-      xAxisIndex: 0,
-      yAxisIndex: 1,
-      showSymbol: false,
-      lineStyle: {
-        color: 'transparent'
+      backgroundColor: '#eeeeee',
+      rich: {
+        date: {
+          color: '#fff',
+          align: 'center',
+          padding: [0, 10, 0, 10]
+        },
+        abg: {
+          backgroundColor: '#e91e63',
+          width: '100%',
+          align: 'right',
+          height: 25,
+          padding: [0, 10, 0, 10]
+        },
+        title: {
+          height: 20,
+          align: 'left',
+          padding: [0, 10, 0, 10]
+        }
       }
-    })
+    },
+    silent: true,
+    data: []
+  }
+
+  if (state.yAxis.right !== 'price') {
+    const zoom = options.dataZoom as DataZoomComponentOption[]
+    if (Array.isArray(zoom) && zoom[0]) {
+      const axisLine = renderAxisLine(state, zoom[0].start!, zoom[0].end!)
+      Array.isArray(options.series) && options.series.push(axisLine as any)
+    }
+  }
+
+  Array.isArray(options.series) && options.series.push(virtualLine)
 
   // 如果grid > 1 ，取消显示axisPointer标签
   if (Array.isArray(options.xAxis)) {
@@ -453,60 +510,6 @@ export const renderMarkLine: ChartRender = (options, state) => {
       ]
     ]
   }
-
-  // 虚拟线
-  const virtualLine = JSON.parse(JSON.stringify(mainSeries)) as LineSeriesOption
-
-  virtualLine.name = MAIN_CHART_NAME_VIRTUAL
-  virtualLine.type = 'line'
-
-  virtualLine.encode = {
-    x: [0],
-    y: [2]
-  }
-
-  virtualLine.color = 'transparent'
-  virtualLine.symbol = 'none'
-  virtualLine.itemStyle = {}
-
-  virtualLine.markLine = {
-    symbol: ['none', 'none'],
-    lineStyle: {
-      color: '#949596'
-    },
-    label: {
-      formatter: (v: any) => {
-        const x = (v.data as any)?.xAxis as string
-        const date = dayjs(new Date(+x)).format('YYYY-MM-DD')
-
-        return `{date|${date}}{abg|}\n{title|${v.data.name}}`
-      },
-      backgroundColor: '#eeeeee',
-      rich: {
-        date: {
-          color: '#fff',
-          align: 'center',
-          padding: [0, 10, 0, 10]
-        },
-        abg: {
-          backgroundColor: '#e91e63',
-          width: '100%',
-          align: 'right',
-          height: 25,
-          padding: [0, 10, 0, 10]
-        },
-        title: {
-          height: 20,
-          align: 'left',
-          padding: [0, 10, 0, 10]
-        }
-      }
-    },
-    silent: true,
-    data: []
-  }
-
-  Array.isArray(options.series) && options.series.push(virtualLine)
 }
 
 /**
@@ -517,6 +520,7 @@ export const renderMainCoiling = (options: ECOption, state: ChartState) => {
   const points = calcCoilingPoints(state.mainData.history, state.mainData.coiling_data)
   const pivots = calcCoilingPivots(state.mainData.coiling_data, points)
   const expands = calcCoilingPivotsExpands(state.mainData.coiling_data, points)
+  const yAxisIndex = state.yAxis.right === 'price' ? 1 : 0
   state.mainCoiling.forEach(coiling => {
     if (coiling === CoilingIndicatorId.PEN) {
       const p: any[] = []
@@ -530,20 +534,20 @@ export const renderMainCoiling = (options: ECOption, state: ChartState) => {
           index === points.length - 2 && state.mainData.coiling_data?.status !== 1 ? LineType.DASH : LineType.SOLID
         ])
       })
-      drawPolyline(options, {} as any, { xAxisIndex: 0, yAxisIndex: 0, data: p, extra: { color: '#ffffff' } })
+      drawPolyline(options, {} as any, { xAxisIndex: 0, yAxisIndex: yAxisIndex, data: p, extra: { color: '#ffffff' } })
     } else if (coiling === CoilingIndicatorId.PIVOT) {
-      drawPivots(options, {} as any, { xAxisIndex: 0, yAxisIndex: 0, data: expands as any })
-      drawPivots(options, {} as any, { xAxisIndex: 0, yAxisIndex: 0, data: pivots as any })
+      drawPivots(options, {} as any, { xAxisIndex: 0, yAxisIndex: yAxisIndex, data: expands as any })
+      drawPivots(options, {} as any, { xAxisIndex: 0, yAxisIndex: yAxisIndex, data: pivots as any })
     } else if (
       [CoilingIndicatorId.ONE_TYPE, CoilingIndicatorId.TWO_TYPE, CoilingIndicatorId.THREE_TYPE].includes(coiling)
     ) {
       const tradePoints = calcTradePoints(state.mainData.coiling_data, points, coiling as any)
-      drawTradePoints(options, {} as any, { xAxisIndex: 0, yAxisIndex: 0, data: tradePoints })
+      drawTradePoints(options, {} as any, { xAxisIndex: 0, yAxisIndex: yAxisIndex, data: tradePoints })
     } else if (coiling === CoilingIndicatorId.SHORT_LINE) {
       const cma = calculateMA(20, state.mainData.history)
       const cma2 = calculateMA(30, state.mainData.history)
       drawLine(options, {} as any, {
-        yAxisIndex: 0,
+        yAxisIndex: yAxisIndex,
         xAxisIndex: 0,
         data: cma.map((s, i) => [i, s]),
         extra: {
@@ -551,7 +555,7 @@ export const renderMainCoiling = (options: ECOption, state: ChartState) => {
         }
       })
       drawLine(options, {} as any, {
-        yAxisIndex: 0,
+        yAxisIndex: yAxisIndex,
         xAxisIndex: 0,
         data: cma2.map((s, i) => [i, s]),
         extra: {
@@ -565,7 +569,7 @@ export const renderMainCoiling = (options: ECOption, state: ChartState) => {
       const cma3 = calculateMA(120, state.mainData.history)
       const cma4 = calculateMA(250, state.mainData.history)
       drawLine(options, {} as any, {
-        yAxisIndex: 0,
+        yAxisIndex: yAxisIndex,
         xAxisIndex: 0,
         data: cma.map((s, i) => [i, s]),
         extra: {
@@ -573,7 +577,7 @@ export const renderMainCoiling = (options: ECOption, state: ChartState) => {
         }
       })
       drawLine(options, {} as any, {
-        yAxisIndex: 0,
+        yAxisIndex: yAxisIndex,
         xAxisIndex: 0,
         data: cma1.map((s, i) => [i, s]),
         extra: {
@@ -581,7 +585,7 @@ export const renderMainCoiling = (options: ECOption, state: ChartState) => {
         }
       })
       drawLine(options, {} as any, {
-        yAxisIndex: 0,
+        yAxisIndex: yAxisIndex,
         xAxisIndex: 0,
         data: cma2.map((s, i) => [i, s]),
         extra: {
@@ -589,7 +593,7 @@ export const renderMainCoiling = (options: ECOption, state: ChartState) => {
         }
       })
       drawLine(options, {} as any, {
-        yAxisIndex: 0,
+        yAxisIndex: yAxisIndex,
         xAxisIndex: 0,
         data: cma3.map((s, i) => [i, s]),
         extra: {
@@ -597,7 +601,7 @@ export const renderMainCoiling = (options: ECOption, state: ChartState) => {
         }
       })
       drawLine(options, {} as any, {
-        yAxisIndex: 0,
+        yAxisIndex: yAxisIndex,
         xAxisIndex: 0,
         data: cma4.map((s, i) => [i, s]),
         extra: {
@@ -787,7 +791,7 @@ export const renderSecondary = (options: ECOption, indicators: Indicator[]) => {
       } else if (d.draw === 'STICKLINE') {
         const data: DrawerRectShape[] = Object.keys(d.data).map(key => [
           +key,
-          ...(d.data as NormalizedRecord<number[]>)[key],
+          ...(d.data as NormalizedRecord<number[]>)[key].map((s, i) => (i === 2 ? s * 10 : s)),
           d.style.color
         ]) as any[]
         stickLineData.push(...data)
@@ -1030,4 +1034,56 @@ export const renderZoom = (options: ECOption, zoom: [number, number]) => {
       z.end = zoom[1]
     }
   }
+}
+
+/**
+ * 显示坐标轴的线，因为坐标轴要根据dataZoom最左边的点来显示
+ */
+export const renderAxisLine = (state: ChartState, start: number, end: number) => {
+  const rightAxisLine: LineSeriesOption = {
+    type: 'line',
+    name: 'right-axis-line',
+    xAxisIndex: 0,
+    data: [],
+    yAxisIndex: 1,
+    encode: {
+      x: [0],
+      y: [2]
+    },
+    symbol: 'none',
+    lineStyle: {
+      color: 'transparent',
+      width: 1
+    }
+  }
+
+  if (state.yAxis.right === 'price') {
+    rightAxisLine.data = state.mainData.history
+  } else {
+    rightAxisLine.data = state.mainData.history.map((h, i) => {
+      /**
+       * 1.01，x轴100%是state.mainData.length * 1.01，100%的时候要向左偏移0.01
+       * 所以对应data的100%其实是100/1.01 = 98.02%
+       * 所以差值是100 - 98.02 = 1.98
+       */
+      const _start = start + 0.95 > 100 ? 100 : start + 0.95
+      const _end = end + 0.95 > 100 ? 100 : end + 0.95
+
+      const startIndex = Math.round((_start / 100) * (state.mainData.history.length - 1))
+      const endIndex = Math.round((_end / 100) * (state.mainData.history.length - 1))
+      if (i < startIndex) {
+        return 0
+      }
+      if (i > endIndex) {
+        return (
+          ((state.mainData.history[endIndex][2] - state.mainData.history[startIndex][2]) /
+            state.mainData.history[startIndex][2]) *
+          100
+        )
+      }
+      return ((h[2] - state.mainData.history[startIndex][2]) / state.mainData.history[startIndex][2]) * 100
+    })
+  }
+
+  return rightAxisLine
 }

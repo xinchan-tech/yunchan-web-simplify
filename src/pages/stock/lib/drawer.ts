@@ -328,65 +328,6 @@ export const drawGradient: DrawerFunc<[XAxis, GradientData[], string[]][]> = (
     data: points
   }
 
-  /**
-   * 方法二
-   */
-  // const series: CustomSeriesOption = {
-  //   type: 'custom',
-  //   xAxisIndex: index,
-  //   yAxisIndex: index,
-  //   encode: {
-  //     x: [0, 1],
-  //     y: [2]
-  //   },
-  //   renderItem: (_, api) => {
-  //     const y = api.value(2) as number
-  //     const item: [XAxis, GradientData[], string[]] = data[y]
-
-  //     const colors = (item[2] as unknown as string[]).map(colorUtil.hexToRGBA)
-  //     const c = ['transparent', 'transparent']
-  //     colors.forEach((color, index) => {
-  //       if (color) {
-  //         c[index] = `rgba(${color.r}, ${color.g}, ${color.b}, ${color.a})`
-  //       }
-  //     })
-
-  //     const _points: number[][] = []
-  //     const rightMax = api.getWidth() - right
-
-  //     item[1].forEach(p => {
-  //       const po = api.coord([p.x, p.y])
-
-  //       if (po[0] > rightMax) {
-  //         po[0] = rightMax
-  //       }
-
-  //       _points.push(po)
-  //     })
-
-  //     return {
-  //       type: 'polygon',
-  //       shape: {
-  //         points: [..._points]
-  //       },
-  //       emphasisDisabled: true,
-  //       style: {
-  //         fill: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-  //           {
-  //             offset: 0,
-  //             color: c[0]
-  //           },
-  //           {
-  //             offset: 1,
-  //             color: c[1]
-  //           }
-  //         ])
-  //       }
-  //     }
-  //   },
-  //   data: points
-  // }
-
   Array.isArray(options.series) && options.series.push(series)
 
   // console.log(data

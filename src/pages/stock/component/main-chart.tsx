@@ -5,7 +5,7 @@ import { useQueries, useQuery, useQueryClient } from "@tanstack/react-query"
 import { getStockChart, getStockIndicatorData, StockChartInterval } from "@/api"
 import { useMount, useUnmount, useUpdateEffect } from "ahooks"
 import { useDomSize, useStockBarSubscribe } from "@/hooks"
-import { renderChart, renderGrid, renderMainChart, renderMainCoiling, renderMainIndicators, renderMarkLine, renderOverlay, renderOverlayMark, renderSecondary, renderSecondaryLocalIndicators, renderWatermark, renderZoom } from "../lib/render"
+import { renderAxisLine, renderChart, renderGrid, renderMainChart, renderMainCoiling, renderMainIndicators, renderMarkLine, renderOverlay, renderOverlayMark, renderSecondary, renderSecondaryLocalIndicators, renderWatermark, renderZoom } from "../lib/render"
 import { SecondaryIndicator } from "./secondary-indicator"
 import { renderUtils } from "../lib/utils"
 import { StockSelect } from "@/components"
@@ -13,6 +13,7 @@ import { cn } from "@/utils/style"
 import { TimeIndexMenu } from "./time-index"
 import echarts from "@/utils/echarts"
 import { stockManager } from "@/utils/stock"
+import { throttle } from "radash"
 
 
 interface MainChartProps {
@@ -41,7 +42,7 @@ export const MainChart = (props: MainChartProps) => {
     start_at: startTime,
     ticker: state.symbol,
     interval: state.timeIndex,
-    gzencode: false
+    gzencode: true
   }
   const queryKey = [getStockChart.cacheKey, params]
   const query = useQuery({
@@ -80,9 +81,10 @@ export const MainChart = (props: MainChartProps) => {
         params = getIndicatorQueryParams(item)
         queryKey.push(params)
       }
-  
+
       return {
         queryKey,
+        refetchInterval: 60 * 1000,
         queryFn: async () => {
           const r = await getStockIndicatorData({
             symbol: state.symbol, cycle: state.timeIndex, id: item, db_type: state.mainIndicators[item].type, start_at: startTime,
@@ -116,6 +118,7 @@ export const MainChart = (props: MainChartProps) => {
 
       return {
         queryKey,
+        refetchInterval: 60 * 1000,
         queryFn: () => getStockIndicatorData({
           symbol: state.symbol, cycle: state.timeIndex, id: id, db_type: type, start_at: startTime, param: JSON.stringify(params)
         }).then(r => ({ id: id, data: r.result })),
@@ -204,37 +207,41 @@ export const MainChart = (props: MainChartProps) => {
 
   // TODO 监听dataZoom事件
   useEffect(() => {
-    if(!chart.current) return
+    if (!chart.current) return
 
-    if(state.yAxis.right !== 'percent') return
+    if (state.yAxis.right !== 'percent') return
 
-    chart.current.on('dataZoom', (e: any) => {
-      let startIndex = e.start
-      let endIndex = e.end
-      if(e.batch){
-        startIndex = Math.round((e.batch[0].start / 100) * (state.mainData.history.length - 1))
-        endIndex = Math.round((e.batch[0].end / 100) * (state.mainData.history.length - 1))
+    /**
+     * 1.01，x轴100%是state.mainData.length * 1.01，100%的时候要向左偏移0.01
+     * 所以对应data的100%其实是100/1.01 = 98.02%
+     * 所以差值是100 - 98.02 = 1.98
+     */
+    chart.current.on('dataZoom', throttle({interval: 1000}, (e: any) => {
+      let start = e.start 
+      let end = e.end
+      if (e.batch) {
+        start = e.batch[0].start
+        end = e.batch[0].end
       }
-    
-      console.log(startIndex, endIndex, e)
-      const start = state.mainData.history[startIndex][2]
 
-      const max = Math.max(...state.mainData.history.slice(startIndex, endIndex).map(v => v[2]))
-      const min = Math.min(...state.mainData.history.slice(startIndex, endIndex).map(v => v[2]))
+      const series = renderAxisLine(state, start, end)
 
-      const maxPercent = ((max - start) / start) * 100
-      const minPercent = ((min - start) / start) * 100
+      const startValue = series.data![0]!
 
       chart.current?.setOption({
+        series,
         yAxis: [
           {},
           {
-            min: minPercent,
-            max: maxPercent
+            axisLabel: {
+              formatter: (value: number) => {
+                return `{${value >= +startValue ? 'u' : 'd'}|${value.toFixed(2)}%}`
+              }
+            }
           }
-        ]
+        ],
       })
-    })
+    }))
 
     return () => {
       chart.current?.off('dataZoom')

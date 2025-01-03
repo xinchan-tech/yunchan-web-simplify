@@ -1,23 +1,23 @@
 import { Button, CapsuleTabs, JknTable, type JknTableProps, NumSpan, StockView } from "@/components"
 import { useCollectCates, useToken } from "@/store"
 import { appEvent } from "@/utils/event"
-import { useMemo, useState } from "react"
-
+import { useEffect, useState } from "react"
 import { getStockCollects } from "@/api"
-import { type StockRecord, stockManager } from "@/utils/stock"
-import { useQuery, useQueryClient } from "@tanstack/react-query"
-import Decimal from "decimal.js"
 import { useStockQuoteSubscribe } from "@/hooks"
+import { type StockRecord, stockManager } from "@/utils/stock"
+import { useQuery } from "@tanstack/react-query"
+import Decimal from "decimal.js"
+import { useImmer } from "use-immer"
 
 const GoldenStockPool = () => {
   const { collects } = useCollectCates()
   const [type, setType] = useState(collects[0].id)
   const { token } = useToken()
-  const queryClient = useQueryClient()
+  const [list, setList] = useImmer<StockRecord[]>([])
 
   const query = useQuery({
     queryKey: [getStockCollects.cacheKey, type],
-    refetchInterval: 30 * 1000,
+    refetchInterval: 5 * 1000,
     queryFn: () => getStockCollects({
       cate_id: +type,
       extend: ['total_share', 'basic_index', 'day_basic', 'alarm_ai', 'alarm_all', 'financials', 'thumbs', 'stock_after', 'stock_before'],
@@ -26,33 +26,23 @@ const GoldenStockPool = () => {
     enabled: !!token
   })
 
-  const data = useMemo(() => query.data?.items.map(item => stockManager.toStockRecord(item)[0]!) ?? [], [query.data])
+  useEffect(() => {
+    setList(query.data?.items.map(item => stockManager.toStockRecord(item)[0]!) ?? [])
+  }, [query.data, setList])
   const onLogin = () => {
     appEvent.emit('login')
   }
 
-  useStockQuoteSubscribe(data.map(d => d.symbol), (data) => {
-    queryClient.setQueryData([getStockCollects.cacheKey, type], (old: typeof query.data) => {
-      if (!old) return old
-      const items = old.items.map((item) => {
-        if (item.symbol === data.topic) {
-          const newStock = [...item.stock]
-          newStock[0] = data.rawRecord[0]
-          newStock[2] = data.rawRecord[1]
-          newStock[9] = data.rawRecord[2]
-          newStock[5] = data.rawRecord[3]
-          newStock[6] = data.rawRecord[4]
-          return {
-            ...item,
-            stock: newStock
-          }
-        }
-        return item
-      })
+  useStockQuoteSubscribe(query.data?.items.map(d => d.symbol) ?? [], (data) => {
+    setList(draft => {
+      const item = draft.find(d => d.symbol === data.topic)
 
-      return {
-        ...old,
-        items
+      if (item) {
+        item.close = data.record.close
+        item.percent = data.record.changePercent
+        item.volume = data.record.volume
+        item.turnover = data.record.turnover
+        item.marketValue = item.totalShare ? item.close * item.totalShare : 0
       }
     })
   })
@@ -67,15 +57,13 @@ const GoldenStockPool = () => {
       )
     },
     {
-      header: '现价', accessorKey: 'close', meta: { align: 'right', width: '16%' },
-      cell: ({ row }) => <NumSpan blink value={row.original.close} decimal={2} isPositive={row.original.isUp} />
+      header: '现价', accessorKey: 'close', meta: { align: 'right', width: '16%', cellClassName: '!p-0' },
+      cell: ({ row }) => <NumSpan blink value={row.original.close} decimal={3} isPositive={row.original.isUp} align="right" />
     },
     {
-      header: '涨跌幅', accessorKey: 'percent', meta: { align: 'right', width: '19%' },
+      header: '涨跌幅', accessorKey: 'percent', meta: { align: 'right', width: '19%', cellClassName: '!p-0' },
       cell: ({ row }) => (
-        <div className="inline-block w-20">
-          <NumSpan value={row.getValue<number>('percent') * 100} decimal={2} percent isPositive={row.original.isUp} block />
-        </div>
+        <NumSpan className="w-20 text-center" block blink value={row.getValue<number>('percent') * 100} decimal={2} percent isPositive={row.original.isUp} align="right" />
       )
     },
     {
@@ -111,7 +99,7 @@ const GoldenStockPool = () => {
       <div className="flex-1 overflow-hidden">
         {
           token ? (
-            <JknTable loading={query.isLoading} rowKey="symbol" data={data} columns={columns} />
+            <JknTable loading={query.isLoading} rowKey="symbol" data={list} columns={columns} />
           ) : (
             <div className="w-full text-center mt-40">
               <div className="mb-4 text-secondary">尚未登录账号</div>

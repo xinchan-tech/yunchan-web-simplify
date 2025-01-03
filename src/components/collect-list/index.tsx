@@ -192,13 +192,6 @@ const StockChart = (props: StockChartProps) => {
     }]
   }
 
-  const calcXAxisData = (data: typeof props.data) => {
-    if(data.length < xAxisData.length * 0.1){
-      return xAxisData.slice(0, Math.round(xAxisData.length * 0.12))
-    }
-    return xAxisData
-  }
-
   useMount(() => {
     charts.current = echarts.init(dom.current)
     charts.current.setOption(options)

@@ -170,6 +170,7 @@ const _JknTable = <TData extends Record<string, unknown>, TValue>(props: JknTabl
           border-style: solid;
           box-sizing: border-box;
           font-size: 13px;
+          height: 1px;
         }
 
 

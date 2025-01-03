@@ -1,7 +1,5 @@
-import { Ws, wsManager } from '../ws'
-import { nanoid } from 'nanoid'
+import { Ws } from '../ws'
 import mitt from 'mitt'
-import { StockRecord, type StockResultRecord } from './stock'
 import type { StockRawRecord } from '@/api'
 import { uid } from "radash"
 
@@ -21,12 +19,20 @@ const barActionResultParser = (data: any) => {
 const quoteActionResultParser = (data: any) => {
   const action = data.ev as string
   const [topic, ...raws] = data.q.split(',')
-  const rawRecord = raws.map((raw: string, index: number) => index === 0 ? raw : Number.parseFloat(raw as string)) as StockRawRecord
+  const record = {
+    symbol: topic,
+    time: Number.parseInt(raws[0]),
+    close: Number.parseFloat(raws[1]),
+    preClose: Number.parseFloat(raws[2]),
+    changePercent: Number.parseFloat(raws[3]),
+    volume: Number.parseFloat(raws[4]),
+    turnover: Number.parseFloat(raws[5]),
+  }
 
   return {
     action,
     topic: topic as string,
-    rawRecord,
+    record,
     extra: data.d as string
   }
 }
@@ -75,20 +81,24 @@ class StockSubscribe {
 
   public subscribe(action: SubscribeActionType, params: string[]) {
     const _action = `${action}_add_symbols`
+    const _params: string[] = []
     params.forEach(symbol => {
       const topic = `${action}:${symbol}`
       if (this.subscribeTopic[topic]) {
         this.subscribeTopic[topic].count++
       } else {
         this.subscribeTopic[topic] = { count: 1 }
+        _params.push(symbol)
       }
     })
 
-    this.ws.send({
-      action: _action,
-      cid: this.cid,
-      params
-    })
+    if(_params.length > 0){
+      this.ws.send({
+        action: _action,
+        cid: this.cid,
+        params: _params
+      })
+    }
 
     return () => {
       this.unsubscribe(action, params)
@@ -126,6 +136,7 @@ class StockSubscribe {
     Object.entries(cleanTopic).forEach(([action, symbols]) => {
       this.ws.send({
         action: `${action}_remove_symbols`,
+        cid: this.cid,
         params: symbols
       })
     })
