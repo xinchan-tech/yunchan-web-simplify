@@ -31,7 +31,7 @@ const GoldenPool = () => {
   const data = useMemo(() => collects.data?.items.map(o => stockManager.toStockRecord(o)[0]) ?? [], [collects.data])
 
   useSubscribe(collects.data?.items.map(item => item.symbol) ?? [], (data) => {
-    console.log(data)
+
   })
 
   const onActiveStockChange = (v: string) => {

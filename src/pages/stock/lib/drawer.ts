@@ -188,14 +188,12 @@ export const drawRect: DrawerFunc<DrawerRectShape[]> = (options, _, { xAxisIndex
     },
     type: 'custom',
     renderItem: (_, api) => {
-      const x = api.value(0) as number
-      const y1 = api.value(1) as number
+      const startX = api.value(0) as number
+      const startY = api.value(1) as number
       const y2 = api.value(2) as number
-      const bottom = Math.min(y1, y2)
-      const yValue = Math.abs(y1 - y2)
-      const start = api.coord([x, bottom])
-      const width = (api.value(3) as number)
-      const size = api.size!([x, yValue]) as number[]
+      const height = (api.size!([0, Math.abs(y2 - startY)]) as number[])[1] as number
+      const start = api.coord([startX, startY])
+      const width = api.value(3) as number
       const empty = api.value(4) as number
       const color = (api.value(5) as string) || extraColor || '#00943c'
 
@@ -205,7 +203,7 @@ export const drawRect: DrawerFunc<DrawerRectShape[]> = (options, _, { xAxisIndex
           x: start[0] - width / 2,
           y: start[1],
           width: width,
-          height: -size[1] 
+          height: -((y2 - startY) / Math.abs(y2 - startY)) * height
         },
         z: 10,
         emphasisDisabled: true,
@@ -232,7 +230,11 @@ type GradientData = {
 /**
  * 填充渐变
  */
-export const drawGradient: DrawerFunc<[XAxis, GradientData[], string[]][]> = (options, _, { xAxisIndex, yAxisIndex, data }) => {
+export const drawGradient: DrawerFunc<[XAxis, GradientData[], string[]][]> = (
+  options,
+  _,
+  { xAxisIndex, yAxisIndex, data }
+) => {
   const right = 50
   const points = data
     .filter(item => !!item[0])
@@ -441,7 +443,7 @@ export const drawPivots: DrawerFunc<DrawPivotsShape[]> = (options, _, { xAxisInd
             emphasisDisabled: true,
             style: {
               // 抄客户端的逻辑
-              fill: extend === '1' && text !== 'A²' ? 'transparent' : bgColor ,
+              fill: extend === '1' && text !== 'A²' ? 'transparent' : bgColor,
               stroke: !(extend === '1' && text !== 'A²') ? 'transparent' : bgColor,
               lineDash: 'dashed',
               lineWidth: 1

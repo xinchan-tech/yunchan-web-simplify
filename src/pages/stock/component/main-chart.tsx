@@ -177,9 +177,10 @@ export const MainChart = (props: MainChartProps) => {
     renderSecondary(_options, state.secondaryIndicators)
     renderSecondaryLocalIndicators(_options, state.secondaryIndicators, state)
     renderWatermark(_options, state.timeIndex)
-
+    console.log("🚀 ~ render ~ _options:", _options)
     chart.current.setOption(_options)
   }
+
 
   useUpdateEffect(() => {
     render()
@@ -201,10 +202,7 @@ export const MainChart = (props: MainChartProps) => {
   }, [state.symbol])
 
 
-  /**
-   * 监听dataZoom事件
-   * TODO
-   */
+  // TODO 监听dataZoom事件
   useEffect(() => {
     if(!chart.current) return
 
@@ -241,7 +239,7 @@ export const MainChart = (props: MainChartProps) => {
     return () => {
       chart.current?.off('dataZoom')
     }
-  }, [chart, state])
+  }, [state])
 
   return (
     <div className={

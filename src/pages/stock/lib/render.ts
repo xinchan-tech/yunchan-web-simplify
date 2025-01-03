@@ -1,6 +1,6 @@
 import { StockChartInterval, type StockRawRecord, type getStockChart } from '@/api'
 import { useConfig } from '@/store'
-import { dateToWeek } from '@/utils/date'
+import { dateToWeek, getTradingPeriod } from '@/utils/date'
 import type { ECOption } from '@/utils/echarts'
 import { StockRecord } from '@/utils/stock'
 import { colorUtil } from '@/utils/style'
@@ -63,13 +63,12 @@ export const createOptions = (): ECOption => ({
       color: '#fff'
     },
     formatter: (v: any) => {
-      const errData = (v as any[]).find(_v => _v.axisId === 'main-x')
-
+      const errData = (v as any[]).find(_v => _v.seriesName === MAIN_CHART_NAME)
+      const priceData = (v as any[]).find(_v => _v.seriesName === 'price')
       if (!errData) return ''
       const data = errData?.seriesType === 'candlestick' ? errData?.value.slice(1) : (errData.value as StockRawRecord)
 
-      data[0] = dayjs(+data[0]).format('YYYY-MM-DD HH:mm:ss')
-
+      data[0] = dayjs(+priceData.value[0]).format('YYYY-MM-DD HH:mm:ss')
       const stock = StockRecord.of('', '', data)
 
       let time = stock.time ? dayjs(stock.time).format('MM-DD hh:mm') + dateToWeek(stock.time, '周') : '-'
@@ -104,20 +103,7 @@ export const createOptions = (): ECOption => ({
         xAxisIndex: 'all'
       }
     ],
-    label: {
-      formatter: params => {
-        if (params.axisDimension === 'x') {
-          let time = dayjs(params.value).format('MM-DD hh:mm') + dateToWeek(params.value as string, '周')
-          if ((params.value as string).slice(11) === '00:00:00') {
-            time = (params.value as string).slice(0, 11) + dateToWeek(params.value as string, '周')
-          }
-
-          return time
-        }
-
-        return Decimal.create(params.value as string).toFixed(3)
-      }
-    }
+    label: {}
   },
   toolbox: {},
   xAxis: [
@@ -247,10 +233,51 @@ export const renderGrid = (options: ECOption, state: ChartState, size: [number, 
 
   const yAxis = options.yAxis as YAXisOption[]
 
+  if (Array.isArray(options.xAxis)) {
+    const xAxis = options.xAxis?.find(x => x.id === 'main-x')
+    if (xAxis) {
+      if (isTimeIndexChart(state.timeIndex) && state.timeIndex !== StockChartInterval.FIVE_DAY) {
+        ;(xAxis as any).data = getTradingPeriod(
+          state.timeIndex === StockChartInterval.PRE_MARKET
+            ? 'preMarket'
+            : state.timeIndex === StockChartInterval.AFTER_HOURS
+              ? 'afterHours'
+              : 'intraDay',
+          dayjs(+state.mainData.history[0]?.[0])
+        ).map(item => dayjs(item).valueOf().toString())
+      } else {
+        ;(xAxis as any).data = state.mainData.history.map(item => item[0])
+      }
+    }
+  }
+
+  // 分时图不允许缩放
+  if (isTimeIndexChart(state.timeIndex)) {
+    options.dataZoom = []
+  }
+
+  if (options.axisPointer && !Array.isArray(options.axisPointer)) {
+    options.axisPointer.label!.formatter = params => {
+      if (params.axisDimension === 'x') {
+        let time = dayjs(+params.value).format('MM-DD hh:mm') + dateToWeek(params.value as string, '周')
+        if (isTimeIndexChart(state.timeIndex) && state.timeIndex !== StockChartInterval.FIVE_DAY) {
+          time = dayjs(+params.value).format('YYYY-MM-DD hh:mm')
+        }
+
+        return time
+      }
+
+      return Decimal.create(params.value as string).toFixed(3)
+    }
+  }
+
   if (state.yAxis.left) {
-    const left = yAxis.find(axis => axis.id === 'main-price')
+    const left = yAxis[0]
     if (left) {
-      // left.show = true
+      left.show = true
+      if (left.axisPointer?.label) {
+        left.axisPointer.label.show = true
+      }
     }
   }
 
@@ -284,7 +311,7 @@ export const renderMainChart: ChartRender = (options, state) => {
       borderColor: upColor,
       borderColor0: downColor
     }
-    mainSeries.data = state.mainData.history ?? []
+    mainSeries.data = data
     mainSeries.yAxisIndex = 0
     mainSeries.encode = {
       x: [1],
@@ -307,7 +334,7 @@ export const renderMainChart: ChartRender = (options, state) => {
       y: [2]
     }
     mainSeries.yAxisIndex = 0
-    _mainSeries.data = state.mainData.history ?? []
+    _mainSeries.data = data
     mainSeries.color = color
     ;(mainSeries as any).areaStyle = {
       color: {
@@ -318,11 +345,11 @@ export const renderMainChart: ChartRender = (options, state) => {
         colorStops: [
           {
             offset: 0,
-            color:  color/* 0% 处的颜色*/
+            color: `rgba(${rgbColor?.r}, ${rgbColor?.g}, ${rgbColor?.b}, .4)` /* 0% 处的颜色*/
           },
           {
-            offset: 0.6,
-            color: `rgba(${rgbColor?.r}, ${rgbColor?.g}, ${rgbColor?.b}, .2)` /* 100% 处的颜色*/
+            offset: 0.8,
+            color: `rgba(${rgbColor?.r}, ${rgbColor?.g}, ${rgbColor?.b}, .1)` /* 100% 处的颜色*/
           },
           {
             offset: 1,
@@ -333,9 +360,8 @@ export const renderMainChart: ChartRender = (options, state) => {
     }
   }
   ;(options.series as any)?.push(mainSeries)
-  const firstData = state.mainData.history[0]
-  const stocks = state.mainData.history
-    .map(stock => [stock[0], state.yAxis.right === 'price' ? stock[2] : (stock[2] - firstData[2])/firstData[2]])
+
+  const stocks = state.mainData.history.map(stock => [stock[0], state.yAxis.right === 'price' ? stock[2] : stock[2]])
   // console
   Array.isArray(options.series) &&
     options.series.push({
@@ -359,8 +385,6 @@ export const renderMainChart: ChartRender = (options, state) => {
     const xAxis = options.xAxis.find(y => y.id === 'main-x')
 
     if (xAxis) {
-      ;(xAxis as any).data = state.mainData.history.map(item => item[0])
-
       if (Array.isArray(options.grid) && options.grid.length > 1) {
         xAxis.axisPointer = {
           label: {
@@ -372,6 +396,13 @@ export const renderMainChart: ChartRender = (options, state) => {
         }
       } else {
         xAxis.axisLabel!.show = true
+        ;(xAxis.axisLabel as any)!.formatter = (v: any) => {
+          return v
+            ? isTimeIndexChart(state.timeIndex) && state.timeIndex !== StockChartInterval.FIVE_DAY
+              ? dayjs(+v).format('hh:mm')
+              : dayjs(+v).format('MM-DD')
+            : ''
+        }
       }
     }
   }
@@ -846,12 +877,13 @@ export const renderSecondaryLocalIndicators = (options: ECOption, indicators: In
       })
     } else if (indicator.id === '10') {
       const { S1, S2, X0, Z } = calculateTradingPoint(state.mainData.history)
+
       drawRect(options, {} as any, {
         xAxisIndex: index + 1,
         yAxisIndex: index + 2,
         data: [
-          ...X0.map((x, i) => [i, 0, x, 20, 0, x > 0 ? 'magenta' : 'cyan'] as any),
-          ...Z.map((z, i) => [i, 0, z, 20, 0, z > 0 ? 'magenta' : 'cyan'] as any)
+          ...X0.map((x, i) => [i, 0, x * 1000, 20, 0, x > 0 ? 'magenta' : 'cyan'] as any),
+          ...Z.map((z, i) => [i, 0, z * 1000, 20, 0, z > 0 ? 'magenta' : 'cyan'] as any)
         ]
       })
       drawLine(options, {} as any, {
@@ -862,7 +894,7 @@ export const renderSecondaryLocalIndicators = (options: ECOption, indicators: In
         },
         xAxisIndex: index + 1,
         yAxisIndex: index + 2,
-        data: S1.map((s, i) => [i, s])
+        data: S1.map((s, i) => [i, s * 1000])
       })
       drawLine(options, {} as any, {
         extra: {
@@ -872,7 +904,7 @@ export const renderSecondaryLocalIndicators = (options: ECOption, indicators: In
         },
         xAxisIndex: index + 1,
         yAxisIndex: index + 2,
-        data: S2.map((s, i) => [i, s])
+        data: S2.map((s, i) => [i, s * 1000])
       })
     }
   })
@@ -886,7 +918,7 @@ const renderSecondaryAxis = (options: ECOption, state: KChartState['state'][0], 
     options.xAxis.push({
       type: 'category',
       gridIndex: index + 1,
-      data: state.mainData.history.map(item => item[0]),
+      data: (options.xAxis[0] as any).data,
       axisLine: {
         onZero: false,
         lineStyle: {
@@ -897,7 +929,11 @@ const renderSecondaryAxis = (options: ECOption, state: KChartState['state'][0], 
         show: index === state.secondaryIndicators.length - 1,
         color: '#fff',
         formatter: (v: any) => {
-          return v ? dayjs(v).format('MM-DD') : ''
+          return v
+            ? isTimeIndexChart(state.timeIndex) && state.timeIndex !== StockChartInterval.FIVE_DAY
+              ? dayjs(+v).format('hh:mm')
+              : dayjs(+v).format('MM-DD')
+            : ''
         }
       },
       axisTick: {
@@ -995,5 +1031,3 @@ export const renderZoom = (options: ECOption, zoom: [number, number]) => {
     }
   }
 }
-
-

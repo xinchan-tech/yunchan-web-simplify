@@ -138,7 +138,6 @@ const PlateStocks = (props: PlateStocksProps) => {
 
 
   const _onEvent: JknTableProps['onEvent'] = ({ event, params }) => {
-    console.log(event)
     if (event === 'createFav') {
       onCreateStockToCollects(params.id, params.symbols)
       return

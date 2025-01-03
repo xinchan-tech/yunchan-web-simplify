@@ -63,7 +63,7 @@ export const renderUtils = {
    * 左右留出50px显示标签
    */
   calcGridSize: (size: [number, number], secondaryIndicatorLen: number, hasLeft: boolean) => {
-    const Y_AXIS_WIDTH = 50
+    const Y_AXIS_WIDTH = 70
     const X_AXIS_HEIGHT = 24
     const TOP_OFFSET = 10
     const [width, height] = size

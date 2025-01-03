@@ -94,7 +94,7 @@ const NumSpan = ({ isPositive, block, percent, value, symbol, className, arrow, 
   useUpdateEffect(() => {
     if (blink && priceBlink === '1') {
       span.current?.classList.add('stock-blink')
-      console.log(1)
+
       setTimeout(() => {
         span.current?.classList.remove('stock-blink')
       }, 700)

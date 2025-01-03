@@ -28,7 +28,7 @@ export const FinanceComparison = () => {
 
   const chartData = useMemo(() => {
     const datas = queries.map(q => q.data)
-    console.log(datas)
+
     const source = params.period === 'quarter' ? datas.map(q => q?.quarter_data) : datas.map(q => q?.year_data)
 
     const r: FinanceComparisonChartProps['data'] = []

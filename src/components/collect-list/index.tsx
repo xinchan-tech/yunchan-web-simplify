@@ -136,7 +136,7 @@ interface StockChartProps {
   type: 'up' | 'down'
 }
 
-const xAxisData = getTradingPeriod('intraDay')
+// const xAxisData = getTradingPeriod('intraDay')
 
 const StockChart = (props: StockChartProps) => {
   const charts = useRef<echarts.ECharts>()
@@ -178,7 +178,8 @@ const StockChart = (props: StockChartProps) => {
     },
     xAxis: {
       type: 'category',
-      data: xAxisData,
+      // type: 'category',
+      // data: xAxisData,
       show: false
     },
     yAxis: {
@@ -202,9 +203,9 @@ const StockChart = (props: StockChartProps) => {
     charts.current = echarts.init(dom.current)
     charts.current.setOption(options)
     charts.current.setOption({
-      xAxis: {
-        data: calcXAxisData(props.data)
-      },
+      // xAxis: {
+      //   data: calcXAxisData(props.data)
+      // },
       series: [{
         data: props.data
       }]
@@ -214,9 +215,9 @@ const StockChart = (props: StockChartProps) => {
 
   useUpdateEffect(() => {
     charts.current?.setOption({
-      xAxis: {
-        data: calcXAxisData(props.data)
-      },
+      // xAxis: {
+      //   data: calcXAxisData(props.data)
+      // },
       series: [{
         data: props.data
       }]

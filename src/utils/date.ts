@@ -1,6 +1,6 @@
 import { useConfig } from '@/store'
 import dayjs, { type Dayjs } from 'dayjs'
-import { StockTrading } from "./stock"
+import type { StockTrading } from "./stock"
 
 /**
  * 将小时和分钟转换为数字
@@ -67,7 +67,7 @@ export const getTrading = (time: string): StockTrading => {
  * @param trading Trading 股票交易周期
  * @param date    日期
  */
-export const getTradingPeriod = (trading: StockTrading, date?: string) => {
+export const getTradingPeriod = (trading: StockTrading, date?: string | Dayjs) => {
   let startTime = [9, 30]
   let endTime = [16, 0]
 
@@ -84,7 +84,7 @@ export const getTradingPeriod = (trading: StockTrading, date?: string) => {
       break
   }
 
-  const day = date ? dayjs(date) : dayjs()
+  const day = date ? dayjs.isDayjs(date) ? date : dayjs(date) : dayjs()
   const start = day.set('hour', startTime[0]).set('minute', startTime[1]).set('second', 0)
   const end = day.set('hour', endTime[0]).set('minute', endTime[1]).set('second', 0)
   return Array.from({ length: end.diff(start, 'minute') }, (_, i) => {

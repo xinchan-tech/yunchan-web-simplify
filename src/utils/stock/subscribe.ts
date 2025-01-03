@@ -7,7 +7,6 @@ import { uid } from "radash"
 
 const barActionResultParser = (data: any) => {
   const action = data.ev as string
-  console.log(data)
   const [topic, ...raws] = data.b.split(',')
   const rawRecord = raws.map((raw: string, index: number) => index === 0 ? raw : Number.parseFloat(raw as string)) as StockRawRecord
 
