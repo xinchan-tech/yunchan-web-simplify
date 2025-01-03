@@ -40,6 +40,11 @@ const MenuRight = () => {
       icon: 'left_menu_6',
       title: '特色推送',
       path: '/push'
+	},
+	{
+      icon: 'right_menu_5',
+      title: '讨论社群',
+      path: '/chat'
     }
   ]
 
@@ -47,12 +52,12 @@ const MenuRight = () => {
   const { toast } = useToast()
 
   const onNav = (path: string) => {
-    if (!token && path !== '/') {
-      toast({
-        title: '请先登录'
-      })
-      return
-    }
+    // if (!token && path !== '/') {
+    //   toast({
+    //     title: '请先登录'
+    //   })
+    //   return
+    // }
 
     const search = new URLSearchParams(window.location.search)
     const symbol = search.get('symbol') ?? 'QQQ'

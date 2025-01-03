@@ -77,7 +77,7 @@ const App = () => {
 
   useEffect(() => {
     const handler = () => {
-      if (notLogin.current === 0 && window.location.pathname !== '/') {
+      if (notLogin.current === 0 && (window.location.pathname !== '/chat' && window.location.pathname !== '/')) {
         notLogin.current = 1
         JknAlert.info({
           content: '请先登录账号',
