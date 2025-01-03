@@ -20,6 +20,10 @@ class StockManager {
     return StockRecord.of(symbol ?? '', name ?? '', data)
   }
 
+  public cloneFrom(data: StockRecord) {
+    return  StockRecord.of(data.symbol, data.name, data.rawRecord, data.extend)
+  }
+
   public subscribe(code: string | string[], handler: StockSubscribeHandler) {
     const _code = Array.isArray(code) ? code : [code]
     if(_code.length === 0) return

@@ -7,7 +7,7 @@ import { type StockRecord, type StockTrading, stockManager } from "@/utils/stock
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import dayjs from "dayjs"
 import Decimal from "decimal.js"
-import { useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
 
 const tradingToTopStatusMap: Record<StockTrading, IncreaseTopStatus> = {
@@ -23,6 +23,7 @@ const TopList = () => {
   const { t } = useTranslation()
   const trading = useTime().getTrading()
   const { isToday } = useTime()
+  const [list, setList] = useState<(StockRecord & { blink?: 'up' | 'down' })[]>([])
 
   const query = useQuery({
     queryKey: [getIncreaseTop.cacheKey, type],
@@ -32,12 +33,15 @@ const TopList = () => {
 
   const queryClient = useQueryClient()
 
+  useEffect(() => {
+    setList(query.data?.map(item => stockManager.toStockRecord(item)[0]!) ?? [])
+  }, [query.data])
+
   const onTypeChange = (s: IncreaseTopStatus) => {
     setType(s)
     queryClient.invalidateQueries({ queryKey: [getIncreaseTop.cacheKey, s] })
   }
 
-  const data = useMemo(() => query.data?.map(d => stockManager.toStockRecord(d)[0]!) ?? [], [query.data])
 
   useStockQuoteSubscribe(data.map(d => d.symbol), (data) => {
     if (tradingToTopStatusMap[time.getTrading() as keyof typeof tradingToTopStatusMap] !== type) return
@@ -94,9 +98,9 @@ const TopList = () => {
 
   const isShowTips = () => {
 
-    if (!data || data.length === 0) return false
+    if (!list || list.length === 0) return false
 
-    const firstRecord = data[0]
+    const firstRecord = list[0]
     if (!firstRecord) return false
 
     if (isToday(firstRecord.date)) {
@@ -136,7 +140,7 @@ const TopList = () => {
                     <JknIcon name="ic_tip1" className="w-3 h-3" />
                   </HoverCardTrigger>
                   <HoverCardContent side="top" className="w-fit">
-                    {`上一个交易日${formatDate(data[0]?.date)}统计`}
+                    {`上一个交易日${formatDate(list[0]?.date)}统计`}
                   </HoverCardContent>
                 </HoverCard>
               )
@@ -152,7 +156,7 @@ const TopList = () => {
                     <JknIcon name="ic_tip1" className="w-3 h-3" />
                   </HoverCardTrigger>
                   <HoverCardContent side="top" className="w-fit">
-                    {`上一个交易日${formatDate(data[0]?.date)}统计`}
+                    {`上一个交易日${formatDate(list[0]?.date)}统计`}
                   </HoverCardContent>
                 </HoverCard>
               )
@@ -166,7 +170,7 @@ const TopList = () => {
                     <JknIcon name="ic_tip1" className="w-3 h-3" />
                   </HoverCardTrigger>
                   <HoverCardContent side="top" className="w-fit">
-                    {`上一个交易日${formatDate(data[0]?.date)}统计`}
+                    {`上一个交易日${formatDate(list[0]?.date)}统计`}
                   </HoverCardContent>
                 </HoverCard>
               )

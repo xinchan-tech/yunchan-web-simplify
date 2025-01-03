@@ -122,6 +122,7 @@ const _JknTable = <TData extends Record<string, unknown>, TValue>(props: JknTabl
                                 >
                                   {row.getVisibleCells().map((cell) => {
                                     const { align, cellClassName } = cell.column.columnDef.meta ?? {}
+                              
                                     return (
                                       <td
                                         key={cell.id}

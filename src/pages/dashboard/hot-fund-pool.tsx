@@ -1,9 +1,10 @@
 import { getCollectHot } from "@/api"
 import { CapsuleTabs, JknRcTable, type JknRcTableProps, NumSpan, StockView } from "@/components"
-import { type StockRecord, stockManager } from "@/utils/stock"
+import { useStockQuoteSubscribe } from "@/hooks"
+import { type StockRecord, StockSubscribeHandler, stockManager } from "@/utils/stock"
 import { useQuery } from "@tanstack/react-query"
 import Decimal from "decimal.js"
-import { useMemo } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 
 
 // type 1: 最热关注
@@ -15,8 +16,27 @@ const TopList = () => {
     queryFn: () => getCollectHot({ extend: ['total_share'] }),
     refetchInterval: 30 * 1000
   })
+  const [list, setList] = useState<(StockRecord & { blink?: 'up' | 'down' })[]>([])
 
-  const data = useMemo(() => query.data?.find(v => v.type === HotType)?.stocks.map(v => stockManager.toStockRecord(v)[0]) ?? [], [query.data])
+  useEffect(() => {
+    setList(query.data?.find(v => v.type === HotType)?.stocks.map(v => stockManager.toStockRecord(v)[0]) ?? [])
+  }, [query.data])
+
+  const updateQuoteHandler = useCallback<StockSubscribeHandler<'quote'>>((data) => {
+    setList(draft => draft.map(item => {
+      if (item.symbol === data.topic) {
+        item.blink = data.record.close > item.close! ? 'up' : 'down'
+        item.close = data.record.close
+        item.percent = (data.record.close - data.record.preClose) / data.record.preClose
+        item.volume = data.record.volume
+        item.turnover = data.record.turnover
+        item.marketValue = item.totalShare ? item.close * item.totalShare : 0
+      }
+      return item
+    }))
+  }, [])
+
+  useStockQuoteSubscribe(query.data?.find(v => v.type === HotType)?.stocks.map(v => v.symbol) ?? [], updateQuoteHandler)
 
   const columns: JknRcTableProps<StockRecord>['columns'] = [
     {

@@ -43,6 +43,9 @@ export class StockRecord {
   thumbs?: string[]
   collect?: 0 | 1
 
+  rawRecord: StockRawRecord
+  extend?: StockExtendResultMap
+
   [key: string]: any 
 
   /**
@@ -79,7 +82,7 @@ export class StockRecord {
     return r
   }
 
-  static of(code: string, name: string, data: StockRawRecord, extend?: StockExtendResultMap) {
+  static of(code: string, name: string, data?: StockRawRecord, extend?: StockExtendResultMap) {
     return new StockRecord(code, name, data, extend)
   }
 
@@ -87,9 +90,13 @@ export class StockRecord {
     this.code = code
     this.name = name
 
+    this.extend = extend
+
     if(!data || !StockRecord.isValid(data)) {
       return
     }
+
+    this.rawRecord = data
 
     this.time = StockRecord.parseTime(data[0])
     this.open = data[1]
@@ -103,6 +110,7 @@ export class StockRecord {
     this.pe = 0
     this.pb = 0
     this.totalShare = 0
+ 
 
     this.marketValue = 0
     this.turnOverRate = 0

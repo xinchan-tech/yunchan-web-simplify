@@ -1,7 +1,7 @@
 import { Button, CapsuleTabs, JknRcTable, NumSpan, StockView } from "@/components"
 import { useCollectCates, useToken } from "@/store"
 import { appEvent } from "@/utils/event"
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { getStockCollects } from "@/api"
 import { type StockRecord, stockManager } from "@/utils/stock"
 import { useQuery } from "@tanstack/react-query"

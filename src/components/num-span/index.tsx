@@ -4,8 +4,8 @@ import { cn } from "@/utils/style"
 import { cva, type VariantProps } from "class-variance-authority"
 import Decimal from "decimal.js"
 import { JknIcon } from ".."
-import { useLatest, useUpdateEffect } from "ahooks"
-import { useRef } from "react"
+import { useLatest, useMount, useUpdateEffect } from "ahooks"
+import { useEffect, useRef } from "react"
 
 const numSpanVariants = cva(
   '',
@@ -22,9 +22,6 @@ const numSpanVariants = cva(
       block: {
         default: "",
         true: "box-border w-full rounded-[2px] text-center px-2 py-1"
-      },
-      blink: {
-        true: "box-border w-full"
       }
     },
     compoundVariants: [
@@ -75,11 +72,6 @@ interface NumSpanProps extends React.HTMLAttributes<HTMLSpanElement>, VariantPro
   arrow?: boolean
 
   /**
-   * 变动闪烁
-   */
-  blink?: boolean
-
-  /**
    * 对齐
    */
   align?: 'left' | 'center' | 'right'
@@ -123,7 +115,7 @@ const NumSpan = ({ isPositive, block, percent, value, symbol, className, arrow, 
       align === 'right' && 'justify-end'
     )}  ref={span}>
       <span className={cn(
-        numSpanVariants({ isPositive, block, blink, className }),
+        numSpanVariants({ isPositive, block, className }),
 
       )} {...props}>
         {symbol && num.gte(0) ? '+' : ''}
