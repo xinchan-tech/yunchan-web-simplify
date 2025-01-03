@@ -31,8 +31,8 @@ const ImChatMiddle = () => {
       style={{
         height:
           fullScreen === true
-            ? `calc(100% - 48px)`
-            : `calc(100% - ${bottomHeight + 48}px)`,
+            ? `calc(100% - 82px)`
+            : `calc(100% - ${bottomHeight + 82}px)`,
       }}
     >
       <div className="im-chat-middle-scroller">
@@ -47,7 +47,9 @@ const ImChatMiddle = () => {
       <MsgInputer />
       <style jsx>{`
          {
-        
+          .im-chat-middle-container { 
+             padding-bottom: 34px;
+          }
           .im-chat-middle-scroller {
             height: 100%;
             overflow-y: auto;
@@ -55,7 +57,7 @@ const ImChatMiddle = () => {
               display: block;
               width: 6px;
             }
-
+           
             ::-webkit-scrollbar-thumb {
               background-color: rgb(88, 88, 88);
             }
