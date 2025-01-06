@@ -1,5 +1,5 @@
 import { getCollectHot } from "@/api"
-import { CapsuleTabs, JknTable, type JknTableProps, NumSpan, StockView } from "@/components"
+import { CapsuleTabs, JknRcTable, type JknRcTableProps, NumSpan, StockView } from "@/components"
 import { type StockRecord, stockManager } from "@/utils/stock"
 import { useQuery } from "@tanstack/react-query"
 import Decimal from "decimal.js"
@@ -18,30 +18,33 @@ const TopList = () => {
 
   const data = useMemo(() => query.data?.find(v => v.type === HotType)?.stocks.map(v => stockManager.toStockRecord(v)[0]) ?? [], [query.data])
 
-  const columns: JknTableProps<StockRecord>['columns'] = [
+  const columns: JknRcTableProps<StockRecord>['columns'] = [
     {
-      header: '名称代码', accessorKey: 'name', meta: { width: '24%' },
-      cell: ({ row }) => <StockView code={row.original.code} name={row.getValue('name')} />
+      title: '名称代码', dataIndex: 'name',align: 'left',
+      render: (_, row) => <StockView code={row.code} name={row.name} />
     },
     {
-      header: '现价', accessorKey: 'close', meta: { align: 'right', width: '17%' },
-      cell: ({ row }) => <NumSpan blink value={Decimal.create(row.getValue<number>('close')).toFixed(2)} isPositive={row.original.isUp} align="right" />
+      title: '现价', dataIndex: 'close',align: 'right', width: '17%', sort: true,
+      render: (_, row) => <NumSpan blink value={Decimal.create(row.close).toFixed(2)} isPositive={row.isUp} align="right" />
     },
     {
-      header: '涨跌幅', accessorKey: 'percent', meta: { align: 'right', width: '20%' },
-      cell: ({ row }) => (
+      title: '涨跌幅', dataIndex: 'percent',
+      align: 'right', width: '20%', sort: true,
+      render: (_, row) => (
         <div className="inline-block">
-          <NumSpan block className="py-1 w-20" decimal={2} value={`${row.getValue<number>('percent') * 100}`} percent isPositive={row.getValue<number>('percent') >= 0} symbol />
+          <NumSpan block className="py-1 w-20" decimal={2} value={Decimal.create(row.percent).mul(100)} percent isPositive={row.isUp} symbol />
         </div>
       )
     },
     {
-      header: '成交额', accessorKey: 'turnover', meta: { align: 'right', width: '20%' },
-      cell: ({ row }) => <NumSpan unit decimal={2} value={row.getValue('turnover')} isPositive={row.getValue<number>('percent') >= 0} />
+      title: '成交额', dataIndex: 'turnover',
+      align: 'right', width: '20%', sort: true,
+      render: (_, row) => <NumSpan unit decimal={2} value={row.turnover} isPositive={row.isUp} />
     },
     {
-      header: '总市值', accessorKey: 'marketValue', meta: { align: 'right', width: '19%' },
-      cell: ({ row }) => Decimal.create(row.getValue('marketValue')).toDecimalPlaces(2).toShortCN()
+      title: '总市值', dataIndex: 'marketValue',
+      align: 'right', width: '19%', sort: true,
+      render: (_, row) => Decimal.create(row.marketValue).toDecimalPlaces(2).toShortCN()
     },
   ]
   return (
@@ -51,8 +54,8 @@ const TopList = () => {
           <CapsuleTabs.Tab value="hot" label={<span>热度金池</span>} />
         </CapsuleTabs>
       </div>
-      <div className="h-[calc(100%-38px)]">
-        <JknTable rowKey="code" columns={columns} data={data} />
+      <div className="h-[calc(100%-38px)] overflow-hidden">
+        <JknRcTable isLoading={query.isLoading} rowKey="code" columns={columns} data={data} />
       </div>
     </div>
   )

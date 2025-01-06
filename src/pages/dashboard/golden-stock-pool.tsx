@@ -1,20 +1,20 @@
-import { Button, CapsuleTabs, JknRcTable, type JknRcTableProps, NumSpan, StockView } from "@/components"
+import { Button, CapsuleTabs, JknRcTable, NumSpan, StockView } from "@/components"
 import { useCollectCates, useToken } from "@/store"
 import { appEvent } from "@/utils/event"
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useState } from "react"
 import { getStockCollects } from "@/api"
 import { type StockRecord, stockManager } from "@/utils/stock"
 import { useQuery } from "@tanstack/react-query"
 import Decimal from "decimal.js"
-import { useImmer } from "use-immer"
 import type { TableProps } from 'rc-table'
+import { useTableData } from "@/hooks"
 
 const GoldenStockPool = () => {
   const { collects } = useCollectCates()
   const [type, setType] = useState(collects[0].id)
   const { token } = useToken()
-  const [list, setList] = useImmer<StockRecord[]>([])
-  const rawList = useRef<StockRecord[]>([])
+  const [list, {setList, onSort}] = useTableData<StockRecord>([], 'symbol')
+
 
   const query = useQuery({
     queryKey: [getStockCollects.cacheKey, type],
@@ -30,29 +30,11 @@ const GoldenStockPool = () => {
   useEffect(() => {
     const list = query.data?.items.map(item => stockManager.toStockRecord(item)[0]!) ?? []
     setList(list)
-    rawList.current = list
   }, [query.data, setList])
 
 
   const onLogin = () => {
     appEvent.emit('login')
-  }
-
-  const onSort: JknRcTableProps<StockRecord>['onSort'] = (columnKey, order) => {
-    if (!order) {
-      setList(rawList.current)
-    }
-
-    setList(draft => {
-      draft.sort((a, b) => {
-        if (order === 'asc') {
-          return a[columnKey] - b[columnKey]
-        } if (order === 'desc') {
-          return b[columnKey] - a[columnKey]
-        }
-        return 0
-      })
-    })
   }
 
   const columns: TableProps<StockRecord>['columns'] = [
@@ -111,14 +93,13 @@ const GoldenStockPool = () => {
       <div className="flex-1 overflow-hidden">
         {
           token ? (
-            <JknRcTable columns={columns} data={list} onSort={onSort} rowKey="symbol" className="w-full" />
+            <JknRcTable isLoading={query.isLoading} columns={columns} data={list} onSort={onSort} rowKey="symbol" className="w-full" />
             // <JknTable loading={query.isLoading} rowKey="symbol" data={list} columns={columns} />
           ) : (
             <div className="w-full text-center mt-40">
               <div className="mb-4 text-secondary">尚未登录账号</div>
               <Button onClick={onLogin}>登录账号</Button>
             </div>
-
           )
         }
       </div>

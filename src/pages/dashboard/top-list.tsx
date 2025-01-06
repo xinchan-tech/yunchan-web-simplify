@@ -1,9 +1,9 @@
 import { IncreaseTopStatus, getIncreaseTop } from "@/api"
-import { CapsuleTabs, HoverCard, HoverCardContent, HoverCardTrigger, JknIcon, JknTable, type JknTableProps, NumSpan, ScrollArea, StockView } from "@/components"
+import { CapsuleTabs, HoverCard, HoverCardContent, HoverCardTrigger, JknIcon, JknRcTable, type JknRcTableProps, NumSpan, StockView } from "@/components"
 import { useStockQuoteSubscribe } from "@/hooks"
 import { useTime } from "@/store"
 import { dateToWeek } from "@/utils/date"
-import { stockManager, type StockTrading, type StockRecord } from "@/utils/stock"
+import { type StockRecord, type StockTrading, stockManager } from "@/utils/stock"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import dayjs from "dayjs"
 import Decimal from "decimal.js"
@@ -40,56 +40,55 @@ const TopList = () => {
   const data = useMemo(() => query.data?.map(d => stockManager.toStockRecord(d)[0]!) ?? [], [query.data])
 
   useStockQuoteSubscribe(data.map(d => d.symbol), (data) => {
-    if(tradingToTopStatusMap[time.getTrading() as keyof typeof tradingToTopStatusMap] !== type) return
+    if (tradingToTopStatusMap[time.getTrading() as keyof typeof tradingToTopStatusMap] !== type) return
 
-     queryClient.setQueryData([getIncreaseTop.cacheKey, type], (old: typeof query.data) => {
-          if (!old) return old
-          const items = old.map((item) => {
-            if (item.symbol === data.topic) {
-              const newStock = [...item.stock]
-              newStock[0] = data.rawRecord[0]
-              newStock[2] = data.rawRecord[1]
-              newStock[9] = data.rawRecord[2]
-              newStock[5] = data.rawRecord[3]
-              newStock[6] = data.rawRecord[4]
-              return {
-                ...item,
-                stock: newStock
-              }
-            }
-            return item
-          })
-    
-          return items
-        })
+    queryClient.setQueryData([getIncreaseTop.cacheKey, type], (old: typeof query.data) => {
+      if (!old) return old
+      const items = old.map((item) => {
+        if (item.symbol === data.topic) {
+          const newStock = [...item.stock]
+          newStock[0] = data.rawRecord[0]
+          newStock[2] = data.rawRecord[1]
+          newStock[9] = data.rawRecord[2]
+          newStock[5] = data.rawRecord[3]
+          newStock[6] = data.rawRecord[4]
+          return {
+            ...item,
+            stock: newStock
+          }
+        }
+        return item
+      })
+
+      return items
+    })
   })
 
-  const columns: JknTableProps<StockRecord>['columns'] = [
+  const columns: JknRcTableProps<StockRecord>['columns'] = [
     {
-      header: '名称代码', accessorKey: 'name',
-      meta: { width: '26%' },
-      cell: ({ row }) => <StockView code={row.original.code} name={row.getValue('name')} />
+      title: '名称代码', dataIndex: 'name', align: 'left', width: '26%',
+      render: (_, row) => <StockView code={row.code} name={row.name} />
 
     },
     {
-      header: '盘前价', accessorKey: 'close', meta: { align: 'right', width: '17%' },
-      cell: ({ row }) => <NumSpan value={row.getValue('close')} isPositive={row.getValue<number>('percent') >= 0} />
+      title: '盘前价', dataIndex: 'close', align: 'right', sort: true,
+      render: (_, row) => <NumSpan value={row.close} isPositive={row.isUp} />
     },
     {
-      header: '盘前涨跌幅', accessorKey: 'percent', meta: { align: 'right', width: '19%' },
-      cell: ({ row }) => (
+      title: '盘前涨跌幅', dataIndex: 'percent', align: 'right', sort: true,
+      render: (_, row) => (
         <div className="inline-block">
-          <NumSpan block className="py-0.5 w-20" decimal={2} value={`${row.getValue<number>('percent') * 100}`} percent isPositive={row.getValue<number>('percent') >= 0} symbol />
+          <NumSpan block className="py-0.5 w-20" decimal={2} value={Decimal.create(row.percent).mul(100)} percent isPositive={row.isUp} symbol />
         </div>
       )
     },
     {
-      header: '成交额', accessorKey: 'turnover', meta: { align: 'right', width: '19%' },
-      cell: ({ row }) => <NumSpan unit decimal={2} value={row.getValue('turnover')} isPositive={row.getValue<number>('percent') >= 0} />
+      title: '成交额', dataIndex: 'turnover', align: 'right', sort: true,
+      render: (_, row) => <NumSpan unit decimal={2} value={row.turnover} isPositive={row.isUp} />
     },
     {
-      header: '总市值', accessorKey: 'marketValue', meta: { align: 'right', width: '19%' },
-      cell: ({ row }) => Decimal.create(row.getValue('marketValue')).toDecimalPlaces(2).toShortCN()
+      title: '总市值', dataIndex: 'marketValue', align: 'right', sort: true,
+      render: (_, row) => Decimal.create(row.marketValue).toDecimalPlaces(2).toShortCN()
     },
   ]
 
@@ -178,7 +177,7 @@ const TopList = () => {
         </CapsuleTabs>
       </div>
       <div className="flex-1">
-        <JknTable rowKey="symbol" columns={columns} data={data} />
+        <JknRcTable rowKey="symbol" isLoading={query.isLoading} columns={columns} data={data} />
       </div>
     </div>
   )

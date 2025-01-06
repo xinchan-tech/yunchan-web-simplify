@@ -5,14 +5,16 @@ import type { DefaultRecordType } from "rc-table/lib/interface"
 import { withSort } from "../jkn-icon/with-sort"
 import { useCallback, useMemo, type ReactNode } from "react"
 import { useImmer } from "use-immer"
+import { Skeleton } from "@/components/ui/skeleton"
 
 export interface JknRcTableProps<T = any> extends TableProps<T> {
   headerHeight?: number
+  isLoading?: boolean
   onSort?: (columnKey: keyof T, order: 'asc' | 'desc' | undefined) => void
 }
 
 
-export const JknRcTable = <T extends DefaultRecordType = any>({ headerHeight = 35, columns, ...props }: JknRcTableProps<T>) => {
+export const JknRcTable = <T extends DefaultRecordType = any>({ headerHeight = 35, columns, emptyText, isLoading, ...props }: JknRcTableProps<T>) => {
   const [size, dom] = useDomSize<HTMLDivElement>()
   const [sort, setSort] = useImmer<{ columnKey: keyof T | undefined, order: 'asc' | 'desc' | undefined }>({
     columnKey: undefined,
@@ -43,7 +45,21 @@ export const JknRcTable = <T extends DefaultRecordType = any>({ headerHeight = 3
 
   return (
     <div className="jkn-rc-table overflow-hidden h-full" ref={dom} >
-      <Table columns={_columns} scroll={{ y: size?.height ? (size?.height - headerHeight) : size?.height }} {...props} />
+      <Table columns={_columns} scroll={{ y: size?.height ? (size?.height - headerHeight) : size?.height }}
+        emptyText={
+          isLoading ? (
+            <div className="space-y-2 my-2">
+              {
+                Array.from({ length: 8 }).map((_, i) => (
+                  // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
+                  <Skeleton key={i} className="h-5" />
+                ))
+              }
+            </div>
+          ) : (emptyText && <div className="text-center my-4">暂无数据</div>)
+        }
+
+        {...props} />
     </div>
   )
 }
