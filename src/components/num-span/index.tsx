@@ -88,24 +88,24 @@ interface NumSpanProps extends React.HTMLAttributes<HTMLSpanElement>, VariantPro
 
 
 const NumSpan = ({ isPositive, block, percent, value, symbol, className, arrow, decimal = 3, unit = false, blink, align = 'left', ...props }: NumSpanProps) => {
-  const { setting: { upOrDownColor, priceBlink }, getStockColor } = useConfig()
-  const lastValue = useLatest(value)
+  const { setting: { upOrDownColor, priceBlink } } = useConfig()
+  const lastValue = useRef(value)
   const span = useRef<HTMLSpanElement>(null)
   const priceBlinkTimer = useRef<number>()
-
+  // console.log(lastValue.current, value)
   useUpdateEffect(() => {
     if (blink && priceBlink === '1') {
       if (!priceBlinkTimer.current) {
         if(lastValue.current === undefined || !value) return
 
-        const blinkClass = lastValue.current < value ? 'stock-blink-up' : 'stock-blink-down'
+        const blinkState = lastValue.current < value ? 'down' : 'up'
         lastValue.current = value
-        span.current?.classList.add(blinkClass)
+        span.current?.setAttribute('data-blink', blinkState)
 
         priceBlinkTimer.current = setTimeout(() => {
-          span.current?.classList.remove(blinkClass)
+          span.current?.removeAttribute('data-blink')
           priceBlinkTimer.current = undefined
-        }, 700)
+        }, 300)
       }
     }
   }, [value, blink, priceBlink])
@@ -115,7 +115,7 @@ const NumSpan = ({ isPositive, block, percent, value, symbol, className, arrow, 
 
   return (
     <span className={cn(
-      'inline-flex items-center flex-nowrap space-x-0.5 box-border',
+      'inline-flex items-center flex-nowrap space-x-0.5 box-border stock-blink',
       (block || blink) && 'w-full h-full',
       blink && 'px-1',
       align === 'left' && 'justify-start',
@@ -142,39 +142,7 @@ const NumSpan = ({ isPositive, block, percent, value, symbol, className, arrow, 
         ) : null
       }
       <style jsx>{`
-        .stock-blink-up {
-          animation: stock-blink-once 0.3s;
-          transition: background 0.1s;
-        }
 
-        .stock-blink-down {
-          animation: stock-blink-once 0.3s;
-          transition: background 0.1s;
-        }
-
-        @keyframes stock-blink-up {
-          0% {
-            background: transparent;
-          }
-          50% {
-            background: ${getStockColor(true)};
-          }
-          100% {
-            background: transparent;
-          }
-        }
-
-        @keyframes stock-blink-down {
-          0% {
-            background: transparent;
-          }
-          50% {
-            background: ${getStockColor(false)};
-          }
-          100% {
-            background: transparent;
-          }
-        }
       `}</style>
     </span>
   )

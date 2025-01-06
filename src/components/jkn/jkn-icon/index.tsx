@@ -68,7 +68,5 @@ type JknIcon = typeof _JknIcon & {
   Checkbox: typeof JknIconCheckbox
 }
 
-const JknIcon = _JknIcon as JknIcon
+export const JknIcon = _JknIcon as JknIcon
 JknIcon.Checkbox = JknIconCheckbox
-
-export default JknIcon

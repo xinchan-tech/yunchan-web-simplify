@@ -117,6 +117,7 @@ body {
 .jkn-rc-table {
   table {
     width: 100%;
+    border-spacing: 1px;
   }
 
   .rc-table-header {
@@ -125,7 +126,7 @@ body {
       background-color: hsl(var(--accent));
       font-size: 12px;
       color: hsl(var(--text-secondary));
-      padding: 4px 8px;
+      padding: 8px;
     }
   }
 
@@ -144,6 +145,11 @@ body {
 
     .rc-table-cell {
       font-size: 13px;
+      height: 1px;
+    }
+
+    .rc-table-row:hover{
+      background-color: hsl(var(--accent));
     }
   }
 }
@@ -151,4 +157,39 @@ body {
 // 隐藏全局scrollbar
 ::-webkit-scrollbar {
   display: none;
+}
+
+.stock-blink {
+  animation-duration: 0.2s;
+  &[data-blink="up"] {
+    animation-name: stock-blink-up;
+  }
+
+  &[data-blink="down"] {
+    animation-name: stock-blink-down;
+  }
+}
+
+@keyframes stock-blink-up {
+  0% {
+    background: transparent;
+  }
+  50% {
+    background: hsl(var(--stock-up-color) / 0.4);
+  }
+  100% {
+    background: transparent;
+  }
+}
+
+@keyframes stock-blink-down {
+  0% {
+    background: transparent;
+  }
+  50% {
+    background: hsl(var(--stock-down-color) / 0.4);
+  }
+  100% {
+    background: transparent;
+  }
 }

@@ -180,7 +180,6 @@ export const MainChart = (props: MainChartProps) => {
     renderSecondary(_options, state.secondaryIndicators)
     renderSecondaryLocalIndicators(_options, state.secondaryIndicators, state)
     renderWatermark(_options, state.timeIndex)
-    console.log("🚀 ~ render ~ _options:", _options)
     chart.current.setOption(_options)
   }
 
@@ -215,6 +214,7 @@ export const MainChart = (props: MainChartProps) => {
      * 1.01，x轴100%是state.mainData.length * 1.01，100%的时候要向左偏移0.01
      * 所以对应data的100%其实是100/1.01 = 98.02%
      * 所以差值是100 - 98.02 = 1.98
+     * TODO: 算法不对，需要重新计算 
      */
     chart.current.on('dataZoom', throttle({interval: 1000}, (e: any) => {
       let start = e.start 

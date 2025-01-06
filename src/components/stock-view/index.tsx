@@ -1,5 +1,5 @@
 import { useStockList } from "@/store"
-import JknIcon from "../jkn/jkn-icon"
+import { JknIcon } from "../jkn/jkn-icon"
 
 interface StockViewProps {
   code: string
@@ -9,7 +9,7 @@ interface StockViewProps {
 
 
 const StockView = ({ code, name }: StockViewProps) => {
-  const {listMap} = useStockList()
+  const { listMap } = useStockList()
 
   const stock = listMap[code]
 

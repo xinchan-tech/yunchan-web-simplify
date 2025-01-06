@@ -1,5 +1,5 @@
 import { flexRender, type Table } from "@tanstack/react-table"
-import JknIcon from "../jkn-icon"
+import { JknIcon } from "../jkn-icon"
 
 interface JknTableHeaderProps {
   table: Table<any>
@@ -28,7 +28,7 @@ export const JknTableHeader = ({ width, table }: JknTableHeaderProps) => {
               {headerGroup.headers.map((header) => {
                 const { align, rowSpan = 1 } = header.column.columnDef.meta ?? {}
 
-                if(header.depth - header.column.depth > 1){
+                if (header.depth - header.column.depth > 1) {
                   return null
                 }
 

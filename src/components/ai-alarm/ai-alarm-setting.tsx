@@ -8,7 +8,7 @@ import { cn } from "@/utils/style"
 import { useQuery } from "@tanstack/react-query"
 import { useBoolean, useUpdateEffect } from "ahooks"
 import { forwardRef, useState, useMemo, useEffect, type CSSProperties } from "react"
-import JknIcon from "../jkn/jkn-icon"
+import { JknIcon } from "../jkn/jkn-icon"
 import { z } from "zod"
 import { ToggleGroup, ToggleGroupItem } from "../ui/toggle-group"
 import { Button } from "../ui/button"
@@ -31,7 +31,7 @@ const AiAlarmSetting = (props: AiAlarmSetting) => {
     categoryIds: [],
     symbol: props.code ?? ''
   })
-  const [loading, {toggle}] = useBoolean(false)
+  const [loading, { toggle }] = useBoolean(false)
 
   const { toast } = useToast()
 

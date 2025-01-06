@@ -22,7 +22,6 @@ const TopList = () => {
     {
       header: '名称代码', accessorKey: 'name', meta: { width: '24%' },
       cell: ({ row }) => <StockView code={row.original.code} name={row.getValue('name')} />
-
     },
     {
       header: '现价', accessorKey: 'close', meta: { align: 'right', width: '17%' },

@@ -1,4 +1,4 @@
-import JknIcon from "../jkn/jkn-icon"
+import { JknIcon } from "../jkn/jkn-icon"
 import { cn } from "@/utils/style"
 import { router } from "@/router"
 import { useEffect, useState } from "react"
@@ -52,9 +52,9 @@ const MenuRight = () => {
     const search = new URLSearchParams(window.location.search)
     const symbol = search.get('symbol') ?? 'QQQ'
 
-    if(path.startsWith('/stock')){
+    if (path.startsWith('/stock')) {
       router.navigate(`${path}?symbol=${symbol}`)
-    }else{
+    } else {
       router.navigate(path)
     }
   }

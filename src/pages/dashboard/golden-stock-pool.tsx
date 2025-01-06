@@ -1,13 +1,13 @@
-import { Button, CapsuleTabs, JknTable, type JknTableProps, NumSpan, StockView } from "@/components"
+import { Button, CapsuleTabs, JknRcTable, JknRcTableProps, NumSpan, StockView } from "@/components"
 import { useCollectCates, useToken } from "@/store"
 import { appEvent } from "@/utils/event"
 import { useEffect, useState } from "react"
 import { getStockCollects } from "@/api"
-import { useStockQuoteSubscribe } from "@/hooks"
 import { type StockRecord, stockManager } from "@/utils/stock"
 import { useQuery } from "@tanstack/react-query"
 import Decimal from "decimal.js"
 import { useImmer } from "use-immer"
+import type { TableProps } from 'rc-table'
 
 const GoldenStockPool = () => {
   const { collects } = useCollectCates()
@@ -29,50 +29,47 @@ const GoldenStockPool = () => {
   useEffect(() => {
     setList(query.data?.items.map(item => stockManager.toStockRecord(item)[0]!) ?? [])
   }, [query.data, setList])
+
+
   const onLogin = () => {
     appEvent.emit('login')
   }
 
-  useStockQuoteSubscribe(query.data?.items.map(d => d.symbol) ?? [], (data) => {
-    setList(draft => {
-      const item = draft.find(d => d.symbol === data.topic)
+  const onSort: JknRcTableProps<StockRecord>['onSort'] = (columnKey, order) => {
+    
+  }
 
-      if (item) {
-        item.close = data.record.close
-        item.percent = data.record.changePercent
-        item.volume = data.record.volume
-        item.turnover = data.record.turnover
-        item.marketValue = item.totalShare ? item.close * item.totalShare : 0
-      }
-    })
-  })
-
-  const columns: JknTableProps<StockRecord>['columns'] = [
+  const columns: TableProps<StockRecord>['columns'] = [
     {
-      accessorKey: 'name',
-      header: '名称代码',
-      meta: { width: '27%' },
-      cell: ({ row }) => (
-        <StockView code={row.original.symbol} name={row.getValue('name')} />
+      dataIndex: 'name',
+      title: '名称代码',
+      key: 'name',
+      align: 'left',
+      render: (_, row) => (
+        <StockView code={row.symbol} name={row.name} />
       )
     },
     {
-      header: '现价', accessorKey: 'close', meta: { align: 'right', width: '16%', cellClassName: '!p-0' },
-      cell: ({ row }) => <NumSpan blink value={row.original.close} decimal={3} isPositive={row.original.isUp} align="right" />
+      title: '现价', dataIndex: 'close', key: 'close',
+      sort: true,
+      onSort,
+      align: 'right',
+      render: (_, row) => <NumSpan blink value={row.close} decimal={3} isPositive={row.isUp} align="right" />
     },
     {
-      header: '涨跌幅', accessorKey: 'percent', meta: { align: 'right', width: '19%', cellClassName: '!p-0' },
-      cell: ({ row }) => (
-        <NumSpan className="w-20 text-center" block blink value={row.getValue<number>('percent') * 100} decimal={2} percent isPositive={row.original.isUp} align="right" />
+      title: '涨跌幅', dataIndex: 'percent', key: 'percent', align: 'right', 
+      sort: true,
+      render: (_, row) => (
+        <NumSpan className="w-20 text-center" block blink value={row.percent! * 100} decimal={2} percent isPositive={row.isUp} align="right" />
       )
     },
     {
-      header: '成交额', accessorKey: 'turnover', meta: { align: 'right', width: '19%' },
-      cell: ({ row }) => <NumSpan value={row.original.turnover} decimal={2} unit isPositive={row.original.isUp} />
+      title: '成交额', dataIndex: 'turnover', key: 'turnover', align: 'right',
+      render: (_, row) => <NumSpan value={row.turnover} decimal={2} unit isPositive={row.isUp} />
     },
     {
-      header: '总市值', accessorKey: 'marketValue', meta: { align: 'right', width: '19%' },
-      cell: ({ row }) => <span>{Decimal.create(row.original.marketValue).toShortCN()}</span>
+      title: '总市值', dataIndex: 'marketValue', key: 'marketValue', align: 'right',
+      render: (_, row) => <span>{Decimal.create(row.marketValue).toShortCN()}</span>
     },
   ]
 
@@ -99,7 +96,8 @@ const GoldenStockPool = () => {
       <div className="flex-1 overflow-hidden">
         {
           token ? (
-            <JknTable loading={query.isLoading} rowKey="symbol" data={list} columns={columns} />
+            <JknRcTable columns={columns} data={list} rowKey="symbol" className="w-full" />
+            // <JknTable loading={query.isLoading} rowKey="symbol" data={list} columns={columns} />
           ) : (
             <div className="w-full text-center mt-40">
               <div className="mb-4 text-secondary">尚未登录账号</div>

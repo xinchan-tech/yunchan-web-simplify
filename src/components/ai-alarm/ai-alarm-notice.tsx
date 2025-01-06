@@ -1,5 +1,5 @@
 import { useBoolean } from "ahooks"
-import JknIcon from "../jkn/jkn-icon"
+import { JknIcon } from "../jkn/jkn-icon"
 import { Popover, PopoverAnchor, PopoverContent } from "../ui/popover"
 import { useConfig, useTime } from "@/store"
 import { dateToWeek, getLatestTradingDay } from "@/utils/date"
@@ -9,7 +9,6 @@ import { AlarmType, getAlarmLogs, PriceAlarmTrigger } from "@/api"
 import { useEffect, useMemo } from "react"
 import JknTable, { type JknTableProps } from "../jkn/jkn-table"
 import StockView from "../stock-view"
-import { ScrollArea } from "../ui/scroll-area"
 import { cn } from "@/utils/style"
 
 export const AiAlarmNotice = () => {

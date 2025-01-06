@@ -1,5 +1,5 @@
 import type { ComponentProps } from "react"
-import JknIcon from "../jkn-icon"
+import { JknIcon } from "../jkn-icon"
 import { cn } from "@/utils/style"
 
 interface JknCheckboxProps extends ComponentProps<typeof JknIcon.Checkbox> {

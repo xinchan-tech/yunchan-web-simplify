@@ -4,7 +4,7 @@ import { dateToWeek, getTrading } from "@/utils/date"
 import { useMount, useRequest, useUnmount } from "ahooks"
 import dayjs from "dayjs"
 import { useRef, useState } from "react"
-import JknIcon from "../../jkn/jkn-icon"
+import { JknIcon } from "../../jkn/jkn-icon"
 
 const FooterTime = () => {
   const [usTime, setUsTime] = useState(0)

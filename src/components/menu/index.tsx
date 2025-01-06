@@ -1,4 +1,4 @@
-import JknIcon from "../jkn/jkn-icon"
+import { JknIcon } from "../jkn/jkn-icon"
 import { cn } from "@/utils/style"
 import { router } from "@/router"
 import { type ReactNode, useEffect, useMemo, useState } from "react"
@@ -76,7 +76,7 @@ const Menu = () => {
     }
   ], [])
 
-  
+
 
   const onNav = (path: string) => {
     if (!token && path !== '/') {
