@@ -1,7 +1,7 @@
-import { Button, CapsuleTabs, JknRcTable, JknRcTableProps, NumSpan, StockView } from "@/components"
+import { Button, CapsuleTabs, JknRcTable, type JknRcTableProps, NumSpan, StockView } from "@/components"
 import { useCollectCates, useToken } from "@/store"
 import { appEvent } from "@/utils/event"
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { getStockCollects } from "@/api"
 import { type StockRecord, stockManager } from "@/utils/stock"
 import { useQuery } from "@tanstack/react-query"
@@ -14,6 +14,7 @@ const GoldenStockPool = () => {
   const [type, setType] = useState(collects[0].id)
   const { token } = useToken()
   const [list, setList] = useImmer<StockRecord[]>([])
+  const rawList = useRef<StockRecord[]>([])
 
   const query = useQuery({
     queryKey: [getStockCollects.cacheKey, type],
@@ -27,7 +28,9 @@ const GoldenStockPool = () => {
   })
 
   useEffect(() => {
-    setList(query.data?.items.map(item => stockManager.toStockRecord(item)[0]!) ?? [])
+    const list = query.data?.items.map(item => stockManager.toStockRecord(item)[0]!) ?? []
+    setList(list)
+    rawList.current = list
   }, [query.data, setList])
 
 
@@ -36,7 +39,20 @@ const GoldenStockPool = () => {
   }
 
   const onSort: JknRcTableProps<StockRecord>['onSort'] = (columnKey, order) => {
-    
+    if (!order) {
+      setList(rawList.current)
+    }
+
+    setList(draft => {
+      draft.sort((a, b) => {
+        if (order === 'asc') {
+          return a[columnKey] - b[columnKey]
+        } if (order === 'desc') {
+          return b[columnKey] - a[columnKey]
+        }
+        return 0
+      })
+    })
   }
 
   const columns: TableProps<StockRecord>['columns'] = [
@@ -52,23 +68,22 @@ const GoldenStockPool = () => {
     {
       title: '现价', dataIndex: 'close', key: 'close',
       sort: true,
-      onSort,
       align: 'right',
       render: (_, row) => <NumSpan blink value={row.close} decimal={3} isPositive={row.isUp} align="right" />
     },
     {
-      title: '涨跌幅', dataIndex: 'percent', key: 'percent', align: 'right', 
+      title: '涨跌幅', dataIndex: 'percent', key: 'percent', align: 'right',
       sort: true,
       render: (_, row) => (
         <NumSpan className="w-20 text-center" block blink value={row.percent! * 100} decimal={2} percent isPositive={row.isUp} align="right" />
       )
     },
     {
-      title: '成交额', dataIndex: 'turnover', key: 'turnover', align: 'right',
+      title: '成交额', sort: true, dataIndex: 'turnover', key: 'turnover', align: 'right',
       render: (_, row) => <NumSpan value={row.turnover} decimal={2} unit isPositive={row.isUp} />
     },
     {
-      title: '总市值', dataIndex: 'marketValue', key: 'marketValue', align: 'right',
+      title: '总市值', sort: true, dataIndex: 'marketValue', key: 'marketValue', align: 'right',
       render: (_, row) => <span>{Decimal.create(row.marketValue).toShortCN()}</span>
     },
   ]
@@ -96,7 +111,7 @@ const GoldenStockPool = () => {
       <div className="flex-1 overflow-hidden">
         {
           token ? (
-            <JknRcTable columns={columns} data={list} rowKey="symbol" className="w-full" />
+            <JknRcTable columns={columns} data={list} onSort={onSort} rowKey="symbol" className="w-full" />
             // <JknTable loading={query.isLoading} rowKey="symbol" data={list} columns={columns} />
           ) : (
             <div className="w-full text-center mt-40">
