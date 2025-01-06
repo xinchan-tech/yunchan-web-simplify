@@ -1,11 +1,12 @@
 import { getStockFinancialsStatisticsCate } from "@/api"
-import { Button, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, JknIcon, JknTable } from "@/components"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, JknIcon, JknRcTable } from "@/components"
 import { useQueryParams } from "@/hooks"
 import { useQuery } from "@tanstack/react-query"
-import { useEffect, useMemo, useState } from "react"
-import { financeTableColumns } from "./finance-table-columns"
-import Decimal from "decimal.js"
 import { useUpdateEffect } from "ahooks"
+import Decimal from "decimal.js"
+import { useEffect, useState } from "react"
+import { financeTableColumns } from "./finance-table-columns"
+
 
 
 export const FinanceStatisticsCate = () => {
@@ -20,12 +21,9 @@ export const FinanceStatisticsCate = () => {
     enabled: !!symbol
   })
 
-  const columns = useMemo(() => {
-    return financeTableColumns
-  }, [])
 
   useEffect(() => {
-    console.log(!plateId, stockStatisticsCate.data?.plates)
+
     if (!plateId && stockStatisticsCate.data?.plates) {
       setPlates(stockStatisticsCate.data.plates)
       setPlateId(stockStatisticsCate.data.plates[0].id)
@@ -39,7 +37,7 @@ export const FinanceStatisticsCate = () => {
 
 
   return (
-    <div>
+    <div className="finance-statistics-table h-full flex flex-col overflow-hidden ">
       <div className="flex items-center py-2 space-x-4 text-sm w-full mt-4 px-4 box-border">
         <div className="flex items-center space-x-2 ">
           <span> 相关板块：</span>
@@ -68,9 +66,14 @@ export const FinanceStatisticsCate = () => {
           <span>未发布：{stockStatisticsCate.data?.unrelease_num ?? '-'}</span>
         </span>
       </div>
-      <div className="mt-4">
-        <JknTable loading={stockStatisticsCate.isLoading} rowKey={(row) => `${row.symbol}_${row.report_date}`} columns={columns} data={stockStatisticsCate.data?.items ?? []} />
+      <div className="mt-4 flex-1 overflow-hidden">
+        <JknRcTable isLoading={stockStatisticsCate.isLoading} rowKey={(row) => `${row.symbol}_${row.report_date}`} columns={financeTableColumns} data={stockStatisticsCate.data?.items ?? []} />
       </div>
+      <style jsx>{`
+        .finance-statistics-table :global(.jkn-rc-table .rc-table-body .rc-table-cell) {
+          padding: 0;
+        }
+      `}</style>
     </div>
   )
 }

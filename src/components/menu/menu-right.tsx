@@ -35,6 +35,11 @@ const MenuRight = () => {
       icon: 'right_menu_4',
       title: '财务估值',
       path: '/stock/finance'
+    },
+    {
+      icon: 'left_menu_6',
+      title: '特色推送',
+      path: '/push'
     }
   ]
 
@@ -65,7 +70,7 @@ const MenuRight = () => {
         <div key={item.title} onClick={() => onNav(item.path)} onKeyDown={() => { }} className="mb-4 flex flex-col items-center cursor-pointer">
           <div className={cn(pathname === item.path && 'active-icon')}>
             <JknIcon name={item.icon}
-              className="inline-block w-7 h-7 mb-1"
+              className="inline-block w-6 h-6 mb-1 rounded-none"
             />
           </div>
           <div className={

@@ -1,11 +1,10 @@
 import { getStockFinancialsStatistics } from "@/api"
-import { JknIcon, JknTable, NumSpan, StockSelect } from "@/components"
+import { JknIcon, JknRcTable, NumSpan, StockSelect } from "@/components"
 import { useQueryParams } from "@/hooks"
 import { useStockList } from "@/store"
 import type { StockRecord } from "@/utils/stock"
 import { useQuery } from "@tanstack/react-query"
 import Decimal from "decimal.js"
-import { useMemo } from "react"
 import { financeTableColumns } from "./finance-table-columns"
 
 interface FinanceStatisticsProps {
@@ -27,12 +26,12 @@ export const FinanceStatistics = (props: FinanceStatisticsProps) => {
 
   const stockIcon = listMap[symbol]
 
-  const columns = useMemo(() => {
-   return financeTableColumns
-  }, [])
+  // const columns = useMemo(() => {
+  //  return 
+  // }, [])
 
   return (
-    <div className="px-12">
+    <div className="px-12 finance-statistics-table h-full flex flex-col overflow-hidden ">
       <div className="flex items-center py-2 space-x-4 text-sm w-full mt-12">
         <div className="flex items-center space-x-2 ">
           <JknIcon stock={stockIcon?.[0]} className="w-8 h-8" />
@@ -47,9 +46,14 @@ export const FinanceStatistics = (props: FinanceStatisticsProps) => {
           <StockSelect placeholder="搜索股票" onChange={v => setQueryParams({ symbol: v })} />
         </span>
       </div>
-      <div className="mt-8">
-        <JknTable loading={stockStatistics.isLoading} rowKey={(row) => `${row.symbol}_${row.report_date}`} columns={columns} data={stockStatistics.data?.items ?? []} />
+      <div className="mt-8 flex-1 overflow-hidden">
+        <JknRcTable  isLoading={stockStatistics.isLoading} rowKey={(row) => `${row.symbol}_${row.report_date}`} columns={financeTableColumns} data={stockStatistics.data?.items ?? []} />
       </div>
+      <style jsx>{`
+        .finance-statistics-table :global(.jkn-rc-table .rc-table-body .rc-table-cell) {
+          padding: 0;
+        }
+      `}</style>
     </div>
   )
 }

@@ -1585,3 +1585,50 @@ export const getStockFinancialsPK = (symbol: string) => {
   return request.get<GetStockFinancialsPKResult>('/stock/revenues/pk', { params: { symbol } }).then(r => r.data)
 }
 getStockFinancialsPK.cacheKey = 'stock:revenues:pk'
+
+export enum StockPushType {
+  /**
+   * 超牛清单
+   */
+  STOCK_KING = '0',
+  /**
+   * 缠论推送
+   */
+  COILING = '1',
+  /**
+   * MA趋势评级
+   */
+  MA = '2',
+  /**
+   * 今日牛股
+   */
+  BOLL = '3'
+}
+
+type GetStockPushParams = {
+  type: StockPushType
+  date: string
+  extend: StockExtend[]
+}
+
+type GetStockPushResult = {
+  symbol: string
+  id: string
+  star: string
+  interval: string
+  coiling_signal: string
+  warning: string
+  bull: string
+  update_time: string
+  name: string
+  stock: StockRawRecord
+  extend: StockExtendResultMap
+}
+
+/**
+ * 特色推送
+ */
+export const getStockPush = (params: GetStockPushParams) => {
+  return request.get<GetStockPushResult[]>('/push/index', { params }).then(r => r.data)
+}
+getStockPush.cacheKey = 'push:index'

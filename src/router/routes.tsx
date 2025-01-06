@@ -72,6 +72,13 @@ export const routes: RouteObject[] = [
     handle:{
       title: '个股盘口'
     }
+  },
+  {
+    path: '/push',
+    Component: lazy(() => import('@/pages/push')),
+    handle:{
+      title: '特色推送'
+    }
   }
   
 ]

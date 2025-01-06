@@ -247,6 +247,11 @@ const ValuationPieChart = ({ name, data, options }: ValuationPieChartProps) => {
   useEffect(() => {
     if (!chart.current) return
 
+    if(!data){
+      chart.current.clear()
+      return
+    }
+
     const options: ECOption = {
       grid: {
         top: 0,
