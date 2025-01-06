@@ -1,6 +1,6 @@
 import { StockChartInterval } from '@/api'
 import type { ECOption } from '@/utils/echarts'
-import dayjs from 'dayjs'
+import dayjs, { type Dayjs } from 'dayjs'
 import type { ECBasicOption } from 'echarts/types/dist/shared'
 import type { KChartContext } from './ctx'
 
@@ -167,5 +167,37 @@ export const renderUtils = {
       return (max + diff * 0.05).toFixed(1)
     }
     return max * 1.1
+  },
+  
+  /**
+   * 
+   */
+  isSameTimeByInterval: (src: Dayjs, target: Dayjs, interval: StockChartInterval) => {
+    switch(interval) {
+      case StockChartInterval.ONE_MIN:
+        return src.isSame(target, 'minute')
+      case StockChartInterval.TWO_MIN:
+        return src.add(2, 'minute').isAfter(target)
+      case StockChartInterval.FIVE_MIN:
+        return src.add(5, 'minute').isAfter(target)
+      case StockChartInterval.FIFTEEN_MIN:
+        return src.add(15, 'minute').isAfter(target)
+      case StockChartInterval.THIRTY_MIN:
+        return src.add(30, 'minute').isAfter(target)
+      case StockChartInterval.FORTY_FIVE_MIN:
+        return src.add(45, 'minute').isAfter(target)
+      case StockChartInterval.ONE_HOUR:
+        return src.isSame(target, 'hour')
+      case StockChartInterval.TWO_HOUR:
+        return src.add(2, 'hour').isAfter(target)
+      case StockChartInterval.THREE_HOUR:
+        return src.add(3, 'hour').isAfter(target)
+      case StockChartInterval.FOUR_HOUR:
+        return src.add(4, 'hour').isAfter(target)
+      case StockChartInterval.DAY:
+        return src.isSame(target, 'day')
+      default:
+        return false
+    }
   }
 }

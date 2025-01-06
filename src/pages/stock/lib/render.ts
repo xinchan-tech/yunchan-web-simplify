@@ -115,21 +115,22 @@ export const createOptions = (): ECOption => ({
       axisTick: {
         show: false
       },
+      boundaryGap: false,
       axisLabel: {
         show: false,
         formatter: (v: any) => {
           return v ? dayjs(v).format('MM-DD') : ''
         }
       },
+      min: 'dataMin',
+      max: v => {
+        return v.max + Math.round((v.max - v.min) * 0.01)
+      },
       splitLine: {
         show: true,
         lineStyle: {
           color: 'rgb(31, 32, 33)'
         }
-      },
-      min: 'dataMin',
-      max: v => {
-        return Math.round(v.max * 1.01)
       },
       axisPointer: {
         z: 100
@@ -147,8 +148,11 @@ export const createOptions = (): ECOption => ({
           show: false
         }
       },
+      min: (v) => {
+        return v.min - (v.max - v.min) * 0.1
+      },
       max: (v) => {
-        return v.max + 20
+        return v.max + (v.max - v.min) * 0.1
       },
       splitLine: {
         lineStyle: {
@@ -164,8 +168,11 @@ export const createOptions = (): ECOption => ({
       splitLine: {
         show: false
       },
+      min: (v) => {
+        return v.min - (v.max - v.min) * 0.1
+      },
       max: (v) => {
-        return v.max + 20
+        return v.max + (v.max - v.min) * 0.1
       },
       axisLabel: {
         
@@ -252,6 +259,10 @@ export const renderGrid = (options: ECOption, state: ChartState, size: [number, 
               : 'intraDay',
           dayjs(+state.mainData.history[0]?.[0])
         ).map(item => dayjs(item).valueOf().toString())
+        xAxis.max = (xAxis as any).data.length
+        xAxis.axisLabel!.interval = (index) => {
+          return index % 15 === 0
+        }
       } else {
         ;(xAxis as any).data = state.mainData.history.map(item => item[0])
       }
@@ -928,7 +939,8 @@ const renderSecondaryAxis = (options: ECOption, state: KChartState['state'][0], 
     options.xAxis.push({
       type: 'category',
       gridIndex: index + 1,
-      data: (options.xAxis[0] as any).data,
+      data: [...(options.xAxis[0] as any).data],
+      boundaryGap: false,
       axisLine: {
         onZero: false,
         lineStyle: {
@@ -938,13 +950,16 @@ const renderSecondaryAxis = (options: ECOption, state: KChartState['state'][0], 
       axisLabel: {
         show: index === state.secondaryIndicators.length - 1,
         color: '#fff',
-        formatter: (v: any) => {
+        formatter: (v: any, index) => {
           return v
             ? isTimeIndexChart(state.timeIndex) && state.timeIndex !== StockChartInterval.FIVE_DAY
-              ? dayjs(+v).format('hh:mm')
+              ? index % 30 === 0 ? dayjs(+v).format('hh:mm') : ''
               : dayjs(+v).format('MM-DD')
             : ''
-        }
+        },
+        interval:isTimeIndexChart(state.timeIndex) && state.timeIndex !== StockChartInterval.FIVE_DAY ? (index) => {
+          return index % 15 === 0
+        }: undefined
       },
       axisTick: {
         show: false
@@ -956,8 +971,8 @@ const renderSecondaryAxis = (options: ECOption, state: KChartState['state'][0], 
         }
       },
       min: 'dataMin',
-      max: v => {
-        return Math.round(v.max * 1.01)
+      max:  isTimeIndexChart(state.timeIndex) && state.timeIndex !== StockChartInterval.FIVE_DAY ? (options.xAxis[0] as any).data.length : v => {
+        return v.max + Math.round((v.max - v.min) * 0.01)
       },
       axisPointer: {
         z: 100,

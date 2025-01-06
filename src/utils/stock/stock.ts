@@ -222,9 +222,9 @@ export class StockRecord {
   static parseTime(time: string) {
     if(time.replace('-', '').length === time.length) {
       if(time.length === 10) {
-        return dayjs(+time * 1000).format('YYYY-MM-DD HH:mm:ss')
+        return dayjs(+time * 1000).tz('America/New_York').format('YYYY-MM-DD HH:mm:ss')
       }
-      return dayjs(+time).format('YYYY-MM-DD HH:mm:ss')
+      return dayjs(+time).tz('America/New_York').format('YYYY-MM-DD HH:mm:ss')
     }
     if (time.length === 10) {
       return `${dayjs(time).format('YYYY-MM-DD')} 15:59:00`

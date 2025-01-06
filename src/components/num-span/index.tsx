@@ -75,6 +75,11 @@ interface NumSpanProps extends React.HTMLAttributes<HTMLSpanElement>, VariantPro
    * 对齐
    */
   align?: 'left' | 'center' | 'right'
+
+  /**
+   * 闪烁
+   */
+  blink?: boolean
 }
 
 
@@ -87,7 +92,9 @@ const NumSpan = ({ isPositive, block, percent, value, symbol, className, arrow, 
   // console.log(lastValue.current, value)
   useUpdateEffect(() => {
     if (blink && priceBlink === '1') {
+
       if (!priceBlinkTimer.current) {
+
         if(lastValue.current === undefined || !value) return
 
         const blinkState = lastValue.current < value ? 'down' : 'up'
@@ -97,7 +104,7 @@ const NumSpan = ({ isPositive, block, percent, value, symbol, className, arrow, 
         priceBlinkTimer.current = setTimeout(() => {
           span.current?.removeAttribute('data-blink')
           priceBlinkTimer.current = undefined
-        }, 300)
+        }, 100)
       }
     }
   }, [value, blink, priceBlink])

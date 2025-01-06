@@ -1,7 +1,7 @@
 import { getCollectHot } from "@/api"
 import { CapsuleTabs, JknRcTable, type JknRcTableProps, NumSpan, StockView } from "@/components"
-import { useStockQuoteSubscribe } from "@/hooks"
-import { type StockRecord, StockSubscribeHandler, stockManager } from "@/utils/stock"
+import { useStockQuoteSubscribe, useTableData } from "@/hooks"
+import { type StockRecord, type StockSubscribeHandler, stockManager } from "@/utils/stock"
 import { useQuery } from "@tanstack/react-query"
 import Decimal from "decimal.js"
 import { useCallback, useEffect, useMemo, useState } from "react"
@@ -16,24 +16,24 @@ const TopList = () => {
     queryFn: () => getCollectHot({ extend: ['total_share'] }),
     refetchInterval: 30 * 1000
   })
-  const [list, setList] = useState<(StockRecord & { blink?: 'up' | 'down' })[]>([])
+  const [list, {setList}] = useTableData<StockRecord>([], 'symbol')
 
   useEffect(() => {
     setList(query.data?.find(v => v.type === HotType)?.stocks.map(v => stockManager.toStockRecord(v)[0]) ?? [])
-  }, [query.data])
+  }, [query.data, setList])
 
   const updateQuoteHandler = useCallback<StockSubscribeHandler<'quote'>>((data) => {
-    setList(draft => draft.map(item => {
-      if (item.symbol === data.topic) {
-        item.blink = data.record.close > item.close! ? 'up' : 'down'
-        item.close = data.record.close
-        item.percent = (data.record.close - data.record.preClose) / data.record.preClose
-        item.volume = data.record.volume
-        item.turnover = data.record.turnover
-        item.marketValue = item.totalShare ? item.close * item.totalShare : 0
-      }
-      return item
-    }))
+    // setList(draft => draft.map(item => {
+    //   if (item.symbol === data.topic) {
+    //     item.blink = data.record.close > item.close! ? 'up' : 'down'
+    //     item.close = data.record.close
+    //     item.percent = (data.record.close - data.record.preClose) / data.record.preClose
+    //     item.volume = data.record.volume
+    //     item.turnover = data.record.turnover
+    //     item.marketValue = item.totalShare ? item.close * item.totalShare : 0
+    //   }
+    //   return item
+    // }))
   }, [])
 
   useStockQuoteSubscribe(query.data?.find(v => v.type === HotType)?.stocks.map(v => v.symbol) ?? [], updateQuoteHandler)
@@ -75,7 +75,7 @@ const TopList = () => {
         </CapsuleTabs>
       </div>
       <div className="h-[calc(100%-38px)] overflow-hidden">
-        <JknRcTable isLoading={query.isLoading} rowKey="code" columns={columns} data={data} />
+        <JknRcTable isLoading={query.isLoading} rowKey="code" columns={columns} data={list} />
       </div>
     </div>
   )

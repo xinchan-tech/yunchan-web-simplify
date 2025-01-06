@@ -12,9 +12,7 @@ export const useTableData = <T extends Record<string, any>>(data: T[], orderKey:
     [orderKey]
   )
 
-  const updateList = useCallback((data: T[]) => {
-    setList(data)
-  }, [])
+  const updateList = useCallback(setList, [])
 
   const onSort = useCallback((columnKey: keyof T, order: 'asc' | 'desc' | undefined) => {
     if (!order) {

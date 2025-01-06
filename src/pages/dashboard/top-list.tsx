@@ -1,9 +1,9 @@
 import { IncreaseTopStatus, getIncreaseTop } from "@/api"
 import { CapsuleTabs, HoverCard, HoverCardContent, HoverCardTrigger, JknIcon, JknRcTable, type JknRcTableProps, NumSpan, StockView } from "@/components"
-import { useStockQuoteSubscribe } from "@/hooks"
+import { useStockQuoteSubscribe, useTableData } from "@/hooks"
 import { useTime } from "@/store"
 import { dateToWeek } from "@/utils/date"
-import { type StockRecord, type StockTrading, stockManager } from "@/utils/stock"
+import { type StockRecord, type StockSubscribeHandler, type StockTrading, stockManager } from "@/utils/stock"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import dayjs from "dayjs"
 import Decimal from "decimal.js"
@@ -23,7 +23,7 @@ const TopList = () => {
   const { t } = useTranslation()
   const trading = useTime().getTrading()
   const { isToday } = useTime()
-  const [list, setList] = useState<(StockRecord & { blink?: 'up' | 'down' })[]>([])
+  const [list, {setList, onSort, updateList}] = useTableData<StockRecord>([], 'symbol')
 
   const query = useQuery({
     queryKey: [getIncreaseTop.cacheKey, type],
@@ -35,38 +35,32 @@ const TopList = () => {
 
   useEffect(() => {
     setList(query.data?.map(item => stockManager.toStockRecord(item)[0]!) ?? [])
-  }, [query.data])
+  }, [query.data, setList])
 
-  const onTypeChange = (s: IncreaseTopStatus) => {
-    setType(s)
-    queryClient.invalidateQueries({ queryKey: [getIncreaseTop.cacheKey, s] })
-  }
-
-
-  useStockQuoteSubscribe(data.map(d => d.symbol), (data) => {
-    if (tradingToTopStatusMap[time.getTrading() as keyof typeof tradingToTopStatusMap] !== type) return
-
-    queryClient.setQueryData([getIncreaseTop.cacheKey, type], (old: typeof query.data) => {
-      if (!old) return old
-      const items = old.map((item) => {
+  const subscribeHandler: StockSubscribeHandler<'quote'> = useCallback((data) => {
+    updateList(s => {
+      const items = s.map((item) => {
         if (item.symbol === data.topic) {
-          const newStock = [...item.stock]
-          newStock[0] = data.rawRecord[0]
-          newStock[2] = data.rawRecord[1]
-          newStock[9] = data.rawRecord[2]
-          newStock[5] = data.rawRecord[3]
-          newStock[6] = data.rawRecord[4]
-          return {
-            ...item,
-            stock: newStock
-          }
+          const stock = stockManager.cloneFrom(item)
+          stock.close = data.record.close
+          stock.prevClose = data.record.preClose
+          stock.percent = (data.record.close - data.record.preClose) / data.record.preClose
+          
+          return stock
         }
         return item
       })
 
       return items
     })
-  })
+  }, [updateList])
+
+  const onTypeChange = (s: IncreaseTopStatus) => {
+    setType(s)
+    queryClient.invalidateQueries({ queryKey: [getIncreaseTop.cacheKey, s] })
+  }
+
+  useStockQuoteSubscribe(query.data?.map(d => d.symbol) ?? [], subscribeHandler)
 
   const columns: JknRcTableProps<StockRecord>['columns'] = [
     {
@@ -76,13 +70,13 @@ const TopList = () => {
     },
     {
       title: '盘前价', dataIndex: 'close', align: 'right', sort: true,
-      render: (_, row) => <NumSpan value={row.close} isPositive={row.isUp} />
+      render: (_, row) => <NumSpan blink value={row.close} isPositive={row.isUp} />
     },
     {
-      title: '盘前涨跌幅', dataIndex: 'percent', align: 'right', sort: true,
+      title: '涨跌幅', dataIndex: 'percent', align: 'right', sort: true,
       render: (_, row) => (
         <div className="inline-block">
-          <NumSpan block className="py-0.5 w-20" decimal={2} value={Decimal.create(row.percent).mul(100)} percent isPositive={row.isUp} symbol />
+          <NumSpan block className="w-20" decimal={2} value={Decimal.create(row.percent).mul(100)} percent isPositive={row.isUp} symbol />
         </div>
       )
     },
@@ -180,8 +174,8 @@ const TopList = () => {
           <CapsuleTabs.Tab value={IncreaseTopStatus.WEEK.toString()} label={<span>本周</span>} />
         </CapsuleTabs>
       </div>
-      <div className="flex-1">
-        <JknRcTable rowKey="symbol" isLoading={query.isLoading} columns={columns} data={data} />
+      <div className="flex-1 overflow-hidden">
+        <JknRcTable rowKey="symbol" isLoading={query.isLoading} columns={columns} data={list} onSort={onSort} />
       </div>
     </div>
   )

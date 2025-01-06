@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useKChartContext } from "../lib"
 import { useIndicator, useTime } from "@/store"
 import { useQueries, useQuery, useQueryClient } from "@tanstack/react-query"
@@ -12,7 +12,7 @@ import { StockSelect } from "@/components"
 import { cn } from "@/utils/style"
 import { TimeIndexMenu } from "./time-index"
 import echarts from "@/utils/echarts"
-import { stockManager } from "@/utils/stock"
+import { stockManager, StockSubscribeHandler } from "@/utils/stock"
 import { throttle } from "radash"
 
 
@@ -53,13 +53,20 @@ export const MainChart = (props: MainChartProps) => {
 
   const subscribeSymbol = useMemo(() => `${state.symbol}@${state.timeIndex}`, [state.symbol, state.timeIndex])
 
-  useStockBarSubscribe([subscribeSymbol], (data) => {
+  const subscribeHandler: StockSubscribeHandler<'bar'> = useCallback((data) => {
     const stock = stockManager.toSimpleStockRecord(data.rawRecord)
     const qData = queryClient.getQueryData(queryKey) as typeof query.data
 
     if (!qData || qData.history.length === 0) return
 
     const lastData = stockManager.toSimpleStockRecord(qData.history[qData.history.length - 1])
+    if( state.timeIndex === StockChartInterval.PRE_MARKET || state.timeIndex === StockChartInterval.AFTER_HOURS || state.timeIndex === StockChartInterval.INTRA_DAY){
+      queryClient.setQueryData(queryKey, {
+        ...qData,
+        history: [...qData.history, [stock.time!, ...(data.rawRecord.slice(1)) as any]]
+      })
+      return
+    }
     if (state.timeIndex === StockChartInterval.ONE_MIN) {
       // 当前分钟大于最后一条数据的分钟
       if (lastData.toDayjs().isBefore(stock.toDayjs(), 'minute')) {
@@ -67,9 +74,16 @@ export const MainChart = (props: MainChartProps) => {
           ...qData,
           history: [...qData.history, data.rawRecord]
         })
+      }else{
+        queryClient.setQueryData(queryKey, {
+          ...qData,
+          history: [...qData.history.slice(0, -1), [stock.time!, ...(data.rawRecord.slice(1)) as any]]
+        })
       }
     }
-  })
+  }, [ queryClient, state.timeIndex])
+
+  useStockBarSubscribe([subscribeSymbol], subscribeHandler)
 
   const { isDefaultIndicatorParams, getIndicatorQueryParams } = useIndicator()
 
@@ -180,6 +194,7 @@ export const MainChart = (props: MainChartProps) => {
     renderSecondary(_options, state.secondaryIndicators)
     renderSecondaryLocalIndicators(_options, state.secondaryIndicators, state)
     renderWatermark(_options, state.timeIndex)
+    console.log(_options)
     chart.current.setOption(_options)
   }
 

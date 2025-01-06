@@ -160,7 +160,7 @@ body {
 }
 
 .stock-blink {
-  animation-duration: 0.2s;
+  animation-duration: 0.1s;
   &[data-blink="up"] {
     animation-name: stock-blink-up;
   }
