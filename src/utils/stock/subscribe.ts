@@ -141,7 +141,7 @@ class StockSubscribe {
       })
     })
 
-    requestIdleCallback(() => {
+    requestAnimationFrame(() => {
       this.unSubscribeStockIdle()
     })
   }

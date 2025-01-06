@@ -140,15 +140,15 @@ export class Ws {
   }
 
   private startQueueMessage() {
-    // 使用requestIdleCallback处理消息队列
+    // 使用requestAnimationFrame处理消息队列
     if (this.ws?.readyState !== WebSocket.OPEN) {
-      requestIdleCallback(() => {
+      requestAnimationFrame(() => {
         this.startQueueMessage()
       })
       return
     }
     if (this.messageQueue.length === 0) {
-      requestIdleCallback(() => {
+      requestAnimationFrame(() => {
         this.startQueueMessage()
       })
       return
@@ -158,7 +158,7 @@ export class Ws {
     if (message) {
       this.send(message)
     }
-    requestIdleCallback(() => {
+    requestAnimationFrame(() => {
       this.startQueueMessage()
     })
   }
