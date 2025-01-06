@@ -325,11 +325,11 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
       },
       axisLabel: {
         interval(index) {
-          return index % 15 === 0
+          return index % 30 === 0
         },
         showMinLabel: true,
         formatter: (value, index) => {
-          return index % 30 === 0 ? dayjs(value).format('HH:mm') : ''
+          return index % 60 === 0 ? dayjs(value).format('HH:mm') : ''
         },
         color: '#999999',
         fontSize: 10
