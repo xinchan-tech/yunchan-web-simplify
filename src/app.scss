@@ -160,7 +160,7 @@ body {
 }
 
 .stock-blink {
-  animation-duration: 0.1s;
+  animation-duration: 0.3s;
   &[data-blink="up"] {
     animation-name: stock-blink-up;
   }
@@ -175,7 +175,7 @@ body {
     background: transparent;
   }
   50% {
-    background: hsl(var(--stock-up-color) / 0.4);
+    background: hsl(var(--stock-up-color) / 0.2);
   }
   100% {
     background: transparent;
@@ -187,7 +187,7 @@ body {
     background: transparent;
   }
   50% {
-    background: hsl(var(--stock-down-color) / 0.4);
+    background: hsl(var(--stock-down-color) / 0.2);
   }
   100% {
     background: transparent;

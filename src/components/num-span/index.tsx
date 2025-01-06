@@ -92,19 +92,22 @@ const NumSpan = ({ isPositive, block, percent, value, symbol, className, arrow, 
   // console.log(lastValue.current, value)
   useUpdateEffect(() => {
     if (blink && priceBlink === '1') {
-
+  
       if (!priceBlinkTimer.current) {
-
+        
         if(lastValue.current === undefined || !value) return
+        const randomDelay = Math.random() * 1000
 
-        const blinkState = lastValue.current < value ? 'down' : 'up'
-        lastValue.current = value
-        span.current?.setAttribute('data-blink', blinkState)
+        priceBlinkTimer.current = window.setTimeout(() => {
+          const blinkState = lastValue.current! < value ? 'down' : 'up'
+          lastValue.current = value
+          span.current?.setAttribute('data-blink', blinkState)
 
-        priceBlinkTimer.current = setTimeout(() => {
-          span.current?.removeAttribute('data-blink')
-          priceBlinkTimer.current = undefined
-        }, 100)
+          setTimeout(() => {
+            span.current?.removeAttribute('data-blink')
+            priceBlinkTimer.current = undefined
+          }, 300)
+        }, randomDelay)
       }
     }
   }, [value, blink, priceBlink])
