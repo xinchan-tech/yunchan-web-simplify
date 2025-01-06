@@ -147,6 +147,9 @@ export const createOptions = (): ECOption => ({
           show: false
         }
       },
+      max: (v) => {
+        return v.max + 20
+      },
       splitLine: {
         lineStyle: {
           color: 'rgb(31, 32, 33)'
@@ -160,6 +163,9 @@ export const createOptions = (): ECOption => ({
       position: 'right',
       splitLine: {
         show: false
+      },
+      max: (v) => {
+        return v.max + 20
       },
       axisLabel: {
         

@@ -1,14 +1,13 @@
-import { getLargeCapIndexes, getStockCollects, type StockExtend } from "@/api"
+import { getStockCollects, type StockExtend } from "@/api"
 import { AddCollect, CollectCapsuleTabs, JknIcon, NumSpan, ScrollArea } from "@/components"
-import { useConfig } from "@/store"
-import { getTradingPeriod } from "@/utils/date"
+import { useConfig, useTime } from "@/store"
 import echarts, { type ECOption } from "@/utils/echarts"
-import { stockManager } from "@/utils/stock"
+import { stockManager, type StockRecord } from "@/utils/stock"
 import { colorUtil } from "@/utils/style"
 import { useQuery } from "@tanstack/react-query"
 import { useMount, useUnmount, useUpdateEffect } from "ahooks"
 import Decimal from "decimal.js"
-import { useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 
 const extend: StockExtend[] = ['basic_index', 'day_basic', 'alarm_ai', 'alarm_all', 'total_share', 'financials', 'thumbs', 'stock_before', 'stock_after']
 
@@ -18,8 +17,8 @@ type TableDataType = {
   thumbs: string[]
   price?: number
   percent?: number
-  afterPrice?: number
-  afterPercent?: number
+  subPrice?: number
+  subPercent?: number
 }
 
 
@@ -29,6 +28,9 @@ interface CollectListProps {
 
 export const CollectList = (props: CollectListProps) => {
   const [collect, setCollect] = useState('1')
+  const trading = useTime(s => s.getTrading())
+  const [stockList, setStockList] = useState<TableDataType[]>([])
+
   const stocks = useQuery({
     queryKey: [getStockCollects.cacheKey, collect],
     refetchInterval: 60 * 1000,
@@ -39,27 +41,30 @@ export const CollectList = (props: CollectListProps) => {
     })
   })
 
-  const stockList = (() => {
-    const r: TableDataType[] = []
-
-    if (!stocks.data) return r
-
-    for (const s of stocks.data.items) {
-      const [lastStock, _, afterStock] = stockManager.toStockRecord(s)
-
-      r.push({
-        name: s.name,
-        code: s.symbol,
-        price: lastStock?.close,
-        percent: lastStock?.percent,
-        thumbs: lastStock?.thumbs ?? [],
-        afterPercent: afterStock?.percent,
-        afterPrice: afterStock?.close
-      })
+  useEffect(() => {
+    if (!stocks.data) {
+      setStockList([])
+      return
     }
 
-    return r
-  })()
+    const _stockList = stocks.data.items.map(stock => {
+      const [lastStock, beforeStock, afterStock] = stockManager.toStockRecord(stock)
+      const thumbs = lastStock?.thumbs ?? []
+      const subStock: StockRecord | null = ['afterHours', 'close'].includes(trading) ? afterStock : beforeStock
+
+      return {
+        name: stock.name,
+        code: stock.symbol,
+        thumbs,
+        price: lastStock?.close,
+        percent: lastStock?.percent,
+        subPrice: subStock?.close,
+        subPercent: subStock?.percent,
+      }
+    })
+
+    setStockList(_stockList)
+  }, [stocks.data, trading])
 
 
   return (
@@ -107,20 +112,24 @@ export const CollectList = (props: CollectListProps) => {
                     </div>
                     <div className="w-16 flex-shrink-0 text-right">
                       {
-                        stock.percent ? <NumSpan className="py-0.5 w-16" block value={stock.percent * 100} percent decimal={2} isPositive={stock.percent >= 0} /> : '--'
+                        stock.price ? <NumSpan className="py-0.5 w-16" block value={Decimal.create(stock.percent).mul(100)} percent decimal={2} isPositive={(stock.percent ?? 0) >= 0} /> : '--'
                       }
                     </div>
                   </div>
-                  <div className="text-right text-secondary mt-0.5 scale-90">
-                    {
-                      stock.afterPrice ? (
-                        <span>
-                          <span>{Decimal.create(stock.afterPrice).toFixed(3)}</span>&nbsp;&nbsp;
-                          <span>{Decimal.create(stock.afterPercent).mul(100).toFixed(2)}%</span>
-                        </span>
-                      ) : '--'
-                    }
-                  </div>
+                  {
+                    trading !== 'intraDay' ? (
+                      <div className="text-right text-secondary mt-0.5 scale-90">
+                        {
+                          stock.subPrice ? (
+                            <span>
+                              <span>{Decimal.create(stock.subPrice).toFixed(3)}</span>&nbsp;&nbsp;
+                              <span>{Decimal.create(stock.subPercent).mul(100).toFixed(2)}%</span>
+                            </span>
+                          ) : '--'
+                        }
+                      </div>
+                    ) : null
+                  }
                 </div>
               </div>
             ))
@@ -144,10 +153,10 @@ const StockChart = (props: StockChartProps) => {
   const dom = useRef<HTMLDivElement>(null)
   const setChartAreaStyle = () => {
     const color = colorUtil.hexToRGB(getStockColor(props.type === 'up', 'hex'))!
- 
+
     charts.current?.setOption({
       series: [{
-        color: colorUtil.rgbaToString({...color, a: 1}),
+        color: colorUtil.rgbaToString({ ...color, a: 1 }),
         areaStyle: {
           color: {
             type: 'linear',
@@ -156,9 +165,9 @@ const StockChart = (props: StockChartProps) => {
             x2: 0,
             y2: 1,
             colorStops: [{
-              offset: 0, color: colorUtil.rgbaToString({...color, a: .35}) // 0% 处的颜色
+              offset: 0, color: colorUtil.rgbaToString({ ...color, a: .35 }) // 0% 处的颜色
             }, {
-              offset: .7, color: colorUtil.rgbaToString({...color, a: .2}) // 100% 处的颜色
+              offset: .7, color: colorUtil.rgbaToString({ ...color, a: .2 }) // 100% 处的颜色
             }, {
               offset: 1, color: 'transparent' // 100% 处的颜色
             }]
