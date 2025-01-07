@@ -1,11 +1,10 @@
 import { useConfig } from "@/store"
-import { priceToCnUnit } from "@/utils/price"
 import { cn } from "@/utils/style"
 import { cva, type VariantProps } from "class-variance-authority"
 import Decimal from "decimal.js"
 import { JknIcon } from ".."
-import { useLatest, useMount, useUpdateEffect } from "ahooks"
-import { useEffect, useRef } from "react"
+import {  useUpdateEffect } from "ahooks"
+import {  useRef } from "react"
 
 const numSpanVariants = cva(
   '',
@@ -13,7 +12,7 @@ const numSpanVariants = cva(
     variants: {
       isPositive: {
         default:
-          'text-stock-up',
+          'text-foreground',
         false:
           'text-stock-down',
         true:
@@ -96,7 +95,7 @@ const NumSpan = ({ isPositive, block, percent, value, symbol, className, arrow, 
       if (!priceBlinkTimer.current) {
         
         if(lastValue.current === undefined || !value) return
-        const randomDelay = Math.random() * 1000
+        const randomDelay = Math.random() * 500
 
         priceBlinkTimer.current = window.setTimeout(() => {
           const blinkState = lastValue.current! < value ? 'down' : 'up'
@@ -106,7 +105,7 @@ const NumSpan = ({ isPositive, block, percent, value, symbol, className, arrow, 
           setTimeout(() => {
             span.current?.removeAttribute('data-blink')
             priceBlinkTimer.current = undefined
-          }, 300)
+          }, 500)
         }, randomDelay)
       }
     }

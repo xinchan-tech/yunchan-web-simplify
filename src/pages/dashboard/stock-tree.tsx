@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { useImmer } from 'use-immer'
 import { useTranslation } from "react-i18next"
 import { getHotSectors, getPlateList, getUsStocks } from "@/api"
@@ -6,7 +6,8 @@ import TreeMap from "./components/tree-map"
 import Decimal from "decimal.js"
 import { CapsuleTabs, Skeleton } from "@/components"
 import { useQuery } from "@tanstack/react-query"
-import { stockUtils, StockRecord } from "@/utils/stock"
+import { stockUtils, StockRecord, type StockSubscribeHandler } from "@/utils/stock"
+import { useStockQuoteSubscribe } from "@/hooks"
 
 type StockTreeType = 'industry' | 'concept' | 'bull' | 'etf' | 'industry-heatmap' | 'etf-heatmap'
 type StockTreeDate = 'day' | 'week' | 'month'
@@ -48,11 +49,16 @@ const StockTree = () => {
     enabled: ['industry', 'concept'].includes(type)
   })
 
-  const treeData = useMemo(() => {
-    if (!query.data) return []
+  const [treeData, setTreeData] = useState<any[]>([])
+
+  useEffect(() => {
+    if (!query.data) {
+      setTreeData([])
+      return
+    }
 
     const root = []
-    const dataset: Record<string, { value: number }> = {}
+    const dataset: Record<string, { value: number, originValue: number }> = {}
 
     const colors = filter.map(v => getColorByStep(v / 100))
 
@@ -65,26 +71,70 @@ const StockTree = () => {
           const stockRecord = stockUtils.toSimpleStockRecord(t.stock)
           const _color = getColorByStep(stockRecord.percent ?? 0)
           if (!colors.includes(_color)) continue
-          const child = { name: t.symbol, value: stockRecord.turnover!, data: stockRecord.percent, color: getColorByStep(stockRecord.percent ?? 0) }
+          const child = { name: t.symbol, value: stockRecord.turnover!, data: stockRecord.percent, color: getColorByStep(stockRecord.percent ?? 0), plateId: t.plate_id, originValue: stockRecord.turnover! }
           dataset[child.name + t.plate_id] = child
           n.children.push(child as never)
         } else {
-          n.children.push({ name: t.symbol, value: 0, data: 0 } as never)
+          n.children.push({ name: t.symbol, value: 0, data: 0, plateId: t.plate_id, originValue: 0 } as never)
         }
       }
     }
 
-    const absValues = Object.keys(dataset).map(key => dataset[key as keyof typeof dataset].value)
+    const absValues = Object.keys(dataset).map(key => dataset[key as keyof typeof dataset].originValue)
     const min = Math.min(...absValues)
     const max = Math.max(...absValues)
 
     for (const k of Object.keys(dataset)) {
-      dataset[k].value = ((dataset[k].value - min) / (max - min)) * (5 - 1) + 1
+      dataset[k].value = ((dataset[k].originValue - min) / (max - min)) * (5 - 1) + 1
     }
 
-
-    return root
+    setTreeData(root)
   }, [query.data, filter])
+
+  const subscribeHandler: StockSubscribeHandler<'quote'> = useCallback((data) => {
+    
+    setTreeData(s => {
+      const dataset: Record<string, { value: number, originValue: number }> = {}
+      const items = s.map((item) => {
+        return {
+          ...item,
+          children: item.children.map((child: any) => {
+            if (child.name === data.topic) {
+              const percent = (data.record.close - data.record.preClose) / data.record.preClose
+              const _child =  { name: child.name, value: data.record.turnover!, data: percent, color: getColorByStep(percent ?? 0) , plateId: child.plateId, originValue: data.record.turnover }
+              dataset[_child.name + _child.plateId] = _child
+              return _child
+            }
+            dataset[child.name + child.plateId] = child
+            return child
+          })
+        }
+      })
+
+      const absValues = Object.keys(dataset).map(key => dataset[key as keyof typeof dataset].originValue)
+      const min = Math.min(...absValues)
+      const max = Math.max(...absValues)
+  
+      for (const k of Object.keys(dataset)) {
+        dataset[k].value = ((dataset[k].originValue - min) / (max - min)) * (5 - 1) + 1
+      }
+
+      return items
+    })
+  }, [])
+
+  const subscribeStocks = useMemo(() => {
+    if(!query.data) return []
+    const stocks: string[] = []
+    for (const node of query.data) {
+      for (const t of node.tops) {
+        stocks.push(t.symbol)
+      }
+    }
+    return stocks
+  }, [query.data])
+
+   useStockQuoteSubscribe(subscribeStocks, subscribeHandler)
 
 
   const queryPlate = useQuery({

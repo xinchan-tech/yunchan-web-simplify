@@ -1,6 +1,6 @@
 import { type StockExtend, addStockCollectCate, type getStockCollectCates, getStockCollects, removeStockCollect, removeStockCollectCate, updateStockCollectCate } from "@/api"
 import { AiAlarm, Button, CapsuleTabs, Checkbox, JknAlert, JknIcon, JknTable, type JknTableProps, NumSpan, Popover, PopoverAnchor, PopoverContent, StockView, useFormModal, useModal } from "@/components"
-import { useSubscribe, useToast, useZForm } from "@/hooks"
+import {  useToast, useZForm } from "@/hooks"
 import { useCollectCates } from "@/store"
 import { useQuery } from "@tanstack/react-query"
 import { useMount } from "ahooks"
@@ -29,10 +29,6 @@ const GoldenPool = () => {
   })
 
   const data = useMemo(() => collects.data?.items.map(o => stockUtils.toStockRecord(o)[0]) ?? [], [collects.data])
-
-  useSubscribe(collects.data?.items.map(item => item.symbol) ?? [], (data) => {
-
-  })
 
   const onActiveStockChange = (v: string) => {
     setActiveStock(v)

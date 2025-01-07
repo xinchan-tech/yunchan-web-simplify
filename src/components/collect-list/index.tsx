@@ -1,13 +1,16 @@
 import { getStockCollects, type StockExtend } from "@/api"
 import { AddCollect, CollectCapsuleTabs, JknIcon, NumSpan, ScrollArea } from "@/components"
 import { useConfig, useTime } from "@/store"
+import { getTradingPeriod } from "@/utils/date"
 import echarts, { type ECOption } from "@/utils/echarts"
 import { stockUtils, type StockRecord } from "@/utils/stock"
 import { colorUtil } from "@/utils/style"
 import { useQuery } from "@tanstack/react-query"
 import { useMount, useUnmount, useUpdateEffect } from "ahooks"
 import Decimal from "decimal.js"
-import { useEffect, useRef, useState } from "react"
+import { type PropsWithChildren, useEffect, useRef, useState } from "react"
+import { withSort } from "../jkn/jkn-icon/with-sort"
+import { useTableData } from "@/hooks"
 
 const extend: StockExtend[] = ['basic_index', 'day_basic', 'alarm_ai', 'alarm_all', 'total_share', 'financials', 'thumbs', 'stock_before', 'stock_after']
 
@@ -21,15 +24,16 @@ type TableDataType = {
   subPercent?: number
 }
 
-
 interface CollectListProps {
   onCollectChange?: (collect: string) => void
 }
 
+const SortSpan = withSort((props: PropsWithChildren) => <span>{props.children}</span>)
+
 export const CollectList = (props: CollectListProps) => {
   const [collect, setCollect] = useState('1')
   const trading = useTime(s => s.getTrading())
-  const [stockList, setStockList] = useState<TableDataType[]>([])
+  const [stockList, {setList, updateList, onSort}] = useTableData<TableDataType>([], 'code')
 
   const stocks = useQuery({
     queryKey: [getStockCollects.cacheKey, collect],
@@ -43,11 +47,11 @@ export const CollectList = (props: CollectListProps) => {
 
   useEffect(() => {
     if (!stocks.data) {
-      setStockList([])
+      setList([])
       return
     }
 
-    const _stockList = stocks.data.items.map(stock => {
+    const _stockList: TableDataType[] = stocks.data.items.map(stock => {
       const [lastStock, beforeStock, afterStock] = stockUtils.toStockRecord(stock)
       const thumbs = lastStock?.thumbs ?? []
       const subStock: StockRecord | null = ['afterHours', 'close'].includes(trading) ? afterStock : beforeStock
@@ -63,25 +67,37 @@ export const CollectList = (props: CollectListProps) => {
       }
     })
 
-    setStockList(_stockList)
-  }, [stocks.data, trading])
+    setList(_stockList)
+  }, [stocks.data, trading, setList])
 
+  const [sort, setSort] = useState<{ field: string, sort: 'asc' | 'desc' | undefined }>({ field: '', sort: undefined })
+
+  const _onSort = (field: string, sort: 'asc' | 'desc' | undefined) => {
+    onSort(field as any, sort)
+    setSort({ field, sort })
+  }
 
   return (
-    <div className="flex flex-col border border-solid border-border h-full overflow-hidden">
+    <div className="flex flex-col border border-solid border-border overflow-hidden h-full">
       <div className="flex w-full flex-nowrap justify-start flex-shrink-0 border-0 border-b border-solid border-border">
         <CollectCapsuleTabs onChange={setCollect} type="text" />
         <AddCollect>
           <JknIcon name="add" />
         </AddCollect>
       </div>
-      <div className="flex-1 overflow-hidden">
+      <div className="flex-1 overflow-hidden flex flex-col">
         <div className="border-0 border-b border-solid border-border flex text-xs py-1 px-1 ">
-          <span className="flex-1">名称</span>
-          <span className="w-24 flex-shrink-0 text-right box-border pr-1">现价</span>
-          <span className="w-16 flex-shrink-0 text-right">涨跌幅%</span>
+          <span className="flex-1">
+            <SortSpan onSort={_onSort} field="code" sort={sort.field === 'code' ? sort.sort : undefined}>名称</SortSpan>
+          </span>
+          <span className="w-24 flex-shrink-0 text-right box-border pr-1">
+            <SortSpan onSort={_onSort} field="price" sort={sort.field === 'price' ? sort.sort : undefined}>现价</SortSpan>
+          </span>
+          <span className="w-16 flex-shrink-0 text-right">
+            <SortSpan onSort={_onSort} field="percent" sort={sort.field === 'percent' ? sort.sort : undefined}>涨跌幅%</SortSpan>
+          </span>
         </div>
-        <ScrollArea className="h-[calc(100%-1.5rem)]">
+        <div className="flex-1 overflow-y-auto">
           {
             stockList.map(stock => (
               <div
@@ -134,7 +150,7 @@ export const CollectList = (props: CollectListProps) => {
               </div>
             ))
           }
-        </ScrollArea>
+        </div>
       </div>
     </div>
   )
@@ -145,7 +161,7 @@ interface StockChartProps {
   type: 'up' | 'down'
 }
 
-// const xAxisData = getTradingPeriod('intraDay')
+const xAxisData = getTradingPeriod('intraDay')
 
 const StockChart = (props: StockChartProps) => {
   const charts = useRef<echarts.ECharts>()
@@ -187,8 +203,6 @@ const StockChart = (props: StockChartProps) => {
     },
     xAxis: {
       type: 'category',
-      // type: 'category',
-      // data: xAxisData,
       show: false
     },
     yAxis: {
@@ -205,9 +219,9 @@ const StockChart = (props: StockChartProps) => {
     charts.current = echarts.init(dom.current)
     charts.current.setOption(options)
     charts.current.setOption({
-      // xAxis: {
-      //   data: calcXAxisData(props.data)
-      // },
+      xAxis: {
+        data: props.data.length < 100 ? xAxisData.slice(0, 100) : xAxisData
+      },
       series: [{
         data: props.data
       }]
@@ -217,9 +231,9 @@ const StockChart = (props: StockChartProps) => {
 
   useUpdateEffect(() => {
     charts.current?.setOption({
-      // xAxis: {
-      //   data: calcXAxisData(props.data)
-      // },
+      xAxis: {
+        data: props.data.length < 100 ? xAxisData.slice(0, 100) : xAxisData
+      },
       series: [{
         data: props.data
       }]
@@ -232,8 +246,6 @@ const StockChart = (props: StockChartProps) => {
     charts.current?.dispose()
   })
   return (
-    <div className="h-full w-[120px]" ref={dom}>
-
-    </div>
+    <div className="h-full w-[120px]" ref={dom} />
   )
 }

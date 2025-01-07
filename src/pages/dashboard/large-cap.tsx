@@ -2,18 +2,18 @@ import { StockChartInterval, getLargeCapIndexes, getStockChart } from "@/api"
 import StockDownIcon from '@/assets/icon/stock_down.png'
 import StockUpIcon from '@/assets/icon/stock_up.png'
 import { CapsuleTabs } from "@/components"
-import { useSubscribe } from "@/hooks"
+import { useStockQuoteSubscribe } from "@/hooks"
 import { useConfig, useTime } from "@/store"
 import { getTradingPeriod } from "@/utils/date"
 import echarts, { type ECOption } from "@/utils/echarts"
-import { stockUtils, type StockTrading } from "@/utils/stock"
+import { type StockRecord, type StockSubscribeHandler, stockUtils, type StockTrading } from "@/utils/stock"
 import { cn, colorUtil } from "@/utils/style"
 import { useQuery } from "@tanstack/react-query"
 import { useMount, useSize, useUnmount, useUpdateEffect } from "ahooks"
 import clsx from "clsx"
 import dayjs from "dayjs"
 import Decimal from "decimal.js"
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 
 const tradingToIntervalMap: Record<StockTrading, StockChartInterval> = {
@@ -38,6 +38,7 @@ const intervalToTradingMap: Partial<Record<StockChartInterval, StockTrading>> = 
 const LargeCap = () => {
   const [activeKey, setActiveKey] = useState<string>()
   const [activeStock, setActiveStock] = useState<string>()
+  const [stocks, setStocks] = useState<StockRecord[]>([])
   const time = useTime()
 
   const [stockType, setStockType] = useState<StockChartInterval>(tradingToIntervalMap[time.getTrading() as StockTrading])
@@ -47,16 +48,40 @@ const LargeCap = () => {
   })
 
   useEffect(() => {
+    if (!activeKey || !largeCap.data) {
+      setStocks([])
+      return
+    }
+
+    setStocks(largeCap.data.find(item => item.category_name === activeKey)?.stocks.map(item => stockUtils.toSimpleStockRecord(item.stock, item.symbol, item.name)) ?? [])
+  }, [activeKey, largeCap.data])
+
+  useEffect(() => {
     if (largeCap.data) {
       setActiveKey(largeCap.data[1].category_name)
       setActiveStock(largeCap.data[1].stocks[0].symbol)
     }
   }, [largeCap.data])
 
-  // useSubscribe(largeCap.data?.find(o => o.category_name === activeKey)?.stocks.map(s => s.symbol) ?? [], (data) => {
-  //   console.log(data)
-  // })
+  const updateQuoteHandler = useCallback<StockSubscribeHandler<'quote'>>((data) => {
+    setStocks(s => {
+      const items = s.map((item) => {
+        if (item.symbol === data.topic) {
+          const stock = stockUtils.cloneFrom(item)
+          stock.close = data.record.close
+          stock.prevClose = data.record.preClose
+          stock.percent = (data.record.close - data.record.preClose) / data.record.preClose
+          return stock
+        }
+        return item
+      })
 
+      return items
+    })
+  }, [])
+
+  useStockQuoteSubscribe(largeCap.data?.find(item => item.category_name === activeKey)?.stocks.map(item => stockUtils.toSimpleStockRecord(item.stock, item.symbol, item.name)).map(v => v.symbol) ?? [], updateQuoteHandler)
+  
   const tabs = useMemo(() => {
     return largeCap.data?.map(item => ({
       key: item.category_name,
@@ -73,18 +98,12 @@ const LargeCap = () => {
     }
   }
 
-  const stocks = useMemo(() => {
-    if (!activeKey || !largeCap.data) return []
 
-    return largeCap.data.find(item => item.category_name === activeKey)?.stocks.map(item => stockUtils.toSimpleStockRecord(item.stock, item.symbol, item.name)) ?? []
-  }, [activeKey, largeCap.data])
 
   const onActiveKeyChange = (key: string) => {
     setActiveKey(key)
     const codes = largeCap.data?.find(item => item.category_name === key)?.stocks.map(item => [item.symbol, item.name]) ?? []
     setActiveStock(codes[0][0])
-
-    // setActiveStock(t.stocks[0].code)
   }
 
   return (
@@ -156,6 +175,7 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
   const stockUpColor = `hsl(${getStockColor()})`
   const stockDownColor = `hsl(${getStockColor(false)})`
 
+
   const interval = ((c, t) => {
     if (['SPX', 'IXIC', 'DJI'].includes(c!)) {
       return StockChartInterval.INTRA_DAY
@@ -176,11 +196,15 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
     })
   })
 
-
+  const [stockData, setStockData] = useState<typeof queryData.data>(queryData.data)
 
   useUpdateEffect(() => {
-    renderChart(queryData.data)
+    setStockData(queryData.data)
   }, [queryData.data])
+
+  useEffect(() => {
+    renderChart(queryData.data)
+  }, )
 
   const renderChart = (data: typeof queryData.data) => {
     if (!data) return
@@ -458,7 +482,7 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
   useMount(() => {
     chartRef.current = echarts.init(chartDomRef.current)
     chartRef.current.setOption(options)
-    renderChart(queryData.data)
+    renderChart(stockData)
   })
 
   useUnmount(() => {

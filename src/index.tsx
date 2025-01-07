@@ -19,7 +19,7 @@ const queryClient = new QueryClient({
   }
 })
 
-if (typeof window !== 'undefined') {
+if (typeof window !== 'undefined' && import.meta.env.MODE === 'development') {
   scan({
     enabled: true,
     // log: true, // logs render info to console (default: false)

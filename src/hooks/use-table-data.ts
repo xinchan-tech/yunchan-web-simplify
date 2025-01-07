@@ -1,7 +1,7 @@
 import { isFunction, isNumber } from 'radash'
 import { useCallback, useRef, useState } from 'react'
 
-type OrderKey<T = any> = string | ((arg: T) => string)
+type OrderKey<T = any> = (keyof T) | ((arg: T) => string)
 
 
 export const useTableData = <T extends Record<string, any>>(data: T[], orderKey: OrderKey<T>) => {

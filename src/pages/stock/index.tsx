@@ -14,18 +14,21 @@ const StockPage = () => {
   const [_, setQueryParams] = useQueryParams()
   const params = useParams<{ type: string }>()
 
-
   return (
-    <div className="grid  h-full grid-cols-[300px_1fr_300px] bg-muted">
-      <CollectList onCollectChange={s => setQueryParams({ symbol: s })} />
-      {
-        params.type && !['finance'].includes(params.type) ? (
-          <>
+    <div className="h-full flex flex-nowrap bg-muted overflow-hidden">
+      <div id="stock-trading-left-container" className="order w-[300px] data-[width=half]:w-[150px] data-[width=none]:hidden h-full">
+        <CollectList onCollectChange={s => setQueryParams({ symbol: s })} />
+      </div>
+      <div className="flex-1 order-1 h-full">
+        {
+          params.type && !['finance'].includes(params.type) ? (
             <KChart />
-            <StockInfo />
-          </>
-        ): <div className="col-span-2"><Finance /></div>
-      }
+          ): <Finance />
+        }
+      </div>
+      <div id="stock-trading-right-container" className="order-2 w-[300px] data-[width=half]:w-[150px] data-[width=none]:hidden h-full">
+        <StockInfo />
+      </div>
     </div>
   )
 }

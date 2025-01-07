@@ -45,6 +45,7 @@ export type SubscribeActionType = 'bar' | 'quote'
 // export type UnsubscribeAction = 'bar_remove_symbols' | 'quote_remove_symbols'
 
 
+type BufferItem = {action: string, data: ReturnType<typeof barActionResultParser> | ReturnType<typeof quoteActionResultParser>, dirty: boolean}
 
 class StockSubscribe {
   private subscribed = mitt<Record<string, any>>()
@@ -53,7 +54,9 @@ class StockSubscribe {
       count: number
     }
   }
-
+  private buffer: BufferItem[]
+  private bufferMap: Map<string, BufferItem>
+  private bufferHandleLength: number
   private url: string
   private ws: Ws
   private cid: string
@@ -61,22 +64,28 @@ class StockSubscribe {
     this.url = url
     this.subscribeTopic = {}
     this.cid = uid(16)
+    this.buffer = []
+    this.bufferMap = new Map()
+    this.bufferHandleLength = 20
     this.ws = new Ws(`${this.url}&cid=${this.cid}`, {
       beat: false,
       onMessage: ev => {
         const data = JSON.parse(ev.data)
         if (data.ev) {
-         if(data.b){
-          const parserData = barActionResultParser(data)
-          this.subscribed.emit(parserData.action, parserData)
-         }else{
-          const parserData = quoteActionResultParser(data)
-          this.subscribed.emit(parserData.action, parserData)
-         }
+          const parserData = data.b ? barActionResultParser(data): quoteActionResultParser(data)
+          if(this.bufferMap.has(parserData.topic)){
+            const _old = this.bufferMap.get(parserData.topic)!
+            _old.dirty = true
+
+            const _new = {action: parserData.topic, data: parserData, dirty: false}
+            this.bufferMap.set(parserData.topic, _new)
+            this.buffer.push(_new)
+          }
         }
       }
     })
     this.unSubscribeStockIdle()
+    this.startBufferHandle()
   }
 
   public subscribe(action: SubscribeActionType, params: string[]) {
@@ -119,7 +128,15 @@ class StockSubscribe {
     this.subscribed.off(code)
   }
 
-  public unSubscribeStockIdle() {
+  public on<T extends SubscribeActionType>(action: T, handler: StockSubscribeHandler<T>) {
+    this.subscribed.on(action, handler)
+  }
+
+  public off<T extends SubscribeActionType>(action: T, handler: StockSubscribeHandler<T>) {
+    this.subscribed.off(action, handler)
+  }
+
+  private unSubscribeStockIdle() {
     const cleanTopic: Record<string, string[]> = {}
 
     for (const [key, value] of Object.entries(this.subscribeTopic)) {
@@ -146,13 +163,25 @@ class StockSubscribe {
     })
   }
 
-  public on<T extends SubscribeActionType>(action: T, handler: StockSubscribeHandler<T>) {
-    this.subscribed.on(action, handler)
+  private startBufferHandle(){
+    let count = this.bufferHandleLength
+
+    while(count > 0 && this.buffer.length > 0){
+      const item = this.buffer.shift()!
+      if(item.dirty){
+        continue
+      }
+      this.subscribed.emit(item.data.action, item.data)
+      this.bufferMap.delete(item.data.action)
+      count--
+    }
+
+    requestAnimationFrame(() => {
+      this.startBufferHandle()
+    })
   }
 
-  public off<T extends SubscribeActionType>(action: T, handler: StockSubscribeHandler<T>) {
-    this.subscribed.off(action, handler)
-  }
+ 
 }
 
 export const stockSubscribe = new StockSubscribe(`${import.meta.env.PUBLIC_BASE_WS_STOCK_URL}?token=shipeijun`)

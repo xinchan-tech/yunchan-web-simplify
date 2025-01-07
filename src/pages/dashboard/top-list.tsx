@@ -2,12 +2,12 @@ import { IncreaseTopStatus, getIncreaseTop } from "@/api"
 import { CapsuleTabs, HoverCard, HoverCardContent, HoverCardTrigger, JknIcon, JknRcTable, type JknRcTableProps, NumSpan, StockView } from "@/components"
 import { useStockQuoteSubscribe, useTableData } from "@/hooks"
 import { useTime } from "@/store"
-import { dateToWeek, getTrading } from "@/utils/date"
+import { dateToWeek } from "@/utils/date"
 import { type StockRecord, type StockSubscribeHandler, type StockTrading, stockUtils } from "@/utils/stock"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import dayjs from "dayjs"
 import Decimal from "decimal.js"
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 
 const tradingToTopStatusMap: Record<StockTrading, IncreaseTopStatus> = {
@@ -55,7 +55,8 @@ const TopList = () => {
           stock.close = data.record.close
           stock.prevClose = data.record.preClose
           stock.percent = (data.record.close - data.record.preClose) / data.record.preClose
-
+          stock.marketValue = Decimal.create(data.record.close).mul(stock.totalShare ?? 0).toNumber()
+          stock.turnover = data.record.turnover
           return stock
         }
         return item
@@ -86,18 +87,16 @@ const TopList = () => {
       title: `${type === IncreaseTopStatus.PRE_MARKET ? '盘前' : type === IncreaseTopStatus.AFTER_HOURS ? '盘后' : ''}涨跌幅%`, dataIndex: 'percent', align: 'right', sort: true,
       width: 100,
       render: (_, row) => (
-        <div className="inline-block">
-          <NumSpan block className="w-20" decimal={2} value={Decimal.create(row.percent).mul(100)} percent isPositive={row.isUp} symbol />
-        </div>
+        <NumSpan block blink className="w-20" decimal={2} value={Decimal.create(row.percent).mul(100)} percent isPositive={row.isUp} symbol align="right" />
       )
     },
     {
       title: '成交额', dataIndex: 'turnover', align: 'right', sort: true,
-      render: (_, row) => <NumSpan unit decimal={2} value={row.turnover} isPositive={row.isUp} />
+      render: (_, row) => <NumSpan blink unit decimal={2} value={row.turnover} align="right" />
     },
     {
       title: '总市值', dataIndex: 'marketValue', align: 'right', sort: true,
-      render: (_, row) => Decimal.create(row.marketValue).toDecimalPlaces(2).toShortCN()
+      render: (_, row) => <NumSpan blink unit decimal={2} value={row.marketValue} align="right"  />
     },
   ]
 

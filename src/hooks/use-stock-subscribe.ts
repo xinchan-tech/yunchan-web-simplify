@@ -55,7 +55,6 @@ export const useStockQuoteSubscribe = (symbols: string[], handler: StockSubscrib
 
   useEffect(() => {
     stockSubscribe.on('quote', handler)
-    console.log(11)
     return () => {
       stockSubscribe.off('quote', handler)
     }

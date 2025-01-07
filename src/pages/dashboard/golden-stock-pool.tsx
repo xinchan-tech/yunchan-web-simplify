@@ -3,17 +3,17 @@ import { useCollectCates, useToken } from "@/store"
 import { appEvent } from "@/utils/event"
 import { useCallback, useEffect, useState } from "react"
 import { getStockCollects } from "@/api"
-import { type StockRecord, stockUtils } from "@/utils/stock"
+import { type StockRecord, type StockSubscribeHandler, stockUtils } from "@/utils/stock"
 import { useQuery } from "@tanstack/react-query"
 import Decimal from "decimal.js"
 import type { TableProps } from 'rc-table'
-import { useTableData } from "@/hooks"
+import { useStockQuoteSubscribe, useTableData } from "@/hooks"
 
 const GoldenStockPool = () => {
   const { collects } = useCollectCates()
   const [type, setType] = useState(collects[0].id)
   const { token } = useToken()
-  const [list, {setList, onSort}] = useTableData<StockRecord>([], 'symbol')
+  const [list, {setList, onSort, updateList}] = useTableData<StockRecord>([], 'symbol')
 
 
   const query = useQuery({
@@ -32,6 +32,27 @@ const GoldenStockPool = () => {
     setList(list)
   }, [query.data, setList])
 
+  const subscribeHandler: StockSubscribeHandler<'quote'> = useCallback((data) => {
+    updateList(s => {
+      const items = s.map((item) => {
+        if (item.symbol === data.topic) {
+          const stock = stockUtils.cloneFrom(item)
+          stock.close = data.record.close
+          stock.prevClose = data.record.preClose
+          stock.percent = (data.record.close - data.record.preClose) / data.record.preClose
+          stock.marketValue = Decimal.create(data.record.close).mul(stock.totalShare ?? 0).toNumber()
+          stock.turnover = data.record.turnover
+          return stock
+        }
+        return item
+      })
+
+      return items
+    })
+  }, [updateList])
+
+   useStockQuoteSubscribe(query.data?.items?.map(d => d.symbol) ?? [], subscribeHandler)
+
 
   const onLogin = () => {
     appEvent.emit('login')
@@ -43,6 +64,7 @@ const GoldenStockPool = () => {
       title: '名称代码',
       key: 'name',
       align: 'left',
+      sort: true,
       render: (_, row) => (
         <StockView code={row.symbol} name={row.name} />
       )
@@ -62,11 +84,11 @@ const GoldenStockPool = () => {
     },
     {
       title: '成交额', sort: true, dataIndex: 'turnover', key: 'turnover', align: 'right',
-      render: (_, row) => <NumSpan value={row.turnover} decimal={2} unit isPositive={row.isUp} />
+      render: (_, row) => <NumSpan blink value={row.turnover} decimal={2} unit align="right"/>
     },
     {
       title: '总市值', sort: true, dataIndex: 'marketValue', key: 'marketValue', align: 'right',
-      render: (_, row) => <span>{Decimal.create(row.marketValue).toShortCN()}</span>
+      render: (_, row) => <NumSpan blink value={row.marketValue} decimal={2} unit  align="right"/>
     },
   ]
 

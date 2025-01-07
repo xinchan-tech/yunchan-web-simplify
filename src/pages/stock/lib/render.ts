@@ -951,7 +951,7 @@ const renderSecondaryAxis = (options: ECOption, state: KChartState['state'][0], 
         show: index === state.secondaryIndicators.length - 1,
         color: '#fff',
         formatter: (v: any, index) => {
-          console.log(index)
+    
           return v
             ? index % 2 === 0
               ? isTimeIndexChart(state.timeIndex) && state.timeIndex !== StockChartInterval.FIVE_DAY

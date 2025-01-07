@@ -2,7 +2,9 @@ import { getLargeCapIndexes } from "@/api"
 import { cn } from "@/utils/style"
 import { useQuery } from "@tanstack/react-query"
 import NumSpan from "../num-span"
-import { stockUtils } from "@/utils/stock"
+import { type StockSubscribeHandler, stockUtils } from "@/utils/stock"
+import { useCallback, useEffect, useState } from "react"
+import { useStockQuoteSubscribe } from "@/hooks"
 
 // const codes = ['IXIC', 'SPX', 'DJI']
 export const StockBar = () => {
@@ -21,10 +23,36 @@ export const StockBar = () => {
     })
   })
 
+  const [stockData, setStockData] = useState<typeof query.data>(query.data)
+
+  useEffect(() => {
+    setStockData(query.data)
+  }, [query.data])
+
+  const updateQuoteHandler = useCallback<StockSubscribeHandler<'quote'>>((data) => {
+    setStockData(s => {
+      if(!s) return []
+      const items = s.map((item) => {
+        if (item.code === data.topic) {
+          const _item = {...item}
+          _item.price = data.record.close
+          _item.percent = (data.record.close - data.record.preClose) / data.record.preClose
+          _item.offset = data.record.close - data.record.preClose
+          return _item
+        }
+        return item
+      })
+
+      return items
+    })
+  }, [])
+
+  useStockQuoteSubscribe(query.data?.map(o => o.code) ?? [], updateQuoteHandler)
+
   return (
     <div>
       {
-        query.data?.map(item => (
+        stockData?.map(item => (
           <span key={item.code}>
             <span>{item.name}:</span>&nbsp;
             <span className={cn(item.percent >= 0 ? 'text-stock-up' : 'text-stock-down')}>

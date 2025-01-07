@@ -16,6 +16,7 @@ type TreeMapData = {
   color?: string
   size?: number
   img?: string
+  plateId?: number | string
   [key: string]: unknown
 }
 

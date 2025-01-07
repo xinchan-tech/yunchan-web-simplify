@@ -16,31 +16,37 @@ const TopList = () => {
     queryFn: () => getCollectHot({ extend: ['total_share'] }),
     refetchInterval: 30 * 1000
   })
-  const [list, {setList}] = useTableData<StockRecord>([], 'symbol')
+  const [list, {setList, updateList,onSort}] = useTableData<StockRecord>([], 'symbol')
 
   useEffect(() => {
     setList(query.data?.find(v => v.type === HotType)?.stocks.map(v => stockUtils.toStockRecord(v)[0]) ?? [])
   }, [query.data, setList])
 
   const updateQuoteHandler = useCallback<StockSubscribeHandler<'quote'>>((data) => {
-    // setList(draft => draft.map(item => {
-    //   if (item.symbol === data.topic) {
-    //     item.blink = data.record.close > item.close! ? 'up' : 'down'
-    //     item.close = data.record.close
-    //     item.percent = (data.record.close - data.record.preClose) / data.record.preClose
-    //     item.volume = data.record.volume
-    //     item.turnover = data.record.turnover
-    //     item.marketValue = item.totalShare ? item.close * item.totalShare : 0
-    //   }
-    //   return item
-    // }))
-  }, [])
+    updateList(s => {
+      const items = s.map((item) => {
+        if (item.symbol === data.topic) {
+          const stock = stockUtils.cloneFrom(item)
+          stock.close = data.record.close
+          stock.prevClose = data.record.preClose
+          stock.percent = (data.record.close - data.record.preClose) / data.record.preClose
+          stock.marketValue = Decimal.create(data.record.close).mul(stock.totalShare ?? 0).toNumber()
+          stock.turnover = data.record.turnover
+          return stock
+        }
+        return item
+      })
+
+      return items
+    })
+  }, [updateList])
 
   useStockQuoteSubscribe(query.data?.find(v => v.type === HotType)?.stocks.map(v => v.symbol) ?? [], updateQuoteHandler)
 
   const columns: JknRcTableProps<StockRecord>['columns'] = [
     {
       title: '名称代码', dataIndex: 'name',align: 'left',
+      sort: true,
       render: (_, row) => <StockView code={row.code} name={row.name} />
     },
     {
@@ -51,20 +57,18 @@ const TopList = () => {
       title: '涨跌幅', dataIndex: 'percent',
       align: 'right', width: '20%', sort: true,
       render: (_, row) => (
-        <div className="inline-block">
-          <NumSpan block className="py-1 w-20" decimal={2} value={Decimal.create(row.percent).mul(100)} percent isPositive={row.isUp} symbol />
-        </div>
+        <NumSpan block blink className="py-1 w-20" decimal={2} align="right" value={Decimal.create(row.percent).mul(100)} percent isPositive={row.isUp} symbol />
       )
     },
     {
       title: '成交额', dataIndex: 'turnover',
       align: 'right', width: '20%', sort: true,
-      render: (_, row) => <NumSpan unit decimal={2} value={row.turnover} isPositive={row.isUp} />
+      render: (_, row) => <NumSpan blink align="right" unit decimal={2} value={row.turnover} />
     },
     {
       title: '总市值', dataIndex: 'marketValue',
       align: 'right', width: '19%', sort: true,
-      render: (_, row) => Decimal.create(row.marketValue).toDecimalPlaces(2).toShortCN()
+      render: (_, row) => <NumSpan blink align="right" unit decimal={2} value={row.marketValue} />
     },
   ]
   return (
@@ -75,7 +79,7 @@ const TopList = () => {
         </CapsuleTabs>
       </div>
       <div className="h-[calc(100%-38px)] overflow-hidden">
-        <JknRcTable isLoading={query.isLoading} rowKey="code" columns={columns} data={list} />
+        <JknRcTable isLoading={query.isLoading} onSort={onSort} rowKey="code" columns={columns} data={list} />
       </div>
     </div>
   )

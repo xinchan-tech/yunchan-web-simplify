@@ -3,7 +3,7 @@ import type { TableProps } from "rc-table"
 import Table from "rc-table"
 import type { DefaultRecordType } from "rc-table/lib/interface"
 import { withSort } from "../jkn-icon/with-sort"
-import { useCallback, useMemo, type ReactNode } from "react"
+import { memo, useCallback, useMemo, type ReactNode } from "react"
 import { useImmer } from "use-immer"
 import { Skeleton } from "@/components/ui/skeleton"
 
@@ -49,12 +49,7 @@ export const JknRcTable = <T extends DefaultRecordType = any>({ headerHeight = 3
         emptyText={
           isLoading ? (
             <div className="space-y-2 my-2">
-              {
-                Array.from({ length: 8 }).map((_, i) => (
-                  // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
-                  <Skeleton key={i} className="h-5" />
-                ))
-              }
+              <Loading />
             </div>
           ) : (emptyText && <div className="text-center my-4">暂无数据</div>)
         }
@@ -63,5 +58,12 @@ export const JknRcTable = <T extends DefaultRecordType = any>({ headerHeight = 3
     </div>
   )
 }
+
+const Loading = memo(() => (
+  Array.from({ length: 8 }).map((_, i) => (
+    // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
+    <Skeleton key={i} className="h-5" />
+  ))
+))
 
 export const SortTitle = withSort(({ children }: { children: ReactNode }) => <span>{children}</span>)
