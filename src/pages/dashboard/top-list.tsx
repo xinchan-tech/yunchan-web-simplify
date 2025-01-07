@@ -2,8 +2,8 @@ import { IncreaseTopStatus, getIncreaseTop } from "@/api"
 import { CapsuleTabs, HoverCard, HoverCardContent, HoverCardTrigger, JknIcon, JknRcTable, type JknRcTableProps, NumSpan, StockView } from "@/components"
 import { useStockQuoteSubscribe, useTableData } from "@/hooks"
 import { useTime } from "@/store"
-import { dateToWeek } from "@/utils/date"
-import { type StockRecord, type StockSubscribeHandler, type StockTrading, stockManager } from "@/utils/stock"
+import { dateToWeek, getTrading } from "@/utils/date"
+import { type StockRecord, type StockSubscribeHandler, type StockTrading, stockUtils } from "@/utils/stock"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import dayjs from "dayjs"
 import Decimal from "decimal.js"
@@ -18,12 +18,11 @@ const tradingToTopStatusMap: Record<StockTrading, IncreaseTopStatus> = {
 }
 
 const TopList = () => {
-  const time = useTime()
-  const [type, setType] = useState<IncreaseTopStatus>(tradingToTopStatusMap[time.getTrading() as keyof typeof tradingToTopStatusMap])
+  const trading = useTime(s => s.getTrading())
+  const [type, setType] = useState<IncreaseTopStatus>(tradingToTopStatusMap[trading as keyof typeof tradingToTopStatusMap])
   const { t } = useTranslation()
-  const trading = useTime().getTrading()
   const { isToday } = useTime()
-  const [list, {setList, onSort, updateList}] = useTableData<StockRecord>([], 'symbol')
+  const [list, { setList, onSort, updateList }] = useTableData<StockRecord>([], 'symbol')
 
   const query = useQuery({
     queryKey: [getIncreaseTop.cacheKey, type],
@@ -34,18 +33,29 @@ const TopList = () => {
   const queryClient = useQueryClient()
 
   useEffect(() => {
-    setList(query.data?.map(item => stockManager.toStockRecord(item)[0]!) ?? [])
-  }, [query.data, setList])
+    if (!query.data) {
+      setList([])
+      return
+    }
+    const data = query.data?.map(item => stockUtils.toStockRecord(item))
+    if (type === IncreaseTopStatus.PRE_MARKET) {
+      setList(data?.map(v => v[trading === 'preMarket' ? 1 : 0]))
+    } else if (type === IncreaseTopStatus.AFTER_HOURS) {
+      setList(data?.map(v => v[trading === 'intraDay' ? 0 : 2]))
+    } else {
+      setList(data?.map(v => v[0]))
+    }
+  }, [query.data, setList, type, trading])
 
   const subscribeHandler: StockSubscribeHandler<'quote'> = useCallback((data) => {
     updateList(s => {
       const items = s.map((item) => {
         if (item.symbol === data.topic) {
-          const stock = stockManager.cloneFrom(item)
+          const stock = stockUtils.cloneFrom(item)
           stock.close = data.record.close
           stock.prevClose = data.record.preClose
           stock.percent = (data.record.close - data.record.preClose) / data.record.preClose
-          
+
           return stock
         }
         return item
@@ -64,16 +74,17 @@ const TopList = () => {
 
   const columns: JknRcTableProps<StockRecord>['columns'] = [
     {
-      title: '名称代码', dataIndex: 'name', align: 'left', width: '26%',
+      title: '名称代码', dataIndex: 'name', align: 'left', width: '22%',
       render: (_, row) => <StockView code={row.code} name={row.name} />
 
     },
     {
-      title: '盘前价', dataIndex: 'close', align: 'right', sort: true,
-      render: (_, row) => <NumSpan blink value={row.close} isPositive={row.isUp} />
+      title: `${type === IncreaseTopStatus.PRE_MARKET ? '盘前' : type === IncreaseTopStatus.AFTER_HOURS ? '盘后' : '现'}价`, dataIndex: 'close', align: 'right', sort: true,
+      render: (_, row) => <NumSpan blink value={row.close} isPositive={row.isUp} align="right" />
     },
     {
-      title: '涨跌幅', dataIndex: 'percent', align: 'right', sort: true,
+      title: `${type === IncreaseTopStatus.PRE_MARKET ? '盘前' : type === IncreaseTopStatus.AFTER_HOURS ? '盘后' : ''}涨跌幅%`, dataIndex: 'percent', align: 'right', sort: true,
+      width: 100,
       render: (_, row) => (
         <div className="inline-block">
           <NumSpan block className="w-20" decimal={2} value={Decimal.create(row.percent).mul(100)} percent isPositive={row.isUp} symbol />

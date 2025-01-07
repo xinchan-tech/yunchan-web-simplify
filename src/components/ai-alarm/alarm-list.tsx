@@ -1,7 +1,7 @@
 import { AlarmType, getAlarmsGroup, getAlarms, deleteAlarm } from "@/api"
 import { type JknTableProps, StockView, NumSpan, JknIcon, JknTable, Popover, PopoverAnchor, PopoverClose, PopoverContent, PopoverTrigger,  Button } from "@/components"
 import { useToast } from "@/hooks"
-import { stockManager } from "@/utils/stock"
+import { stockUtils } from "@/utils/stock"
 import { cn } from "@/utils/style"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import dayjs from "dayjs"
@@ -48,7 +48,7 @@ const GroupAlarm = (props: AlarmItemProps) => {
     }
   }, [query.data, props.onChange])
 
-  const data = useMemo(() => query.data?.items.map(item => stockManager.toStockRecord(item)[0]) ?? [], [query.data])
+  const data = useMemo(() => query.data?.items.map(item => stockUtils.toStockRecord(item)[0]) ?? [], [query.data])
 
   const columns = useMemo(() => {
     const c: JknTableProps<ArrayItem<typeof data>>['columns'] = [

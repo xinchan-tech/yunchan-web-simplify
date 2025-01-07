@@ -14,9 +14,13 @@ import { wsManager } from "./utils/ws"
 import { uid } from "radash"
 
 const App = () => {
-  const config = useConfig()
+  const setConsults = useConfig(s => s.setConsults)
+  const setHasSelected = useConfig(s => s.setHasSelected)
+  const setLanguage = useConfig(s => s.setLanguage)
+  const language = useConfig(s => s.language)
+  const hasSelected = useConfig(s => s.hasSelected)
   const { t, i18n } = useTranslation()
-  const user = useUser()
+  const setUser = useUser(s => s.setUser)
   const notLogin = useRef(0)
 
   const query = useQuery({
@@ -33,23 +37,23 @@ const App = () => {
 
   useUpdateEffect(() => {
     if (!query.isLoading) {
-      user.setUser({
+      setUser({
         ...query.data
       })
     }
   }, [query.isLoading])
 
   useUpdateEffect(() => {
-    config.setConsults(configQuery.data?.consults ?? [])
+    setConsults(configQuery.data?.consults ?? [])
   }, [configQuery.data])
 
   useMount(() => {
-    if (!config.hasSelected) {
-      config.setHasSelected()
-      config.setLanguage(navigator.language === 'zh-CN' ? 'zh_CN' : 'en')
+    if (!hasSelected) {
+      setHasSelected()
+      setLanguage(navigator.language === 'zh-CN' ? 'zh_CN' : 'en')
     }
 
-    i18n.changeLanguage(config.language)
+    i18n.changeLanguage(language)
   })
 
   useEffect(() => {
@@ -78,7 +82,7 @@ const App = () => {
       <Toaster />
       <div className="header relative z-10 px-4">
         <div className="search float-left flex items-center h-full">
-          <StockSelect size="mini" placeholder={t('search.stocks')} />
+          <StockSelect size="mini" placeholder={t('search.stocks')} onChange={v => router.navigate(`/stock/trading?symbol=${v}`)} />
         </div>
 
         <div className="absolute top-0 left-0 h-full w-full text-center flex justify-center items-center -z-10">
@@ -169,15 +173,15 @@ const App = () => {
 const AppTitle = () => {
   const { t } = useTranslation()
   const [pathname, setPathname] = useState(router.state.location.pathname)
-  
+
   const { token } = useToken()
 
   useEffect(() => {
-    if(token){
+    if (token) {
       wsManager.send({
         event: "login",
         data: {
-            "token": token
+          "token": token
         },
         msg_id: uid(20)
       })
@@ -185,7 +189,7 @@ const AppTitle = () => {
         wsManager.send({
           event: "login",
           data: {
-              "token": token
+            "token": token
           },
           msg_id: uid(20)
         })

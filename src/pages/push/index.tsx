@@ -2,7 +2,7 @@ import { getStockPush, StockPushType } from "@/api"
 import { AiAlarm, CapsuleTabs, CollectStar, JknCheckbox, JknIcon, JknRcTable, type JknRcTableProps, NumSpan, StockView } from "@/components"
 import { useCheckboxGroup, useTableData } from "@/hooks"
 import { dateToWeek } from "@/utils/date"
-import { stockManager, type StockRecord } from "@/utils/stock"
+import { stockUtils, type StockRecord } from "@/utils/stock"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import dayjs from "dayjs"
 import Decimal from "decimal.js"
@@ -53,7 +53,7 @@ const PushPage = () => {
   useEffect(() => {
     if (query.data) {
       setList(query.data.map(item => {
-        const [stock] = stockManager.toStockRecord(item)
+        const [stock] = stockUtils.toStockRecord(item)
         stock.update_time = item.update_time
         stock.star = item.star
         stock.id = item.id
@@ -79,7 +79,7 @@ const PushPage = () => {
         continue
       }
 
-      r.unshift(d.format('MM-DD W'))
+      r.unshift(d.format('YYYY-MM-DD'))
     }
 
     return r
@@ -155,6 +155,7 @@ const PushPage = () => {
         title: '更新时间',
         dataIndex: 'update_time',
         align: 'center',
+        sort: true,
         render: v => v ? `${dayjs(+v * 1000).tz('America/New_York').format('MM-DD W HH:mm')}` : '-'
       },
       {
@@ -211,7 +212,7 @@ const PushPage = () => {
       <div className="border-0 border-b border-solid border-border py-1 px-2">
         <CapsuleTabs activeKey={date} onChange={v => setDate(v)} type="text">
           {dates.map(d => (
-            <CapsuleTabs.Tab key={d} value={d} label={d} />
+            <CapsuleTabs.Tab key={d} value={d} label={dayjs(d).format('MM-DD W')} />
           ))}
         </CapsuleTabs>
       </div>

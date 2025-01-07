@@ -1,7 +1,7 @@
 import { getStockBaseCodeInfo } from "@/api"
 import { JknIcon, StockSelect } from "@/components"
 import { useStockList } from "@/store"
-import { stockManager } from "@/utils/stock"
+import { stockUtils } from "@/utils/stock"
 import { cn } from "@/utils/style"
 import { useQuery } from "@tanstack/react-query"
 import Decimal from "decimal.js"
@@ -33,7 +33,7 @@ const StockSelectInput = forwardRef((props: StockSelectInputProps, _) => {
     }
 
     if (query.data) {
-      const stock = stockManager.toStockRecord(query.data)[0]
+      const stock = stockUtils.toStockRecord(query.data)[0]
       r.price = stock.close ?? 0
       r.percent = stock.percent ?? 0
     }

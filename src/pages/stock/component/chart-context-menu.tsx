@@ -24,10 +24,10 @@ export const ChartContextMenu = (props: PropsWithChildren<ChartContextMenuProps>
           props.children
         }
       </ContextMenuTrigger>
-      <ContextMenuContent className="w-32 border border-solid border-dialog-border">
+      <ContextMenuContent className="w-24 min-w-4 border border-solid border-dialog-border">
         <ContextMenuSub>
           <ContextMenuSubTrigger>主图坐标</ContextMenuSubTrigger>
-          <ContextMenuSubContent className="w-24 border border-solid border-dialog-border" sideOffset={10}>
+          <ContextMenuSubContent className="w-24 min-w-4 border border-solid border-dialog-border" sideOffset={10}>
             <ContextMenuItem onClick={_setYAxis({ right: 'price' })}>价格坐标</ContextMenuItem>
             <ContextMenuItem onClick={_setYAxis({ right: 'percent' })}>涨幅坐标</ContextMenuItem>
             <ContextMenuItem onClick={_setYAxis({ left: 'price', right: 'percent' })}>双边坐标</ContextMenuItem>
@@ -36,7 +36,7 @@ export const ChartContextMenu = (props: PropsWithChildren<ChartContextMenuProps>
         <ContextMenuSeparator />
         <ContextMenuSub>
           <ContextMenuSubTrigger >附图数量</ContextMenuSubTrigger>
-          <ContextMenuSubContent className="w-24 border border-solid border-dialog-border" sideOffset={10}>
+          <ContextMenuSubContent className="w-24 min-w-4 border border-solid border-dialog-border" sideOffset={10}>
             <ContextMenuItem onClick={onChangeSecondaryIndicators(0)}>0个窗口</ContextMenuItem>
             <ContextMenuItem onClick={onChangeSecondaryIndicators(1)}>1个窗口</ContextMenuItem>
             <ContextMenuItem onClick={onChangeSecondaryIndicators(2)}>2个窗口</ContextMenuItem>

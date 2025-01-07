@@ -1,6 +1,6 @@
 import { getStockBaseCodeInfo, getStockBrief, getStockNotice, getStockQuote, getStockRelated, getStockTrades } from "@/api"
 import { AiAlarm, Button, CapsuleTabs, Carousel, CarouselContent, CollectStar, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, HoverCard, HoverCardContent, HoverCardTrigger, JknIcon, JknTable, type JknTableProps, NumSpan, PriceAlarm, ScrollArea, Separator } from "@/components"
-import { StockRecord, stockManager } from "@/utils/stock"
+import { StockRecord, stockUtils } from "@/utils/stock"
 import { cn } from "@/utils/style"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import dayjs from "dayjs"
@@ -67,7 +67,7 @@ const StockBaseInfo = () => {
 
   const codeInfo = useQuery(queryOptions)
 
-  const [lastData, _, afterData] = codeInfo.data ? stockManager.toStockRecord(codeInfo.data) : []
+  const [lastData, _, afterData] = codeInfo.data ? stockUtils.toStockRecord(codeInfo.data) : []
 
   const onStarUpdate = (check: boolean) => {
     queryClient.cancelQueries(queryOptions)
@@ -89,7 +89,7 @@ const StockBaseInfo = () => {
         <span className="text-lg">{code}</span>
         <span className="flex-1 text-sm text-tertiary mx-2">{lastData?.name}</span>
         {
-          lastData?.code ? <CollectStar onUpdate={onStarUpdate} checked={lastData?.collect === 1} code={lastData.code} /> : null
+          lastData?.code ? <CollectStar onUpdate={onStarUpdate} checked={lastData?.collect === 1} sideOffset={5} align="start" code={lastData.code} /> : null
         }
       </div>
       <div className="mt-1 py-2 border-0 border-b border-solid border-border">
@@ -151,7 +151,7 @@ const StockQuote = () => {
     queryFn: () => getStockBaseCodeInfo({ symbol: code, extend: stockBaseCodeInfoExtend })
   })
 
-  const [stock, _, __] = codeInfo.data ? stockManager.toStockRecord(codeInfo.data) : []
+  const [stock, _, __] = codeInfo.data ? stockUtils.toStockRecord(codeInfo.data) : []
 
 
 
@@ -367,12 +367,12 @@ const StockRelated = () => {
             }
           </DropdownMenuContent>
         </DropdownMenu>
-        <div onClick={() => setMenuType('trades')} onKeyDown={() => { }}>
+        {/* <div onClick={() => setMenuType('trades')} onKeyDown={() => { }}>
           <span className={cn(
             'text-xs cursor-pointer',
             menuType === 'trades' && 'text-primary'
           )}>逐笔交易</span>
-        </div>
+        </div> */}
       </div>
       <div className="flex-1 overflow-hidden">
         {

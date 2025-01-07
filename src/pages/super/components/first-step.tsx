@@ -1,7 +1,7 @@
 import { type StockExtend, getPlateList, getPlateStocks, getStockCollects } from "@/api"
 import { Checkbox, JknIcon, JknTable, type JknTableProps, NumSpan, ScrollArea, StockView, ToggleGroup, ToggleGroupItem } from "@/components"
 import { useCollectCates } from "@/store"
-import { stockManager } from "@/utils/stock"
+import { stockUtils } from "@/utils/stock"
 import { cn } from "@/utils/style"
 import { useQuery } from '@tanstack/react-query'
 import type { Row } from "@tanstack/react-table"
@@ -135,7 +135,7 @@ const GoldenPoolList = (props: GoldenPoolListProps) => {
     enabled: !!props.cateId
   })
 
-  const data = useMemo(() => query.data?.items.map(o => stockManager.toStockRecord(o)[0]) ?? [], [query.data])
+  const data = useMemo(() => query.data?.items.map(o => stockUtils.toStockRecord(o)[0]) ?? [], [query.data])
 
   const columns: JknTableProps<ArrayItem<typeof data>>['columns'] = [
     {
@@ -352,7 +352,7 @@ const PlateStocks = (props: PlateStocksProps) => {
 
 
 
-  const data = useMemo(() => plateStocks.data?.map(o => stockManager.toStockRecord(o)[0]) ?? [], [plateStocks.data])
+  const data = useMemo(() => plateStocks.data?.map(o => stockUtils.toStockRecord(o)[0]) ?? [], [plateStocks.data])
 
   const columns = useMemo<JknTableProps<ArrayItem<typeof data>>['columns']>(() => [
     { header: '序号', enableSorting: false, accessorKey: 'index', meta: { align: 'center', width: 60, }, cell: ({ row }) => row.index + 1 },

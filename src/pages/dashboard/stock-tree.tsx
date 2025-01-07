@@ -6,7 +6,7 @@ import TreeMap from "./components/tree-map"
 import Decimal from "decimal.js"
 import { CapsuleTabs, Skeleton } from "@/components"
 import { useQuery } from "@tanstack/react-query"
-import { stockManager, StockRecord } from "@/utils/stock"
+import { stockUtils, StockRecord } from "@/utils/stock"
 
 type StockTreeType = 'industry' | 'concept' | 'bull' | 'etf' | 'industry-heatmap' | 'etf-heatmap'
 type StockTreeDate = 'day' | 'week' | 'month'
@@ -62,7 +62,7 @@ const StockTree = () => {
 
       for (const t of node.tops) {
         if (StockRecord.isValid(t.stock)) {
-          const stockRecord = stockManager.toSimpleStockRecord(t.stock)
+          const stockRecord = stockUtils.toSimpleStockRecord(t.stock)
           const _color = getColorByStep(stockRecord.percent ?? 0)
           if (!colors.includes(_color)) continue
           const child = { name: t.symbol, value: stockRecord.turnover!, data: stockRecord.percent, color: getColorByStep(stockRecord.percent ?? 0) }
@@ -147,7 +147,7 @@ const StockTree = () => {
 
     for (const stock of queryStock.data.items) {
       if (StockRecord.isValid(stock.stock)) {
-        const stockRecord = stockManager.toSimpleStockRecord(stock.stock)
+        const stockRecord = stockUtils.toSimpleStockRecord(stock.stock)
         const _color = getColorByStep(stockRecord.percent ?? 0)
         if (!colors.includes(_color)) continue
         const child = { name: stock.symbol, value: stockRecord.turnover ?? 0, data: stockRecord.percent, color: getColorByStep(stockRecord.percent ?? 0) }

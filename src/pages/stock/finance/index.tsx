@@ -6,7 +6,7 @@ import { stockBaseCodeInfoExtend } from "../lib"
 import { useQueryParams } from "@/hooks"
 import { useQuery } from "@tanstack/react-query"
 import { getStockBaseCodeInfo } from "@/api"
-import { stockManager } from "@/utils/stock"
+import { stockUtils } from "@/utils/stock"
 import { FinanceStatistics } from "./finance-statistics"
 import { FinanceStatisticsCate } from "./finance-statistics-cate"
 import { FinanceComparison } from "./finance-comparison"
@@ -19,7 +19,7 @@ export const Finance = () => {
     queryKey: [getStockBaseCodeInfo.cacheKey, symbol, stockBaseCodeInfoExtend],
     queryFn: () => getStockBaseCodeInfo({ symbol, extend: stockBaseCodeInfoExtend }),
     enabled: !!symbol,
-    select: data => stockManager.toSimpleStockRecord(data.stock)
+    select: data => stockUtils.toSimpleStockRecord(data.stock)
   })
 
   const [activeTab, setActiveTab] = useState('core')

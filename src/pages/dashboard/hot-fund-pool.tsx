@@ -1,7 +1,7 @@
 import { getCollectHot } from "@/api"
 import { CapsuleTabs, JknRcTable, type JknRcTableProps, NumSpan, StockView } from "@/components"
 import { useStockQuoteSubscribe, useTableData } from "@/hooks"
-import { type StockRecord, type StockSubscribeHandler, stockManager } from "@/utils/stock"
+import { type StockRecord, type StockSubscribeHandler, stockUtils } from "@/utils/stock"
 import { useQuery } from "@tanstack/react-query"
 import Decimal from "decimal.js"
 import { useCallback, useEffect, useMemo, useState } from "react"
@@ -19,7 +19,7 @@ const TopList = () => {
   const [list, {setList}] = useTableData<StockRecord>([], 'symbol')
 
   useEffect(() => {
-    setList(query.data?.find(v => v.type === HotType)?.stocks.map(v => stockManager.toStockRecord(v)[0]) ?? [])
+    setList(query.data?.find(v => v.type === HotType)?.stocks.map(v => stockUtils.toStockRecord(v)[0]) ?? [])
   }, [query.data, setList])
 
   const updateQuoteHandler = useCallback<StockSubscribeHandler<'quote'>>((data) => {

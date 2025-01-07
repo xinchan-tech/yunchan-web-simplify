@@ -59,7 +59,7 @@ export const useStockList = create<StockListStore>()(
                 dataUint8[i] = data.charCodeAt(i)
               }
               const res = JSON.parse(pako.inflate(dataUint8, { to: 'string' })) as [string, string, string, string][]
-              res.sort((a, b) => (a[1] as unknown as number) - (b[1] as unknown as number))
+              res.sort((a, b) => a[1].localeCompare(b[1]))
               s.setList(res, r.key)
             })
           }

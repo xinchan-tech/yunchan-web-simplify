@@ -14,7 +14,7 @@ import { z } from "zod"
 import { ToggleGroup, ToggleGroupItem } from "../ui/toggle-group"
 import { Checkbox } from "../ui/checkbox"
 import { Button } from "../ui/button"
-import { stockManager } from "@/utils/stock"
+import { stockUtils } from "@/utils/stock"
 
 const formSchema = z.object({
   symbol: z.string({ message: '股票代码错误' }).min(1, '股票代码错误'),
@@ -147,7 +147,7 @@ const PriceSetting = forwardRef((props: PriceSettingProps, _) => {
     queryKey: [getStockBaseCodeInfo.cacheKey, symbol, ['total_share']],
     queryFn: () => getStockBaseCodeInfo({ symbol: symbol, extend: ['total_share'] }),
     enabled: !!symbol,
-    select: (data) => stockManager.toStockRecord(data)[0]
+    select: (data) => stockUtils.toStockRecord(data)[0]
   })
 
   useEffect(() => {

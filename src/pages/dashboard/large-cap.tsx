@@ -6,7 +6,7 @@ import { useSubscribe } from "@/hooks"
 import { useConfig, useTime } from "@/store"
 import { getTradingPeriod } from "@/utils/date"
 import echarts, { type ECOption } from "@/utils/echarts"
-import { stockManager, type StockTrading } from "@/utils/stock"
+import { stockUtils, type StockTrading } from "@/utils/stock"
 import { cn, colorUtil } from "@/utils/style"
 import { useQuery } from "@tanstack/react-query"
 import { useMount, useSize, useUnmount, useUpdateEffect } from "ahooks"
@@ -76,7 +76,7 @@ const LargeCap = () => {
   const stocks = useMemo(() => {
     if (!activeKey || !largeCap.data) return []
 
-    return largeCap.data.find(item => item.category_name === activeKey)?.stocks.map(item => stockManager.toSimpleStockRecord(item.stock, item.symbol, item.name)) ?? []
+    return largeCap.data.find(item => item.category_name === activeKey)?.stocks.map(item => stockUtils.toSimpleStockRecord(item.stock, item.symbol, item.name)) ?? []
   }, [activeKey, largeCap.data])
 
   const onActiveKeyChange = (key: string) => {
@@ -176,7 +176,7 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
     })
   })
 
-  
+
 
   useUpdateEffect(() => {
     renderChart(queryData.data)
@@ -187,17 +187,19 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
     const dataset: [string, number, number][] = []
     let prevClose = 0
     let lastPercent = 0
+    let lastPrice = 0
     for (const s of data.history) {
-      const t = stockManager.toSimpleStockRecord(s)
+      const t = stockUtils.toSimpleStockRecord(s)
       prevClose = t.prevClose!
       lastPercent = t.percent!
+      lastPrice = t.close!
       dataset.push([t.time!, t.close!, t.percent!])
     }
-    
+
     const xAxisData = getTradingPeriod(intervalToTradingMap[interval] ?? 'intraDay', dataset[0] ? dataset[0][0] : '')
 
     const style = colorUtil.hexToRGB(getStockColor(lastPercent >= 0, 'hex'))!
-
+  
     chartRef.current?.setOption({
       axisPointer: {
         label: {
@@ -236,6 +238,19 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
       xAxis: {
         data: xAxisData
       },
+      graphic: {
+        elements: (interval === StockChartInterval.PRE_MARKET || interval === StockChartInterval.AFTER_HOURS) ? [{
+          type: 'text',
+          left: 'center',
+          top: '30%',
+          style: {
+            text: interval === StockChartInterval.PRE_MARKET ? '盘前交易': '盘后交易',
+            fill: 'rgba(255, 255, 255, .15)',
+            fontSize: 64,
+            textVerticalAlign: 'top'
+          }
+        }]: []
+      },
       series: [{
         data: dataset,
         encode: {
@@ -262,9 +277,9 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
           symbol: 'none',
           silent: true,
           data: [{
-            yAxis: prevClose,
+            yAxis: lastPrice,
             lineStyle: {
-              color: '#999999',
+              color: `rgba(${style.r}, ${style.g}, ${style.b} , 1)`,
               width: 1,
               type: 'dashed'
             },
@@ -319,6 +334,10 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
         }
       },
       axisPointer: {
+        lineStyle: {
+          color: '#404040',
+          type: 'dashed'
+        },
         label: {
           show: false
         }
@@ -337,6 +356,10 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
     },
     axisPointer: {
       link: [{ yAxisIndex: 'all', xAxisIndex: 'all' }],
+      lineStyle: {
+        color: '#404040',
+        type: 'dashed'
+      },
       label: {
         position: 'right',
         backgroundColor: '#777',
@@ -373,6 +396,12 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
             type: 'dashed'
           }
         },
+        axisPointer: {
+          lineStyle: {
+            color: '#404040',
+            type: 'dashed'
+          }
+        },
         splitLine: {
           show: true,
           lineStyle: {
@@ -389,6 +418,12 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
         splitNumber: 8,
         position: 'right',
         scale: true,
+        axisPointer: {
+          lineStyle: {
+            color: '#404040',
+            type: 'dashed'
+          }
+        },
         axisLine: {
           show: true,
           lineStyle: {
@@ -413,6 +448,10 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
       color: stockUpColor,
       lineStyle: { width: 1 },
       symbol: 'none',
+      markLine: {
+        symbol: 'none',
+        silent: true
+      }
     }, { type: 'line', yAxisIndex: 1, showSymbol: false, color: 'transparent' }]
   }
 

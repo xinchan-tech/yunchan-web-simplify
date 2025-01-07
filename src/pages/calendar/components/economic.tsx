@@ -87,7 +87,7 @@ const StockEconomic = () => {
     },
     {
       header: '重要性', size: 120, enableSorting: false, accessorKey: 'star', meta: { align: 'center' },
-      cell: ({ row }) => (<div className="space-x-1" style={{ color: getColor(row.original.date) }}>
+      cell: ({ row }) => (<div className="space-x-1 text-right" style={{ color: getColor(row.original.date) }}>
         {
           // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
           Array.from(new Array(row.getValue('star'))).map((_, i) => <JknIcon name="ic_star_on" key={i} className="w-3 h-3" />)

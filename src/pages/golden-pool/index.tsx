@@ -8,7 +8,7 @@ import to from "await-to-js"
 import { useMemo, useState } from "react"
 import type { z } from "zod"
 import { GoldenPoolForm, poolSchema } from "./components/golden-pool-form"
-import { stockManager, type StockRecord } from "@/utils/stock"
+import { stockUtils, type StockRecord } from "@/utils/stock"
 import Decimal from "decimal.js"
 
 const baseExtends: StockExtend[] = ['total_share', 'basic_index', 'day_basic', 'alarm_ai', 'alarm_all', 'financials']
@@ -28,7 +28,7 @@ const GoldenPool = () => {
     queryFn: () => getStockCollects({ cate_id: +activeStock, limit: 300, extend: baseExtends }),
   })
 
-  const data = useMemo(() => collects.data?.items.map(o => stockManager.toStockRecord(o)[0]) ?? [], [collects.data])
+  const data = useMemo(() => collects.data?.items.map(o => stockUtils.toStockRecord(o)[0]) ?? [], [collects.data])
 
   useSubscribe(collects.data?.items.map(item => item.symbol) ?? [], (data) => {
 

@@ -12,7 +12,7 @@ import { StockSelect } from "@/components"
 import { cn } from "@/utils/style"
 import { TimeIndexMenu } from "./time-index"
 import echarts from "@/utils/echarts"
-import { stockManager, StockSubscribeHandler } from "@/utils/stock"
+import { stockUtils, StockSubscribeHandler } from "@/utils/stock"
 import { throttle } from "radash"
 
 
@@ -54,12 +54,12 @@ export const MainChart = (props: MainChartProps) => {
   const subscribeSymbol = useMemo(() => `${state.symbol}@${state.timeIndex}`, [state.symbol, state.timeIndex])
 
   const subscribeHandler: StockSubscribeHandler<'bar'> = useCallback((data) => {
-    const stock = stockManager.toSimpleStockRecord(data.rawRecord)
+    const stock = stockUtils.toSimpleStockRecord(data.rawRecord)
     const qData = queryClient.getQueryData(queryKey) as typeof query.data
 
     if (!qData || qData.history.length === 0) return
 
-    const lastData = stockManager.toSimpleStockRecord(qData.history[qData.history.length - 1])
+    const lastData = stockUtils.toSimpleStockRecord(qData.history[qData.history.length - 1])
     if( state.timeIndex === StockChartInterval.PRE_MARKET || state.timeIndex === StockChartInterval.AFTER_HOURS || state.timeIndex === StockChartInterval.INTRA_DAY){
       queryClient.setQueryData(queryKey, {
         ...qData,

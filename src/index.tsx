@@ -1,3 +1,4 @@
+import { scan } from 'react-scan'
 import ReactDOM from 'react-dom/client'
 import '@/plugins/dayjs-plugin'
 import '@/utils/i18n'
@@ -5,7 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { StrictMode } from "react"
 import '@/plugins/decimal-plugin'
-import {} from '@/utils/stock'
+import { } from '@/utils/stock'
 import App from './app.tsx'
 
 
@@ -17,6 +18,13 @@ const queryClient = new QueryClient({
     }
   }
 })
+
+if (typeof window !== 'undefined') {
+  scan({
+    enabled: true,
+    // log: true, // logs render info to console (default: false)
+  })
+}
 
 
 const rootEl = document.getElementById('root')

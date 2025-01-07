@@ -148,10 +148,10 @@ export const createOptions = (): ECOption => ({
           show: false
         }
       },
-      min: (v) => {
+      min: v => {
         return v.min - (v.max - v.min) * 0.1
       },
-      max: (v) => {
+      max: v => {
         return v.max + (v.max - v.min) * 0.1
       },
       splitLine: {
@@ -168,15 +168,13 @@ export const createOptions = (): ECOption => ({
       splitLine: {
         show: false
       },
-      min: (v) => {
+      min: v => {
         return v.min - (v.max - v.min) * 0.1
       },
-      max: (v) => {
+      max: v => {
         return v.max + (v.max - v.min) * 0.1
       },
-      axisLabel: {
-        
-      }
+      axisLabel: {}
     }
   ],
   series: []
@@ -260,7 +258,7 @@ export const renderGrid = (options: ECOption, state: ChartState, size: [number, 
           dayjs(+state.mainData.history[0]?.[0])
         ).map(item => dayjs(item).valueOf().toString())
         xAxis.max = (xAxis as any).data.length
-        xAxis.axisLabel!.interval = (index) => {
+        ;(xAxis.axisLabel as any)!.interval = (index: number) => {
           return index % 15 === 0
         }
       } else {
@@ -299,7 +297,7 @@ export const renderGrid = (options: ECOption, state: ChartState, size: [number, 
     }
   }
 
-  const {getStockColor} = useConfig.getState()
+  const { getStockColor } = useConfig.getState()
 
   yAxis[1].axisLabel!.rich = {
     u: {
@@ -307,7 +305,7 @@ export const renderGrid = (options: ECOption, state: ChartState, size: [number, 
     },
     d: {
       color: getStockColor(false, 'hex')
-    },
+    }
   }
 
   for (let i = 0; i < state.secondaryIndicators.length; i++) {
@@ -470,11 +468,13 @@ export const renderMainChart: ChartRender = (options, state) => {
         }
       } else {
         xAxis.axisLabel!.show = true
-        ;(xAxis.axisLabel as any)!.formatter = (v: any) => {
+        ;(xAxis.axisLabel as any)!.formatter = (v: any, index: number) => {
           return v
-            ? isTimeIndexChart(state.timeIndex) && state.timeIndex !== StockChartInterval.FIVE_DAY
-              ? dayjs(+v).format('hh:mm')
-              : dayjs(+v).format('MM-DD')
+            ? index % 2 === 0
+              ? isTimeIndexChart(state.timeIndex) && state.timeIndex !== StockChartInterval.FIVE_DAY
+                ? dayjs(+v).format('hh:mm')
+                : dayjs(+v).format('MM-DD')
+              : ''
             : ''
         }
       }
@@ -951,15 +951,21 @@ const renderSecondaryAxis = (options: ECOption, state: KChartState['state'][0], 
         show: index === state.secondaryIndicators.length - 1,
         color: '#fff',
         formatter: (v: any, index) => {
+          console.log(index)
           return v
-            ? isTimeIndexChart(state.timeIndex) && state.timeIndex !== StockChartInterval.FIVE_DAY
-              ? index % 30 === 0 ? dayjs(+v).format('hh:mm') : ''
-              : dayjs(+v).format('MM-DD')
+            ? index % 2 === 0
+              ? isTimeIndexChart(state.timeIndex) && state.timeIndex !== StockChartInterval.FIVE_DAY
+                ? dayjs(+v).format('hh:mm')
+                : dayjs(+v).format('MM-DD')
+              : ''
             : ''
         },
-        interval:isTimeIndexChart(state.timeIndex) && state.timeIndex !== StockChartInterval.FIVE_DAY ? (index) => {
-          return index % 15 === 0
-        }: undefined
+        interval:
+          isTimeIndexChart(state.timeIndex) && state.timeIndex !== StockChartInterval.FIVE_DAY
+            ? index => {
+                return index % 15 === 0
+              }
+            : undefined
       },
       axisTick: {
         show: false
@@ -971,9 +977,12 @@ const renderSecondaryAxis = (options: ECOption, state: KChartState['state'][0], 
         }
       },
       min: 'dataMin',
-      max:  isTimeIndexChart(state.timeIndex) && state.timeIndex !== StockChartInterval.FIVE_DAY ? (options.xAxis[0] as any).data.length : v => {
-        return v.max + Math.round((v.max - v.min) * 0.01)
-      },
+      max:
+        isTimeIndexChart(state.timeIndex) && state.timeIndex !== StockChartInterval.FIVE_DAY
+          ? (options.xAxis[0] as any).data.length
+          : v => {
+              return v.max + Math.round((v.max - v.min) * 0.01)
+            },
       axisPointer: {
         z: 100,
         label: {

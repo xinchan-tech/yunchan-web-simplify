@@ -43,7 +43,7 @@ const Holidays = () => {
         </CapsuleTabs>
 
       </div>
-      <div>
+      <div className="w-[960px] mx-auto">
         <JknTable columns={columns} data={query.data ?? []} />
       </div>
     </div>

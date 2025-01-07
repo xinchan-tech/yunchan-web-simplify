@@ -1,6 +1,6 @@
 import { type StockExtend, type UsStockColumn, getChineseStocks, getIndexGapAmplitude, getIndexRecommends, getUsStocks } from "@/api"
 import { AiAlarm, CollectStar, JknCheckbox, JknIcon, JknTable, type JknTableProps, NumSpan, StockView } from "@/components"
-import { stockManager } from "@/utils/stock"
+import { stockUtils } from "@/utils/stock"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import Decimal from "decimal.js"
 import { produce } from "immer"
@@ -73,7 +73,7 @@ const SingleTable = (props: SingleTableProps) => {
     if (!query.data) return []
 
     for (const item of query.data) {
-      const [lastData, beforeData, afterData] = stockManager.toStockRecord(item)
+      const [lastData, beforeData, afterData] = stockUtils.toStockRecord(item)
 
       if (!lastData) continue
       r.push({

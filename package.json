@@ -73,6 +73,7 @@
     "react-hook-form": "^7.53.2",
     "react-i18next": "^15.1.2",
     "react-router": "^7.0.1",
+    "react-scan": "^0.0.54",
     "sockjs-client": "^1.6.1",
     "styled-jsx": "^5.1.6",
     "tailwind-merge": "^2.5.5",

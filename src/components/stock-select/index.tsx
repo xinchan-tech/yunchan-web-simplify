@@ -1,7 +1,7 @@
 import { getAllStocks } from "@/api"
 import { useStockList } from "@/store"
 import { useQuery } from "@tanstack/react-query"
-import { useBoolean, useMount, useVirtualList } from "ahooks"
+import { useBoolean, useVirtualList } from "ahooks"
 import pako from "pako"
 import { useState, useMemo, useEffect, useRef } from "react"
 import { JknIcon } from "../jkn/jkn-icon"
@@ -9,6 +9,7 @@ import { Input, type InputProps } from "../ui/input"
 import { Popover, PopoverAnchor, PopoverContent } from "../ui/popover"
 import { ScrollArea } from "../ui/scroll-area"
 import { cn } from "@/utils/style"
+import { Trie } from "./trie-tree"
 
 interface StockSelectProps extends Omit<InputProps, 'onChange'> {
   onChange?: (symbol: string) => void
@@ -98,23 +99,32 @@ interface VirtualStockListProps {
 }
 
 const VirtualStockList = (props: VirtualStockListProps) => {
-  const stockList = useStockList()
+  const stockList = useStockList(s => s.list)
+  const stockMap = useStockList(s => s.listMap)
+  const stockListKey = useStockList(s => s.key)
+  const setStockList = useStockList(s => s.setList)
   const query = useQuery({
     queryKey: [getAllStocks.cacheKey],
-    queryFn: () => getAllStocks(stockList.key)
+    queryFn: () => getAllStocks(stockListKey)
   })
+  // const  = useRef<Trie>(new Trie())
+
+  const trie = useMemo(() => {
+    const trie = new Trie()
+    stockList.forEach(item => trie.insert(item[1]))
+    return trie
+  }, [stockList])
 
   const data = useMemo(() => {
     if (!props.keyword) {
-      return [...stockList.list]
+      return [...stockList]
     }
-
-    const k = props.keyword.toLowerCase()
-    return stockList.list.filter(item => item[1].toLowerCase().includes(k) || item[2].toLowerCase().includes(k) || item[3].toLowerCase().includes(k))
-  }, [stockList.list, props.keyword])
+    console.log()
+    return trie.searchPrefix(props.keyword).map(item => stockMap[item])
+  }, [stockMap, props.keyword, stockList, trie])
 
   useEffect(() => {
-    if (query.data?.key === stockList.key) return
+    if (query.data?.key === stockListKey) return
 
     if (query.data?.data) {
       const data = atob(query.data.data)
@@ -126,10 +136,10 @@ const VirtualStockList = (props: VirtualStockListProps) => {
       }
 
       const res = JSON.parse(pako.inflate(dataUint8, { to: 'string' })) as [string, string, string, string][]
-      res.sort((a, b) => (a[1] as unknown as number) - (b[1] as unknown as number))
-      stockList.setList(res, query.data.key)
+      res.sort((a, b) => a[1].localeCompare(b[1]))
+      setStockList(res, query.data.key)
     }
-  }, [query.data, stockList.setList, stockList.key])
+  }, [query.data, setStockList, stockListKey])
 
   const containerRef = useRef<HTMLDivElement>(null)
   const wrapperRef = useRef<HTMLDivElement>(null)

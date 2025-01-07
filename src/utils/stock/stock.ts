@@ -2,7 +2,7 @@ import dayjs from 'dayjs'
 import { getTrading } from '../date'
 import type { StockExtendResultMap, StockRawRecord } from '@/api'
 import Decimal from 'decimal.js'
-import { isNumber } from "radash"
+import { isNumber } from 'radash'
 
 export type StockTrading = 'preMarket' | 'intraDay' | 'afterHours' | 'close'
 
@@ -44,9 +44,9 @@ export class StockRecord {
   collect?: 0 | 1
 
   rawRecord: StockRawRecord
-  extend?: StockExtendResultMap
+  extend?: StockExtendResultMap;
 
-  [key: string]: any 
+  [key: string]: any
 
   /**
    * 涨幅
@@ -75,8 +75,8 @@ export class StockRecord {
   static create(record: StockResultRecord): [StockRecord, StockRecord, StockRecord] {
     const r: [StockRecord, StockRecord, StockRecord] = [
       StockRecord.of(record.symbol, record.name, record.stock, record.extend),
-      StockRecord.of(record.symbol, record.name, record.extend?.stock_before),
-      StockRecord.of(record.symbol, record.name, record.extend?.stock_after)
+      StockRecord.of(record.symbol, record.name, record.extend?.stock_before, record.extend),
+      StockRecord.of(record.symbol, record.name, record.extend?.stock_after, record.extend)
     ]
 
     return r
@@ -92,7 +92,7 @@ export class StockRecord {
 
     this.extend = extend
 
-    if(!data || !StockRecord.isValid(data)) {
+    if (!data || !StockRecord.isValid(data)) {
       return
     }
 
@@ -110,7 +110,6 @@ export class StockRecord {
     this.pe = 0
     this.pb = 0
     this.totalShare = 0
- 
 
     this.marketValue = 0
     this.turnOverRate = 0
@@ -169,7 +168,7 @@ export class StockRecord {
       return 0
     }
 
-    if(this.prevClose === 0 || this.prevClose === undefined) {
+    if (this.prevClose === 0 || this.prevClose === undefined) {
       return 0
     }
 
@@ -220,9 +219,11 @@ export class StockRecord {
    * @param time 添加时间戳
    */
   static parseTime(time: string) {
-    if(time.replace('-', '').length === time.length) {
-      if(time.length === 10) {
-        return dayjs(+time * 1000).tz('America/New_York').format('YYYY-MM-DD HH:mm:ss')
+    if (time.replace('-', '').length === time.length) {
+      if (time.length === 10) {
+        return dayjs(+time * 1000)
+          .tz('America/New_York')
+          .format('YYYY-MM-DD HH:mm:ss')
       }
       return dayjs(+time).tz('America/New_York').format('YYYY-MM-DD HH:mm:ss')
     }

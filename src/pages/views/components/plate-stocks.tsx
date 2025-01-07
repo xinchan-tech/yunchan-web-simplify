@@ -2,7 +2,7 @@ import { addStockCollect, getPlateStocks } from "@/api"
 import { AiAlarm, Button, Checkbox, CollectStar, JknAlert, JknIcon, JknTable, NumSpan, Popover, PopoverAnchor, PopoverContent, StockView, type JknTableProps } from "@/components"
 import { useToast } from "@/hooks"
 import { useCollectCates } from "@/store"
-import { stockManager, type StockRecord } from "@/utils/stock"
+import { stockUtils, type StockRecord } from "@/utils/stock"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import to from "await-to-js"
 import Decimal from "decimal.js"
@@ -22,7 +22,7 @@ const PlateStocks = (props: PlateStocksProps) => {
 
   const collects = useCollectCates(s => s.collects)
 
-  const data = useMemo(() => plateStocks.data?.map(item => stockManager.toStockRecord(item)[0]) ?? [], [plateStocks.data])
+  const data = useMemo(() => plateStocks.data?.map(item => stockUtils.toStockRecord(item)[0]) ?? [], [plateStocks.data])
 
   const { toast } = useToast()
 

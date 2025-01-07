@@ -1,5 +1,6 @@
 
-import { HoverCard, HoverCardTrigger, HoverCardContent, HoverCardPortal } from "../ui/hover-card"
+import { HoverCard, HoverCardTrigger, HoverCardContent, HoverCardPortal, type HoverCardProps } from "../ui/hover-card"
+import type { HoverCardContentProps } from "@radix-ui/react-hover-card"
 import { Button } from "../ui/button"
 import Star from "./index"
 import { useCollectCates } from "@/store"
@@ -16,7 +17,8 @@ import { CollectStarBatch } from "./collect-star-batch"
 import { useBoolean } from "ahooks"
 
 
-interface CollectStarProps {
+
+interface CollectStarProps extends Partial<Pick<HoverCardContentProps, 'sideOffset' | 'alignOffset' | 'side' | 'align'>> {
   checked: boolean
   code: string
   onUpdate?: (checked: boolean) => void
@@ -33,13 +35,14 @@ const _CollectStar = (props: CollectStarProps) => {
     <HoverCard
       onOpenChange={open => open ? setTrue() : setFalse()}
       openDelay={100}
-      closeDelay={0}
+      closeDelay={100}
     >
       <HoverCardTrigger asChild>
         <div className="flex justify-center items-center"><Star checked={props.checked} /></div>
       </HoverCardTrigger>
       <HoverCardPortal >
-        <HoverCardContent align="center" side="left" sideOffset={-10}
+        <HoverCardContent sideOffset={props.sideOffset ?? -10} alignOffset={props.alignOffset}
+          align={props.align ?? 'center'} side={props.side ?? 'left'}
           className="p-0 w-48 bg-muted border-dialog-border border border-solid"
         >
           {

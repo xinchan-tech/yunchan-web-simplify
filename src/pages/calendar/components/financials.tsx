@@ -1,7 +1,7 @@
 import { getStockFinancials } from "@/api"
 import { AiAlarm, CapsuleTabs, Checkbox, CollectStar, JknDatePicker, JknIcon, JknTable, type JknTableProps, NumSpan, StockView } from "@/components"
 import { dateToWeek } from "@/utils/date"
-import { stockManager } from "@/utils/stock"
+import { stockUtils } from "@/utils/stock"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import Decimal from "decimal.js"
 import { produce } from "immer"
@@ -53,7 +53,7 @@ const StockFinancials = () => {
 
     if (!data) return r
     for (const { id, time, date, ...stock } of data.items) {
-      const [lastStock, beforeStock, afterStock] = stockManager.toStockRecord(stock)
+      const [lastStock, beforeStock, afterStock] = stockUtils.toStockRecord(stock)
 
       r.push({
         name: lastStock.name,

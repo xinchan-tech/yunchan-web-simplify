@@ -3,6 +3,7 @@ import { JknIcon, CapsuleTabs } from "@/components"
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, Button } from "@/components"
 import { useKChartContext, timeIndex } from "../lib"
 import { Fragment } from "react/jsx-runtime"
+import { stockUtils } from "@/utils/stock"
 
 const leftMenu = ['盘前分时', '盘中分时', '盘后分时', '多日分时']
 const rightMenu = ['周线', '月线', '季线', '半年', '年线']
@@ -24,12 +25,7 @@ export const TimeIndexSelect = () => {
             <Button reset className="text-xs font-normal">
               {
                 timeIndex.findIndex(v => v === _activeChart.timeIndex) > 3 ? '分时' : (
-                  <span className="text-primary">{{
-                    '-2': '盘后',
-                    '0': '盘中',
-                    '-1': '盘前',
-                    '7200': '多日'
-                  }[_activeChart.timeIndex.toString()] ?? null}</span>
+                  <span className="text-primary">{stockUtils.intervalToStr(_activeChart.timeIndex)}</span>
                 )
               }
             </Button>
@@ -47,17 +43,7 @@ export const TimeIndexSelect = () => {
       <CapsuleTabs type="text" activeKey={_activeChart.timeIndex.toString()} onChange={v => setActiveMin(+v)}>
         {
           timeIndex.slice(4).slice(0, -5).map(item => (
-            <Fragment key={item}>
-              {
-                item < 60 ? (
-                  <CapsuleTabs.Tab label={`${item}分钟`} value={item.toString()} />
-                ) : item < 1440 ? (
-                  <CapsuleTabs.Tab label={`${item / 60}小时`} value={item.toString()} />
-                ) : (
-                  <CapsuleTabs.Tab label="日线" value={item.toString()} />
-                )
-              }
-            </Fragment>
+            <CapsuleTabs.Tab key={item} label={stockUtils.intervalToStr(item)} value={item.toString()} />
           ))
         }
       </CapsuleTabs>

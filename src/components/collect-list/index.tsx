@@ -2,7 +2,7 @@ import { getStockCollects, type StockExtend } from "@/api"
 import { AddCollect, CollectCapsuleTabs, JknIcon, NumSpan, ScrollArea } from "@/components"
 import { useConfig, useTime } from "@/store"
 import echarts, { type ECOption } from "@/utils/echarts"
-import { stockManager, type StockRecord } from "@/utils/stock"
+import { stockUtils, type StockRecord } from "@/utils/stock"
 import { colorUtil } from "@/utils/style"
 import { useQuery } from "@tanstack/react-query"
 import { useMount, useUnmount, useUpdateEffect } from "ahooks"
@@ -48,7 +48,7 @@ export const CollectList = (props: CollectListProps) => {
     }
 
     const _stockList = stocks.data.items.map(stock => {
-      const [lastStock, beforeStock, afterStock] = stockManager.toStockRecord(stock)
+      const [lastStock, beforeStock, afterStock] = stockUtils.toStockRecord(stock)
       const thumbs = lastStock?.thumbs ?? []
       const subStock: StockRecord | null = ['afterHours', 'close'].includes(trading) ? afterStock : beforeStock
 

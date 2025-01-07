@@ -2,7 +2,7 @@ import { addStockCollect, type getStockSelection } from "@/api"
 import { type JknTableProps, StockView, NumSpan, Checkbox, CollectStar, JknIcon, Button, JknAlert, JknTable, AiAlarm } from "@/components"
 import { useToast } from "@/hooks"
 import { useCollectCates } from "@/store"
-import { stockManager } from "@/utils/stock"
+import { stockUtils } from "@/utils/stock"
 import { Popover, PopoverAnchor, PopoverContent } from "@radix-ui/react-popover"
 import to from "await-to-js"
 import Decimal from "decimal.js"
@@ -37,7 +37,7 @@ const StockTable = (props: StockTableProps) => {
 
     let index = 0
     for (const { indicator_name_hdly, indicator_name, stock_cycle, ...item} of props.data) {
-      const [lastData, beforeData, afterData] = stockManager.toStockRecord(item)
+      const [lastData, beforeData, afterData] = stockUtils.toStockRecord(item)
       r.push({
         index: index++,
         key: nanoid(),

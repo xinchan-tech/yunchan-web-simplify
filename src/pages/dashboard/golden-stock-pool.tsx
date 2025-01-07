@@ -3,7 +3,7 @@ import { useCollectCates, useToken } from "@/store"
 import { appEvent } from "@/utils/event"
 import { useCallback, useEffect, useState } from "react"
 import { getStockCollects } from "@/api"
-import { type StockRecord, stockManager } from "@/utils/stock"
+import { type StockRecord, stockUtils } from "@/utils/stock"
 import { useQuery } from "@tanstack/react-query"
 import Decimal from "decimal.js"
 import type { TableProps } from 'rc-table'
@@ -28,7 +28,7 @@ const GoldenStockPool = () => {
   })
 
   useEffect(() => {
-    const list = query.data?.items.map(item => stockManager.toStockRecord(item)[0]!) ?? []
+    const list = query.data?.items.map(item => stockUtils.toStockRecord(item)[0]!) ?? []
     setList(list)
   }, [query.data, setList])
 

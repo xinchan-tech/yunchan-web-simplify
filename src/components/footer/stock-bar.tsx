@@ -2,7 +2,7 @@ import { getLargeCapIndexes } from "@/api"
 import { cn } from "@/utils/style"
 import { useQuery } from "@tanstack/react-query"
 import NumSpan from "../num-span"
-import { stockManager } from "@/utils/stock"
+import { stockUtils } from "@/utils/stock"
 
 // const codes = ['IXIC', 'SPX', 'DJI']
 export const StockBar = () => {
@@ -10,7 +10,7 @@ export const StockBar = () => {
     queryKey: [getLargeCapIndexes.cacheKey],
     queryFn: () => getLargeCapIndexes(),
     select: data => data?.find(item => item.category_name === '大盘指数')?.stocks.map(item => {
-      const stock = stockManager.toStockRecord(item)[0]
+      const stock = stockUtils.toStockRecord(item)[0]
       return {
         name: stock.symbol === 'IXIC' ? '纳指' : stock.symbol === 'SPX' ? '标指' : '道指',
         price: stock?.close,
