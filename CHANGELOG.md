@@ -1,5 +1,53 @@
 # Changelog
 
+## [1.9.0](https://github.com/xinchan-gx/yunchan-web/compare/1.4.0...1.9.0) (2025-01-07)
+
+### ✨ Features | 新功能
+
+* 调整大盘图表轴标签显示间隔，优化时间格式化逻辑 ([cd9090a](https://github.com/xinchan-gx/yunchan-web/commit/cd9090ae7c39aa265ae07a33d0bcce267621cc9d))
+* 调整股票闪烁动画时长，优化价格闪烁逻辑，增加随机延迟效果 ([9fcffbd](https://github.com/xinchan-gx/yunchan-web/commit/9fcffbd6cc708120bdbfa7a03884254809913d4a))
+* 更新 JknIcon 导入方式，添加 rc-table 类型定义，优化代码结构 ([b099825](https://github.com/xinchan-gx/yunchan-web/commit/b099825d52ec16a45725aed287dbf42e37d4e510))
+* 更新 WebSocket URL 构建逻辑，支持动态主机和端口配置 ([d0d5e85](https://github.com/xinchan-gx/yunchan-web/commit/d0d5e8573da74f4245554c48d744416ace4c912c))
+* 更新股票路径，添加复选框钩子，优化表格数据处理逻辑，新增图标资源 ([c9963e2](https://github.com/xinchan-gx/yunchan-web/commit/c9963e2034e4609ad6e31eaa8c3d62ab39a67e3c))
+* 更新指标参数处理逻辑，优化相关组件和API调用 ([4e8cce9](https://github.com/xinchan-gx/yunchan-web/commit/4e8cce9201f0ac418912b4bc865ebab5f327f0d8))
+* 将消息队列处理从 requestIdleCallback 更改为 requestAnimationFrame，优化性能 ([a8fde30](https://github.com/xinchan-gx/yunchan-web/commit/a8fde30e98484d934199b6c346268173e2f4541e))
+* 添加 dataZoom 事件监听，优化主图指标的动态展示逻辑 ([ec94b5c](https://github.com/xinchan-gx/yunchan-web/commit/ec94b5c8dde54a7c892536b76c2518b0cf341c7a))
+* 添加 useTableData 钩子，优化表格数据管理和排序功能，更新相关组件以支持新钩子 ([9afa65b](https://github.com/xinchan-gx/yunchan-web/commit/9afa65b946f8ba4387436769c356ecb08f7636ee))
+* 添加财务统计功能，更新财务页面路由，优化表格组件 ([2011050](https://github.com/xinchan-gx/yunchan-web/commit/201105096035ee3dcde74ab1b76bd109b18eca4f))
+* 添加大盘指数数据获取，优化股票订阅逻辑和图表展示 ([ab06e4c](https://github.com/xinchan-gx/yunchan-web/commit/ab06e4cae553e81bd8b89467c2b2d1fc51857f0a))
+* 添加调试日志，优化模态框打开逻辑 ([4b8b69b](https://github.com/xinchan-gx/yunchan-web/commit/4b8b69baf10669eb50d7c94f2f1b39abe15a55e1))
+* 添加股票 WebSocket 支持，更新环境变量，优化组件导入 ([ecdbe39](https://github.com/xinchan-gx/yunchan-web/commit/ecdbe39179804f0b6e57be65806c6a8a8ffb9d9e))
+* 添加股票财务估值功能，更新财务页面路由，优化切换标签 ([781c824](https://github.com/xinchan-gx/yunchan-web/commit/781c824f8e3870682f82b14a3a77db5b8f772a2c))
+* 添加股票数据订阅功能，优化股票列表动态更新逻辑，增强用户体验 ([0bbfd48](https://github.com/xinchan-gx/yunchan-web/commit/0bbfd48601797e92b8b171918a4b6bc93ab14e14))
+* 添加进度条组件，更新主题颜色变量，修复类型定义，优化样式处理 ([ba8fb1a](https://github.com/xinchan-gx/yunchan-web/commit/ba8fb1a7fda9b09e218df0e93efd152454ceacb6))
+* 添加均线计算和买卖点计算功能，优化相关逻辑和类型定义 ([373bdd3](https://github.com/xinchan-gx/yunchan-web/commit/373bdd39c320db51a487f3f86d6acb25d679e50b))
+* 添加特色推送页面，整合股票推送数据，优化表格展示和交互功能 ([3dc28a8](https://github.com/xinchan-gx/yunchan-web/commit/3dc28a80ac634a96fec4328ecef7c0f484a53033))
+* 添加指标参数编辑功能，优化二级指标组件逻辑 ([563b1de](https://github.com/xinchan-gx/yunchan-web/commit/563b1deb1ff371d0156015ee63d52ca3d7ca3f5e))
+* 移除调试日志，调整图表和绘制逻辑，优化代码可读性 ([8f7a522](https://github.com/xinchan-gx/yunchan-web/commit/8f7a5222cd301e345d367bf4ecce288f8217faae))
+* 移除无用的日志，重构推送页面数据结构，新增推送周期和缠论信号字段，优化日期格式化逻辑，添加 dayjs 插件 ([a71f5ce](https://github.com/xinchan-gx/yunchan-web/commit/a71f5ce91fc569b53400f4fbd97f79f0165ebd7f))
+* 优化股票池组件，添加排序功能，使用 useRef 存储原始数据，提升性能和可读性 ([98a09fa](https://github.com/xinchan-gx/yunchan-web/commit/98a09fa22643e34d7a86b6f231ea1ee7065663e7))
+* 优化股票订阅逻辑，移除冗余代码，增强组件性能和可读性 ([f13fd97](https://github.com/xinchan-gx/yunchan-web/commit/f13fd9751a66102d7869a59c26aecd252d2dd134))
+* 优化股票闪烁动画时长，更新 WebSocket 目标地址，重构表格数据更新逻辑，添加时间比较工具函数 ([16f712b](https://github.com/xinchan-gx/yunchan-web/commit/16f712b256aeb29b3a8906f7db7133e4cde550d3))
+* 优化股票收集列表和时间管理逻辑，重构相关组件以提升性能和可读性 ([cb5fda2](https://github.com/xinchan-gx/yunchan-web/commit/cb5fda2a0baf812da9c9c48018c6048955c98d76))
+* 重构股票管理逻辑，更新相关引用为 stockUtils，新增 react-scan 依赖，优化假期和经济数据表格样式 ([1da1297](https://github.com/xinchan-gx/yunchan-web/commit/1da129776893c82b7ac2a357304a5c7cd629e994))
+
+### 🐛 Bug Fixes | Bug 修复
+
+* 修复类型定义，更新组件导入方式 ([dafffdf](https://github.com/xinchan-gx/yunchan-web/commit/dafffdf6e4cda56ff4206aa3f86c44c72623acba))
+
+### 🎫 Chores | 其他更新
+
+* Release v1.5.0 ([ec321f7](https://github.com/xinchan-gx/yunchan-web/commit/ec321f70ec3ae04aad23e3daf85fa1ed1e8ee1be))
+* Release v1.6.0 ([1f1ec90](https://github.com/xinchan-gx/yunchan-web/commit/1f1ec90f3f18331c10c8a57406fdff48555ae8c7))
+* Release v1.7.0 ([a570920](https://github.com/xinchan-gx/yunchan-web/commit/a5709201f90e24fcb04df93a6f6d4f247d614576))
+* Release v1.8.0 ([e9f1551](https://github.com/xinchan-gx/yunchan-web/commit/e9f15516161d61b36b326aa72b1072f5abb4c539))
+* Release v1.8.1 ([7782db2](https://github.com/xinchan-gx/yunchan-web/commit/7782db2aa0ad37d61dc03d278622314fd676f124))
+* Release v1.8.2 ([5ab5691](https://github.com/xinchan-gx/yunchan-web/commit/5ab5691efe63c0de666d898f7cdd61cad17fe1d9))
+
+### ♻ Code Refactoring | 代码重构
+
+* 移除未使用的 use-table-selection 和 use-cache-request 钩子，优化代码结构 ([d06d9f0](https://github.com/xinchan-gx/yunchan-web/commit/d06d9f0d608aaa2b4b5c8fd0bb15ab6c5ee09d2e))
+
 ## [1.8.2](https://github.com/xinchan-gx/yunchan-web/compare/1.4.0...1.8.2) (2025-01-03)
 
 ### ✨ Features | 新功能
