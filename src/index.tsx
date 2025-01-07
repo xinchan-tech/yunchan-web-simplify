@@ -8,6 +8,7 @@ import { StrictMode } from "react"
 import '@/plugins/decimal-plugin'
 import { } from '@/utils/stock'
 import App from './app.tsx'
+import { initDataSource } from './services/dataSource.ts'
 
 
 
@@ -25,6 +26,7 @@ if (typeof window !== 'undefined' && import.meta.env.MODE === 'development') {
     // log: true, // logs render info to console (default: false)
   })
 }
+initDataSource();
 
 
 const rootEl = document.getElementById('root')

@@ -25,6 +25,7 @@ const App = () => {
   const setUser = useUser(s => s.setUser)
   const notLogin = useRef(0)
 
+
   const query = useQuery({
     queryKey: [getUser.cacheKey],
     queryFn: () => getUser({

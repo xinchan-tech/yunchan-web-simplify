@@ -82,7 +82,7 @@ export const routes: RouteObject[] = [
   },
   {
     path: '/chat',
-    Component: lazy(() => import('@/pages/chat')),
+    Component: lazy(() => import('@/pages/groupchat')),
     handle:{
       title: '讨论社群'
     }
