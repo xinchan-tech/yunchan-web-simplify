@@ -53,7 +53,6 @@ export const useCheckboxGroup = (initialValue: string[]) => {
   }, [checked])
 
   const setCheckedAll = useCallback((keys: string[]) => {
-    console.log(keys)
     setChecked(keys)
   }, [])
   

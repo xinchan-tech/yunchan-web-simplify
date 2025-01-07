@@ -1,23 +1,14 @@
 import ReactDOM from 'react-dom/client'
-import App from './app.tsx'
+import '@/plugins/dayjs-plugin'
 import '@/utils/i18n'
-import dayjs from "dayjs"
-import utc from 'dayjs/plugin/utc'
-import tz from 'dayjs/plugin/timezone'
-import isSameOrAfter from 'dayjs/plugin/isSameOrAfter'
-import isSameOrBefore from 'dayjs/plugin/isSameOrBefore'
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { StrictMode } from "react"
 import '@/plugins/decimal-plugin'
 import {} from '@/utils/stock'
+import App from './app.tsx'
 
 
-dayjs.extend(utc)
-dayjs.extend(tz)
-dayjs.extend(isSameOrAfter)
-dayjs.extend(isSameOrBefore)
-dayjs.tz.setDefault('America/New_York')
 
 const queryClient = new QueryClient({
   defaultOptions: {

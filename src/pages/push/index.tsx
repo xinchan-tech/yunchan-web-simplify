@@ -24,6 +24,11 @@ type TableDataType = StockRecord & {
    * bull = 1, 画绿色火苗
    */
   bull: string
+  /**
+   * 推送周期
+   */
+  interval: string
+  coiling_signal: string
   id: string
 }
 
@@ -31,7 +36,7 @@ const PushPage = () => {
   const [activeType, setActiveType] = useState<StockPushType>(StockPushType.STOCK_KING)
   const [date, setDate] = useState(dayjs().format('YYYY-MM-DD'))
   const [list, { setList, onSort }] = useTableData<TableDataType>([], 'id')
-  const { checked, onChange, toggle, setCheckedAll, getIsChecked } = useCheckboxGroup([])
+  const { checked, onChange, setCheckedAll, getIsChecked } = useCheckboxGroup([])
 
   const queryParams: Parameters<typeof getStockPush>[0] = {
     type: activeType,
@@ -54,6 +59,8 @@ const PushPage = () => {
         stock.id = item.id
         stock.warning = item.warning
         stock.bull = item.bull
+        stock.coiling_signal = item.coiling_signal
+        stock.interval = item.interval
         return stock as TableDataType
       }))
     } else {
@@ -72,7 +79,7 @@ const PushPage = () => {
         continue
       }
 
-      r.unshift(d.format('YYYY-MM-DD'))
+      r.unshift(d.format('MM-DD W'))
     }
 
     return r
@@ -90,7 +97,7 @@ const PushPage = () => {
     })
   }
 
-  const columns = useMemo(() => {
+  const columns = (() => {
     const common: JknRcTableProps<TableDataType>['columns'] = [
       { title: '序号', dataIndex: 'index', width: 60, render: (_, __, i) => i + 1 },
       {
@@ -131,13 +138,7 @@ const PushPage = () => {
         render: v => Decimal.create(v).toShortCN(2)
       },
       {
-        title: '行业板块',
-        dataIndex: 'industry',
-        align: 'right',
-        render: v => v || '-'
-      },
-      {
-        title: '推荐指数',
+        title: `${activeType === StockPushType.STOCK_KING ? '股王' : '推荐'}指数`,
         dataIndex: 'star',
         align: 'right',
         sort: true,
@@ -154,7 +155,7 @@ const PushPage = () => {
         title: '更新时间',
         dataIndex: 'update_time',
         align: 'center',
-        render: v => v ? `${dayjs(v).format('MM-DD')} ${dateToWeek(dayjs(v).format('YYYY-MM-DD'))} ${dayjs(v).format('HH:mm')}` : '-'
+        render: v => v ? `${dayjs(+v * 1000).tz('America/New_York').format('MM-DD W HH:mm')}` : '-'
       },
       {
         title: '+股票金池',
@@ -175,12 +176,28 @@ const PushPage = () => {
         width: 60,
         render: (_, row) => <JknCheckbox checked={getIsChecked(row.symbol)} onCheckedChange={v => onChange(row.symbol, v)} />
       }
-
-
     ]
 
+    if (activeType === StockPushType.STOCK_KING || activeType === StockPushType.MA) {
+      (common as any[]).splice(6, 0, {
+        title: '行业板块',
+        dataIndex: 'industry',
+        align: 'right'
+      })
+    }else{
+      (common as any[]).splice(6, 0, {
+        title: '推送周期',
+        dataIndex: 'interval',
+        align: 'right'
+      }, {
+        title: '缠论信号',
+        dataIndex: 'coiling_signal',
+        align: 'right'
+      })
+    }
+
     return common
-  }, [activeType, checked, getIsChecked])
+  })()
 
   return (
     <div className="flex flex-col h-full">
