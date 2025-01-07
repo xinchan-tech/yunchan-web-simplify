@@ -1,11 +1,12 @@
 import { getStockPush, StockPushType } from "@/api"
-import { CapsuleTabs, CollectStar, JknRcTable, JknRcTableProps, NumSpan, StockView } from "@/components"
-import { useTableData } from "@/hooks"
+import { AiAlarm, CapsuleTabs, CollectStar, JknCheckbox, JknIcon, JknRcTable, type JknRcTableProps, NumSpan, StockView } from "@/components"
+import { useCheckboxGroup, useTableData } from "@/hooks"
 import { dateToWeek } from "@/utils/date"
-import { stockManager, StockRecord } from "@/utils/stock"
-import { useQuery } from "@tanstack/react-query"
+import { stockManager, type StockRecord } from "@/utils/stock"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 import dayjs from "dayjs"
 import Decimal from "decimal.js"
+import { produce } from "immer"
 import { useEffect, useMemo, useState } from "react"
 
 
@@ -13,12 +14,24 @@ import { useEffect, useMemo, useState } from "react"
 type TableDataType = StockRecord & {
   star: string
   update_time: string
+  /**
+   * warning = 0, 画闪电
+   * warning = 1, 画绿色火苗
+   */
+  warning: string
+  /**
+   * bull = 0, 画红色火苗
+   * bull = 1, 画绿色火苗
+   */
+  bull: string
+  id: string
 }
 
 const PushPage = () => {
   const [activeType, setActiveType] = useState<StockPushType>(StockPushType.STOCK_KING)
   const [date, setDate] = useState(dayjs().format('YYYY-MM-DD'))
-  const [list, { setList, onSort }] = useTableData<TableDataType>([], 'symbol')
+  const [list, { setList, onSort }] = useTableData<TableDataType>([], 'id')
+  const { checked, onChange, toggle, setCheckedAll, getIsChecked } = useCheckboxGroup([])
 
   const queryParams: Parameters<typeof getStockPush>[0] = {
     type: activeType,
@@ -28,8 +41,9 @@ const PushPage = () => {
 
   const query = useQuery({
     queryKey: [getStockPush.cacheKey, queryParams],
-    queryFn: () => getStockPush(queryParams),
+    queryFn: () => getStockPush(queryParams)
   })
+  const queryClient = useQueryClient()
 
   useEffect(() => {
     if (query.data) {
@@ -37,10 +51,16 @@ const PushPage = () => {
         const [stock] = stockManager.toStockRecord(item)
         stock.update_time = item.update_time
         stock.star = item.star
+        stock.id = item.id
+        stock.warning = item.warning
+        stock.bull = item.bull
         return stock as TableDataType
       }))
+    } else {
+      setList([])
     }
-  }, [query.data, setList])
+    setCheckedAll([])
+  }, [query.data, setList, setCheckedAll])
 
   const dates = useMemo(() => {
     const current = dayjs().format('YYYY-MM-DD')
@@ -59,6 +79,17 @@ const PushPage = () => {
 
   }, [])
 
+  const onUpdateCollect = (id: string, checked: boolean) => {
+    queryClient.setQueryData<StockRecord[]>([getStockPush.cacheKey, queryParams], (data) => {
+      if (!data) return data
+      return data.map(produce(item => {
+        if (item.id === id) {
+          item.extend!.collect = checked ? 1 : 0
+        }
+      }))
+    })
+  }
+
   const columns = useMemo(() => {
     const common: JknRcTableProps<TableDataType>['columns'] = [
       { title: '序号', dataIndex: 'index', width: 60, render: (_, __, i) => i + 1 },
@@ -66,6 +97,7 @@ const PushPage = () => {
         title: '名称代码',
         dataIndex: 'symbol',
         align: 'left',
+        sort: true,
         render: (_, row) => <StockView code={row.symbol} name={row.name} />
       },
       {
@@ -109,25 +141,46 @@ const PushPage = () => {
         dataIndex: 'star',
         align: 'right',
         sort: true,
-        render: v => v
+        render: (v, row) => Array.from({ length: v }).map((_, i) => (
+          // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
+          <JknIcon key={i} name={
+            activeType === StockPushType.STOCK_KING ?
+              (row.warning === '0' ? 'ic_fire_green' : 'ic_flash') :
+              (row.bull === '1' ? 'ic_fire_green' : 'ic_fire_red')
+          } />
+        ))
       },
       {
         title: '更新时间',
         dataIndex: 'update_time',
-        align: 'right',
+        align: 'center',
         render: v => v ? `${dayjs(v).format('MM-DD')} ${dateToWeek(dayjs(v).format('YYYY-MM-DD'))} ${dayjs(v).format('HH:mm')}` : '-'
       },
       {
         title: '+股票金池',
-        dataIndex: 'stock_pool',
+        dataIndex: 'collect',
         width: 80,
-        render: (_, row) => <CollectStar code={row.symbol} checked={row.collect === 1} />
+        render: (_, row) => <CollectStar code={row.symbol} checked={row.extend?.collect === 1} onUpdate={(checked) => onUpdateCollect(row.id, checked)} />
+      },
+      {
+        title: 'AI报警',
+        dataIndex: 'ai',
+        width: 60,
+        render: (_, row) => <div className="text-center"><AiAlarm code={row.symbol}><JknIcon name="ic_add" className="rounded-none" /></AiAlarm></div>
+      },
+      {
+        title: <CollectStar.Batch checked={checked} onCheckChange={(v) => setCheckedAll(v ? list.map(o => o.symbol) : [])} />,
+        dataIndex: 'checked',
+        align: 'center',
+        width: 60,
+        render: (_, row) => <JknCheckbox checked={getIsChecked(row.symbol)} onCheckedChange={v => onChange(row.symbol, v)} />
       }
+
 
     ]
 
     return common
-  }, [activeType])
+  }, [activeType, checked, getIsChecked])
 
   return (
     <div className="flex flex-col h-full">
@@ -146,7 +199,7 @@ const PushPage = () => {
         </CapsuleTabs>
       </div>
       <div className="flex-1 overflow-hidden">
-        <JknRcTable rowKey={(row) => `${row.symbol}_${row.update_time}`} onSort={onSort} columns={columns} data={list} isLoading={query.isLoading} />
+        <JknRcTable rowKey="id" onSort={onSort} columns={columns} data={list} isLoading={query.isLoading} />
       </div>
     </div>
   )

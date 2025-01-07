@@ -70,7 +70,7 @@ export const KChart = () => {
 
   const navigate = useNavigate()
   useUpdateEffect(() => {
-    navigate(`/stock/s?symbol=${context.state[context.activeChartIndex].symbol}`)
+    navigate(`/stock/trading?symbol=${context.state[context.activeChartIndex].symbol}`)
   }, [context.state, context.activeChartIndex])
 
 

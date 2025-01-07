@@ -66,19 +66,23 @@ const CollectStarBatchContent = (props: CollectStarBatchContentProps) => {
       return
     }
 
+    toast({
+      description: '添加成功',
+    })
+
     return
   }
 
   return (
     <div className="rounded">
-      <div className="bg-background px-16 py-2">批量操作 {props.checked.length} 项</div>
-      <div className="text-center px-12 py-4 space-y-4">
+      <div className="bg-background text-center py-2">批量操作 {props.checked.length} 项</div>
+      <div className="text-center px-4 py-4 space-y-4">
         {
           collects.map((cate) => (
-            <div key={cate.id} className="flex space-x-2 items-center">
+            <div key={cate.id} className="flex space-x-2 items-center justify-between">
               <div>{cate.name}</div>
               <div onClick={() => updateCollectMutation([+cate.id])} onKeyDown={() => { }}>
-                <Button className="text-tertiary" size="mini" variant="outline">添加</Button>
+                <Button size="mini">添加</Button>
               </div>
             </div>
           ))
