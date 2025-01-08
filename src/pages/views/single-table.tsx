@@ -1,10 +1,11 @@
 import { type StockExtend, type UsStockColumn, getChineseStocks, getIndexGapAmplitude, getIndexRecommends, getUsStocks } from "@/api"
-import { AiAlarm, CollectStar, JknCheckbox, JknIcon, JknTable, type JknTableProps, NumSpan, StockView } from "@/components"
+import { AiAlarm, CollectStar, JknCheckbox, JknIcon, JknRcTable, type JknRcTableProps, JknTable, type JknTableProps, NumSpan, StockView } from "@/components"
+import { useCheckboxGroup, useTableData, useTableRowClickToStockTrading } from "@/hooks"
 import { stockUtils } from "@/utils/stock"
-import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { useQuery } from "@tanstack/react-query"
 import Decimal from "decimal.js"
 import { produce } from "immer"
-import { useMemo } from "react"
+import { useCallback, useEffect, useMemo } from "react"
 import { useImmer } from "use-immer"
 
 interface SingleTableProps {
@@ -60,17 +61,23 @@ const SingleTable = (props: SingleTableProps) => {
     return getUsStocks({ type: props.type, column: 'total_mv', limit: 50, page: 1, order: 'desc', extend }).then(r => r.items)
   }
 
-  const queryClient = useQueryClient()
 
   const query = useQuery({
     queryKey: ['stock-table-view', props.type, sort],
     queryFn: () => QueryFn()
   })
 
-  const data = useMemo(() => {
+  const [list, { setList, onSort, updateList }] = useTableData<TableDataType>([], 'symbol')
+
+  const { checked, onChange, setCheckedAll, getIsChecked } = useCheckboxGroup([])
+
+  useEffect(() => {
     const r: TableDataType[] = []
 
-    if (!query.data) return []
+    if (!query.data) {
+      setList([])
+      return
+    }
 
     for (const item of query.data) {
       const [lastData, beforeData, afterData] = stockUtils.toStockRecord(item)
@@ -92,13 +99,14 @@ const SingleTable = (props: SingleTableProps) => {
         collect: lastData.collect ?? 0,
         isUp: lastData.isUp
       })
+
     }
 
-    return r
+    setList(r)
 
-  }, [query.data])
+  }, [query.data, setList])
 
-  const onSortChange: JknTableProps<TableDataType>['onSortingChange'] = (e) => {
+  const onSortChange: JknRcTableProps<TableDataType>['onSort'] = (columnKey, sort) => {
     const columnMap: Record<string, UsStockColumn> = {
       code: 'symbol',
       price: 'close',
@@ -109,122 +117,114 @@ const SingleTable = (props: SingleTableProps) => {
       afterPercent: "stock_after",
       turnoverRate: "turnover_rate",
     }
-    setSort(d => {
-      d.column = columnMap[e.id as string] ?? 'total_mv'
-      d.order = e.desc === undefined ? 'desc' : e.desc ? 'desc' : 'asc'
+
+    if(columnKey === 'name'){
+      onSort(columnKey, sort)
+      return 
+    }
+
+    setSort({
+      column: sort !== undefined ? columnMap[columnKey as string] : 'total_mv',
+      order: sort === undefined ? 'desc': sort
     })
   }
 
-  const columns: JknTableProps<TableDataType>['columns'] = useMemo(() => ([
-    { header: '序号', enableSorting: false, accessorKey: 'index', meta: { align: 'center', width: 50, }, cell: ({ row }) => row.index + 1 },
+  const updateStockCollect = useCallback((id: string, checked: boolean) => {
+    updateList(s => {
+      return s.map(produce(item => {
+        if (item.symbol === id) {
+          item.collect = checked ? 1 : 0
+        }
+      }))
+    })
+  }, [updateList])
+
+  const columns = useMemo<JknRcTableProps<TableDataType>['columns']>(() => ([
+    { title: '序号', dataIndex: 'index', align: 'center', width: 60, render: (_, __, index) => index + 1 },
     {
-      header: '名称代码', accessorKey: 'name', meta: { align: 'left' },
-      cell: ({ row }) => (
-        <StockView name={row.getValue('name')} code={row.original.symbol as string} />
+      title: '名称代码', dataIndex: 'name', align: 'left',
+      width: '12%', sort: true,
+      render: (_, row) => (
+        <StockView name={row.name} code={row.symbol as string} />
       )
     },
     {
-      header: '现价', accessorKey: 'price', meta: { align: 'right', width: '8%' },
-      cell: ({ row }) => (
-        <NumSpan value={row.getValue<number>('price')} decimal={2} isPositive={row.original.isUp} />
+      title: '现价', dataIndex: 'price', align: 'right', width: '8%', sort: true,
+      render: (_, row) => (
+        <NumSpan value={row.price} decimal={2} isPositive={row.isUp} />
       )
     },
     {
-      header: '涨跌幅', accessorKey: 'percent', meta: { align: 'right', width: 120 },
-      cell: ({ row }) => (
+      title: '涨跌幅', dataIndex: 'percent', align: 'right', width: 120, sort: true,
+      render: (_, row) => (
         <div className="inline-block">
-          <NumSpan block className="py-0.5 w-20" decimal={2} value={`${row.getValue<number>('percent') * 100}`} percent isPositive={row.getValue<number>('percent') >= 0} symbol />
+          <NumSpan block className="py-0.5 w-20" decimal={2} value={Decimal.create(row.percent).mul(100)} percent isPositive={row.isUp} symbol />
         </div>
       )
     },
     {
-      header: '成交额', accessorKey: 'amount', size: 20, meta: { align: 'right', width: '8%' },
-      cell: ({ row }) => Decimal.create(row.getValue<number>('amount')).toDecimalPlaces(2).toShortCN()
+      title: '成交额', dataIndex: 'amount', align: 'right', width: '8%', sort: true,
+      render: (_, row) => Decimal.create(row.amount).toDecimalPlaces(2).toShortCN()
     },
     {
-      header: '总市值', accessorKey: 'total', meta: { align: 'right', width: '8%' },
-      cell: ({ row }) => Decimal.create(row.getValue<number>('total')).toDecimalPlaces(2).toShortCN()
+      title: '总市值', dataIndex: 'total', align: 'right', width: '8%', sort: true,
+      render: (_, row) => Decimal.create(row.total).toDecimalPlaces(2).toShortCN()
     },
     {
-      header: '所属行业', enableSorting: false, accessorKey: 'industry', meta: { width: '8%', align: 'right' }
+      title: '所属行业', dataIndex: 'industry', width: '8%', align: 'right'
     },
     {
-      header: '盘前涨跌幅', accessorKey: 'prePercent', meta: { width: '8%', align: 'right' },
-      cell: ({ row }) => (
-        <NumSpan symbol decimal={2} percent value={row.getValue<number>('prePercent')} isPositive={row.original.isUp} />
+      title: '盘前涨跌幅', dataIndex: 'prePercent', width: '8%', align: 'right', sort: true,
+      render: (_, row) => (
+        <NumSpan symbol decimal={2} percent value={row.prePercent} isPositive={row.isUp} />
       )
     },
     {
-      header: '盘后涨跌幅', accessorKey: 'afterPercent', meta: { width: '8%', align: 'right' },
-      cell: ({ row }) => (
-        <NumSpan symbol decimal={2} percent value={row.getValue<number>('afterPercent')} isPositive={row.original.isUp} />
+      title: '盘后涨跌幅', dataIndex: 'afterPercent', width: '8%', align: 'right', sort: true,
+      render: (_, row) => (
+        <NumSpan symbol decimal={2} percent value={row.afterPercent} isPositive={row.isUp} />
       )
     },
     {
-      header: '换手率', accessorKey: 'turnoverRate', meta: { width: '8%', align: 'right' },
-      cell: ({ row }) => `${Decimal.create(row.getValue<number>('turnoverRate')).toFixed(2)}%`
+      title: '换手率', dataIndex: 'turnoverRate', width: '8%', align: 'right', sort: true,
+      render: (_, row) => `${Decimal.create(row.turnoverRate).toFixed(2)}%`
     },
     {
-      header: '市盈率', enableSorting: false, accessorKey: 'pe', meta: { width: '8%', align: 'right' },
-      cell: ({ row }) => `${Decimal.create(row.getValue<number>('pe')).toFixed(2)}`
+      title: '市盈率', dataIndex: 'pe', width: '8%', align: 'right',
+      render: (_, row) => `${Decimal.create(row.pe).toFixed(2)}`
     },
     {
-      header: '市净率', enableSorting: false, accessorKey: 'pb', meta: { width: '8%', align: 'right' },
-      cell: ({ row }) => `${Decimal.create(row.getValue<number>('pb')).toFixed(2)}`
+      title: '市净率', dataIndex: 'pb', width: '8%', align: 'right',
+      render: (_, row) => `${Decimal.create(row.pb).toFixed(2)}`
     },
     {
-      header: '+股票金池', enableSorting: false, accessorKey: 'collect', meta: { width: 80, align: 'center' },
-      cell: ({ row, table }) => (
-        <div>
-          <CollectStar
-            onUpdate={(checked) => table.options.meta?.emit({ event: 'collect', params: { symbols: [row.original.symbol], checked } })}
-            checked={row.getValue<boolean>('collect')}
-            code={row.original.symbol} />
-        </div>
+      title: '+股票金池', dataIndex: 'collect', width: 80, align: 'center',
+      render: (_, row) => (
+        <CollectStar
+          onUpdate={(checked) => updateStockCollect(row.symbol, checked)}
+          checked={row.collect === 1}
+          code={row.symbol} />
       )
     },
     {
-      header: '+AI报警', enableSorting: false, accessorKey: 't9', meta: { width: 80, align: 'center' },
-      cell: ({ row }) => <AiAlarm code={row.original.symbol}><JknIcon className="rounded-none" name="ic_add" /></AiAlarm>
+      title: '+AI报警', dataIndex: 't9', width: 80, align: 'center',
+      render: (_, row) => <AiAlarm code={row.symbol}><JknIcon className="rounded-none" name="ic_add" /></AiAlarm>
     },
     {
-      header: ({ table }) => (
-        <CollectStar.Batch
-          checked={table.getSelectedRowModel().rows.map(item => item.original.symbol)}
-          onCheckChange={e => table.getToggleAllRowsSelectedHandler()({ target: e })}
-          onUpdate={checked => table.options.meta?.emit({ event: 'collect', params: { symbols: table.getSelectedRowModel().rows.map(o => o.id), checked } })}
-        />
-      ),
-      accessorKey: 'check',
-      id: 'select',
-      enableSorting: false,
-      meta: { align: 'center', width: 60 },
-      cell: ({ row }) => (
-        <div className="w-full flex justify-center">
-          <JknCheckbox className="w-5 h-5" checked={row.getIsSelected()} onCheckedChange={(e) => row.getToggleSelectedHandler()({ target: e })} />
-          {/* <Checkbox checked={row.getIsSelected()} onCheckedChange={(e) => row.getToggleSelectedHandler()({ target: e })} /> */}
-        </div>
-      )
+      title: <CollectStar.Batch checked={checked} onCheckChange={(v) => setCheckedAll(v ? list.map(o => o.symbol) : [])} />,
+      dataIndex: 'checked',
+      align: 'center',
+      width: 60,
+      render: (_, row) => <JknCheckbox checked={getIsChecked(row.symbol)} onCheckedChange={v => onChange(row.symbol, v)} />
     }
-  ]), [])
+  ]), [checked, list, getIsChecked, onChange, setCheckedAll, updateStockCollect])
 
+  const onRowClick = useTableRowClickToStockTrading('symbol')
 
-  const onTableEvent: JknTableProps['onEvent'] = ({ event, params }) => {
-    const { symbols = [], checked } = params
-    if (event === 'collect') {
-      queryClient.setQueryData(['stock-table-view', props.type, sort], (data: TableDataType[]) => {
-        return data.map(produce(draft => {
-          if (symbols.includes(draft.symbol)) {
-
-            draft.extend.collect = checked ? 1 : 0
-          }
-        }))
-      })
-    }
-  }
   return (
-    <JknTable.Virtualizer rowHeight={35.5} onEvent={onTableEvent} loading={query.isLoading} manualSorting rowKey="symbol" onSortingChange={onSortChange} columns={columns} data={data}>
-    </JknTable.Virtualizer>
+    <JknRcTable isLoading={query.isLoading} columns={columns} rowKey="symbol" data={list} onSort={onSortChange} onRow={onRowClick} />
+    // <JknTable.Virtualizer rowHeight={35.5} onEvent={onTableEvent} loading={query.isLoading} manualSorting rowKey="symbol" onSortingChange={onSortChange} columns={columns} data={data}>
+    // </JknTable.Virtualizer>
   )
 }
 

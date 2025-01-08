@@ -121,7 +121,7 @@ export const SecondaryIndicator = (props: SecondaryIndicatorProps) => {
                             key={ele.id}
                             onKeyDown={() => { }}
                           >
-                            <RadioGroupItem value={ele.id} id={`stock-secondary-indicator-${props.mainIndex}-${props.index}-${ele.id}`} />
+                            <RadioGroupItem className="border-white/70" value={ele.id} id={`stock-secondary-indicator-${props.mainIndex}-${props.index}-${ele.id}`} />
                             <Label className="ml-2 flex-1 py-3" htmlFor={`stock-secondary-indicator-${props.mainIndex}-${props.index}-${ele.id}`}>
                               {ele.name}
                             </Label>

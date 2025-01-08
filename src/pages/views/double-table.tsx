@@ -1,11 +1,12 @@
 import { getPlateList } from "@/api"
-import { JknTable, type JknTableProps, NumSpan, ScrollArea } from "@/components"
+import { JknRcTable, type JknRcTableProps, NumSpan } from "@/components"
 import { useUpdateEffect } from "ahooks"
-import { useMemo, useState } from "react"
-import { useImmer } from "use-immer"
-import PlateStocks from "./components/plate-stocks"
+import { useCallback, useEffect, useMemo, useState } from "react"
+
+import { useTableData } from "@/hooks"
 import { useQuery } from "@tanstack/react-query"
 import Decimal from "decimal.js"
+import PlateStocks from "./components/plate-stocks"
 
 interface DoubleTableProps {
   type: 1 | 2
@@ -20,9 +21,9 @@ const DoubleTable = (props: DoubleTableProps) => {
   })
 
 
-  const onClickPlate = (row: PlateDataType) => {
+  const onClickPlate = useCallback((row: PlateDataType) => {
     setActivePlate(row.id)
-  }
+  }, [])
 
   useUpdateEffect(() => {
     setActivePlate(undefined)
@@ -31,6 +32,8 @@ const DoubleTable = (props: DoubleTableProps) => {
       setActivePlate(plate.data[0].id)
     }
   }, [props.type, plate.data])
+
+
 
   return (
     <div className="flex overflow-hidden h-full">
@@ -63,43 +66,29 @@ interface PlateListProps {
 }
 
 const PlateList = (props: PlateListProps) => {
-  const [sort, setSort] = useImmer<{ type?: string, order?: 'asc' | 'desc' }>({
-    type: undefined,
-    order: undefined
-  })
-
-  const data = (() => {
-    if (!sort.type) return [...props.data]
-    const newData = [...props.data]
-    newData.sort((a, b) => {
-      const aValue = a[sort.type as keyof PlateDataType]
-      const bValue = b[sort.type as keyof PlateDataType]
-      if (aValue > bValue) return sort.order === 'asc' ? 1 : -1
-      if (aValue < bValue) return sort.order === 'asc' ? -1 : 1
-      return 0
-    })
-
-    return newData
-
-  })()
+  const [list, { setList, onSort }] = useTableData(props.data, 'id')
 
 
-  const column = useMemo<JknTableProps<PlateDataType>['columns']>(() => [
-    { header: '序号', enableSorting: false, accessorKey: 'index', meta: { align: 'center', width: 40 }, cell: ({ row }) => row.index + 1 },
-    { header: '行业', enableSorting: false, accessorKey: 'name', meta: { width: 'auto' } },
+  useEffect(() => {
+    setList(props.data)
+  }, [props.data, setList])
+
+  const column = useMemo<JknRcTableProps<PlateDataType>['columns']>(() => [
+    { title: '序号', dataIndex: 'index', align: 'center', width: 60, render: (_, __, index) => index + 1 },
+    { title: '行业', dataIndex: 'name', align: 'left' },
     {
-      header: '涨跌幅', accessorKey: 'change',
-      meta: { width: 100 },
-      cell: ({ row }) => <NumSpan block percent symbol value={row.original.change} isPositive={row.original.change > 0} />
+      title: '涨跌幅', dataIndex: 'change', sort: true, align: 'right',
+      width: 100,
+      render: (_, row) => <NumSpan className="w-20" block percent symbol value={row.change} isPositive={row.change > 0} align="right" />
     },
     {
-      header: '成交额', accessorKey: 'amount',
-      meta: { align: 'right', width: 100 },
-      cell: ({ row }) => <span>{Decimal.create(row.original.amount).toShortCN()}</span>
+      title: '成交额', dataIndex: 'amount', sort: true,
+      align: 'right', width: 100,
+      render: (_, row) => <span className="inline-block h-8 leading-8">{Decimal.create(row.amount).toShortCN()}</span>
     }
   ], [])
   return (
-    <JknTable loading={props.loading} onRowClick={props.onRowClick} columns={column} data={data} onSortingChange={(s) => setSort(d => { d.type = s.id; d.order = s.desc ? 'desc' : 'asc' })} />
+    <JknRcTable isLoading={props.loading} columns={column} data={list} onSort={onSort} onRow={(record) => ({ onClick: () => props.onRowClick(record) })} />
   )
 }
 

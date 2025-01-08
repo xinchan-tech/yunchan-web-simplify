@@ -7,6 +7,7 @@ import { FormProvider, type UseFormReturn } from "react-hook-form"
 import type { z } from "zod"
 import { Button } from "../ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "../ui/dialog"
+import { useConfig } from "@/store"
 
 export interface UseModalProps {
   content: ReactNode
@@ -26,7 +27,7 @@ export interface UseModalAction {
 export const useModal = ({ content, onOpen, title, closeIcon, className, footer, ...props }: UseModalProps) => {
   const [modalVisible, { toggle: toggleModalVisible }] = useBoolean(false)
   const [visible, { setFalse, setTrue }] = useBoolean(false)
-
+  const platform = useConfig(s => s.platform)
   const _onOpenChange = (open?: boolean) => {
     if (!open) {
       toggleModalVisible()
@@ -56,7 +57,12 @@ export const useModal = ({ content, onOpen, title, closeIcon, className, footer,
                       {
                         closeIcon && (
                           <span
-                            className="bg-[#F36059] box-border rounded-full cursor-pointer  hover:opacity-90 absolute -z-0 w-4 h-4 left-2 top-3 flex items-center justify-center"
+                            className={
+                              cn(
+                                'bg-[#F36059] box-border rounded-full cursor-pointer  hover:opacity-90 absolute -z-0 w-4 h-4 top-3 flex items-center justify-center',
+                                platform === 'mac' ? 'left-2' : 'right-2'
+                              )
+                            }
                             onClick={toggleModalVisible}
                             onKeyDown={() => { }}
                           >

@@ -7,6 +7,10 @@ type Language = 'zh_CN' | 'en'
 const red = '#ff3f4d'
 const green = '#009e45'
 
+const platform = (() => {
+  return /windows|win32/i.test(navigator.userAgent) ? 'windows': /macintosh|mac os x/i.test(navigator.userAgent) ? 'mac' : 'other'
+})()
+
 interface ConfigStore {
   language: Language
   hasSelected: boolean
@@ -14,6 +18,7 @@ interface ConfigStore {
     name: string
     contact: string[]
   }[]
+  platform: typeof platform
   aiAlarmAutoNotice: boolean
   setAiAlarmAutoNotice: (auto: boolean) => void
   setConsults: (consults: ConfigStore['consults']) => void
@@ -39,6 +44,7 @@ export const useConfig = create<ConfigStore>()(
   persist(
     (set, get) => ({
       language: 'zh_CN',
+      platform,
       hasSelected: false,
       consults: [],
       aiAlarmAutoNotice: true,

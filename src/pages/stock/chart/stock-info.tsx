@@ -224,54 +224,58 @@ const StockNews = () => {
 
 
   return (
-    <div className="flex p-2 w-full box-border">
-      <HoverCard openDelay={100}>
-        <HoverCardTrigger >
-          <JknIcon name="ic_notice" className="mr-2 mt-0.5" />
-        </HoverCardTrigger>
-        <HoverCardContent side="left" align="start" className="w-80 p-0">
-          <ScrollArea className="h-96">
-            <div className="">
-              {
-                newList.data?.event.map((item) => (
-                  <div key={nanoid()} className={cn(
-                    'flex-grow-0 flex-shrink-0 basis-full text-xs hover:bg-primary cursor-pointer'
-                  )}
-                    onClick={() => item.url && window.open(item.url)}
-                    onKeyDown={() => { }}
-                  >
-                    <div className="flex p-2 w-full box-border">
-                      <JknIcon name="ic_notice" className="mr-2 mt-0.5" />
+    <>
+      {
+        newList.data && newList.data.event.length > 0 ? (<div className="flex p-2 w-full box-border">
+          <HoverCard openDelay={100}>
+            <HoverCardTrigger >
+              <JknIcon name="ic_notice" className="mr-2 mt-0.5" />
+            </HoverCardTrigger>
+            <HoverCardContent side="left" align="start" className="w-80 p-0">
+              <ScrollArea className="h-96">
+                <div className="">
+                  {
+                    newList.data?.event.map((item) => (
+                      <div key={nanoid()} className={cn(
+                        'flex-grow-0 flex-shrink-0 basis-full text-xs hover:bg-primary cursor-pointer'
+                      )}
+                        onClick={() => item.url && window.open(item.url)}
+                        onKeyDown={() => { }}
+                      >
+                        <div className="flex p-2 w-full box-border">
+                          <JknIcon name="ic_notice" className="mr-2 mt-0.5" />
+                          {
+                            <span className="text-sm">{item.title}</span>
+                          }
+                        </div>
+                        <Separator />
+                      </div>
+                    ))
+                  }
+                </div>
+              </ScrollArea>
+            </HoverCardContent>
+          </HoverCard>
+          <div className="flex-1">
+            <Carousel plugins={[Autoplay({
+              delay: 1000 * 5,
+            })]} orientation="vertical">
+              <CarouselContent className="h-12" >
+                {
+                  newList.data?.event.map((item) => (
+                    <div key={nanoid()} className="flex-grow-0 flex-shrink-0 basis-full">
                       {
                         <span className="text-sm">{item.title}</span>
                       }
                     </div>
-                    <Separator />
-                  </div>
-                ))
-              }
-            </div>
-          </ScrollArea>
-        </HoverCardContent>
-      </HoverCard>
-      <div className="flex-1">
-        <Carousel plugins={[Autoplay({
-          delay: 1000 * 5,
-        })]} orientation="vertical">
-          <CarouselContent className="h-12" >
-            {
-              newList.data?.event.map((item) => (
-                <div key={nanoid()} className="flex-grow-0 flex-shrink-0 basis-full">
-                  {
-                    <span className="text-sm">{item.title}</span>
-                  }
-                </div>
-              ))
-            }
-          </CarouselContent>
-        </Carousel>
-      </div>
-    </div>
+                  ))
+                }
+              </CarouselContent>
+            </Carousel>
+          </div>
+        </div>) : null
+      }
+    </>
   )
 }
 

@@ -46,6 +46,7 @@ export const JknRcTable = <T extends DefaultRecordType = any>({ headerHeight = 3
   return (
     <div className="jkn-rc-table overflow-hidden h-full" ref={dom} >
       <Table columns={_columns} scroll={{ y: size?.height ? (size?.height - headerHeight) : size?.height }}
+        rowHoverable={false}
         emptyText={
           isLoading ? (
             <div className="space-y-2 my-2">

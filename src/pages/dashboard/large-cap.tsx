@@ -15,6 +15,7 @@ import dayjs from "dayjs"
 import Decimal from "decimal.js"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
+import { useNavigate } from "react-router"
 
 const tradingToIntervalMap: Record<StockTrading, StockChartInterval> = {
   intraDay: StockChartInterval.INTRA_DAY,
@@ -63,6 +64,11 @@ const LargeCap = () => {
     }
   }, [largeCap.data])
 
+  const navigate = useNavigate()
+  const onChartDoubleClick = useCallback(() => {
+    navigate(`/stock/trading?symbol=${activeStock}`)
+  }, [activeStock, navigate])
+
   const updateQuoteHandler = useCallback<StockSubscribeHandler<'quote'>>((data) => {
     setStocks(s => {
       const items = s.map((item) => {
@@ -81,7 +87,7 @@ const LargeCap = () => {
   }, [])
 
   useStockQuoteSubscribe(largeCap.data?.find(item => item.category_name === activeKey)?.stocks.map(item => stockUtils.toSimpleStockRecord(item.stock, item.symbol, item.name)).map(v => v.symbol) ?? [], updateQuoteHandler)
-  
+
   const tabs = useMemo(() => {
     return largeCap.data?.map(item => ({
       key: item.category_name,
@@ -146,7 +152,9 @@ const LargeCap = () => {
         }
       </div>
       <div className="flex-1 relative">
-        <LargeCapChart code={activeStock} type={stockType} />
+        <div onDoubleClick={onChartDoubleClick} className="w-full h-full">
+          <LargeCapChart code={activeStock} type={stockType} />
+        </div>
         {
           activeKey !== '大盘指数' && (
             <div className="absolute bottom-4 left-10">
@@ -174,6 +182,7 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
   const { getStockColor } = useConfig()
   const stockUpColor = `hsl(${getStockColor()})`
   const stockDownColor = `hsl(${getStockColor(false)})`
+  const trading = useTime(s => s.getTrading())
 
 
   const interval = ((c, t) => {
@@ -203,10 +212,10 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
   }, [queryData.data])
 
   useEffect(() => {
-    renderChart(queryData.data)
-  }, )
+    renderChart(stockData, trading)
+  }, [stockData, trading])
 
-  const renderChart = (data: typeof queryData.data) => {
+  const renderChart = (data: typeof queryData.data, _trading: StockTrading) => {
     if (!data) return
     const dataset: [string, number, number][] = []
     let prevClose = 0
@@ -223,7 +232,7 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
     const xAxisData = getTradingPeriod(intervalToTradingMap[interval] ?? 'intraDay', dataset[0] ? dataset[0][0] : '')
 
     const style = colorUtil.hexToRGB(getStockColor(lastPercent >= 0, 'hex'))!
-  
+
     chartRef.current?.setOption({
       axisPointer: {
         label: {
@@ -268,12 +277,12 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
           left: 'center',
           top: '30%',
           style: {
-            text: interval === StockChartInterval.PRE_MARKET ? '盘前交易': '盘后交易',
+            text: interval === StockChartInterval.PRE_MARKET ? '盘前交易' : `${_trading === 'intraDay' ? '上一交易日\n(盘后)' : '盘后交易'}`,
             fill: 'rgba(255, 255, 255, .15)',
             fontSize: 64,
             textVerticalAlign: 'top'
           }
-        }]: []
+        }] : []
       },
       series: [{
         data: dataset,
@@ -482,7 +491,7 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
   useMount(() => {
     chartRef.current = echarts.init(chartDomRef.current)
     chartRef.current.setOption(options)
-    renderChart(stockData)
+    renderChart(stockData, trading)
   })
 
   useUnmount(() => {

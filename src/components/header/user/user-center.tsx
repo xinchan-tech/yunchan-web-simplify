@@ -82,6 +82,9 @@ const UserCenter = (props: UserCenterProps) => {
     reset()
     removeToken()
     props.onLogout()
+    if(window.location.pathname !== '/'){
+      window.location.href = '/'
+    }
   }
 
   return (

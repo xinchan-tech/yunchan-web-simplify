@@ -26,7 +26,7 @@ const CollectStarBatchPopover = (props: PropsWithChildren<{ open: boolean, onChe
       <PopoverAnchor asChild>
         <Button reset className="w-auto h-auto">
           <JknCheckbox
-            className="w-[17px] h-[17px]"
+            className="w-[12px] h-[12px]"
             checked={props.open}
             onCheckedChange={props.onCheckChange}
           />

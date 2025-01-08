@@ -5,7 +5,7 @@ import AppleIcon from '@/assets/icon/apple.png'
 import GoogleIcon from '@/assets/icon/google.png'
 import { useToken, useUser } from "@/store"
 import { z } from "zod"
-import { Button, Form, FormControl, FormField, FormItem,  Input } from "@/components"
+import { Button, Form, FormControl, FormField, FormItem, Input, Separator } from "@/components"
 import { useToast, useZForm } from "@/hooks"
 import { useMutation } from "@tanstack/react-query"
 
@@ -72,8 +72,12 @@ const LoginForm = (props: LoginFormProps) => {
             <Button block loading={loginMutation.isPending}>登录</Button>
           </form>
         </Form>
-        <div className="px-4 other-login mt-4" >
-          {/* <Divider >其他登录方式</Divider> */}
+        <div className="px-4 other-login mt-12" >
+          <div className="flex items-center mb-2">
+            <span className="border-0 border-b border-solid border-gray-300 flex-1" />
+            <span className="text-secondary mx-2 text-xs">其他登录方式</span>
+            <span className="border-0 border-b border-solid border-gray-300 flex-1" />
+          </div>
           <div className="flex items-center justify-between px-10">
             <AppleLogin />
             <WeChatLogin />
@@ -87,7 +91,7 @@ const LoginForm = (props: LoginFormProps) => {
 
 const AppleLogin = () => {
   return (
-    <div className="apple-login w-8 h-8 cursor-pointer">
+    <div className="apple-login w-6 h-6 cursor-pointer">
       <img src={AppleIcon} alt="" className="w-full h-full" />
     </div>
   )
@@ -95,7 +99,7 @@ const AppleLogin = () => {
 
 const WeChatLogin = () => {
   return (
-    <div className="wechat-login w-10 h-10 cursor-pointer">
+    <div className="wechat-login w-8 h-8 cursor-pointer">
       <img src={WechatLoginIcon} alt="" className="w-full h-full" />
     </div>
   )
@@ -103,7 +107,7 @@ const WeChatLogin = () => {
 
 const GoogleLogin = () => {
   return (
-    <div className="google-login w-8 h-8 cursor-pointer">
+    <div className="google-login w-6 h-6 cursor-pointer">
       <img src={GoogleIcon} alt="" className="w-full h-full" />
     </div>
   )
