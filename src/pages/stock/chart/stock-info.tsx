@@ -1,14 +1,16 @@
 import { getStockBaseCodeInfo, getStockBrief, getStockNotice, getStockQuote, getStockRelated, getStockTrades } from "@/api"
 import { AiAlarm, Button, CapsuleTabs, Carousel, CarouselContent, CollectStar, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, HoverCard, HoverCardContent, HoverCardTrigger, JknIcon, JknTable, type JknTableProps, NumSpan, PriceAlarm, ScrollArea, Separator } from "@/components"
-import { StockRecord, stockUtils } from "@/utils/stock"
+import { StockRecord, StockSubscribeHandler, stockUtils } from "@/utils/stock"
 import { cn } from "@/utils/style"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import dayjs from "dayjs"
 import Decimal from "decimal.js"
 import Autoplay from "embla-carousel-autoplay"
 import { nanoid } from "nanoid"
-import { useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { stockBaseCodeInfoExtend, useSymbolQuery } from "../lib"
+import { useTime } from "@/store"
+import { useStockQuoteSubscribe } from "@/hooks"
 export const StockInfo = () => {
   const [active, setActive] = useState<'quote' | 'news'>('quote')
   const code = useSymbolQuery()
@@ -57,8 +59,22 @@ export const StockInfo = () => {
   )
 }
 
+type StockBaseInfoData = {
+  name: string
+  collect: 0 | 1
+  code: string
+  percent: number
+  close: number
+  prevClose: number
+  time: string
+  subTime: string
+  subClose: number
+  subPercent: number
+}
+
 const StockBaseInfo = () => {
   const code = useSymbolQuery()
+  const trading = useTime(s => s.getTrading()) 
   const queryOptions = {
     queryKey: [getStockBaseCodeInfo.cacheKey, code, stockBaseCodeInfoExtend],
     queryFn: () => getStockBaseCodeInfo({ symbol: code, extend: stockBaseCodeInfoExtend })
@@ -67,7 +83,50 @@ const StockBaseInfo = () => {
 
   const codeInfo = useQuery(queryOptions)
 
-  const [lastData, _, afterData] = codeInfo.data ? stockUtils.toStockRecord(codeInfo.data) : []
+  const [data, setData] = useState<StockBaseInfoData>()
+
+  useEffect(() => {
+    const [lastData, beforeData, afterData] = codeInfo.data ? stockUtils.toStockRecord(codeInfo.data) : []
+    
+    const subData = trading === 'preMarket' ? beforeData : afterData
+
+    setData({
+      name: lastData?.name ?? '',
+      collect: lastData?.collect ?? 0,
+      code: lastData?.code ?? '',
+      percent: lastData?.percent ?? 0,
+      close: lastData?.close ?? 0,
+      prevClose: lastData?.prevClose ?? 0,
+      subClose: subData?.close ?? 0,
+      subPercent: subData?.percent ?? 0,
+      time: lastData?.time ?? '',
+      subTime: subData?.time ?? ''
+    })
+
+
+  }, [codeInfo.data, trading])
+
+  const stockSubscribeHandler = useCallback<StockSubscribeHandler<'quote'>>((data) => {
+
+    setData((s) => {
+      if (!s) return
+      if (s.code === data.topic) {
+        if(trading === 'intraDay'){
+          s.close = data.record.close
+          s.percent = (data.record.close - data.record.preClose) / data.record.preClose
+          s.prevClose = data.record.preClose
+          s.time = dayjs(data.record.time).format('YYYY-MM-DD HH:mm:ss')
+        }else{
+          s.subClose = data.record.close
+          s.subPercent = (data.record.close - data.record.preClose) / data.record.preClose
+          s.subTime = dayjs(data.record.time).format('YYYY-MM-DD HH:mm:ss')
+        }
+      }
+      return {...s}
+    })
+  }, [trading])
+
+  useStockQuoteSubscribe([code], stockSubscribeHandler)
 
   const onStarUpdate = (check: boolean) => {
     queryClient.cancelQueries(queryOptions)
@@ -87,48 +146,54 @@ const StockBaseInfo = () => {
     <>
       <div className="flex w-full items-center px-2 box-border py-2 border-0 border-b border-solid border-border">
         <span className="text-lg">{code}</span>
-        <span className="flex-1 text-sm text-tertiary mx-2">{lastData?.name}</span>
+        <span className="flex-1 text-sm text-tertiary mx-2">{data?.name}</span>
         {
-          lastData?.code ? <CollectStar onUpdate={onStarUpdate} checked={lastData?.collect === 1} sideOffset={5} align="start" code={lastData.code} /> : null
+          data?.code ? <CollectStar onUpdate={onStarUpdate} checked={data?.collect === 1} sideOffset={5} align="start" code={data.code} /> : null
         }
       </div>
       <div className="mt-1 py-2 border-0 border-b border-solid border-border">
         <div className={cn(
-          (lastData?.percent ?? 0) >= 0 ? 'text-stock-up' : 'text-stock-down',
+          (data?.percent ?? 0) >= 0 ? 'text-stock-up' : 'text-stock-down',
           'flex items-center justify-between px-2 box-border text-xs'
         )}>
           <span className="text-lg font-bold">
-            <NumSpan arrow decimal={3} isPositive={Decimal.create(lastData?.percent).gte(0)} value={Decimal.create(lastData?.close).toNumber()} />
+            <NumSpan arrow decimal={3} isPositive={Decimal.create(data?.percent).gte(0)} value={Decimal.create(data?.close).toNumber()} />
           </span>
           <span>
-            <NumSpan decimal={3} symbol isPositive={Decimal.create(lastData?.percent).gte(0)} value={(lastData?.close ?? 0) - (lastData?.prevClose ?? 0)} />
+            <NumSpan decimal={3} symbol isPositive={Decimal.create(data?.percent).gte(0)} value={(data?.close ?? 0) - (data?.prevClose ?? 0)} />
           </span>
           <span>
-            {Decimal.create(lastData?.percent).mul(100).toFixed(2)}%
+            {Decimal.create(data?.percent).mul(100).toFixed(2)}%
           </span>
           <span className="text-tertiary">
-            收盘价
-            {lastData?.time?.slice(5, 11).replace('-', '/')}
+            {
+              trading === 'intraDay' ? '交易中': '收盘价'
+            }
+            {data?.time?.slice(5, 11).replace('-', '/')}
           </span>
         </div>
-        <div className={cn(
-          (afterData?.percent ?? 0) >= 0 ? 'text-stock-up' : 'text-stock-down',
-          'flex items-center justify-between px-2 box-border text-xs my-1'
-        )}>
-          <span className="text-base font-bold">
-            <NumSpan arrow decimal={3} isPositive={Decimal.create(afterData?.percent).gte(0)} value={Decimal.create(afterData?.close).toNumber()} />
-          </span>
-          <span>
-            <NumSpan decimal={3} symbol isPositive={Decimal.create(afterData?.percent).gte(0)} value={(afterData?.close ?? 0) - (afterData?.prevClose ?? 0)} />
-          </span>
-          <span>
-            {Decimal.create(afterData?.percent).mul(100).toFixed(2)}%
-          </span>
-          <span className="text-tertiary">
-            盘后价
-            {lastData?.time?.slice(5, 11).replace('-', '/')}
-          </span>
-        </div>
+        {
+          trading !== 'intraDay' ? (
+            <div className={cn(
+              (data?.percent ?? 0) >= 0 ? 'text-stock-up' : 'text-stock-down',
+              'flex items-center justify-between px-2 box-border text-xs my-1'
+            )}>
+              <span className="text-base font-bold">
+                <NumSpan arrow decimal={3} isPositive={Decimal.create(data?.percent).gte(0)} value={Decimal.create(data?.close).toNumber()} />
+              </span>
+              <span>
+                <NumSpan decimal={3} symbol isPositive={Decimal.create(data?.percent).gte(0)} value={(data?.close ?? 0) - (data?.prevClose ?? 0)} />
+              </span>
+              <span>
+                {Decimal.create(data?.percent).mul(100).toFixed(2)}%
+              </span>
+              <span className="text-tertiary">
+                盘后价
+                {data?.subTime?.slice(5, 11).replace('-', '/')}
+              </span>
+            </div>
+          ): null
+        }
       </div>
     </>
   )
