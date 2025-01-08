@@ -60,13 +60,15 @@ class StockSubscribe {
   private url: string
   private ws: Ws
   private cid: string
+  private bufferMax: number
   constructor(url: string) {
     this.url = url
     this.subscribeTopic = {}
     this.cid = uid(16)
     this.buffer = []
     this.bufferMap = new Map()
-    this.bufferHandleLength = 20
+    this.bufferHandleLength = 10
+    this.bufferMax = 2000
     this.ws = new Ws(`${this.url}&cid=${this.cid}`, {
       beat: false,
       onMessage: ev => {
@@ -75,9 +77,18 @@ class StockSubscribe {
           const parserData = data.b ? barActionResultParser(data): quoteActionResultParser(data)
           if(this.bufferMap.has(parserData.topic)){
             const _old = this.bufferMap.get(parserData.topic)!
-            _old.dirty = true
-
+            _old.data = parserData
+            // const _new = {action: parserData.topic, data: parserData, dirty: false}
+            // this.bufferMap.set(parserData.topic, _new)
+            // this.buffer.push(_new)
+          }else{
             const _new = {action: parserData.topic, data: parserData, dirty: false}
+
+            if(this.buffer.length >= this.bufferMax){
+              const first = this.buffer.shift()
+              this.bufferMap.delete(first!.data.topic)
+            }
+
             this.bufferMap.set(parserData.topic, _new)
             this.buffer.push(_new)
           }
@@ -165,12 +176,9 @@ class StockSubscribe {
 
   private startBufferHandle(){
     let count = this.bufferHandleLength
-
     while(count > 0 && this.buffer.length > 0){
       const item = this.buffer.shift()!
-      if(item.dirty){
-        continue
-      }
+     
       this.subscribed.emit(item.data.action, item.data)
       this.bufferMap.delete(item.data.action)
       count--
