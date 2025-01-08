@@ -66,7 +66,7 @@ export const useStockBarSubscribe = (symbols: string[], handler: StockSubscribeH
 
   useEffect(() => {
     stockSubscribe.on('bar', handler)
-
+ 
     return () => {
       stockSubscribe.off('bar', handler)
     }

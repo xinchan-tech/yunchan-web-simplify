@@ -51,37 +51,39 @@ export const MainChart = (props: MainChartProps) => {
   })
 
 
-  const subscribeSymbol = useMemo(() => `${state.symbol}@${state.timeIndex}`, [state.symbol, state.timeIndex])
+  const subscribeSymbol = useMemo(() => `${state.symbol}@${state.timeIndex <= 0 ? 1: state.timeIndex}`, [state.symbol, state.timeIndex])
+
+  // useEffect(() => {
+  //   setMainData({ index: props.index, data: query.data })
+  // }, [query.data, props.index, setMainData])
 
   const subscribeHandler: StockSubscribeHandler<'bar'> = useCallback((data) => {
     const stock = stockUtils.toSimpleStockRecord(data.rawRecord)
-    const qData = queryClient.getQueryData(queryKey) as typeof query.data
 
-    if (!qData || qData.history.length === 0) return
 
-    const lastData = stockUtils.toSimpleStockRecord(qData.history[qData.history.length - 1])
-    if( state.timeIndex === StockChartInterval.PRE_MARKET || state.timeIndex === StockChartInterval.AFTER_HOURS || state.timeIndex === StockChartInterval.INTRA_DAY){
-      queryClient.setQueryData(queryKey, {
-        ...qData,
-        history: [...qData.history, [stock.time!, ...(data.rawRecord.slice(1)) as any]]
-      })
-      return
+    if (!query.data || query.data.history.length === 0) return
+
+    const lastData = stockUtils.toSimpleStockRecord(query.data.history[query.data.history.length - 1])
+    // if( state.timeIndex === StockChartInterval.PRE_MARKET || state.timeIndex === StockChartInterval.AFTER_HOURS || state.timeIndex === StockChartInterval.INTRA_DAY){
+    //   setMainData({ index: props.index, data: {
+    //     ...query.data,
+    //     history: [...query.data.history as any, [stock.time!, ...(data.rawRecord.slice(1)) as any]]
+    //   }})
+    //   return
+    // }
+    if(!renderUtils.isSameTimeByInterval(lastData.toDayjs(), stock.toDayjs(), state.timeIndex)){
+      setMainData({ index: props.index, data: {
+        ...query.data,
+        history: [...query.data.history as any, [stock.time!, ...(data.rawRecord.slice(1)) as any]]
+      } })
+    }else{
+      setMainData({ index: props.index, data: {
+        ...query.data,
+        history: [...query.data.history.slice(0, -1) as any, [stock.time!, ...(data.rawRecord.slice(1)) as any]]
+      } })
     }
-    if (state.timeIndex === StockChartInterval.ONE_MIN) {
-      // 当前分钟大于最后一条数据的分钟
-      if (lastData.toDayjs().isBefore(stock.toDayjs(), 'minute')) {
-        queryClient.setQueryData(queryKey, {
-          ...qData,
-          history: [...qData.history, data.rawRecord]
-        })
-      }else{
-        queryClient.setQueryData(queryKey, {
-          ...qData,
-          history: [...qData.history.slice(0, -1), [stock.time!, ...(data.rawRecord.slice(1)) as any]]
-        })
-      }
-    }
-  }, [ queryClient, state.timeIndex])
+  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
+  }, [ state.timeIndex,  query.data, setMainData, props.index])
 
   useStockBarSubscribe([subscribeSymbol], subscribeHandler)
 
@@ -226,7 +228,7 @@ export const MainChart = (props: MainChartProps) => {
     if (state.yAxis.right !== 'percent') return
 
     /**
-     * 1.01，x轴100%是state.mainData.length * 1.01，100%的时候要向左偏移0.01
+     * 1.01，x轴100%是query.data.length * 1.01，100%的时候要向左偏移0.01
      * 所以对应data的100%其实是100/1.01 = 98.02%
      * 所以差值是100 - 98.02 = 1.98
      * TODO: 算法不对，需要重新计算 

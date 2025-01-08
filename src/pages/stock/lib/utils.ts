@@ -174,6 +174,9 @@ export const renderUtils = {
    */
   isSameTimeByInterval: (src: Dayjs, target: Dayjs, interval: StockChartInterval) => {
     switch(interval) {
+      case StockChartInterval.PRE_MARKET:
+      case StockChartInterval.INTRA_DAY:
+      case StockChartInterval.AFTER_HOURS:
       case StockChartInterval.ONE_MIN:
         return src.isSame(target, 'minute')
       case StockChartInterval.TWO_MIN:

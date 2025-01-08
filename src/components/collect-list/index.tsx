@@ -3,14 +3,14 @@ import { AddCollect, CollectCapsuleTabs, JknIcon, NumSpan, ScrollArea } from "@/
 import { useConfig, useTime } from "@/store"
 import { getTradingPeriod } from "@/utils/date"
 import echarts, { type ECOption } from "@/utils/echarts"
-import { stockUtils, type StockRecord } from "@/utils/stock"
+import { StockSubscribeHandler, stockUtils, type StockRecord } from "@/utils/stock"
 import { colorUtil } from "@/utils/style"
 import { useQuery } from "@tanstack/react-query"
 import { useMount, useUnmount, useUpdateEffect } from "ahooks"
 import Decimal from "decimal.js"
-import { type PropsWithChildren, useEffect, useRef, useState } from "react"
+import { type PropsWithChildren, useCallback, useEffect, useRef, useState } from "react"
 import { withSort } from "../jkn/jkn-icon/with-sort"
-import { useTableData } from "@/hooks"
+import { useStockQuoteSubscribe, useTableData } from "@/hooks"
 
 const extend: StockExtend[] = ['basic_index', 'day_basic', 'alarm_ai', 'alarm_all', 'total_share', 'financials', 'thumbs', 'stock_before', 'stock_after']
 
@@ -69,6 +69,23 @@ export const CollectList = (props: CollectListProps) => {
 
     setList(_stockList)
   }, [stocks.data, trading, setList])
+
+  const stockSubscribeHandler = useCallback<StockSubscribeHandler<'quote'>>((e) => {
+    updateList((list) => {
+      const _list = list.map(stock => {
+        if (stock.code === e.topic) {
+          const _stock = { ...stock }
+          _stock.price = e.record.close
+          _stock.percent = ( e.record.close - e.record.preClose) / e.record.preClose
+          return _stock
+        }
+        return stock
+      })
+      return _list
+    })
+  }, [updateList])
+
+  useStockQuoteSubscribe(stocks.data?.items.map(v => v.symbol) ?? [], stockSubscribeHandler)
 
   const [sort, setSort] = useState<{ field: string, sort: 'asc' | 'desc' | undefined }>({ field: '', sort: undefined })
 

@@ -272,17 +272,17 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
         data: xAxisData
       },
       graphic: {
-        elements: (interval === StockChartInterval.PRE_MARKET || interval === StockChartInterval.AFTER_HOURS) ? [{
+        elements: [{
           type: 'text',
           left: 'center',
           top: '30%',
           style: {
-            text: interval === StockChartInterval.PRE_MARKET ? '盘前交易' : `${_trading === 'intraDay' ? '上一交易日\n(盘后)' : '盘后交易'}`,
+            text: interval === StockChartInterval.INTRA_DAY ? '':  interval === StockChartInterval.PRE_MARKET ? '盘前交易' : `${_trading === 'intraDay' ? '上一交易日\n    (盘后)' : '盘后交易'}`,
             fill: 'rgba(255, 255, 255, .15)',
             fontSize: 64,
             textVerticalAlign: 'top'
           }
-        }] : []
+        }]
       },
       series: [{
         data: dataset,
