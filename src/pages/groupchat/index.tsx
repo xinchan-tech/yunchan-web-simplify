@@ -13,83 +13,179 @@ import WKSDK, {
   MessageStatus,
   Channel,
   ChannelTypeGroup,
+  PullMode,
 } from "wukongimjssdk";
 import { useEffect, useRef, useState } from "react";
 import { useUser, useToken } from "@/store";
 import { Button, Input } from "@/components";
-import { useGroupChatStoreNew } from "@/store/group-chat-new";
-import { useLatest } from "ahooks";
+import {
+  useGroupChatShortStore,
+  useGroupChatStoreNew,
+} from "@/store/group-chat-new";
+import { useLatest, useThrottleFn } from "ahooks";
+import { setPersonChannelCache } from "./chat-utils";
+import { fromUIDList } from "./Service/dataSource";
+
+const Threshold = 200;
 
 let connectStatusListener!: ConnectStatusListener;
 let messageListener!: MessageListener;
 let messageStatusListener!: MessageStatusListener;
 
-enum PullMode {
-  Down = 0, // 向下拉取
-  Up = 1, // 向上拉取
-}
-
 const GroupChatPage = () => {
   const { token } = useToken();
   const { user } = useUser();
 
-  const [title, setTitle] = useState("");
   const { toChannel, setToChannel, selectedChannel } = useGroupChatStoreNew();
-  const latestToChannel = useLatest(toChannel)
-  const msgListRef = useRef<any>(null)
+  const latestToChannel = useLatest(toChannel);
+  const msgListRef = useRef<any>(null);
 
   const [messages, setMessages] = useState<Message[]>([]);
   const messagesRef = useRef<Message[]>([]);
+  const { conversationWraps } = useGroupChatShortStore();
 
   // 消息列表滚动到底部
   const scrollBottom = () => {
     let timer = setTimeout(() => {
-      if(msgListRef.current && typeof msgListRef.current.scrollToBottom === 'function') {
-        msgListRef.current.scrollToBottom()
+      if (
+        msgListRef.current &&
+        typeof msgListRef.current.scrollToBottom === "function"
+      ) {
+        msgListRef.current.scrollToBottom();
       }
-      clearTimeout(timer)
+      clearTimeout(timer);
       timer = null;
     }, 0);
-  }
+  };
 
   // 监听消息
-  messageListener = 
-    (msg) => {
-      if (latestToChannel.current?.channelID !== msg.channel.channelID) {
-        return;
-      }
-      const temp = [...messagesRef.current];
-      temp.push(msg);
-      setMessages(temp);
-      messagesRef.current = temp;
+  messageListener = (msg) => {
+    if (latestToChannel.current?.channelID !== msg.channel.channelID) {
+      return;
+    }
+    const temp = [...messagesRef.current];
 
-      //   scrollBottom();
+    if (fromUIDList.indexOf(msg.fromUID) < 0) {
+      fromUIDList.push(msg.fromUID);
+      setPersonChannelCache(msg.fromUID);
+
+      setMessages(temp);
     }
 
- 
+    temp.push(msg);
+    setMessages(temp);
+    messagesRef.current = temp;
+
+    //   scrollBottom();
+  };
 
   // 拉取当前会话最新消息
   const pullLast = async (channel: Channel) => {
     if (channel) {
+      pulldowning.current = true
+      pulldownFinished.current = false
       const msgs = await WKSDK.shared().chatManager.syncMessages(channel, {
         limit: 15,
         startMessageSeq: 0,
         endMessageSeq: 0,
         pullMode: PullMode.Up,
       });
-
+      pulldowning.current = false
       if (msgs && msgs.length > 0) {
         msgs.forEach((m) => {
           messagesRef.current.push(m);
         });
       }
       setMessages(messagesRef.current);
-      scrollBottom()
+      scrollBottom();
     }
   };
 
+  // 查看前面的消息
+  const pullDown = async () => {
+    if (messagesRef.current.length == 0) {
+      return;
+    }
+    const firstMsg = messagesRef.current[0];
+    const firstMsgId = firstMsg.clientMsgNo
+    if (firstMsg.messageSeq == 1) {
+      pulldownFinished.current = true;
+      return;
+    }
+    if (latestToChannel.current) {
+      const limit = 15;
+      const msgs = await WKSDK.shared().chatManager.syncMessages(
+        latestToChannel.current,
+        {
+          limit: limit,
+          startMessageSeq: firstMsg.messageSeq - 1,
+          endMessageSeq: 0,
+          pullMode: PullMode.Down,
+        }
+      );
+      if (msgs.length < limit) {
+        pulldownFinished.current = true;
+      }
+      if (msgs && msgs.length > 0) {
+        msgs.reverse().forEach((m) => {
+          messagesRef.current.unshift(m);
+        });
+
+        setMessages([...messagesRef.current]);
+      }
+
+      // 等待dom更新后修改滚动位置
+      
+     
+        let timer = setTimeout(() => {
+          if (
+            msgListRef.current &&
+            typeof msgListRef.current.scrollToBottom === "function"
+          ) {
+            const firstMsgEl = document.getElementById(firstMsgId);
+            if (firstMsgEl) {
+
+              msgListRef.current.scrollTo(firstMsgEl.offsetTop);
+            }
+          }
+          clearTimeout(timer);
+          timer = null;
+        }, 0);
+      
+    }
+  };
+
+  const pulldowning = useRef(false);
+  const pulldownFinished = useRef(false);
+  const handleMsgScroll = useThrottleFn((e: any) => {
+    const targetScrollTop = e?.target?.scrollTop;
+    if (targetScrollTop <= Threshold) {
+      // 下拉
+      if (pulldowning.current || pulldownFinished.current) {
+        console.log(
+          "不允许下拉",
+          "pulldowning",
+          pulldowning.current,
+          "pulldownFinished",
+          pulldownFinished.current
+        );
+        return;
+      }
+      console.log("下拉");
+      pulldowning.current = true;
+      pullDown()
+        .then(() => {
+          pulldowning.current = false;
+        })
+        .catch(() => {
+          pulldowning.current = false;
+        });
+    }
+  }, {
+    wait: 200
+  })
+
   messageStatusListener = (ack: SendackPacket) => {
-    console.log(ack);
     messagesRef.current.forEach((m) => {
       if (m.clientSeq == ack.clientSeq) {
         m.status =
@@ -97,7 +193,7 @@ const GroupChatPage = () => {
         return;
       }
     });
-    setMessages(messagesRef.current)
+    setMessages(messagesRef.current);
   };
 
   // 连接IM
@@ -117,11 +213,6 @@ const GroupChatPage = () => {
     // 监听连接状态
     connectStatusListener = (status) => {
       console.log(status, "status");
-      if (status == ConnectStatus.Connected) {
-        setTitle(`${config.uid || ""}(连接成功)`);
-      } else {
-        setTitle(`${config.uid || ""}(断开)`);
-      }
     };
 
     WKSDK.shared().connectManager.addConnectStatusListener(
@@ -164,26 +255,30 @@ const GroupChatPage = () => {
     }
   };
 
-  const handleChannelSelect = (channel:Channel) => {
+  const handleChannelSelect = (channel: Channel) => {
     messagesRef.current = [];
 
     pullLast(channel);
-  }
+  };
 
+  // 初始化群聊列表和消息
+  const initChannelFlag = useRef(true);
   useEffect(() => {
-    if(selectedChannel) {
-      handleChannelSelect(selectedChannel)
+    if (
+      selectedChannel &&
+      conversationWraps.length > 0 &&
+      initChannelFlag.current === true
+    ) {
+      handleChannelSelect(selectedChannel);
+      initChannelFlag.current = false;
     }
-  }, [
-
-    selectedChannel
-  ])
+  }, [selectedChannel, conversationWraps]);
   return (
     <div className="group-chat-container flex">
       <GroupChatLeftBar />
       <GroupChannel
         onSelectChannel={(channel: Channel) => {
-          // handleChannelSelect(channel)
+          handleChannelSelect(channel);
         }}
       />
       <div className="group-chat-right">
@@ -205,7 +300,11 @@ const GroupChatPage = () => {
         </div>
         <div className="flex" style={{ height: "calc(100% - 58px)" }}>
           <div className="group-msg-panel">
-            <GroupChatMsgList messages={messages} ref={msgListRef}/>
+            <GroupChatMsgList
+              messages={messages}
+              ref={msgListRef}
+              handleScroll={handleMsgScroll.run}
+            />
             <GroupChatInput onMsgSend={scrollBottom} />
           </div>
           <div className="w-[220px]"></div>

@@ -3,19 +3,25 @@ import WKSDK, {
   ConversationAction,
   Conversation,
   Channel,
+  ChannelInfo,
 } from "wukongimjssdk";
 import { ConversationWrap } from "../ConversationWrap";
 import { useEffect, useState } from "react";
-import { useGroupChatStoreNew } from "@/store/group-chat-new";
+import {
+  useGroupChatStoreNew,
+   useGroupChatShortStore,
+} from "@/store/group-chat-new";
 import { cn } from "@/utils/style";
-import APIClient from "@/services/APIClient";
+import APIClient from "../Service/APIClient";
 import { useLatest } from "ahooks";
 import { lastContent } from "../chat-utils";
+// import { getGroupMembersService } from "@/api";
 
 const GroupChannel = (props: { onSelectChannel: (c: Channel) => void }) => {
-  const [conversationWraps, setConversationWraps] = useState<
-    ConversationWrap[]
-  >([]);
+  // const [conversationWraps, setConversationWraps] = useState<
+  //   ConversationWrap[]
+  // >([]);
+  const {conversationWraps, setConversationWraps} = useGroupChatShortStore()
   const latestConversation = useLatest(conversationWraps);
   const { onSelectChannel } = props;
   const { setSelectedChannel, selectedChannel, setToChannel } =
@@ -111,8 +117,8 @@ const GroupChannel = (props: { onSelectChannel: (c: Channel) => void }) => {
 
   // 强制刷新会话
   const channelInfoListener = () => {
-    if (conversationWraps.length > 0) {
-      const temp = [...conversationWraps];
+    if (latestConversation.current.length > 0) {
+      const temp = [...latestConversation.current];
       setConversationWraps(temp);
     }
   };
@@ -157,12 +163,20 @@ const GroupChannel = (props: { onSelectChannel: (c: Channel) => void }) => {
     }
   };
 
+  // const handleDealGroupMembers = async (groupId: string) => {
+  //   if(!hasGroupMembers(groupId)) {
+  //     const res = await getGroupMembersService(groupId);
+  //     console.log(res)
+  //   }
+  // }
+
   const handleSelectChannel = (channel: Channel) => {
     setSelectedChannel(channel);
     setToChannel(channel);
     if (typeof onSelectChannel === "function") {
       onSelectChannel(channel);
     }
+    // handleDealGroupMembers(channel.channelID)
     APIClient.shared.clearUnread(channel);
     clearConversationUnread(channel);
   };
@@ -192,7 +206,7 @@ const GroupChannel = (props: { onSelectChannel: (c: Channel) => void }) => {
                     style={{ width: "48px", height: "48px" }}
                   />
                 ) : (
-                  <span>{item.channelInfo?.title || ''}</span>
+                  <span>{item.channelInfo?.title || ""}</span>
                 )}
 
                 {item.unread > 0 && (
@@ -206,7 +220,7 @@ const GroupChannel = (props: { onSelectChannel: (c: Channel) => void }) => {
                   {item.channelInfo?.title || ""}
                 </div>
                 <div className="group-last-msg flex justify-between">
-                  <div className="flex-1 overflow-hidden whitespace-nowrap text-ellipsis">
+                  <div className="flex-1 overflow-hidden whitespace-nowrap text-ellipsis max-w-24">
                     {lastContent(item)}
                     {item.lastMessage?.content.conversationDigest || ""}
                   </div>

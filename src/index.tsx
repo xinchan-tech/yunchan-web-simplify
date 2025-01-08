@@ -9,6 +9,7 @@ import '@/plugins/decimal-plugin'
 import { } from '@/utils/stock'
 import App from './app.tsx'
 import { initDataSource } from './services/dataSource.ts'
+import { initDataSource } from './pages/groupchat/Service/dataSource.ts'
 
 
 

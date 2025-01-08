@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { Channel } from "wukongimjssdk";
+import { ConversationWrap } from "@/pages/groupchat/ConversationWrap";
 
 interface GroupChatStore {
   bottomHeight: number;
@@ -31,17 +32,42 @@ export const useGroupChatStoreNew = create<GroupChatStore>()(
   )
 );
 
+type GroupMember = {
+  name: string;
+  avatar: string;
+};
+
 interface GroupChatShortStore {
-  scrollDom: HTMLElement | null;
-  setScrollDom: (dom: HTMLElement) => void;
+  groupMemberCache: Map<string, GroupMember[]>;
+  setGroupMember: (groupId: string, members: GroupMember[]) => void;
+  getGroupMembers: (groupId: string) => GroupMember[] | undefined
+  hasGroupMembers: (groupId: string) => boolean | undefined
+  conversationWraps: ConversationWrap[]
+  setConversationWraps: (data: ConversationWrap[]) => void
 }
 
 export const useGroupChatShortStore = create<GroupChatShortStore>(
   (set, get) => ({
-    scrollDom: null,
-    setScrollDom: (dom: HTMLElement) =>
-      set({
-        scrollDom: dom,
-      }),
+    conversationWraps: [],
+    setConversationWraps: (data: ConversationWrap[]) => {
+        set({
+            conversationWraps: data
+        })
+    },
+    groupMemberCache: new Map(),
+    setGroupMember: (groupId: string, members: GroupMember[]) => {
+      set((state) => {
+        state.groupMemberCache.set(groupId, members);
+        return {
+          groupMemberCache: state.groupMemberCache,
+        };
+      });
+    },
+    getGroupMembers: (groupId: string) => {
+        return get().groupMemberCache.get(groupId)
+    },
+    hasGroupMembers: (groupId: string) => {
+        return get().groupMemberCache.has(groupId)
+    }
   })
 );

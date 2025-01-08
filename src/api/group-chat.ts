@@ -35,3 +35,16 @@ export const syncRecentConversation = async (params) => {
 }
 
 syncRecentConversation.cacheKey = 'groupChannels:sync'
+
+export const getGroupMembersService = async (groupId: string) => {
+	const r = await request.post(`/channel/${groupId}/users`).then(r => r.data);
+	return r;
+}
+
+export const getChatNameAndAvatar = async (params: {
+	type: string,
+	id: string
+}) => {
+	const resp = await request.get<{name: string, avatar: string}>('/im/avatars' , {params}).then(r => r.data);
+	return resp
+}
