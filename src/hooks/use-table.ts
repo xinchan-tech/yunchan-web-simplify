@@ -1,7 +1,6 @@
-import { JknRcTableProps } from '@/components'
 import { router } from '@/router'
 import { isFunction, isNumber } from 'radash'
-import { useCallback, useMemo, useRef, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 
 type OrderKey<T = any> = keyof T | ((arg: T) => string)
 
@@ -23,6 +22,22 @@ const compareString = (a: string, b: string, order: 'asc' | 'desc') => {
   return 0
 }
 
+const setDataOnIdle = <T extends any[] = any[]>(data: T, setFn: (data: T) => void, count: number) => {
+  const splitLength = 40
+
+  const split = data.slice(0, splitLength * count) as T
+
+  setFn(split)
+
+  if (split.length >= data.length) {
+    return
+  }
+
+  requestAnimationFrame(() => {
+    setDataOnIdle(data, setFn, count + 1)
+  })
+}
+
 export const useTableData = <T extends Record<string, any>>(data: T[], orderKey: OrderKey<T>) => {
   const [list, setList] = useState<T[]>(data)
   const initOrderKey = useRef<(keyof T)[]>([])
@@ -41,18 +56,7 @@ export const useTableData = <T extends Record<string, any>>(data: T[], orderKey:
   const _setList = useCallback(
     (data: T[]) => {
       initOrderKey.current = data.map(getOrderKey)
-      setList(data)
-      // if(lastOrderKey.current.length) {
-      //   const _s = lastOrderKey.current.map(key => {
-      //     return data.find(item =>
-      //       getOrderKey(item) === key
-      //     )
-      //   })
-
-      //   setList(_s as T[])
-      // }else{
-
-      // }
+      setDataOnIdle(data, setList, 0)
     },
     [getOrderKey]
   )

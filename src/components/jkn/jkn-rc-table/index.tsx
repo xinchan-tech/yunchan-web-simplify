@@ -1,6 +1,6 @@
 import { useDomSize } from "@/hooks"
 import type { TableProps } from "rc-table"
-import Table from "rc-table"
+import Table, { VirtualTable } from "rc-table"
 import type { DefaultRecordType } from "rc-table/lib/interface"
 import { withSort } from "../jkn-icon/with-sort"
 import { memo, useCallback, useMemo, type ReactNode } from "react"
@@ -14,7 +14,7 @@ export interface JknRcTableProps<T = any> extends TableProps<T> {
 }
 
 
-export const JknRcTable = <T extends DefaultRecordType = any>({ headerHeight = 35, columns, emptyText, isLoading, ...props }: JknRcTableProps<T>) => {
+const _JknRcTable = <T extends DefaultRecordType = any>({ headerHeight = 35, columns, emptyText, isLoading, ...props }: JknRcTableProps<T>) => {
   const [size, dom] = useDomSize<HTMLDivElement>()
   const [sort, setSort] = useImmer<{ columnKey: keyof T | undefined, order: 'asc' | 'desc' | undefined }>({
     columnKey: undefined,
@@ -59,6 +59,14 @@ export const JknRcTable = <T extends DefaultRecordType = any>({ headerHeight = 3
     </div>
   )
 }
+
+export const JknRcTable = _JknRcTable as typeof _JknRcTable & {
+  Virtual: typeof VirtualTable
+}
+
+JknRcTable.Virtual = VirtualTable
+
+
 
 const Loading = memo(() => (
   Array.from({ length: 8 }).map((_, i) => (

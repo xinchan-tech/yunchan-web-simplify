@@ -182,6 +182,7 @@ const GoldenPool = () => {
         </div>
       </div>
       <div className="flex-1 overflow-hidden">
+
         <JknRcTable isLoading={collects.isLoading} rowKey="code" columns={columns} data={data} />
       </div>
       <style jsx>
@@ -236,6 +237,7 @@ interface GoldenPoolTableProps {
 
 
 const GoldenPoolTable = (props: GoldenPoolTableProps) => {
+ 
   const columns: JknRcTableProps['columns'] = [
     {
       title: '序号',

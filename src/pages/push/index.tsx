@@ -1,7 +1,6 @@
 import { getStockPush, StockPushType } from "@/api"
 import { AiAlarm, CapsuleTabs, CollectStar, JknCheckbox, JknIcon, JknRcTable, type JknRcTableProps, NumSpan, StockView } from "@/components"
 import { useCheckboxGroup, useTableData } from "@/hooks"
-import { dateToWeek } from "@/utils/date"
 import { stockUtils, type StockRecord } from "@/utils/stock"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import dayjs from "dayjs"
