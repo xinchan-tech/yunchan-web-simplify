@@ -1,9 +1,9 @@
 import { getStockCollects, type StockExtend } from "@/api"
-import { AddCollect, CollectCapsuleTabs, JknIcon, NumSpan, ScrollArea } from "@/components"
+import { AddCollect, CollectCapsuleTabs, JknIcon, NumSpan } from "@/components"
 import { useConfig, useTime } from "@/store"
 import { getTradingPeriod } from "@/utils/date"
 import echarts, { type ECOption } from "@/utils/echarts"
-import { StockSubscribeHandler, stockUtils, type StockRecord } from "@/utils/stock"
+import { type StockSubscribeHandler, stockUtils, type StockRecord } from "@/utils/stock"
 import { colorUtil } from "@/utils/style"
 import { useQuery } from "@tanstack/react-query"
 import { useMount, useUnmount, useUpdateEffect } from "ahooks"
@@ -33,7 +33,7 @@ const SortSpan = withSort((props: PropsWithChildren) => <span>{props.children}</
 export const CollectList = (props: CollectListProps) => {
   const [collect, setCollect] = useState('1')
   const trading = useTime(s => s.getTrading())
-  const [stockList, {setList, updateList, onSort}] = useTableData<TableDataType>([], 'code')
+  const [stockList, { setList, updateList, onSort }] = useTableData<TableDataType>([], 'code')
 
   const stocks = useQuery({
     queryKey: [getStockCollects.cacheKey, collect],
@@ -76,7 +76,7 @@ export const CollectList = (props: CollectListProps) => {
         if (stock.code === e.topic) {
           const _stock = { ...stock }
           _stock.price = e.record.close
-          _stock.percent = ( e.record.close - e.record.preClose) / e.record.preClose
+          _stock.percent = (e.record.close - e.record.preClose) / e.record.preClose
           return _stock
         }
         return stock
@@ -117,57 +117,100 @@ export const CollectList = (props: CollectListProps) => {
         <div className="flex-1 overflow-y-auto">
           {
             stockList.map(stock => (
-              <div
-                key={stock.code}
-                className="flex py-3 hover:bg-accent px-1"
-                onClick={() => props.onCollectChange?.(stock.code)}
-                onKeyDown={() => { }}
-              >
-                <div className="flex-1">
-                  <div className="relative">
-                    <span className="text-sm">{stock.code}</span>
-                    <div className="text-xs text-tertiary">{stock.name}</div>
-                    {
-                      stock.thumbs.length > 0 ? (
-                        <div className="absolute left-12 bottom-0 top-0">
-                          <StockChart data={stock.thumbs.filter(v => +v > 0) ?? []} type={(stock.percent ?? 0) >= 0 ? 'up' : 'down'} />
-                        </div>
-                      ) : null
-                    }
-                  </div>
-                </div>
-                <div className="w-40 text-xs">
-                  <div className="flex w-full items-center">
-                    <div className="w-24 flex-shrink-0 text-right box-border pr-1">
-                      {
-                        stock.price ? <NumSpan value={stock.price} isPositive={(stock.percent ?? 0) >= 0} /> : '--'
-                      }
-                    </div>
-                    <div className="w-16 flex-shrink-0 text-right">
-                      {
-                        stock.price ? <NumSpan className="py-0.5 w-16" block value={Decimal.create(stock.percent).mul(100)} percent decimal={2} isPositive={(stock.percent ?? 0) >= 0} /> : '--'
-                      }
-                    </div>
-                  </div>
-                  {
-                    trading !== 'intraDay' ? (
-                      <div className="text-right text-secondary mt-0.5 scale-90">
-                        {
-                          stock.subPrice ? (
-                            <span>
-                              <span>{Decimal.create(stock.subPrice).toFixed(3)}</span>&nbsp;&nbsp;
-                              <span>{Decimal.create(stock.subPercent).mul(100).toFixed(2)}%</span>
-                            </span>
-                          ) : '--'
-                        }
-                      </div>
-                    ) : null
-                  }
-                </div>
-              </div>
+              <StockListItem key={stock.code} stock={stock} onCollectChange={props.onCollectChange}>
+                <StockChart data={stock.thumbs.filter(v => +v > 0) ?? []} type={(stock.percent ?? 0) >= 0 ? 'up' : 'down'} />
+              </StockListItem>
             ))
           }
         </div>
+      </div>
+    </div>
+  )
+}
+
+interface StockListItemProps {
+  stock: TableDataType
+  onCollectChange?: (collect: string) => void
+}
+
+const StockListItem = ({ stock, onCollectChange, children }: PropsWithChildren<StockListItemProps>) => {
+  const trading = useTime(s => s.getTrading())
+  const priceBlink = useConfig(s => s.setting.priceBlink)
+  const lastValue = useRef(stock.price)
+  const span = useRef<HTMLDivElement>(null)
+  const priceBlinkTimer = useRef<number>()
+  useUpdateEffect(() => {
+    if (priceBlink === '1') {
+
+      if (!priceBlinkTimer.current) {
+
+        if (lastValue.current === undefined || !stock.price) return
+        const randomDelay = Math.random() * 500
+
+        priceBlinkTimer.current = window.setTimeout(() => {
+          const blinkState = lastValue.current! < stock.price! ? 'down' : 'up'
+          lastValue.current = stock.price
+          span.current?.setAttribute('data-blink', blinkState)
+
+          setTimeout(() => {
+            span.current?.removeAttribute('data-blink')
+            priceBlinkTimer.current = undefined
+          }, 500)
+        }, randomDelay)
+      }
+    }
+  }, [stock])
+
+  return (
+    <div
+      key={stock.code}
+      className="flex py-3 hover:bg-accent px-1 stock-blink-gradient"
+      onClick={() => onCollectChange?.(stock.code)}
+      onKeyDown={() => { }}
+      ref={span}
+    >
+      <div className="flex-1">
+        <div className="relative">
+          <span className="text-sm">{stock.code}</span>
+          <div className="text-xs text-tertiary">{stock.name}</div>
+          {
+            stock.thumbs.length > 0 ? (
+              <div className="absolute left-12 bottom-0 top-0">
+                {
+                  children
+                }
+              </div>
+            ) : null
+          }
+        </div>
+      </div>
+      <div className="w-40 text-xs">
+        <div className="flex w-full items-center">
+          <div className="w-24 flex-shrink-0 text-right box-border pr-1">
+            {
+              stock.price ? <NumSpan value={stock.price} isPositive={(stock.percent ?? 0) >= 0} /> : '--'
+            }
+          </div>
+          <div className="w-16 flex-shrink-0 text-right">
+            {
+              stock.price ? <NumSpan className="py-0.5 w-16" block value={Decimal.create(stock.percent).mul(100)} percent decimal={2} isPositive={(stock.percent ?? 0) >= 0} /> : '--'
+            }
+          </div>
+        </div>
+        {
+          trading !== 'intraDay' ? (
+            <div className="text-right text-secondary mt-0.5 scale-90">
+              {
+                stock.subPrice ? (
+                  <span>
+                    <span>{Decimal.create(stock.subPrice).toFixed(3)}</span>&nbsp;&nbsp;
+                    <span>{Decimal.create(stock.subPercent).mul(100).toFixed(2)}%</span>
+                  </span>
+                ) : '--'
+              }
+            </div>
+          ) : null
+        }
       </div>
     </div>
   )

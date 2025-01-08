@@ -170,6 +170,18 @@ body {
   }
 }
 
+.stock-blink-gradient {
+  animation-duration: 0.3s;
+  &[data-blink="up"] {
+    animation-name: stock-blink-gradient-up;
+  }
+
+  &[data-blink="down"] {
+    animation-name: stock-blink-gradient-down;
+  }
+}
+
+
 @keyframes stock-blink-up {
   0% {
     background: transparent;
@@ -188,6 +200,30 @@ body {
   }
   50% {
     background: hsl(var(--stock-down-color) / 0.2);
+  }
+  100% {
+    background: transparent;
+  }
+}
+
+@keyframes stock-blink-gradient-up {
+  0% {
+    background: transparent;
+  }
+  50% {
+    background: linear-gradient(-90deg, hsl(var(--stock-up-color) / 0.2), transparent);
+  }
+  100% {
+    background: transparent;
+  }
+}
+
+@keyframes stock-blink-gradient-down {
+  0% {
+    background: transparent;
+  }
+  50% {
+    background: linear-gradient(-90deg, hsl(var(--stock-down-color) / 0.2), transparent);
   }
   100% {
     background: transparent;

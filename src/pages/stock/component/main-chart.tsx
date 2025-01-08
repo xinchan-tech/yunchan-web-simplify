@@ -64,13 +64,7 @@ export const MainChart = (props: MainChartProps) => {
     if (!query.data || query.data.history.length === 0) return
 
     const lastData = stockUtils.toSimpleStockRecord(query.data.history[query.data.history.length - 1])
-    // if( state.timeIndex === StockChartInterval.PRE_MARKET || state.timeIndex === StockChartInterval.AFTER_HOURS || state.timeIndex === StockChartInterval.INTRA_DAY){
-    //   setMainData({ index: props.index, data: {
-    //     ...query.data,
-    //     history: [...query.data.history as any, [stock.time!, ...(data.rawRecord.slice(1)) as any]]
-    //   }})
-    //   return
-    // }
+    
     if(!renderUtils.isSameTimeByInterval(lastData.toDayjs(), stock.toDayjs(), state.timeIndex)){
       setMainData({ index: props.index, data: {
         ...query.data,
@@ -82,7 +76,6 @@ export const MainChart = (props: MainChartProps) => {
         history: [...query.data.history.slice(0, -1) as any, [stock.time!, ...(data.rawRecord.slice(1)) as any]]
       } })
     }
-  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
   }, [ state.timeIndex,  query.data, setMainData, props.index])
 
   useStockBarSubscribe([subscribeSymbol], subscribeHandler)

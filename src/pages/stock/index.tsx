@@ -16,7 +16,7 @@ const StockPage = () => {
 
   return (
     <div className="h-full flex flex-nowrap bg-muted overflow-hidden">
-      <div id="stock-trading-left-container" className="order w-[300px] data-[width=half]:w-[150px] data-[width=none]:hidden h-full">
+      <div id="stock-trading-left-container" className="order w-[300px] data-[width=half]:w-[150px] data-[width=none]:hidden h-full flex-shrink-0">
         <CollectList onCollectChange={s => setQueryParams({ symbol: s })} />
       </div>
       <div className="flex-1 order-1 h-full">
@@ -26,9 +26,13 @@ const StockPage = () => {
           ): <Finance />
         }
       </div>
-      <div id="stock-trading-right-container" className="order-2 w-[300px] data-[width=half]:w-[150px] data-[width=none]:hidden h-full">
-        <StockInfo />
-      </div>
+      {
+        params.type && !['finance'].includes(params.type) && (
+          <div id="stock-trading-right-container" className="order-2 w-[300px] data-[width=half]:w-[150px] data-[width=none]:hidden h-full flex-shrink-0">
+            <StockInfo />
+          </div>
+        )
+      }
     </div>
   )
 }

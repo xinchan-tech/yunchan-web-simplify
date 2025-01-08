@@ -55,7 +55,6 @@ class StockSubscribe {
     }
   }
   private buffer: BufferItem[]
-  private bufferMap: Map<string, BufferItem>
   private bufferHandleLength: number
   private url: string
   private ws: Ws
@@ -66,7 +65,6 @@ class StockSubscribe {
     this.subscribeTopic = {}
     this.cid = uid(16)
     this.buffer = []
-    this.bufferMap = new Map()
     this.bufferHandleLength = 50
     this.bufferMax = 2000
     this.ws = new Ws(`${this.url}&cid=${this.cid}`, {
@@ -76,6 +74,9 @@ class StockSubscribe {
         if (data.ev) {
           const parserData = data.b ? barActionResultParser(data): quoteActionResultParser(data)
           this.buffer.push({action: parserData.topic, data: parserData, dirty: false})
+          if(this.buffer.length > this.bufferMax){
+            this.buffer.shift()
+          }
         }
       }
     })
@@ -171,14 +172,8 @@ class StockSubscribe {
 
     setTimeout(() => {
       this.startBufferHandle()
-    }, 20)
+    }, 500)
   }
-  //   requestAnimationFrame(() => {
-  //     this.startBufferHandle()
-  //   })
-  // }
-
- 
 }
 
 export const stockSubscribe = new StockSubscribe(`${import.meta.env.PUBLIC_BASE_WS_STOCK_URL}?token=shipeijun`)
