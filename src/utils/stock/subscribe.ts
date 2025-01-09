@@ -25,6 +25,7 @@ const quoteActionResultParser = (data: any) => {
     close: Number.parseFloat(raws[1]),
     preClose: Number.parseFloat(raws[2]),
     changePercent: Number.parseFloat(raws[3]),
+    percent: (Number.parseFloat(raws[1]) - Number.parseFloat(raws[2])) / Number.parseFloat(raws[2]),
     volume: Number.parseFloat(raws[4]),
     turnover: Number.parseFloat(raws[5]),
   }
@@ -126,10 +127,26 @@ class StockSubscribe {
 
   public on<T extends SubscribeActionType>(action: T, handler: StockSubscribeHandler<T>) {
     this.subscribed.on(action, handler)
+
+    return () => {
+      this.off(action, handler)
+    }
   }
 
   public off<T extends SubscribeActionType>(action: T, handler: StockSubscribeHandler<T>) {
     this.subscribed.off(action, handler)
+  }
+
+  public onQuoteTopic(topic: string, handler: StockSubscribeHandler<'quote'>) {
+    this.subscribed.on(`${topic}:quote`, handler)
+
+    return () => {
+      this.offQuoteTopic(topic, handler)
+    }
+  }
+
+  public offQuoteTopic(topic: string, handler: StockSubscribeHandler<'quote'>) {
+    this.subscribed.off(`${topic}:quote`, handler)
   }
 
   private unSubscribeStockIdle() {
@@ -166,6 +183,10 @@ class StockSubscribe {
       const item = this.buffer.shift()!
      
       this.subscribed.emit(item.data.action, item.data)
+      if(item.data.topic.indexOf('@') === -1){
+
+        this.subscribed.emit(`${item.data.topic}:quote`, item.data)
+      }
       // this.bufferMap.delete(item.data.action)
       count--
     }

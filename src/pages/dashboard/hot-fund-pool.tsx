@@ -1,5 +1,5 @@
 import { getCollectHot } from "@/api"
-import { CapsuleTabs, JknRcTable, type JknRcTableProps, NumSpan, StockView } from "@/components"
+import { CapsuleTabs, JknRcTable, type JknRcTableProps, NumSpan, NumSpanSubscribe, StockView } from "@/components"
 import { useStockQuoteSubscribe, useTableData } from "@/hooks"
 import { type StockRecord, type StockSubscribeHandler, stockUtils } from "@/utils/stock"
 import { useQuery } from "@tanstack/react-query"
@@ -16,32 +16,13 @@ const TopList = () => {
     queryFn: () => getCollectHot({ extend: ['total_share'] }),
     refetchInterval: 30 * 1000
   })
-  const [list, {setList, updateList,onSort}] = useTableData<StockRecord>([], 'symbol')
+  const [list, {setList, onSort}] = useTableData<StockRecord>([], 'symbol')
 
   useEffect(() => {
     setList(query.data?.find(v => v.type === HotType)?.stocks.map(v => stockUtils.toStockRecord(v)[0]) ?? [])
   }, [query.data, setList])
 
-  const updateQuoteHandler = useCallback<StockSubscribeHandler<'quote'>>((data) => {
-    updateList(s => {
-      const items = s.map((item) => {
-        if (item.symbol === data.topic) {
-          const stock = stockUtils.cloneFrom(item)
-          stock.close = data.record.close
-          stock.prevClose = data.record.preClose
-          stock.percent = (data.record.close - data.record.preClose) / data.record.preClose
-          stock.marketValue = Decimal.create(data.record.close).mul(stock.totalShare ?? 0).toNumber()
-          stock.turnover = data.record.turnover
-          return stock
-        }
-        return item
-      })
-
-      return items
-    })
-  }, [updateList])
-
-  useStockQuoteSubscribe(query.data?.find(v => v.type === HotType)?.stocks.map(v => v.symbol) ?? [], updateQuoteHandler)
+  useStockQuoteSubscribe(query.data?.find(v => v.type === HotType)?.stocks.map(v => v.symbol) ?? [], () => {})
 
   const columns: JknRcTableProps<StockRecord>['columns'] = [
     {
@@ -51,24 +32,24 @@ const TopList = () => {
     },
     {
       title: '现价', dataIndex: 'close',align: 'right', width: '17%', sort: true,
-      render: (_, row) => <NumSpan blink value={Decimal.create(row.close).toFixed(2)} isPositive={row.isUp} align="right" />
+      render: (_, row) => <NumSpanSubscribe code={row.symbol} field="record.close" blink value={Decimal.create(row.close).toFixed(2)} isPositive={row.isUp} align="right" />
     },
     {
       title: '涨跌幅', dataIndex: 'percent',
       align: 'right', width: '20%', sort: true,
       render: (_, row) => (
-        <NumSpan block blink className="py-1 w-20" decimal={2} align="right" value={Decimal.create(row.percent).mul(100)} percent isPositive={row.isUp} symbol />
+        <NumSpanSubscribe code={row.symbol} field="record.percent"  block blink className="py-1 w-20" decimal={2} align="right" value={Decimal.create(row.percent).mul(100).toDP(2).toNumber()} percent isPositive={row.isUp} symbol />
       )
     },
     {
       title: '成交额', dataIndex: 'turnover',
       align: 'right', width: '20%', sort: true,
-      render: (_, row) => <NumSpan blink align="right" unit decimal={2} value={row.turnover} />
+      render: (_, row) => <NumSpanSubscribe code={row.symbol} field="record.turnover"  blink align="right" unit decimal={2} value={row.turnover} />
     },
     {
       title: '总市值', dataIndex: 'marketValue',
       align: 'right', width: '19%', sort: true,
-      render: (_, row) => <NumSpan blink align="right" unit decimal={2} value={row.marketValue} />
+      render: (_, row) => <NumSpanSubscribe code={row.symbol} field={v => v.record.close * (row.marketValue ?? 0)} blink align="right" unit decimal={2} value={row.marketValue} />
     },
   ]
   return (

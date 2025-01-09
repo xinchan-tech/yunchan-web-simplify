@@ -3,8 +3,11 @@ import { cn } from "@/utils/style"
 import { cva, type VariantProps } from "class-variance-authority"
 import Decimal from "decimal.js"
 import { JknIcon } from ".."
-import {  useUpdateEffect } from "ahooks"
-import {  useRef } from "react"
+import { useUpdateEffect } from "ahooks"
+import { useEffect, useRef, useState } from "react"
+import { useStockQuoteSubscribe } from "@/hooks"
+import { stockSubscribe, StockSubscribeHandler } from "@/utils/stock"
+import { get, isFunction } from "radash"
 
 const numSpanVariants = cva(
   '',
@@ -83,7 +86,7 @@ interface NumSpanProps extends React.HTMLAttributes<HTMLSpanElement>, VariantPro
 
 
 
-const NumSpan = ({ isPositive, block, percent, value, symbol, className, arrow, decimal = 3, unit = false, blink, align = 'left', ...props }: NumSpanProps) => {
+export const NumSpan = ({ isPositive, block, percent, value, symbol, className, arrow, decimal = 3, unit = false, blink, align = 'left', ...props }: NumSpanProps) => {
   const { setting: { upOrDownColor, priceBlink } } = useConfig()
   const lastValue = useRef(value)
   const span = useRef<HTMLSpanElement>(null)
@@ -91,10 +94,10 @@ const NumSpan = ({ isPositive, block, percent, value, symbol, className, arrow, 
   // console.log(lastValue.current, value)
   useUpdateEffect(() => {
     if (blink && priceBlink === '1') {
-  
+
       if (!priceBlinkTimer.current) {
-        
-        if(lastValue.current === undefined || !value) return
+
+        if (lastValue.current === undefined || !value) return
         const randomDelay = Math.random() * 500
 
         priceBlinkTimer.current = window.setTimeout(() => {
@@ -122,7 +125,7 @@ const NumSpan = ({ isPositive, block, percent, value, symbol, className, arrow, 
       align === 'left' && 'justify-start',
       align === 'center' && 'justify-center',
       align === 'right' && 'justify-end'
-    )}  ref={span}>
+    )} ref={span}>
       <span className={cn(
         numSpanVariants({ isPositive, block, className }),
 
@@ -149,4 +152,38 @@ const NumSpan = ({ isPositive, block, percent, value, symbol, className, arrow, 
   )
 }
 
-export default NumSpan
+interface NumSpanSubscribeProps extends Omit<NumSpanProps, 'value'> {
+  code: string
+  field: string | ((data: Parameters<StockSubscribeHandler<'quote'>>[0]) => number | string | undefined)
+  value?: number | string
+}
+
+export const NumSpanSubscribe = ({ value, code, ...props }: NumSpanSubscribeProps) => {
+  const [innerValue, setInnerValue] = useState(value)
+  const fieldFn = useRef<NumSpanSubscribeProps['field']>(props.field)
+
+  useEffect(() => {
+    fieldFn.current = props.field
+  }, [props.field])
+
+  useEffect(() => {
+    const unSubscribe = stockSubscribe.onQuoteTopic(code, (data) => {
+     
+      let v = isFunction(fieldFn.current) ? fieldFn.current(data) : get(data, fieldFn.current) 
+      if(props.percent){
+        v = (v as number) * 100
+      }
+      setInnerValue(v as number | string | undefined)
+    })
+
+    return () => {
+      unSubscribe()
+    }
+  }, [code, props.percent])
+  
+  useEffect(() => {
+    setInnerValue(value)
+  }, [value])
+
+  return <NumSpan value={innerValue} {...props} />
+}

@@ -1,7 +1,7 @@
 import { getLargeCapIndexes } from "@/api"
 import { cn } from "@/utils/style"
 import { useQuery } from "@tanstack/react-query"
-import NumSpan from "../num-span"
+import { NumSpan } from "../num-span"
 import { type StockSubscribeHandler, stockUtils } from "@/utils/stock"
 import { useCallback, useEffect, useState } from "react"
 import { useStockQuoteSubscribe } from "@/hooks"
@@ -31,10 +31,10 @@ export const StockBar = () => {
 
   const updateQuoteHandler = useCallback<StockSubscribeHandler<'quote'>>((data) => {
     setStockData(s => {
-      if(!s) return []
+      if (!s) return []
       const items = s.map((item) => {
         if (item.code === data.topic) {
-          const _item = {...item}
+          const _item = { ...item }
           _item.price = data.record.close
           _item.percent = (data.record.close - data.record.preClose) / data.record.preClose
           _item.offset = data.record.close - data.record.preClose

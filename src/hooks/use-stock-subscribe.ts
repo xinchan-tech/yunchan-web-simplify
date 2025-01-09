@@ -1,5 +1,5 @@
 import { stockSubscribe, type StockSubscribeHandler, type SubscribeActionType } from "@/utils/stock"
-import { useEffect } from "react"
+import { useEffect, useRef } from "react"
 import { useLatest } from "ahooks"
 
 /**
@@ -50,15 +50,27 @@ const useStockSubscribe = (action: SubscribeActionType, symbols: string[]) => {
   }, [action, symbols])
 }
 
-export const useStockQuoteSubscribe = (symbols: string[], handler: StockSubscribeHandler<'quote'>) => {
+export const useStockQuoteSubscribe = (symbols: string[], handler?: StockSubscribeHandler<'quote'>) => {
   useStockSubscribe('quote', symbols)
+  const handlerRef = useRef(handler ?? (() => {}))
 
   useEffect(() => {
-    stockSubscribe.on('quote', handler)
+    handlerRef.current = handler ?? (() => {})
+
     return () => {
-      stockSubscribe.off('quote', handler)
+      handlerRef.current = () => {}
     }
   }, [handler])
+
+  useEffect(() => {
+    const unSubscribe =  stockSubscribe.on('quote', (d) => {
+      handlerRef.current(d)
+    })
+
+    return () => {
+      unSubscribe()
+    }
+  }, [])
 }
 
 export const useStockBarSubscribe = (symbols: string[], handler: StockSubscribeHandler<'bar'>) => {
