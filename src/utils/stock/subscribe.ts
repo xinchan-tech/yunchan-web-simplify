@@ -66,8 +66,8 @@ class StockSubscribe {
     this.subscribeTopic = {}
     this.cid = uid(16)
     this.buffer = []
-    this.bufferHandleLength = 50
-    this.bufferMax = 2000
+    this.bufferHandleLength = 500
+    this.bufferMax = 20000
     this.ws = new Ws(`${this.url}&cid=${this.cid}`, {
       beat: false,
       onMessage: ev => {
@@ -193,7 +193,7 @@ class StockSubscribe {
 
     setTimeout(() => {
       this.startBufferHandle()
-    }, 500)
+    }, 300)
   }
 }
 

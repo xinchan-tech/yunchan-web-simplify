@@ -5,12 +5,20 @@ import { getTrading } from '@/utils/date'
 import type { StockTrading } from '@/utils/stock'
 
 interface TimeStore {
+  /**
+   * 获取到服务器的时间戳，不会实时更新
+   * 通过localStamp的偏移值来计算当前的美东时间
+   */
   usTime: number
   localStamp: number
   setUsTime: (usTime: number) => void
   setLocalStamp: (localStamp: number) => void
   getTrading: () => StockTrading
   isToday: (data: string) => boolean
+  /**
+   * 获取实时的美东时间
+   */
+  getCurrentUsTime: () => number
   /**
    * 
    * 用来判断是否是最新的一个交易周期
@@ -40,6 +48,9 @@ export const useTime = create<TimeStore>()(
       isToday: data => {
         const date = dayjs(data)
         return date.isSame(dayjs(get().usTime).tz('America/New_York'), 'day')
+      },
+      getCurrentUsTime: () => {
+        return dayjs(new Date().valueOf() - get().localStamp + get().usTime).tz('America/New_York').valueOf()
       },
       isLastTrading: (trading, date) => {
         if(!date) return false

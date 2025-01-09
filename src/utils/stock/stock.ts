@@ -13,6 +13,9 @@ export type StockResultRecord = {
   extend?: StockExtendResultMap
 }
 
+/**
+ * @deprecated 请使用Stock
+ */
 export class StockRecord {
   name = ''
   code = ''
@@ -239,4 +242,59 @@ export class StockRecord {
   toDayjs() {
     return dayjs(this.time)
   }
+}
+
+
+export type Stock = {
+  symbol: string
+  name: string
+  extend?: StockExtendResultMap
+  /**
+   * 时间戳
+   */
+  timestamp: number
+  /**
+   * 开盘价
+   */
+  open: number
+  /**
+   * 收盘价
+   */
+  close: number
+  /**
+   * 最高价
+   */
+  high: number
+  /**
+   * 最低价
+   */
+  low: number
+  /**
+   * 当前时段成交量
+   */
+  volume: number
+  /**
+   * 当前时段成交额
+   */
+  turnover: number
+  /**
+   * 当日累计成交量
+   */
+  cumulativeVolume?: number
+  /**
+   * 当日累计成交额
+   */
+  cumulativeTurnover?: number
+  /**
+   * 前收盘价
+   */
+  prevClose: number
+  /**
+   * 所属行业
+   */
+  industry?: string
+  // 缩略走势图
+  thumbs?: string[]
+  // 市值
+  totalShare?: number
 }

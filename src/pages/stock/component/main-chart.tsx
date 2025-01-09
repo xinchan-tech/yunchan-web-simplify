@@ -1,19 +1,18 @@
+import { getStockChart } from "@/api"
+import { StockSelect } from "@/components"
+import { useDomSize, useStockBarSubscribe } from "@/hooks"
+import { useIndicator, useTime } from "@/store"
+import { type StockSubscribeHandler, stockUtils } from "@/utils/stock"
+import { cn } from "@/utils/style"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { useUpdateEffect } from "ahooks"
+import * as kCharts from 'klinecharts'
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useKChartContext } from "../lib"
-import { useIndicator, useTime } from "@/store"
-import { useQueries, useQuery, useQueryClient } from "@tanstack/react-query"
-import { getStockChart, getStockIndicatorData, StockChartInterval } from "@/api"
-import { useMount, useUnmount, useUpdateEffect } from "ahooks"
-import { useDomSize, useStockBarSubscribe } from "@/hooks"
-import { renderAxisLine, renderChart, renderGrid, renderMainChart, renderMainCoiling, renderMainIndicators, renderMarkLine, renderOverlay, renderOverlayMark, renderSecondary, renderSecondaryLocalIndicators, renderWatermark, renderZoom } from "../lib/render"
-import { SecondaryIndicator } from "./secondary-indicator"
 import { renderUtils } from "../lib/utils"
-import { StockSelect } from "@/components"
-import { cn } from "@/utils/style"
+import { SecondaryIndicator } from "./secondary-indicator"
 import { TimeIndexMenu } from "./time-index"
-import echarts from "@/utils/echarts"
-import { stockUtils, StockSubscribeHandler } from "@/utils/stock"
-import { throttle } from "radash"
+import { defaultOptions } from "../lib/render"
 
 
 interface MainChartProps {
@@ -21,41 +20,32 @@ interface MainChartProps {
 }
 
 export const MainChart = (props: MainChartProps) => {
-  const [size, dom] = useDomSize<HTMLDivElement>()
-  const chart = useRef<echarts.ECharts>()
+  // const [size, dom] = useDomSize<HTMLDivElement>()
+  const dom = useRef<HTMLDivElement>(null)
+  const chart = useRef<kCharts.Nullable<kCharts.Chart>>()
+  const usTime = useTime(s => s.usTime)
+  const localStamp = useTime(s => s.localStamp)
+
   const queryClient = useQueryClient()
-
-  useMount(() => {
-    chart.current = echarts.init(dom.current)
-  })
-
-  useUnmount(() => {
-    chart.current?.dispose()
-  })
-
   const { state: ctxState, setMainData, setIndicatorData, setSecondaryIndicator, removeOverlayStock, setActiveChart, setSymbol, activeChartIndex } = useKChartContext()
-  const { usTime } = useTime()
   const state = ctxState[props.index]
-  const startTime = renderUtils.getStartTime(usTime, state.timeIndex)
+  const startTime = renderUtils.getStartTime(new Date().valueOf() - localStamp + usTime, state.timeIndex)
 
-  const params = {
+  const params = useMemo(() => ({
     start_at: startTime,
     ticker: state.symbol,
     interval: state.timeIndex,
     gzencode: true
-  }
-  const queryKey = [getStockChart.cacheKey, params]
+  }), [startTime, state.symbol, state.timeIndex])
+
+  const queryKey = useMemo(() => [getStockChart.cacheKey, params], [params])
+
   const query = useQuery({
     queryKey,
     queryFn: () => getStockChart(params)
   })
 
-
-  const subscribeSymbol = useMemo(() => `${state.symbol}@${state.timeIndex <= 0 ? 1: state.timeIndex}`, [state.symbol, state.timeIndex])
-
-  // useEffect(() => {
-  //   setMainData({ index: props.index, data: query.data })
-  // }, [query.data, props.index, setMainData])
+  const subscribeSymbol = useMemo(() => `${state.symbol}@${state.timeIndex <= 0 ? 1 : state.timeIndex}`, [state.symbol, state.timeIndex])
 
   const subscribeHandler: StockSubscribeHandler<'bar'> = useCallback((data) => {
     const stock = stockUtils.toSimpleStockRecord(data.rawRecord)
@@ -64,139 +54,185 @@ export const MainChart = (props: MainChartProps) => {
     if (!query.data || query.data.history.length === 0) return
 
     const lastData = stockUtils.toSimpleStockRecord(query.data.history[query.data.history.length - 1])
-    
-    if(!renderUtils.isSameTimeByInterval(lastData.toDayjs(), stock.toDayjs(), state.timeIndex)){
-      setMainData({ index: props.index, data: {
-        ...query.data,
-        history: [...query.data.history as any, [stock.time!, ...(data.rawRecord.slice(1)) as any]]
-      } })
-    }else{
-      setMainData({ index: props.index, data: {
-        ...query.data,
-        history: [...query.data.history.slice(0, -1) as any, [stock.time!, ...(data.rawRecord.slice(1)) as any]]
-      } })
+
+    if (!renderUtils.isSameTimeByInterval(lastData.toDayjs(), stock.toDayjs(), state.timeIndex)) {
+      setMainData({
+        index: props.index, data: {
+          ...query.data,
+          history: [...query.data.history as any, [stock.time!, ...(data.rawRecord.slice(1)) as any]]
+        }
+      })
+    } else {
+      setMainData({
+        index: props.index, data: {
+          ...query.data,
+          history: [...query.data.history.slice(0, -1) as any, [stock.time!, ...(data.rawRecord.slice(1)) as any]]
+        }
+      })
     }
-  }, [ state.timeIndex,  query.data, setMainData, props.index])
+  }, [state.timeIndex, query.data, setMainData, props.index])
+
 
   useStockBarSubscribe([subscribeSymbol], subscribeHandler)
 
-  const { isDefaultIndicatorParams, getIndicatorQueryParams } = useIndicator()
-
-  const mainQueryIndicatorQueries = useQueries({
-    queries: Reflect.ownKeys(state.mainIndicators).map(v => v.toString()).map((item) => {
-      const queryKey = [getStockIndicatorData.cacheKey, { symbol: state.symbol, cycle: state.timeIndex, id: item, db_type: state.mainIndicators[item].type }] as any[]
-      let params: NormalizedRecord<number> | undefined
-      if (!isDefaultIndicatorParams(item)) {
-        params = getIndicatorQueryParams(item)
-        queryKey.push(params)
-      }
-
-      return {
-        queryKey,
-        refetchInterval: 60 * 1000,
-        queryFn: async () => {
-          const r = await getStockIndicatorData({
-            symbol: state.symbol, cycle: state.timeIndex, id: item, db_type: state.mainIndicators[item].type, start_at: startTime,
-            param: JSON.stringify(params)
-          })
-
-          return { id: item, data: r.result }
-        },
-        placeholderData: () => ({ id: item, data: undefined })
-      }
-    })
-  })
-
-  useEffect(() => {
-    mainQueryIndicatorQueries.forEach((query) => {
-      if (!query.data) return
-
-      setIndicatorData({ index: props.index, indicatorId: query.data.id, data: query.data.data })
-    })
-  }, [mainQueryIndicatorQueries, setIndicatorData, props.index])
-
-  const secondaryIndicatorQueries = useQueries({
-    queries: Array.from(new Set(state.secondaryIndicators.filter(v => !renderUtils.isLocalIndicator(v.id)).map(v => `${v.id}_${v.type}`))).map((item) => {
-      const [id, type] = item.split('_')
-      const queryKey = [getStockIndicatorData.cacheKey, { symbol: state.symbol, cycle: state.timeIndex, id: id, db_type: type }] as any[]
-      let params: NormalizedRecord<number> | undefined
-      if (!isDefaultIndicatorParams(id)) {
-        params = getIndicatorQueryParams(id)
-        queryKey.push(params)
-      }
-
-      return {
-        queryKey,
-        refetchInterval: 60 * 1000,
-        queryFn: () => getStockIndicatorData({
-          symbol: state.symbol, cycle: state.timeIndex, id: id, db_type: type, start_at: startTime, param: JSON.stringify(params)
-        }).then(r => ({ id: id, data: r.result })),
-        placeholderData: () => ({ id: id, data: undefined })
-      }
-    })
-  })
-
-  useEffect(() => {
-    secondaryIndicatorQueries.forEach((query) => {
-
-      if (!query.data) return
-      setIndicatorData({ index: props.index, indicatorId: query.data.id, data: query.data.data })
-    })
-  }, [secondaryIndicatorQueries, setIndicatorData, props.index])
-
-
-
-  useMount(() => {
-    if (chart.current) {
-      chart.current.on('legendselectchanged', (e: any) => {
-        if (!e.selected[e.name]) {
-          removeOverlayStock({ index: props.index, symbol: e.name })
-        }
-      })
-      render()
-    }
-  })
-
-  useUpdateEffect(() => {
-    chart.current?.resize()
-    render()
-  }, [size])
-
   useEffect(() => {
     setMainData({ index: props.index, data: query.data })
-  }, [query.data, props.index, setMainData])
+  }, [query.data, setMainData, props.index])
 
-  const render = () => {
+  useEffect(() => {
+    if (!dom.current) {
+      console.warn('dom is not ready')
+      return
+    }
+    const charts = kCharts.init(dom.current, defaultOptions)
+
+    if (!charts) {
+      console.warn('init chart failed')
+      return
+    }
+
+    chart.current = charts
+
+
+    return () => {
+      kCharts.dispose(charts)
+    }
+  }, [])
+
+  useEffect(() => {
     if (!chart.current) return
 
-    const [start, end] = chart.current.getOption() ? renderUtils.getZoom(chart.current.getOption()) : [90, 100]
+    if (!state.mainData) {
+      chart.current.applyNewData([])
+    }
 
-    chart.current?.clear()
+    const stocks = state.mainData?.history.map(v => stockUtils.toStock(v)) ?? []
+    console.log(stocks, state.mainData)
+    chart.current.applyNewData(stocks, true)
 
-    const _options = renderChart()
-    renderGrid(_options, state, [chart.current.getWidth(), chart.current.getHeight()])
-    renderMainChart(_options, state)
-    renderMarkLine(_options, state)
-    renderZoom(_options, [start, end])
-    /**
-     * 画主图指标
-     */
-    renderOverlay(_options, state.overlayStock)
-    renderMainCoiling(_options, state)
+  }, [state.mainData])
 
-    renderMainIndicators(_options, Object.values(state.mainIndicators))
-    renderOverlayMark(_options, state)
-    renderSecondary(_options, state.secondaryIndicators)
-    renderSecondaryLocalIndicators(_options, state.secondaryIndicators, state)
-    renderWatermark(_options, state.timeIndex)
-    console.log(_options)
-    chart.current.setOption(_options)
-  }
+  /**
+   * 指标参数
+   */
+  const { isDefaultIndicatorParams, getIndicatorQueryParams } = useIndicator()
 
 
-  useUpdateEffect(() => {
-    render()
-  }, [state])
+
+  // const mainQueryIndicatorQueries = useQueries({
+  //   queries: Reflect.ownKeys(state.mainIndicators).map(v => v.toString()).map((item) => {
+  //     const queryKey = [getStockIndicatorData.cacheKey, { symbol: state.symbol, cycle: state.timeIndex, id: item, db_type: state.mainIndicators[item].type }] as any[]
+  //     let params: NormalizedRecord<number> | undefined
+  //     if (!isDefaultIndicatorParams(item)) {
+  //       params = getIndicatorQueryParams(item)
+  //       queryKey.push(params)
+  //     }
+
+  //     return {
+  //       queryKey,
+  //       refetchInterval: 60 * 1000,
+  //       queryFn: async () => {
+  //         const r = await getStockIndicatorData({
+  //           symbol: state.symbol, cycle: state.timeIndex, id: item, db_type: state.mainIndicators[item].type, start_at: startTime,
+  //           param: JSON.stringify(params)
+  //         })
+
+  //         return { id: item, data: r.result }
+  //       },
+  //       placeholderData: () => ({ id: item, data: undefined })
+  //     }
+  //   })
+  // })
+
+  // useEffect(() => {
+  //   mainQueryIndicatorQueries.forEach((query) => {
+  //     if (!query.data) return
+
+  //     setIndicatorData({ index: props.index, indicatorId: query.data.id, data: query.data.data })
+  //   })
+  // }, [mainQueryIndicatorQueries, setIndicatorData, props.index])
+
+  // const secondaryIndicatorQueries = useQueries({
+  //   queries: Array.from(new Set(state.secondaryIndicators.filter(v => !renderUtils.isLocalIndicator(v.id)).map(v => `${v.id}_${v.type}`))).map((item) => {
+  //     const [id, type] = item.split('_')
+  //     const queryKey = [getStockIndicatorData.cacheKey, { symbol: state.symbol, cycle: state.timeIndex, id: id, db_type: type }] as any[]
+  //     let params: NormalizedRecord<number> | undefined
+  //     if (!isDefaultIndicatorParams(id)) {
+  //       params = getIndicatorQueryParams(id)
+  //       queryKey.push(params)
+  //     }
+
+  //     return {
+  //       queryKey,
+  //       refetchInterval: 60 * 1000,
+  //       queryFn: () => getStockIndicatorData({
+  //         symbol: state.symbol, cycle: state.timeIndex, id: id, db_type: type, start_at: startTime, param: JSON.stringify(params)
+  //       }).then(r => ({ id: id, data: r.result })),
+  //       placeholderData: () => ({ id: id, data: undefined })
+  //     }
+  //   })
+  // })
+
+  // useEffect(() => {
+  //   secondaryIndicatorQueries.forEach((query) => {
+
+  //     if (!query.data) return
+  //     setIndicatorData({ index: props.index, indicatorId: query.data.id, data: query.data.data })
+  //   })
+  // }, [secondaryIndicatorQueries, setIndicatorData, props.index])
+
+
+
+  // useMount(() => {
+  //   if (chart.current) {
+  //     chart.current.on('legendselectchanged', (e: any) => {
+  //       if (!e.selected[e.name]) {
+  //         removeOverlayStock({ index: props.index, symbol: e.name })
+  //       }
+  //     })
+  //   }
+  // })
+
+  // useUpdateEffect(() => {
+  //   chart.current?.resize()
+  //   render()
+  // }, [size])
+
+  // useEffect(() => {
+  //   setMainData({ index: props.index, data: query.data })
+  // }, [query.data, props.index, setMainData])
+
+  // const render = () => {
+  //   if (!chart.current) return
+
+  //   const [start, end] = chart.current.getOption() ? renderUtils.getZoom(chart.current.getOption()) : [90, 100]
+
+  //   chart.current?.clear()
+
+  //   const _options = renderChart()
+  //   renderGrid(_options, state, [chart.current.getWidth(), chart.current.getHeight()])
+  //   renderMainChart(_options, state)
+  //   renderMarkLine(_options, state)
+  //   renderZoom(_options, [start, end])
+  //   /**
+  //    * 画主图指标
+  //    */
+  //   renderOverlay(_options, state.overlayStock)
+  //   renderMainCoiling(_options, state)
+
+  //   renderMainIndicators(_options, Object.values(state.mainIndicators))
+  //   renderOverlayMark(_options, state)
+  //   renderSecondary(_options, state.secondaryIndicators)
+  //   renderSecondaryLocalIndicators(_options, state.secondaryIndicators, state)
+  //   renderWatermark(_options, state.timeIndex)
+  //   console.log(_options)
+  //   chart.current.setOption(_options)
+  // }
+
+
+  // useUpdateEffect(() => {
+  //   render()
+  // }, [state])
 
   const onChangeSecondaryIndicators = async (params: { value: string, index: number, type: string }) => {
 
@@ -215,48 +251,48 @@ export const MainChart = (props: MainChartProps) => {
 
 
   // TODO 监听dataZoom事件
-  useEffect(() => {
-    if (!chart.current) return
+  // useEffect(() => {
+  //   if (!chart.current) return
 
-    if (state.yAxis.right !== 'percent') return
+  //   if (state.yAxis.right !== 'percent') return
 
-    /**
-     * 1.01，x轴100%是query.data.length * 1.01，100%的时候要向左偏移0.01
-     * 所以对应data的100%其实是100/1.01 = 98.02%
-     * 所以差值是100 - 98.02 = 1.98
-     * TODO: 算法不对，需要重新计算 
-     */
-    chart.current.on('dataZoom', throttle({interval: 1000}, (e: any) => {
-      let start = e.start 
-      let end = e.end
-      if (e.batch) {
-        start = e.batch[0].start
-        end = e.batch[0].end
-      }
+  //   /**
+  //    * 1.01，x轴100%是query.data.length * 1.01，100%的时候要向左偏移0.01
+  //    * 所以对应data的100%其实是100/1.01 = 98.02%
+  //    * 所以差值是100 - 98.02 = 1.98
+  //    * TODO: 算法不对，需要重新计算 
+  //    */
+  //   chart.current.on('dataZoom', throttle({interval: 1000}, (e: any) => {
+  //     let start = e.start 
+  //     let end = e.end
+  //     if (e.batch) {
+  //       start = e.batch[0].start
+  //       end = e.batch[0].end
+  //     }
 
-      const series = renderAxisLine(state, start, end)
+  //     const series = renderAxisLine(state, start, end)
 
-      const startValue = series.data![0]!
+  //     const startValue = series.data![0]!
 
-      chart.current?.setOption({
-        series,
-        yAxis: [
-          {},
-          {
-            axisLabel: {
-              formatter: (value: number) => {
-                return `{${value >= +startValue ? 'u' : 'd'}|${value.toFixed(2)}%}`
-              }
-            }
-          }
-        ],
-      })
-    }))
+  //     chart.current?.setOption({
+  //       series,
+  //       yAxis: [
+  //         {},
+  //         {
+  //           axisLabel: {
+  //             formatter: (value: number) => {
+  //               return `{${value >= +startValue ? 'u' : 'd'}|${value.toFixed(2)}%}`
+  //             }
+  //           }
+  //         }
+  //       ],
+  //     })
+  //   }))
 
-    return () => {
-      chart.current?.off('dataZoom')
-    }
-  }, [state])
+  //   return () => {
+  //     chart.current?.off('dataZoom')
+  //   }
+  // }, [state])
 
   return (
     <div className={
@@ -265,9 +301,9 @@ export const MainChart = (props: MainChartProps) => {
         ctxState.length > 1 && activeChartIndex === props.index ? 'border-primary' : ''
       )
     } onClick={() => setActiveChart(props.index)} onKeyDown={() => { }}>
-      <div className="w-full h-full" ref={dom}>
+      <div className="w-full h-full box-border" ref={dom}>
       </div>
-      {
+      {/* {
         state.secondaryIndicators.map((item, index, arr) => {
           const grids = renderUtils.calcGridSize(
             [chart.current?.getWidth() ?? 0, chart.current?.getHeight() ?? 0],
@@ -286,7 +322,7 @@ export const MainChart = (props: MainChartProps) => {
             </div>
           )
         })
-      }
+      } */}
       {
         ctxState.length > 1 ? (
           <div className="absolute top-2 left-2 flex items-center bg-muted border border-solid border-dialog-border rounded pr-2 h-6">

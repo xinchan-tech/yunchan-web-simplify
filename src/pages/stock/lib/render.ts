@@ -32,11 +32,58 @@ import {
 import { renderUtils } from './utils'
 import type { GraphicComponentOption } from 'echarts/components'
 import type { DataZoomComponentOption, YAXisOption } from 'echarts/types/dist/shared'
+import * as kCharts from 'klinecharts'
 
 const MAIN_CHART_NAME = 'kChart'
 const MAIN_CHART_NAME_VIRTUAL = 'kChart-virtual'
 
 type ChartState = ArrayItem<KChartState['state']>
+
+const stockUpColor = useConfig.getState().getStockColor(true, 'hex')
+const stockDownColor = useConfig.getState().getStockColor(false, 'hex')
+
+export const defaultOptions: kCharts.Options = {
+  styles: {
+    candle: {
+      bar: {
+        upColor: stockUpColor,
+        upBorderColor: stockUpColor,
+        upWickColor: stockUpColor,
+        downBorderColor: stockDownColor,
+        downWickColor: stockDownColor,
+        downColor: stockDownColor,
+        noChangeColor: stockUpColor
+      }
+    },
+    grid: {
+      horizontal: {
+        style: kCharts.LineType.Solid,
+        color: 'rgb(31, 32, 33)'
+      },
+      vertical: {
+        style: kCharts.LineType.Solid,
+        color: 'rgb(31, 32, 33)'
+      }
+    },
+    yAxis: {
+      axisLine: {
+        color: 'rgb(31, 32, 33)'
+      },
+      tickLine: {
+        show: false
+      }
+    },
+    xAxis: {
+      axisLine: {
+        color: 'rgb(31, 32, 33)'
+      },
+      tickLine: {
+        show: false
+      }
+    },
+    crosshair: {}
+  }
+}
 
 /**
  * 主图通用配置
@@ -951,7 +998,6 @@ const renderSecondaryAxis = (options: ECOption, state: KChartState['state'][0], 
         show: index === state.secondaryIndicators.length - 1,
         color: '#fff',
         formatter: (v: any, index) => {
-    
           return v
             ? index % 2 === 0
               ? isTimeIndexChart(state.timeIndex) && state.timeIndex !== StockChartInterval.FIVE_DAY

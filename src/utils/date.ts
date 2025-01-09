@@ -22,6 +22,12 @@ export const dateToWeek = (date: Dayjs | string, unit = '星期') => {
   }
   return weeks[dayjs(date).day()]
 }
+
+/**
+ * @deprecated
+ * @param time 时间
+ * @returns 
+ */
 export const getTrading = (time: string): StockTrading => {
 
   const usTime = dayjs(time)
