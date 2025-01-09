@@ -59,7 +59,7 @@
     "immer": "^10.1.1",
     "js-md5": "^0.8.3",
     "js-sha256": "^0.11.0",
-    "klinecharts": "^9.8.12",
+    "klinecharts": "10.0.0-alpha2",
     "lucide-react": "^0.462.0",
     "lz-string": "^1.5.0",
     "mitt": "^3.0.1",
