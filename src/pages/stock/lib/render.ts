@@ -101,14 +101,6 @@ export const mainDefaultOptions = (): ECOption => ({
       return obj
     }
   },
-  axisPointer: {
-    link: [
-      {
-        xAxisIndex: 'all'
-      }
-    ],
-    label: {}
-  },
   xAxis: {
     type: 'category',
     axisLine: { onZero: false, show: false },
@@ -117,7 +109,10 @@ export const mainDefaultOptions = (): ECOption => ({
     },
     boundaryGap: false,
     axisLabel: {
-      show: false
+      show: false,
+      interval: (index: number) => {
+        return index % 15 === 0
+      }
     },
     min: 'dataMin',
     max: v => {
@@ -167,30 +162,6 @@ export const mainDefaultOptions = (): ECOption => ({
         }
       }
     }
-    // {
-    //   scale: true,
-    //   show: true,
-    //   gridIndex: 0,
-    //   position: 'right',
-    //   splitNumber: 8,
-    //   silent: true,
-    //   axisLine: {
-    //     onZero: false
-    //   },
-    //   splitLine: {
-    //     show: false,
-    //     lineStyle: {
-    //       color: LINE_COLOR
-    //     }
-    //   },
-    //   // min: v => {
-    //   //   return v.min - (v.max - v.min) * 0.2
-    //   // },
-    //   // max: v => {
-    //   //   return v.max + (v.max - v.min) * 0.2
-    //   // },
-    //   axisLabel: {}
-    // }
   ],
   dataZoom: [
     {
@@ -216,18 +187,10 @@ export const xAxisDefaultOptions = (): ECOption => ({
   tooltip: {
     trigger: 'axis',
     axisPointer: {
-      type: 'cross'
+      type: 'line'
     },
     formatter: () => '',
     position: [0, 0]
-  },
-  axisPointer: {
-    link: [
-      {
-        xAxisIndex: 'all'
-      }
-    ],
-    label: {}
   },
   xAxis: {
     type: 'category',
@@ -247,7 +210,10 @@ export const xAxisDefaultOptions = (): ECOption => ({
       }
     },
     axisLabel: {
-      color: TEXT_COLOR
+      color: TEXT_COLOR,
+      interval: (index: number) => {
+        return index % 15 === 0
+      }
     }
   },
   yAxis: {

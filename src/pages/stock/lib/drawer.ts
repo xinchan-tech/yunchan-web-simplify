@@ -90,12 +90,16 @@ export const drawPolyline: DrawerFunc<[XAxis, YAxis, XAxis, YAxis, LineType][]> 
 
   const maxRight = width - right
 
-  console.log(right, left)
   const series: CustomSeriesOption = {
     xAxisIndex: xAxisIndex,
     yAxisIndex: yAxisIndex,
     type: 'custom',
+    name: seriesName,
     id: seriesName,
+    tooltip: {
+      show: false,
+      trigger: 'none'
+    },
     encode: {
       x: [0, 2],
       y: [1, 3]

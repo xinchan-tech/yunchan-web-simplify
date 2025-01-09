@@ -88,21 +88,24 @@ export const MainChart = (props: MainChartProps) => {
    */
   useMount(() => {
     if (!dom.current) return
-
+    if (!xAxisDom.current) return
     chart.current = echarts.init(dom.current)
+    chart.current.group = `stock-chart-${props.index}`
     chart.current.setOption(mainDefaultOptions())
 
-    if (!xAxisDom.current) return
-
     xAxisChart.current = echarts.init(xAxisDom.current)
+    xAxisChart.current.group = `stock-chart-${props.index}`
     xAxisChart.current.setOption(xAxisDefaultOptions())
-
-    echarts.connect([chart.current, xAxisChart.current])
+    console.log('connect', `stock-chart-${props.index}`)
+    echarts.connect(`stock-chart-${props.index}`)
   })
 
   useUnmount(() => {
+    echarts.disconnect(`stock-chart-${props.index}`)
+    console.log('disconnect', `stock-chart-${props.index}`)
     chart.current?.dispose()
     xAxisChart.current?.dispose()
+    
   })
 
   useUpdateEffect(() => {
@@ -144,7 +147,6 @@ export const MainChart = (props: MainChartProps) => {
     })
 
 
-
   }, [state.mainData, state.timeIndex, state.type])
 
   useEffect(() => {
@@ -158,7 +160,7 @@ export const MainChart = (props: MainChartProps) => {
       ]
     }, { lazyUpdate: true })
 
-
+  
   }, [state.mainCoiling, state.mainData])
 
   /**
@@ -352,7 +354,7 @@ export const MainChart = (props: MainChartProps) => {
     } onClick={() => setActiveChart(props.index)} onKeyDown={() => { }} ref={containerDom}>
       <div className="w-full flex-1 box-border" ref={dom}>
       </div>
-      <div className="h-[20px] flex-shrink-0" ref={xAxisDom}>
+      <div className="h-[80px] flex-shrink-0" ref={xAxisDom}>
 
       </div>
       {/* {
