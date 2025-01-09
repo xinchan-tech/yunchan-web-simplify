@@ -43,6 +43,17 @@ const stockUpColor = useConfig.getState().getStockColor(true, 'hex')
 const stockDownColor = useConfig.getState().getStockColor(false, 'hex')
 
 export const defaultOptions: kCharts.Options = {
+  layout: [
+    {
+      type: 'candle' as kCharts.LayoutChildType , 
+      options: {
+        axis: {
+          name: 'customYAxisPrice'
+        }
+      } 
+
+    }
+  ],
   styles: {
     candle: {
       bar: {
