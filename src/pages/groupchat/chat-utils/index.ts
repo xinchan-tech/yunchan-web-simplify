@@ -4,6 +4,7 @@ import WKSDK, {
   Message,
   ChannelInfo,
 } from "wukongimjssdk";
+
 import { ConversationWrap } from "../ConversationWrap";
 import { getChatNameAndAvatar } from "@/api";
 
@@ -53,3 +54,10 @@ export const userToChannelInfo = (
 
   return channelInfo;
 };
+
+
+export class MentionModel {
+  all: boolean = false
+  uids?: Array<string>
+}
+

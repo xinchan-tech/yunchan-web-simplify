@@ -7,14 +7,17 @@ import {
   WKSDK,
   Conversation,
   Message,
-  MessageTask
+  MessageTask,
+  Subscriber,
 } from "wukongimjssdk";
 
 import { MediaMessageUploadTask } from "./task";
 import APIClient from "./APIClient";
-import { syncRecentConversation } from "@/api";
+import { syncRecentConversation, getGroupMembersService, GroupMemberResult } from "@/api";
 import { Convert } from "./convert";
 import request from "@/utils/request";
+import UploadUtil from "./uploadUtil";
+import { userToChannelInfo } from "../chat-utils";
 
 export const fromUIDList: string[] = [];
 
@@ -95,15 +98,54 @@ export function initDataSource() {
     return channelInfo;
   };
   // 如果是群频道，可以实现这个方法，调用 WKSDK.shared().channelManager.syncSubscribes(channel) 方法将会触发此回调
-  //  WKSDK.shared().config.provider.syncSubscribersCallback
+  WKSDK.shared().config.provider.syncSubscribersCallback = async (
+    channel: Channel,
+    version: number
+  ): Promise<Array<Subscriber>> => {
+    let resp:GroupMemberResult;
+    let members: Subscriber[] = [];
+    try {
+      resp = await getGroupMembersService(channel.channelID);
+      if (resp.items instanceof Array && resp.items.length > 0) {
+        resp.items.forEach((man) => {
+          let member = new Subscriber();
+          member.uid = man.username;
+          member.name = man.realname;
+          member.orgData = man;
+          member.avatar = man.avatar;
+  
+          // 在这里缓存群成员的头像昵称
+          const data = {
+            name: man.realname,
+            avatar: man.avatar,
+          };
+          WKSDK.shared().channelManager.setChannleInfoForCache(
+            userToChannelInfo(data, man.username)
+          );
+  
+          members.push(member);
+        });
+      }
+    } catch (err) {
+      console.error(err)
+      
+    }
+ 
+
+   
+
+    return members;
+  };
 
   // 如果涉及到消息包含附件（多媒体）可以实现这个方法，sdk将调用此方法进行附件上传
   //  WKSDK.shared().config.provider.messageUploadTask
 
   // 消息上传任务
-  // WKSDK.shared().config.provider.messageUploadTaskCallback = (
-  //   message: Message
-  // ): MessageTask => {
-  //   return new MediaMessageUploadTask(message);
-  // };
+  WKSDK.shared().config.provider.messageUploadTaskCallback = (
+    message: Message
+  ): MessageTask => {
+    return new MediaMessageUploadTask(message);
+  };
+
+  UploadUtil.shared.init();
 }

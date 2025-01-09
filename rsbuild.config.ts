@@ -17,10 +17,10 @@ export default defineConfig({
   },
   server: {
     host: '0.0.0.0',
-    port: 3001,
+ 
     proxy: {
       '/api': {
-        target: 'http://us.mgjkn.com/',
+        target: 'http://cn.mgjkn.com/',
         changeOrigin: true,
         pathRewrite: {
           '^/api': ''

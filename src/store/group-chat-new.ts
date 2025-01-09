@@ -32,16 +32,11 @@ export const useGroupChatStoreNew = create<GroupChatStore>()(
   )
 );
 
-type GroupMember = {
-  name: string;
-  avatar: string;
-};
+
 
 interface GroupChatShortStore {
-  groupMemberCache: Map<string, GroupMember[]>;
-  setGroupMember: (groupId: string, members: GroupMember[]) => void;
-  getGroupMembers: (groupId: string) => GroupMember[] | undefined
-  hasGroupMembers: (groupId: string) => boolean | undefined
+  avatarColorMap: Map<string, string>
+  setAvatarColorMap: (map:Map<string, string>) => void
   conversationWraps: ConversationWrap[]
   setConversationWraps: (data: ConversationWrap[]) => void
 }
@@ -54,20 +49,11 @@ export const useGroupChatShortStore = create<GroupChatShortStore>(
             conversationWraps: data
         })
     },
-    groupMemberCache: new Map(),
-    setGroupMember: (groupId: string, members: GroupMember[]) => {
-      set((state) => {
-        state.groupMemberCache.set(groupId, members);
-        return {
-          groupMemberCache: state.groupMemberCache,
-        };
-      });
-    },
-    getGroupMembers: (groupId: string) => {
-        return get().groupMemberCache.get(groupId)
-    },
-    hasGroupMembers: (groupId: string) => {
-        return get().groupMemberCache.has(groupId)
+    avatarColorMap: new Map(),
+    setAvatarColorMap: (map: Map<string, string>) => {
+      set({
+        avatarColorMap: map
+      })
     }
   })
 );

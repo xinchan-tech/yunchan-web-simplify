@@ -1,9 +1,8 @@
 import { cn } from "@/utils/style";
-import { Message, MessageText, MessageImage, CMDContent } from "wukongimjssdk";
-import ImageCell, { ImageContent } from "../../Messages/Image";
+import { Message } from "wukongimjssdk";
+
 import MsgHead from "../msg-head";
 import { ReactNode } from "react";
-import SystemCell from "../../Messages/system";
 
 const MsgCard = (props: { data: Message; children: string | ReactNode }) => {
   const { data } = props;
@@ -11,7 +10,10 @@ const MsgCard = (props: { data: Message; children: string | ReactNode }) => {
   return (
     <div
       key={data.clientMsgNo}
-      className={cn("flex mb-6 msg-card items-start", data.send && "justify-end")}
+      className={cn(
+        "flex mb-6 msg-card items-start",
+        data.send && "justify-end"
+      )}
     >
       {data.send !== true && (
         <div className="w-12 h-full rounded-md  left">
@@ -35,7 +37,7 @@ const MsgCard = (props: { data: Message; children: string | ReactNode }) => {
       )}
       <style>
         {`
-            
+  
                 .sedn-card {
 
                 }

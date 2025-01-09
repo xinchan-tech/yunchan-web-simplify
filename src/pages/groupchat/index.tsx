@@ -14,6 +14,7 @@ import WKSDK, {
   Channel,
   ChannelTypeGroup,
   PullMode,
+  Subscriber,
 } from "wukongimjssdk";
 import { useEffect, useRef, useState } from "react";
 import { useUser, useToken } from "@/store";
@@ -25,6 +26,7 @@ import {
 import { useLatest, useThrottleFn } from "ahooks";
 import { setPersonChannelCache } from "./chat-utils";
 import { fromUIDList } from "./Service/dataSource";
+import GroupMembers from "./group-members";
 
 const Threshold = 200;
 
@@ -55,7 +57,7 @@ const GroupChatPage = () => {
       }
       clearTimeout(timer);
       timer = null;
-    }, 0);
+    }, 100);
   };
 
   // 监听消息
@@ -65,12 +67,12 @@ const GroupChatPage = () => {
     }
     const temp = [...messagesRef.current];
 
-    if (fromUIDList.indexOf(msg.fromUID) < 0) {
-      fromUIDList.push(msg.fromUID);
-      setPersonChannelCache(msg.fromUID);
+    // if (fromUIDList.indexOf(msg.fromUID) < 0) {
+    //   fromUIDList.push(msg.fromUID);
+    //   setPersonChannelCache(msg.fromUID);
 
-      setMessages(temp);
-    }
+    //   setMessages(temp);
+    // }
 
     temp.push(msg);
     setMessages(temp);
@@ -82,15 +84,15 @@ const GroupChatPage = () => {
   // 拉取当前会话最新消息
   const pullLast = async (channel: Channel) => {
     if (channel) {
-      pulldowning.current = true
-      pulldownFinished.current = false
+      pulldowning.current = true;
+      pulldownFinished.current = false;
       const msgs = await WKSDK.shared().chatManager.syncMessages(channel, {
         limit: 15,
         startMessageSeq: 0,
         endMessageSeq: 0,
         pullMode: PullMode.Up,
       });
-      pulldowning.current = false
+      pulldowning.current = false;
       if (msgs && msgs.length > 0) {
         msgs.forEach((m) => {
           messagesRef.current.push(m);
@@ -107,7 +109,7 @@ const GroupChatPage = () => {
       return;
     }
     const firstMsg = messagesRef.current[0];
-    const firstMsgId = firstMsg.clientMsgNo
+    const firstMsgId = firstMsg.clientMsgNo;
     if (firstMsg.messageSeq == 1) {
       pulldownFinished.current = true;
       return;
@@ -135,55 +137,55 @@ const GroupChatPage = () => {
       }
 
       // 等待dom更新后修改滚动位置
-      
-     
-        let timer = setTimeout(() => {
-          if (
-            msgListRef.current &&
-            typeof msgListRef.current.scrollToBottom === "function"
-          ) {
-            const firstMsgEl = document.getElementById(firstMsgId);
-            if (firstMsgEl) {
 
-              msgListRef.current.scrollTo(firstMsgEl.offsetTop);
-            }
+      let timer = setTimeout(() => {
+        if (
+          msgListRef.current &&
+          typeof msgListRef.current.scrollToBottom === "function"
+        ) {
+          const firstMsgEl = document.getElementById(firstMsgId);
+          if (firstMsgEl) {
+            msgListRef.current.scrollTo(firstMsgEl.offsetTop);
           }
-          clearTimeout(timer);
-          timer = null;
-        }, 0);
-      
+        }
+        clearTimeout(timer);
+        timer = null;
+      }, 0);
     }
   };
 
   const pulldowning = useRef(false);
   const pulldownFinished = useRef(false);
-  const handleMsgScroll = useThrottleFn((e: any) => {
-    const targetScrollTop = e?.target?.scrollTop;
-    if (targetScrollTop <= Threshold) {
-      // 下拉
-      if (pulldowning.current || pulldownFinished.current) {
-        console.log(
-          "不允许下拉",
-          "pulldowning",
-          pulldowning.current,
-          "pulldownFinished",
-          pulldownFinished.current
-        );
-        return;
+  const handleMsgScroll = useThrottleFn(
+    (e: any) => {
+      const targetScrollTop = e?.target?.scrollTop;
+      if (targetScrollTop <= Threshold) {
+        // 下拉
+        if (pulldowning.current || pulldownFinished.current) {
+          console.log(
+            "不允许下拉",
+            "pulldowning",
+            pulldowning.current,
+            "pulldownFinished",
+            pulldownFinished.current
+          );
+          return;
+        }
+        console.log("下拉");
+        pulldowning.current = true;
+        pullDown()
+          .then(() => {
+            pulldowning.current = false;
+          })
+          .catch(() => {
+            pulldowning.current = false;
+          });
       }
-      console.log("下拉");
-      pulldowning.current = true;
-      pullDown()
-        .then(() => {
-          pulldowning.current = false;
-        })
-        .catch(() => {
-          pulldowning.current = false;
-        });
+    },
+    {
+      wait: 200,
     }
-  }, {
-    wait: 200
-  })
+  );
 
   messageStatusListener = (ack: SendackPacket) => {
     messagesRef.current.forEach((m) => {
@@ -241,38 +243,39 @@ const GroupChatPage = () => {
     };
   }, []);
 
-  const [groupNm, setGroupNm] = useState("");
+  // 群成员
+  const [subscribers, setSubscribers] = useState<Subscriber[]>([]);
 
-  const handleAddGroupChannel = () => {
-    const channel = new Channel(groupNm, ChannelTypeGroup);
-
-    setToChannel(channel);
-    const conversation =
-      WKSDK.shared().conversationManager.findConversation(channel);
-    if (!conversation) {
-      // 如果最近会话不存在，则创建一个空的会话
-      WKSDK.shared().conversationManager.createEmptyConversation(channel);
-    }
-  };
-
-  const handleChannelSelect = (channel: Channel) => {
+  const handleChannelSelect = async (channel: Channel) => {
     messagesRef.current = [];
 
+    await WKSDK.shared().channelManager.syncSubscribes(channel); // 同步订阅者
+    const members: Subscriber[] =
+      WKSDK.shared().channelManager.getSubscribes(channel);
+    setSubscribers(members);
+    console.log(members, "subscribers");
     pullLast(channel);
   };
 
   // 初始化群聊列表和消息
   const initChannelFlag = useRef(true);
   useEffect(() => {
-    if (
-      selectedChannel &&
-      conversationWraps.length > 0 &&
-      initChannelFlag.current === true
-    ) {
-      handleChannelSelect(selectedChannel);
+    if (conversationWraps.length > 0 && initChannelFlag.current === true) {
+      // selectedChannel是缓存了起来的
+      const firstChannel = conversationWraps.find(
+        (item) => item.channel.channelID === selectedChannel?.channelID
+      )?.channel;
+      if (firstChannel) {
+        handleChannelSelect(firstChannel);
+      }
       initChannelFlag.current = false;
     }
-  }, [selectedChannel, conversationWraps]);
+  }, [conversationWraps]);
+  let currentChannelInfo;
+  if (selectedChannel instanceof Channel) {
+    currentChannelInfo =
+      WKSDK.shared().channelManager.getChannelInfo(selectedChannel);
+  }
   return (
     <div className="group-chat-container flex">
       <GroupChatLeftBar />
@@ -283,19 +286,8 @@ const GroupChatPage = () => {
       />
       <div className="group-chat-right">
         <div className="group-chat-header justify-between h-[58px]">
-          <div className="group-title">
-            群名称
-            <div className="flex">
-              <Input
-                className="inline-block"
-                placeholder="请输入群聊名称"
-                value={groupNm}
-                onChange={(e) => {
-                  setGroupNm(e.target.value);
-                }}
-              />
-              <Button onClick={handleAddGroupChannel}>新建群聊</Button>
-            </div>
+          <div className="group-title flex items-center h-full">
+            {currentChannelInfo?.title}
           </div>
         </div>
         <div className="flex" style={{ height: "calc(100% - 58px)" }}>
@@ -305,9 +297,14 @@ const GroupChatPage = () => {
               ref={msgListRef}
               handleScroll={handleMsgScroll.run}
             />
-            <GroupChatInput onMsgSend={scrollBottom} />
+            <GroupChatInput
+              onMsgSend={scrollBottom}
+              subscribers={subscribers}
+            />
           </div>
-          <div className="w-[220px]"></div>
+          <div className="w-[220px] group-member-panel">
+            <GroupMembers subscribers={subscribers} />
+          </div>
         </div>
       </div>
       <style jsx>
@@ -319,6 +316,14 @@ const GroupChatPage = () => {
             background-color: rgb(43, 45, 49);
             height: 100%;
             flex: 1;
+          }
+          .group-title {
+            padding-left: 20px;
+            font-weight: bold;
+            font-size: 20px;
+          }
+          .group-member-panel {
+            border-left: 1px solid rgb(50, 50, 50);
           }
           .group-chat-header {
             border-bottom: 1px solid hsl(var(--border));

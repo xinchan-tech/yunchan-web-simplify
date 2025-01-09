@@ -1,50 +1,65 @@
-import request from '@/utils/request';
+import request from "@/utils/request";
 
 type getGroupChannelsParams = {
-    type: '0' | '1' | '2' | '3',
-    keywords?: string,
-    page?: string,
-    'order[price]'? : 'ASC' | 'DESC'
-}
+  type: "0" | "1" | "2" | "3";
+  keywords?: string;
+  page?: string;
+  "order[price]"?: "ASC" | "DESC";
+};
 
 export type GroupChannelItem = {
-	id: string;
-	account: string;
-	avatar: string;
-	name: string;
-	price: string;
-	brief: string;
-	tags: string;
-	total_user: string;
-	in_channel: number;
-}
+  id: string;
+  account: string;
+  avatar: string;
+  name: string;
+  price: string;
+  brief: string;
+  tags: string;
+  total_user: string;
+  in_channel: number;
+};
 
-type GroupChannelsResult = PageResult<GroupChannelItem>
+type GroupChannelsResult = PageResult<GroupChannelItem>;
 
 export const getGroupChannels = async (params: getGroupChannelsParams) => {
-    const r = await request.get<GroupChannelsResult>('/channels', {params}).then(r => r.data);
-    return r;
-}
+  const r = await request
+    .get<GroupChannelsResult>("/channels", { params })
+    .then((r) => r.data);
+  return r;
+};
 
-getGroupChannels.cacheKey = 'groupChannels:channels'
-
+getGroupChannels.cacheKey = "groupChannels:channels";
 
 export const syncRecentConversation = async (params) => {
-	const r = await request.post('/conversations/sync', params).then(r => r.data);
-	return r;
-}
+  const r = await request
+    .post("/conversations/sync", params)
+    .then((r) => r.data);
+  return r;
+};
 
-syncRecentConversation.cacheKey = 'groupChannels:sync'
+syncRecentConversation.cacheKey = "groupChannels:sync";
 
+export type GroupMemberResult = PageResult<{
+  type: string;
+  uid: string;
+  forbidden: string;
+  username: string;
+  realname: string;
+  avatar: string;
+}>;
 export const getGroupMembersService = async (groupId: string) => {
-	const r = await request.post(`/channel/${groupId}/users`).then(r => r.data);
-	return r;
-}
+  const r = await request
+    .get<GroupMemberResult>(`/channel/${groupId}/users`)
+    .then((r) => r.data);
+  return r;
+};
 
 export const getChatNameAndAvatar = async (params: {
-	type: string,
-	id: string
+  type: string;
+  id: string;
 }) => {
-	const resp = await request.get<{name: string, avatar: string}>('/im/avatars' , {params}).then(r => r.data);
-	return resp
-}
+  const resp = await request
+    .get<{ name: string; avatar: string }>("/im/avatars", { params })
+    .then((r) => r.data);
+  return resp;
+};

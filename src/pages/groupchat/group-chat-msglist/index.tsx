@@ -3,12 +3,12 @@ import { useEffect, useRef, UIEventHandler } from "react";
 import { Message, MessageText, MessageImage } from "wukongimjssdk";
 
 import { useImperativeHandle, forwardRef, ReactNode } from "react";
-import ImageCell, { ImageContent } from "../Messages/Image";
+import ImageCell from "../Messages/Image";
 import SystemCell from "../Messages/system";
 import TextCell from "../Messages/text";
-import { fromUIDList } from "../Service/dataSource";
-import { setPersonChannelCache } from "../chat-utils";
+
 import { useUpdate } from "ahooks";
+import { MessageWrap } from "../Service/Model";
 
 const GroupChatMsgList = forwardRef(
   (
@@ -27,8 +27,9 @@ const GroupChatMsgList = forwardRef(
       if (m instanceof Message) {
         const streams = m.streams;
         let text: string | ReactNode = "";
+        const messageWrap = new MessageWrap(m)
         if (m.content instanceof MessageText) {
-          text = <TextCell key={key} message={m} />;
+          text = <TextCell key={key} message={m} messageWrap={messageWrap} />;
         } else if (m.content instanceof MessageImage) {
           text = <ImageCell key={key} message={m}></ImageCell>;
         } else {
@@ -53,22 +54,22 @@ const GroupChatMsgList = forwardRef(
     // 更新message时，查询聊发送人头像和姓名信息，并缓存
     useEffect(() => {
       console.log(messages, "messages");
-      const cacheTaskList:Promise<{avatar: string, name: string}>[] = []
-      if (messages instanceof Array && messages.length > 0) {
-        messages.forEach((m) => {
-          if (fromUIDList.indexOf(m.fromUID) < 0) {
-            fromUIDList.push(m.fromUID);
-            cacheTaskList.push(setPersonChannelCache(m.fromUID))
-          }
-        });
-        if(cacheTaskList.length > 0) {
+      // const cacheTaskList:Promise<{avatar: string, name: string}>[] = []
+      // if (messages instanceof Array && messages.length > 0) {
+      //   messages.forEach((m) => {
+      //     if (fromUIDList.indexOf(m.fromUID) < 0) {
+      //       fromUIDList.push(m.fromUID);
+      //       cacheTaskList.push(setPersonChannelCache(m.fromUID))
+      //     }
+      //   });
+      //   if(cacheTaskList.length > 0) {
 
-          // 请求完了再更新
-          Promise.all(cacheTaskList).then(() => {
-            update()
-          })
-        }
-      }
+      //     // 请求完了再更新
+      //     Promise.all(cacheTaskList).then(() => {
+      //       update()
+      //     })
+      //   }
+      // }
 
       //
     }, [messages, update]);

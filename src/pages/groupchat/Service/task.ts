@@ -3,6 +3,7 @@ import request from "@/utils/request";
 import axios, { Canceler } from "axios";
 import { MediaMessageContent } from "wukongimjssdk";
 import {  MessageTask, TaskStatus } from "wukongimjssdk";
+import UploadUtil from "./uploadUtil";
 
 
 
@@ -17,20 +18,27 @@ export class MediaMessageUploadTask extends MessageTask {
       }
 
     async start(): Promise<void> {
+     
         const mediaContent = this.message.content as MediaMessageContent
         if(mediaContent.file) {
-            const param = new FormData();
-            param.append("file", mediaContent.file);
-            const fileName = this.getUUID();
-            const path = `/${this.message.channel.channelType}/${this.message.channel.channelID}/${fileName}${mediaContent.extension??""}`
-            const uploadURL = await  this.getUploadURL(path)
-            if(uploadURL) {
-                this.uploadFile(mediaContent.file,uploadURL)
-
-            }else{
-                console.log('获取上传地址失败！')
+            
+            // const fileName = mediaContent.file.name;
+            const fileName = this.getUUID()
+            const resp = await UploadUtil.shared.uploadImg(mediaContent.file, fileName).catch(error => {
+                console.log('文件上传失败！->', error);
                 this.status = TaskStatus.fail
                 this.update()
+            })
+
+            console.log(resp , 'resprespresp');
+ 
+            if(resp) {
+                if(resp.url) {
+                    const mediaContent = this.message.content as MediaMessageContent
+                    mediaContent.remoteUrl = resp.url
+                    this.status = TaskStatus.success
+                    this.update()
+                }
             }
         }else {
             console.log('多媒体消息不存在附件！');
@@ -44,41 +52,9 @@ export class MediaMessageUploadTask extends MessageTask {
         }
     }
 
-   async uploadFile(file:File,uploadURL:string) {
-        const param = new FormData();
-        param.append("file", file);
-        const resp = await axios.post(uploadURL,param,{
-            headers: { "Content-Type": "multipart/form-data" },
-            cancelToken: new axios.CancelToken((c: Canceler) => {
-                this.canceler = c
-            }),
-            onUploadProgress: e => {
-                var completeProgress = ((e.loaded / e.total) | 0);
-                this._progress = completeProgress
-                this.update()
-            }
-        }).catch(error => {
-            console.log('文件上传失败！->', error);
-            this.status = TaskStatus.fail
-            this.update()
-        })
-        if(resp) {
-            if(resp.data.path) {
-                const mediaContent = this.message.content as MediaMessageContent
-                mediaContent.remoteUrl = resp.data.path
-                this.status = TaskStatus.success
-                this.update()
-            }
-        }
-    }
+  
 
-    // 获取上传路径
-    async getUploadURL(path:string) :Promise<string|undefined> {
-       const result = await request.get<{url:string}>(`file/upload?path=${path}&type=chat`)
-       if(result) {
-           return result.url
-       }
-    }
+
 
     suspend(): void {
     }

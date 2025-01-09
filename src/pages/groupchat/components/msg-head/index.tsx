@@ -1,5 +1,6 @@
 import { cn } from "@/utils/style";
 import WKSDK, { Message, Channel, ChannelTypePerson } from "wukongimjssdk";
+import ChatAvatar from "../chat-avatar";
 const MsgHead = (props: { message: Message; type: "left" | "right" }) => {
   const { message, type } = props;
 
@@ -21,13 +22,21 @@ const MsgHead = (props: { message: Message; type: "left" | "right" }) => {
         {channelInfo?.title}
       </div>
 
-      {channelInfo?.logo ? (
+      {/* {channelInfo?.logo ? (
         <img className="w-12 h-12 rounded-md" src={channelInfo.logo} />
       ) : (
         <div className="w-12 h-12 rounded-md bg-orange-700 flex items-center text-lg justify-center">
           {channelInfo?.title[0].toLocaleUpperCase()}
         </div>
-      )}
+      )} */}
+      <ChatAvatar
+        data={{
+          name: channelInfo?.title || "",
+          avatar: channelInfo?.logo || "",
+          uid: channelInfo?.channel.channelID || "",
+        }}
+        radius="8px"
+      />
       <style jsx>
         {`
           .user-name {

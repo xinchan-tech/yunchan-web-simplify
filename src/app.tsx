@@ -10,7 +10,7 @@ import { Suspense, useEffect, useMemo, useRef, useState } from "react"
 import { getConfig, getUser } from "./api"
 import { useQuery } from "@tanstack/react-query"
 import { appEvent } from "./utils/event"
-import { wsManager } from "./utils/ws"
+// import { wsManager } from "./utils/ws"
 import { uid } from "radash"
 import { useToast } from "./hooks"
 
@@ -219,9 +219,9 @@ const AppTitle = () => {
         })
       })
 
-      return close
-    }
-  }, [token])
+  //     return close
+  //   }
+  // }, [token])
 
   useEffect(() => {
     const s = router.subscribe((s) => {

@@ -116,7 +116,8 @@ const GroupChannel = (props: { onSelectChannel: (c: Channel) => void }) => {
   };
 
   // 强制刷新会话
-  const channelInfoListener = () => {
+  const channelInfoListener = (channelInfo: ChannelInfo) => {
+    console.log(channelInfo,latestConversation, "current channel");
     if (latestConversation.current.length > 0) {
       const temp = [...latestConversation.current];
       setConversationWraps(temp);
