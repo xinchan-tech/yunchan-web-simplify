@@ -2,7 +2,7 @@ import { StockChartInterval, type StockRawRecord, type getStockChart } from '@/a
 import { useConfig } from '@/store'
 import { dateToWeek, getTradingPeriod } from '@/utils/date'
 import type { ECOption } from '@/utils/echarts'
-import { StockRecord } from '@/utils/stock'
+import { StockRecord, stockUtils } from '@/utils/stock'
 import { colorUtil } from '@/utils/style'
 import dayjs from 'dayjs'
 import Decimal from 'decimal.js'
@@ -31,8 +31,8 @@ import {
 } from './coilling'
 import { renderUtils } from './utils'
 import type { GraphicComponentOption } from 'echarts/components'
-import type { DataZoomComponentOption, YAXisOption } from 'echarts/types/dist/shared'
-import * as kCharts from 'klinecharts'
+import type { DataZoomComponentOption, SeriesOption, YAXisOption } from 'echarts/types/dist/shared'
+import echarts from '@/utils/echarts'
 
 const MAIN_CHART_NAME = 'kChart'
 const MAIN_CHART_NAME_VIRTUAL = 'kChart-virtual'
@@ -42,48 +42,229 @@ type ChartState = ArrayItem<KChartState['state']>
 const stockUpColor = useConfig.getState().getStockColor(true, 'hex')
 const stockDownColor = useConfig.getState().getStockColor(false, 'hex')
 
-export const defaultOptions: kCharts.Options = {
-  styles: {
-    candle: {
-      bar: {
-        upColor: stockUpColor,
-        upBorderColor: stockUpColor,
-        upWickColor: stockUpColor,
-        downBorderColor: stockDownColor,
-        downWickColor: stockDownColor,
-        downColor: stockDownColor,
-        noChangeColor: stockUpColor
+const LINE_COLOR = 'rgb(31, 32, 33)'
+const TEXT_COLOR = '#fff'
+
+export const mainDefaultOptions = (): ECOption => ({
+  animation: false,
+  grid: {
+    left: 10,
+    top: 10,
+    right: 60,
+    bottom: 0
+  },
+  tooltip: {
+    trigger: 'axis',
+    axisPointer: {
+      type: 'cross'
+    },
+    borderWidth: 1,
+    borderColor: '#29292a',
+    backgroundColor: '#202020',
+    padding: 10,
+    textStyle: {
+      color: '#fff'
+    },
+    formatter: (v: any) => {
+      return ''
+      // const errData = (v as any[]).find(_v => _v.seriesName === MAIN_CHART_NAME)
+      // const priceData = (v as any[]).find(_v => _v.seriesName === MAIN_CHART_NAME_VIRTUAL)
+      // if (!errData) return ''
+      // const data = errData?.seriesType === 'candlestick' ? errData?.value.slice(1) : (errData.value as StockRawRecord)
+
+      // data[0] = dayjs(+priceData.value[0]).format('YYYY-MM-DD HH:mm:ss')
+      // const stock = StockRecord.of('', '', data)
+
+      // let time = stock.time ? dayjs(stock.time).format('MM-DD hh:mm') + dateToWeek(stock.time, '周') : '-'
+      // if (stock.time?.slice(11) === '00:00:00') {
+      //   time = stock.time.slice(0, 11) + dateToWeek(stock.time, '周')
+      // }
+
+      // return `
+      //     <span class="text-xs">
+      //      ${time}<br/>
+      //     开盘&nbsp;&nbsp;${Decimal.create(stock.open).toFixed(3)}<br/>
+      //     最高&nbsp;&nbsp;${Decimal.create(stock.high).toFixed()}<br/>
+      //     最低&nbsp;&nbsp;${Decimal.create(stock.low).toFixed()}<br/>
+      //     收盘&nbsp;&nbsp;${Decimal.create(stock.close).toFixed()}<br/>
+      //     涨跌额&nbsp;&nbsp;${`<span class="${stock.isUp ? 'text-stock-up' : 'text-stock-down'}">${stock.isUp ? '+' : ''}${Decimal.create(stock.percentAmount).toFixed(3)}</span>`}<br/>
+      //     涨跌幅&nbsp;&nbsp;${`<span class="${stock.isUp ? 'text-stock-up' : 'text-stock-down'}">${stock.isUp ? '+' : ''}${Decimal.create(stock.percent).mul(100).toFixed(2)}%</span>`}<br/>
+      //     成交量&nbsp;&nbsp;${stock.volume}<br/>
+      //     </span>
+      //     `
+    },
+    position: (pos, _, __, ___, size) => {
+      const obj = {
+        top: 10
+      } as any
+      obj[['left', 'right'][+(pos[0] < size.viewSize[0] / 2)]] = 30
+      return obj
+    }
+  },
+  axisPointer: {
+    link: [
+      {
+        xAxisIndex: 'all'
+      }
+    ],
+    label: {}
+  },
+  xAxis: {
+    type: 'category',
+    axisLine: { onZero: false, show: false },
+    axisTick: {
+      show: false
+    },
+    boundaryGap: false,
+    axisLabel: {
+      show: false
+    },
+    min: 'dataMin',
+    max: v => {
+      return v.max + Math.round((v.max - v.min) * 0.01)
+    },
+    splitLine: {
+      show: true,
+      lineStyle: {
+        color: LINE_COLOR
       }
     },
-    grid: {
-      horizontal: {
-        style: kCharts.LineType.Solid,
-        color: 'rgb(31, 32, 33)'
-      },
-      vertical: {
-        style: kCharts.LineType.Solid,
-        color: 'rgb(31, 32, 33)'
-      }
-    },
-    yAxis: {
-      axisLine: {
-        color: 'rgb(31, 32, 33)'
-      },
-      tickLine: {
+
+    axisPointer: {
+      label: {
         show: false
       }
-    },
-    xAxis: {
-      axisLine: {
-        color: 'rgb(31, 32, 33)'
+    }
+  },
+  yAxis: [
+    {
+      scale: true,
+      gridIndex: 0,
+      position: 'right',
+      splitNumber: 8,
+      axisPointer: {
+        label: {
+          show: true
+        }
       },
-      tickLine: {
-        show: false
+      axisLabel: {
+        show: true,
+        color: '#fff',
+        formatter: (value: any, index: any) => {
+          return index === 0 ? '' : value
+        }
+      },
+      axisLine: {
+        show: true,
+        lineStyle: {
+          color: LINE_COLOR
+        }
+      },
+      splitLine: {
+        show: true,
+        lineStyle: {
+          color: LINE_COLOR
+        }
+      }
+    }
+    // {
+    //   scale: true,
+    //   show: true,
+    //   gridIndex: 0,
+    //   position: 'right',
+    //   splitNumber: 8,
+    //   silent: true,
+    //   axisLine: {
+    //     onZero: false
+    //   },
+    //   splitLine: {
+    //     show: false,
+    //     lineStyle: {
+    //       color: LINE_COLOR
+    //     }
+    //   },
+    //   // min: v => {
+    //   //   return v.min - (v.max - v.min) * 0.2
+    //   // },
+    //   // max: v => {
+    //   //   return v.max + (v.max - v.min) * 0.2
+    //   // },
+    //   axisLabel: {}
+    // }
+  ],
+  dataZoom: [
+    {
+      minSpan: 1,
+      type: 'inside',
+      xAxisIndex: [0],
+      start: 90,
+      end: 100,
+      filterMode: 'weakFilter'
+    }
+  ],
+  series: []
+})
+
+export const xAxisDefaultOptions = (): ECOption => ({
+  animation: false,
+  grid: {
+    left: 10,
+    right: 60,
+    top: 0,
+    bottom: 20
+  },
+  tooltip: {
+    trigger: 'axis',
+    axisPointer: {
+      type: 'cross'
+    },
+    formatter: () => '',
+    position: [0, 0]
+  },
+  axisPointer: {
+    link: [
+      {
+        xAxisIndex: 'all'
+      }
+    ],
+    label: {}
+  },
+  xAxis: {
+    type: 'category',
+    axisLine: { onZero: false, show: false },
+    axisTick: {
+      show: false
+    },
+    boundaryGap: false,
+    min: 'dataMin',
+    max: v => {
+      return v.max + Math.round((v.max - v.min) * 0.01)
+    },
+    splitLine: {
+      show: true,
+      lineStyle: {
+        color: LINE_COLOR
       }
     },
-    crosshair: {}
-  }
-}
+    axisLabel: {
+      color: TEXT_COLOR
+    }
+  },
+  yAxis: {
+    show: false
+  },
+  dataZoom: [
+    {
+      minSpan: 1,
+      type: 'inside',
+      xAxisIndex: [0],
+      start: 90,
+      end: 100,
+      filterMode: 'weakFilter'
+    }
+  ],
+  series: []
+})
 
 /**
  * 主图通用配置
@@ -164,10 +345,7 @@ export const createOptions = (): ECOption => ({
       },
       boundaryGap: false,
       axisLabel: {
-        show: false,
-        formatter: (v: any) => {
-          return v ? dayjs(v).format('MM-DD') : ''
-        }
+        show: false
       },
       min: 'dataMin',
       max: v => {
@@ -176,24 +354,22 @@ export const createOptions = (): ECOption => ({
       splitLine: {
         show: true,
         lineStyle: {
-          color: 'rgb(31, 32, 33)'
+          color: LINE_COLOR
         }
       },
       axisPointer: {
-        z: 100
+        show: false
       }
     }
   ],
   yAxis: [
     {
       scale: true,
-      gridIndex: 0,
-      position: 'left',
+      position: 'right',
       show: true,
-      axisPointer: {
-        label: {
-          show: false
-        }
+      axisTick: {},
+      axisLine: {
+        onZero: false
       },
       min: v => {
         return v.min - (v.max - v.min) * 0.1
@@ -206,22 +382,6 @@ export const createOptions = (): ECOption => ({
           color: 'rgb(31, 32, 33)'
         }
       }
-    },
-    {
-      scale: true,
-      show: true,
-      gridIndex: 0,
-      position: 'right',
-      splitLine: {
-        show: false
-      },
-      min: v => {
-        return v.min - (v.max - v.min) * 0.1
-      },
-      max: v => {
-        return v.max + (v.max - v.min) * 0.1
-      },
-      axisLabel: {}
     }
   ],
   series: []
@@ -364,22 +524,32 @@ export const renderGrid = (options: ECOption, state: ChartState, size: [number, 
 /**
  * 渲染主图
  */
-export const renderMainChart: ChartRender = (options, state) => {
-  const mainSeries = { name: MAIN_CHART_NAME } as LineSeriesOption | CandlestickSeriesOption
+export const renderMainChart = (
+  params: {
+    data: StockRawRecord[]
+    type: 'candlestick' | 'line'
+    isTimeIndex: boolean
+  },
+  chart: echarts.ECharts
+): (LineSeriesOption | CandlestickSeriesOption)[] => {
+  const { data, type, isTimeIndex } = params
+
+  const mainSeries = { name: MAIN_CHART_NAME, id: MAIN_CHART_NAME } as LineSeriesOption | CandlestickSeriesOption
   mainSeries.yAxisIndex = 0
-  mainSeries.xAxisIndex = 0
+
   const { getStockColor } = useConfig.getState()
 
-  const data = state.mainData.history
+  if (!data || data.length === 0) return []
 
-  if (!data || data.length === 0) return options
+  const lastStock = stockUtils.toStock(data[data.length - 1])
+
+  const isLastStockUp = stockUtils.isUp(lastStock)
 
   const upColor = getStockColor(true, 'hex')
   const downColor = getStockColor(false, 'hex')
+  const lineColor = getStockColor(isLastStockUp, 'hex')
 
-  const yAxisIndex = state.yAxis.right === 'price' ? 1 : 0
-
-  if (state.type === 'k-line') {
+  if (type === 'candlestick') {
     mainSeries.type = 'candlestick'
     mainSeries.itemStyle = {
       color: upColor,
@@ -388,7 +558,6 @@ export const renderMainChart: ChartRender = (options, state) => {
       borderColor0: downColor
     }
     mainSeries.data = data
-    mainSeries.yAxisIndex = yAxisIndex
     mainSeries.encode = {
       x: [1],
       y: [2, 3, 5, 4]
@@ -396,10 +565,8 @@ export const renderMainChart: ChartRender = (options, state) => {
   } else {
     let color = '#4784cf'
 
-    const lastData = StockRecord.of('', '', data[data.length - 1])
-
-    if (isTimeIndexChart(state.timeIndex)) {
-      color = getStockColor(lastData.isUp, 'hex')
+    if (isTimeIndex) {
+      color = getStockColor(isLastStockUp, 'hex')
     }
     const rgbColor = colorUtil.hexToRGB(color)
     const _mainSeries = mainSeries as LineSeriesOption
@@ -409,10 +576,10 @@ export const renderMainChart: ChartRender = (options, state) => {
       x: [0],
       y: [2]
     }
-    mainSeries.yAxisIndex = yAxisIndex
+    _mainSeries.yAxisIndex = 0
     _mainSeries.data = data
-    mainSeries.color = color
-    ;(mainSeries as any).areaStyle = {
+    _mainSeries.color = color
+    _mainSeries.areaStyle = {
       color: {
         x: 0,
         y: 0,
@@ -435,100 +602,131 @@ export const renderMainChart: ChartRender = (options, state) => {
       }
     }
   }
-  ;(options.series as any)?.push(mainSeries)
 
-  // 用来给叠加标记定位的虚拟线
-  const virtualLine = JSON.parse(JSON.stringify(mainSeries)) as LineSeriesOption
-
-  virtualLine.name = MAIN_CHART_NAME_VIRTUAL
-  virtualLine.type = 'line'
-
-  virtualLine.encode = {
-    x: [0],
-    y: [2]
-  }
-
-  virtualLine.color = 'transparent'
-  virtualLine.symbol = 'none'
-  virtualLine.itemStyle = {}
-
-  virtualLine.markLine = {
+  mainSeries.markLine = {
     symbol: ['none', 'none'],
     lineStyle: {
-      color: '#949596'
+      color: lineColor
     },
     label: {
-      formatter: (v: any) => {
-        const x = (v.data as any)?.xAxis as string
-        const date = dayjs(new Date(+x)).format('YYYY-MM-DD')
-
-        return `{date|${date}}{abg|}\n{title|${v.data.name}}`
-      },
-      backgroundColor: '#eeeeee',
-      rich: {
-        date: {
-          color: '#fff',
-          align: 'center',
-          padding: [0, 10, 0, 10]
-        },
-        abg: {
-          backgroundColor: '#e91e63',
-          width: '100%',
-          align: 'right',
-          height: 25,
-          padding: [0, 10, 0, 10]
-        },
-        title: {
-          height: 20,
-          align: 'left',
-          padding: [0, 10, 0, 10]
-        }
+      color: '#fff',
+      borderRadius: 2,
+      padding: [2, 4],
+      backgroundColor: lineColor,
+      formatter: params => {
+        return ((params.data as any)?.yAxis as unknown as number).toFixed(3)
       }
     },
     silent: true,
-    data: []
-  }
-
-  if (state.yAxis.right !== 'price') {
-    const zoom = options.dataZoom as DataZoomComponentOption[]
-    if (Array.isArray(zoom) && zoom[0]) {
-      const axisLine = renderAxisLine(state, zoom[0].start!, zoom[0].end!)
-      Array.isArray(options.series) && options.series.push(axisLine as any)
-    }
-  }
-
-  Array.isArray(options.series) && options.series.push(virtualLine)
-
-  // 如果grid > 1 ，取消显示axisPointer标签
-  if (Array.isArray(options.xAxis)) {
-    const xAxis = options.xAxis.find(y => y.id === 'main-x')
-
-    if (xAxis) {
-      if (Array.isArray(options.grid) && options.grid.length > 1) {
-        xAxis.axisPointer = {
-          label: {
-            show: false,
-            formatter: (v: any) => {
-              return v.value.slice(5, 11)
-            }
-          }
+    data: [
+      [
+        {
+          xAxis: 'max',
+          yAxis: data[data.length - 1][2] ?? 0
+        },
+        {
+          yAxis: data[data.length - 1][2] ?? 0,
+          x: chart.getWidth() - 60
         }
-      } else {
-        xAxis.axisLabel!.show = true
-        ;(xAxis.axisLabel as any)!.formatter = (v: any, index: number) => {
-          return v
-            ? index % 2 === 0
-              ? isTimeIndexChart(state.timeIndex) && state.timeIndex !== StockChartInterval.FIVE_DAY
-                ? dayjs(+v).format('hh:mm')
-                : dayjs(+v).format('MM-DD')
-              : ''
-            : ''
-        }
-      }
-    }
+      ]
+    ]
   }
 
-  return options
+  return [mainSeries]
+  // ;(options.series as any)?.push(mainSeries)
+
+  // // 用来给叠加标记定位的虚拟线
+  // const virtualLine = JSON.parse(JSON.stringify(mainSeries)) as LineSeriesOption
+
+  // virtualLine.name = MAIN_CHART_NAME_VIRTUAL
+  // virtualLine.type = 'line'
+
+  // virtualLine.encode = {
+  //   x: [0],
+  //   y: [2]
+  // }
+
+  // virtualLine.color = 'transparent'
+  // virtualLine.symbol = 'none'
+  // virtualLine.itemStyle = {}
+
+  // virtualLine.markLine = {
+  //   symbol: ['none', 'none'],
+  //   lineStyle: {
+  //     color: '#949596'
+  //   },
+  //   label: {
+  //     formatter: (v: any) => {
+  //       const x = (v.data as any)?.xAxis as string
+  //       const date = dayjs(new Date(+x)).format('YYYY-MM-DD')
+
+  //       return `{date|${date}}{abg|}\n{title|${v.data.name}}`
+  //     },
+  //     backgroundColor: '#eeeeee',
+  //     rich: {
+  //       date: {
+  //         color: '#fff',
+  //         align: 'center',
+  //         padding: [0, 10, 0, 10]
+  //       },
+  //       abg: {
+  //         backgroundColor: '#e91e63',
+  //         width: '100%',
+  //         align: 'right',
+  //         height: 25,
+  //         padding: [0, 10, 0, 10]
+  //       },
+  //       title: {
+  //         height: 20,
+  //         align: 'left',
+  //         padding: [0, 10, 0, 10]
+  //       }
+  //     }
+  //   },
+  //   silent: true,
+  //   data: []
+  // }
+
+  // if (state.yAxis.right !== 'price') {
+  //   const zoom = options.dataZoom as DataZoomComponentOption[]
+  //   if (Array.isArray(zoom) && zoom[0]) {
+  //     const axisLine = renderAxisLine(state, zoom[0].start!, zoom[0].end!)
+  //     Array.isArray(options.series) && options.series.push(axisLine as any)
+  //   }
+  // }
+
+  // Array.isArray(options.series) && options.series.push(virtualLine)
+
+  // // 如果grid > 1 ，取消显示axisPointer标签
+  // if (Array.isArray(options.xAxis)) {
+  //   const xAxis = options.xAxis.find(y => y.id === 'main-x')
+
+  //   if (xAxis) {
+  //     if (Array.isArray(options.grid) && options.grid.length > 1) {
+  //       xAxis.axisPointer = {
+  //         label: {
+  //           show: false,
+  //           formatter: (v: any) => {
+  //             return v.value.slice(5, 11)
+  //           }
+  //         }
+  //       }
+  //     } else {
+  //       xAxis.axisLabel!.show = true
+  //       ;(xAxis.axisLabel as any)!.formatter = (v: any, index: number) => {
+  //         return v
+  //           ? index % 2 === 0
+  //             ? isTimeIndexChart(state.timeIndex) && state.timeIndex !== StockChartInterval.FIVE_DAY
+  //               ? dayjs(+v).format('hh:mm')
+  //               : dayjs(+v).format('MM-DD')
+  //             : ''
+  //           : ''
+  //       }
+  //     }
+  //   }
+  // }
+
+  // return options
 }
 
 /**
@@ -546,46 +744,23 @@ export const renderMarkLine: ChartRender = (options, state) => {
 
   const lineColor = getStockColor(lastData.isUp, 'hex')
 
-  mainSeries.markLine = {
-    symbol: ['none', 'none'],
-    lineStyle: {
-      color: lineColor
-    },
-    label: {
-      color: '#fff',
-      borderRadius: 2,
-      padding: [2, 4],
-      backgroundColor: lineColor,
-      formatter: (params: { data: { yAxis: number } }) => {
-        return params.data.yAxis.toFixed(3)
-      }
-    },
-    silent: true,
-    data: [
-      [
-        {
-          xAxis: 'max',
-          yAxis: data[data.length - 1][2] ?? 0
-        },
-        {
-          yAxis: data[data.length - 1][2] ?? 0,
-          x: '96%'
-        }
-      ]
-    ]
-  }
+  mainSeries
 }
 
 /**
  * 主图缠论
  */
-export const renderMainCoiling = (options: ECOption, state: ChartState) => {
-  if (state.mainCoiling.length === 0) return options
-  const points = calcCoilingPoints(state.mainData.history, state.mainData.coiling_data)
-  const pivots = calcCoilingPivots(state.mainData.coiling_data, points)
-  const expands = calcCoilingPivotsExpands(state.mainData.coiling_data, points)
-  const yAxisIndex = state.yAxis.right === 'price' ? 1 : 0
-  state.mainCoiling.forEach(coiling => {
+export const renderMainCoiling = (
+  coiling: CoilingIndicatorId[],
+  data: ChartState['mainData'],
+  chart: echarts.ECharts
+): SeriesOption[] => {
+  if (coiling.length === 0) return []
+  const points = calcCoilingPoints(data.history, data.coiling_data)
+  const pivots = calcCoilingPivots(data.coiling_data, points)
+  const expands = calcCoilingPivotsExpands(data.coiling_data, points)
+  const series: SeriesOption[] = []
+  coiling.forEach(coiling => {
     if (coiling === CoilingIndicatorId.PEN) {
       const p: any[] = []
       points.slice(1).forEach((point, index) => {
@@ -595,85 +770,92 @@ export const renderMainCoiling = (options: ECOption, state: ChartState) => {
           prev.y,
           point.xIndex,
           point.y,
-          index === points.length - 2 && state.mainData.coiling_data?.status !== 1 ? LineType.DASH : LineType.SOLID
+          index === points.length - 2 && data.coiling_data?.status !== 1 ? LineType.DASH : LineType.SOLID
         ])
       })
-      drawPolyline(options, {} as any, { xAxisIndex: 0, yAxisIndex: yAxisIndex, data: p, extra: { color: '#ffffff' } })
-    } else if (coiling === CoilingIndicatorId.PIVOT) {
-      drawPivots(options, {} as any, { xAxisIndex: 0, yAxisIndex: yAxisIndex, data: expands as any })
-      drawPivots(options, {} as any, { xAxisIndex: 0, yAxisIndex: yAxisIndex, data: pivots as any })
-    } else if (
-      [CoilingIndicatorId.ONE_TYPE, CoilingIndicatorId.TWO_TYPE, CoilingIndicatorId.THREE_TYPE].includes(coiling)
-    ) {
-      const tradePoints = calcTradePoints(state.mainData.coiling_data, points, coiling as any)
-      drawTradePoints(options, {} as any, { xAxisIndex: 0, yAxisIndex: yAxisIndex, data: tradePoints })
-    } else if (coiling === CoilingIndicatorId.SHORT_LINE) {
-      const cma = calculateMA(20, state.mainData.history)
-      const cma2 = calculateMA(30, state.mainData.history)
-      drawLine(options, {} as any, {
-        yAxisIndex: yAxisIndex,
-        xAxisIndex: 0,
-        data: cma.map((s, i) => [i, s]),
-        extra: {
-          color: 'rgb(186, 64, 127)'
-        }
-      })
-      drawLine(options, {} as any, {
-        yAxisIndex: yAxisIndex,
-        xAxisIndex: 0,
-        data: cma2.map((s, i) => [i, s]),
-        extra: {
-          color: 'rgb(156, 171, 232)'
-        }
-      })
-    } else if (coiling === CoilingIndicatorId.MAIN) {
-      const cma = calculateMA(55, state.mainData.history)
-      const cma1 = calculateMA(60, state.mainData.history)
-      const cma2 = calculateMA(65, state.mainData.history)
-      const cma3 = calculateMA(120, state.mainData.history)
-      const cma4 = calculateMA(250, state.mainData.history)
-      drawLine(options, {} as any, {
-        yAxisIndex: yAxisIndex,
-        xAxisIndex: 0,
-        data: cma.map((s, i) => [i, s]),
-        extra: {
-          color: 'rgb(250,28,19)'
-        }
-      })
-      drawLine(options, {} as any, {
-        yAxisIndex: yAxisIndex,
-        xAxisIndex: 0,
-        data: cma1.map((s, i) => [i, s]),
-        extra: {
-          color: 'rgb(255,255,255)'
-        }
-      })
-      drawLine(options, {} as any, {
-        yAxisIndex: yAxisIndex,
-        xAxisIndex: 0,
-        data: cma2.map((s, i) => [i, s]),
-        extra: {
-          color: 'rgb(51,251,41)'
-        }
-      })
-      drawLine(options, {} as any, {
-        yAxisIndex: yAxisIndex,
-        xAxisIndex: 0,
-        data: cma3.map((s, i) => [i, s]),
-        extra: {
-          color: 'rgb(51,251,41)'
-        }
-      })
-      drawLine(options, {} as any, {
-        yAxisIndex: yAxisIndex,
-        xAxisIndex: 0,
-        data: cma4.map((s, i) => [i, s]),
-        extra: {
-          color: 'rgb(249,42,251)'
-        }
-      })
+   
+      series.push(
+        drawPolyline(`coiling-${CoilingIndicatorId.PEN}`, { xAxisIndex: 0, yAxisIndex: 0, data: p, extra: { color: '#ffffff' }, chart })
+      )
     }
+
+    // else if (coiling === CoilingIndicatorId.PIVOT) {
+    //   drawPivots(options, {} as any, { xAxisIndex: 0, yAxisIndex: yAxisIndex, data: expands as any })
+    //   drawPivots(options, {} as any, { xAxisIndex: 0, yAxisIndex: yAxisIndex, data: pivots as any })
+    // } else if (
+    //   [CoilingIndicatorId.ONE_TYPE, CoilingIndicatorId.TWO_TYPE, CoilingIndicatorId.THREE_TYPE].includes(coiling)
+    // ) {
+    //   const tradePoints = calcTradePoints(state.mainData.coiling_data, points, coiling as any)
+    //   drawTradePoints(options, {} as any, { xAxisIndex: 0, yAxisIndex: yAxisIndex, data: tradePoints })
+    // } else if (coiling === CoilingIndicatorId.SHORT_LINE) {
+    //   const cma = calculateMA(20, state.mainData.history)
+    //   const cma2 = calculateMA(30, state.mainData.history)
+    //   drawLine(options, {} as any, {
+    //     yAxisIndex: yAxisIndex,
+    //     xAxisIndex: 0,
+    //     data: cma.map((s, i) => [i, s]),
+    //     extra: {
+    //       color: 'rgb(186, 64, 127)'
+    //     }
+    //   })
+    //   drawLine(options, {} as any, {
+    //     yAxisIndex: yAxisIndex,
+    //     xAxisIndex: 0,
+    //     data: cma2.map((s, i) => [i, s]),
+    //     extra: {
+    //       color: 'rgb(156, 171, 232)'
+    //     }
+    //   })
+    // } else if (coiling === CoilingIndicatorId.MAIN) {
+    //   const cma = calculateMA(55, state.mainData.history)
+    //   const cma1 = calculateMA(60, state.mainData.history)
+    //   const cma2 = calculateMA(65, state.mainData.history)
+    //   const cma3 = calculateMA(120, state.mainData.history)
+    //   const cma4 = calculateMA(250, state.mainData.history)
+    //   drawLine(options, {} as any, {
+    //     yAxisIndex: yAxisIndex,
+    //     xAxisIndex: 0,
+    //     data: cma.map((s, i) => [i, s]),
+    //     extra: {
+    //       color: 'rgb(250,28,19)'
+    //     }
+    //   })
+    //   drawLine(options, {} as any, {
+    //     yAxisIndex: yAxisIndex,
+    //     xAxisIndex: 0,
+    //     data: cma1.map((s, i) => [i, s]),
+    //     extra: {
+    //       color: 'rgb(255,255,255)'
+    //     }
+    //   })
+    //   drawLine(options, {} as any, {
+    //     yAxisIndex: yAxisIndex,
+    //     xAxisIndex: 0,
+    //     data: cma2.map((s, i) => [i, s]),
+    //     extra: {
+    //       color: 'rgb(51,251,41)'
+    //     }
+    //   })
+    //   drawLine(options, {} as any, {
+    //     yAxisIndex: yAxisIndex,
+    //     xAxisIndex: 0,
+    //     data: cma3.map((s, i) => [i, s]),
+    //     extra: {
+    //       color: 'rgb(51,251,41)'
+    //     }
+    //   })
+    //   drawLine(options, {} as any, {
+    //     yAxisIndex: yAxisIndex,
+    //     xAxisIndex: 0,
+    //     data: cma4.map((s, i) => [i, s]),
+    //     extra: {
+    //       color: 'rgb(249,42,251)'
+    //     }
+    //   })
+    // }
   })
+
+  return series
 }
 
 /**

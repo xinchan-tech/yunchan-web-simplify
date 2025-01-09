@@ -3,6 +3,7 @@ import type { CustomSeriesOption, LineSeriesOption } from 'echarts/charts'
 import type { KChartState } from './ctx'
 import echarts from '@/utils/echarts'
 import { colorUtil } from '@/utils/style'
+import { SeriesOption } from "echarts/types/dist/shared"
 
 type XAxis = number
 type YAxis = number
@@ -41,9 +42,13 @@ type DrawerFuncOptions<T = any> = {
    * 额外的数据
    */
   extra?: Record<string, any>
+  /**
+   * chart实例
+   */
+  chart: echarts.ECharts
 }
 
-type DrawerFunc<T = any> = (options: ECOption, state: KChartState['state'][0], params: DrawerFuncOptions<T>) => ECOption
+type DrawerFunc<T = any> = (serial: string, params: DrawerFuncOptions<T>) => SeriesOption
 
 /**
  * 画一条线
@@ -73,14 +78,24 @@ export const drawLine: DrawerFunc<[XAxis, number | null][]> = (options, _, { xAx
  * 画折线
  */
 export const drawPolyline: DrawerFunc<[XAxis, YAxis, XAxis, YAxis, LineType][]> = (
-  options,
-  _,
-  { xAxisIndex, yAxisIndex, data, extra }
+  seriesName: string,
+  { xAxisIndex, yAxisIndex, data, extra, chart }
 ) => {
-  const line: CustomSeriesOption = {
+  const width = chart.getWidth()
+  const options = chart.getOption() as ECOption
+
+  const grid = Array.isArray(options.grid) ? options.grid : [options.grid]
+  const right = grid[0] ? (grid[0].right as number) : 0
+  const left = grid[0] ? (grid[0].left as number) : 0
+
+  const maxRight = width - right
+
+  console.log(right, left)
+  const series: CustomSeriesOption = {
     xAxisIndex: xAxisIndex,
     yAxisIndex: yAxisIndex,
     type: 'custom',
+    id: seriesName,
     encode: {
       x: [0, 2],
       y: [1, 3]
@@ -89,6 +104,26 @@ export const drawPolyline: DrawerFunc<[XAxis, YAxis, XAxis, YAxis, LineType][]> 
       const start = api.coord([api.value(0), api.value(1)])
       const end = api.coord([api.value(2), api.value(3)])
       const lineType = api.value(4) as LineType
+      if(end[0] > maxRight) {
+        //计算y轴角度
+        const angle = Math.atan((end[1] - start[1]) / (end[0] - start[0]))
+        //计算 maxRight 对应的 y
+        const y = (maxRight - start[0]) * Math.tan(angle) + start[1]
+
+        end[0] = maxRight
+        end[1] = y
+      }
+
+      if(start[0] < left) {
+        //计算y轴角度
+        const angle = Math.atan((end[1] - start[1]) / (end[0] - start[0]))
+        //计算 maxRight 对应的 y
+        const y = (left - start[0]) * Math.tan(angle) + start[1]
+
+        start[0] = left
+        start[1] = y
+      }
+
       return {
         type: 'line',
         shape: {
@@ -110,9 +145,7 @@ export const drawPolyline: DrawerFunc<[XAxis, YAxis, XAxis, YAxis, LineType][]> 
     data: data
   }
 
-  Array.isArray(options.series) && options.series.push(line)
-
-  return options
+  return series
 }
 
 export type DrawerTextShape = [XAxis, YAxis, string, DrawerColor]

@@ -1,18 +1,19 @@
-import { getStockChart } from "@/api"
+import { getStockChart, StockChartInterval } from "@/api"
 import { StockSelect } from "@/components"
 import { useDomSize, useStockBarSubscribe } from "@/hooks"
 import { useIndicator, useTime } from "@/store"
 import { type StockSubscribeHandler, stockUtils } from "@/utils/stock"
 import { cn } from "@/utils/style"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
-import { useUpdateEffect } from "ahooks"
+import { useMount, useSize, useUnmount, useUpdateEffect } from "ahooks"
 import * as kCharts from 'klinecharts'
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { useKChartContext } from "../lib"
+import { lazy, useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { isTimeIndexChart, useKChartContext } from "../lib"
 import { renderUtils } from "../lib/utils"
 import { SecondaryIndicator } from "./secondary-indicator"
 import { TimeIndexMenu } from "./time-index"
-import { defaultOptions } from "../lib/render"
+import { defaultOptions, mainDefaultOptions, renderMainChart, renderMainCoiling, xAxisDefaultOptions } from "../lib/render"
+import echarts from "@/utils/echarts"
 
 
 interface MainChartProps {
@@ -22,14 +23,17 @@ interface MainChartProps {
 export const MainChart = (props: MainChartProps) => {
   // const [size, dom] = useDomSize<HTMLDivElement>()
   const dom = useRef<HTMLDivElement>(null)
-  const chart = useRef<kCharts.Nullable<kCharts.Chart>>()
+  const chart = useRef<echarts.ECharts>()
+  const containerDom = useRef<HTMLDivElement>(null)
+  const xAxisDom = useRef<HTMLDivElement>(null)
+  const xAxisChart = useRef<echarts.ECharts>()
   const usTime = useTime(s => s.usTime)
   const localStamp = useTime(s => s.localStamp)
-
   const queryClient = useQueryClient()
   const { state: ctxState, setMainData, setIndicatorData, setSecondaryIndicator, removeOverlayStock, setActiveChart, setSymbol, activeChartIndex } = useKChartContext()
   const state = ctxState[props.index]
   const startTime = renderUtils.getStartTime(new Date().valueOf() - localStamp + usTime, state.timeIndex)
+  const size = useSize(containerDom)
 
   const params = useMemo(() => ({
     start_at: startTime,
@@ -79,38 +83,83 @@ export const MainChart = (props: MainChartProps) => {
     setMainData({ index: props.index, data: query.data })
   }, [query.data, setMainData, props.index])
 
-  useEffect(() => {
-    if (!dom.current) {
-      console.warn('dom is not ready')
-      return
-    }
-    const charts = kCharts.init(dom.current, defaultOptions)
+  /**
+   * echart 相关
+   */
+  useMount(() => {
+    if (!dom.current) return
 
-    if (!charts) {
-      console.warn('init chart failed')
-      return
-    }
+    chart.current = echarts.init(dom.current)
+    chart.current.setOption(mainDefaultOptions())
 
-    chart.current = charts
+    if (!xAxisDom.current) return
 
+    xAxisChart.current = echarts.init(xAxisDom.current)
+    xAxisChart.current.setOption(xAxisDefaultOptions())
 
-    return () => {
-      kCharts.dispose(charts)
-    }
-  }, [])
+    echarts.connect([chart.current, xAxisChart.current])
+  })
+
+  useUnmount(() => {
+    chart.current?.dispose()
+    xAxisChart.current?.dispose()
+  })
+
+  useUpdateEffect(() => {
+    chart.current?.resize()
+    xAxisChart.current?.resize()
+  }, [size])
+
 
   useEffect(() => {
     if (!chart.current) return
+    const isTimeIndex = isTimeIndexChart(state.timeIndex) && state.timeIndex !== StockChartInterval.FIVE_DAY
+    const type = state.type === 'k-line' ? 'candlestick' : 'line'
+    const mainSeries = renderMainChart({
+      data: state.mainData.history,
+      isTimeIndex,
+      type
+    }, chart.current)
 
-    if (!state.mainData) {
-      chart.current.applyNewData([])
-    }
+    chart.current.setOption({
+      xAxis: {
+        data: state.mainData.history.map(v => v[0])
+      },
+      series: mainSeries
+    })
+    xAxisChart.current?.setOption({
+      xAxis: {
+        data: state.mainData.history.map(v => v[0])
+      },
+      series: [
+        {
+          type: 'line',
+          data: state.mainData.history.map(() => 0),
+          symbol: 'none',
+          lineStyle: {
+            color: 'transparent'
+          }
+        }
+      ]
+    })
 
-    const stocks = state.mainData?.history.map(v => stockUtils.toStock(v)) ?? []
-    console.log(stocks, state.mainData)
-    chart.current.applyNewData(stocks, true)
 
-  }, [state.mainData])
+
+  }, [state.mainData, state.timeIndex, state.type])
+
+  useEffect(() => {
+    if (!chart.current) return
+    const mainCoilingSeries = renderMainCoiling(state.mainCoiling, state.mainData, chart.current)
+
+    
+    chart.current.setOption({
+      series: [
+        ...mainCoilingSeries
+      ]
+    }, { lazyUpdate: true })
+
+
+  }, [state.mainCoiling, state.mainData])
 
   /**
    * 指标参数
@@ -297,11 +346,14 @@ export const MainChart = (props: MainChartProps) => {
   return (
     <div className={
       cn(
-        'w-full h-full relative border border-transparent border-solid box-border',
+        'w-full h-full relative border border-transparent border-solid box-border flex-col flex overflow-hidden',
         ctxState.length > 1 && activeChartIndex === props.index ? 'border-primary' : ''
       )
-    } onClick={() => setActiveChart(props.index)} onKeyDown={() => { }}>
-      <div className="w-full h-full box-border" ref={dom}>
+    } onClick={() => setActiveChart(props.index)} onKeyDown={() => { }} ref={containerDom}>
+      <div className="w-full flex-1 box-border" ref={dom}>
+      </div>
+      <div className="h-[20px] flex-shrink-0" ref={xAxisDom}>
+
       </div>
       {/* {
         state.secondaryIndicators.map((item, index, arr) => {
