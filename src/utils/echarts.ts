@@ -89,3 +89,11 @@ export type ECOption = echarts.ComposeOption<
 
 
 export default echarts
+
+
+export const echartUtils = {
+  getAxisScale: (chart: echarts.ECharts, axisIndex = 0) => {
+    // @ts-ignore
+    return chart.getModel().getComponent('xAxis', axisIndex).axis.scale.getExtent()
+  }
+}

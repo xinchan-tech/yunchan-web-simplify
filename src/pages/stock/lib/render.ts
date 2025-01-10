@@ -1,7 +1,7 @@
 import { StockChartInterval, type StockRawRecord, type getStockChart } from '@/api'
 import { useConfig } from '@/store'
 import { dateToWeek, getTradingPeriod } from '@/utils/date'
-import type { ECOption } from '@/utils/echarts'
+import { echartUtils, type ECOption } from '@/utils/echarts'
 import { StockRecord, stockUtils } from '@/utils/stock'
 import { colorUtil } from '@/utils/style'
 import dayjs from 'dayjs'
@@ -32,6 +32,7 @@ import {
 import { renderUtils } from './utils'
 import type { GraphicComponentOption } from 'echarts/components'
 import type { XAXisOption, YAXisOption } from 'echarts/types/dist/shared'
+import type { ECharts } from "echarts"
 
 const MAIN_CHART_NAME = 'kChart'
 const MAIN_CHART_NAME_VIRTUAL = 'kChart-virtual'
@@ -46,7 +47,7 @@ type ChartState = ArrayItem<KChartState['state']>
 /**
  * 主图通用配置
  */
-export const createOptions = (chart: echarts.ECharts): ECOption => ({
+export const createOptions = (chart: ECharts): ECOption => ({
   animation: false,
   grid: [
     {
@@ -252,7 +253,7 @@ export const createOptions = (chart: echarts.ECharts): ECOption => ({
         showMinLabel: false,
         formatter: (v: any) => {
           if (chart.meta?.yAxis?.right === 'percent') {
-            const scale = chart.getModel().getComponent('xAxis', 0).axis.scale.getExtent()
+            const scale = echartUtils.getAxisScale(chart, 0)
 
             const data = chart.meta!.mainData?.slice(scale[0], scale[1])
 
@@ -428,12 +429,12 @@ export const renderGrid = (options: ECOption, state: ChartState, size: [number, 
     }
   }
 
-  if (state.yAxis.left) {
-    const left = yAxis[0]
-    if (left) {
-      left.show = true
-    }
-  }
+  // if (state.yAxis.left) {
+  //   const left = yAxis[0]
+  //   if (left) {
+  //     left.show = true
+  //   }
+  // }
 
   const { getStockColor } = useConfig.getState()
 
@@ -728,7 +729,6 @@ export const renderMainCoiling = (options: ECOption, state: ChartState, chart: e
   const points = calcCoilingPoints(state.mainData.history, state.mainData.coiling_data)
   const pivots = calcCoilingPivots(state.mainData.coiling_data, points)
   const expands = calcCoilingPivotsExpands(state.mainData.coiling_data, points)
-  const yAxisIndex = state.yAxis.right === 'price' ? 1 : 0
   state.mainCoiling.forEach(coiling => {
     if (coiling === CoilingIndicatorId.PEN) {
       const p: any[] = []
@@ -742,20 +742,20 @@ export const renderMainCoiling = (options: ECOption, state: ChartState, chart: e
           index === points.length - 2 && state.mainData.coiling_data?.status !== 1 ? LineType.DASH : LineType.SOLID
         ])
       })
-      drawPolyline(options, {} as any, { xAxisIndex: 0, yAxisIndex: yAxisIndex, data: p, extra: { color: '#ffffff' } , chart: chart})
+      drawPolyline(options, {} as any, { xAxisIndex: 0, yAxisIndex: 1, data: p, extra: { color: '#ffffff' } , chart: chart})
     } else if (coiling === CoilingIndicatorId.PIVOT) {
-      drawPivots(options, {} as any, { xAxisIndex: 0, yAxisIndex: yAxisIndex, data: expands as any })
-      drawPivots(options, {} as any, { xAxisIndex: 0, yAxisIndex: yAxisIndex, data: pivots as any })
+      drawPivots(options, {} as any, { xAxisIndex: 0, yAxisIndex: 1, data: expands as any })
+      drawPivots(options, {} as any, { xAxisIndex: 0, yAxisIndex: 1, data: pivots as any })
     } else if (
       [CoilingIndicatorId.ONE_TYPE, CoilingIndicatorId.TWO_TYPE, CoilingIndicatorId.THREE_TYPE].includes(coiling)
     ) {
       const tradePoints = calcTradePoints(state.mainData.coiling_data, points, coiling as any)
-      drawTradePoints(options, {} as any, { xAxisIndex: 0, yAxisIndex: yAxisIndex, data: tradePoints })
+      drawTradePoints(options, {} as any, { xAxisIndex: 0, yAxisIndex: 1, data: tradePoints })
     } else if (coiling === CoilingIndicatorId.SHORT_LINE) {
       const cma = calculateMA(20, state.mainData.history)
       const cma2 = calculateMA(30, state.mainData.history)
       drawLine(options, {} as any, {
-        yAxisIndex: yAxisIndex,
+        yAxisIndex: 1,
         xAxisIndex: 0,
         data: cma.map((s, i) => [i, s]),
         extra: {
@@ -763,7 +763,7 @@ export const renderMainCoiling = (options: ECOption, state: ChartState, chart: e
         }
       })
       drawLine(options, {} as any, {
-        yAxisIndex: yAxisIndex,
+        yAxisIndex: 1,
         xAxisIndex: 0,
         data: cma2.map((s, i) => [i, s]),
         extra: {
@@ -777,7 +777,7 @@ export const renderMainCoiling = (options: ECOption, state: ChartState, chart: e
       const cma3 = calculateMA(120, state.mainData.history)
       const cma4 = calculateMA(250, state.mainData.history)
       drawLine(options, {} as any, {
-        yAxisIndex: yAxisIndex,
+        yAxisIndex: 1,
         xAxisIndex: 0,
         data: cma.map((s, i) => [i, s]),
         extra: {
@@ -785,7 +785,7 @@ export const renderMainCoiling = (options: ECOption, state: ChartState, chart: e
         }
       })
       drawLine(options, {} as any, {
-        yAxisIndex: yAxisIndex,
+        yAxisIndex: 1,
         xAxisIndex: 0,
         data: cma1.map((s, i) => [i, s]),
         extra: {
@@ -793,7 +793,7 @@ export const renderMainCoiling = (options: ECOption, state: ChartState, chart: e
         }
       })
       drawLine(options, {} as any, {
-        yAxisIndex: yAxisIndex,
+        yAxisIndex: 1,
         xAxisIndex: 0,
         data: cma2.map((s, i) => [i, s]),
         extra: {
@@ -801,7 +801,7 @@ export const renderMainCoiling = (options: ECOption, state: ChartState, chart: e
         }
       })
       drawLine(options, {} as any, {
-        yAxisIndex: yAxisIndex,
+        yAxisIndex: 1,
         xAxisIndex: 0,
         data: cma3.map((s, i) => [i, s]),
         extra: {
@@ -809,7 +809,7 @@ export const renderMainCoiling = (options: ECOption, state: ChartState, chart: e
         }
       })
       drawLine(options, {} as any, {
-        yAxisIndex: yAxisIndex,
+        yAxisIndex: 1,
         xAxisIndex: 0,
         data: cma4.map((s, i) => [i, s]),
         extra: {
