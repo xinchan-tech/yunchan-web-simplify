@@ -4,9 +4,10 @@ import { cva, type VariantProps } from "class-variance-authority"
 import Decimal from "decimal.js"
 import { JknIcon } from ".."
 import { useLatest, useUpdateEffect } from "ahooks"
-import { useEffect, useRef, useState } from "react"
+import { HTMLAttributes, useEffect, useRef, useState } from "react"
 import { stockSubscribe, type StockSubscribeHandler } from "@/utils/stock"
 import { get, isFunction } from "radash"
+import { useHalfControlValue } from "@/hooks"
 
 const numSpanVariants = cva(
   '',
@@ -190,4 +191,55 @@ export const NumSpanSubscribe = ({ value, code, isPositive, field,...props }: Nu
   }, [value])
 
   return <NumSpan value={innerValue} isPositive={isUp} {...props} />
+}
+
+/**
+ * 一个订阅股票数据span标签
+ */
+interface SubscribeSpanProps extends HTMLAttributes<HTMLSpanElement> {
+  value: number | string | undefined
+  symbol: string
+  field: keyof Parameters<StockSubscribeHandler<'quote'>>[0]['record'] | ((data: Parameters<StockSubscribeHandler<'quote'>>[0]) => number | string | undefined)
+  positive?: boolean
+  format: (value?: number | string) => string | number | undefined
+}
+
+
+export const SubscribeSpan = ({value, symbol, field, positive, format, ...props}: SubscribeSpanProps) => {
+  const [innerValue, setInnerValue] = useHalfControlValue(value)
+  const spanRef = useRef<HTMLSpanElement>(null)
+  const isPos = useLatest(positive)
+  const fieldFn = useLatest(field)
+  const formatFn = useLatest(format)
+
+
+  useEffect(() => {
+    const unSubscribe = stockSubscribe.onQuoteTopic(symbol, (data) => {
+   
+      let v = isFunction(fieldFn.current) ? fieldFn.current(data) : get(data.record, fieldFn.current) as number | string | undefined
+      
+      if(formatFn.current){
+        v = formatFn.current(v)
+      }
+      
+      setInnerValue(v as number | string | undefined)
+      if(isPos.current !== undefined){
+          spanRef.current?.classList.remove('text-stock-up')
+          spanRef.current?.classList.remove('text-stock-down')
+
+          if(data.record.percent > 0){
+            spanRef.current?.classList.add('text-stock-up')
+          }else{
+            spanRef.current?.classList.add('text-stock-down')
+          }
+      }
+    })
+
+    return () => {
+      unSubscribe()
+    }
+  }, [symbol, isPos, fieldFn, formatFn, setInnerValue])
+
+
+  return <span ref={spanRef} {...props}>{innerValue}</span>
 }
