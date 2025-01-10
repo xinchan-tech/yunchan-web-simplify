@@ -472,21 +472,31 @@ export const renderGrid = (options: ECOption, state: ChartState, size: [number, 
           //获取时间跨度
           const time = dayjs(+v).diff(+startDay, 'day')
 
-          const offset = Math.round((scale[1] - scale[0]) / X_AXIS_TICK)
-          
-
-          if (offset <= X_AXIS_TICK) {
-            return index % 4 === 0 ? dayjs(+v).format('hh:mm') : ''
+          if(time < 1){
+            return dayjs(+v).format('hh:mm')
           }
 
-          return (index - scale[0]) % offset === 0 ? dayjs(+v).format('MM-DD') : ''
+          if(time < 365){
+            return dayjs(+v).format('MM-DD')
+          }
+
+          return dayjs(+v).format('YY-MM-DD')
         },
-        interval:
-          isTimeIndexChart(state.timeIndex) && state.timeIndex !== StockChartInterval.FIVE_DAY
-            ? index => {
-                return index % 15 === 0
-              }
-            : undefined
+        interval: (index: number) => {
+          if(isTimeIndexChart(state.timeIndex) && state.timeIndex !== StockChartInterval.FIVE_DAY){
+            return index % 15 === 0
+          }
+          const scale = chart.getModel().getComponent('xAxis', 0).axis.scale.getExtent()
+
+          const offset = Math.round((scale[1] - scale[0]) / X_AXIS_TICK)
+
+          if (offset <= X_AXIS_TICK) {
+            return index % 4 === 0
+          }
+
+          return (index - scale[0]) % offset === 0
+        }
+         
       },
       axisPointer: {
         label: {
@@ -661,35 +671,6 @@ export const renderMainChart: ChartRender = (options, state) => {
   }
 
   Array.isArray(options.series) && options.series.push(virtualLine)
-
-  // 如果grid > 1 ，取消显示axisPointer标签
-  // if (Array.isArray(options.xAxis)) {
-  //   const xAxis = options.xAxis.find(y => y.id === 'main-x')
-
-  //   if (xAxis) {
-  //     if (Array.isArray(options.grid) && options.grid.length > 1) {
-  //       xAxis.axisPointer = {
-  //         label: {
-  //           show: false,
-  //           formatter: (v: any) => {
-  //             return v.value.slice(5, 11)
-  //           }
-  //         }
-  //       }
-  //     } else {
-  //       xAxis.axisLabel!.show = true
-  //       ;(xAxis.axisLabel as any)!.formatter = (v: any, index: number) => {
-  //         return v
-  //           ? index % 2 === 0
-  //             ? isTimeIndexChart(state.timeIndex) && state.timeIndex !== StockChartInterval.FIVE_DAY
-  //               ? dayjs(+v).format('hh:mm')
-  //               : dayjs(+v).format('MM-DD')
-  //             : ''
-  //           : ''
-  //       }
-  //     }
-  //   }
-  // }
 
   return options
 }

@@ -1,19 +1,18 @@
-import { Button, CapsuleTabs, JknRcTable, NumSpan, StockView } from "@/components"
+import { getStockCollects } from "@/api"
+import { Button, CapsuleTabs, JknRcTable, NumSpanSubscribe, StockView } from "@/components"
+import { useStockQuoteSubscribe, useTableData, useTableRowClickToStockTrading } from "@/hooks"
 import { useCollectCates, useToken } from "@/store"
 import { appEvent } from "@/utils/event"
-import { useCallback, useEffect, useState } from "react"
-import { getStockCollects } from "@/api"
-import { type StockRecord, type StockSubscribeHandler, stockUtils } from "@/utils/stock"
+import { type Stock, stockUtils } from "@/utils/stock"
 import { useQuery } from "@tanstack/react-query"
-import Decimal from "decimal.js"
 import type { TableProps } from 'rc-table'
-import { useStockQuoteSubscribe, useTableData } from "@/hooks"
+import { useEffect, useState } from "react"
 
 const GoldenStockPool = () => {
   const { collects } = useCollectCates()
   const [type, setType] = useState(collects[0].id)
   const { token } = useToken()
-  const [list, {setList, onSort, updateList}] = useTableData<StockRecord>([], 'symbol')
+  const [list, { setList, onSort }] = useTableData<Stock>([], 'symbol')
 
 
   const query = useQuery({
@@ -28,37 +27,18 @@ const GoldenStockPool = () => {
   })
 
   useEffect(() => {
-    const list = query.data?.items.map(item => stockUtils.toStockRecord(item)[0]!) ?? []
+    const list = query.data?.items.map(item => stockUtils.toStock(item.stock, { extend: item.extend, name: item.name, symbol: item.symbol })) ?? []
     setList(list)
   }, [query.data, setList])
 
-  const subscribeHandler: StockSubscribeHandler<'quote'> = useCallback((data) => {
-    updateList(s => {
-      const items = s.map((item) => {
-        if (item.symbol === data.topic) {
-          const stock = stockUtils.cloneFrom(item)
-          stock.close = data.record.close
-          stock.prevClose = data.record.preClose
-          stock.percent = (data.record.close - data.record.preClose) / data.record.preClose
-          stock.marketValue = Decimal.create(data.record.close).mul(stock.totalShare ?? 0).toNumber()
-          stock.turnover = data.record.turnover
-          return stock
-        }
-        return item
-      })
-
-      return items
-    })
-  }, [updateList])
-
-   useStockQuoteSubscribe(query.data?.items?.map(d => d.symbol) ?? [], subscribeHandler)
+  useStockQuoteSubscribe(query.data?.items?.map(d => d.symbol) ?? [])
 
 
   const onLogin = () => {
     appEvent.emit('login')
   }
 
-  const columns: TableProps<StockRecord>['columns'] = [
+  const columns: TableProps<Stock>['columns'] = [
     {
       dataIndex: 'name',
       title: '名称代码',
@@ -73,24 +53,26 @@ const GoldenStockPool = () => {
       title: '现价', dataIndex: 'close', key: 'close',
       sort: true,
       align: 'right',
-      render: (_, row) => <NumSpan blink value={row.close} decimal={3} isPositive={row.isUp} align="right" />
+      render: (_, row) => <NumSpanSubscribe code={row.symbol} field="record.close" blink value={row.close} decimal={3} isPositive={stockUtils.isUp(row)} align="right" />
     },
     {
       title: '涨跌幅', dataIndex: 'percent', key: 'percent', align: 'right',
       sort: true,
       render: (_, row) => (
-        <NumSpan className="w-20 text-center" block blink value={row.percent! * 100} decimal={2} percent isPositive={row.isUp} align="right" />
+        <NumSpanSubscribe code={row.symbol} field="record.percent" className="w-20 text-center" block blink value={(stockUtils.getPercent(row) ?? 0) * 100} decimal={2} percent isPositive={stockUtils.isUp(row)} align="right" />
       )
     },
     {
       title: '成交额', sort: true, dataIndex: 'turnover', key: 'turnover', align: 'right',
-      render: (_, row) => <NumSpan blink value={row.turnover} decimal={2} unit align="right"/>
+      render: (_, row) => <NumSpanSubscribe code={row.symbol} field="record.turnover" blink value={row.turnover} decimal={2} unit align="right" />
     },
     {
       title: '总市值', sort: true, dataIndex: 'marketValue', key: 'marketValue', align: 'right',
-      render: (_, row) => <NumSpan blink value={row.marketValue} decimal={2} unit  align="right"/>
+      render: (_, row) => <NumSpanSubscribe code={row.symbol} blink field={v => stockUtils.getSubscribeMarketValue(row, v)} value={stockUtils.getMarketValue(row)} decimal={2} unit align="right" />
     },
   ]
+
+  const onRowClick = useTableRowClickToStockTrading('symbol')
 
   return (
     <div className="w-full h-full flex flex-col overflow-hidden">
@@ -115,7 +97,7 @@ const GoldenStockPool = () => {
       <div className="flex-1 overflow-hidden">
         {
           token ? (
-            <JknRcTable isLoading={query.isLoading} columns={columns} data={list} onSort={onSort} rowKey="symbol" className="w-full" />
+            <JknRcTable isLoading={query.isLoading} columns={columns} data={list} onSort={onSort} rowKey="symbol" className="w-full" onRow={onRowClick} />
             // <JknTable loading={query.isLoading} rowKey="symbol" data={list} columns={columns} />
           ) : (
             <div className="w-full text-center mt-40">

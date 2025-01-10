@@ -88,7 +88,7 @@ const PlateList = (props: PlateListProps) => {
     }
   ], [])
   return (
-    <JknRcTable isLoading={props.loading} columns={column} data={list} onSort={onSort} onRow={(record) => ({ onClick: () => props.onRowClick(record) })} />
+    <JknRcTable rowKey="id" isLoading={props.loading} columns={column} data={list} onSort={onSort} onRow={(record) => ({ onClick: () => props.onRowClick(record) })} />
   )
 }
 

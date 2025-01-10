@@ -3,10 +3,9 @@ import { cn } from "@/utils/style"
 import { cva, type VariantProps } from "class-variance-authority"
 import Decimal from "decimal.js"
 import { JknIcon } from ".."
-import { useUpdateEffect } from "ahooks"
+import { useLatest, useUpdateEffect } from "ahooks"
 import { useEffect, useRef, useState } from "react"
-import { useStockQuoteSubscribe } from "@/hooks"
-import { stockSubscribe, StockSubscribeHandler } from "@/utils/stock"
+import { stockSubscribe, type StockSubscribeHandler } from "@/utils/stock"
 import { get, isFunction } from "radash"
 
 const numSpanVariants = cva(
@@ -158,13 +157,15 @@ interface NumSpanSubscribeProps extends Omit<NumSpanProps, 'value'> {
   value?: number | string
 }
 
-export const NumSpanSubscribe = ({ value, code, ...props }: NumSpanSubscribeProps) => {
+export const NumSpanSubscribe = ({ value, code, isPositive, field,...props }: NumSpanSubscribeProps) => {
   const [innerValue, setInnerValue] = useState(value)
-  const fieldFn = useRef<NumSpanSubscribeProps['field']>(props.field)
+  const [isUp, setIsUp] = useState(isPositive)
+  const isPos = useLatest(isPositive)
+  const fieldFn = useRef<NumSpanSubscribeProps['field']>(field)
 
   useEffect(() => {
-    fieldFn.current = props.field
-  }, [props.field])
+    fieldFn.current = field
+  }, [field])
 
   useEffect(() => {
     const unSubscribe = stockSubscribe.onQuoteTopic(code, (data) => {
@@ -174,16 +175,19 @@ export const NumSpanSubscribe = ({ value, code, ...props }: NumSpanSubscribeProp
         v = (v as number) * 100
       }
       setInnerValue(v as number | string | undefined)
+      if(isPos.current !== undefined){
+        setIsUp(data.record.percent > 0)
+      }
     })
 
     return () => {
       unSubscribe()
     }
-  }, [code, props.percent])
+  }, [code, props.percent, isPos])
   
   useEffect(() => {
     setInnerValue(value)
   }, [value])
 
-  return <NumSpan value={innerValue} {...props} />
+  return <NumSpan value={innerValue} isPositive={isUp} {...props} />
 }

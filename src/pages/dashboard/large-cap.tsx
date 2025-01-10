@@ -1,12 +1,10 @@
 import { StockChartInterval, getLargeCapIndexes, getStockChart } from "@/api"
-import StockDownIcon from '@/assets/icon/stock_down.png'
-import StockUpIcon from '@/assets/icon/stock_up.png'
-import { CapsuleTabs } from "@/components"
+import { CapsuleTabs, NumSpanSubscribe } from "@/components"
 import { useStockQuoteSubscribe } from "@/hooks"
 import { useConfig, useTime } from "@/store"
 import { getTradingPeriod } from "@/utils/date"
 import echarts, { type ECOption } from "@/utils/echarts"
-import { type StockRecord, type StockSubscribeHandler, stockUtils, type StockTrading } from "@/utils/stock"
+import { type StockTrading, stockUtils } from "@/utils/stock"
 import { cn, colorUtil } from "@/utils/style"
 import { useQuery } from "@tanstack/react-query"
 import { useMount, useSize, useUnmount, useUpdateEffect } from "ahooks"
@@ -39,7 +37,6 @@ const intervalToTradingMap: Partial<Record<StockChartInterval, StockTrading>> = 
 const LargeCap = () => {
   const [activeKey, setActiveKey] = useState<string>()
   const [activeStock, setActiveStock] = useState<string>()
-  const [stocks, setStocks] = useState<StockRecord[]>([])
   const time = useTime()
 
   const [stockType, setStockType] = useState<StockChartInterval>(tradingToIntervalMap[time.getTrading() as StockTrading])
@@ -48,14 +45,15 @@ const LargeCap = () => {
     queryFn: () => getLargeCapIndexes(),
   })
 
-  useEffect(() => {
+  const stocks = useMemo(() => {
     if (!activeKey || !largeCap.data) {
-      setStocks([])
-      return
+      return []
     }
 
-    setStocks(largeCap.data.find(item => item.category_name === activeKey)?.stocks.map(item => stockUtils.toSimpleStockRecord(item.stock, item.symbol, item.name)) ?? [])
+    return largeCap.data.find(item => item.category_name === activeKey)?.stocks.map(item => stockUtils.toStock(item.stock, {symbol: item.symbol, name: item.name})) ?? []
   }, [activeKey, largeCap.data])
+
+  useStockQuoteSubscribe(stocks.map(o => o.symbol) ?? [])
 
   useEffect(() => {
     if (largeCap.data) {
@@ -68,25 +66,6 @@ const LargeCap = () => {
   const onChartDoubleClick = useCallback(() => {
     navigate(`/stock/trading?symbol=${activeStock}`)
   }, [activeStock, navigate])
-
-  const updateQuoteHandler = useCallback<StockSubscribeHandler<'quote'>>((data) => {
-    setStocks(s => {
-      const items = s.map((item) => {
-        if (item.symbol === data.topic) {
-          const stock = stockUtils.cloneFrom(item)
-          stock.close = data.record.close
-          stock.prevClose = data.record.preClose
-          stock.percent = (data.record.close - data.record.preClose) / data.record.preClose
-          return stock
-        }
-        return item
-      })
-
-      return items
-    })
-  }, [])
-
-  useStockQuoteSubscribe(largeCap.data?.find(item => item.category_name === activeKey)?.stocks.map(item => stockUtils.toSimpleStockRecord(item.stock, item.symbol, item.name)).map(v => v.symbol) ?? [], updateQuoteHandler)
 
   const tabs = useMemo(() => {
     return largeCap.data?.map(item => ({
@@ -103,6 +82,8 @@ const LargeCap = () => {
       setStockType(StockChartInterval.INTRA_DAY)
     }
   }
+
+  
 
 
 
@@ -138,14 +119,14 @@ const LargeCap = () => {
               <div className="text-center"><span>{stock.name}</span></div>
               <div
                 className={clsx(
-                  'font-black text-[15px]',
-                  (stock.percent ?? 0) >= 0 ? 'text-stock-up' : 'text-stock-down'
+                  'font-black text-[15px]'
                 )}>
                 <div className="flex items-center justify-center mt-1">
-                  {Decimal.create(stock.close).toFixed(3)}
-                  <img className="w-5" src={(stock.percent ?? 0) >= 0 ? StockUpIcon : StockDownIcon} alt="" />
+                  <NumSpanSubscribe value={stock.close} code={stock.symbol} isPositive={stockUtils.isUp(stock)} field="record.close" decimal={3} arrow />
                 </div>
-                <div className="">{Decimal.create((stock.percent ?? 0) * 100).toFixed(2)}%</div>
+                <div className="">
+                <NumSpanSubscribe value={stockUtils.getPercent(stock)} code={stock.symbol} isPositive={stockUtils.isUp(stock)} field="record.percent" decimal={2} percent />
+                </div>
               </div>
             </div>
           ))
@@ -496,6 +477,7 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
 
   useUnmount(() => {
     chartRef.current?.dispose()
+    chartRef.current = undefined
   })
 
   const size = useSize(chartDomRef)

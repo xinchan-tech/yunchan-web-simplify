@@ -23,3 +23,7 @@ declare type ArrayItem<T> = T extends Array<infer U> ? U : never
 declare const __RELEASE_TAG__: string
 
 declare const __RELEASE_VERSION__: string
+
+declare type Optional<T, K extends keyof T> = Omit<T, K> & Partial<T>
+
+declare type RequiredBy<T, K extends keyof T> = Partial<Omit<T, K>> & Required<Pick<T, K>>

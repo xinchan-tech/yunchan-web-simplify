@@ -1,6 +1,6 @@
 import { useStockList } from "@/store"
 import { useMount, useSize, useUnmount, useUpdateEffect } from "ahooks"
-import { useRef } from "react"
+import { useRef, useState } from "react"
 import { select, hierarchy, treemap, type Selection, type HierarchyRectangularNode } from 'd3'
 import { numToFixed } from "@/utils/price"
 
@@ -32,7 +32,54 @@ const TreeMap = (props: TreeMapProps) => {
   const stockList = useStockList()
   const chartRef = useRef<Selection<SVGSVGElement, unknown, null, undefined>>()
   const chartDomRef = useRef<HTMLDivElement>(null)
-  const treeMapSize = useSize(chartDomRef)
+
+  // const [data, setData] = useState<TreeMapData[]>([])
+
+  // console.log(props.data)
+  // const treeMapSize = useSize(chartDomRef)  const subscribeHandler: StockSubscribeHandler<'quote'> = useCallback((data) => {
+    
+  //   setTreeData(s => {
+  //     const dataset: Record<string, { value: number, originValue: number }> = {}
+  //     const items = s.map((item) => {
+  //       return {
+  //         ...item,
+  //         children: item.children.map((child: any) => {
+  //           if (child.name === data.topic) {
+  //             const percent = (data.record.close - data.record.preClose) / data.record.preClose
+  //             const _child =  { name: child.name, value: data.record.turnover!, data: percent, color: getColorByStep(percent ?? 0) , plateId: child.plateId, originValue: data.record.turnover }
+  //             dataset[_child.name + _child.plateId] = _child
+  //             return _child
+  //           }
+  //           dataset[child.name + child.plateId] = child
+  //           return child
+  //         })
+  //       }
+  //     })
+
+  //     const absValues = Object.keys(dataset).map(key => dataset[key as keyof typeof dataset].originValue)
+  //     const min = Math.min(...absValues)
+  //     const max = Math.max(...absValues)
+  
+  //     for (const k of Object.keys(dataset)) {
+  //       dataset[k].value = ((dataset[k].originValue - min) / (max - min)) * (5 - 1) + 1
+  //     }
+
+  //     return items
+  //   })
+  // }, [])
+
+  // const subscribeStocks = useMemo(() => {
+  //   if(!query.data) return []
+  //   const stocks: string[] = []
+  //   for (const node of query.data) {
+  //     for (const t of node.tops) {
+  //       stocks.push(t.symbol)
+  //     }
+  //   }
+  //   return stocks
+  // }, [query.data])
+
+  //  useStockQuoteSubscribe(subscribeStocks, subscribeHandler)
 
   useMount(() => {
     if (!chartDomRef.current) {
@@ -49,6 +96,8 @@ const TreeMap = (props: TreeMapProps) => {
 
     chartRef.current = svg
   })
+
+  
 
   const render = () => {
     if (!chartDomRef.current) {
@@ -73,9 +122,9 @@ const TreeMap = (props: TreeMapProps) => {
   }
 
 
-  useUpdateEffect(() => {
-    render()
-  }, [treeMapSize])
+  // useUpdateEffect(() => {
+  //   render()
+  // }, [treeMapSize])
 
   useUnmount(() => {
     chartRef.current?.remove()

@@ -2,6 +2,7 @@ import type { StockExtendResultMap, StockRawRecord } from '@/api'
 import dayjs from 'dayjs'
 import Decimal from 'decimal.js'
 import { type Stock, StockRecord, type StockResultRecord, type StockTrading } from './stock'
+import { StockSubscribeHandler } from "./subscribe"
 
 export const stockUtils = {
   toStockRecord(data: StockResultRecord) {
@@ -186,7 +187,7 @@ export const stockUtils = {
   /**
    * 市值
    */
-  getMarketValue: (stock: Stock): number | undefined => {
+  getMarketValue: (stock: RequiredBy<Stock, 'close'>): number | undefined => {
     if (!stock.totalShare) return
     return stock.close * stock.totalShare
   },
@@ -217,6 +218,14 @@ export const stockUtils = {
     if (!stock.extend?.liabilities_and_equity || !stock.extend?.liabilities || !stock.totalShare) return
 
     return stock.close / ((stock.extend.liabilities_and_equity - stock.extend.liabilities) / stock.totalShare)
+  },
+
+  /**
+   * 计算订阅的市场总值
+   */
+  getSubscribeMarketValue: (stock: Partial<Stock>, data: Parameters<StockSubscribeHandler<'quote'>>[0]) => {
+    if (!stock.totalShare) return
+    return data.record.close * stock.totalShare
   }
 }
 
@@ -225,7 +234,8 @@ export const stockUtils = {
  * 2024-09-10 不带时间默认为盘中数据，自动补齐
  * @param time 添加时间戳
  */
-const parseTime = (time: string) => {
+const parseTime = (time?: string) => {
+  if(!time) return -1
   if (time.replace('-', '').length === time.length) {
     if (time.length === 10) {
       return dayjs(+time * 1000).valueOf()

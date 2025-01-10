@@ -10,7 +10,7 @@ import { useMount, useUnmount, useUpdateEffect } from "ahooks"
 import Decimal from "decimal.js"
 import { type PropsWithChildren, useCallback, useEffect, useRef, useState } from "react"
 import { withSort } from "../jkn/jkn-icon/with-sort"
-import { useStockQuoteSubscribe, useTableData } from "@/hooks"
+import { useHalfControlValue, useStockQuoteSubscribe, useTableData } from "@/hooks"
 
 const extend: StockExtend[] = ['basic_index', 'day_basic', 'alarm_ai', 'alarm_all', 'total_share', 'financials', 'thumbs', 'stock_before', 'stock_after']
 
@@ -70,22 +70,8 @@ export const CollectList = (props: CollectListProps) => {
     setList(_stockList)
   }, [stocks.data, trading, setList])
 
-  const stockSubscribeHandler = useCallback<StockSubscribeHandler<'quote'>>((e) => {
-    updateList((list) => {
-      const _list = list.map(stock => {
-        if (stock.code === e.topic) {
-          const _stock = { ...stock }
-          _stock.price = e.record.close
-          _stock.percent = (e.record.close - e.record.preClose) / e.record.preClose
-          return _stock
-        }
-        return stock
-      })
-      return _list
-    })
-  }, [updateList])
 
-  useStockQuoteSubscribe(stocks.data?.items.map(v => v.symbol) ?? [], stockSubscribeHandler)
+  useStockQuoteSubscribe(stocks.data?.items.map(v => v.symbol) ?? [])
 
   const [sort, setSort] = useState<{ field: string, sort: 'asc' | 'desc' | undefined }>({ field: '', sort: undefined })
 
@@ -139,17 +125,25 @@ const StockListItem = ({ stock, onCollectChange, children }: PropsWithChildren<S
   const lastValue = useRef(stock.price)
   const span = useRef<HTMLDivElement>(null)
   const priceBlinkTimer = useRef<number>()
-  useUpdateEffect(() => {
+  const [value, setValue] = useHalfControlValue(stock.price)
+
+  const updateHandler = useCallback<StockSubscribeHandler<'quote'>>((data) => {
+    setValue(data.record.close)
+  }, [setValue])
+
+  useStockQuoteSubscribe([stock.code], updateHandler)
+
+  useEffect(() => {
     if (priceBlink === '1') {
 
       if (!priceBlinkTimer.current) {
 
-        if (lastValue.current === undefined || !stock.price) return
+        if (lastValue.current === undefined || !value) return
         const randomDelay = Math.random() * 500
 
         priceBlinkTimer.current = window.setTimeout(() => {
-          const blinkState = lastValue.current! < stock.price! ? 'down' : 'up'
-          lastValue.current = stock.price
+          const blinkState = lastValue.current! < value! ? 'down' : 'up'
+          lastValue.current = value
           span.current?.setAttribute('data-blink', blinkState)
 
           setTimeout(() => {
@@ -159,7 +153,8 @@ const StockListItem = ({ stock, onCollectChange, children }: PropsWithChildren<S
         }, randomDelay)
       }
     }
-  }, [stock])
+  }, [value, priceBlink])
+
 
   return (
     <div

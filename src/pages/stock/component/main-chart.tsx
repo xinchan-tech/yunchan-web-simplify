@@ -26,8 +26,8 @@ export const MainChart = (props: MainChartProps) => {
   const queryClient = useQueryClient()
 
   useMount(() => {
-    chart.current = echarts.init(dom.current)
-    chart.current.meta = {}
+    chart.current = echarts.init(dom.current) as unknown as echarts.ECharts
+    (chart.current as any).meta = {}
   })
 
   useUnmount(() => {

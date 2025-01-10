@@ -87,20 +87,5 @@ export type ECOption = echarts.ComposeOption<
   | PieSeriesOption
 >
 
-const _echarts = echarts as typeof echarts & {
-  ECharts: echarts.ECharts & {
-    meta?: {
-      dataZoom: {
-        start: number
-        end: number
-      },
-      yAxis: {
-        left?: 'price' | 'percent',
-        right: 'price' | 'percent'
-      },
-      mainData: any[]
-    }
-  }
-}
 
-export default _echarts
+export default echarts

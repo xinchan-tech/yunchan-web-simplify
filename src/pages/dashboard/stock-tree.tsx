@@ -46,6 +46,7 @@ const StockTree = () => {
       top: 15,
       stock: ['1']
     }),
+    refetchInterval: 30 * 1000,
     enabled: ['industry', 'concept'].includes(type)
   })
 
@@ -90,52 +91,6 @@ const StockTree = () => {
 
     setTreeData(root)
   }, [query.data, filter])
-
-  const subscribeHandler: StockSubscribeHandler<'quote'> = useCallback((data) => {
-    
-    setTreeData(s => {
-      const dataset: Record<string, { value: number, originValue: number }> = {}
-      const items = s.map((item) => {
-        return {
-          ...item,
-          children: item.children.map((child: any) => {
-            if (child.name === data.topic) {
-              const percent = (data.record.close - data.record.preClose) / data.record.preClose
-              const _child =  { name: child.name, value: data.record.turnover!, data: percent, color: getColorByStep(percent ?? 0) , plateId: child.plateId, originValue: data.record.turnover }
-              dataset[_child.name + _child.plateId] = _child
-              return _child
-            }
-            dataset[child.name + child.plateId] = child
-            return child
-          })
-        }
-      })
-
-      const absValues = Object.keys(dataset).map(key => dataset[key as keyof typeof dataset].originValue)
-      const min = Math.min(...absValues)
-      const max = Math.max(...absValues)
-  
-      for (const k of Object.keys(dataset)) {
-        dataset[k].value = ((dataset[k].originValue - min) / (max - min)) * (5 - 1) + 1
-      }
-
-      return items
-    })
-  }, [])
-
-  const subscribeStocks = useMemo(() => {
-    if(!query.data) return []
-    const stocks: string[] = []
-    for (const node of query.data) {
-      for (const t of node.tops) {
-        stocks.push(t.symbol)
-      }
-    }
-    return stocks
-  }, [query.data])
-
-   useStockQuoteSubscribe(subscribeStocks, subscribeHandler)
-
 
   const queryPlate = useQuery({
     queryKey: [getPlateList.cacheKey, type],

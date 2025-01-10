@@ -99,7 +99,7 @@ export const drawPolyline: DrawerFunc<[XAxis, YAxis, XAxis, YAxis, LineType][]> 
       const start = api.coord([api.value(0), api.value(1)])
       const end = api.coord([api.value(2), api.value(3)])
       const lineType = api.value(4) as LineType
-      console.log(end[0], maxRight)
+
       if (maxRight > 0 && end[0] > maxRight) {
         //计算y轴角度
         const angle = Math.atan((end[1] - start[1]) / (end[0] - start[0]))

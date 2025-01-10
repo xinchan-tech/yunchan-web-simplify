@@ -14,7 +14,7 @@ interface TimeStore {
   setUsTime: (usTime: number) => void
   setLocalStamp: (localStamp: number) => void
   getTrading: () => StockTrading
-  isToday: (data: string) => boolean
+  isToday: (data: string | number) => boolean
   /**
    * 获取实时的美东时间
    */

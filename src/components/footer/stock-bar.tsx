@@ -1,10 +1,10 @@
 import { getLargeCapIndexes } from "@/api"
+import { useStockQuoteSubscribe } from "@/hooks"
+import { stockUtils } from "@/utils/stock"
 import { cn } from "@/utils/style"
 import { useQuery } from "@tanstack/react-query"
-import { NumSpan } from "../num-span"
-import { type StockSubscribeHandler, stockUtils } from "@/utils/stock"
-import { useCallback, useEffect, useState } from "react"
-import { useStockQuoteSubscribe } from "@/hooks"
+import { useEffect, useState } from "react"
+import { NumSpanSubscribe } from "../num-span"
 
 // const codes = ['IXIC', 'SPX', 'DJI']
 export const StockBar = () => {
@@ -29,25 +29,8 @@ export const StockBar = () => {
     setStockData(query.data)
   }, [query.data])
 
-  const updateQuoteHandler = useCallback<StockSubscribeHandler<'quote'>>((data) => {
-    setStockData(s => {
-      if (!s) return []
-      const items = s.map((item) => {
-        if (item.code === data.topic) {
-          const _item = { ...item }
-          _item.price = data.record.close
-          _item.percent = (data.record.close - data.record.preClose) / data.record.preClose
-          _item.offset = data.record.close - data.record.preClose
-          return _item
-        }
-        return item
-      })
 
-      return items
-    })
-  }, [])
-
-  useStockQuoteSubscribe(query.data?.map(o => o.code) ?? [], updateQuoteHandler)
+  useStockQuoteSubscribe(query.data?.map(o => o.code) ?? [])
 
   return (
     <div>
@@ -56,11 +39,11 @@ export const StockBar = () => {
           <span key={item.code}>
             <span>{item.name}:</span>&nbsp;
             <span className={cn(item.percent >= 0 ? 'text-stock-up' : 'text-stock-down')}>
-              <NumSpan value={item.price ?? 0} isPositive={item.percent >= 0} decimal={3} arrow />
+              <NumSpanSubscribe code={item.code} field="record.close" value={item.price ?? 0} isPositive={item.percent >= 0} decimal={3} arrow />
               {/* <JknIcon className="w-4 h-4 -mb-0.5" name={item.percent >= 0 ? 'ic_price_up_green' : 'ic_price_down_red'} /> */}
               &emsp;
-              <NumSpan value={item.offset} isPositive={item.percent >= 0} symbol />&emsp;
-              <NumSpan value={item.percent * 100} decimal={2} isPositive={item.percent >= 0} percent symbol />&emsp;
+              <NumSpanSubscribe code={item.code} field={(v) => v.record.close - v.record.preClose} value={item.offset} isPositive={item.percent >= 0} symbol decimal={3} />&emsp;
+              <NumSpanSubscribe code={item.code} field="record.percent" value={item.percent * 100} decimal={2} isPositive={item.percent >= 0} percent symbol />&emsp;
             </span>
           </span>
         ))

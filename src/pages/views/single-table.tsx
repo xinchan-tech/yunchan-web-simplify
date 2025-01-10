@@ -1,8 +1,9 @@
 import { type StockExtend, type UsStockColumn, getChineseStocks, getIndexGapAmplitude, getIndexRecommends, getUsStocks } from "@/api"
-import { AiAlarm, CollectStar, JknCheckbox, JknIcon, JknRcTable, type JknRcTableProps, JknTable, type JknTableProps, NumSpan, StockView } from "@/components"
-import { useCheckboxGroup, useTableData, useTableRowClickToStockTrading } from "@/hooks"
+import { AiAlarm, CollectStar, JknCheckbox, JknIcon, JknRcTable, type JknRcTableProps, JknTable, type JknTableProps, NumSpan, NumSpanSubscribe, StockView } from "@/components"
+import { useCheckboxGroup, useStockQuoteSubscribe, useTableData, useTableRowClickToStockTrading } from "@/hooks"
 import { stockUtils } from "@/utils/stock"
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
+
 import Decimal from "decimal.js"
 import { produce } from "immer"
 import { useCallback, useEffect, useMemo } from "react"
@@ -80,24 +81,28 @@ const SingleTable = (props: SingleTableProps) => {
     }
 
     for (const item of query.data) {
-      const [lastData, beforeData, afterData] = stockUtils.toStockRecord(item)
+      // const [lastData, beforeData, afterData] = stockUtils.toStock(item)
+      const lastData = stockUtils.toStock(item.stock, {extend: item.extend})
+     
+      const beforeData = stockUtils.toStock(item.extend.stock_before, {extend: item.extend})
+      const afterData = stockUtils.toStock(item.extend.stock_after, {extend: item.extend})
 
       if (!lastData) continue
       r.push({
         symbol: item.symbol,
         name: item.name,
         price: lastData.close,
-        percent: lastData.percent,
-        total: lastData.marketValue,
+        percent: stockUtils.getPercent(lastData),
+        total: stockUtils.getMarketValue(lastData),
         amount: lastData.turnover,
         industry: lastData.industry,
-        prePercent: (beforeData?.percent ?? 0) * 100,
-        afterPercent: (afterData?.percent ?? 0) * 100,
-        turnoverRate: lastData.turnOverRate ? (lastData.turnOverRate) : undefined,
-        pe: lastData.pe,
-        pb: lastData.pb,
-        collect: lastData.collect ?? 0,
-        isUp: lastData.isUp
+        prePercent: stockUtils.getPercent(beforeData),
+        afterPercent: stockUtils.getPercent(afterData),
+        turnoverRate: stockUtils.getTurnOverRate(lastData),
+        pe: stockUtils.getPE(lastData),
+        pb: stockUtils.getPB(lastData),
+        collect: lastData.extend?.collect ?? 0,
+        isUp: stockUtils.isUp(lastData)
       })
 
     }
@@ -118,14 +123,14 @@ const SingleTable = (props: SingleTableProps) => {
       turnoverRate: "turnover_rate",
     }
 
-    if(columnKey === 'name'){
+    if (columnKey === 'name') {
       onSort(columnKey, sort)
-      return 
+      return
     }
 
     setSort({
       column: sort !== undefined ? columnMap[columnKey as string] : 'total_mv',
-      order: sort === undefined ? 'desc': sort
+      order: sort === undefined ? 'desc' : sort
     })
   }
 
@@ -139,6 +144,8 @@ const SingleTable = (props: SingleTableProps) => {
     })
   }, [updateList])
 
+  useStockQuoteSubscribe(query.data?.map(o => o.symbol) ?? [])
+
   const columns = useMemo<JknRcTableProps<TableDataType>['columns']>(() => ([
     { title: '序号', dataIndex: 'index', align: 'center', width: 60, render: (_, __, index) => index + 1 },
     {
@@ -151,24 +158,26 @@ const SingleTable = (props: SingleTableProps) => {
     {
       title: '现价', dataIndex: 'price', align: 'right', width: '8%', sort: true,
       render: (_, row) => (
-        <NumSpan value={row.price} decimal={2} isPositive={row.isUp} />
+        <NumSpanSubscribe blink code={row.symbol} field="record.close" value={row.price} decimal={2} isPositive={row.isUp} align="right" />
       )
     },
     {
       title: '涨跌幅', dataIndex: 'percent', align: 'right', width: 120, sort: true,
       render: (_, row) => (
-        <div className="inline-block">
-          <NumSpan block className="py-0.5 w-20" decimal={2} value={Decimal.create(row.percent).mul(100)} percent isPositive={row.isUp} symbol />
-        </div>
+        <NumSpanSubscribe blink code={row.symbol} field="record.percent" block className="py-0.5 w-20" decimal={2} value={Decimal.create(row.percent).toNumber()} percent isPositive={row.isUp} symbol align="right" />
       )
     },
     {
       title: '成交额', dataIndex: 'amount', align: 'right', width: '8%', sort: true,
-      render: (_, row) => Decimal.create(row.amount).toDecimalPlaces(2).toShortCN()
+      render: (_, row) => (
+        <NumSpanSubscribe blink code={row.symbol} field="record.turnover" value={row.amount} decimal={2} align="right" unit />
+      )
     },
     {
       title: '总市值', dataIndex: 'total', align: 'right', width: '8%', sort: true,
-      render: (_, row) => Decimal.create(row.total).toDecimalPlaces(2).toShortCN()
+      render: (_, row) => (
+        <NumSpanSubscribe blink code={row.symbol} field={v => stockUtils.getSubscribeMarketValue({ totalShare: row.total }, v)} value={row.amount} decimal={2} align="right" unit />
+      )
     },
     {
       title: '所属行业', dataIndex: 'industry', width: '8%', align: 'right'
