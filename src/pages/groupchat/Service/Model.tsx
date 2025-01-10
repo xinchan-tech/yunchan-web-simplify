@@ -52,7 +52,8 @@ export class MessageWrap {
     let parts = new Array<Part>();
     let i = 0;
     while (text.length > 0) {
-      const mentionMatchResult = text.match(/@([\w\u4e00-\u9fa5])+/m);
+    //   const mentionMatchResult = text.match(/@([\w\u4e00-\u9fa5])+/m);
+    const mentionMatchResult = text.match(/@([\S])+/m);
       let index = mentionMatchResult?.index;
       if (index === undefined) {
         index = -1;

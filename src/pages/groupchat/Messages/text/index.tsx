@@ -1,8 +1,14 @@
 import MsgCard from "../../components/msg-card";
-import HighlightMentions from "../../components/mention-higllight";
-import { Message, MessageText } from "wukongimjssdk";
+
+import WKSDK, {
+  Channel,
+  ChannelTypePerson,
+  Message,
+  MessageText,
+} from "wukongimjssdk";
 import { MessageWrap, PartType, Part } from "../../Service/Model";
 import { cn } from "@/utils/style";
+
 const TextCell = (props: { message: Message; messageWrap?: MessageWrap }) => {
   const { message, messageWrap } = props;
 
@@ -33,6 +39,14 @@ const TextCell = (props: { message: Message; messageWrap?: MessageWrap }) => {
   };
 
   const getMentionText = (k: number, part: Part) => {
+    console.log(part, 'partpart')
+    let latestName: any = part.text;
+    // if(part.data?.uid) {
+    //   latestName = '@' + WKSDK.shared().channelManager.getChannelInfo(
+    //     new Channel(part.data.uid, ChannelTypePerson)
+    //   )?.title;
+    // } 
+
     return (
       <span
         key={`${message.clientMsgNo}-mention-${k}`}
@@ -41,7 +55,7 @@ const TextCell = (props: { message: Message; messageWrap?: MessageWrap }) => {
           message.send ? "message-text-send" : "message-text-recv"
         )}
       >
-        {part.text}
+        {latestName}
       </span>
     );
   };
@@ -66,16 +80,14 @@ const TextCell = (props: { message: Message; messageWrap?: MessageWrap }) => {
 
   return (
     <MsgCard data={message}>
-        {elements}
-        <style >
-          {
-            `
+      {elements}
+      <style>
+        {`
               .message-text-richmention {
                 color: rgb(65,158,255)
               }
-            `
-          }
-        </style>
+            `}
+      </style>
     </MsgCard>
   );
 };

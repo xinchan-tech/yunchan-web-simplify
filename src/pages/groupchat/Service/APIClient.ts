@@ -137,7 +137,7 @@ export default class APIClient {
     // 然后后台接口再调用WuKongIM的接口，这样自己的后台可以返回一些自己的业务数据填充到Message.remoteExtra中
     syncMessages = async (channel: Channel,opts: SyncOptions) => {
         let resultMessages = new Array<Message>()
-        const limit = 20;
+       
         const resp = await APIClient.shared.post('/channel/messagesync', {
             login_uid: WKSDK.shared().config.uid,
             channel_id: channel.channelID,
@@ -145,7 +145,7 @@ export default class APIClient {
             start_message_seq: opts.startMessageSeq,
             end_message_seq: opts.endMessageSeq,
             pull_mode: opts.pullMode,
-            limit: limit
+            limit: opts.limit || 20
         })
         const messageList = resp && resp["messages"]
         if (messageList) {

@@ -1,4 +1,7 @@
-import { useGroupChatStoreNew } from "@/store/group-chat-new";
+import {
+  useGroupChatStoreNew,
+  useGroupChatShortStore,
+} from "@/store/group-chat-new";
 import { useEffect, useRef, UIEventHandler } from "react";
 import { Message, MessageText, MessageImage } from "wukongimjssdk";
 
@@ -9,25 +12,29 @@ import TextCell from "../Messages/text";
 
 import { useUpdate } from "ahooks";
 import { MessageWrap } from "../Service/Model";
+import ReplyMsg from "../components/reply-msg";
+import { cn } from "@/utils/style";
 
 const GroupChatMsgList = forwardRef(
   (
     props: {
       messages: Message[];
       handleScroll: UIEventHandler<HTMLDivElement>;
+      handleFindPrevMsg: (messageSeq: number) => void
     },
     ref
   ) => {
-    const { messages } = props;
+    const { messages , handleFindPrevMsg} = props;
     const { bottomHeight } = useGroupChatStoreNew();
+    const { locatedMessageId } = useGroupChatShortStore()
     const scrollDomRef = useRef<HTMLElement | null>(null);
-    const update = useUpdate()
+    const update = useUpdate();
 
     const getMessage = (m: Message, key: string) => {
       if (m instanceof Message) {
         const streams = m.streams;
         let text: string | ReactNode = "";
-        const messageWrap = new MessageWrap(m)
+        const messageWrap = new MessageWrap(m);
         if (m.content instanceof MessageText) {
           text = <TextCell key={key} message={m} messageWrap={messageWrap} />;
         } else if (m.content instanceof MessageImage) {
@@ -54,24 +61,6 @@ const GroupChatMsgList = forwardRef(
     // 更新message时，查询聊发送人头像和姓名信息，并缓存
     useEffect(() => {
       console.log(messages, "messages");
-      // const cacheTaskList:Promise<{avatar: string, name: string}>[] = []
-      // if (messages instanceof Array && messages.length > 0) {
-      //   messages.forEach((m) => {
-      //     if (fromUIDList.indexOf(m.fromUID) < 0) {
-      //       fromUIDList.push(m.fromUID);
-      //       cacheTaskList.push(setPersonChannelCache(m.fromUID))
-      //     }
-      //   });
-      //   if(cacheTaskList.length > 0) {
-
-      //     // 请求完了再更新
-      //     Promise.all(cacheTaskList).then(() => {
-      //       update()
-      //     })
-      //   }
-      // }
-
-      //
     }, [messages, update]);
 
     useImperativeHandle(ref, () => ({
@@ -92,6 +81,16 @@ const GroupChatMsgList = forwardRef(
       typeof props.handleScroll === "function" && props.handleScroll(e);
     };
 
+   
+ 
+    // 定位到引用消息位置
+    const locateMessage = (messageSeq: number) => {
+     
+      typeof handleFindPrevMsg === 'function' && handleFindPrevMsg(messageSeq)
+  
+      
+    };
+
     return (
       <div
         className="group-chat-msglist"
@@ -102,14 +101,27 @@ const GroupChatMsgList = forwardRef(
         {(messages || []).map((msg: Message, idx: number) => {
           const key = msg.clientMsgNo + idx;
           return (
-            <div key={key} id={msg.clientMsgNo}>
+            <div key={key} id={msg.clientMsgNo} className={cn('message-item',locatedMessageId ===  msg.clientMsgNo && 'located')}>
               {getMessage(msg, key)}
+              {msg.content.reply && (
+                <ReplyMsg
+                  locateMessage={locateMessage}
+                  message={msg}
+                ></ReplyMsg>
+              )}
             </div>
           );
         })}
         <style jsx>
           {`
              {
+             
+              .message-item {
+                transition: background linear 0.4s
+              }
+               .message-item.located {
+                background-color: rgb(69,70,73)
+               } 
               .group-chat-msglist {
                 padding: 0 12px;
                 overflow-y: auto;

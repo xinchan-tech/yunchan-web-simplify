@@ -2,17 +2,27 @@ import { cn } from "@/utils/style";
 import { Message } from "wukongimjssdk";
 
 import MsgHead from "../msg-head";
-import { ReactNode } from "react";
+import { ReactNode, useContext } from "react";
+
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuTrigger,
+  ContextMenuItem,
+} from "@/components";
+import { GroupChatContext, ReplyFn } from "../..";
 
 const MsgCard = (props: { data: Message; children: string | ReactNode }) => {
   const { data } = props;
 
+  const { handleReply } = useContext(GroupChatContext);
   return (
     <div
       key={data.clientMsgNo}
       className={cn(
-        "flex mb-6 msg-card items-start",
-        data.send && "justify-end"
+        "flex msg-card items-start",
+        data.send && "justify-end",
+        data.content.reply ? "mb-2" : "mb-6"
       )}
     >
       {data.send !== true && (
@@ -27,7 +37,27 @@ const MsgCard = (props: { data: Message; children: string | ReactNode }) => {
           data.send && "right-bubble"
         )}
       >
-        <span>{props.children}</span>
+        <ContextMenu>
+          <ContextMenuTrigger asChild>
+            <span>{props.children}</span>
+          </ContextMenuTrigger>
+          <ContextMenuContent>
+            <ContextMenuItem
+              onClick={() => {
+                typeof handleReply === "function" && handleReply(data, true);
+              }}
+            >
+              引用
+            </ContextMenuItem>
+            <ContextMenuItem
+              onClick={() => {
+                typeof handleReply === "function" && handleReply(data);
+              }}
+            >
+              回复
+            </ContextMenuItem>
+          </ContextMenuContent>
+        </ContextMenu>
       </div>
 
       {data.send === true && (

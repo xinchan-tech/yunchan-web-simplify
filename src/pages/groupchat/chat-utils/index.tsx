@@ -12,9 +12,14 @@ export const lastContent = (conversationWrap: ConversationWrap) => {
   if (!conversationWrap.lastMessage) {
     return;
   }
+
   const draft = conversationWrap.remoteExtra.draft;
   if (draft && draft !== "") {
     return draft;
+  }
+
+  if(conversationWrap.isMentionMe === true) {
+    return <span style={{color: 'red'}}>[有人@我]</span>
   }
 };
 

@@ -6,10 +6,10 @@ import WKSDK, {
   ChannelInfo,
 } from "wukongimjssdk";
 import { ConversationWrap } from "../ConversationWrap";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import {
   useGroupChatStoreNew,
-   useGroupChatShortStore,
+  useGroupChatShortStore,
 } from "@/store/group-chat-new";
 import { cn } from "@/utils/style";
 import APIClient from "../Service/APIClient";
@@ -17,11 +17,11 @@ import { useLatest } from "ahooks";
 import { lastContent } from "../chat-utils";
 // import { getGroupMembersService } from "@/api";
 
+
+
 const GroupChannel = (props: { onSelectChannel: (c: Channel) => void }) => {
-  // const [conversationWraps, setConversationWraps] = useState<
-  //   ConversationWrap[]
-  // >([]);
-  const {conversationWraps, setConversationWraps} = useGroupChatShortStore()
+
+  const { conversationWraps, setConversationWraps } = useGroupChatShortStore();
   const latestConversation = useLatest(conversationWraps);
   const { onSelectChannel } = props;
   const { setSelectedChannel, selectedChannel, setToChannel } =
@@ -80,7 +80,7 @@ const GroupChannel = (props: { onSelectChannel: (c: Channel) => void }) => {
     action: ConversationAction
   ) => {
     // 监听最近会话列表的变化
-
+   
     if (action === ConversationAction.add) {
       const temp = [
         new ConversationWrap(conversation),
@@ -117,7 +117,7 @@ const GroupChannel = (props: { onSelectChannel: (c: Channel) => void }) => {
 
   // 强制刷新会话
   const channelInfoListener = (channelInfo: ChannelInfo) => {
-    console.log(channelInfo,latestConversation, "current channel");
+    console.log(channelInfo, latestConversation, "current channel");
     if (latestConversation.current.length > 0) {
       const temp = [...latestConversation.current];
       setConversationWraps(temp);
@@ -164,12 +164,17 @@ const GroupChannel = (props: { onSelectChannel: (c: Channel) => void }) => {
     }
   };
 
-  // const handleDealGroupMembers = async (groupId: string) => {
-  //   if(!hasGroupMembers(groupId)) {
-  //     const res = await getGroupMembersService(groupId);
-  //     console.log(res)
-  //   }
-  // }
+  const clearConversationMentionMe = (channel: Channel) => {
+    const conversation =
+      WKSDK.shared().conversationManager.findConversation(channel);
+    if (conversation && conversation.isMentionMe === true) {
+      conversation.isMentionMe = false;
+      WKSDK.shared().conversationManager.notifyConversationListeners(
+        conversation,
+        ConversationAction.update
+      );
+    }
+  };
 
   const handleSelectChannel = (channel: Channel) => {
     setSelectedChannel(channel);
@@ -177,11 +182,22 @@ const GroupChannel = (props: { onSelectChannel: (c: Channel) => void }) => {
     if (typeof onSelectChannel === "function") {
       onSelectChannel(channel);
     }
-    // handleDealGroupMembers(channel.channelID)
+   
     APIClient.shared.clearUnread(channel);
+    // todo 调一个接口清除@提醒
+    
     clearConversationUnread(channel);
+    clearConversationMentionMe(channel)
+
+    
+   
   };
   // console.log(conversationWraps, "conversationWraps");
+
+  useEffect(() => {
+    console.log(conversationWraps, 'conversationWraps')
+  }, [conversationWraps])
+ 
 
   return (
     <div className="w-[270px]">
@@ -197,21 +213,23 @@ const GroupChannel = (props: { onSelectChannel: (c: Channel) => void }) => {
                   "actived"
               )}
               onClick={() => {
+               
                 handleSelectChannel(item.channel);
               }}
             >
-              <div className="group-avatar flex items-center overflow-hidden text-ellipsis justify-center relative">
+              <div className="group-avatar rounded-md flex items-center text-ellipsis justify-center relative">
                 {item.channelInfo?.logo ? (
                   <img
                     src={item.channelInfo?.logo}
+                    className="rounded-md"
                     style={{ width: "48px", height: "48px" }}
                   />
                 ) : (
-                  <span>{item.channelInfo?.title || ""}</span>
+                  <span className='text-lg'>{item.channelInfo?.title[0].toLocaleUpperCase() || ""}</span>
                 )}
 
                 {item.unread > 0 && (
-                  <div className="absolute h-[18px] box-border unread min-w-6">
+                  <div className="absolute h-[18px] box-border  unread min-w-6">
                     {item.unread > 99 ? "99+" : item.unread}
                   </div>
                 )}
@@ -253,7 +271,7 @@ const GroupChannel = (props: { onSelectChannel: (c: Channel) => void }) => {
           .group-avatar {
             width: 48px;
             height: 48px;
-            border-radius: 8px;
+
             background-color: rgb(228, 98, 64);
             color: #fff;
             font-size: 13px;

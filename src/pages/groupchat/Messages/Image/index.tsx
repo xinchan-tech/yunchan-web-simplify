@@ -3,8 +3,10 @@ import {
   MessageImage,
   MediaMessageContent,
   MessageContentType,
+  Message,
 } from "wukongimjssdk";
 import MsgCard from "../../components/msg-card";
+import { ReplyFn } from "../..";
 
 export class ImageContent extends MediaMessageContent {
   width!: number;
@@ -75,7 +77,10 @@ const getImageSrc = (content: MessageImage) => {
   return content.remoteUrl;
 };
 
-const ImageCell = (props: any) => {
+const ImageCell = (props: {
+
+  message: Message
+}) => {
   const { message } = props;
   const [showPreview, setShowPreview] = useState(false);
 
@@ -87,7 +92,7 @@ const ImageCell = (props: any) => {
     const content = message.content as MessageImage;
     let scaleSize = imageScale(content.width, content.height);
     return (
-      <MsgCard data={message}>
+      <MsgCard data={message} >
         <img
           alt=""
           src={getImageSrc(content)}
