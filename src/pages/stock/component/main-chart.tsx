@@ -12,7 +12,7 @@ import { StockSelect } from "@/components"
 import { cn } from "@/utils/style"
 import { TimeIndexMenu } from "./time-index"
 import echarts from "@/utils/echarts"
-import { stockUtils, StockSubscribeHandler } from "@/utils/stock"
+import { stockUtils, type StockSubscribeHandler } from "@/utils/stock"
 import { throttle } from "radash"
 
 
@@ -27,6 +27,7 @@ export const MainChart = (props: MainChartProps) => {
 
   useMount(() => {
     chart.current = echarts.init(dom.current)
+    chart.current.meta = {}
   })
 
   useUnmount(() => {
@@ -51,11 +52,8 @@ export const MainChart = (props: MainChartProps) => {
   })
 
 
-  const subscribeSymbol = useMemo(() => `${state.symbol}@${state.timeIndex <= 0 ? 1: state.timeIndex}`, [state.symbol, state.timeIndex])
+  const subscribeSymbol = useMemo(() => `${state.symbol}@${state.timeIndex <= 0 ? 1 : state.timeIndex}`, [state.symbol, state.timeIndex])
 
-  // useEffect(() => {
-  //   setMainData({ index: props.index, data: query.data })
-  // }, [query.data, props.index, setMainData])
 
   const subscribeHandler: StockSubscribeHandler<'bar'> = useCallback((data) => {
     const stock = stockUtils.toSimpleStockRecord(data.rawRecord)
@@ -64,19 +62,23 @@ export const MainChart = (props: MainChartProps) => {
     if (!query.data || query.data.history.length === 0) return
 
     const lastData = stockUtils.toSimpleStockRecord(query.data.history[query.data.history.length - 1])
-    
-    if(!renderUtils.isSameTimeByInterval(lastData.toDayjs(), stock.toDayjs(), state.timeIndex)){
-      setMainData({ index: props.index, data: {
-        ...query.data,
-        history: [...query.data.history as any, [stock.time!, ...(data.rawRecord.slice(1)) as any]]
-      } })
-    }else{
-      setMainData({ index: props.index, data: {
-        ...query.data,
-        history: [...query.data.history.slice(0, -1) as any, [stock.time!, ...(data.rawRecord.slice(1)) as any]]
-      } })
+
+    if (!renderUtils.isSameTimeByInterval(lastData.toDayjs(), stock.toDayjs(), state.timeIndex)) {
+      setMainData({
+        index: props.index, data: {
+          ...query.data,
+          history: [...query.data.history as any, [stock.time!, ...(data.rawRecord.slice(1)) as any]]
+        }
+      })
+    } else {
+      setMainData({
+        index: props.index, data: {
+          ...query.data,
+          history: [...query.data.history.slice(0, -1) as any, [stock.time!, ...(data.rawRecord.slice(1)) as any]]
+        }
+      })
     }
-  }, [ state.timeIndex,  query.data, setMainData, props.index])
+  }, [state.timeIndex, query.data, setMainData, props.index])
 
   useStockBarSubscribe([subscribeSymbol], subscribeHandler)
 
@@ -169,12 +171,21 @@ export const MainChart = (props: MainChartProps) => {
   const render = () => {
     if (!chart.current) return
 
+    chart.current.meta!.yAxis = {
+      left: state.yAxis.left,
+      right: state.yAxis.right
+    }
+
+    // 优化卡顿，不要删除
+    chart.current.meta!.mainData = state.mainData.history
+
     const [start, end] = chart.current.getOption() ? renderUtils.getZoom(chart.current.getOption()) : [90, 100]
 
     chart.current?.clear()
 
-    const _options = renderChart()
-    renderGrid(_options, state, [chart.current.getWidth(), chart.current.getHeight()])
+
+    const _options = renderChart(chart.current)
+    renderGrid(_options, state, [chart.current.getWidth(), chart.current.getHeight()], chart.current)
     renderMainChart(_options, state)
     renderMarkLine(_options, state)
     renderZoom(_options, [start, end])
@@ -182,14 +193,13 @@ export const MainChart = (props: MainChartProps) => {
      * 画主图指标
      */
     renderOverlay(_options, state.overlayStock)
-    renderMainCoiling(_options, state)
+    renderMainCoiling(_options, state, chart.current)
 
     renderMainIndicators(_options, Object.values(state.mainIndicators))
     renderOverlayMark(_options, state)
     renderSecondary(_options, state.secondaryIndicators)
     renderSecondaryLocalIndicators(_options, state.secondaryIndicators, state)
     renderWatermark(_options, state.timeIndex)
-    console.log(_options)
     chart.current.setOption(_options)
   }
 
@@ -215,48 +225,54 @@ export const MainChart = (props: MainChartProps) => {
 
 
   // TODO 监听dataZoom事件
-  useEffect(() => {
-    if (!chart.current) return
+  // useEffect(() => {
+  //   if (!chart.current) return
 
-    if (state.yAxis.right !== 'percent') return
+  //   /**
+  //    * 1.01，x轴100%是query.data.length * 1.01，100%的时候要向左偏移0.01
+  //    * 所以对应data的100%其实是100/1.01 = 98.02%
+  //    * 所以差值是100 - 98.02 = 1.98
+  //    * TODO: 算法不对，需要重新计算 
+  //    */
+  //   chart.current.on('dataZoom', (e: any) => {
+  //     let start = e.start
+  //     let end = e.end
+  //     if (e.batch) {
+  //       start = e.batch[0].start
+  //       end = e.batch[0].end
+  //     }
+  //     console.log(start, end)
+  //     chart.current!.meta = {
+  //       dataZoom: {
+  //         start,
+  //         end
+  //       }
+  //     }
 
-    /**
-     * 1.01，x轴100%是query.data.length * 1.01，100%的时候要向左偏移0.01
-     * 所以对应data的100%其实是100/1.01 = 98.02%
-     * 所以差值是100 - 98.02 = 1.98
-     * TODO: 算法不对，需要重新计算 
-     */
-    chart.current.on('dataZoom', throttle({interval: 1000}, (e: any) => {
-      let start = e.start 
-      let end = e.end
-      if (e.batch) {
-        start = e.batch[0].start
-        end = e.batch[0].end
-      }
 
-      const series = renderAxisLine(state, start, end)
+  //     // const series = renderAxisLine(state, start, end)
 
-      const startValue = series.data![0]!
+  //     // const startValue = series.data![0]!
 
-      chart.current?.setOption({
-        series,
-        yAxis: [
-          {},
-          {
-            axisLabel: {
-              formatter: (value: number) => {
-                return `{${value >= +startValue ? 'u' : 'd'}|${value.toFixed(2)}%}`
-              }
-            }
-          }
-        ],
-      })
-    }))
+  //     // chart.current?.setOption({
+  //     //   series,
+  //     //   yAxis: [
+  //     //     {},
+  //     //     {
+  //     //       axisLabel: {
+  //     //         formatter: (value: number) => {
+  //     //           return `{${value >= +startValue ? 'u' : 'd'}|${value.toFixed(2)}%}`
+  //     //         }
+  //     //       }
+  //     //     }
+  //     //   ],
+  //     // })
+  //   })
 
-    return () => {
-      chart.current?.off('dataZoom')
-    }
-  }, [state])
+  //   return () => {
+  //     chart.current?.off('dataZoom')
+  //   }
+  // }, [])
 
   return (
     <div className={

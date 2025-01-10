@@ -2,7 +2,7 @@ import { StockChartInterval, type StockRawRecord, type getStockChart } from '@/a
 import { useConfig } from '@/store'
 import { dateToWeek, getTradingPeriod } from '@/utils/date'
 import type { ECOption } from '@/utils/echarts'
-import { StockRecord } from '@/utils/stock'
+import { StockRecord, stockUtils } from '@/utils/stock'
 import { colorUtil } from '@/utils/style'
 import dayjs from 'dayjs'
 import Decimal from 'decimal.js'
@@ -31,17 +31,22 @@ import {
 } from './coilling'
 import { renderUtils } from './utils'
 import type { GraphicComponentOption } from 'echarts/components'
-import type { DataZoomComponentOption, YAXisOption } from 'echarts/types/dist/shared'
+import type { XAXisOption, YAXisOption } from 'echarts/types/dist/shared'
 
 const MAIN_CHART_NAME = 'kChart'
 const MAIN_CHART_NAME_VIRTUAL = 'kChart-virtual'
+
+const TEXT_COLOR = 'rgb(31, 32, 33)'
+const LINE_COLOR = 'rgb(31, 32, 33)'
+
+const X_AXIS_TICK = 8
 
 type ChartState = ArrayItem<KChartState['state']>
 
 /**
  * 主图通用配置
  */
-export const createOptions = (): ECOption => ({
+export const createOptions = (chart: echarts.ECharts): ECOption => ({
   animation: false,
   grid: [
     {
@@ -69,13 +74,14 @@ export const createOptions = (): ECOption => ({
       const data = errData?.seriesType === 'candlestick' ? errData?.value.slice(1) : (errData.value as StockRawRecord)
 
       data[0] = dayjs(+priceData.value[0]).format('YYYY-MM-DD HH:mm:ss')
-      const stock = StockRecord.of('', '', data)
+      const stock = stockUtils.toStock(data)
 
-      let time = stock.time ? dayjs(stock.time).format('MM-DD hh:mm') + dateToWeek(stock.time, '周') : '-'
-      if (stock.time?.slice(11) === '00:00:00') {
-        time = stock.time.slice(0, 11) + dateToWeek(stock.time, '周')
-      }
-
+      const time = dayjs(stock.timestamp).format('MM-DD hh:mm w')
+      // let time = stock.time ? dayjs(stock.time).format('MM-DD hh:mm') + dateToWeek(stock.time, '周') : '-'
+      // if (stock.time?.slice(11) === '00:00:00') {
+      //   time = stock.time.slice(0, 11) + dateToWeek(stock.time, '周')
+      // }
+      const isUp = stockUtils.isUp(stock)
       return `
           <span class="text-xs">
            ${time}<br/>
@@ -83,8 +89,8 @@ export const createOptions = (): ECOption => ({
           最高&nbsp;&nbsp;${Decimal.create(stock.high).toFixed()}<br/>
           最低&nbsp;&nbsp;${Decimal.create(stock.low).toFixed()}<br/>
           收盘&nbsp;&nbsp;${Decimal.create(stock.close).toFixed()}<br/>
-          涨跌额&nbsp;&nbsp;${`<span class="${stock.isUp ? 'text-stock-up' : 'text-stock-down'}">${stock.isUp ? '+' : ''}${Decimal.create(stock.percentAmount).toFixed(3)}</span>`}<br/>
-          涨跌幅&nbsp;&nbsp;${`<span class="${stock.isUp ? 'text-stock-up' : 'text-stock-down'}">${stock.isUp ? '+' : ''}${Decimal.create(stock.percent).mul(100).toFixed(2)}%</span>`}<br/>
+          涨跌额&nbsp;&nbsp;${`<span class="${isUp ? 'text-stock-up' : 'text-stock-down'}">${isUp ? '+' : ''}${Decimal.create(stockUtils.getPercentAmount(stock)).toFixed(3)}</span>`}<br/>
+          涨跌幅&nbsp;&nbsp;${`<span class="${isUp ? 'text-stock-up' : 'text-stock-down'}">${isUp ? '+' : ''}${Decimal.create(stockUtils.getPercent(stock)).mul(100).toFixed(2)}%</span>`}<br/>
           成交量&nbsp;&nbsp;${stock.volume}<br/>
           </span>
           `
@@ -118,8 +124,16 @@ export const createOptions = (): ECOption => ({
       boundaryGap: false,
       axisLabel: {
         show: false,
-        formatter: (v: any) => {
-          return v ? dayjs(v).format('MM-DD') : ''
+        interval: (index: number) => {
+          const scale = chart.getModel().getComponent('xAxis', 0).axis.scale.getExtent()
+
+          const offset = Math.round((scale[1] - scale[0]) / X_AXIS_TICK)
+
+          if (offset <= X_AXIS_TICK) {
+            return index % 4 === 0
+          }
+
+          return (index - scale[0]) % offset === 0
         }
       },
       min: 'dataMin',
@@ -133,8 +147,11 @@ export const createOptions = (): ECOption => ({
         }
       },
       axisPointer: {
-        z: 100
-      }
+        label: {
+          show: false
+        }
+      },
+      data: []
     }
   ],
   yAxis: [
@@ -142,6 +159,7 @@ export const createOptions = (): ECOption => ({
       scale: true,
       gridIndex: 0,
       position: 'left',
+      splitNumber: 8,
       show: true,
       axisPointer: {
         label: {
@@ -149,14 +167,31 @@ export const createOptions = (): ECOption => ({
         }
       },
       min: v => {
-        return v.min - (v.max - v.min) * 0.1
+        return Math.round(v.min - (v.max - v.min) * 0.2)
       },
       max: v => {
-        return v.max + (v.max - v.min) * 0.1
+        return Math.round(v.max + (v.max - v.min) * 0.2)
       },
       splitLine: {
         lineStyle: {
           color: 'rgb(31, 32, 33)'
+        }
+      },
+      axisLabel: {
+        showMaxLabel: false,
+        showMinLabel: false,
+        color: v => {
+          const scale = chart.getModel().getComponent('xAxis', 0).axis.scale.getExtent()
+
+          const data = chart.meta!.mainData?.slice(scale[0], scale[1])
+
+          if (!data || !v) return TEXT_COLOR
+
+          const start = data[0]
+
+          const getStockColor = useConfig.getState().getStockColor
+
+          return v >= start[2] ? getStockColor(true, 'hex') : getStockColor(false, 'hex')
         }
       }
     },
@@ -165,20 +200,176 @@ export const createOptions = (): ECOption => ({
       show: true,
       gridIndex: 0,
       position: 'right',
+      splitNumber: 8,
       splitLine: {
         show: false
       },
       min: v => {
-        return v.min - (v.max - v.min) * 0.1
+        return Math.round(v.min - (v.max - v.min) * 0.2)
       },
       max: v => {
-        return v.max + (v.max - v.min) * 0.1
+        return Math.round(v.max + (v.max - v.min) * 0.2)
       },
-      axisLabel: {}
+      axisPointer: {
+        label: {
+          padding: [0, 0, 0, 0],
+          formatter: (params: any) => {
+            const scale = chart.getModel().getComponent('xAxis', 0).axis.scale.getExtent()
+            const data = chart.meta!.mainData?.slice(scale[0], scale[1])
+
+            if (!data) return params.value
+
+            const start = data[0]
+
+            if (chart.meta?.yAxis?.right === 'percent') {
+              const percent = ((params.value - start[2]) / start[2]) * 100
+
+              return `{${percent >= 0 ? 'u' : 'd'}|${percent.toFixed(2)}%}`
+            }
+
+            return `{${params.value >= start[2] ? 'u' : 'd'}|${params.value.toFixed(2)}}`
+          },
+          rich: {
+            u: {
+              backgroundColor: useConfig.getState().getStockColor(true, 'hex'),
+              width: '100%',
+              color: '#fff',
+              padding: [4, 4],
+              borderRadius: 4
+            },
+            d: {
+              backgroundColor: useConfig.getState().getStockColor(false, 'hex'),
+              width: '100%',
+              color: '#fff',
+              padding: [4, 4],
+              borderRadius: 4
+            }
+          }
+        }
+      },
+      axisLabel: {
+        showMaxLabel: false,
+        showMinLabel: false,
+        formatter: (v: any) => {
+          if (chart.meta?.yAxis?.right === 'percent') {
+            const scale = chart.getModel().getComponent('xAxis', 0).axis.scale.getExtent()
+
+            const data = chart.meta!.mainData?.slice(scale[0], scale[1])
+
+            if (!data) return '-'
+
+            const start = data[0]
+
+            return `${(((v - start[2]) / start[2]) * 100).toFixed(2)}%`
+          }
+
+          return v
+        },
+        color: v => {
+          const scale = chart.getModel().getComponent('xAxis', 0).axis.scale.getExtent()
+
+          const data = chart.meta!.mainData?.slice(scale[0], scale[1])
+
+          if (!data || !v) return TEXT_COLOR
+
+          const start = data[0]
+
+          const getStockColor = useConfig.getState().getStockColor
+
+          return v >= start[2] ? getStockColor(true, 'hex') : getStockColor(false, 'hex')
+        }
+      }
+    }
+  ],
+  dataZoom: [
+    {
+      minSpan: 1,
+      type: 'inside',
+      xAxisIndex: [0, 1, 2, 3, 4, 5, 6],
+      start: 90,
+      end: 100,
+      filterMode: 'weakFilter'
+    },
+    {
+      fillerColor: 'weakFilter',
+      minSpan: 2,
+      show: true,
+      xAxisIndex: [0, 1, 2, 3, 4, 5, 6],
+      type: 'slider',
+      bottom: 0,
+      start: 90,
+      end: 100,
+      backgroundColor: 'transparent',
+      dataBackground: {
+        lineStyle: {
+          color: 'rgb(31, 32, 33)'
+        }
+      },
+      borderColor: 'rgb(31, 32, 33)'
     }
   ],
   series: []
 })
+
+/**
+ * 默认x轴配置
+ */
+const defaultXAxis: XAXisOption = {
+  type: 'category',
+  boundaryGap: false,
+  axisLine: {
+    onZero: false,
+    lineStyle: {
+      color: LINE_COLOR
+    }
+  },
+ 
+  axisTick: {
+    show: false
+  },
+  splitLine: {
+    show: true,
+    lineStyle: {
+      color: LINE_COLOR
+    }
+  },
+  axisPointer: {
+    label: {
+      show: false
+    }
+  },
+  min: 'dataMin',
+  max: (v: any) => {
+    return v.max + Math.round((v.max - v.min) * 0.01)
+  }
+}
+
+/**
+ * 默认Y轴配置
+ */
+const defaultYAxis: YAXisOption = {
+  scale: true,
+  min: v => {
+    return Math.round(v.min - (v.max - v.min) * 0.2)
+  },
+  max: v => {
+    return Math.round(v.max + (v.max - v.min) * 0.2)
+  },
+  position: 'right',
+  axisLine: { onZero: false, show: false },
+  axisTick: {
+    show: false
+  },
+  axisPointer: {
+    label: {
+      show: false
+    }
+  },
+  axisLabel: { show: false },
+  splitLine: {
+    show: false
+  }
+}
 
 type ChartRender = (
   options: ECOption,
@@ -190,39 +381,8 @@ type ChartRender = (
 /**
  * 渲染图表
  */
-export const renderChart = (): ECOption => {
-  const _options = createOptions()
-
-  _options.dataZoom = [
-    {
-      minSpan: 1,
-      type: 'inside',
-      xAxisIndex: [0, 1, 2, 3, 4, 5],
-      start: 90,
-      end: 100,
-      filterMode: 'weakFilter'
-    },
-    {
-      fillerColor: 'weakFilter',
-      minSpan: 2,
-      show: true,
-      xAxisIndex: [0, 1, 2, 3, 4, 5],
-      type: 'slider',
-      bottom: 0,
-      start: 90,
-      end: 100,
-      backgroundColor: 'transparent',
-      dataBackground: {
-        lineStyle: {
-          color: 'rgb(31, 32, 33)'
-        }
-      },
-      borderColor: 'rgb(31, 32, 33)',
-      labelFormatter: (_, e) => {
-        return e
-      }
-    }
-  ]
+export const renderChart = (chart: echarts.ECharts): ECOption => {
+  const _options = createOptions(chart)
 
   return _options
 }
@@ -230,7 +390,7 @@ export const renderChart = (): ECOption => {
 /**
  * 渲染布局
  */
-export const renderGrid = (options: ECOption, state: ChartState, size: [number, number]) => {
+export const renderGrid = (options: ECOption, state: ChartState, size: [number, number], chart: echarts.ECharts) => {
   /**
    * 布局策略
    * 1. 无副图 -> 主图占满, 底部留出24显示标签
@@ -245,6 +405,11 @@ export const renderGrid = (options: ECOption, state: ChartState, size: [number, 
 
   const yAxis = options.yAxis as YAXisOption[]
 
+  //   分时图不允许缩放
+  if (isTimeIndexChart(state.timeIndex)) {
+    options.dataZoom = []
+  }
+
   if (Array.isArray(options.xAxis)) {
     const xAxis = options.xAxis?.find(x => x.id === 'main-x')
     if (xAxis) {
@@ -257,33 +422,9 @@ export const renderGrid = (options: ECOption, state: ChartState, size: [number, 
               : 'intraDay',
           dayjs(+state.mainData.history[0]?.[0])
         ).map(item => dayjs(item).valueOf().toString())
-        xAxis.max = (xAxis as any).data.length
-        ;(xAxis.axisLabel as any)!.interval = (index: number) => {
-          return index % 15 === 0
-        }
       } else {
         ;(xAxis as any).data = state.mainData.history.map(item => item[0])
       }
-    }
-  }
-
-  // 分时图不允许缩放
-  if (isTimeIndexChart(state.timeIndex)) {
-    options.dataZoom = []
-  }
-
-  if (options.axisPointer && !Array.isArray(options.axisPointer)) {
-    options.axisPointer.label!.formatter = params => {
-      if (params.axisDimension === 'x') {
-        let time = dayjs(+params.value).format('MM-DD hh:mm') + dateToWeek(params.value as string, '周')
-        if (isTimeIndexChart(state.timeIndex) && state.timeIndex !== StockChartInterval.FIVE_DAY) {
-          time = dayjs(+params.value).format('YYYY-MM-DD hh:mm')
-        }
-
-        return time
-      }
-
-      return Decimal.create(params.value as string).toFixed(3)
     }
   }
 
@@ -291,9 +432,6 @@ export const renderGrid = (options: ECOption, state: ChartState, size: [number, 
     const left = yAxis[0]
     if (left) {
       left.show = true
-      if (left.axisPointer?.label) {
-        left.axisPointer.label.show = true
-      }
     }
   }
 
@@ -309,8 +447,91 @@ export const renderGrid = (options: ECOption, state: ChartState, size: [number, 
   }
 
   for (let i = 0; i < state.secondaryIndicators.length; i++) {
-    renderSecondaryAxis(options, state, i)
+    renderSecondaryAxis(options, state, i, chart)
   }
+
+
+  /**
+   * 设置底部X轴
+   */
+  Array.isArray(options.xAxis) &&
+    options.xAxis.push({
+      ...defaultXAxis,
+      show: true,
+      gridIndex: grids.length - 1,
+      data: (options.xAxis[0] as any).data,
+      id: 'xAxis-x',
+      axisLabel: {
+        show: true,
+        color: '#fff',
+        formatter: (v: any, index: number) => {
+          if (!v) return ''
+
+          const scale = chart.getModel().getComponent('xAxis', 0).axis.scale.getExtent()
+          const startDay = chart.meta?.mainData?.[scale[0]]?.[0]
+          //获取时间跨度
+          const time = dayjs(+v).diff(+startDay, 'day')
+
+          const offset = Math.round((scale[1] - scale[0]) / X_AXIS_TICK)
+          
+
+          if (offset <= X_AXIS_TICK) {
+            return index % 4 === 0 ? dayjs(+v).format('hh:mm') : ''
+          }
+
+          return (index - scale[0]) % offset === 0 ? dayjs(+v).format('MM-DD') : ''
+        },
+        interval:
+          isTimeIndexChart(state.timeIndex) && state.timeIndex !== StockChartInterval.FIVE_DAY
+            ? index => {
+                return index % 15 === 0
+              }
+            : undefined
+      },
+      axisPointer: {
+        label: {
+          show: true,
+          formatter: params => {
+            if (params.axisDimension === 'x') {
+              let time = dayjs(+params.value).format('MM-DD hh:mm') + dateToWeek(params.value as string, '周')
+              if (isTimeIndexChart(state.timeIndex) && state.timeIndex !== StockChartInterval.FIVE_DAY) {
+                time = dayjs(+params.value).format('YYYY-MM-DD hh:mm')
+              }
+      
+              return time
+            }
+      
+            return Decimal.create(params.value as string).toFixed(3)
+          }
+        }
+      }
+    })
+
+  Array.isArray(options.yAxis) &&
+    options.yAxis.push({
+      ...defaultYAxis,
+      gridIndex: grids.length - 1,
+      position: 'right',
+      id: 'xAxis-y'
+    })
+
+  Array.isArray(options.series) &&
+    options.series.push({
+      type: 'line',
+      xAxisIndex: grids.length - 1,
+      yAxisIndex: grids.length,
+      symbol: 'none',
+      emphasis: {
+        disabled: true
+      },
+      data: state.mainData.history.map(v => [v[0], 0]),
+      color: 'transparent',
+      encode: {
+        x: [0],
+        y: [1]
+      }
+    })
+
   return options
 }
 
@@ -319,7 +540,7 @@ export const renderGrid = (options: ECOption, state: ChartState, size: [number, 
  */
 export const renderMainChart: ChartRender = (options, state) => {
   const mainSeries = { name: MAIN_CHART_NAME } as LineSeriesOption | CandlestickSeriesOption
-  mainSeries.yAxisIndex = 0
+  mainSeries.yAxisIndex = 1
   mainSeries.xAxisIndex = 0
   const { getStockColor } = useConfig.getState()
 
@@ -330,8 +551,6 @@ export const renderMainChart: ChartRender = (options, state) => {
   const upColor = getStockColor(true, 'hex')
   const downColor = getStockColor(false, 'hex')
 
-  const yAxisIndex = state.yAxis.right === 'price' ? 1 : 0
-
   if (state.type === 'k-line') {
     mainSeries.type = 'candlestick'
     mainSeries.itemStyle = {
@@ -341,7 +560,6 @@ export const renderMainChart: ChartRender = (options, state) => {
       borderColor0: downColor
     }
     mainSeries.data = data
-    mainSeries.yAxisIndex = yAxisIndex
     mainSeries.encode = {
       x: [1],
       y: [2, 3, 5, 4]
@@ -362,10 +580,9 @@ export const renderMainChart: ChartRender = (options, state) => {
       x: [0],
       y: [2]
     }
-    mainSeries.yAxisIndex = yAxisIndex
     _mainSeries.data = data
-    mainSeries.color = color
-    ;(mainSeries as any).areaStyle = {
+    _mainSeries.color = color
+    _mainSeries.areaStyle = {
       color: {
         x: 0,
         y: 0,
@@ -395,6 +612,7 @@ export const renderMainChart: ChartRender = (options, state) => {
 
   virtualLine.name = MAIN_CHART_NAME_VIRTUAL
   virtualLine.type = 'line'
+  virtualLine.yAxisIndex = 0
 
   virtualLine.encode = {
     x: [0],
@@ -442,44 +660,36 @@ export const renderMainChart: ChartRender = (options, state) => {
     data: []
   }
 
-  if (state.yAxis.right !== 'price') {
-    const zoom = options.dataZoom as DataZoomComponentOption[]
-    if (Array.isArray(zoom) && zoom[0]) {
-      const axisLine = renderAxisLine(state, zoom[0].start!, zoom[0].end!)
-      Array.isArray(options.series) && options.series.push(axisLine as any)
-    }
-  }
-
   Array.isArray(options.series) && options.series.push(virtualLine)
 
   // 如果grid > 1 ，取消显示axisPointer标签
-  if (Array.isArray(options.xAxis)) {
-    const xAxis = options.xAxis.find(y => y.id === 'main-x')
+  // if (Array.isArray(options.xAxis)) {
+  //   const xAxis = options.xAxis.find(y => y.id === 'main-x')
 
-    if (xAxis) {
-      if (Array.isArray(options.grid) && options.grid.length > 1) {
-        xAxis.axisPointer = {
-          label: {
-            show: false,
-            formatter: (v: any) => {
-              return v.value.slice(5, 11)
-            }
-          }
-        }
-      } else {
-        xAxis.axisLabel!.show = true
-        ;(xAxis.axisLabel as any)!.formatter = (v: any, index: number) => {
-          return v
-            ? index % 2 === 0
-              ? isTimeIndexChart(state.timeIndex) && state.timeIndex !== StockChartInterval.FIVE_DAY
-                ? dayjs(+v).format('hh:mm')
-                : dayjs(+v).format('MM-DD')
-              : ''
-            : ''
-        }
-      }
-    }
-  }
+  //   if (xAxis) {
+  //     if (Array.isArray(options.grid) && options.grid.length > 1) {
+  //       xAxis.axisPointer = {
+  //         label: {
+  //           show: false,
+  //           formatter: (v: any) => {
+  //             return v.value.slice(5, 11)
+  //           }
+  //         }
+  //       }
+  //     } else {
+  //       xAxis.axisLabel!.show = true
+  //       ;(xAxis.axisLabel as any)!.formatter = (v: any, index: number) => {
+  //         return v
+  //           ? index % 2 === 0
+  //             ? isTimeIndexChart(state.timeIndex) && state.timeIndex !== StockChartInterval.FIVE_DAY
+  //               ? dayjs(+v).format('hh:mm')
+  //               : dayjs(+v).format('MM-DD')
+  //             : ''
+  //           : ''
+  //       }
+  //     }
+  //   }
+  // }
 
   return options
 }
@@ -532,7 +742,7 @@ export const renderMarkLine: ChartRender = (options, state) => {
 /**
  * 主图缠论
  */
-export const renderMainCoiling = (options: ECOption, state: ChartState) => {
+export const renderMainCoiling = (options: ECOption, state: ChartState, chart: echarts.ECharts) => {
   if (state.mainCoiling.length === 0) return options
   const points = calcCoilingPoints(state.mainData.history, state.mainData.coiling_data)
   const pivots = calcCoilingPivots(state.mainData.coiling_data, points)
@@ -551,7 +761,7 @@ export const renderMainCoiling = (options: ECOption, state: ChartState) => {
           index === points.length - 2 && state.mainData.coiling_data?.status !== 1 ? LineType.DASH : LineType.SOLID
         ])
       })
-      drawPolyline(options, {} as any, { xAxisIndex: 0, yAxisIndex: yAxisIndex, data: p, extra: { color: '#ffffff' } })
+      drawPolyline(options, {} as any, { xAxisIndex: 0, yAxisIndex: yAxisIndex, data: p, extra: { color: '#ffffff' } , chart: chart})
     } else if (coiling === CoilingIndicatorId.PIVOT) {
       drawPivots(options, {} as any, { xAxisIndex: 0, yAxisIndex: yAxisIndex, data: expands as any })
       drawPivots(options, {} as any, { xAxisIndex: 0, yAxisIndex: yAxisIndex, data: pivots as any })
@@ -934,85 +1144,34 @@ export const renderSecondaryLocalIndicators = (options: ECOption, indicators: In
 /**
  * 渲染坐标轴
  */
-const renderSecondaryAxis = (options: ECOption, state: KChartState['state'][0], index: number) => {
+const renderSecondaryAxis = (options: ECOption, _: any, index: number, chart: echarts.ECharts) => {
   Array.isArray(options.xAxis) &&
     options.xAxis.push({
-      type: 'category',
+      ...defaultXAxis,
+      id: `secondary-${index}`,
       gridIndex: index + 1,
-      data: [...(options.xAxis[0] as any).data],
-      boundaryGap: false,
-      axisLine: {
-        onZero: false,
-        lineStyle: {
-          color: 'rgb(31, 32, 33)'
-        }
-      },
       axisLabel: {
-        show: index === state.secondaryIndicators.length - 1,
-        color: '#fff',
-        formatter: (v: any, index) => {
-    
-          return v
-            ? index % 2 === 0
-              ? isTimeIndexChart(state.timeIndex) && state.timeIndex !== StockChartInterval.FIVE_DAY
-                ? dayjs(+v).format('hh:mm')
-                : dayjs(+v).format('MM-DD')
-              : ''
-            : ''
-        },
-        interval:
-          isTimeIndexChart(state.timeIndex) && state.timeIndex !== StockChartInterval.FIVE_DAY
-            ? index => {
-                return index % 15 === 0
-              }
-            : undefined
-      },
-      axisTick: {
-        show: false
-      },
-      splitLine: {
-        show: true,
-        lineStyle: {
-          color: 'rgb(31, 32, 33)'
+        show: false,
+        interval: (index: number) => {
+          const scale = chart.getModel().getComponent('xAxis', 0).axis.scale.getExtent()
+
+          const offset = Math.round((scale[1] - scale[0]) / X_AXIS_TICK)
+
+          if (offset <= X_AXIS_TICK) {
+            return index % 4 === 0
+          }
+
+          return (index - scale[0]) % offset === 0
         }
       },
-      min: 'dataMin',
-      max:
-        isTimeIndexChart(state.timeIndex) && state.timeIndex !== StockChartInterval.FIVE_DAY
-          ? (options.xAxis[0] as any).data.length
-          : v => {
-              return v.max + Math.round((v.max - v.min) * 0.01)
-            },
-      axisPointer: {
-        z: 100,
-        label: {
-          show: index + 1 === state.secondaryIndicators.length
-        }
-      }
+      data: (options.xAxis[0] as any).data
     })
 
   Array.isArray(options.yAxis) &&
     options.yAxis.push({
-      scale: true,
+      ...defaultYAxis,
       gridIndex: index + 1,
-      max: v => {
-        return Math.round(v.max * 1.1)
-      },
-      position: 'right',
-      id: `secondary-${index}`,
-      axisLine: { onZero: false, show: false },
-      axisTick: {
-        show: false
-      },
-      axisPointer: {
-        label: {
-          show: false
-        }
-      },
-      axisLabel: { show: false },
-      splitLine: {
-        show: false
-      }
+      id: `secondary-${index}`
     })
 
   return options

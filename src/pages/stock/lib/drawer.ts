@@ -3,6 +3,7 @@ import type { CustomSeriesOption, LineSeriesOption } from 'echarts/charts'
 import type { KChartState } from './ctx'
 import echarts from '@/utils/echarts'
 import { colorUtil } from '@/utils/style'
+import type { ECharts } from 'echarts'
 
 type XAxis = number
 type YAxis = number
@@ -41,6 +42,10 @@ type DrawerFuncOptions<T = any> = {
    * 额外的数据
    */
   extra?: Record<string, any>
+  /**
+   *
+   */
+  chart?: ECharts
 }
 
 type DrawerFunc<T = any> = (options: ECOption, state: KChartState['state'][0], params: DrawerFuncOptions<T>) => ECOption
@@ -75,8 +80,13 @@ export const drawLine: DrawerFunc<[XAxis, number | null][]> = (options, _, { xAx
 export const drawPolyline: DrawerFunc<[XAxis, YAxis, XAxis, YAxis, LineType][]> = (
   options,
   _,
-  { xAxisIndex, yAxisIndex, data, extra }
+  { xAxisIndex, yAxisIndex, data, extra, chart }
 ) => {
+  const grid = Array.isArray(options.grid) ? options.grid : [options.grid]
+  const left = grid[0] ? (grid[0].left as number) : 0
+
+  const maxRight = left + (grid[0] ? (grid[0].width as number) : 0)
+
   const line: CustomSeriesOption = {
     xAxisIndex: xAxisIndex,
     yAxisIndex: yAxisIndex,
@@ -89,6 +99,27 @@ export const drawPolyline: DrawerFunc<[XAxis, YAxis, XAxis, YAxis, LineType][]> 
       const start = api.coord([api.value(0), api.value(1)])
       const end = api.coord([api.value(2), api.value(3)])
       const lineType = api.value(4) as LineType
+      console.log(end[0], maxRight)
+      if (maxRight > 0 && end[0] > maxRight) {
+        //计算y轴角度
+        const angle = Math.atan((end[1] - start[1]) / (end[0] - start[0]))
+        //计算 maxRight 对应的 y
+        const y = (maxRight - start[0]) * Math.tan(angle) + start[1]
+
+        end[0] = maxRight
+        end[1] = y
+      }
+
+      if (start[0] < left) {
+        //计算y轴角度
+        const angle = Math.atan((end[1] - start[1]) / (end[0] - start[0]))
+        //计算 maxRight 对应的 y
+        const y = (left - start[0]) * Math.tan(angle) + start[1]
+
+        start[0] = left
+        start[1] = y
+      }
+
       return {
         type: 'line',
         shape: {
@@ -348,6 +379,11 @@ type DrawPivotsShape = {
  * 绘制主图中枢区域
  */
 export const drawPivots: DrawerFunc<DrawPivotsShape[]> = (options, _, { xAxisIndex, yAxisIndex, data }) => {
+  const grid = Array.isArray(options.grid) ? options.grid : [options.grid]
+  const left = grid[0] ? (grid[0].left as number) : 0
+
+  const maxRight = left + (grid[0] ? (grid[0].width as number) : 0)
+
   const pivots: CustomSeriesOption = {
     xAxisIndex: xAxisIndex,
     yAxisIndex: yAxisIndex,
@@ -360,13 +396,24 @@ export const drawPivots: DrawerFunc<DrawPivotsShape[]> = (options, _, { xAxisInd
       const startPoint = [api.value(0), api.value(1)] as [XAxis, YAxis]
       const endPoint = [api.value(2), api.value(3)] as [XAxis, YAxis]
       const start = api.coord(startPoint)
+
+      if(start[0] < left){
+        start[0] = left
+      }
+
       const end = api.coord(endPoint)
-      const width = end[0] - start[0]
+      let width = end[0] - start[0]
       const height = end[1] - start[1]
       const bgColor = api.value(5) as string
       const [positive, text, extend, mark] = (api.value(4) as string).split('_')
       const color = api.value(6) as string
       const offset = extend === '1' ? 5 : 0
+
+      if(end[0] > maxRight){
+        width = maxRight - start[0]
+      }
+
+
 
       const group = {
         type: 'group',
@@ -393,17 +440,20 @@ export const drawPivots: DrawerFunc<DrawPivotsShape[]> = (options, _, { xAxisInd
         ]
       } as any
 
-      group.children.push({
-        type: 'text',
-        emphasisDisabled: true,
-        style: {
-          text: `${positive}${text}`,
-          fill: color,
-          font: 'bold 24px SimHei',
-          textVerticalAlign: 'bottom'
-        },
-        position: [end[0] + 4, start[1]]
-      })
+      if(end[0] + 28 < maxRight){
+        group.children.push({
+          type: 'text',
+          emphasisDisabled: true,
+          style: {
+            text: `${positive}${text}`,
+            fill: color,
+            font: 'bold 24px SimHei',
+            textVerticalAlign: 'bottom'
+          },
+          position: [end[0] + 4, start[1]]
+        })
+      }
+     
 
       if (mark) {
         group.children.push({

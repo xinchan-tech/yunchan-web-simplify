@@ -57,8 +57,9 @@ export const renderUtils = {
   /**
    * 布局策略
    * 1. 无副图 -> 主图占满, 底部留出24显示标签
-   * 2. 副图 <= 3 -> 副图占20% * 副图数量，底部留24标签
-   * 3. 副图 > 3 -> 副图占60%平均分，底部留24标签
+   * 2. 副图 <= 3 -> 副图占20% * 副图数量
+   * 3. 副图 > 3 -> 副图占60%平均分
+   * 4. x轴占24
    *
    * 左右留出50px显示标签
    */
@@ -117,6 +118,13 @@ export const renderUtils = {
         })
       })
     }
+
+    grid.push({
+      left: gridLeft,
+      top: height - X_AXIS_HEIGHT,
+      width: gridSize[0],
+      height: 0
+    })
 
     return grid
   },
