@@ -189,11 +189,11 @@ export const KChart = () => {
     })
   }
 
-  const setMainData: KChartContext['setMainData'] = useCallback(({ index, data }) => {
+  const setMainData: KChartContext['setMainData'] = useCallback(({ index, data , dateConvert}) => {
 
     setContext(d => {
       const chart = d.state[index ?? d.activeChartIndex]
-      chart.mainData = data ? { ...data, history: data.history.map(v => [dayjs(v[0]).valueOf().toString(), ...v.slice(1)]) } as any : {
+      chart.mainData = data ? dateConvert ? { ...data, history: data.history.map(v => [dayjs(v[0]).valueOf().toString(), ...v.slice(1)]) } as any: data : {
         history: [],
         coiling_data: undefined,
         md5: ''

@@ -45,6 +45,65 @@ const X_AXIS_TICK = 8
 type ChartState = ArrayItem<KChartState['state']>
 
 /**
+ * 初始化配置
+ */
+export const initOptions = (): ECOption => {
+  return {
+    tooltip: {
+      trigger: 'axis',
+      axisPointer: {
+        type: 'cross'
+      },
+      borderWidth: 1,
+      borderColor: '#29292a',
+      backgroundColor: '#202020',
+      padding: 10,
+      textStyle: {
+        color: '#fff'
+      },
+      formatter: (v: any) => {
+        const series = (v as any[]).find(_v => _v.seriesName === MAIN_CHART_NAME) as any
+        const data = series?.data as StockRawRecord
+   
+        const stock = stockUtils.toStock(data)
+  
+        const time = dayjs(stock.timestamp).format('MM-DD hh:mm w')
+   
+        const isUp = stockUtils.isUp(stock)
+        return `
+            <span class="text-xs">
+             ${time}<br/>
+            开盘&nbsp;&nbsp;${Decimal.create(stock.open).toFixed(3)}<br/>
+            最高&nbsp;&nbsp;${Decimal.create(stock.high).toFixed()}<br/>
+            最低&nbsp;&nbsp;${Decimal.create(stock.low).toFixed()}<br/>
+            收盘&nbsp;&nbsp;${Decimal.create(stock.close).toFixed()}<br/>
+            涨跌额&nbsp;&nbsp;${`<span class="${isUp ? 'text-stock-up' : 'text-stock-down'}">${isUp ? '+' : ''}${Decimal.create(stockUtils.getPercentAmount(stock)).toFixed(3)}</span>`}<br/>
+            涨跌幅&nbsp;&nbsp;${`<span class="${isUp ? 'text-stock-up' : 'text-stock-down'}">${isUp ? '+' : ''}${Decimal.create(stockUtils.getPercent(stock)).mul(100).toFixed(2)}%</span>`}<br/>
+            成交量&nbsp;&nbsp;${stock.volume}<br/>
+            </span>
+            `
+      },
+      position: (pos, _, __, ___, size) => {
+        const obj = {
+          top: 10
+        } as any
+        obj[['left', 'right'][+(pos[0] < size.viewSize[0] / 2)]] = 30
+        return obj
+      }
+    },
+    axisPointer: {
+      link: [
+        {
+          xAxisIndex: 'all'
+        }
+      ],
+      label: {}
+    },
+    toolbox: {},
+  }
+}
+
+/**
  * 主图通用配置
  */
 export const createOptions = (chart: ECharts): ECOption => ({
@@ -56,63 +115,6 @@ export const createOptions = (chart: ECharts): ECOption => ({
       height: '97%'
     }
   ],
-  tooltip: {
-    trigger: 'axis',
-    axisPointer: {
-      type: 'cross'
-    },
-    borderWidth: 1,
-    borderColor: '#29292a',
-    backgroundColor: '#202020',
-    padding: 10,
-    textStyle: {
-      color: '#fff'
-    },
-    formatter: (v: any) => {
-      const errData = (v as any[]).find(_v => _v.seriesName === MAIN_CHART_NAME)
-      const priceData = (v as any[]).find(_v => _v.seriesName === MAIN_CHART_NAME_VIRTUAL)
-      if (!errData) return ''
-      const data = errData?.seriesType === 'candlestick' ? errData?.value.slice(1) : (errData.value as StockRawRecord)
-
-      data[0] = dayjs(+priceData.value[0]).format('YYYY-MM-DD HH:mm:ss')
-      const stock = stockUtils.toStock(data)
-
-      const time = dayjs(stock.timestamp).format('MM-DD hh:mm w')
-      // let time = stock.time ? dayjs(stock.time).format('MM-DD hh:mm') + dateToWeek(stock.time, '周') : '-'
-      // if (stock.time?.slice(11) === '00:00:00') {
-      //   time = stock.time.slice(0, 11) + dateToWeek(stock.time, '周')
-      // }
-      const isUp = stockUtils.isUp(stock)
-      return `
-          <span class="text-xs">
-           ${time}<br/>
-          开盘&nbsp;&nbsp;${Decimal.create(stock.open).toFixed(3)}<br/>
-          最高&nbsp;&nbsp;${Decimal.create(stock.high).toFixed()}<br/>
-          最低&nbsp;&nbsp;${Decimal.create(stock.low).toFixed()}<br/>
-          收盘&nbsp;&nbsp;${Decimal.create(stock.close).toFixed()}<br/>
-          涨跌额&nbsp;&nbsp;${`<span class="${isUp ? 'text-stock-up' : 'text-stock-down'}">${isUp ? '+' : ''}${Decimal.create(stockUtils.getPercentAmount(stock)).toFixed(3)}</span>`}<br/>
-          涨跌幅&nbsp;&nbsp;${`<span class="${isUp ? 'text-stock-up' : 'text-stock-down'}">${isUp ? '+' : ''}${Decimal.create(stockUtils.getPercent(stock)).mul(100).toFixed(2)}%</span>`}<br/>
-          成交量&nbsp;&nbsp;${stock.volume}<br/>
-          </span>
-          `
-    },
-    position: (pos, _, __, ___, size) => {
-      const obj = {
-        top: 10
-      } as any
-      obj[['left', 'right'][+(pos[0] < size.viewSize[0] / 2)]] = 30
-      return obj
-    }
-  },
-  axisPointer: {
-    link: [
-      {
-        xAxisIndex: 'all'
-      }
-    ],
-    label: {}
-  },
-  toolbox: {},
   xAxis: [
     {
       type: 'category',
@@ -139,6 +141,7 @@ export const createOptions = (chart: ECharts): ECOption => ({
       },
       min: 'dataMin',
       max: v => {
+        console.log( v.max + Math.round((v.max - v.min) * 0.01), 'main-x')
         return v.max + Math.round((v.max - v.min) * 0.01)
       },
       splitLine: {
@@ -341,6 +344,8 @@ const defaultXAxis: XAXisOption = {
   },
   min: 'dataMin',
   max: (v: any) => {
+
+    console.log( v.max + Math.round((v.max - v.min) * 0.01), 'secondary-x')
     return v.max + Math.round((v.max - v.min) * 0.01)
   }
 }
@@ -570,10 +575,11 @@ export const renderMainChart: ChartRender = (options, state) => {
       borderColor: upColor,
       borderColor0: downColor
     }
+
     mainSeries.data = data
     mainSeries.encode = {
-      x: [1],
-      y: [2, 3, 5, 4]
+      x: [0],
+      y: [1, 2, 4, 3]
     }
   } else {
     let color = '#4784cf'

@@ -152,7 +152,7 @@ export interface KChartContext {
   /**
    * 设置主图数据
    */
-  setMainData: (params: { index?: number; data?: Awaited<ReturnType<typeof getStockChart>> }) => void
+  setMainData: (params: { index?: number; data?: Awaited<ReturnType<typeof getStockChart>>, dateConvert?: boolean }) => void
 
   /**
    * 设置指标数据，主图和附图的指标数据都可以设置

@@ -11,7 +11,10 @@ declare module 'echarts' {
         left?: 'price' | 'percent',
         right: 'price' | 'percent'
       },
-      mainData: any[]
+      mainData: any[],
+      toolTip: {
+        dataIndex: number
+      }
     }
   }
 }

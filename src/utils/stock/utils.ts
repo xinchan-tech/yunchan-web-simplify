@@ -65,6 +65,20 @@ export const stockUtils = {
     ]
   },
 
+  toShortRawRecord(data: Stock): StockRawRecord {
+    const dateStr = dayjs(data.timestamp).tz('America/New_York').format('YYYY-MM-DD HH:mm:ss')
+    return [
+      dateStr,
+      data.open,
+      data.close,
+      data.high,
+      data.low,
+      data.volume,
+      data.turnover,
+      data.prevClose
+    ]
+  },
+
   intervalToStr(interval: number) {
     switch (interval) {
       case -1:
