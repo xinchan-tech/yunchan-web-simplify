@@ -1,4 +1,4 @@
-import { useConfig } from '@/store'
+import { useConfig, useTime } from '@/store'
 import dayjs, { type Dayjs } from 'dayjs'
 import type { StockTrading } from "./stock"
 
@@ -90,7 +90,7 @@ export const getTradingPeriod = (trading: StockTrading, date?: string | Dayjs) =
       break
   }
 
-  const day = date ? dayjs.isDayjs(date) ? date : dayjs(date) : dayjs()
+  const day = date ? dayjs.isDayjs(date) ? date : dayjs(date) : dayjs(useTime.getState().getCurrentUsTime())
   const start = day.set('hour', startTime[0]).set('minute', startTime[1]).set('second', 0)
   const end = day.set('hour', endTime[0]).set('minute', endTime[1]).set('second', 0)
   return Array.from({ length: end.diff(start, 'minute') }, (_, i) => {

@@ -1,8 +1,9 @@
-import type {EChartsType as EEChartsType} from 'echarts'
+import type { StockChartInterval } from "@/api"
+import type {EChartsType as EEChartsType} from 'echarts/core'
 
-declare module 'echarts' {
+declare module 'echarts/core' {
   interface EChartsType extends EEChartsType {
-    meta?: {
+    meta: {
       dataZoom: {
         start: number
         end: number
@@ -12,9 +13,7 @@ declare module 'echarts' {
         right: 'price' | 'percent'
       },
       mainData: any[],
-      toolTip: {
-        dataIndex: number
-      }
+      timeIndex: StockChartInterval
     }
   }
 }

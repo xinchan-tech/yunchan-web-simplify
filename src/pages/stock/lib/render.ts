@@ -32,7 +32,7 @@ import {
 import { renderUtils } from './utils'
 import type { GraphicComponentOption } from 'echarts/components'
 import type { XAXisOption, YAXisOption } from 'echarts/types/dist/shared'
-import type { ECharts } from "echarts"
+import type { EChartsType } from 'echarts/core'
 
 const MAIN_CHART_NAME = 'kChart'
 const MAIN_CHART_NAME_VIRTUAL = 'kChart-virtual'
@@ -64,11 +64,11 @@ export const initOptions = (): ECOption => {
       formatter: (v: any) => {
         const series = (v as any[]).find(_v => _v.seriesName === MAIN_CHART_NAME) as any
         const data = series?.data as StockRawRecord
-   
-        const stock = stockUtils.toStock(data)
   
+        const stock = stockUtils.toStock(data)
+
         const time = dayjs(stock.timestamp).format('MM-DD hh:mm w')
-   
+        
         const isUp = stockUtils.isUp(stock)
         return `
             <span class="text-xs">
@@ -99,14 +99,14 @@ export const initOptions = (): ECOption => {
       ],
       label: {}
     },
-    toolbox: {},
+    toolbox: {}
   }
 }
 
 /**
  * 主图通用配置
  */
-export const createOptions = (chart: ECharts): ECOption => ({
+export const createOptions = (chart: EChartsType): ECOption => ({
   animation: false,
   grid: [
     {
@@ -128,7 +128,7 @@ export const createOptions = (chart: ECharts): ECOption => ({
       axisLabel: {
         show: false,
         interval: (index: number) => {
-          const scale = chart.getModel().getComponent('xAxis', 0).axis.scale.getExtent()
+          const scale = renderUtils.getScaledZoom(chart, 0)
 
           const offset = Math.round((scale[1] - scale[0]) / X_AXIS_TICK)
 
@@ -138,11 +138,6 @@ export const createOptions = (chart: ECharts): ECOption => ({
 
           return (index - scale[0]) % offset === 0
         }
-      },
-      min: 'dataMin',
-      max: v => {
-        console.log( v.max + Math.round((v.max - v.min) * 0.01), 'main-x')
-        return v.max + Math.round((v.max - v.min) * 0.01)
       },
       splitLine: {
         show: true,
@@ -327,7 +322,7 @@ const defaultXAxis: XAXisOption = {
       color: LINE_COLOR
     }
   },
- 
+
   axisTick: {
     show: false
   },
@@ -341,12 +336,6 @@ const defaultXAxis: XAXisOption = {
     label: {
       show: false
     }
-  },
-  min: 'dataMin',
-  max: (v: any) => {
-
-    console.log( v.max + Math.round((v.max - v.min) * 0.01), 'secondary-x')
-    return v.max + Math.round((v.max - v.min) * 0.01)
   }
 }
 
@@ -387,7 +376,7 @@ type ChartRender = (
 /**
  * 渲染图表
  */
-export const renderChart = (chart: echarts.ECharts): ECOption => {
+export const renderChart = (chart: EChartsType): ECOption => {
   const _options = createOptions(chart)
 
   return _options
@@ -396,7 +385,7 @@ export const renderChart = (chart: echarts.ECharts): ECOption => {
 /**
  * 渲染布局
  */
-export const renderGrid = (options: ECOption, state: ChartState, size: [number, number], chart: echarts.ECharts) => {
+export const renderGrid = (options: ECOption, state: ChartState, size: [number, number], chart: EChartsType) => {
   /**
    * 布局策略
    * 1. 无副图 -> 主图占满, 底部留出24显示标签
@@ -416,30 +405,10 @@ export const renderGrid = (options: ECOption, state: ChartState, size: [number, 
     options.dataZoom = []
   }
 
-  if (Array.isArray(options.xAxis)) {
-    const xAxis = options.xAxis?.find(x => x.id === 'main-x')
-    if (xAxis) {
-      if (isTimeIndexChart(state.timeIndex) && state.timeIndex !== StockChartInterval.FIVE_DAY) {
-        ;(xAxis as any).data = getTradingPeriod(
-          state.timeIndex === StockChartInterval.PRE_MARKET
-            ? 'preMarket'
-            : state.timeIndex === StockChartInterval.AFTER_HOURS
-              ? 'afterHours'
-              : 'intraDay',
-          dayjs(+state.mainData.history[0]?.[0])
-        ).map(item => dayjs(item).valueOf().toString())
-      } else {
-        ;(xAxis as any).data = state.mainData.history.map(item => item[0])
-      }
-    }
+  const mainXAxis = renderUtils.getXAxisIndex(options, 0)
+  if (mainXAxis) {
+    ;(mainXAxis as any).data = renderUtils.calcXAxisData(state.mainData.history, state.timeIndex)
   }
-
-  // if (state.yAxis.left) {
-  //   const left = yAxis[0]
-  //   if (left) {
-  //     left.show = true
-  //   }
-  // }
 
   const { getStockColor } = useConfig.getState()
 
@@ -456,7 +425,6 @@ export const renderGrid = (options: ECOption, state: ChartState, size: [number, 
     renderSecondaryAxis(options, state, i, chart)
   }
 
-
   /**
    * 设置底部X轴
    */
@@ -469,30 +437,32 @@ export const renderGrid = (options: ECOption, state: ChartState, size: [number, 
       id: 'xAxis-x',
       axisLabel: {
         show: true,
+        alignMinLabel: 'right',
         color: '#fff',
-        formatter: (v: any, index: number) => {
+        formatter: (v: any) => {
           if (!v) return ''
 
-          const scale = chart.getModel().getComponent('xAxis', 0).axis.scale.getExtent()
+          const scale = renderUtils.getScaledZoom(chart, 0)
           const startDay = chart.meta?.mainData?.[scale[0]]?.[0]
           //获取时间跨度
           const time = dayjs(+v).diff(+startDay, 'day')
 
-          if(time < 1){
+
+          if (time < 1) {
             return dayjs(+v).format('hh:mm')
           }
 
-          if(time < 365){
+          if (time < 365) {
             return dayjs(+v).format('MM-DD')
           }
 
           return dayjs(+v).format('YY-MM-DD')
         },
         interval: (index: number) => {
-          if(isTimeIndexChart(state.timeIndex) && state.timeIndex !== StockChartInterval.FIVE_DAY){
+          if (isTimeIndexChart(state.timeIndex) && state.timeIndex !== StockChartInterval.FIVE_DAY) {
             return index % 15 === 0
           }
-          const scale = chart.getModel().getComponent('xAxis', 0).axis.scale.getExtent()
+          const scale = renderUtils.getScaledZoom(chart, 0)
 
           const offset = Math.round((scale[1] - scale[0]) / X_AXIS_TICK)
 
@@ -502,7 +472,6 @@ export const renderGrid = (options: ECOption, state: ChartState, size: [number, 
 
           return (index - scale[0]) % offset === 0
         }
-         
       },
       axisPointer: {
         label: {
@@ -513,10 +482,10 @@ export const renderGrid = (options: ECOption, state: ChartState, size: [number, 
               if (isTimeIndexChart(state.timeIndex) && state.timeIndex !== StockChartInterval.FIVE_DAY) {
                 time = dayjs(+params.value).format('YYYY-MM-DD hh:mm')
               }
-      
+
               return time
             }
-      
+
             return Decimal.create(params.value as string).toFixed(3)
           }
         }
@@ -639,6 +608,7 @@ export const renderMainChart: ChartRender = (options, state) => {
   virtualLine.color = 'transparent'
   virtualLine.symbol = 'none'
   virtualLine.itemStyle = {}
+  virtualLine.areaStyle = {}
 
   virtualLine.markLine = {
     symbol: ['none', 'none'],
@@ -693,9 +663,10 @@ export const renderMarkLine: ChartRender = (options, state) => {
   const mainSeries = (options.series as any[]).find(s => s.name === MAIN_CHART_NAME)!
 
   const { getStockColor } = useConfig.getState()
-  const lastData = StockRecord.of('', '', data[data.length - 1])
+  const lastData = stockUtils.toStock(data[data.length - 1])
 
-  const lineColor = getStockColor(lastData.isUp, 'hex')
+  const lineColor = getStockColor(stockUtils.isUp(lastData), 'hex')
+  const grid = renderUtils.getGridIndex(options, 0)
 
   mainSeries.markLine = {
     symbol: ['none', 'none'],
@@ -720,7 +691,7 @@ export const renderMarkLine: ChartRender = (options, state) => {
         },
         {
           yAxis: data[data.length - 1][2] ?? 0,
-          x: '96%'
+          x: ((grid!.width ?? 0) as number) + ((grid!.left ?? 0) as number)
         }
       ]
     ]
@@ -730,7 +701,7 @@ export const renderMarkLine: ChartRender = (options, state) => {
 /**
  * 主图缠论
  */
-export const renderMainCoiling = (options: ECOption, state: ChartState, chart: echarts.ECharts) => {
+export const renderMainCoiling = (options: ECOption, state: ChartState, chart: EChartsType) => {
   if (state.mainCoiling.length === 0) return options
   const points = calcCoilingPoints(state.mainData.history, state.mainData.coiling_data)
   const pivots = calcCoilingPivots(state.mainData.coiling_data, points)
@@ -748,7 +719,13 @@ export const renderMainCoiling = (options: ECOption, state: ChartState, chart: e
           index === points.length - 2 && state.mainData.coiling_data?.status !== 1 ? LineType.DASH : LineType.SOLID
         ])
       })
-      drawPolyline(options, {} as any, { xAxisIndex: 0, yAxisIndex: 1, data: p, extra: { color: '#ffffff' } , chart: chart})
+      drawPolyline(options, {} as any, {
+        xAxisIndex: 0,
+        yAxisIndex: 1,
+        data: p,
+        extra: { color: '#ffffff' },
+        chart: chart
+      })
     } else if (coiling === CoilingIndicatorId.PIVOT) {
       drawPivots(options, {} as any, { xAxisIndex: 0, yAxisIndex: 1, data: expands as any })
       drawPivots(options, {} as any, { xAxisIndex: 0, yAxisIndex: 1, data: pivots as any })
@@ -1131,7 +1108,7 @@ export const renderSecondaryLocalIndicators = (options: ECOption, indicators: In
 /**
  * 渲染坐标轴
  */
-const renderSecondaryAxis = (options: ECOption, _: any, index: number, chart: echarts.ECharts) => {
+const renderSecondaryAxis = (options: ECOption, _: any, index: number, chart: EChartsType) => {
   Array.isArray(options.xAxis) &&
     options.xAxis.push({
       ...defaultXAxis,
@@ -1169,6 +1146,7 @@ const renderSecondaryAxis = (options: ECOption, _: any, index: number, chart: ec
  * 只有在盘前盘中盘后显示
  */
 export const renderWatermark = (options: ECOption, timeIndex: ChartState['timeIndex']) => {
+  
   if (!isTimeIndexChart(timeIndex)) return
 
   if (timeIndex === StockChartInterval.FIVE_DAY) return

@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useKChartContext } from "../lib"
 import { useIndicator, useTime } from "@/store"
-import { useQueries, useQuery, useQueryClient } from "@tanstack/react-query"
-import { getStockChart, getStockIndicatorData, StockChartInterval } from "@/api"
-import { useLatest, useMount, useUnmount, useUpdateEffect } from "ahooks"
+import { useQueries, useQuery } from "@tanstack/react-query"
+import { getStockChart, getStockIndicatorData } from "@/api"
+import { useMount, useUnmount, useUpdateEffect } from "ahooks"
 import { useDomSize, useStockBarSubscribe } from "@/hooks"
-import { initOptions, renderAxisLine, renderChart, renderGrid, renderMainChart, renderMainCoiling, renderMainIndicators, renderMarkLine, renderOverlay, renderOverlayMark, renderSecondary, renderSecondaryLocalIndicators, renderWatermark, renderZoom } from "../lib/render"
+import { initOptions, renderChart, renderGrid, renderMainChart, renderMainCoiling, renderMainIndicators, renderMarkLine, renderOverlay, renderOverlayMark, renderSecondary, renderSecondaryLocalIndicators, renderWatermark, renderZoom } from "../lib/render"
 import { SecondaryIndicator } from "./secondary-indicator"
 import { renderUtils } from "../lib/utils"
 import { StockSelect } from "@/components"
@@ -13,8 +13,8 @@ import { cn } from "@/utils/style"
 import { TimeIndexMenu } from "./time-index"
 import echarts from "@/utils/echarts"
 import { stockUtils, type StockSubscribeHandler } from "@/utils/stock"
-import { series, throttle } from "radash"
 import dayjs from "dayjs"
+import type { EChartsType } from 'echarts/core';
 
 
 interface MainChartProps {
@@ -23,24 +23,11 @@ interface MainChartProps {
 
 export const MainChart = (props: MainChartProps) => {
   const [size, dom] = useDomSize<HTMLDivElement>()
-  const chart = useRef<echarts.ECharts>()
-  const queryClient = useQueryClient()
-  const lastIndex = useRef<number>()
+  const chart = useRef<EChartsType>()
 
   useMount(() => {
-    chart.current = echarts.init(dom.current) as unknown as echarts.ECharts
-    chart.current.meta = {
-      tooTip: {
-        dataIndex: undefined
-      }
-    }
-    chart.current.on('mouseover', (e) => {
-      lastIndex.current = e.dataIndex
-    })
-
-    chart.current.on('mouseout', (e) => {
-      lastIndex.current = undefined
-    })
+    chart.current = echarts.init(dom.current)
+    chart.current.meta = {} as any
 
     chart.current.setOption({
       ...initOptions()
@@ -48,8 +35,6 @@ export const MainChart = (props: MainChartProps) => {
   })
 
   useUnmount(() => {
-    chart.current?.off('mouseover')
-    chart.current?.off('mouseout')
     chart.current?.dispose()
   })
 
@@ -195,23 +180,24 @@ export const MainChart = (props: MainChartProps) => {
   }, [size])
 
   useEffect(() => {
-    setMainData({ index: props.index, data: query.data })
+    setMainData({ index: props.index, data: query.data, dateConvert: true })
   }, [query.data, props.index, setMainData])
 
   const render = () => {
     if (!chart.current) return
 
-    chart.current.meta!.yAxis = {
+    chart.current.meta.yAxis = {
       left: state.yAxis.left,
       right: state.yAxis.right
     }
 
+    chart.current.meta.timeIndex = state.timeIndex
+
     // 优化卡顿，不要删除
-    chart.current.meta!.mainData = state.mainData.history
+    chart.current.meta.mainData = state.mainData.history
 
     const [start, end] = chart.current.getOption() ? renderUtils.getZoom(chart.current.getOption()) : [90, 100]
 
-    // chart.current?.clear()
 
     const _options = renderChart(chart.current)
     renderGrid(_options, state, [chart.current.getWidth(), chart.current.getHeight()], chart.current)
@@ -234,7 +220,7 @@ export const MainChart = (props: MainChartProps) => {
      * TODO: 附图指标x轴max需要和主图一致
      * 盘中数据实时更新，附图指标会落后几个数据，max根据数据量计算会导致x轴对不齐
      */
-    chart.current.setOption(_options, { replaceMerge: ['series', 'grid', 'xAxis', 'yAxis']})
+    chart.current.setOption(_options, { replaceMerge: ['series', 'grid', 'xAxis', 'yAxis', 'dataZoom', ]})
     console.log(chart.current.getOption())
   }
 
@@ -242,7 +228,7 @@ export const MainChart = (props: MainChartProps) => {
     render()
 
     
-  }, [state])
+  }, [state, startTime])
 
   const onChangeSecondaryIndicators = async (params: { value: string, index: number, type: string }) => {
 

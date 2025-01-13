@@ -3,12 +3,17 @@ import type { ECOption } from '@/utils/echarts'
 import dayjs, { type Dayjs } from 'dayjs'
 import type { ECBasicOption } from 'echarts/types/dist/shared'
 import type { KChartContext } from './ctx'
+import type { EChartsType } from "echarts/core"
+import { getTradingPeriod } from "@/utils/date"
+import { stockUtils } from "@/utils/stock"
 
 export const renderUtils = {
   getXAxisIndex: (options: ECOption, index: number) => {
     if (Array.isArray(options.xAxis)) {
       return options.xAxis[index]
     }
+
+    return options.xAxis
   },
   getYAxisIndex: (options: ECOption, index: number) => {
     if (Array.isArray(options.yAxis)) {
@@ -25,6 +30,13 @@ export const renderUtils = {
       return options.grid[index]
     }
   },
+
+  getGridSize: (chart: EChartsType, index = 0) => {
+    const grid = chart.getOption().grid
+
+    console.log(grid)
+  },
+
   getTooltipIndex: (options: ECOption, index: number) => {
     if (Array.isArray(options.tooltip)) {
       return options.tooltip[index]
@@ -210,5 +222,77 @@ export const renderUtils = {
       default:
         return false
     }
+  },
+
+  /**
+   * 获取zoom刻度坐标
+   */
+  getScaledZoom: (chart: EChartsType, index = 0): [number, number] => {
+    // @ts-ignore
+    return chart.getModel().getComponent('xAxis', index).axis.scale.getExtent()
+  },
+
+  /**
+   * 获取刻度间隔
+   */
+  getIntervalScale: (interval: StockChartInterval): number => {
+    switch(interval) {
+      case StockChartInterval.PRE_MARKET:
+      case StockChartInterval.INTRA_DAY:
+      case StockChartInterval.AFTER_HOURS:
+      case StockChartInterval.ONE_MIN:
+        return 60 * 1000
+      case StockChartInterval.TWO_MIN:
+        return 2 * 60 * 1000
+      case StockChartInterval.FIVE_MIN:
+        return 5 * 60 * 1000
+      case StockChartInterval.FIFTEEN_MIN:
+        return 15 * 60 * 1000
+      case StockChartInterval.THIRTY_MIN:
+        return 30 * 60 * 1000
+      case StockChartInterval.FORTY_FIVE_MIN:
+        return 45 * 60 * 1000
+      case StockChartInterval.ONE_HOUR:
+        return 60 * 60 * 1000
+      case StockChartInterval.TWO_HOUR:
+        return 2 * 60 * 60 * 1000
+      case StockChartInterval.THREE_HOUR:
+        return 3 * 60 * 60 * 1000
+      case StockChartInterval.FOUR_HOUR:
+        return 4 * 60 * 60 * 1000
+      case StockChartInterval.DAY:
+        return 24 * 60 * 60 * 1000
+      case StockChartInterval.WEEK:
+        return 7 * 24 * 60 * 60 * 1000
+      case StockChartInterval.MONTH:
+        return 30 * 24 * 60 * 60 * 1000
+      case StockChartInterval.QUARTER:
+        return 90 * 24 * 60 * 60 * 1000
+      case StockChartInterval.YEAR:
+        return 365 * 24 * 60 * 60 * 1000
+      default:
+        return 0
+    }
+  },
+
+  calcXAxisData: (data: any[], interval: StockChartInterval) => {
+    if(data.length === 0){
+      return []
+    }
+    if([StockChartInterval.PRE_MARKET, StockChartInterval.INTRA_DAY, StockChartInterval.AFTER_HOURS].includes(interval)) {
+      return getTradingPeriod(stockUtils.intervalToTrading(interval)!, dayjs(+data[0][0])).map(item => dayjs(item).valueOf())
+    }
+
+ 
+    const extLen = Math.round(data.length * 0.01)
+    
+    const startTime = data[data.length - 1][0]
+    const scale = renderUtils.getIntervalScale(interval)
+    const xAxisData = Array.from({ length: extLen }, (_, i) => {
+      const time = dayjs(startTime).add((i + 1) * scale, 'millisecond')
+      return time.valueOf()
+    })
+    console.log()
+    return [...data.map(o => o[0]), ...xAxisData]
   }
 }

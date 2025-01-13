@@ -1,8 +1,8 @@
-import type { StockExtendResultMap, StockRawRecord } from '@/api'
+import { StockChartInterval, type StockExtendResultMap, type StockRawRecord } from '@/api'
 import dayjs from 'dayjs'
 import Decimal from 'decimal.js'
 import { type Stock, StockRecord, type StockResultRecord, type StockTrading } from './stock'
-import { StockSubscribeHandler } from "./subscribe"
+import type { StockSubscribeHandler } from "./subscribe"
 
 export const stockUtils = {
   toStockRecord(data: StockResultRecord) {
@@ -27,7 +27,7 @@ export const stockUtils = {
       high: data[3],
       low: data[4],
       volume: data[5],
-      turnover: data[6],
+      turnover: data[6] ?  data[6] * 10000 : data[6],
       extend: opts?.extend
     } as Stock
 
@@ -127,6 +127,19 @@ export const stockUtils = {
         return '年线'
       default:
         return '-'
+    }
+  },
+
+  intervalToTrading(interval: StockChartInterval): StockTrading | undefined{
+    switch(interval) {
+      case StockChartInterval.PRE_MARKET:
+        return 'preMarket'  
+      case StockChartInterval.INTRA_DAY:
+        return 'intraDay'
+      case StockChartInterval.AFTER_HOURS:
+        return 'afterHours'
+      default:
+        return undefined
     }
   },
 
