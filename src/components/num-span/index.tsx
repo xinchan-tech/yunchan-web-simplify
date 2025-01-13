@@ -98,6 +98,9 @@ export const NumSpan = ({ isPositive, block, percent, value, symbol, className, 
       if (!priceBlinkTimer.current) {
 
         if (lastValue.current === undefined || !value) return
+
+        if(lastValue.current === value) return
+
         const randomDelay = Math.random() * 500
 
         priceBlinkTimer.current = window.setTimeout(() => {
@@ -168,6 +171,7 @@ export const NumSpanSubscribe = ({ value, code, isPositive, field,...props }: Nu
     const unSubscribe = stockSubscribe.onQuoteTopic(code, (data) => {
      
       let v = isFunction(fieldFn.current) ? fieldFn.current(data.record) : get(data.record, fieldFn.current) 
+      
       if(props.percent){
         v = (v as number) * 100
       }
@@ -220,6 +224,7 @@ export const SubscribeSpan = ({value, symbol, field, positive, format, ...props}
       
       setInnerValue(v as number | string | undefined)
       if(isPos.current !== undefined){
+          
           spanRef.current?.classList.remove('text-stock-up')
           spanRef.current?.classList.remove('text-stock-down')
 

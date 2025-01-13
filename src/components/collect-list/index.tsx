@@ -138,9 +138,11 @@ const StockListItem = ({ stock, onCollectChange, children }: PropsWithChildren<S
   const [value, setValue] = usePropValue(stock.price)
 
   const updateHandler = useCallback<StockSubscribeHandler<'quote'>>((data) => {
-    setValue(data.record.close)
-  }, [setValue])
-
+    if(data.topic === stock.code){
+      setValue(data.record.close)
+    }
+  }, [setValue, stock.code])
+  
   useStockQuoteSubscribe([stock.code], updateHandler)
 
   useEffect(() => {
