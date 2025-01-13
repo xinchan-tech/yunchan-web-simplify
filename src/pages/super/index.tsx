@@ -1,23 +1,22 @@
-import { cn } from "@/utils/style"
-import { useRef, useState } from "react"
-import FirstStep from "./components/first-step"
-import KLineType from "./components/k-line-step"
-import { Button, Drawer, DrawerClose, DrawerContent, DrawerFooter, DrawerHeader, JknIcon, ScrollArea } from "@/components"
 import { getStockCategoryData, getStockSelection } from "@/api"
-import { useQuery } from "@tanstack/react-query"
-import { SuperStockContext } from "./ctx"
-import MethodStep from "./components/method-step"
-import FactorStep from "./components/factor-step"
-import MarketCap from "./components/market-cap"
-import BubbleStep from "./components/bubble-step"
-import FinanceStep from "./components/finance-step"
-import PeriodStep from "./components/period-step"
-import CompareStep from "./components/compare-step"
+import { Button, JknIcon, ScrollArea } from "@/components"
 import { useToast } from "@/hooks"
+import { cn } from "@/utils/style"
+import { useQuery } from "@tanstack/react-query"
 import { useBoolean } from "ahooks"
 import to from "await-to-js"
-import { VisuallyHidden } from "@radix-ui/react-visually-hidden"
+import { useRef, useState } from "react"
+import BubbleStep from "./components/bubble-step"
+import CompareStep from "./components/compare-step"
+import FactorStep from "./components/factor-step"
+import FinanceStep from "./components/finance-step"
+import FirstStep from "./components/first-step"
+import KLineType from "./components/k-line-step"
+import MarketCap from "./components/market-cap"
+import MethodStep from "./components/method-step"
+import PeriodStep from "./components/period-step"
 import StockTable from "./components/stock-table"
+import { SuperStockContext } from "./ctx"
 
 enum SuperStockType {
   Tech = 0,
@@ -35,13 +34,12 @@ const SuperStock = () => {
   const [type, setType] = useState<SuperStockType>(SuperStockType.Tech)
   const registerRef = useRef<StepRegister>({})
   const [loading, { setFalse, setTrue }] = useBoolean()
-  const [drawerOpen, { setFalse: setDrawerClose, setTrue: setDrawerOpen }] = useBoolean()
   const { data: category } = useQuery({
     queryKey: [getStockCategoryData.cacheKey],
     queryFn: () => getStockCategoryData(),
     placeholderData: {}
   })
-  const [data, setData] = useState<Awaited<ReturnType<typeof getStockSelection>>>([])
+  const [data, setData] = useState<Awaited<ReturnType<typeof getStockSelection>>>(JSON.parse(sessionStorage.getItem('stock-picker-list') ?? '[]'))
   const register: SuperStockContext['register'] = (field, step, getData, validate) => {
     for (const key of Object.keys(registerRef.current)) {
       if (registerRef.current[key].step === step) {
@@ -51,6 +49,8 @@ const SuperStock = () => {
 
     registerRef.current[field] = { step, getData, validate }
   }
+
+  const [result, setResult] = useState<{ hasResult: boolean }>({ hasResult: Boolean(sessionStorage.getItem('stock-picker-has')) })
 
   const unregister: SuperStockContext['unregister'] = (field) => {
     delete registerRef.current[field]
@@ -87,101 +87,95 @@ const SuperStock = () => {
       return
     }
     setData(r)
-    setDrawerOpen()
+    sessionStorage.setItem('stock-picker-has', '1')
+    sessionStorage.setItem('stock-picker-list', JSON.stringify(r))
+
+    setResult({ hasResult: true })
   }
 
-  const onUpdate = async () => {
-    const data = Object.keys(registerRef.current).reduce((acc, cur) => {
-      acc[cur] = registerRef.current[cur].getData()
-      return acc
-    }, {} as Record<string, unknown>) as Parameters<typeof getStockSelection>[0]
+  const onResetStockPick = () => {
+    sessionStorage.removeItem('stock-picker-has')
+    sessionStorage.removeItem('stock-picker-list')
 
-    data.tab_page = type
-
-    const [err, r] = await to(getStockSelection(data))
-
-    if (!err) {
-      setData(r)
-    }
-
+    setResult({ hasResult: false })
   }
 
   return (
     <SuperStockContext.Provider value={{ data: category as unknown as SuperStockContext['data'], register, unregister }} >
-      <ScrollArea className="bg-muted h-full">
-        <div className="w-[1366px] mx-auto ">
-          <div className="p-12 box-border ">
-            <div className="flex justify-center text-secondary mb-12">
-              <SuperStockTypeTab type={type} onChange={setType} />
+      {
+        result.hasResult ? (
+          <div className="h-full flex flex-col">
+            <div className="flex-1 overflow-hidden">
+              <StockTable data={data} />
             </div>
-            {
-              type === SuperStockType.Super && (
-                <div className="mt-8 bg-accent py-1 text-center text-sm">
-                  技术面
-                </div>
-              )
-            }
-            <div>
-              <FirstStep />
-            </div>
-            {
-              (type === SuperStockType.Tech || type === SuperStockType.Super) && (
-                <>
-                  <KLineType />
-                  <MethodStep />
-                  <FactorStep />
-                </>
-              )
-            }
-            {
-              type === SuperStockType.Super && (
-                <div className="mt-8 bg-accent py-1 text-center text-sm">
-                  基本面
-                </div>
-              )
-            }
-            {
-              (type === SuperStockType.Basic || type === SuperStockType.Super) && (
-                <>
-                  <MarketCap />
-                  <BubbleStep />
-                  <FinanceStep />
-                  <PeriodStep />
-                  <CompareStep />
-                </>
-              )
-            }
-            <div className="text-center mt-12">
-              <Button className="w-24" onClick={onSubmit}>确定</Button>
+            <div className="flex flex-shrink-0 relative items-center justify-center pb-4">
+              <div className="absolute left-2 top-3 text-sm">
+                选股结果：当前共选出 {data.length} 只股票
+              </div>
+              <Button className="w-32 mx-auto" onClick={onResetStockPick}>重新选股</Button>
             </div>
           </div>
-          {
-            loading && (<div className="fixed left-0 right-0 bottom-0 top-0 bg-background/45 flex items-center justify-center">
-              <div className="w-60 bg-background/95 p-12 flex flex-col items-center">
-                <JknIcon className="w-48 h-48" name="load" />
-                <div className="text-center mt-4">拼命选股中</div>
+        ) : (
+          <ScrollArea className="bg-muted h-full">
+            <div className="w-[1366px] mx-auto ">
+              <div className="p-12 box-border ">
+                <div className="flex justify-center text-secondary mb-12">
+                  <SuperStockTypeTab type={type} onChange={setType} />
+                </div>
+                {
+                  type === SuperStockType.Super && (
+                    <div className="mt-8 bg-accent py-1 text-center text-sm">
+                      技术面
+                    </div>
+                  )
+                }
+                <div>
+                  <FirstStep />
+                </div>
+                {
+                  (type === SuperStockType.Tech || type === SuperStockType.Super) && (
+                    <>
+                      <KLineType />
+                      <MethodStep />
+                      <FactorStep />
+                    </>
+                  )
+                }
+                {
+                  type === SuperStockType.Super && (
+                    <div className="mt-8 bg-accent py-1 text-center text-sm">
+                      基本面
+                    </div>
+                  )
+                }
+                {
+                  (type === SuperStockType.Basic || type === SuperStockType.Super) && (
+                    <>
+                      <MarketCap />
+                      <BubbleStep />
+                      <FinanceStep />
+                      <PeriodStep />
+                      <CompareStep />
+                    </>
+                  )
+                }
+                <div className="text-center mt-12">
+                  <Button className="w-24" onClick={onSubmit}>确定</Button>
+                </div>
               </div>
+              {
+                loading && (<div className="fixed left-0 right-0 bottom-0 top-0 bg-background/45 flex items-center justify-center">
+                  <div className="w-60 bg-background/95 p-12 flex flex-col items-center">
+                    <JknIcon className="w-48 h-48" name="load" />
+                    <div className="text-center mt-4">拼命选股中</div>
+                  </div>
+                </div>
+                )
+              }
             </div>
-            )
-          }
-        </div>
-      </ScrollArea>
-      <Drawer open={drawerOpen} onOpenChange={v => !v && setDrawerClose()}>
-        <DrawerContent className="h-[95vh]">
-          <VisuallyHidden>
-            <DrawerHeader className="text-left">
-            </DrawerHeader>
-          </VisuallyHidden>
-          <ScrollArea className="h-full overflow-hidden">
-            <StockTable data={data} onUpdate={onUpdate} />
           </ScrollArea>
-          <DrawerFooter className="pt-2">
-            <DrawerClose asChild>
-              <Button className="w-32 mx-auto">重新选股</Button>
-            </DrawerClose>
-          </DrawerFooter>
-        </DrawerContent>
-      </Drawer>
+        )
+      }
     </SuperStockContext.Provider >
   )
 }

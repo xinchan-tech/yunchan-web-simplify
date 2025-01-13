@@ -39,11 +39,11 @@ export const StockBar = () => {
           <span key={item.code}>
             <span>{item.name}:</span>&nbsp;
             <span className={cn(item.percent >= 0 ? 'text-stock-up' : 'text-stock-down')}>
-              <NumSpanSubscribe code={item.code} field="record.close" value={item.price ?? 0} isPositive={item.percent >= 0} decimal={3} arrow />
+              <NumSpanSubscribe code={item.code} field="close" value={item.price ?? 0} isPositive={item.percent >= 0} decimal={3} arrow />
               {/* <JknIcon className="w-4 h-4 -mb-0.5" name={item.percent >= 0 ? 'ic_price_up_green' : 'ic_price_down_red'} /> */}
               &emsp;
-              <NumSpanSubscribe code={item.code} field={(v) => v.record.close - v.record.preClose} value={item.offset} isPositive={item.percent >= 0} symbol decimal={3} />&emsp;
-              <NumSpanSubscribe code={item.code} field="record.percent" value={item.percent * 100} decimal={2} isPositive={item.percent >= 0} percent symbol />&emsp;
+              <NumSpanSubscribe code={item.code} field={(v) => v.close - v.preClose} value={item.offset} isPositive={item.percent >= 0} symbol decimal={3} />&emsp;
+              <NumSpanSubscribe code={item.code} field="percent" value={item.percent * 100} decimal={2} isPositive={item.percent >= 0} percent symbol />&emsp;
             </span>
           </span>
         ))

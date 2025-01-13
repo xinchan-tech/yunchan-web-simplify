@@ -1,21 +1,18 @@
-import { addStockCollect, type getStockSelection } from "@/api"
-import { type JknTableProps, StockView, NumSpan, Checkbox, CollectStar, JknIcon, Button, JknAlert, JknTable, AiAlarm } from "@/components"
-import { useToast } from "@/hooks"
-import { useCollectCates } from "@/store"
+import { type getStockSelection } from "@/api"
+import { AiAlarm, CollectStar, JknCheckbox, JknIcon, JknRcTable, JknRcTableProps, NumSpan, NumSpanSubscribe, StockView } from "@/components"
+import { useCheckboxGroup, useTableData, useTableRowClickToStockTrading } from "@/hooks"
 import { stockUtils } from "@/utils/stock"
-import { Popover, PopoverAnchor, PopoverContent } from "@radix-ui/react-popover"
-import to from "await-to-js"
-import Decimal from "decimal.js"
+import { produce } from "immer"
 import { nanoid } from "nanoid"
-import { useMemo } from "react"
+import { useCallback, useEffect, useMemo } from "react"
 
 type TableDataType = {
   index: number
-  code: string
+  symbol: string
   name: string
   stock_cycle: number
   indicator_name: string
-  price?: number
+  close?: number
   percent?: number
   bottom?: string
   total?: number
@@ -32,167 +29,131 @@ interface StockTableProps {
   onUpdate?: () => void
 }
 const StockTable = (props: StockTableProps) => {
-  const data = useMemo(() => {
-    const r: TableDataType[] = []
-
-    let index = 0
-    for (const { indicator_name_hdly, indicator_name, stock_cycle, ...item} of props.data) {
-      const [lastData, beforeData, afterData] = stockUtils.toStockRecord(item)
-      r.push({
-        index: index++,
-        key: nanoid(),
-        code: lastData.symbol,
-        name: lastData.name,
-        bottom: indicator_name_hdly,
-        price: lastData.close,
-        percent: lastData.percent,
-        total: lastData.marketValue,
-        amount: lastData.turnover,
-        industry: lastData.industry,
-        prePercent: (beforeData?.percent ?? 0) * 100,
-        afterPercent: (afterData?.percent ?? 0) * 100,
-        collect: lastData.collect ?? 0,
-        stock_cycle,
-        indicator_name
-      })
+  const [list, { setList, updateList, onSort }] = useTableData<TableDataType>([], 'symbol')
+  useEffect(() => {
+    if (!props.data) {
+      setList([])
+      return
     }
 
+    let index = 0
+    setList(props.data.map(item => {
+      const lastData = stockUtils.toStock(item.stock, { extend: item.extend, symbol: item.symbol, name: item.name })
+      const beforeData = stockUtils.toStock(item.extend?.stock_before, { extend: item.extend, symbol: item.symbol, name: item.name })
+      const afterData = stockUtils.toStock(item.extend?.stock_after, { extend: item.extend, symbol: item.symbol, name: item.name })
+      return {
+        index: index++,
+        key: nanoid(),
+        stock_cycle: item.stock_cycle,
+        indicator_name: item.indicator_name,
+        symbol: lastData.symbol,
+        name: lastData.name,
+        close: lastData.close,
+        percent: stockUtils.getPercent(lastData),
+        total: stockUtils.getMarketValue(lastData),
+        amount: lastData.turnover,
+        industry: lastData.industry,
+        bottom: item.indicator_name_hdly,
+        prePercent: (stockUtils.getPercent(beforeData) ?? 0) * 100,
+        afterPercent: (stockUtils.getPercent(afterData) ?? 0) * 100,
+        collect: lastData.extend?.collect ?? 0
+      }
+    }))
+  }, [props.data, setList])
 
-    return r
+  const { checked, onChange, setCheckedAll, getIsChecked } = useCheckboxGroup([])
 
-  }, [props.data])
+  const updateStockCollect = useCallback((id: string, checked: boolean) => {
+    updateList(s => {
+      return s.map(produce(item => {
+        if (item.symbol === id) {
+          item.collect = checked ? 1 : 0
+        }
+      }))
+    })
+  }, [updateList])
 
-  const columns: JknTableProps<TableDataType>['columns'] = useMemo(() => ([
-    { header: '序号', enableSorting: false, accessorKey: 'index', meta: { align: 'center', width: 40 }, cell: ({ row }) => row.index + 1 },
+  const columns: JknRcTableProps<TableDataType>['columns'] = useMemo(() => ([
+    { title: '序号', dataIndex: 'index', width: 40, align: 'center', render: (_, row) => row.index + 1 },
     {
-      header: '名称代码', accessorKey: 'name', meta: { align: 'left', width: 120 },
-      cell: ({ row }) => (
-        <StockView name={row.getValue('name')} code={row.original.code as string} />
+      title: '名称代码', dataIndex: 'name', width: 120, align: 'left', sort: true,
+      render: (name, row) => (
+        <StockView name={name} code={row.symbol} />
       )
     }, {
-      header: '周期', accessorKey: 'stock_cycle', meta: { align: 'right', width: 40},
-      cell: ({ row }) => `${row.getValue('stock_cycle')}分`
+      title: '周期', dataIndex: 'stock_cycle', width: 40, align: 'right', sort: true,
+      render: (stock_cycle) => `${stock_cycle}分`
     }, {
-      header: '信号类型', enableSorting: false, accessorKey: 'indicator_name', meta: { align: 'center', width: 60 },
-      cell: ({ row }) => row.getValue('indicator_name')
+      title: '信号类型', dataIndex: 'indicator_name', width: 60, align: 'center'
     }, {
-      header: '底部类型', accessorKey: 'bottom', meta: { align: 'center', width: 60},
-      cell: ({ row }) => row.getValue('bottom') ?? '-'
+      title: '底部类型', dataIndex: 'bottom', width: 60, align: 'center', sort: true,
+      render: (bottom) => bottom || '-'
     },
     {
-      header: '现价', accessorKey: 'price', meta: { align: 'right', width: 80 },
-      cell: ({ row }) => (
-        <NumSpan value={row.getValue<number>('price')} decimal={2} isPositive={row.getValue<number>('percent') >= 0} />
+      title: '现价', dataIndex: 'close', width: 80, align: 'right', sort: true,
+      render: (close, row) => (
+        <NumSpanSubscribe code={row.symbol} blink field="close" value={close} decimal={2} isPositive={(row.percent ?? 0) >= 0} align="right" />
       )
     },
     {
-      header: '涨跌幅', accessorKey: 'percent', meta: { align: 'right', width: 90 },
-      cell: ({ row }) => (
-        <NumSpan percent block decimal={2} value={row.getValue<number>('percent') * 100} isPositive={row.getValue<number>('percent') >= 0} symbol />
+      title: '涨跌幅', dataIndex: 'percent', width: 90, align: 'right', sort: true,
+      render: (percent, row) => (
+        <NumSpanSubscribe code={row.symbol} field="percent" blink percent block decimal={2} value={percent} isPositive={(row.percent ?? 0) >= 0} symbol />
       )
     },
     {
-      header: '成交额', accessorKey: 'amount', meta: { align: 'right', width: 100 },
-      cell: ({ row }) => Decimal.create(row.getValue<number>('amount')).toShortCN(3)
+      title: '成交额', dataIndex: 'amount', width: 100, align: 'right', sort: true,
+      render: (amount, row) => <NumSpanSubscribe code={row.symbol} field="turnover" blink align="right" unit decimal={2} value={amount} />
     },
     {
-      header: '总市值', accessorKey: 'total', meta: { align: 'right', width: 100 },
-      cell: ({ row }) => Decimal.create(row.getValue<number>('total')).toShortCN(3)
+      title: '总市值', dataIndex: 'total', width: 100, align: 'right', sort: true,
+      render: (total, row) => <NumSpanSubscribe code={row.symbol} field={v => stockUtils.getSubscribeMarketValue(row, v)} blink align="right" unit decimal={2} value={total} />
     },
     {
-      header: '所属行业', enableSorting: false, accessorKey: 'industry', meta: { width: 120, align: 'right' }
+      title: '所属行业', dataIndex: 'industry', width: 120, align: 'right',
     },
     {
-      header: '盘前涨跌幅', accessorKey: 'prePercent', meta: { width: '15%', align: 'right' },
-      cell: ({ row }) => (
-        <NumSpan symbol decimal={2} percent value={row.getValue<number>('prePercent')} isPositive={row.getValue<number>('prePercent') >= 0} />
+      title: '盘前涨跌幅', dataIndex: 'prePercent', width: '15%', align: 'right', sort: true,
+      render: (prePercent, row) => (
+        <NumSpan symbol decimal={2} percent value={prePercent} isPositive={row.prePercent >= 0} />
       )
     },
     {
-      header: '盘后涨跌幅', accessorKey: 'afterPercent', meta: { width: '15%', align: 'right' },
-      cell: ({ row }) => (
-        <NumSpan symbol decimal={2} percent value={row.getValue<number>('afterPercent')} isPositive={row.getValue<number>('afterPercent') >= 0} />
+      title: '盘后涨跌幅', dataIndex: 'afterPercent', width: '15%', align: 'right', sort: true,
+      render: (afterPercent, row) => (
+        <NumSpan symbol decimal={2} percent value={afterPercent} isPositive={row.afterPercent >= 0} />
       )
     },
     {
-      header: '+股票金池', enableSorting: false, accessorKey: 'collect', meta: { width: 60, align: 'center' },
-      cell: ({ row }) => (
+      title: '+股票金池', dataIndex: 'collect', width: 60, align: 'center',
+      render: (collect, row) => (
         <div>
           <CollectStar
             onUpdate={props.onUpdate}
-            checked={row.getValue<boolean>('collect')}
-            code={row.original.code} />
+            checked={collect}
+            code={row.symbol} />
         </div>
       )
     },
     {
-      header: '+AI报警', enableSorting: false, accessorKey: 't9', meta: { width: 50, align: 'center' },
-      cell: ({ row }) => <AiAlarm code={row.original.code} ><JknIcon className="rounded-none" name="ic_add" /></AiAlarm>
+      title: '+AI报警', dataIndex: 't9', width: 50, align: 'center',
+      render: (_, row) => <AiAlarm code={row.symbol} ><JknIcon className="rounded-none" name="ic_add" /></AiAlarm>
     },
     {
-      header: ({ table }) => (
-        <div>
-          <Popover open={table.getIsSomeRowsSelected() || table.getIsAllRowsSelected()}>
-            <PopoverAnchor asChild>
-              <Checkbox
-                checked={table.getIsSomeRowsSelected() || table.getIsAllRowsSelected()}
-                onCheckedChange={e => table.getToggleAllRowsSelectedHandler()({ target: e })}
-              />
-            </PopoverAnchor>
-            <PopoverContent className="w-60" align="start" side="left">
-              <div className="rounded">
-                <div className="bg-background px-16 py-2">批量操作 {table.getSelectedRowModel().rows.length} 项</div>
-                <div className="text-center px-12 py-4 space-y-4">
-                  {
-                    collects.map((cate) => (
-                      <div key={cate.id} className="flex space-x-2 items-center">
-                        <div>{cate.name}</div>
-                        <div onClick={() => onCreateStockToCollects(cate.id, table.getSelectedRowModel().rows.map(item => item.original.code))} onKeyDown={() => { }}>
-                          <Button className="text-tertiary" size="mini" variant="outline">添加</Button>
-                        </div>
-                      </div>
-                    ))
-                  }
-                </div>
-              </div>
-            </PopoverContent>
-          </Popover>
-        </div>
-      ),
-      accessorKey: 'check',
+      title: <CollectStar.Batch checked={checked} onCheckChange={(v) => setCheckedAll(v ? list.map(o => o.symbol) : [])} />,
+      dataIndex: 'check',
       id: 'select',
-      enableSorting: false,
-      meta: { align: 'center', width: 40 },
-      cell: ({ row }) => (
-        <Checkbox checked={row.getIsSelected()} onCheckedChange={(e) => row.getToggleSelectedHandler()({ target: e })} />
-      )
+      width: 60, align: 'center',
+      render: (_, row) => <JknCheckbox checked={getIsChecked(row.symbol)} onCheckedChange={v => onChange(row.symbol, v)} />
     }
-  ]), [props.onUpdate])
+  ]), [checked, list, getIsChecked, onChange, setCheckedAll, updateStockCollect, props.onUpdate])
 
-  const collects = useCollectCates(s => s.collects)
-  const { toast } = useToast()
-  const onCreateStockToCollects = (cateId: string, stockIds: string[]) => {
-    JknAlert.confirm({
-      content: `确定添加到 ${collects.find(c => c.id === cateId)?.name}？`,
-      onAction: async (action) => {
-        if (action !== 'confirm') return
-
-        const [err] = await to(addStockCollect({ symbols: stockIds, cate_ids: [+cateId] }))
-
-        if (err) {
-          toast({ description: err.message })
-          return false
-        }
-
-        props.onUpdate?.()
-      }
-    })
-  }
+  const onRowClick = useTableRowClickToStockTrading('symbol')
 
 
   return (
-    <JknTable rowKey="key" columns={columns} data={data}>
-    </JknTable>
+    <JknRcTable rowKey="key" columns={columns} data={list} onRow={onRowClick} onSort={onSort}>
+    </JknRcTable>
   )
 }
 

@@ -5,6 +5,7 @@ interface CapsuleTabsProps {
   activeKey?: string
   onChange?: (value: string) => void
   type?: 'default' | 'text'
+  className?: string
 }
 
 interface CapsuleTabsContext {
@@ -15,9 +16,9 @@ interface CapsuleTabsContext {
 
 const CapsuleTabsContext = createContext<CapsuleTabsContext>({} as CapsuleTabsContext)
 
-const _CapsuleTabs = ({ activeKey, onChange, children, type = 'default' }: PropsWithChildren<CapsuleTabsProps>) => {
+const _CapsuleTabs = ({ activeKey, onChange, children, type = 'default', className }: PropsWithChildren<CapsuleTabsProps>) => {
   return (
-    <div className="flex items-center space-x-2 flex-wrap">
+    <div className={cn('flex items-center space-x-2 flex-wrap', className)}>
       <CapsuleTabsContext.Provider value={{ value: activeKey, onChange, type }}>
         {
           children

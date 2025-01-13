@@ -88,6 +88,7 @@
     "@biomejs/biome": "^1.9.4",
     "@release-it/conventional-changelog": "^9.0.4",
     "@rsbuild/core": "^1.1.6",
+    "@rsbuild/plugin-less": "^1.1.0",
     "@rsbuild/plugin-react": "^1.0.7",
     "@rsbuild/plugin-sass": "^1.1.1",
     "@swc/plugin-styled-jsx": "^5.0.0",

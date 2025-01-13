@@ -1,6 +1,8 @@
 import { getStockBaseCodeInfo, getStockBrief, getStockNotice, getStockQuote, getStockRelated, getStockTrades } from "@/api"
-import { AiAlarm, Button, CapsuleTabs, Carousel, CarouselContent, CollectStar, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, HoverCard, HoverCardContent, HoverCardTrigger, JknIcon, JknTable, type JknTableProps, NumSpan, PriceAlarm, ScrollArea, Separator } from "@/components"
-import { StockRecord, StockSubscribeHandler, stockUtils } from "@/utils/stock"
+import { AiAlarm, Button, CapsuleTabs, Carousel, CarouselContent, CollectStar, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, HoverCard, HoverCardContent, HoverCardTrigger, JknIcon, JknRcTable, type JknRcTableProps, NumSpan, NumSpanSubscribe, PriceAlarm, ScrollArea, Separator } from "@/components"
+import { useStockQuoteSubscribe, useTableData, useTableRowClickToStockTrading } from "@/hooks"
+import { useTime } from "@/store"
+import { type StockSubscribeHandler, stockUtils } from "@/utils/stock"
 import { cn } from "@/utils/style"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import dayjs from "dayjs"
@@ -9,8 +11,6 @@ import Autoplay from "embla-carousel-autoplay"
 import { nanoid } from "nanoid"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { stockBaseCodeInfoExtend, useSymbolQuery } from "../lib"
-import { useTime } from "@/store"
-import { useStockQuoteSubscribe } from "@/hooks"
 export const StockInfo = () => {
   const [active, setActive] = useState<'quote' | 'news'>('quote')
   const code = useSymbolQuery()
@@ -74,7 +74,7 @@ type StockBaseInfoData = {
 
 const StockBaseInfo = () => {
   const code = useSymbolQuery()
-  const trading = useTime(s => s.getTrading()) 
+  const trading = useTime(s => s.getTrading())
   const queryOptions = {
     queryKey: [getStockBaseCodeInfo.cacheKey, code, stockBaseCodeInfoExtend],
     queryFn: () => getStockBaseCodeInfo({ symbol: code, extend: stockBaseCodeInfoExtend })
@@ -87,7 +87,7 @@ const StockBaseInfo = () => {
 
   useEffect(() => {
     const [lastData, beforeData, afterData] = codeInfo.data ? stockUtils.toStockRecord(codeInfo.data) : []
-    
+
     const subData = trading === 'preMarket' ? beforeData : afterData
 
     setData({
@@ -111,18 +111,18 @@ const StockBaseInfo = () => {
     setData((s) => {
       if (!s) return
       if (s.code === data.topic) {
-        if(trading === 'intraDay'){
+        if (trading === 'intraDay') {
           s.close = data.record.close
           s.percent = (data.record.close - data.record.preClose) / data.record.preClose
           s.prevClose = data.record.preClose
           s.time = dayjs(data.record.time).format('YYYY-MM-DD HH:mm:ss')
-        }else{
+        } else {
           s.subClose = data.record.close
           s.subPercent = (data.record.close - data.record.preClose) / data.record.preClose
           s.subTime = dayjs(data.record.time).format('YYYY-MM-DD HH:mm:ss')
         }
       }
-      return {...s}
+      return { ...s }
     })
   }, [trading])
 
@@ -167,7 +167,7 @@ const StockBaseInfo = () => {
           </span>
           <span className="text-tertiary">
             {
-              trading === 'intraDay' ? '交易中': '收盘价'
+              trading === 'intraDay' ? '交易中' : '收盘价'
             }
             {data?.time?.slice(5, 11).replace('-', '/')}
           </span>
@@ -192,7 +192,7 @@ const StockBaseInfo = () => {
                 {data?.subTime?.slice(5, 11).replace('-', '/')}
               </span>
             </div>
-          ): null
+          ) : null
         }
       </div>
     </>
@@ -344,6 +344,13 @@ const StockNews = () => {
   )
 }
 
+type TableDataType = {
+  symbol: string,
+  name: string,
+  close: number,
+  percent?: number,
+  marketValue?: number,
+}
 
 const StockRelated = () => {
   const code = useSymbolQuery()
@@ -351,7 +358,7 @@ const StockRelated = () => {
   const [plateId, setPlateId] = useState<string>()
   const [menuType, setMenuType] = useState<'plates' | 'trades'>('plates')
   const relates = useQuery({
-    queryKey: [getStockRelated.cacheKey, code, plateId, ['total_share']],
+    queryKey: [getStockRelated.cacheKey, code, ['total_share'], (plateId === undefined || plateId === plates[0]?.id) ? undefined : plateId],
     queryFn: () => getStockRelated({ symbol: code, plate_id: plateId, extend: ['total_share'] }),
     enabled: menuType === 'plates'
   })
@@ -365,42 +372,52 @@ const StockRelated = () => {
   useEffect(() => {
     if (relates.data?.plates) {
       setPlates(relates.data?.plates)
+      setPlateId(relates.data?.plates[0].id)
     }
   }, [relates.data?.plates])
 
-  const data = relates.data?.stocks.map(item => {
-    const [stock] = StockRecord.create(item)
+  const [list, { setList, onSort }] = useTableData<TableDataType>([], 'symbol')
 
-    return {
-      symbol: item.symbol,
-      name: item.name,
-      price: stock?.close,
-      percent: stock?.percent,
-      amount: stock?.marketValue
+  useEffect(() => {
+    if (!relates.data) {
+      setList([])
+      return
     }
-  }) ?? []
 
-  const columns = useMemo<JknTableProps['columns']>(() => [
+    setList(relates.data?.stocks.map(item => {
+      const stock = stockUtils.toStock(item.stock, { extend: item.extend, symbol: item.symbol, name: item.name })
+
+      return {
+        symbol: item.symbol,
+        name: item.name,
+        close: stock.close,
+        percent: stockUtils.getPercent(stock),
+        marketValue: stockUtils.getMarketValue(stock),
+      }
+    }))
+  }, [relates.data, setList])
+
+  const columns = useMemo<JknRcTableProps['columns']>(() => [
     {
-      header: '股票', accessorKey: 'symbol', meta: { width: '22%' }, enableSorting: false,
-      cell: ({ row }) => <span className="text-xs">{row.getValue('symbol')}</span>
+      title: '股票', dataIndex: 'symbol', width: '22%', sort: true,
+      render: (symbol) => <span className="text-xs">{symbol}</span>
     },
     {
-      header: '现价', accessorKey: 'price', meta: { align: 'right', width: '24%' },
-      cell: ({ row }) => (
-        <NumSpan className="text-xs" value={Decimal.create(row.getValue<number>('price')).toNumber()} isPositive={Decimal.create(row.getValue<number>('percent')).gte(0)} />
+      title: '现价', dataIndex: 'close', align: 'right', width: '24%', sort: true,
+      render: (close, row) => (
+        <NumSpanSubscribe code={row.symbol} field="close" blink value={close} isPositive={Decimal.create(row.price).gte(0)} align="right" />
       )
     },
     {
-      header: '涨跌幅%', accessorKey: 'percent', meta: { align: 'right', width: '30%' },
-      cell: ({ row }) => (
-        <NumSpan className="text-xs" block decimal={2} value={Decimal.create(row.getValue<number>('percent')).mul(100).toNumber()} isPositive={Decimal.create(row.getValue<number>('percent')).gte(0)} symbol percent />
+      title: '涨跌幅%', dataIndex: 'percent', align: 'right', width: '30%', sort: true,
+      render: (percent, row) => (
+        <NumSpanSubscribe code={row.symbol} field="percent" blink block className="w-20" decimal={2} value={percent} percent isPositive={Decimal.create(row.percent).gte(0)} symbol align="right" />
       )
     },
     {
-      header: '总市值', accessorKey: 'amount', meta: { align: 'right', width: '24%' },
-      cell: ({ row }) => (
-        <NumSpan className="text-xs" decimal={2} value={Decimal.create(row.getValue<number>('amount')).toNumber()} unit />
+      title: '总市值', dataIndex: 'marketValue', align: 'right', width: '24%', sort: true,
+      render: (marketValue, row) => (
+        <NumSpanSubscribe code={row.symbol} field={v => stockUtils.getSubscribeMarketValue(row, v)} blink align="right" unit decimal={2} value={marketValue} />
       )
     }
 
@@ -411,6 +428,8 @@ const StockRelated = () => {
       return dayjs(a.t).valueOf() - dayjs(b.t).valueOf()
     })
   }, [trades.data])
+
+  const onRowClick = useTableRowClickToStockTrading('symbol')
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
@@ -446,7 +465,7 @@ const StockRelated = () => {
       <div className="flex-1 overflow-hidden">
         {
           menuType === 'plates' ? (
-            <JknTable rowKey="symbol" data={data} columns={columns} />
+            <JknRcTable isLoading={relates.isLoading} rowKey="symbol" data={list} columns={columns} onSort={onSort as any} onRow={onRowClick} />
           ) : (
             <ScrollArea className="flex flex-col text-xs space-y-2 px-2 h-full">
               {

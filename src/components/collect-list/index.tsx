@@ -1,16 +1,16 @@
-import { getStockCollects, type StockExtend } from "@/api"
+import { type StockExtend, type StockRawRecord, getStockCollects } from "@/api"
 import { AddCollect, CollectCapsuleTabs, JknIcon, NumSpan } from "@/components"
+import { usePropValue, useStockQuoteSubscribe, useTableData } from "@/hooks"
 import { useConfig, useTime } from "@/store"
 import { getTradingPeriod } from "@/utils/date"
 import echarts, { type ECOption } from "@/utils/echarts"
-import { type StockSubscribeHandler, stockUtils, type StockRecord } from "@/utils/stock"
+import { type Stock, type StockSubscribeHandler, stockUtils } from "@/utils/stock"
 import { colorUtil } from "@/utils/style"
 import { useQuery } from "@tanstack/react-query"
 import { useMount, useUnmount, useUpdateEffect } from "ahooks"
 import Decimal from "decimal.js"
 import { type PropsWithChildren, useCallback, useEffect, useRef, useState } from "react"
 import { withSort } from "../jkn/jkn-icon/with-sort"
-import { useHalfControlValue, useStockQuoteSubscribe, useTableData } from "@/hooks"
 
 const extend: StockExtend[] = ['basic_index', 'day_basic', 'alarm_ai', 'alarm_all', 'total_share', 'financials', 'thumbs', 'stock_before', 'stock_after']
 
@@ -26,6 +26,7 @@ type TableDataType = {
 
 interface CollectListProps {
   onCollectChange?: (collect: string) => void
+  visible: 'full' | 'half' | 'hide'
 }
 
 const SortSpan = withSort((props: PropsWithChildren) => <span>{props.children}</span>)
@@ -33,7 +34,7 @@ const SortSpan = withSort((props: PropsWithChildren) => <span>{props.children}</
 export const CollectList = (props: CollectListProps) => {
   const [collect, setCollect] = useState('1')
   const trading = useTime(s => s.getTrading())
-  const [stockList, { setList, updateList, onSort }] = useTableData<TableDataType>([], 'code')
+  const [stockList, { setList, onSort }] = useTableData<TableDataType>([], 'code')
 
   const stocks = useQuery({
     queryKey: [getStockCollects.cacheKey, collect],
@@ -52,18 +53,23 @@ export const CollectList = (props: CollectListProps) => {
     }
 
     const _stockList: TableDataType[] = stocks.data.items.map(stock => {
-      const [lastStock, beforeStock, afterStock] = stockUtils.toStockRecord(stock)
+      // const [lastStock, beforeStock, afterStock] = stockUtils.toStockRecord(stock)
+      const lastStock = stockUtils.toStock(stock.stock, { extend: stock.extend, symbol: stock.symbol, name: stock.name })
+      const beforeStock = stock.extend?.stock_before ? stockUtils.toStock(stock.extend?.stock_before as StockRawRecord, { extend: stock.extend, symbol: stock.symbol, name: stock.name }): null
+      const afterStock = stock.extend?.stock_after ? stockUtils.toStock(stock.extend?.stock_after as StockRawRecord, { extend: stock.extend, symbol: stock.symbol, name: stock.name }) : null
+
       const thumbs = lastStock?.thumbs ?? []
-      const subStock: StockRecord | null = ['afterHours', 'close'].includes(trading) ? afterStock : beforeStock
+
+      const subStock: Stock | null = ['afterHours', 'close'].includes(trading) ? afterStock : beforeStock
 
       return {
         name: stock.name,
         code: stock.symbol,
         thumbs,
         price: lastStock?.close,
-        percent: lastStock?.percent,
+        percent: subStock ? stockUtils.getPercent(lastStock) : undefined,
         subPrice: subStock?.close,
-        subPercent: subStock?.percent,
+        subPercent: subStock ? stockUtils.getPercent(subStock) : undefined,
       }
     })
 
@@ -93,18 +99,22 @@ export const CollectList = (props: CollectListProps) => {
           <span className="flex-1">
             <SortSpan onSort={_onSort} field="code" sort={sort.field === 'code' ? sort.sort : undefined}>名称</SortSpan>
           </span>
-          <span className="w-24 flex-shrink-0 text-right box-border pr-1">
+          <span className="w-20 flex-shrink-0 text-right box-border pr-1">
             <SortSpan onSort={_onSort} field="price" sort={sort.field === 'price' ? sort.sort : undefined}>现价</SortSpan>
           </span>
           <span className="w-16 flex-shrink-0 text-right">
             <SortSpan onSort={_onSort} field="percent" sort={sort.field === 'percent' ? sort.sort : undefined}>涨跌幅%</SortSpan>
           </span>
         </div>
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto w-full">
           {
             stockList.map(stock => (
               <StockListItem key={stock.code} stock={stock} onCollectChange={props.onCollectChange}>
-                <StockChart data={stock.thumbs.filter(v => +v > 0) ?? []} type={(stock.percent ?? 0) >= 0 ? 'up' : 'down'} />
+                {
+                  props.visible === 'full' ? (
+                    <StockChart data={stock.thumbs.filter(v => +v > 0) ?? []} type={(stock.percent ?? 0) >= 0 ? 'up' : 'down'} />
+                  ) : null
+                }
               </StockListItem>
             ))
           }
@@ -125,7 +135,7 @@ const StockListItem = ({ stock, onCollectChange, children }: PropsWithChildren<S
   const lastValue = useRef(stock.price)
   const span = useRef<HTMLDivElement>(null)
   const priceBlinkTimer = useRef<number>()
-  const [value, setValue] = useHalfControlValue(stock.price)
+  const [value, setValue] = usePropValue(stock.price)
 
   const updateHandler = useCallback<StockSubscribeHandler<'quote'>>((data) => {
     setValue(data.record.close)
@@ -159,15 +169,15 @@ const StockListItem = ({ stock, onCollectChange, children }: PropsWithChildren<S
   return (
     <div
       key={stock.code}
-      className="flex py-3 hover:bg-accent px-1 stock-blink-gradient"
+      className="flex py-3 hover:bg-accent px-1 stock-blink-gradient w-full box-border"
       onClick={() => onCollectChange?.(stock.code)}
       onKeyDown={() => { }}
       ref={span}
     >
-      <div className="flex-1">
-        <div className="relative">
+      <div className="flex-1 overflow-hidden">
+        <div className="relative w-full overflow-hidden">
           <span className="text-sm">{stock.code}</span>
-          <div className="text-xs text-tertiary">{stock.name}</div>
+          <div className="text-xs text-tertiary w-full overflow-hidden text-ellipsis whitespace-nowrap">{stock.name}</div>
           {
             stock.thumbs.length > 0 ? (
               <div className="absolute left-12 bottom-0 top-0">
@@ -179,9 +189,9 @@ const StockListItem = ({ stock, onCollectChange, children }: PropsWithChildren<S
           }
         </div>
       </div>
-      <div className="w-40 text-xs">
+      <div className="w-38 text-xs">
         <div className="flex w-full items-center">
-          <div className="w-24 flex-shrink-0 text-right box-border pr-1">
+          <div className="w-20 flex-shrink-0 text-right box-border pr-1">
             {
               stock.price ? <NumSpan value={stock.price} isPositive={(stock.percent ?? 0) >= 0} /> : '--'
             }

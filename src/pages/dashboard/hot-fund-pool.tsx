@@ -32,24 +32,24 @@ const TopList = () => {
     },
     {
       title: '现价', dataIndex: 'close', align: 'right', width: '17%', sort: true,
-      render: (_, row) => <NumSpanSubscribe code={row.symbol} field="record.close" blink value={Decimal.create(row.close).toFixed(2)} isPositive={row.isUp} align="right" />
+      render: (_, row) => <NumSpanSubscribe code={row.symbol} field="close" blink value={Decimal.create(row.close).toFixed(2)} isPositive={row.isUp} align="right" />
     },
     {
       title: '涨跌幅', dataIndex: 'percent',
       align: 'right', width: '20%', sort: true,
       render: (_, row) => (
-        <NumSpanSubscribe code={row.symbol} field="record.percent" block blink className="py-1 w-20" decimal={2} align="right" value={Decimal.create(row.percent).mul(100).toDP(2).toNumber()} percent isPositive={row.isUp} symbol />
+        <NumSpanSubscribe code={row.symbol} field="percent" block blink className="py-1 w-20" decimal={2} align="right" value={Decimal.create(row.percent).mul(100).toDP(2).toNumber()} percent isPositive={row.isUp} symbol />
       )
     },
     {
       title: '成交额', dataIndex: 'turnover',
       align: 'right', width: '20%', sort: true,
-      render: (_, row) => <NumSpanSubscribe code={row.symbol} field="record.turnover" blink align="right" unit decimal={2} value={row.turnover} />
+      render: (_, row) => <NumSpanSubscribe code={row.symbol} field="turnover" blink align="right" unit decimal={2} value={row.turnover} />
     },
     {
       title: '总市值', dataIndex: 'marketValue',
       align: 'right', width: '19%', sort: true,
-      render: (_, row) => <NumSpanSubscribe code={row.symbol} field={v => v.record.close * (row.marketValue ?? 0)} blink align="right" unit decimal={2} value={row.marketValue} />
+      render: (_, row) => <NumSpanSubscribe code={row.symbol} field={v => v.close * (row.marketValue ?? 0)} blink align="right" unit decimal={2} value={row.marketValue} />
     },
   ]
 

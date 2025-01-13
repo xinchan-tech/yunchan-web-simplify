@@ -52,13 +52,13 @@ const PlateStocks = (props: PlateStocksProps) => {
     {
       title: '现价', dataIndex: 'close', align: 'right', width: '10%',
       render: (_, row) => (
-        <NumSpanSubscribe blink code={row.symbol} field="record.close" value={row.close} decimal={2} isPositive={stockUtils.isUp(row)} align="right" />
+        <NumSpanSubscribe blink code={row.symbol} field="close" value={row.close} decimal={2} isPositive={stockUtils.isUp(row)} align="right" />
       )
     },
     {
       title: '涨跌幅', dataIndex: 'percent', align: 'right', width: 100,
       render: (_, row) => (
-        <NumSpanSubscribe blink code={row.symbol} field="record.percent" block className="py-0.5 w-20" decimal={2} value={Decimal.create(stockUtils.getPercent(row)).toNumber()} percent align="right" />
+        <NumSpanSubscribe blink code={row.symbol} field="percent" block className="py-0.5 w-20" decimal={2} value={Decimal.create(stockUtils.getPercent(row)).toNumber()} percent align="right" />
       )
     },
     {
@@ -67,7 +67,7 @@ const PlateStocks = (props: PlateStocksProps) => {
     },
     {
       title: '成交额', dataIndex: 'turnover', align: 'right', width: '10%',
-      render: (_, row) => <NumSpanSubscribe blink code={row.symbol} field="record.turnover" value={row.turnover} decimal={2} align="right" unit />
+      render: (_, row) => <NumSpanSubscribe blink code={row.symbol} field="turnover" value={row.turnover} decimal={2} align="right" unit />
     },
     {
       title: '换手率', dataIndex: 'turnOverRate', align: 'right', width: '7%',

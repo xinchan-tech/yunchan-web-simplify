@@ -1,16 +1,16 @@
 import { type StockExtend, addStockCollectCate, type getStockCollectCates, getStockCollects, removeStockCollect, removeStockCollectCate, updateStockCollectCate } from "@/api"
-import { AddCollect, AiAlarm, Button, CapsuleTabs, Checkbox, JknAlert, JknCheckbox, JknIcon, JknRcTable, type JknRcTableProps, JknTable, type JknTableProps, NumSpan, Popover, PopoverAnchor, PopoverContent, StockView, useFormModal, useModal } from "@/components"
-import { useCheckboxGroup, useToast, useZForm } from "@/hooks"
+import { AddCollect, AiAlarm, Button, CapsuleTabs, JknAlert, JknCheckbox, JknIcon, JknRcTable, type JknRcTableProps, NumSpan, NumSpanSubscribe, Popover, PopoverAnchor, PopoverContent, StockView, useFormModal, useModal } from "@/components"
+import { useCheckboxGroup, useTableRowClickToStockTrading, useToast, useZForm } from "@/hooks"
 import { useCollectCates } from "@/store"
+import { type Stock, stockUtils } from "@/utils/stock"
 import { useQuery } from "@tanstack/react-query"
 import { useMount } from "ahooks"
 import to from "await-to-js"
+import dayjs from "dayjs"
+import Decimal from "decimal.js"
 import { useCallback, useMemo, useState } from "react"
 import type { z } from "zod"
 import { GoldenPoolForm, poolSchema } from "./components/golden-pool-form"
-import { stockUtils, type StockRecord } from "@/utils/stock"
-import Decimal from "decimal.js"
-import dayjs from "dayjs"
 
 const baseExtends: StockExtend[] = ['total_share', 'basic_index', 'day_basic', 'alarm_ai', 'alarm_all', 'financials']
 type CollectCate = Awaited<ReturnType<typeof getStockCollectCates>>[0]
@@ -29,7 +29,7 @@ const GoldenPool = () => {
     queryFn: () => getStockCollects({ cate_id: +activeStock, limit: 300, extend: baseExtends }),
   })
 
-  const data = useMemo(() => collects.data?.items.map(o => stockUtils.toStockRecord(o)[0]) ?? [], [collects.data])
+  const data = useMemo(() => collects.data?.items.map(o => stockUtils.toStock(o.stock, { extend: o.extend, name: o.name, symbol: o.symbol })) ?? [], [collects.data])
 
   const onActiveStockChange = (v: string) => {
     setActiveStock(v)
@@ -77,52 +77,53 @@ const GoldenPool = () => {
   }, [activeStock, collects, toast, checked])
 
 
-  const columns: JknRcTableProps<StockRecord>['columns'] = useMemo(() => [
+  const columns: JknRcTableProps<Stock>['columns'] = useMemo(() => [
     {
       title: '序号', dataIndex: 'index', align: 'center', width: 60,
-      render: (_, __, index) => <div className="text-center">{index + 1}</div>
+      render: (_, __, index) => <div className="text-center w-full">{index + 1}</div>
     },
     {
       title: '名称代码', dataIndex: 'name', sort: true, align: 'left',
-      render: (_, row) => <StockView name={row.name} code={row.code} />
+      render: (_, row) => <StockView name={row.name} code={row.symbol} />
     },
     {
       title: '现价', dataIndex: 'close', align: 'right', sort: true,
-      render: (_, row) => <NumSpan value={row.close} decimal={3} isPositive={row.isUp} />
+      render: (_, row) => <NumSpanSubscribe blink className="w-full" code={row.symbol} field="close" value={row.close} decimal={3} isPositive={stockUtils.isUp(row)} align="right" />
     },
     {
       title: '涨跌幅', dataIndex: 'percent', align: 'right', width: 120, sort: true,
       render: (_, row) => (
-        <NumSpan className="w-24" percent block decimal={2} value={(row.percent ?? 0) * 100} isPositive={row.isUp} symbol align="right" />
+        <NumSpanSubscribe code={row.symbol} blink field="percent" className="w-24" percent block decimal={2} value={stockUtils.getPercent(row)} isPositive={stockUtils.isUp(row)} symbol align="right" />
       )
     },
     {
       title: '成交额', dataIndex: 'turnover', align: 'right', sort: true,
-      render: (_, row) => Decimal.create(row.turnover).toShortCN(2)
+      render: (_, row) => <NumSpanSubscribe blink code={row.symbol} field="turnover" value={row.turnover} decimal={2} align="right" unit />
     },
     {
       title: '总市值', dataIndex: 'marketValue', align: 'right', sort: true,
-      render: (_, row) => Decimal.create(row.marketValue).toShortCN(2)
+      render: (_, row) => <NumSpanSubscribe blink code={row.symbol} field={v => stockUtils.getSubscribeMarketValue(row, v)} value={stockUtils.getMarketValue(row)} decimal={2} align="right" unit />
     },
     {
       title: '换手率', dataIndex: 'turnoverRate', align: 'right', sort: true,
-      render: (_, row) => `${Decimal.create(row.turnoverRate).toFixed(2)}%`
+      render: (_, row) => <NumSpanSubscribe blink code={row.symbol} field={v => stockUtils.getSubscribeTurnOverRate(row, v)} value={stockUtils.getTurnOverRate(row)} decimal={2} align="right" percent />
     },
     {
       title: '市盈率', dataIndex: 'pe', align: 'right',
-      render: (_, row) => `${Decimal.create(row.pe).toFixed(2) ?? '-'}`
+      render: (_, row) => <div className="w-full text-right">{`${Decimal.create(stockUtils.getPE(row)).toFixed(2) ?? '-'}`}</div>
     },
     {
       title: '行业板块', dataIndex: 'industry', align: 'right',
+      render: (_, row) => <div className="w-full text-right">{row.industry}</div>
     },
     {
       title: '+AI报警', dataIndex: 'ai', width: 80, align: 'center',
-      render: (_, row) => <AiAlarm code={row.code} ><JknIcon name="ic_add" className="rounded-none" /></AiAlarm>
+      render: (_, row) => <div className="text-center w-full"><AiAlarm code={row.symbol} ><JknIcon name="ic_add" className="rounded-none" /></AiAlarm></div>
     },
     {
       title: '移除', dataIndex: 'opt', align: 'center', width: 60,
       render: (_, row) => (
-        <div className="cursor-pointer text-tertiary" onClick={() => onRemove(row.symbol, row.name)} onKeyDown={() => { }}>
+        <div className="cursor-pointer text-tertiary text-center w-full" onClick={() => onRemove(row.symbol, row.name)} onKeyDown={() => { }}>
           <JknIcon name="del" className="w-4 h-4" />
         </div>
       )
@@ -133,7 +134,7 @@ const GoldenPool = () => {
           <Button className="reset" variant="icon" >
             <JknCheckbox
               checked={checked.length > 0}
-              onCheckedChange={e => setCheckedAll(e ? data.map(o => o.code) : [])}
+              onCheckedChange={e => setCheckedAll(e ? data.map(o => o.symbol) : [])}
             />
           </Button>
         </PopoverAnchor>
@@ -155,10 +156,14 @@ const GoldenPool = () => {
       </Popover>,
       dataIndex: 'check', align: 'center', width: 60,
       render: (_, row) => (
-        <JknCheckbox checked={getIsChecked(row.symbol)} onCheckedChange={v => onChange(row.symbol, v)} />
+        <div className="w-full text-center">
+          <JknCheckbox checked={getIsChecked(row.symbol)} onCheckedChange={v => onChange(row.symbol, v)} />
+        </div>
       )
     },
   ], [cates.collects, activeStock, onRemoveBatch, checked, getIsChecked, onChange, setCheckedAll, data, onRemove])
+
+  const onRowClick = useTableRowClickToStockTrading('symbol')
 
   return (
     <div className="h-full overflow-hidden flex flex-col golden-pool">
@@ -183,7 +188,7 @@ const GoldenPool = () => {
       </div>
       <div className="flex-1 overflow-hidden">
 
-        <JknRcTable isLoading={collects.isLoading} rowKey="code" columns={columns} data={data} />
+        <JknRcTable virtual isLoading={collects.isLoading} rowKey="symbol" columns={columns} data={data} onRow={onRowClick} />
       </div>
       <style jsx>
         {
@@ -237,7 +242,7 @@ interface GoldenPoolTableProps {
 
 
 const GoldenPoolTable = (props: GoldenPoolTableProps) => {
- 
+
   const columns: JknRcTableProps['columns'] = [
     {
       title: '序号',

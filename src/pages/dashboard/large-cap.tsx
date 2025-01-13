@@ -122,10 +122,10 @@ const LargeCap = () => {
                   'font-black text-[15px]'
                 )}>
                 <div className="flex items-center justify-center mt-1">
-                  <NumSpanSubscribe value={stock.close} code={stock.symbol} isPositive={stockUtils.isUp(stock)} field="record.close" decimal={3} arrow />
+                  <NumSpanSubscribe value={stock.close} code={stock.symbol} isPositive={stockUtils.isUp(stock)} field="close" decimal={3} arrow />
                 </div>
                 <div className="">
-                <NumSpanSubscribe value={stockUtils.getPercent(stock)} code={stock.symbol} isPositive={stockUtils.isUp(stock)} field="record.percent" decimal={2} percent />
+                <NumSpanSubscribe value={stockUtils.getPercent(stock)} code={stock.symbol} isPositive={stockUtils.isUp(stock)} field="percent" decimal={2} percent />
                 </div>
               </div>
             </div>

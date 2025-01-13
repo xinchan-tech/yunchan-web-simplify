@@ -10,11 +10,12 @@ import { Skeleton } from "@/components/ui/skeleton"
 export interface JknRcTableProps<T = any> extends TableProps<T> {
   headerHeight?: number
   isLoading?: boolean
+  virtual?: boolean
   onSort?: (columnKey: keyof T, order: 'asc' | 'desc' | undefined) => void
 }
 
 
-const _JknRcTable = <T extends DefaultRecordType = any>({ headerHeight = 35, columns, emptyText, isLoading, ...props }: JknRcTableProps<T>) => {
+const _JknRcTable = <T extends DefaultRecordType = any>({ headerHeight = 35, columns, emptyText, isLoading, virtual, ...props }: JknRcTableProps<T>) => {
   const [size, dom] = useDomSize<HTMLDivElement>()
   const [sort, setSort] = useImmer<{ columnKey: keyof T | undefined, order: 'asc' | 'desc' | undefined }>({
     columnKey: undefined,
@@ -45,26 +46,45 @@ const _JknRcTable = <T extends DefaultRecordType = any>({ headerHeight = 35, col
 
   return (
     <div className="jkn-rc-table overflow-hidden h-full" ref={dom} >
-      <Table columns={_columns} scroll={{ y: size?.height ? (size?.height - headerHeight) : size?.height }}
-        rowHoverable={false}
-        emptyText={
-          isLoading ? (
-            <div className="space-y-2 my-2">
-              <Loading />
-            </div>
-          ) : (emptyText && <div className="text-center my-4">暂无数据</div>)
-        }
+      {
+        virtual ? (
+          <VirtualTable columns={_columns} scroll={{ y: size?.height ? (size?.height - headerHeight) : 0, x: size?.width ? size?.width - 1 : 0 }}
+            rowHoverable={false}
+            emptyText={
+              isLoading ? (
+                <div className="space-y-2 my-2">
+                  <Loading />
+                </div>
+              ) : (emptyText ? emptyText: null)
+            }
+            getContainerWidth={(ele, width) => {
+              // Minus border
+              const { borderInlineStartWidth } = getComputedStyle(ele.querySelector('.rc-table-tbody')!);
+              const mergedWidth = width - Number.parseInt(borderInlineStartWidth, 10);
+              return mergedWidth;
+            }}
+            {...props} />
+        ) : (
+          <Table columns={_columns} scroll={{ y: size?.height ? (size?.height - headerHeight) : size?.height }}
+            rowHoverable={false}
+            emptyText={
+              isLoading ? (
+                <div className="space-y-2 my-2">
+                  <Loading />
+                </div>
+              ) : (emptyText ? emptyText: null)
+            }
 
-        {...props} />
+            {...props} />
+        )
+      }
     </div>
   )
 }
 
-export const JknRcTable = _JknRcTable as typeof _JknRcTable & {
-  Virtual: typeof VirtualTable
-}
+export const JknRcTable = _JknRcTable as typeof _JknRcTable
 
-JknRcTable.Virtual = VirtualTable
+// JknRcTable.Virtual = VirtualTable
 
 
 

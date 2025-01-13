@@ -44,6 +44,7 @@ export const stockUtils = {
     if(opts?.extend){
       stock.totalShare = opts?.extend.total_share
       stock.industry = opts?.extend.basic_index
+      stock.thumbs = opts?.extend.thumbs
     }
 
     return stock
@@ -250,10 +251,22 @@ export const stockUtils = {
   /**
    * 计算订阅的市场总值
    */
-  getSubscribeMarketValue: (stock: Partial<Stock>, data: Parameters<StockSubscribeHandler<'quote'>>[0]) => {
+  getSubscribeMarketValue: (stock: Partial<Stock>, data: Parameters<StockSubscribeHandler<'quote'>>[0]['record']) => {
     if (!stock.totalShare) return
-    return data.record.close * stock.totalShare
+    return data.close * stock.totalShare
+  },
+
+  /**
+   * 计算订阅的换手率
+   */
+  getSubscribeTurnOverRate: (stock: Partial<Stock>, data: Parameters<StockSubscribeHandler<'quote'>>[0]['record']) => {
+    const marketValue = stockUtils.getSubscribeMarketValue(stock, data)
+
+    if (!marketValue) return
+
+    return data.turnover / marketValue
   }
+
 }
 
 /**

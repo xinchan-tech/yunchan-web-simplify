@@ -2,13 +2,14 @@ import type { StockChartInterval } from "@/api"
 import { JknIcon, CapsuleTabs } from "@/components"
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, Button } from "@/components"
 import { useKChartContext, timeIndex } from "../lib"
-import { Fragment } from "react/jsx-runtime"
 import { stockUtils } from "@/utils/stock"
+import { useDomSize } from "@/hooks"
+import { useMemo } from "react"
 
 const leftMenu = ['盘前分时', '盘中分时', '盘后分时', '多日分时']
-const rightMenu = ['周线', '月线', '季线', '半年', '年线']
 
-const rightMenuStartIndex = timeIndex.length - rightMenu.length
+
+const ItemWidth = 55
 
 export const TimeIndexSelect = () => {
   const { setTimeIndex, state, activeChartIndex } = useKChartContext()
@@ -16,12 +17,21 @@ export const TimeIndexSelect = () => {
   const setActiveMin = (min: StockChartInterval) => {
     setTimeIndex({ timeIndex: min })
   }
+  const [size, dom] = useDomSize<HTMLDivElement>()
+
+  const showCount = useMemo(() => {
+    if (!size) return 8
+    const count = Math.floor((size?.width - 90) / ItemWidth) - 1
+    return count
+  }, [size])
+
+
 
   return (
-    <>
+    <div className="flex items-center w-full overflow-hidden flex-nowrap" ref={dom}>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <div>
+          <div className="flex-shrink-0">
             <Button reset className="text-xs font-normal">
               {
                 timeIndex.findIndex(v => v === _activeChart.timeIndex) > 3 ? '分时' : (
@@ -40,37 +50,35 @@ export const TimeIndexSelect = () => {
           }
         </DropdownMenuContent>
       </DropdownMenu>
-      <CapsuleTabs type="text" activeKey={_activeChart.timeIndex.toString()} onChange={v => setActiveMin(+v)}>
+      <CapsuleTabs className="flex-nowrap overflow-hidden" type="text" activeKey={_activeChart.timeIndex.toString()} onChange={v => setActiveMin(+v)}>
         {
-          timeIndex.slice(4).slice(0, -5).map(item => (
-            <CapsuleTabs.Tab key={item} label={stockUtils.intervalToStr(item)} value={item.toString()} />
+          timeIndex.slice(4).slice(0, showCount).map(item => (
+            <CapsuleTabs.Tab className="whitespace-nowrap" key={item} label={stockUtils.intervalToStr(item)} value={item.toString()} />
           ))
         }
       </CapsuleTabs>
-      <div className="ml-2">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <div>
-              <Button reset className="text-xs font-normal">
-                {
-                  timeIndex.findIndex(v => v === _activeChart.timeIndex) < rightMenuStartIndex ? '周期' : (
-                    <span className="text-primary">{rightMenu[timeIndex.findIndex(v => v === _activeChart.timeIndex) - rightMenuStartIndex]}</span>
-                  )
-                }
-              </Button>
-              <JknIcon name="arrow_down" className="w-2 h-2  ml-1" />
-            </div>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent>
-            {
-              rightMenu.map((item, index) => (
-                <DropdownMenuItem key={item} onClick={() => setActiveMin(timeIndex[index + rightMenuStartIndex])}>{item}</DropdownMenuItem>
-              ))
-            }
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-    </>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <div className="flex-shrink-0">
+            <Button reset className="text-xs font-normal">
+              {
+                !timeIndex.slice(4).slice(showCount).includes(_activeChart.timeIndex) ? '周期' : (
+                  <span className="text-primary">{stockUtils.intervalToStr(_activeChart.timeIndex)}</span>
+                )
+              }
+            </Button>
+            <JknIcon name="arrow_down" className="w-2 h-2  ml-1" />
+          </div>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent>
+          {
+            timeIndex.slice(4).slice(showCount).map((item) => (
+              <DropdownMenuItem key={item} onClick={() => setActiveMin(+item)}>{stockUtils.intervalToStr(item)}</DropdownMenuItem>
+            ))
+          }
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
   )
 }
 

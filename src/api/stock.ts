@@ -1215,6 +1215,7 @@ interface GetStockRelatedResult {
     name: string
     symbol: string
     stock: StockRawRecord
+    extend?: StockExtendResultMap
   }[]
 }
 

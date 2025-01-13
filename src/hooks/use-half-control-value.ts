@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 
-export function useHalfControlValue<T>(controlledValue: T | undefined) {
+export function usePropValue<T>(controlledValue: T | undefined) {
   const [value, setValue] = useState<T | undefined>(controlledValue);
 
   useEffect(() => {

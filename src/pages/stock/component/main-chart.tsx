@@ -221,7 +221,6 @@ export const MainChart = (props: MainChartProps) => {
      * 盘中数据实时更新，附图指标会落后几个数据，max根据数据量计算会导致x轴对不齐
      */
     chart.current.setOption(_options, { replaceMerge: ['series', 'grid', 'xAxis', 'yAxis', 'dataZoom', ]})
-    console.log(chart.current.getOption())
   }
 
   useUpdateEffect(() => {
@@ -245,56 +244,6 @@ export const MainChart = (props: MainChartProps) => {
     setSelectSymbol(state.symbol)
   }, [state.symbol])
 
-
-  // TODO 监听dataZoom事件
-  // useEffect(() => {
-  //   if (!chart.current) return
-
-  //   /**
-  //    * 1.01，x轴100%是query.data.length * 1.01，100%的时候要向左偏移0.01
-  //    * 所以对应data的100%其实是100/1.01 = 98.02%
-  //    * 所以差值是100 - 98.02 = 1.98
-  //    * TODO: 算法不对，需要重新计算 
-  //    */
-  //   chart.current.on('dataZoom', (e: any) => {
-  //     let start = e.start
-  //     let end = e.end
-  //     if (e.batch) {
-  //       start = e.batch[0].start
-  //       end = e.batch[0].end
-  //     }
-  //     console.log(start, end)
-  //     chart.current!.meta = {
-  //       dataZoom: {
-  //         start,
-  //         end
-  //       }
-  //     }
-
-
-  //     // const series = renderAxisLine(state, start, end)
-
-  //     // const startValue = series.data![0]!
-
-  //     // chart.current?.setOption({
-  //     //   series,
-  //     //   yAxis: [
-  //     //     {},
-  //     //     {
-  //     //       axisLabel: {
-  //     //         formatter: (value: number) => {
-  //     //           return `{${value >= +startValue ? 'u' : 'd'}|${value.toFixed(2)}%}`
-  //     //         }
-  //     //       }
-  //     //     }
-  //     //   ],
-  //     // })
-  //   })
-
-  //   return () => {
-  //     chart.current?.off('dataZoom')
-  //   }
-  // }, [])
 
   return (
     <div className={

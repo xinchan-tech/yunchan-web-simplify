@@ -1,6 +1,6 @@
 import { StockChartInterval, type StockRawRecord, type getStockChart } from '@/api'
 import { useConfig } from '@/store'
-import { dateToWeek, getTradingPeriod } from '@/utils/date'
+import { dateToWeek } from '@/utils/date'
 import { echartUtils, type ECOption } from '@/utils/echarts'
 import { StockRecord, stockUtils } from '@/utils/stock'
 import { colorUtil } from '@/utils/style'

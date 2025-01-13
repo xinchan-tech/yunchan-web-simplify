@@ -15,14 +15,21 @@ import { nanoid } from "nanoid"
 import { useUpdateEffect } from "ahooks"
 import { useNavigate } from "react-router"
 import { produce } from "immer"
+import { JknIcon } from "@/components"
 
+interface KChartProps {
+  onChangeLeftSide: () => void
+  leftSideVisible: 'full' | 'half' | 'hide'
+  onChangeRightSize: () => void
+  rightSideVisible: 'full' | 'hide'
+}
 
 /**
  * @examples
  * @returns 
  */
 
-export const KChart = () => {
+export const KChart = (props: KChartProps) => {
 
   const symbol = useSymbolQuery()
 
@@ -166,7 +173,7 @@ export const KChart = () => {
     })
   }
 
-    const { isDefaultIndicatorParams, getIndicatorQueryParams } = useIndicator()
+  const { isDefaultIndicatorParams, getIndicatorQueryParams } = useIndicator()
 
   const setSecondaryIndicator: KChartContext['setSecondaryIndicator'] = ({ index, indicatorIndex, indicator }) => {
     const queryKey = [getStockIndicatorData.cacheKey, { symbol: indicator.symbol, cycle: indicator.timeIndex, id: indicator.id, db_type: indicator.type }] as any[]
@@ -189,11 +196,11 @@ export const KChart = () => {
     })
   }
 
-  const setMainData: KChartContext['setMainData'] = useCallback(({ index, data , dateConvert}) => {
+  const setMainData: KChartContext['setMainData'] = useCallback(({ index, data, dateConvert }) => {
 
     setContext(d => {
       const chart = d.state[index ?? d.activeChartIndex]
-      chart.mainData = data ? dateConvert ? { ...data, history: data.history.map(v => [dayjs(v[0]).valueOf().toString(), ...v.slice(1)]) } as any: data : {
+      chart.mainData = data ? dateConvert ? { ...data, history: data.history.map(v => [dayjs(v[0]).valueOf().toString(), ...v.slice(1)]) } as any : data : {
         history: [],
         coiling_data: undefined,
         md5: ''
@@ -315,8 +322,21 @@ export const KChart = () => {
         setIndicatorData, setViewMode, setYAxis, setSymbol, overMarkList: tabList.data ?? []
       }}>
         <div className="w-full flex-shrink-0">
-          <div className="flex border border-solid border-border px-4">
-            <TimeIndexSelect />
+          <div className="flex border border-solid border-border px-4 items-center">
+            <JknIcon name="ic_leftbar" className={cn(
+              'rounded-none h-4 w-4 mr-1 flex-shrink-0',
+              props.leftSideVisible !== 'hide' ? 'icon-checked' : ''
+            )} onClick={props.onChangeLeftSide} />
+            <span className="flex-shrink-0 text-primary text-xs mr-2">
+              {symbol}
+            </span>
+            <div className="flex-1">
+              <TimeIndexSelect />
+            </div>
+            <JknIcon name="ic_rightbar" className={cn(
+              'rounded-none h-4 w-4 mr-2 flex-shrink-0',
+              props.rightSideVisible !== 'hide' ? 'icon-checked' : ''
+            )} onClick={props.onChangeRightSize} />
           </div>
           <ChartToolSelect />
         </div>

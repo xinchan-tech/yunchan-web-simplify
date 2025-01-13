@@ -228,6 +228,9 @@ importers:
       '@rsbuild/core':
         specifier: ^1.1.6
         version: 1.1.6
+      '@rsbuild/plugin-less':
+        specifier: ^1.1.0
+        version: 1.1.0(@rsbuild/core@1.1.6)
       '@rsbuild/plugin-react':
         specifier: ^1.0.7
         version: 1.0.7(@rsbuild/core@1.1.6)
@@ -1710,6 +1713,11 @@ packages:
     resolution: {integrity: sha512-u9Elj+xfgIPRD8rEXioE6xBJOdEGt0Pw1iJiGm/gU28FmH3QmOEFq2Jvo70RsOISNOy18kEM9y0RsqVgtVrpNw==}
     engines: {node: '>=16.7.0'}
     hasBin: true
+
+  '@rsbuild/plugin-less@1.1.0':
+    resolution: {integrity: sha512-F834dobNDIdyGj5trMxIqzm/qf54Kj5KVDxeuB3TTj64mzq5fHJnR4aI/iYIliUwICG1/l2MliKr5sR34Kb7eA==}
+    peerDependencies:
+      '@rsbuild/core': 1.x
 
   '@rsbuild/plugin-react@1.0.7':
     resolution: {integrity: sha512-t7T/GqDwodusTAnxGpqVRnQ/G+HYh98zk71qIg19WkjVJJGv57AC1Ppx0/6zzbZAbxU60bfK8TeEEXjhXCdSxA==}
@@ -6027,6 +6035,12 @@ snapshots:
       '@rspack/lite-tapable': 1.0.1
       '@swc/helpers': 0.5.15
       core-js: 3.39.0
+
+  '@rsbuild/plugin-less@1.1.0(@rsbuild/core@1.1.6)':
+    dependencies:
+      '@rsbuild/core': 1.1.6
+      deepmerge: 4.3.1
+      reduce-configs: 1.1.0
 
   '@rsbuild/plugin-react@1.0.7(@rsbuild/core@1.1.6)':
     dependencies:

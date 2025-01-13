@@ -1,5 +1,6 @@
 @use '@/theme/utilities';
 @use '@/theme/theme' as theme;
+@use '@/theme/table';
 @use 'sass:math';
 @tailwind base;
 @tailwind components;
@@ -112,46 +113,6 @@ body {
   //涨幅颜色
   scrollbar-width: 'thin';
   scrollbar-gutter: 'stable';
-}
-
-.jkn-rc-table {
-  table {
-    width: 100%;
-    border-spacing: 1px;
-  }
-
-  .rc-table-header {
-    .rc-table-cell {
-      font-weight: normal;
-      background-color: hsl(var(--accent));
-      font-size: 12px;
-      color: hsl(var(--text-secondary));
-      padding: 8px;
-    }
-  }
-
-  .rc-table-body {
-    margin-top: -2px;
-    // 美化滚动条
-    &::-webkit-scrollbar {
-      width: 8px;
-      height: 8px;
-    }
-
-    &::-webkit-scrollbar-thumb {
-      background-color: hsl(var(--muted));
-      border-radius: 4px;
-    }
-
-    .rc-table-cell {
-      font-size: 13px;
-      height: 1px;
-    }
-
-    .rc-table-row:hover{
-      background-color: hsl(var(--accent));
-    }
-  }
 }
 
 // 隐藏全局scrollbar

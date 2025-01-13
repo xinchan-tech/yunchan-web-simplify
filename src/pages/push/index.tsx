@@ -1,16 +1,15 @@
-import { getStockPush, StockPushType } from "@/api"
-import { AiAlarm, CapsuleTabs, CollectStar, JknCheckbox, JknIcon, JknRcTable, type JknRcTableProps, NumSpan, StockView } from "@/components"
-import { useCheckboxGroup, useTableData } from "@/hooks"
-import { stockUtils, type StockRecord } from "@/utils/stock"
+import { StockPushType, getStockPush } from "@/api"
+import { AiAlarm, CapsuleTabs, CollectStar, JknCheckbox, JknIcon, JknRcTable, type JknRcTableProps, NumSpanSubscribe, StockView } from "@/components"
+import { useCheckboxGroup, useTableData, useTableRowClickToStockTrading } from "@/hooks"
+import { type Stock, stockUtils } from "@/utils/stock"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import dayjs from "dayjs"
-import Decimal from "decimal.js"
 import { produce } from "immer"
 import { useEffect, useMemo, useState } from "react"
 
 
 
-type TableDataType = StockRecord & {
+type TableDataType = Stock & {
   star: string
   update_time: string
   /**
@@ -29,6 +28,8 @@ type TableDataType = StockRecord & {
   interval: string
   coiling_signal: string
   id: string
+  percent?: number
+  marketValue?: number
 }
 
 const PushPage = () => {
@@ -52,15 +53,17 @@ const PushPage = () => {
   useEffect(() => {
     if (query.data) {
       setList(query.data.map(item => {
-        const [stock] = stockUtils.toStockRecord(item)
+        const stock = stockUtils.toStock(item.stock, { extend: item.extend, symbol: item.symbol, name: item.name }) as TableDataType
         stock.update_time = item.update_time
         stock.star = item.star
         stock.id = item.id
         stock.warning = item.warning
+        stock.percent = stockUtils.getPercent(stock)
+        stock.marketValue = stockUtils.getMarketValue(stock)
         stock.bull = item.bull
         stock.coiling_signal = item.coiling_signal
         stock.interval = item.interval
-        return stock as TableDataType
+        return stock
       }))
     } else {
       setList([])
@@ -86,7 +89,7 @@ const PushPage = () => {
   }, [])
 
   const onUpdateCollect = (id: string, checked: boolean) => {
-    queryClient.setQueryData<StockRecord[]>([getStockPush.cacheKey, queryParams], (data) => {
+    queryClient.setQueryData<TableDataType[]>([getStockPush.cacheKey, queryParams], (data) => {
       if (!data) return data
       return data.map(produce(item => {
         if (item.id === id) {
@@ -111,30 +114,28 @@ const PushPage = () => {
         dataIndex: 'close',
         align: 'right',
         sort: true,
-        render: (v, row) => <NumSpan value={v} isPositive={row.isUp} decimal={3} />
+        render: (v, row) => <NumSpanSubscribe code={row.symbol} field="close" blink value={v} isPositive={stockUtils.isUp(row)} align="right" />
       },
       {
         title: '涨跌幅%',
         dataIndex: 'percent',
         align: 'right',
         sort: true,
-        render: v => <div className="inline-block">
-          <NumSpan block className="w-20" value={Decimal.create(v).mul(100)} isPositive={v >= 0} percent symbol />
-        </div>
+        render: (percent, row) => <NumSpanSubscribe code={row.symbol} field="percent" blink block className="w-20" decimal={2} value={percent} percent isPositive={stockUtils.isUp(row)} symbol align="right" />
       },
       {
         title: '成交额',
         dataIndex: 'turnover',
         align: 'right',
         sort: true,
-        render: v => Decimal.create(v).toShortCN(2)
+        render: (turnover, row) => <NumSpanSubscribe code={row.symbol} field="turnover" blink align="right" unit decimal={2} value={turnover} />
       },
       {
         title: '总市值',
         dataIndex: 'marketValue',
         align: 'right',
         sort: true,
-        render: v => Decimal.create(v).toShortCN(2)
+        render: (marketValue, row) => <NumSpanSubscribe code={row.symbol} field={v => stockUtils.getSubscribeMarketValue(row, v)} blink align="right" unit decimal={2} value={marketValue} />
       },
       {
         title: `${activeType === StockPushType.STOCK_KING ? '股王' : '推荐'}指数`,
@@ -184,7 +185,7 @@ const PushPage = () => {
         dataIndex: 'industry',
         align: 'right'
       })
-    }else{
+    } else {
       (common as any[]).splice(6, 0, {
         title: '推送周期',
         dataIndex: 'interval',
@@ -198,6 +199,8 @@ const PushPage = () => {
 
     return common
   })()
+
+  const onRowClick = useTableRowClickToStockTrading('symbol')
 
   return (
     <div className="flex flex-col h-full">
@@ -216,7 +219,7 @@ const PushPage = () => {
         </CapsuleTabs>
       </div>
       <div className="flex-1 overflow-hidden">
-        <JknRcTable rowKey="id" onSort={onSort} columns={columns} data={list} isLoading={query.isLoading} />
+        <JknRcTable rowKey="id" onSort={onSort} columns={columns} data={list} isLoading={query.isLoading} onRow={onRowClick} />
       </div>
     </div>
   )

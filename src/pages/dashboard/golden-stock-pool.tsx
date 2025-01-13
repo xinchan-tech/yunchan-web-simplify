@@ -53,18 +53,18 @@ const GoldenStockPool = () => {
       title: '现价', dataIndex: 'close', key: 'close',
       sort: true,
       align: 'right',
-      render: (_, row) => <NumSpanSubscribe code={row.symbol} field="record.close" blink value={row.close} decimal={3} isPositive={stockUtils.isUp(row)} align="right" />
+      render: (_, row) => <NumSpanSubscribe code={row.symbol} field="close" blink value={row.close} decimal={3} isPositive={stockUtils.isUp(row)} align="right" />
     },
     {
       title: '涨跌幅', dataIndex: 'percent', key: 'percent', align: 'right',
       sort: true,
       render: (_, row) => (
-        <NumSpanSubscribe code={row.symbol} field="record.percent" className="w-20 text-center" block blink value={(stockUtils.getPercent(row) ?? 0) * 100} decimal={2} percent isPositive={stockUtils.isUp(row)} align="right" />
+        <NumSpanSubscribe code={row.symbol} field="percent" className="w-20 text-center" block blink value={(stockUtils.getPercent(row) ?? 0) * 100} decimal={2} percent isPositive={stockUtils.isUp(row)} align="right" />
       )
     },
     {
       title: '成交额', sort: true, dataIndex: 'turnover', key: 'turnover', align: 'right',
-      render: (_, row) => <NumSpanSubscribe code={row.symbol} field="record.turnover" blink value={row.turnover} decimal={2} unit align="right" />
+      render: (_, row) => <NumSpanSubscribe code={row.symbol} field="turnover" blink value={row.turnover} decimal={2} unit align="right" />
     },
     {
       title: '总市值', sort: true, dataIndex: 'marketValue', key: 'marketValue', align: 'right',

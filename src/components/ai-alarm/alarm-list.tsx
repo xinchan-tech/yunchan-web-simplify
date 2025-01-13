@@ -1,12 +1,12 @@
-import { AlarmType, getAlarmsGroup, getAlarms, deleteAlarm } from "@/api"
-import { type JknTableProps, StockView, NumSpan, JknIcon, JknTable, Popover, PopoverAnchor, PopoverClose, PopoverContent, PopoverTrigger,  Button } from "@/components"
-import { useToast } from "@/hooks"
-import { stockUtils } from "@/utils/stock"
+import { AlarmType, deleteAlarm, getAlarms, getAlarmsGroup } from "@/api"
+import { Button, JknIcon, JknRcTable, type JknRcTableProps, JknTable, type JknTableProps, NumSpanSubscribe, Popover, PopoverAnchor, PopoverClose, PopoverContent, PopoverTrigger, StockView } from "@/components"
+import { useCheckboxGroup, useTableData, useToast } from "@/hooks"
+import { type Stock, stockUtils } from "@/utils/stock"
 import { cn } from "@/utils/style"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import dayjs from "dayjs"
-import Decimal from "decimal.js"
 import { useEffect, useMemo, useState } from "react"
+import { useNavigate } from "react-router"
 
 interface AlarmListProps {
   type: AlarmType
@@ -42,109 +42,30 @@ const GroupAlarm = (props: AlarmItemProps) => {
   }
   const query = useQuery(options)
 
+  const [list, { setList, onSort }] = useTableData<Stock>([], 'symbol')
+
   useEffect(() => {
     if (query.data) {
       props.onChange?.(query.data.items[0]?.symbol)
     }
   }, [query.data, props.onChange])
 
-  const data = useMemo(() => query.data?.items.map(item => stockUtils.toStockRecord(item)[0]) ?? [], [query.data])
-
-  const columns = useMemo(() => {
-    const c: JknTableProps<ArrayItem<typeof data>>['columns'] = [
-      { header: '序号', accessorKey: 'index', enableSorting: false, cell: ({ row }) => <span className="block py-1">{row.index + 1}</span>, meta: { align: 'center', width: 40 } },
-      {
-        header: '股票代码', accessorKey: 'name', meta: {  },
-        cell: ({ row }) => <StockView code={row.original.code} name={row.original.name} />
-      },
-      {
-        header: '现价', accessorKey: 'close', meta: { align: 'right', width: '10%' },
-        cell: ({ row }) => <NumSpan value={row.original.close} decimal={2} isPositive={row.original.isUp} />
-      },
-      {
-        header: '涨跌幅', accessorKey: 'percent', meta: { align: 'right', width: '10%' },
-        cell: ({ row }) => <div className="inline-block"><NumSpan className="w-20 " symbol block percent decimal={2} value={row.original.percent} isPositive={row.original.isUp} /></div>
-      },
-      {
-        header: '成交额', accessorKey: 'volume', meta: { align: 'right', width: '10%' },
-        cell: ({ row }) => <span >{Decimal.create(row.original.volume).toShortCN(3)} </span>
-      },
-      {
-        header: '总市值', accessorKey: 'marketValue', meta: { align: 'right', width: '10%' },
-        cell: ({ row }) => <NumSpan unit value={row.original.marketValue} isPositive={row.original.isUp} />
-      },
-    ]
-
-    if (props.options) {
-      c.push({
-        header: (row) => (
-          <div className="flex justify-center items-center gap-2">
-            <Popover open={row.table.getSelectedRowModel().rows.length > 0}>
-              <PopoverAnchor>
-                <span>操作</span>
-              </PopoverAnchor>
-              <PopoverContent side="left" align="start" sideOffset={-20} alignOffset={30} className='w-auto px-4'>
-                <div className="text-center py-1 bg-background">
-                  批量操作 {row.table.getSelectedRowModel().rows.length} 项
-                </div>
-                <div className='flex my-4 bg-muted gap-2'>
-                  <span>批量删除</span>
-                  <Button onClick={() => row.table.resetRowSelection()} size="mini" variant="outline">取消</Button>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button size="mini" variant="destructive">删除</Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto px-4">
-                      <div className="text-center py-1 bg-background">
-                        确定删除吗
-                      </div>
-                      <div className="items-center justify-center flex my-4 bg-muted gap-2">
-                        <PopoverClose asChild><Button size="mini" variant="outline">取消</Button></PopoverClose>
-                        <Button size="mini" onClick={() => row.table.options.meta?.emit({ event: 'delete', params: row.table.getSelectedRowModel().rows.map(item => item.original.code) })}>确定</Button>
-                      </div>
-                    </PopoverContent>
-                  </Popover>
-                </div>
-              </PopoverContent>
-            </Popover>
-            <JknIcon.Checkbox checked={row.table.getSelectedRowModel().rows.length > 0} className="rounded-none" checkedIcon="checkbox_mult_sel" uncheckedIcon="checkbox_mult_nor" />
-          </div>
-        ),
-        enableSorting: false, size: 90, accessorKey: 'action', meta: { align: 'center', width: 100 },
-        cell: ({ row, table }) => (
-          <div className="flex justify-center gap-2">
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="icon">
-                  <JknIcon name="del" className="w-4 h-4 rounded-none" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto">
-                <div className="text-center py-1 bg-background">
-                  删除确认
-                </div>
-                <div className="my-4 bg-muted px-4">
-                  <div>
-                    确定删除 {row.original.code} 的所有报警？
-                  </div>
-                  <div className="items-center justify-center flex gap-2 mt-4">
-                    <PopoverClose asChild><Button size="mini" variant="outline">取消</Button></PopoverClose>
-                    <Button size="mini" onClick={() => table.options.meta?.emit({ event: 'deleteOne', params: row.original.code })}>确定</Button>
-                  </div>
-                </div>
-              </PopoverContent>
-            </Popover>
-
-            <JknIcon.Checkbox className="rounded-none" checked={row.getIsSelected()} onClick={() => row.toggleSelected()} checkedIcon="checkbox_mult_sel" uncheckedIcon="checkbox_mult_nor" />
-          </div>
-        )
-      })
-    } else {
-      c.splice(4, 1)
+  useEffect(() => {
+    if (!query.data) {
+      setList([])
+      return
     }
+    setList(query.data.items.map(item => {
+      const s = stockUtils.toStock(item.stock, { extend: item.extend, symbol: item.symbol, name: item.name })
+      return {
+        ...s,
+        percent: stockUtils.getPercent(s),
+        marketValue: stockUtils.getMarketValue(s)
+      }
+    }))
+  }, [query.data, setList])
 
-    return c
-  }, [props.options])
+  const { checked, toggle, setCheckedAll, getIsChecked } = useCheckboxGroup([])
 
   const queryClient = useQueryClient()
   const { toast } = useToast()
@@ -180,17 +101,112 @@ const GroupAlarm = (props: AlarmItemProps) => {
     }
   })
 
-  const _onEvent: JknTableProps['onEvent'] = ({ event, params }) => {
-    if (event === 'deleteOne') {
-      deleteAlarmMutation.mutate({ ids: [params], type: props.type })
-    } else if (event === 'delete') {
-      deleteAlarmMutation.mutate({ ids: params, type: props.type })
+  const columns = useMemo(() => {
+    const c: JknRcTableProps<ArrayItem<typeof list>>['columns'] = [
+      { title: '序号', dataIndex: 'index', align: 'center', width: 40, render: (_, __, index) => <span className="block py-1">{index + 1}</span> },
+      {
+        title: '股票代码', dataIndex: 'name', sort: true,
+        render: (name, row) => <StockView code={row.symbol} name={name} />
+      },
+      {
+        title: '现价', dataIndex: 'close', align: 'right', sort: true, width: '10%',
+        render: (close, row) => <NumSpanSubscribe code={row.symbol} blink field="close" value={close} decimal={2} isPositive={stockUtils.isUp(row)} align="right" />
+      },
+      {
+        title: '涨跌幅', dataIndex: 'percent', align: 'right', sort: true, width: '10%',
+        render: (percent, row) => <NumSpanSubscribe code={row.symbol} field="percent" blink className="w-20" symbol block percent decimal={2} value={percent} isPositive={stockUtils.isUp(row)} />
+      },
+      {
+        title: '成交额', dataIndex: 'turnover', align: 'right', sort: true, width: '10%',
+        render: (turnover, row) => <NumSpanSubscribe code={row.symbol} field="turnover" blink align="right" unit decimal={2} value={turnover} />
+      },
+      {
+        title: '总市值', dataIndex: 'marketValue', align: 'right', sort: true, width: '10%',
+        render: (marketValue, row) => <NumSpanSubscribe code={row.symbol} field={v => stockUtils.getSubscribeMarketValue(row, v)} blink align="right" unit decimal={2} value={marketValue} />
+      },
+    ]
+
+    if (props.options) {
+      ; (c as any[]).push({
+        title:
+          <div className="flex justify-center items-center gap-2">
+            <Popover open={checked.length > 0}>
+              <PopoverAnchor>
+                <span>操作</span>
+              </PopoverAnchor>
+              <PopoverContent side="left" align="start" sideOffset={-20} alignOffset={30} className='w-auto px-4'>
+                <div className="text-center py-1 bg-background">
+                  批量操作 {checked.length} 项
+                </div>
+                <div className='flex my-4 bg-muted gap-2'>
+                  <span>批量删除</span>
+                  <Button onClick={() => { setCheckedAll([]) }} size="mini" variant="outline">取消</Button>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button size="mini" variant="destructive">删除</Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto px-4">
+                      <div className="text-center py-1 bg-background">
+                        确定删除吗
+                      </div>
+                      <div className="items-center justify-center flex my-4 bg-muted gap-2">
+                        <PopoverClose asChild><Button size="mini" variant="outline">取消</Button></PopoverClose>
+                        <Button size="mini" onClick={() => deleteAlarmMutation.mutate({ ids: [...checked], type: props.type })}>确定</Button>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              </PopoverContent>
+            </Popover>
+            <JknIcon.Checkbox checked={checked.length > 0} className="rounded-none" checkedIcon="checkbox_mult_sel" uncheckedIcon="checkbox_mult_nor" />
+          </div>
+        , dataIndex: 'action', align: 'center', width: 100,
+        render: (_: any, row: any) => (
+          <div className="flex justify-center gap-2">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="icon">
+                  <JknIcon name="del" className="w-4 h-4 rounded-none" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto">
+                <div className="text-center py-1 bg-background">
+                  删除确认
+                </div>
+                <div className="my-4 bg-muted px-4">
+                  <div>
+                    确定删除 {row.symbol} 的所有报警？
+                  </div>
+                  <div className="items-center justify-center flex gap-2 mt-4">
+                    <PopoverClose asChild><Button size="mini" variant="outline">取消</Button></PopoverClose>
+                    <PopoverClose asChild>   <Button size="mini" onClick={() => deleteAlarmMutation.mutate({ ids: [row.symbol], type: props.type })}>确定</Button></PopoverClose>
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
+
+            <JknIcon.Checkbox className="rounded-none" checked={getIsChecked(row.symbol)} onClick={() => toggle(row.symbol)} checkedIcon="checkbox_mult_sel" uncheckedIcon="checkbox_mult_nor" />
+          </div>
+        )
+      })
+    } else {
+      ; (c as any[]).splice(4, 1)
     }
-  }
+
+    return c
+  }, [props.options, checked, deleteAlarmMutation.mutate, getIsChecked, props.type, setCheckedAll, toggle])
+
+
+
+
+  const navigate = useNavigate()
 
   return (
     <div className="h-full overflow-hidden">
-      <JknTable rowKey="code" onRowClick={row => props.onChange?.(row.code)} data={data} columns={columns} onEvent={_onEvent} />
+      <JknRcTable rowKey="symbol" onRow={(row) => ({
+        onClick: () => props.onChange?.(row.symbol),
+        onDoubleClick: () => navigate(`/stock/trading?symbol=${row.symbol}`)
+      })} data={list} columns={columns} onSort={onSort} />
     </div>
   )
 }
@@ -349,7 +365,7 @@ const AlarmGroupList = (props: AlarmGroupListProps) => {
     }
 
     return c
-  }, [props.options, props.type])
+  }, [props.options])
 
   const data = (() => {
     const r: TableDataType[] = []

@@ -64,22 +64,22 @@ const TopList = () => {
     },
     {
       title: `${type === IncreaseTopStatus.PRE_MARKET ? '盘前' : type === IncreaseTopStatus.AFTER_HOURS ? '盘后' : '现'}价`, dataIndex: 'close', align: 'right', sort: true,
-      render: (_, row) => <NumSpanSubscribe code={row.symbol} field="record.close" blink value={row.close} isPositive={stockUtils.isUp(row)} align="right" />
+      render: (_, row) => <NumSpanSubscribe code={row.symbol} field="close" blink value={row.close} isPositive={stockUtils.isUp(row)} align="right" />
     },
     {
       title: `${type === IncreaseTopStatus.PRE_MARKET ? '盘前' : type === IncreaseTopStatus.AFTER_HOURS ? '盘后' : ''}涨跌幅%`, dataIndex: 'percent', align: 'right', sort: true,
       width: 100,
       render: (_, row) => (
-        <NumSpanSubscribe code={row.symbol} field="record.percent" blink block className="w-20" decimal={2} value={Decimal.create(stockUtils.getPercent(row)).mul(100).toDP(2).toNumber()} percent isPositive={stockUtils.isUp(row)} symbol align="right" />
+        <NumSpanSubscribe code={row.symbol} field="percent" blink block className="w-20" decimal={2} value={Decimal.create(stockUtils.getPercent(row)).mul(100).toDP(2).toNumber()} percent isPositive={stockUtils.isUp(row)} symbol align="right" />
       )
     },
     {
       title: '成交额', dataIndex: 'turnover', align: 'right', sort: true,
-      render: (_, row) => <NumSpanSubscribe code={row.symbol} field="record.turnover" blink align="right" unit decimal={2} value={row.turnover} />
+      render: (_, row) => <NumSpanSubscribe code={row.symbol} field="turnover" blink align="right" unit decimal={2} value={row.turnover} />
     },
     {
       title: '总市值', dataIndex: 'marketValue', align: 'right', sort: true,
-      render: (_, row) => <NumSpanSubscribe code={row.symbol} field={v => v.record.close * (stockUtils.getMarketValue(row) ?? 0)} blink align="right" unit decimal={2} value={stockUtils.getMarketValue(row)} />
+      render: (_, row) => <NumSpanSubscribe code={row.symbol} field={v => v.close * (stockUtils.getMarketValue(row) ?? 0)} blink align="right" unit decimal={2} value={stockUtils.getMarketValue(row)} />
     },
   ]
 

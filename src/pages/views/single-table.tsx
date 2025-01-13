@@ -1,8 +1,8 @@
 import { type StockExtend, type UsStockColumn, getChineseStocks, getIndexGapAmplitude, getIndexRecommends, getUsStocks } from "@/api"
-import { AiAlarm, CollectStar, JknCheckbox, JknIcon, JknRcTable, type JknRcTableProps, JknTable, type JknTableProps, NumSpan, NumSpanSubscribe, StockView } from "@/components"
+import { AiAlarm, CollectStar, JknCheckbox, JknIcon, JknRcTable, type JknRcTableProps, NumSpan, NumSpanSubscribe, StockView } from "@/components"
 import { useCheckboxGroup, useStockQuoteSubscribe, useTableData, useTableRowClickToStockTrading } from "@/hooks"
 import { stockUtils } from "@/utils/stock"
-import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { useQuery } from "@tanstack/react-query"
 
 import Decimal from "decimal.js"
 import { produce } from "immer"
@@ -158,19 +158,19 @@ const SingleTable = (props: SingleTableProps) => {
     {
       title: '现价', dataIndex: 'price', align: 'right', width: '8%', sort: true,
       render: (_, row) => (
-        <NumSpanSubscribe blink code={row.symbol} field="record.close" value={row.price} decimal={2} isPositive={row.isUp} align="right" />
+        <NumSpanSubscribe blink code={row.symbol} field="close" value={row.price} decimal={2} isPositive={row.isUp} align="right" />
       )
     },
     {
       title: '涨跌幅', dataIndex: 'percent', align: 'right', width: 120, sort: true,
       render: (_, row) => (
-        <NumSpanSubscribe blink code={row.symbol} field="record.percent" block className="py-0.5 w-20" decimal={2} value={Decimal.create(row.percent).toNumber()} percent isPositive={row.isUp} symbol align="right" />
+        <NumSpanSubscribe blink code={row.symbol} field="percent" block className="py-0.5 w-20" decimal={2} value={Decimal.create(row.percent).toNumber()} percent isPositive={row.isUp} symbol align="right" />
       )
     },
     {
       title: '成交额', dataIndex: 'amount', align: 'right', width: '8%', sort: true,
       render: (_, row) => (
-        <NumSpanSubscribe blink code={row.symbol} field="record.turnover" value={row.amount} decimal={2} align="right" unit />
+        <NumSpanSubscribe blink code={row.symbol} field="turnover" value={row.amount} decimal={2} align="right" unit />
       )
     },
     {
