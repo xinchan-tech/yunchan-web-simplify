@@ -9,6 +9,26 @@ import WKSDK, {
 import { MessageWrap, PartType, Part } from "../../Service/Model";
 import { cn } from "@/utils/style";
 
+export const getRevokeText = (fromUID: string) => {
+  const fromUser = WKSDK.shared().channelManager.getChannelInfo(
+    new Channel(fromUID, ChannelTypePerson)
+  );
+
+  return (
+    <div className='message-system'>
+      {fromUser?.title + "撤回了一条消息"}
+      <style jsx>{`
+        .message-system {
+          margin: 20px auto;
+          color: rgb(90, 90, 90);
+          font-size: 12px;
+          text-align: center;
+        }
+      `}</style>
+    </div>
+  );
+};
+
 const TextCell = (props: { message: Message; messageWrap?: MessageWrap }) => {
   const { message, messageWrap } = props;
 
@@ -39,13 +59,13 @@ const TextCell = (props: { message: Message; messageWrap?: MessageWrap }) => {
   };
 
   const getMentionText = (k: number, part: Part) => {
-    console.log(part, 'partpart')
+    // console.log(part, 'partpart')
     let latestName: any = part.text;
     // if(part.data?.uid) {
     //   latestName = '@' + WKSDK.shared().channelManager.getChannelInfo(
     //     new Channel(part.data.uid, ChannelTypePerson)
     //   )?.title;
-    // } 
+    // }
 
     return (
       <span
@@ -79,16 +99,21 @@ const TextCell = (props: { message: Message; messageWrap?: MessageWrap }) => {
   }
 
   return (
-    <MsgCard data={message}>
-      {elements}
+    <>
+      {message.content.revoke === true ? (
+        getRevokeText(message.content.revoker)
+      ) : (
+        <MsgCard data={message}>{elements}</MsgCard>
+      )}
       <style>
         {`
-              .message-text-richmention {
-                color: rgb(65,158,255)
-              }
-            `}
+          .message-text-richmention {
+            color: rgb(65,158,255)
+          }
+          
+        `}
       </style>
-    </MsgCard>
+    </>
   );
 };
 

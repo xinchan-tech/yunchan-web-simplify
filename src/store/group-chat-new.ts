@@ -53,6 +53,7 @@ interface GroupChatShortStore {
   setMessages: (data: Message[]) => void
   locatedMessageId: string
   setLocatedMessageId: (locatedMessageId: string) =>void
+
 }
 
 export const useGroupChatShortStore = create<GroupChatShortStore>(
@@ -93,5 +94,6 @@ export const useGroupChatShortStore = create<GroupChatShortStore>(
         locatedMessageId
       })
     },
+
   })
 );

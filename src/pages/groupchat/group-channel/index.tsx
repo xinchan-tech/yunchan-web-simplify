@@ -6,7 +6,7 @@ import WKSDK, {
   ChannelInfo,
 } from "wukongimjssdk";
 import { ConversationWrap } from "../ConversationWrap";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import {
   useGroupChatStoreNew,
   useGroupChatShortStore,
@@ -14,14 +14,30 @@ import {
 import { cn } from "@/utils/style";
 import APIClient from "../Service/APIClient";
 import { useLatest } from "ahooks";
+import { useShallow } from "zustand/react/shallow";
 import { lastContent } from "../chat-utils";
-// import { getGroupMembersService } from "@/api";
+import { getGroupChannels } from "@/api";
+import { useQuery } from "@tanstack/react-query";
 
-
+type GroupData = {
+  id: string;
+  account: string;
+  avatar: string;
+  name: string;
+  price: string;
+  brief: string;
+  tags: string;
+  total_user: string;
+  in_channel: number;
+};
 
 const GroupChannel = (props: { onSelectChannel: (c: Channel) => void }) => {
-
-  const { conversationWraps, setConversationWraps } = useGroupChatShortStore();
+  const { conversationWraps, setConversationWraps } = useGroupChatShortStore(
+    useShallow((state) => ({
+      conversationWraps: state.conversationWraps,
+      setConversationWraps: state.setConversationWraps,
+    }))
+  );
   const latestConversation = useLatest(conversationWraps);
   const { onSelectChannel } = props;
   const { setSelectedChannel, selectedChannel, setToChannel } =
@@ -80,7 +96,7 @@ const GroupChannel = (props: { onSelectChannel: (c: Channel) => void }) => {
     action: ConversationAction
   ) => {
     // 监听最近会话列表的变化
-   
+
     if (action === ConversationAction.add) {
       const temp = [
         new ConversationWrap(conversation),
@@ -89,6 +105,7 @@ const GroupChannel = (props: { onSelectChannel: (c: Channel) => void }) => {
       batchUpdateConversation(temp);
       setConversationWraps(temp);
     } else if (action === ConversationAction.update) {
+ 
       const index = latestConversation.current?.findIndex(
         (item) =>
           item.channel.channelID === conversation.channel.channelID &&
@@ -117,7 +134,7 @@ const GroupChannel = (props: { onSelectChannel: (c: Channel) => void }) => {
 
   // 强制刷新会话
   const channelInfoListener = (channelInfo: ChannelInfo) => {
-    console.log(channelInfo, latestConversation, "current channel");
+
     if (latestConversation.current.length > 0) {
       const temp = [...latestConversation.current];
       setConversationWraps(temp);
@@ -176,79 +193,151 @@ const GroupChannel = (props: { onSelectChannel: (c: Channel) => void }) => {
     }
   };
 
+  const option = {
+    queryKey: [getGroupChannels.cacheKey],
+    queryFn: () =>
+      getGroupChannels({
+        type: "1",
+      }),
+  };
+
+  const { data } = useQuery(option);
+
   const handleSelectChannel = (channel: Channel) => {
     setSelectedChannel(channel);
     setToChannel(channel);
     if (typeof onSelectChannel === "function") {
       onSelectChannel(channel);
     }
-   
+
     APIClient.shared.clearUnread(channel);
     // todo 调一个接口清除@提醒
-    
-    clearConversationUnread(channel);
-    clearConversationMentionMe(channel)
 
-    
-   
+    clearConversationUnread(channel);
+    clearConversationMentionMe(channel);
   };
   // console.log(conversationWraps, "conversationWraps");
 
   useEffect(() => {
-    console.log(conversationWraps, 'conversationWraps')
-  }, [conversationWraps])
- 
+    console.log(data, "conversationWraps");
+  }, [data]);
+
+  const displayConversations = useMemo(() => {
+    let result: Array<GroupData | ConversationWrap> = [];
+
+    if (
+      data &&
+      data.items instanceof Array &&
+      conversationWraps instanceof Array
+    ) {
+      result = data.items.map((item) => {
+        const joinedGroup = conversationWraps.find(
+          (con) => con.channel.channelID === item.account
+        );
+        if (joinedGroup) {
+          return joinedGroup
+        } else {
+          return item
+        }
+      });
+    }
+    return result;
+  }, [data?.items, conversationWraps]);
 
   return (
     <div className="w-[270px]">
       <div className="group-filter h-[58px]"></div>
       <div className="group-list">
-        {conversationWraps.map((item: ConversationWrap) => {
-          return (
-            <div
-              key={item.channel.channelID}
-              className={cn(
-                "flex conversation-card",
-                item.channel.channelID === selectedChannel?.channelID &&
-                  "actived"
-              )}
-              onClick={() => {
-               
-                handleSelectChannel(item.channel);
-              }}
-            >
-              <div className="group-avatar rounded-md flex items-center text-ellipsis justify-center relative">
-                {item.channelInfo?.logo ? (
-                  <img
-                    src={item.channelInfo?.logo}
-                    className="rounded-md"
-                    style={{ width: "48px", height: "48px" }}
-                  />
-                ) : (
-                  <span className='text-lg'>{item.channelInfo?.title[0].toLocaleUpperCase() || ""}</span>
-                )}
-
-                {item.unread > 0 && (
-                  <div className="absolute h-[18px] box-border  unread min-w-6">
-                    {item.unread > 99 ? "99+" : item.unread}
+        {displayConversations.map(
+          (item: ConversationWrap  | GroupData) => {
+            if(item instanceof ConversationWrap) {
+              return (
+                <div
+                  key={item.channel.channelID}
+                  className={cn(
+                    "flex conversation-card",
+                    item.channel.channelID === selectedChannel?.channelID &&
+                      "actived"
+                  )}
+                  onClick={() => {
+                    handleSelectChannel(item.channel);
+                  }}
+                >
+                  <div className="group-avatar rounded-md flex items-center text-ellipsis justify-center relative">
+                    {item.channelInfo?.logo ? (
+                      <img
+                        src={item.channelInfo?.logo}
+                        className="rounded-md"
+                        style={{ width: "48px", height: "48px" }}
+                      />
+                    ) : (
+                      <span className="text-lg">
+                        {item.channelInfo?.title[0].toLocaleUpperCase() || ""}
+                      </span>
+                    )}
+  
+                    {item.unread > 0 && (
+                      <div className="absolute h-[18px] box-border  unread min-w-6">
+                        {item.unread > 99 ? "99+" : item.unread}
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-              <div className="group-data flex-1">
-                <div className="group-title">
-                  {item.channelInfo?.title || ""}
-                </div>
-                <div className="group-last-msg flex justify-between">
-                  <div className="flex-1 overflow-hidden whitespace-nowrap text-ellipsis max-w-24">
-                    {lastContent(item)}
-                    {item.lastMessage?.content.conversationDigest || ""}
+                  <div className="group-data flex-1">
+                    <div className="group-title">
+                      {item.channelInfo?.title || ""}
+                    </div>
+                    <div className="group-last-msg flex justify-between">
+                      <div className="flex-1 overflow-hidden whitespace-nowrap text-ellipsis max-w-24">
+                        {lastContent(item)}
+                        {item.lastMessage?.content.conversationDigest || ""}
+                      </div>
+                      <div className="max-w-24">{item.timestampString || ""}</div>
+                    </div>
                   </div>
-                  <div className="max-w-20">{item.timestampString || ""}</div>
                 </div>
-              </div>
-            </div>
-          );
-        })}
+              );
+            }  else {
+              return (
+                <div
+                  key={item.account}
+                  className={cn(
+                    "flex conversation-card",
+                    item.account === selectedChannel?.channelID &&
+                      "actived"
+                  )}
+                 
+                >
+                  <div className="group-avatar rounded-md flex items-center text-ellipsis justify-center relative">
+                    {item.avatar ? (
+                      <img
+                        src={item.avatar}
+                        className="rounded-md"
+                        style={{ width: "48px", height: "48px" }}
+                      />
+                    ) : (
+                      <span className="text-lg">
+                        {item.name[0].toLocaleUpperCase() || ""}
+                      </span>
+                    )}
+  
+                   
+                  </div>
+                  <div className="group-data flex-1">
+                    <div className="group-title">
+                      {item.name || ""}
+                    </div>
+                    <div className="group-last-msg flex justify-between">
+                      <div className="flex-1 overflow-hidden whitespace-nowrap text-ellipsis max-w-24">
+                        一起加入群组吧
+                      </div>
+                      <div className="max-w-24"></div>
+                    </div>
+                  </div>
+                </div>)
+            }
+           
+          }
+        )}
       </div>
 
       <style jsx>

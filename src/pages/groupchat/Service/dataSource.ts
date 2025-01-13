@@ -13,13 +13,17 @@ import {
 
 import { MediaMessageUploadTask } from "./task";
 import APIClient from "./APIClient";
-import { syncRecentConversation, getGroupMembersService, GroupMemberResult } from "@/api";
+import {
+  syncRecentConversation,
+  getGroupMembersService,
+  GroupMemberResult,
+} from "@/api";
 import { Convert } from "./convert";
 import request from "@/utils/request";
 import UploadUtil from "./uploadUtil";
 import { userToChannelInfo } from "../chat-utils";
 
-export const fromUIDList: string[] = [];
+const subscriberCache: Map<string, Subscriber[]> = new Map();
 
 export function initDataSource() {
   // 同步自己业务端的频道消息列表
@@ -102,37 +106,38 @@ export function initDataSource() {
     channel: Channel,
     version: number
   ): Promise<Array<Subscriber>> => {
-    let resp:GroupMemberResult;
+    let resp: GroupMemberResult;
     let members: Subscriber[] = [];
     try {
-      resp = await getGroupMembersService(channel.channelID);
-      if (resp.items instanceof Array && resp.items.length > 0) {
-        resp.items.forEach((man) => {
-          let member = new Subscriber();
-          member.uid = man.username;
-          member.name = man.realname;
-          member.orgData = man;
-          member.avatar = man.avatar;
-  
-          // 在这里缓存群成员的头像昵称
-          const data = {
-            name: man.realname,
-            avatar: man.avatar,
-          };
-          WKSDK.shared().channelManager.setChannleInfoForCache(
-            userToChannelInfo(data, man.username)
-          );
-  
-          members.push(member);
-        });
+      if (subscriberCache.has(channel.channelID)) {
+        members = subscriberCache.get(channel.channelID);
+      } else {
+        resp = await getGroupMembersService(channel.channelID);
+        if (resp.items instanceof Array && resp.items.length > 0) {
+          resp.items.forEach((man) => {
+            let member = new Subscriber();
+            member.uid = man.username;
+            member.name = man.realname;
+            member.orgData = man;
+            member.avatar = man.avatar;
+
+            // 在这里缓存群成员的头像昵称
+            const data = {
+              name: man.realname,
+              avatar: man.avatar,
+            };
+            WKSDK.shared().channelManager.setChannleInfoForCache(
+              userToChannelInfo(data, man.username)
+            );
+
+            members.push(member);
+          });
+        }
+        subscriberCache.set(channel.channelID, members);
       }
     } catch (err) {
-      console.error(err)
-      
+      console.error(err);
     }
- 
-
-   
 
     return members;
   };

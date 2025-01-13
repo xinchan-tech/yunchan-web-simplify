@@ -38,6 +38,7 @@ import { cn } from "@/utils/style";
 import ChatAvatar from "../components/chat-avatar";
 import { MentionModel } from "../chat-utils";
 import ReplyMessageView from "../components/reply-view";
+import { useShallow } from "zustand/react/shallow";
 
 class MemberSuggestionDataItem implements SuggestionDataItem {
   id!: string | number;
@@ -59,7 +60,15 @@ const GroupChatInput = forwardRef(
     const { onMsgSend, subscribers } = props;
     const mentionCache = useRef<any>({});
     // 文本内容
-    const { inputValue, setInputValue , replyMessage , setReplyMessage} = useGroupChatShortStore();
+    const { inputValue, setInputValue, replyMessage, setReplyMessage } =
+      useGroupChatShortStore(
+        useShallow((state) => ({
+          inputValue: state.inputValue,
+          setInputValue: state.setInputValue,
+          replyMessage: state.replyMessage,
+          setReplyMessage: state.setReplyMessage,
+        }))
+      );
 
     const suggestionsMember = useMemo(() => {
       let selectedItems = new Array<MemberSuggestionDataItem>();
@@ -105,18 +114,20 @@ const GroupChatInput = forwardRef(
       }
 
       if (replyMessage) {
-        const reply = new Reply()
-        reply.messageID =replyMessage.messageID
-        reply.messageSeq = replyMessage.messageSeq
-        reply.fromUID = replyMessage.fromUID
-        const channelInfo = WKSDK.shared().channelManager.getChannelInfo(new Channel(replyMessage.fromUID, ChannelTypePerson))
+        const reply = new Reply();
+        reply.messageID = replyMessage.messageID;
+        reply.messageSeq = replyMessage.messageSeq;
+        reply.fromUID = replyMessage.fromUID;
+        const channelInfo = WKSDK.shared().channelManager.getChannelInfo(
+          new Channel(replyMessage.fromUID, ChannelTypePerson)
+        );
         if (channelInfo) {
-            reply.fromName = channelInfo.title
+          reply.fromName = channelInfo.title;
         }
-        reply.content =replyMessage.content
-        content.reply = reply
-        setReplyMessage(null)
-    }
+        reply.content = replyMessage.content;
+        content.reply = reply;
+        setReplyMessage(null);
+      }
 
       if (toChannel) {
         WKSDK.shared().chatManager.send(content, toChannel, setting);
@@ -260,11 +271,15 @@ const GroupChatInput = forwardRef(
         <div
           style={{ height: bottomHeight + "px" }}
           className="chat-msg-inputer relative"
-          
         >
-          {
-            replyMessage && <ReplyMessageView message={replyMessage} onClose={() => {}}></ReplyMessageView>
-          }
+          {replyMessage && (
+            <ReplyMessageView
+              message={replyMessage}
+              onClose={() => {
+                setReplyMessage(null)
+              }}
+            ></ReplyMessageView>
+          )}
           <div className="h-[40px] flex items-center">
             <Popover>
               <PopoverTrigger asChild>

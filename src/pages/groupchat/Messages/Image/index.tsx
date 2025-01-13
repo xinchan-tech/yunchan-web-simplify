@@ -6,7 +6,7 @@ import {
   Message,
 } from "wukongimjssdk";
 import MsgCard from "../../components/msg-card";
-import { ReplyFn } from "../..";
+import { getRevokeText } from "../text";
 
 export class ImageContent extends MediaMessageContent {
   width!: number;
@@ -77,22 +77,17 @@ const getImageSrc = (content: MessageImage) => {
   return content.remoteUrl;
 };
 
-const ImageCell = (props: {
-
-  message: Message
-}) => {
+const ImageCell = (props: { message: Message }) => {
   const { message } = props;
   const [showPreview, setShowPreview] = useState(false);
 
   const content = message.content as MessageImage;
 
-
-
   const getImageElement = () => {
     const content = message.content as MessageImage;
     let scaleSize = imageScale(content.width, content.height);
     return (
-      <MsgCard data={message} >
+      <MsgCard data={message}>
         <img
           alt=""
           src={getImageSrc(content)}
@@ -106,7 +101,13 @@ const ImageCell = (props: {
     );
   };
 
-  return <div>{getImageElement()}</div>;
+  return (
+    <>
+      {message.content.revoke === true
+        ? getRevokeText(message.content.revoker)
+        : getImageElement()}
+    </>
+  );
 };
 
 export default ImageCell;

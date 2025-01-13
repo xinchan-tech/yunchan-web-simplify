@@ -11,13 +11,21 @@ const ReplyMsg = (props: {
       <div
         className="reply-msg p-4 rounded-md inline-block"
         onClick={() => {
-        
+
           typeof locateMessage === "function" &&
             locateMessage(message?.content.reply.messageSeq);
         }}
       >
-        <div className="mb-1"> {message.content.reply.fromName}： </div>
-        <div> {message.content.reply.content?.conversationDigest}</div>
+        {message.content.reply.revoke === true ? (
+          "消息已撤回"
+        ) : (
+          <>
+     
+            <div className="mb-1"> {message.content.reply.fromName}： </div>
+            <div> {message.content.reply.content?.conversationDigest}</div>
+          </>
+        )}
+
         <style jsx>
           {`
             .reply-msg {

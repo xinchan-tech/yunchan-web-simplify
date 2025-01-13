@@ -1,5 +1,6 @@
 import { cn } from "@/utils/style";
 import { useGroupChatShortStore } from "@/store/group-chat-new";
+import { useShallow } from 'zustand/react/shallow';
 import { useEffect } from "react";
 
 function getRandomRgbColor() {
@@ -22,7 +23,11 @@ const ChatAvatar = (props: {
   size?: "sm" | "lg";
 }) => {
   const { data, className, radius = "50%", size } = props;
-  const { avatarColorMap, setAvatarColorMap } = useGroupChatShortStore();
+  
+  const { avatarColorMap, setAvatarColorMap } = useGroupChatShortStore(useShallow(state => ({
+    avatarColorMap: state.avatarColorMap,
+    setAvatarColorMap: state.setAvatarColorMap
+  })));
 
   useEffect(() => {
     if (data && data.uid) {

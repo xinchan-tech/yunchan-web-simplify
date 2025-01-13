@@ -11,11 +11,14 @@ import {
   ContextMenuItem,
 } from "@/components";
 import { GroupChatContext, ReplyFn } from "../..";
+import { revokeMessageService } from "@/api";
 
 const MsgCard = (props: { data: Message; children: string | ReactNode }) => {
   const { data } = props;
+  // todo 获取撤回权限
+  const revokePremession = true;
 
-  const { handleReply } = useContext(GroupChatContext);
+  const { handleReply , handleRevoke} = useContext(GroupChatContext);
   return (
     <div
       key={data.clientMsgNo}
@@ -56,6 +59,11 @@ const MsgCard = (props: { data: Message; children: string | ReactNode }) => {
             >
               回复
             </ContextMenuItem>
+            {revokePremession === true && (
+              <ContextMenuItem onClick={() => {
+                typeof handleRevoke === 'function' && handleRevoke(data)
+              }}>撤回</ContextMenuItem>
+            )}
           </ContextMenuContent>
         </ContextMenu>
       </div>

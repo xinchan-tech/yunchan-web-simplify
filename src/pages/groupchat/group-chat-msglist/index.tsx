@@ -2,7 +2,7 @@ import {
   useGroupChatStoreNew,
   useGroupChatShortStore,
 } from "@/store/group-chat-new";
-import { useEffect, useRef, UIEventHandler } from "react";
+import { useEffect, useRef, UIEventHandler, useState, useMemo } from "react";
 import { Message, MessageText, MessageImage } from "wukongimjssdk";
 
 import { useImperativeHandle, forwardRef, ReactNode } from "react";
@@ -14,19 +14,25 @@ import { useUpdate } from "ahooks";
 import { MessageWrap } from "../Service/Model";
 import ReplyMsg from "../components/reply-msg";
 import { cn } from "@/utils/style";
+import { sortMessages } from "../chat-utils";
 
 const GroupChatMsgList = forwardRef(
   (
     props: {
       messages: Message[];
       handleScroll: UIEventHandler<HTMLDivElement>;
-      handleFindPrevMsg: (messageSeq: number) => void
+      handleFindPrevMsg: (messageSeq: number) => void;
     },
     ref
   ) => {
-    const { messages , handleFindPrevMsg} = props;
+    const { messages, handleFindPrevMsg } = props;
     const { bottomHeight } = useGroupChatStoreNew();
-    const { locatedMessageId } = useGroupChatShortStore()
+    const locatedMessageId = useGroupChatShortStore(
+      (state) => state.locatedMessageId
+    );
+    const setLocatedMessageId = useGroupChatShortStore((state) => {
+      return state.setLocatedMessageId;
+    });
     const scrollDomRef = useRef<HTMLElement | null>(null);
     const update = useUpdate();
 
@@ -40,7 +46,7 @@ const GroupChatMsgList = forwardRef(
         } else if (m.content instanceof MessageImage) {
           text = <ImageCell key={key} message={m}></ImageCell>;
         } else {
-          text = <SystemCell key={key} message={m.content} />;
+          text = <SystemCell key={key} message={m} />;
         }
 
         if (streams && streams.length > 0) {
@@ -58,16 +64,29 @@ const GroupChatMsgList = forwardRef(
       return "未知消息";
     };
 
+    const goodMessages = useMemo(() => {
+      let result: Message[] = [];
+      if (messages instanceof Array && messages.length > 0) {
+        result = sortMessages(messages);
+      }
+      return result;
+    }, [messages]);
     // 更新message时，查询聊发送人头像和姓名信息，并缓存
     useEffect(() => {
       console.log(messages, "messages");
-    }, [messages, update]);
+    }, [messages]);
 
     useImperativeHandle(ref, () => ({
       scrollToBottom: () => {
         if (scrollDomRef.current) {
           scrollDomRef.current.scrollTop = scrollDomRef.current.scrollHeight;
         }
+      },
+      judgeNotOver: () => {
+        if (scrollDomRef.current) {
+          return scrollDomRef.current.scrollHeight <= scrollDomRef.current.offsetHeight;
+        }
+        return true
       },
       scrollTo: (position: number) => {
         if (scrollDomRef.current) {
@@ -81,14 +100,9 @@ const GroupChatMsgList = forwardRef(
       typeof props.handleScroll === "function" && props.handleScroll(e);
     };
 
-   
- 
     // 定位到引用消息位置
     const locateMessage = (messageSeq: number) => {
-     
-      typeof handleFindPrevMsg === 'function' && handleFindPrevMsg(messageSeq)
-  
-      
+      typeof handleFindPrevMsg === "function" && handleFindPrevMsg(messageSeq);
     };
 
     return (
@@ -97,13 +111,27 @@ const GroupChatMsgList = forwardRef(
         style={{ height: `calc(100% - ${bottomHeight}px)` }}
         ref={scrollDomRef}
         onScroll={handleScroll}
+        id="group-chat-msglist"
       >
-        {(messages || []).map((msg: Message, idx: number) => {
+        {(goodMessages || []).map((msg: Message, idx: number) => {
           const key = msg.clientMsgNo + idx;
+          
           return (
-            <div key={key} id={msg.clientMsgNo} className={cn('message-item',locatedMessageId ===  msg.clientMsgNo && 'located')}>
+            <div
+              key={key}
+              id={msg.clientMsgNo}
+              onMouseLeave={() => {
+                if (locatedMessageId === msg.clientMsgNo) {
+                  setLocatedMessageId("");
+                }
+              }}
+              className={cn(
+                "message-item",
+                locatedMessageId === msg.clientMsgNo && "located"
+              )}
+            >
               {getMessage(msg, key)}
-              {msg.content.reply && (
+              {msg.content?.reply && (
                 <ReplyMsg
                   locateMessage={locateMessage}
                   message={msg}
@@ -115,13 +143,12 @@ const GroupChatMsgList = forwardRef(
         <style jsx>
           {`
              {
-             
               .message-item {
-                transition: background linear 0.4s
+                transition: background linear 0.4s;
               }
-               .message-item.located {
-                background-color: rgb(69,70,73)
-               } 
+              .message-item.located {
+                background-color: rgb(69, 70, 73);
+              }
               .group-chat-msglist {
                 padding: 0 12px;
                 overflow-y: auto;

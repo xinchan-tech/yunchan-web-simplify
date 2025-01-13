@@ -20,7 +20,9 @@ const ReplyMessageView = (props: { message: Message; onClose: () => void }) => {
         <div>{fromChannelInfo?.title}</div>
         <div>{message?.content?.conversationDigest}</div>
       </div>
-      <JknIcon name='close' />
+      <JknIcon name='close' onClick={() => {
+        typeof onClose === 'function' && onClose()
+      }}/>
       <style jsx>
         {`
            {
