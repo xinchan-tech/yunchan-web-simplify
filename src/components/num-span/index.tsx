@@ -99,7 +99,7 @@ export const NumSpan = ({ isPositive, block, percent, value, symbol, className, 
 
         if (lastValue.current === undefined || !value) return
 
-        if(lastValue.current === value) return
+        if (lastValue.current === value) return
 
         const randomDelay = Math.random() * 500
 
@@ -153,11 +153,12 @@ export const NumSpan = ({ isPositive, block, percent, value, symbol, className, 
 
 interface NumSpanSubscribeProps extends Omit<NumSpanProps, 'value'> {
   code: string
-  field: keyof Parameters<StockSubscribeHandler<'quote'>>[0]['record']  | ((data: Parameters<StockSubscribeHandler<'quote'>>[0]['record']) => number | string | undefined)
+  field: keyof Parameters<StockSubscribeHandler<'quote'>>[0]['record'] | ((data: Parameters<StockSubscribeHandler<'quote'>>[0]['record']) => number | string | undefined)
   value?: number | string
+  subscribe?: boolean
 }
 
-export const NumSpanSubscribe = ({ value, code, isPositive, field,...props }: NumSpanSubscribeProps) => {
+export const NumSpanSubscribe = ({ value, code, isPositive, field, subscribe = true, ...props }: NumSpanSubscribeProps) => {
   const [innerValue, setInnerValue] = useState(value && props.percent ? +value * 100 : value)
   const [isUp, setIsUp] = useState(isPositive)
   const isPos = useLatest(isPositive)
@@ -168,15 +169,16 @@ export const NumSpanSubscribe = ({ value, code, isPositive, field,...props }: Nu
   }, [field])
 
   useEffect(() => {
+    if (!subscribe) return
     const unSubscribe = stockSubscribe.onQuoteTopic(code, (data) => {
-     
-      let v = isFunction(fieldFn.current) ? fieldFn.current(data.record) : get(data.record, fieldFn.current) 
-      
-      if(props.percent){
+
+      let v = isFunction(fieldFn.current) ? fieldFn.current(data.record) : get(data.record, fieldFn.current)
+
+      if (props.percent) {
         v = (v as number) * 100
       }
       setInnerValue(v as number | string | undefined)
-      if(isPos.current !== undefined){
+      if (isPos.current !== undefined) {
         setIsUp(data.record.percent > 0)
       }
     })
@@ -184,13 +186,23 @@ export const NumSpanSubscribe = ({ value, code, isPositive, field,...props }: Nu
     return () => {
       unSubscribe()
     }
-  }, [code, props.percent, isPos])
-  
+  }, [code, props.percent, isPos, subscribe])
+
   useEffect(() => {
     setInnerValue(value && props.percent ? +value * 100 : value)
   }, [value, props.percent])
 
-  return <NumSpan value={innerValue} isPositive={isUp} {...props} />
+  return (
+    <>
+      {
+        subscribe ? (
+          <NumSpan value={innerValue} isPositive={isUp} {...props} />
+        ) : (
+          <NumSpan value={value} isPositive={isPositive} {...props}  />
+        )
+      }
+    </>
+  )
 }
 
 /**
@@ -205,7 +217,7 @@ interface SubscribeSpanProps extends HTMLAttributes<HTMLSpanElement> {
 }
 
 
-export const SubscribeSpan = ({value, symbol, field, positive, format, ...props}: SubscribeSpanProps) => {
+export const SubscribeSpan = ({ value, symbol, field, positive, format, ...props }: SubscribeSpanProps) => {
   const [innerValue, setInnerValue] = usePropValue(value)
   const spanRef = useRef<HTMLSpanElement>(null)
   const isPos = useLatest(positive)
@@ -215,24 +227,24 @@ export const SubscribeSpan = ({value, symbol, field, positive, format, ...props}
 
   useEffect(() => {
     const unSubscribe = stockSubscribe.onQuoteTopic(symbol, (data) => {
-   
+
       let v = isFunction(fieldFn.current) ? fieldFn.current(data) : get(data.record, fieldFn.current) as number | string | undefined
-      
-      if(formatFn.current){
+
+      if (formatFn.current) {
         v = formatFn.current(v)
       }
-      
-      setInnerValue(v as number | string | undefined)
-      if(isPos.current !== undefined){
-          
-          spanRef.current?.classList.remove('text-stock-up')
-          spanRef.current?.classList.remove('text-stock-down')
 
-          if(data.record.percent > 0){
-            spanRef.current?.classList.add('text-stock-up')
-          }else{
-            spanRef.current?.classList.add('text-stock-down')
-          }
+      setInnerValue(v as number | string | undefined)
+      if (isPos.current !== undefined) {
+
+        spanRef.current?.classList.remove('text-stock-up')
+        spanRef.current?.classList.remove('text-stock-down')
+
+        if (data.record.percent > 0) {
+          spanRef.current?.classList.add('text-stock-up')
+        } else {
+          spanRef.current?.classList.add('text-stock-down')
+        }
       }
     })
 

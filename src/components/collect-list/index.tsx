@@ -1,5 +1,5 @@
 import { type StockExtend, type StockRawRecord, getStockCollects } from "@/api"
-import { AddCollect, CollectCapsuleTabs, JknIcon, NumSpan } from "@/components"
+import { AddCollect, CollectCapsuleTabs, JknIcon, NumSpan, NumSpanSubscribe } from "@/components"
 import { usePropValue, useStockQuoteSubscribe, useTableData } from "@/hooks"
 import { useConfig, useTime } from "@/store"
 import { getTradingPeriod } from "@/utils/date"
@@ -55,7 +55,7 @@ export const CollectList = (props: CollectListProps) => {
     const _stockList: TableDataType[] = stocks.data.items.map(stock => {
       // const [lastStock, beforeStock, afterStock] = stockUtils.toStockRecord(stock)
       const lastStock = stockUtils.toStock(stock.stock, { extend: stock.extend, symbol: stock.symbol, name: stock.name })
-      const beforeStock = stock.extend?.stock_before ? stockUtils.toStock(stock.extend?.stock_before as StockRawRecord, { extend: stock.extend, symbol: stock.symbol, name: stock.name }): null
+      const beforeStock = stock.extend?.stock_before ? stockUtils.toStock(stock.extend?.stock_before as StockRawRecord, { extend: stock.extend, symbol: stock.symbol, name: stock.name }) : null
       const afterStock = stock.extend?.stock_after ? stockUtils.toStock(stock.extend?.stock_after as StockRawRecord, { extend: stock.extend, symbol: stock.symbol, name: stock.name }) : null
 
       const thumbs = lastStock?.thumbs ?? []
@@ -135,37 +135,37 @@ const StockListItem = ({ stock, onCollectChange, children }: PropsWithChildren<S
   const lastValue = useRef(stock.price)
   const span = useRef<HTMLDivElement>(null)
   const priceBlinkTimer = useRef<number>()
-  const [value, setValue] = usePropValue(stock.price)
+  // const [value, setValue] = usePropValue(stock.price)
 
   const updateHandler = useCallback<StockSubscribeHandler<'quote'>>((data) => {
-    if(data.topic === stock.code){
-      setValue(data.record.close)
-    }
-  }, [setValue, stock.code])
+    if (data.topic === stock.code) {
+      if (priceBlink === '1') {
+
+        if (!priceBlinkTimer.current) {
   
-  useStockQuoteSubscribe([stock.code], updateHandler)
-
-  useEffect(() => {
-    if (priceBlink === '1') {
-
-      if (!priceBlinkTimer.current) {
-
-        if (lastValue.current === undefined || !value) return
-        const randomDelay = Math.random() * 500
-
-        priceBlinkTimer.current = window.setTimeout(() => {
-          const blinkState = lastValue.current! < value! ? 'down' : 'up'
-          lastValue.current = value
-          span.current?.setAttribute('data-blink', blinkState)
-
-          setTimeout(() => {
-            span.current?.removeAttribute('data-blink')
-            priceBlinkTimer.current = undefined
-          }, 500)
-        }, randomDelay)
+          if (lastValue.current === undefined || !data.record.close) return
+          const randomDelay = Math.random() * 500
+  
+          priceBlinkTimer.current = window.setTimeout(() => {
+            const blinkState = lastValue.current! < data.record.close! ? 'down' : 'up'
+            lastValue.current = data.record.close
+            span.current?.setAttribute('data-blink', blinkState)
+  
+            setTimeout(() => {
+              span.current?.removeAttribute('data-blink')
+              priceBlinkTimer.current = undefined
+            }, 500)
+          }, randomDelay)
+        }
       }
     }
-  }, [value, priceBlink])
+  }, [stock.code, priceBlink])
+
+  useStockQuoteSubscribe([stock.code], updateHandler)
+
+  // useEffect(() => {
+    
+  // }, [value, priceBlink])
 
 
   return (
@@ -195,12 +195,12 @@ const StockListItem = ({ stock, onCollectChange, children }: PropsWithChildren<S
         <div className="flex w-full items-center">
           <div className="w-20 flex-shrink-0 text-right box-border pr-1">
             {
-              stock.price ? <NumSpan value={stock.price} isPositive={(stock.percent ?? 0) >= 0} /> : '--'
+              stock.price ? <NumSpanSubscribe code={stock.code} field="close" subscribe={trading === 'intraDay'} value={stock.price} isPositive={(stock.percent ?? 0) >= 0} /> : '--'
             }
           </div>
           <div className="w-16 flex-shrink-0 text-right">
             {
-              stock.price ? <NumSpan className="py-0.5 w-16" block value={Decimal.create(stock.percent).mul(100)} percent decimal={2} isPositive={(stock.percent ?? 0) >= 0} /> : '--'
+              stock.price ? <NumSpanSubscribe code={stock.code} field="percent" subscribe={trading === 'intraDay'} className="py-0.5 w-16" block value={stock.percent} percent decimal={2} isPositive={(stock.percent ?? 0) >= 0} /> : '--'
             }
           </div>
         </div>
