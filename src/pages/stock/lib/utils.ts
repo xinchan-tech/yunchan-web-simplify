@@ -3,9 +3,9 @@ import type { ECOption } from '@/utils/echarts'
 import dayjs, { type Dayjs } from 'dayjs'
 import type { ECBasicOption } from 'echarts/types/dist/shared'
 import type { KChartContext } from './ctx'
-import type { EChartsType } from "echarts/core"
-import { getTradingPeriod } from "@/utils/date"
-import { stockUtils } from "@/utils/stock"
+import type { EChartsType } from 'echarts/core'
+import { getTradingPeriod } from '@/utils/date'
+import { stockUtils } from '@/utils/stock'
 
 export const renderUtils = {
   getXAxisIndex: (options: ECOption, index: number) => {
@@ -27,7 +27,12 @@ export const renderUtils = {
   },
   getGridIndex: (options: ECOption, index: number) => {
     if (Array.isArray(options.grid)) {
-      return options.grid[index]
+      return options.grid[index] as {
+        left: number
+        top: number
+        width: number
+        height: number
+      }
     }
   },
 
@@ -80,53 +85,58 @@ export const renderUtils = {
     const X_AXIS_HEIGHT = 24
     const TOP_OFFSET = 10
     const [width, height] = size
-  
-    const gridLeft = hasLeft ? Y_AXIS_WIDTH: 0
-  
-    const gridSize = [
-      width - Y_AXIS_WIDTH - gridLeft,
-      height - X_AXIS_HEIGHT - TOP_OFFSET
-    ]
 
-    const grid: {left: number, top: number, width: number, height: number}[] = []
+    const gridLeft = hasLeft ? Y_AXIS_WIDTH : 1
 
-    if(secondaryIndicatorLen === 0) {
+    const gridSize = [width - Y_AXIS_WIDTH - gridLeft, height - X_AXIS_HEIGHT - TOP_OFFSET]
+
+    const grid: { left: number; top: number; width: number; height: number; borderColor?: string; show?: boolean }[] =
+      []
+
+    if (secondaryIndicatorLen === 0) {
       grid.push({
         left: gridLeft,
         top: TOP_OFFSET,
         width: gridSize[0],
-        height: gridSize[1]
+        height: gridSize[1],
+        borderColor: '#fff'
       })
-    }else if(secondaryIndicatorLen <= 3){
+    } else if (secondaryIndicatorLen <= 3) {
       grid.push({
+        show: true,
         left: gridLeft,
         top: TOP_OFFSET,
         width: gridSize[0],
-        height: gridSize[1] * (5 - secondaryIndicatorLen) / 5
+        height: (gridSize[1] * (5 - secondaryIndicatorLen)) / 5,
+        borderColor: '#4a4848'
       })
 
-      Array.from({ length: secondaryIndicatorLen }, (_) => {
+      Array.from({ length: secondaryIndicatorLen }, _ => {
         grid.push({
+          show: true,
           left: gridLeft,
           top: grid.reduce((acc, cur) => acc + cur.height, 0),
           width: gridSize[0],
-          height: gridSize[1] / 5
+          height: gridSize[1] / 5,
+          borderColor: '#4a4848'
         })
       })
-    }else {
+    } else {
       grid.push({
         left: gridLeft,
         top: TOP_OFFSET,
         width: gridSize[0],
-        height: gridSize[1] * 0.4
+        height: gridSize[1] * 0.4,
+        borderColor: 'gray'
       })
 
-      Array.from({ length: secondaryIndicatorLen }, (_) => {
+      Array.from({ length: secondaryIndicatorLen }, _ => {
         grid.push({
           left: gridLeft,
           top: grid.reduce((acc, cur) => acc + cur.height, 0),
           width: gridSize[0],
-          height: gridSize[1] / 5
+          height: gridSize[1] / 5,
+          borderColor: 'gray'
         })
       })
     }
@@ -135,7 +145,8 @@ export const renderUtils = {
       left: gridLeft,
       top: height - X_AXIS_HEIGHT,
       width: gridSize[0],
-      height: 0
+      height: 0,
+      borderColor: '#fff'
     })
 
     return grid
@@ -188,12 +199,12 @@ export const renderUtils = {
     }
     return max * 1.1
   },
-  
+
   /**
-   * 
+   *
    */
   isSameTimeByInterval: (src: Dayjs, target: Dayjs, interval: StockChartInterval) => {
-    switch(interval) {
+    switch (interval) {
       case StockChartInterval.PRE_MARKET:
       case StockChartInterval.INTRA_DAY:
       case StockChartInterval.AFTER_HOURS:
@@ -236,7 +247,7 @@ export const renderUtils = {
    * 获取刻度间隔
    */
   getIntervalScale: (interval: StockChartInterval): number => {
-    switch(interval) {
+    switch (interval) {
       case StockChartInterval.PRE_MARKET:
       case StockChartInterval.INTRA_DAY:
       case StockChartInterval.AFTER_HOURS:
@@ -276,16 +287,19 @@ export const renderUtils = {
   },
 
   calcXAxisData: (data: any[], interval: StockChartInterval) => {
-    if(data.length === 0){
+    if (data.length === 0) {
       return []
     }
-    if([StockChartInterval.PRE_MARKET, StockChartInterval.INTRA_DAY, StockChartInterval.AFTER_HOURS].includes(interval)) {
-      return getTradingPeriod(stockUtils.intervalToTrading(interval)!, dayjs(+data[0][0])).map(item => dayjs(item).valueOf())
+    if (
+      [StockChartInterval.PRE_MARKET, StockChartInterval.INTRA_DAY, StockChartInterval.AFTER_HOURS].includes(interval)
+    ) {
+      return getTradingPeriod(stockUtils.intervalToTrading(interval)!, dayjs(+data[0][0])).map(item =>
+        dayjs(item).valueOf()
+      )
     }
 
- 
     const extLen = Math.round(data.length * 0.01)
-    
+
     const startTime = data[data.length - 1][0]
     const scale = renderUtils.getIntervalScale(interval)
     const xAxisData = Array.from({ length: extLen }, (_, i) => {

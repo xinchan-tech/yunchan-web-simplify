@@ -23,6 +23,10 @@ export interface JknTableProps<TData extends Record<any, unknown> = Record<strin
 }
 
 
+/**
+ * @deprecated
+ * @returns 
+ */
 const _JknTable = <TData extends Record<string, unknown>, TValue>(props: JknTableProps<TData, TValue>) => {
   const [sorting, setSorting] = useState<SortingState>([])
   const [rowSelection, setRowSelection] = useState({})
@@ -188,6 +192,11 @@ const _JknTable = <TData extends Record<string, unknown>, TValue>(props: JknTabl
   )
 }
 
+
+/**
+ * @deprecated
+ * @returns 
+ */
 const JknTable = _JknTable as typeof _JknTable & {
   Virtualizer: typeof VirtualizedTable
 }

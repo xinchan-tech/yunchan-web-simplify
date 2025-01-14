@@ -12,6 +12,7 @@ import {
   type DrawerRectShape,
   type DrawerTextShape,
   drawGradient,
+  drawHLine,
   drawLine,
   drawPivots,
   drawPolyline,
@@ -64,11 +65,11 @@ export const initOptions = (): ECOption => {
       formatter: (v: any) => {
         const series = (v as any[]).find(_v => _v.seriesName === MAIN_CHART_NAME) as any
         const data = series?.data as StockRawRecord
-  
+        if (!data) return ''
         const stock = stockUtils.toStock(data)
 
         const time = dayjs(stock.timestamp).format('MM-DD hh:mm w')
-        
+
         const isUp = stockUtils.isUp(stock)
         return `
             <span class="text-xs">
@@ -290,7 +291,7 @@ export const createOptions = (chart: EChartsType): ECOption => ({
       filterMode: 'weakFilter'
     },
     {
-      fillerColor: 'weakFilter',
+      filterMode: 'weakFilter',
       minSpan: 2,
       show: true,
       xAxisIndex: [0, 1, 2, 3, 4, 5, 6],
@@ -298,13 +299,40 @@ export const createOptions = (chart: EChartsType): ECOption => ({
       bottom: 0,
       start: 90,
       end: 100,
+      zoomLock: true,
+      fillerColor: 'rgba(255, 255, 255, 0.2)',
+      selectedDataBackground: {
+        areaStyle: {
+          color: 'transparent'
+        },
+        lineStyle: {
+          color: 'transparent'
+        }
+      },
+      labelFormatter: () => '',
+      textStyle: {
+        show: false
+      },
       backgroundColor: 'transparent',
       dataBackground: {
         lineStyle: {
-          color: 'rgb(31, 32, 33)'
+          color: 'transparent'
+        },
+        areaStyle: {
+          color: 'transparent'
         }
       },
-      borderColor: 'rgb(31, 32, 33)'
+      borderColor: 'transparent',
+      handleStyle: {
+        color: 'transparent',
+        opacity: 0
+      },
+      handleSize: 0,
+      moveHandleIcon: 'none',
+      moveHandleSize: 0,
+      moveHandleStyle: {
+        color: 'transparent'
+      }
     }
   ],
   series: []
@@ -447,7 +475,6 @@ export const renderGrid = (options: ECOption, state: ChartState, size: [number, 
           //获取时间跨度
           const time = dayjs(+v).diff(+startDay, 'day')
 
-
           if (time < 1) {
             return dayjs(+v).format('hh:mm')
           }
@@ -476,6 +503,7 @@ export const renderGrid = (options: ECOption, state: ChartState, size: [number, 
       axisPointer: {
         label: {
           show: true,
+          backgroundColor: '#353535',
           formatter: params => {
             if (params.axisDimension === 'x') {
               let time = dayjs(+params.value).format('MM-DD hh:mm') + dateToWeek(params.value as string, '周')
@@ -878,6 +906,7 @@ export const renderOverlay = (options: ECOption, data?: ChartState['overlayStock
   data.forEach(stock => {
     const series: LineSeriesOption = {
       name: stock.symbol,
+      id: stock.symbol,
       smooth: true,
       symbol: 'none',
       type: 'line',
@@ -897,23 +926,31 @@ export const renderOverlay = (options: ECOption, data?: ChartState['overlayStock
     }
   })
 
-  /**
-   * 添加legend
-   */
-  if (!options.legend) {
-    options.legend = {
-      data: data.map(stock => stock.symbol),
-      icon: 'rect',
-      itemWidth: 10,
-      itemHeight: 10,
-      itemStyle: {
-        borderRadius: 0
-      },
-      textStyle: {
-        color: '#fff'
-      }
-    }
-  }
+  // /**
+  //  * 添加legend
+  //  */
+  // if (!options.legend) {
+  //   options.legend = {
+  //     show: false,
+  //     data: data.map(stock => stock.symbol),
+  //     icon: 'rect',
+  //     itemWidth: 10,
+  //     itemHeight: 10,
+  //     borderColor: '#fff',
+  //     borderWidth: 1,
+  //     emphasis: {
+  //       selectorLabel: {
+  //         color: 'red'
+  //       }
+  //     },
+  //     itemStyle: {
+  //       borderRadius: 0
+  //     },
+  //     textStyle: {
+  //       color: '#fff'
+  //     }
+  //   }
+  // }
 
   return options
 }
@@ -1058,6 +1095,16 @@ export const renderSecondaryLocalIndicators = (options: ECOption, indicators: In
               color: d.style?.color
             }
           })
+        } else if (d.draw === 'HORIZONTALLINE') {
+          drawHLine(options, {} as any, {
+            extra: {
+              color: d.style?.color,
+              type: d.style?.style_type
+            },
+            xAxisIndex: index + 1,
+            yAxisIndex: index + 2,
+            data: (d.data as number[]).map((s, i) => [i, s])
+          })
         } else {
           drawLine(options, {} as any, {
             extra: {
@@ -1146,7 +1193,6 @@ const renderSecondaryAxis = (options: ECOption, _: any, index: number, chart: EC
  * 只有在盘前盘中盘后显示
  */
 export const renderWatermark = (options: ECOption, timeIndex: ChartState['timeIndex']) => {
-  
   if (!isTimeIndexChart(timeIndex)) return
 
   if (timeIndex === StockChartInterval.FIVE_DAY) return

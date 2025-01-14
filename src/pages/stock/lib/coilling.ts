@@ -537,7 +537,7 @@ export const calcBottomSignal = (
         data: horizonData
       },
       {
-        draw: '',
+        draw: 'HORIZONTALLINE',
         style: {
           color: '#ff0066',
           linethick: 1,

@@ -10,6 +10,11 @@ const SortUp = () => <JknIcon name="ic_btn_up" className="w-2 h-4" />
 const SortDown = () => <JknIcon name="ic_btn_down" className="w-2 h-4" />
 const SortNone = () => <JknIcon name="ic_btn_nor" className="w-2 h-4" />
 
+
+/**
+ * @deprecated
+ * @returns 
+ */
 export const JknTableHeader = ({ width, table }: JknTableHeaderProps) => {
 
   return (

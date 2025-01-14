@@ -1,7 +1,6 @@
 
-import { HoverCard, HoverCardTrigger, HoverCardContent, HoverCardPortal, type HoverCardProps } from "../ui/hover-card"
+import { HoverCard, HoverCardTrigger, HoverCardContent, HoverCardPortal } from "../ui/hover-card"
 import type { HoverCardContentProps } from "@radix-ui/react-hover-card"
-import { Button } from "../ui/button"
 import Star from "./index"
 import { useCollectCates } from "@/store"
 import { addStockCollectBatch, addStockCollectCate, getStockCollectCates, updateStockCollectCate } from "@/api"
@@ -41,10 +40,13 @@ const _CollectStar = (props: CollectStarProps) => {
         <div className="flex justify-center items-center"><Star checked={props.checked} /></div>
       </HoverCardTrigger>
       <HoverCardPortal >
-        <HoverCardContent sideOffset={props.sideOffset ?? -10} alignOffset={props.alignOffset}
-          align={props.align ?? 'center'} side={props.side ?? 'left'}
+        <HoverCardContent sideOffset={props.sideOffset ?? -10} alignOffset={props.alignOffset ?? -50}
+          align={props.align ?? 'start'} side={props.side ?? 'left'}
           className="p-0 w-48 bg-muted border-dialog-border border border-solid"
         >
+          {
+            props.alignOffset
+          }
           {
             render ? <CollectList code={props.code} onUpdate={props.onUpdate} /> : null
           }

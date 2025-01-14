@@ -43,6 +43,7 @@ export const useTime = create<TimeStore>()(
       },
       getTrading: () => {
         const usTime = dayjs(get().usTime).tz('America/New_York').format('YYYY-MM-DD HH:mm:ss')
+        
         return getTrading(usTime)
       },
       isToday: data => {

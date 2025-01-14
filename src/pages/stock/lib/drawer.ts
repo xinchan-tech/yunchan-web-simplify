@@ -4,6 +4,7 @@ import type { KChartState } from './ctx'
 import echarts from '@/utils/echarts'
 import { colorUtil } from '@/utils/style'
 import type { ECharts } from 'echarts'
+import { renderUtils } from './utils'
 
 type XAxis = number
 type YAxis = number
@@ -67,6 +68,50 @@ export const drawLine: DrawerFunc<[XAxis, number | null][]> = (options, _, { xAx
       type: extra?.type ?? 'solid'
     },
     data: [...data.map(item => item[1])]
+  }
+
+  Array.isArray(options.series) && options.series.push(line)
+
+  return options
+}
+
+/**
+ * 水平线
+ */
+export const drawHLine: typeof drawLine = (options, _, { xAxisIndex, yAxisIndex, data, extra, chart }) => {
+  const grid = Array.isArray(options.grid) ? options.grid : [options.grid]
+  const left = grid[0] ? (grid[0].left as number) : 0
+
+  const maxRight = left + (grid[0] ? (grid[0].width as number) : 0)
+
+  const currentGrid = grid[yAxisIndex - 1]
+
+  const line: CustomSeriesOption = {
+    xAxisIndex: xAxisIndex,
+    yAxisIndex: yAxisIndex,
+    type: 'custom',
+    renderItem: (params, _) => {
+      if (params.context.rendered) return
+      params.context.rendered = true
+
+      return {
+        type: 'line',
+        shape: {
+          x1: left,
+          y1: (currentGrid!.top as number) + 20,
+          x2: maxRight,
+          y2: (currentGrid!.top as number) + 20
+        },
+        emphasisDisabled: true,
+        z: extra?.z ?? 0,
+        style: {
+          stroke: extra?.color,
+          lineDash: extra?.type ?? 'solid',
+          lineWidth: 1
+        }
+      }
+    },
+    data: data
   }
 
   Array.isArray(options.series) && options.series.push(line)
@@ -209,6 +254,11 @@ export type DrawerRectShape = [XAxis, YAxis, YAxis, Width, empty, DrawerColor]
  * @example ['2030-01-01', 0, 111380, 0.8, 0]
  */
 export const drawRect: DrawerFunc<DrawerRectShape[]> = (options, _, { xAxisIndex, yAxisIndex, data, extra }) => {
+  const grid = renderUtils.getGridIndex(options, 0)
+  const left = grid?.left ?? 1
+
+  const maxRight = left + (grid?.width ?? 0)
+
   const extraColor = extra?.color
   const line: CustomSeriesOption = {
     xAxisIndex: xAxisIndex,
@@ -224,9 +274,13 @@ export const drawRect: DrawerFunc<DrawerRectShape[]> = (options, _, { xAxisIndex
       const y2 = api.value(2) as number
       const height = (api.size!([0, Math.abs(y2 - startY)]) as number[])[1] as number
       const start = api.coord([startX, startY])
-      const width = api.value(3) as number
+      let width = api.value(3) as number
       const empty = api.value(4) as number
       const color = (api.value(5) as string) || extraColor || '#00943c'
+
+      if(start[0] + width > maxRight){
+        width = maxRight - start[0]
+      }
 
       return {
         type: 'rect',
@@ -266,7 +320,11 @@ export const drawGradient: DrawerFunc<[XAxis, GradientData[], string[]][]> = (
   _,
   { xAxisIndex, yAxisIndex, data }
 ) => {
-  const right = 50
+  const grid = renderUtils.getGridIndex(options, 0)
+  const left = grid?.left ?? 1
+
+  const maxRight = left + (grid?.width ?? 0)
+
   const points = data
     .filter(item => !!item[0])
     .map((item, index) => {
@@ -279,7 +337,7 @@ export const drawGradient: DrawerFunc<[XAxis, GradientData[], string[]][]> = (
     })
 
   /**
-   * 两种方法性能未知，待测试
+   * 性能未知，待测试
    * 方法一
    */
   const series: CustomSeriesOption = {
@@ -294,7 +352,6 @@ export const drawGradient: DrawerFunc<[XAxis, GradientData[], string[]][]> = (
       if (params.context.rendered) return
       params.context.rendered = true
 
-      const rightMax = api.getWidth() - right
       const polygons: { color: string[]; points: number[][] }[] = []
 
       points.forEach(p => {
@@ -313,8 +370,8 @@ export const drawGradient: DrawerFunc<[XAxis, GradientData[], string[]][]> = (
         item[1].forEach(p => {
           const po = api.coord([p.x, p.y])
 
-          if (po[0] > rightMax) {
-            po[0] = rightMax
+          if (po[0] > maxRight) {
+            po[0] = maxRight
           }
 
           if (po[0] < 0) {
@@ -397,7 +454,7 @@ export const drawPivots: DrawerFunc<DrawPivotsShape[]> = (options, _, { xAxisInd
       const endPoint = [api.value(2), api.value(3)] as [XAxis, YAxis]
       const start = api.coord(startPoint)
 
-      if(start[0] < left){
+      if (start[0] < left) {
         start[0] = left
       }
 
@@ -409,11 +466,9 @@ export const drawPivots: DrawerFunc<DrawPivotsShape[]> = (options, _, { xAxisInd
       const color = api.value(6) as string
       const offset = extend === '1' ? 5 : 0
 
-      if(end[0] > maxRight){
+      if (end[0] > maxRight) {
         width = maxRight - start[0]
       }
-
-
 
       const group = {
         type: 'group',
@@ -440,7 +495,7 @@ export const drawPivots: DrawerFunc<DrawPivotsShape[]> = (options, _, { xAxisInd
         ]
       } as any
 
-      if(end[0] + 28 < maxRight){
+      if (end[0] + 28 < maxRight) {
         group.children.push({
           type: 'text',
           emphasisDisabled: true,
@@ -453,7 +508,6 @@ export const drawPivots: DrawerFunc<DrawPivotsShape[]> = (options, _, { xAxisInd
           position: [end[0] + 4, start[1]]
         })
       }
-     
 
       if (mark) {
         group.children.push({

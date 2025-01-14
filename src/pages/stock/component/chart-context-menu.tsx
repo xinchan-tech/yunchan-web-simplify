@@ -19,7 +19,7 @@ export const ChartContextMenu = (props: PropsWithChildren<ChartContextMenuProps>
 
   return (
     <ContextMenu>
-      <ContextMenuTrigger className={cn(`chart-item-${props.index}`, 'overflow-hidden')}>
+      <ContextMenuTrigger className={cn(`chart-item-${props.index + 1}`, 'overflow-hidden')}>
         {
           props.children
         }

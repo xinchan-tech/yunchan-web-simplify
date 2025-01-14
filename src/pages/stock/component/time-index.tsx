@@ -1,10 +1,12 @@
-import type { StockChartInterval } from "@/api"
+import { StockChartInterval } from "@/api"
 import { JknIcon, CapsuleTabs } from "@/components"
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, Button } from "@/components"
 import { useKChartContext, timeIndex } from "../lib"
-import { stockUtils } from "@/utils/stock"
+import { StockTrading, stockUtils } from "@/utils/stock"
 import { useDomSize } from "@/hooks"
-import { useMemo } from "react"
+import { useCallback, useMemo } from "react"
+import { useTime } from "@/store"
+import dayjs from "dayjs"
 
 const leftMenu = ['盘前分时', '盘中分时', '盘后分时', '多日分时']
 
@@ -17,7 +19,34 @@ export const TimeIndexSelect = () => {
   const setActiveMin = (min: StockChartInterval) => {
     setTimeIndex({ timeIndex: min })
   }
+  const usTime = useTime(s => s.usTime)
+  const localStamp = useTime(s => s.localStamp)
   const [size, dom] = useDomSize<HTMLDivElement>()
+
+  const getIsLastDay = useCallback((trading: StockChartInterval) => {
+    const usDate = dayjs(usTime + localStamp).tz('America/New_York')
+
+    if (usDate.hour() < 4) {
+      return true
+    }
+
+    if (trading === StockChartInterval.PRE_MARKET) {
+      return usDate.isBefore(usDate.hour(9).minute(30).second(0))
+    }
+
+    if (trading === StockChartInterval.INTRA_DAY) {
+      return usDate.isBefore(usDate.hour(16).minute(0).second(0))
+    }
+
+    return false
+
+  }, [usTime, localStamp])
+  // const isLastDay = useMemo(() => {
+  //   const currentTimeStamp = new Date().valueOf()
+  //   const lastUsTime = currentTimeStamp - localStamp + usTime
+  //   const lastUsDay = dayjs(lastUsTime).tz('America/New_York')
+  //   return lastUsDay.isAfter(dayjs().tz('America/New_York').startOf('day'))
+  // }, [usTime, localStamp])
 
   const showCount = useMemo(() => {
     if (!size) return 8
@@ -35,7 +64,11 @@ export const TimeIndexSelect = () => {
             <Button reset className="text-xs font-normal">
               {
                 timeIndex.findIndex(v => v === _activeChart.timeIndex) > 3 ? '分时' : (
-                  <span className="text-primary">{stockUtils.intervalToStr(_activeChart.timeIndex)}</span>
+                  <span className="text-primary">{stockUtils.intervalToStr(_activeChart.timeIndex)}
+                    {
+                      [StockChartInterval.PRE_MARKET, StockChartInterval.INTRA_DAY, StockChartInterval.AFTER_HOURS].includes(_activeChart.timeIndex) && getIsLastDay(_activeChart.timeIndex) ? '(上一交易日)': ''
+                    }
+                  </span>
                 )
               }
             </Button>

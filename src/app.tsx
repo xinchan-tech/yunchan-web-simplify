@@ -211,6 +211,15 @@ const AppTitle = () => {
 
   const title = useMemo(() => {
     const route = routes.find((r) => r.path === pathname)
+    if (pathname.startsWith('/stock')) {
+      if (pathname.includes('trading')) {
+        return '个股盘口'
+      }
+      if (pathname.includes('finance')) {
+        return '财务分析'
+      }
+      return '个股盘口'
+    }
     return route?.handle?.title
   }, [pathname])
 

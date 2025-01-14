@@ -22,6 +22,10 @@ export interface JknTableProps<TData extends Record<string, unknown> = Record<st
   onEvent?: (arg: { event: string, params: any }) => void
 }
 
+/**
+ * @deprecated
+ * @returns 
+ */
 const VirtualizedTable = <TData extends Record<string, unknown>, TValue>({ className, style, ...props }: JknTableProps<TData, TValue>) => {
   const [sorting, setSorting] = useState<SortingState>([])
   const [rowSelection, setRowSelection] = useState({})

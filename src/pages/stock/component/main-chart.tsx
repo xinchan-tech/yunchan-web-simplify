@@ -9,12 +9,12 @@ import { initOptions, renderChart, renderGrid, renderMainChart, renderMainCoilin
 import { SecondaryIndicator } from "./secondary-indicator"
 import { renderUtils } from "../lib/utils"
 import { StockSelect } from "@/components"
-import { cn } from "@/utils/style"
+import { cn, colorUtil } from "@/utils/style"
 import { TimeIndexMenu } from "./time-index"
 import echarts from "@/utils/echarts"
 import { stockUtils, type StockSubscribeHandler } from "@/utils/stock"
 import dayjs from "dayjs"
-import type { EChartsType } from 'echarts/core';
+import type { EChartsType } from 'echarts/core'
 
 
 interface MainChartProps {
@@ -31,7 +31,7 @@ export const MainChart = (props: MainChartProps) => {
 
     chart.current.setOption({
       ...initOptions()
-    }, {lazyUpdate: true})
+    }, { lazyUpdate: true })
   })
 
   useUnmount(() => {
@@ -69,7 +69,7 @@ export const MainChart = (props: MainChartProps) => {
 
     if (!query.data || query.data.history.length === 0) return
     if (!lastMainHistory.current || lastMainHistory.current.length === 0) return
-  
+
     const lastData = stockUtils.toStock(lastMainHistory.current[lastMainHistory.current.length - 1])
     const s = stockUtils.toShortRawRecord(stock)
 
@@ -86,7 +86,7 @@ export const MainChart = (props: MainChartProps) => {
     } else {
       setMainData({
         index: props.index,
-         data: {
+        data: {
           ...query.data,
           history: [...lastMainHistory.current.slice(0, -1) as any, s]
         },
@@ -162,18 +162,6 @@ export const MainChart = (props: MainChartProps) => {
   }, [secondaryIndicatorQueries, setIndicatorData, props.index])
 
 
-
-  useMount(() => {
-    if (chart.current) {
-      chart.current.on('legendselectchanged', (e: any) => {
-        if (!e.selected[e.name]) {
-          removeOverlayStock({ index: props.index, symbol: e.name })
-        }
-      })
-      render()
-    }
-  })
-
   useUpdateEffect(() => {
     chart.current?.resize()
     render()
@@ -216,17 +204,14 @@ export const MainChart = (props: MainChartProps) => {
     renderSecondaryLocalIndicators(_options, state.secondaryIndicators, state)
     renderWatermark(_options, state.timeIndex)
 
-    /**
-     * TODO: 附图指标x轴max需要和主图一致
-     * 盘中数据实时更新，附图指标会落后几个数据，max根据数据量计算会导致x轴对不齐
-     */
-    chart.current.setOption(_options, { replaceMerge: ['series', 'grid', 'xAxis', 'yAxis', 'dataZoom', ]})
+
+    chart.current.setOption(_options, { replaceMerge: ['series', 'grid', 'xAxis', 'yAxis', 'dataZoom',] })
   }
 
   useUpdateEffect(() => {
     render()
 
-    
+
   }, [state, startTime])
 
   const onChangeSecondaryIndicators = async (params: { value: string, index: number, type: string }) => {
@@ -244,6 +229,10 @@ export const MainChart = (props: MainChartProps) => {
     setSelectSymbol(state.symbol)
   }, [state.symbol])
 
+  
+  const closeOverlayStock = (symbol: string) => {
+    removeOverlayStock({ index: props.index, symbol: symbol })
+  }
 
   return (
     <div className={
@@ -279,6 +268,21 @@ export const MainChart = (props: MainChartProps) => {
           <div className="absolute top-2 left-2 flex items-center bg-muted border border-solid border-dialog-border rounded pr-2 h-6">
             <StockSelect className="border-none" width={80} size="mini" onChange={(v) => { setSymbol({ index: props.index, symbol: v }) }} onInput={v => setSelectSymbol((v.target as any).value)} value={selectSymbol} />
             <TimeIndexMenu index={props.index} />
+          </div>
+        ) : null
+      }
+      {
+        state.overlayStock.length > 0 ? (
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 flex space-x-2">
+            {
+              state.overlayStock.map((item, index) => (
+                <div key={item.symbol} className="text-sm flex items-center border border-solid border-transparent hover:border-white hover:cursor-pointer rounded-sm px-2 text-transparent hover:text-white" onClick={() => closeOverlayStock(item.symbol)} onKeyDown={() => {}}>
+                  <span className="w-3 h-3 inline-block mr-1" style={{ background: colorUtil.colorPalette[index] }} />
+                  <span className="pointer-events-none text-white">{item.symbol}&nbsp;</span>
+                  <span className="rotate-45 text-inherit">+</span>
+                </div>
+              ))
+            }
           </div>
         ) : null
       }

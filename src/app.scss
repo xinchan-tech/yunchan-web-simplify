@@ -190,3 +190,10 @@ body {
     background: transparent;
   }
 }
+
+
+@for $i from 1 through 10 {
+  .chart-item-#{$i} {
+    grid-area: chart-#{$i}
+  }
+}

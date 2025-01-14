@@ -70,6 +70,7 @@ type StockBaseInfoData = {
   subTime: string
   subClose: number
   subPercent: number
+  subPrevClose: number
 }
 
 const StockBaseInfo = () => {
@@ -100,7 +101,8 @@ const StockBaseInfo = () => {
       subClose: subData?.close ?? 0,
       subPercent: subData?.percent ?? 0,
       time: lastData?.time ?? '',
-      subTime: subData?.time ?? ''
+      subTime: subData?.time ?? '',
+      subPrevClose: subData?.prevClose ?? 0
     })
 
 
@@ -179,16 +181,18 @@ const StockBaseInfo = () => {
               'flex items-center justify-between px-2 box-border text-xs my-1'
             )}>
               <span className="text-base font-bold">
-                <NumSpan arrow decimal={3} isPositive={Decimal.create(data?.percent).gte(0)} value={Decimal.create(data?.close).toNumber()} />
+                <NumSpan arrow decimal={3} isPositive={Decimal.create(data?.subPercent).gte(0)} value={Decimal.create(data?.subClose).toNumber()} />
               </span>
               <span>
-                <NumSpan decimal={3} symbol isPositive={Decimal.create(data?.percent).gte(0)} value={(data?.close ?? 0) - (data?.prevClose ?? 0)} />
+                <NumSpan decimal={3} symbol isPositive={Decimal.create(data?.subPercent).gte(0)} value={(data?.subClose ?? 0) - (data?.subPrevClose ?? 0)} />
               </span>
               <span>
-                {Decimal.create(data?.percent).mul(100).toFixed(2)}%
+                <NumSpan decimal={2} symbol isPositive={Decimal.create(data?.subPercent).gte(0)} value={Decimal.create(data?.subPercent).mul(100).toNumber()} percent />
               </span>
               <span className="text-tertiary">
-                盘后价
+                {
+                  trading === 'preMarket' ? '盘前' : '盘后' 
+                }价
                 {data?.subTime?.slice(5, 11).replace('-', '/')}
               </span>
             </div>
@@ -227,15 +231,19 @@ const StockQuote = () => {
       <div className="mt-1 py-2 grid grid-cols-2 border-0 border-b border-solid border-border text-xs px-2 gap-y-2">
         <div>
           <span className="text-tertiary">最高价&nbsp;&nbsp;</span>
-          <span>{Decimal.create(quote.data?.q_high).toFixed(3)}</span>
+          <span><NumSpan value={quote.data?.q_high} isPositive={Decimal.create(quote.data?.q_high).gte(quote.data?.q_close ?? 0)} /></span>
         </div>
         <div>
           <span className="text-tertiary">今开价&nbsp;&nbsp;</span>
-          <span>{Decimal.create(quote.data?.q_open).toFixed(3)}</span>
+          <span>
+            <NumSpan value={quote.data?.q_open} isPositive={Decimal.create(quote.data?.q_open).gte(quote.data?.q_close ?? 0)} />
+          </span>
         </div>
         <div>
           <span className="text-tertiary">最低价&nbsp;&nbsp;</span>
-          <span>{Decimal.create(quote.data?.q_low).toFixed(3)}</span>
+          <span>
+            <NumSpan value={quote.data?.q_low} isPositive={Decimal.create(quote.data?.q_low).gte(quote.data?.q_close ?? 0)} />
+          </span>
         </div>
         <div>
           <span className="text-tertiary">昨收价&nbsp;&nbsp;</span>
@@ -267,11 +275,15 @@ const StockQuote = () => {
         </div>
         <div>
           <span className="text-tertiary">52周高&nbsp;&nbsp;</span>
-          <span>{Decimal.create(quote.data?.q_year_high).toFixed(3)}</span>
+          <span>
+            <NumSpan value={quote.data?.q_year_high} isPositive={Decimal.create(quote.data?.q_year_high).gte(quote.data?.q_close ?? 0)} />
+          </span>
         </div>
         <div>
           <span className="text-tertiary">52周低&nbsp;&nbsp;</span>
-          <span>{Decimal.create(quote.data?.q_year_low).toFixed(3)}</span>
+          <span>
+            <NumSpan value={quote.data?.q_year_low} isPositive={Decimal.create(quote.data?.q_year_low).gte(quote.data?.q_close ?? 0)} />
+          </span>
         </div>
       </div>
     </div >
@@ -399,7 +411,7 @@ const StockRelated = () => {
 
   const columns = useMemo<JknRcTableProps['columns']>(() => [
     {
-      title: '股票', dataIndex: 'symbol', width: '22%', sort: true,
+      title: '股票', dataIndex: 'symbol', width: '22%', sort: true, align: 'left',
       render: (symbol) => <span className="text-xs">{symbol}</span>
     },
     {
@@ -409,13 +421,13 @@ const StockRelated = () => {
       )
     },
     {
-      title: '涨跌幅%', dataIndex: 'percent', align: 'right', width: '30%', sort: true,
+      title: '涨跌幅%', dataIndex: 'percent', align: 'right', width: '29%', sort: true,
       render: (percent, row) => (
         <NumSpanSubscribe code={row.symbol} field="percent" blink block className="w-20" decimal={2} value={percent} percent isPositive={Decimal.create(row.percent).gte(0)} symbol align="right" />
       )
     },
     {
-      title: '总市值', dataIndex: 'marketValue', align: 'right', width: '24%', sort: true,
+      title: '总市值', dataIndex: 'marketValue', align: 'right', width: '25%', sort: true,
       render: (marketValue, row) => (
         <NumSpanSubscribe code={row.symbol} field={v => stockUtils.getSubscribeMarketValue(row, v)} blink align="right" unit decimal={2} value={marketValue} />
       )

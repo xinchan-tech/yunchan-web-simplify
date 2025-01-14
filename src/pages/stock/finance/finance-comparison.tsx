@@ -3,17 +3,13 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { useChart } from "@/hooks"
 import theme from '@/theme/variables.module.scss'
 import type { ECOption } from "@/utils/echarts"
+import { colorUtil } from "@/utils/style"
 import { useQueries } from '@tanstack/react-query'
 import Decimal from "decimal.js"
 import { useEffect, useMemo } from 'react'
 import { useImmer } from "use-immer"
 
-const colors = [
-  '#FF6633', '#FFB399', '#FF33FF', '#FFFF99', '#00B3E6',
-  '#E6B333', '#3366E6', '#999966', '#99FF99', '#B34D4D',
-  '#80B300', '#809900', '#E6B3B3', '#6680B3', '#66991A',
-  '#FF99E6', '#CCFF1A', '#FF1A66', '#E6331A', '#33FFCC'
-]
+
 
 export const FinanceComparison = () => {
   const [params, setParams] = useImmer({ type: 'revenues', symbols: [] as string[], period: 'quarter' })
@@ -39,7 +35,7 @@ export const FinanceComparison = () => {
 
       r.push({
         symbol: params.symbols[i],
-        color: colors[i],
+        color: colorUtil.colorPalette[i],
         data: data.map((v) => [v.fiscal_year.slice(2) + (params.period === 'quarter' ? ` ${v.fiscal_period}` : ''), v[params.type as keyof typeof data[0]] as unknown as number])
       })
     }
