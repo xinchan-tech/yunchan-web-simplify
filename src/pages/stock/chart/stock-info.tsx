@@ -397,15 +397,7 @@ const StockRelated = () => {
     }
 
     setList(relates.data?.stocks.map(item => {
-      const stock = stockUtils.toStock(item.stock, { extend: item.extend, symbol: item.symbol, name: item.name })
-
-      return {
-        symbol: item.symbol,
-        name: item.name,
-        close: stock.close,
-        percent: stockUtils.getPercent(stock),
-        marketValue: stockUtils.getMarketValue(stock),
-      }
+      return stockUtils.toStockWithExt(item.stock, { extend: item.extend, symbol: item.symbol, name: item.name })
     }))
   }, [relates.data, setList])
 

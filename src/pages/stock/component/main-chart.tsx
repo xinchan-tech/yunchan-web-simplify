@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useKChartContext } from "../lib"
 import { useIndicator, useTime } from "@/store"
 import { useQueries, useQuery } from "@tanstack/react-query"
-import { getStockChart, getStockIndicatorData } from "@/api"
+import { getStockChart, getStockIndicatorData, StockChartInterval } from "@/api"
 import { useMount, useUnmount, useUpdateEffect } from "ahooks"
 import { useDomSize, useStockBarSubscribe } from "@/hooks"
 import { initOptions, renderChart, renderGrid, renderMainChart, renderMainCoiling, renderMainIndicators, renderMarkLine, renderOverlay, renderOverlayMark, renderSecondary, renderSecondaryLocalIndicators, renderWatermark, renderZoom } from "../lib/render"
@@ -60,8 +60,31 @@ export const MainChart = (props: MainChartProps) => {
     queryFn: () => getStockChart(params)
   })
 
+  const subscribeSymbol = useMemo(() => {
+    if (state.timeIndex <= 1) {
+      return `${state.symbol}@1m`
+    }
 
-  const subscribeSymbol = useMemo(() => `${state.symbol}@${state.timeIndex <= 0 ? 1 : state.timeIndex}`, [state.symbol, state.timeIndex])
+    if (state.timeIndex <= StockChartInterval.FORTY_FIVE_MIN) {
+      return `${state.symbol}@${state.timeIndex}m`
+    }
+
+    if (state.timeIndex === StockChartInterval.DAY) {
+      return `${state.symbol}@1d`
+    }
+
+    if (state.timeIndex === StockChartInterval.WEEK) {
+      return `${state.symbol}@1w`
+    }
+
+    if (state.timeIndex === StockChartInterval.MONTH) {
+      return `${state.symbol}@1M`
+    }
+
+    return `${state.symbol}@${state.timeIndex}`
+
+  }, [state.symbol, state.timeIndex])
+
 
 
   const subscribeHandler: StockSubscribeHandler<'bar'> = useCallback((data) => {
@@ -229,7 +252,7 @@ export const MainChart = (props: MainChartProps) => {
     setSelectSymbol(state.symbol)
   }, [state.symbol])
 
-  
+
   const closeOverlayStock = (symbol: string) => {
     removeOverlayStock({ index: props.index, symbol: symbol })
   }
@@ -276,7 +299,7 @@ export const MainChart = (props: MainChartProps) => {
           <div className="absolute top-4 left-1/2 -translate-x-1/2 flex space-x-2">
             {
               state.overlayStock.map((item, index) => (
-                <div key={item.symbol} className="text-sm flex items-center border border-solid border-transparent hover:border-white hover:cursor-pointer rounded-sm px-2 text-transparent hover:text-white" onClick={() => closeOverlayStock(item.symbol)} onKeyDown={() => {}}>
+                <div key={item.symbol} className="text-sm flex items-center border border-solid border-transparent hover:border-white hover:cursor-pointer rounded-sm px-2 text-transparent hover:text-white" onClick={() => closeOverlayStock(item.symbol)} onKeyDown={() => { }}>
                   <span className="w-3 h-3 inline-block mr-1" style={{ background: colorUtil.colorPalette[index] }} />
                   <span className="pointer-events-none text-white">{item.symbol}&nbsp;</span>
                   <span className="rotate-45 text-inherit">+</span>
