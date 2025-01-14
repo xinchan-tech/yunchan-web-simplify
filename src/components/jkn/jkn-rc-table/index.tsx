@@ -45,7 +45,7 @@ const _JknRcTable = <T extends DefaultRecordType = any>({ headerHeight = 35, col
   }, [columns, sort, onSort])
 
   return (
-    <div className="jkn-rc-table overflow-hidden h-full" ref={dom} >
+    <div className="jkn-rc-table overflow-hidden h-full w-full" ref={dom} >
       {
         virtual ? (
           <VirtualTable columns={_columns} scroll={{ y: size?.height ? (size?.height - headerHeight) : 0, x: size?.width ? size?.width - 1 : 0 }}

@@ -3,10 +3,9 @@ import { CapsuleTabs, HoverCard, HoverCardContent, HoverCardTrigger, JknIcon, Jk
 import { useStockQuoteSubscribe, useTableData, useTableRowClickToStockTrading } from "@/hooks"
 import { useTime } from "@/store"
 import { dateToWeek } from "@/utils/date"
-import { type Stock, type StockTrading, stockUtils } from "@/utils/stock"
+import { type StockTrading, stockUtils } from "@/utils/stock"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import dayjs from "dayjs"
-import Decimal from "decimal.js"
 import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 
@@ -17,12 +16,14 @@ const tradingToTopStatusMap: Record<StockTrading, IncreaseTopStatus> = {
   close: IncreaseTopStatus.AFTER_HOURS
 }
 
+type TableDataType = ReturnType<typeof stockUtils.toStockWithExt>
+
 const TopList = () => {
   const trading = useTime(s => s.getTrading())
   const [type, setType] = useState<IncreaseTopStatus>(tradingToTopStatusMap[trading as keyof typeof tradingToTopStatusMap])
   const { t } = useTranslation()
   const { isToday } = useTime()
-  const [list, { setList, onSort }] = useTableData<Stock>([], 'symbol')
+  const [list, { setList, onSort }] = useTableData<TableDataType>([], 'symbol')
 
   const query = useQuery({
     queryKey: [getIncreaseTop.cacheKey, type],
@@ -40,12 +41,13 @@ const TopList = () => {
 
     // const data = query.data?.map(item => stockUtils.toStockRecord(item))
     if (type === IncreaseTopStatus.PRE_MARKET) {
-      setList(query.data?.map(v => stockUtils.toStock(trading === 'preMarket' ? v.extend?.stock_before : v.stock, { extend: v.extend, symbol: v.symbol, name: v.name })))
+      setList(query.data?.map(v => stockUtils.toStockWithExt(trading === 'preMarket' ? v.extend?.stock_before : v.stock, { extend: v.extend, symbol: v.symbol, name: v.name })))
     } else if (type === IncreaseTopStatus.AFTER_HOURS) {
-      setList(query.data?.map(v => stockUtils.toStock(trading === 'intraDay' ? v.stock : v.extend?.stock_after, { extend: v.extend, symbol: v.symbol, name: v.name })))
+      setList(query.data?.map(v => stockUtils.toStockWithExt(trading === 'intraDay' ? v.stock : v.extend?.stock_after, { extend: v.extend, symbol: v.symbol, name: v.name })))
     } else {
-      setList(query.data?.map(v => stockUtils.toStock(v.stock, { extend: v.extend, symbol: v.symbol, name: v.name })))
+      setList(query.data?.map(v => stockUtils.toStockWithExt(v.stock, { extend: v.extend, symbol: v.symbol, name: v.name })))
     }
+
   }, [query.data, setList, type, trading])
 
 
@@ -56,9 +58,9 @@ const TopList = () => {
 
   useStockQuoteSubscribe(query.data?.map(d => d.symbol) ?? [])
 
-  const columns: JknRcTableProps<Stock>['columns'] = [
+  const columns: JknRcTableProps<TableDataType>['columns'] = [
     {
-      title: '名称代码', dataIndex: 'name', align: 'left', width: '22%',
+      title: '名称代码', dataIndex: 'name', align: 'left', width: '22%', sort: true,
       render: (_, row) => <StockView code={row.symbol} name={row.name} />
 
     },
@@ -69,17 +71,17 @@ const TopList = () => {
     {
       title: `${type === IncreaseTopStatus.PRE_MARKET ? '盘前' : type === IncreaseTopStatus.AFTER_HOURS ? '盘后' : ''}涨跌幅%`, dataIndex: 'percent', align: 'right', sort: true,
       width: 100,
-      render: (_, row) => (
-        <NumSpanSubscribe code={row.symbol} field="percent" blink block className="w-20" decimal={2} value={Decimal.create(stockUtils.getPercent(row)).mul(100).toDP(2).toNumber()} percent isPositive={stockUtils.isUp(row)} symbol align="right" />
+      render: (percent, row) => (
+        <NumSpanSubscribe code={row.symbol} field="percent" blink block className="w-20" decimal={2} value={percent} percent isPositive={stockUtils.isUp(row)} symbol align="right" />
       )
     },
     {
       title: '成交额', dataIndex: 'turnover', align: 'right', sort: true,
-      render: (_, row) => <NumSpanSubscribe code={row.symbol} field="turnover" blink align="right" unit decimal={2} value={row.turnover} />
+      render: (turnover, row) => <NumSpanSubscribe code={row.symbol} field="turnover" blink align="right" unit decimal={2} value={turnover} />
     },
     {
       title: '总市值', dataIndex: 'marketValue', align: 'right', sort: true,
-      render: (_, row) => <NumSpanSubscribe code={row.symbol} field={v => v.close * (stockUtils.getMarketValue(row) ?? 0)} blink align="right" unit decimal={2} value={stockUtils.getMarketValue(row)} />
+      render: (marketValue, row) => <NumSpanSubscribe code={row.symbol} field={v => stockUtils.getSubscribeMarketValue(row, v)} blink align="right" unit decimal={2} value={marketValue} />
     },
   ]
 

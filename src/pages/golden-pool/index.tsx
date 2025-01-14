@@ -1,6 +1,6 @@
 import { type StockExtend, addStockCollectCate, type getStockCollectCates, getStockCollects, removeStockCollect, removeStockCollectCate, updateStockCollectCate } from "@/api"
 import { AddCollect, AiAlarm, Button, CapsuleTabs, JknAlert, JknCheckbox, JknIcon, JknRcTable, type JknRcTableProps, NumSpan, NumSpanSubscribe, Popover, PopoverAnchor, PopoverContent, StockView, useFormModal, useModal } from "@/components"
-import { useCheckboxGroup, useTableRowClickToStockTrading, useToast, useZForm } from "@/hooks"
+import { useCheckboxGroup, useTableData, useTableRowClickToStockTrading, useToast, useZForm } from "@/hooks"
 import { useCollectCates } from "@/store"
 import { type Stock, stockUtils } from "@/utils/stock"
 import { useQuery } from "@tanstack/react-query"
@@ -8,15 +8,16 @@ import { useMount } from "ahooks"
 import to from "await-to-js"
 import dayjs from "dayjs"
 import Decimal from "decimal.js"
-import { useCallback, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import type { z } from "zod"
 import { GoldenPoolForm, poolSchema } from "./components/golden-pool-form"
 
 const baseExtends: StockExtend[] = ['total_share', 'basic_index', 'day_basic', 'alarm_ai', 'alarm_all', 'financials']
 type CollectCate = Awaited<ReturnType<typeof getStockCollectCates>>[0]
 
-const GoldenPool = () => {
+type TableDataType = ReturnType<typeof stockUtils.toStockWithExt>
 
+const GoldenPool = () => {
   const cates = useCollectCates()
   const [activeStock, setActiveStock] = useState<string>('1')
   const { checked, onChange, setCheckedAll, getIsChecked } = useCheckboxGroup([])
@@ -29,7 +30,12 @@ const GoldenPool = () => {
     queryFn: () => getStockCollects({ cate_id: +activeStock, limit: 300, extend: baseExtends }),
   })
 
-  const data = useMemo(() => collects.data?.items.map(o => stockUtils.toStock(o.stock, { extend: o.extend, name: o.name, symbol: o.symbol })) ?? [], [collects.data])
+  const [list, { setList, onSort }] = useTableData<TableDataType>([], 'symbol')
+
+  useEffect(() => {
+    setList(collects.data?.items.map(o => stockUtils.toStockWithExt(o.stock, { extend: o.extend, name: o.name, symbol: o.symbol })) ?? [])
+  }, [collects.data, setList])
+
 
   const onActiveStockChange = (v: string) => {
     setActiveStock(v)
@@ -77,7 +83,7 @@ const GoldenPool = () => {
   }, [activeStock, collects, toast, checked])
 
 
-  const columns: JknRcTableProps<Stock>['columns'] = useMemo(() => [
+  const columns: JknRcTableProps<TableDataType>['columns'] = useMemo(() => [
     {
       title: '序号', dataIndex: 'index', align: 'center', width: 60,
       render: (_, __, index) => <div className="text-center w-full">{index + 1}</div>
@@ -134,7 +140,7 @@ const GoldenPool = () => {
           <Button className="reset" variant="icon" >
             <JknCheckbox
               checked={checked.length > 0}
-              onCheckedChange={e => setCheckedAll(e ? data.map(o => o.symbol) : [])}
+              onCheckedChange={e => setCheckedAll(e ? list.map(o => o.symbol) : [])}
             />
           </Button>
         </PopoverAnchor>
@@ -161,7 +167,7 @@ const GoldenPool = () => {
         </div>
       )
     },
-  ], [cates.collects, activeStock, onRemoveBatch, checked, getIsChecked, onChange, setCheckedAll, data, onRemove])
+  ], [cates.collects, activeStock, onRemoveBatch, checked, getIsChecked, onChange, setCheckedAll, list, onRemove])
 
   const onRowClick = useTableRowClickToStockTrading('symbol')
 
@@ -188,7 +194,7 @@ const GoldenPool = () => {
       </div>
       <div className="flex-1 overflow-hidden">
 
-        <JknRcTable virtual isLoading={collects.isLoading} rowKey="symbol" columns={columns} data={data} onRow={onRowClick} />
+        <JknRcTable virtual isLoading={collects.isLoading} rowKey="symbol" columns={columns} data={list} onRow={onRowClick} onSort={onSort} />
       </div>
       <style jsx>
         {

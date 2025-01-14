@@ -94,7 +94,7 @@ export const PriceAlarmSetting = (props: PriceAlarmSetting) => {
               <FormItem>
                 <FormLabel>二、股价设置</FormLabel>
                 <FormControl>
-                  <PriceSetting mode="rise" {...field} />
+                  <PriceSetting mode="rise" value={field.value} onChange={field.onChange} />
                 </FormControl>
               </FormItem>
             )}
@@ -104,7 +104,7 @@ export const PriceAlarmSetting = (props: PriceAlarmSetting) => {
             render={({ field }) => (
               <FormItem className="!mt-4 pb-4 border-0 border-b border-solid border-dialog-border">
                 <FormControl>
-                  <PriceSetting mode="fall" {...field} />
+                  <PriceSetting mode="fall" value={field.value} onChange={field.onChange} />
                 </FormControl>
               </FormItem>
             )}
@@ -146,22 +146,23 @@ const PriceSetting = forwardRef((props: PriceSettingProps, _) => {
   const query = useQuery({
     queryKey: [getStockBaseCodeInfo.cacheKey, symbol, ['total_share']],
     queryFn: () => getStockBaseCodeInfo({ symbol: symbol, extend: ['total_share'] }),
-    enabled: !!symbol,
-    select: (data) => stockUtils.toStockRecord(data)[0]
+    enabled: !!symbol
   })
 
   useEffect(() => {
     if (query.data) {
-      const r = Decimal.create(query.data.close ?? 0).mul(props.mode === 'rise' ? 1.05 : 0.95).toFixed(2)
+      const stock = stockUtils.toStock(query.data.stock, { extend: query.data.extend, symbol: query.data.symbol, name: query.data.name })
+      const r = Decimal.create(stock.close ?? 0).mul(props.mode === 'rise' ? 1.05 : 0.95).toFixed(2)
       setList([{ checked: false, value: r, id: nanoid(8) }])
     }
   }, [query.data, props.mode])
 
   const calcPercent = (price: string) => {
-    if (!query.data || !price || !query.data.close) {
+    if (!query.data || !price) {
       return '-'
     }
-    return `${props.mode === 'rise' ? '+' : ''}${new Decimal(price).minus(query.data.close).div(query.data.close).mul(100).toFixed(2)}%`
+    const stock = stockUtils.toStock(query.data.stock, { extend: query.data.extend, symbol: query.data.symbol, name: query.data.name })
+    return `${props.mode === 'rise' ? '+' : ''}${new Decimal(price).minus(stock.close).div(stock.close).mul(100).toFixed(2)}%`
   }
 
   const onValueChange = (id: string, value: string) => {

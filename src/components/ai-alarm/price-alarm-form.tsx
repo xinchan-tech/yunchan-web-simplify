@@ -13,7 +13,7 @@ const PriceAlarmForm = (props: PriceAlarmFormProps) => {
   const [active, setActive] = useState('1')
 
   return (
-    <div className="h-[800px] overflow-hidden">
+    <div className="h-[800px] overflow-hidden w-[900px]">
       <div className="p-1 border-0 border-b border-solid border-border">
         <CapsuleTabs activeKey={active} onChange={setActive}>
           <CapsuleTabs.Tab label="报警设置" value="1" />

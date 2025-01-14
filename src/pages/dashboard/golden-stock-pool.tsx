@@ -8,11 +8,13 @@ import { useQuery } from "@tanstack/react-query"
 import type { TableProps } from 'rc-table'
 import { useEffect, useState } from "react"
 
+type TableDataType = ReturnType<typeof stockUtils.toStockWithExt>
+
 const GoldenStockPool = () => {
   const { collects } = useCollectCates()
   const [type, setType] = useState(collects[0].id)
   const { token } = useToken()
-  const [list, { setList, onSort }] = useTableData<Stock>([], 'symbol')
+  const [list, { setList, onSort }] = useTableData<TableDataType>([], 'symbol')
 
 
   const query = useQuery({
@@ -27,7 +29,7 @@ const GoldenStockPool = () => {
   })
 
   useEffect(() => {
-    const list = query.data?.items.map(item => stockUtils.toStock(item.stock, { extend: item.extend, name: item.name, symbol: item.symbol })) ?? []
+    const list = query.data?.items.map(item => stockUtils.toStockWithExt(item.stock, { extend: item.extend, name: item.name, symbol: item.symbol })) ?? []
     setList(list)
   }, [query.data, setList])
 
@@ -38,38 +40,33 @@ const GoldenStockPool = () => {
     appEvent.emit('login')
   }
 
-  const columns: TableProps<Stock>['columns'] = [
+  const columns: TableProps<TableDataType>['columns'] = [
     {
-      dataIndex: 'name',
-      title: '名称代码',
-      key: 'name',
-      align: 'left',
+      title: '名称代码', dataIndex: 'name', align: 'left',
       sort: true,
-      render: (_, row) => (
-        <StockView code={row.symbol} name={row.name} />
+      render: (name, row) => <StockView code={row.symbol} name={name} />
+    },
+    {
+      title: '现价', dataIndex: 'close', align: 'right', width: '17%', sort: true,
+      render: (close, row) => <NumSpanSubscribe code={row.symbol} field="close" blink value={close} isPositive={stockUtils.isUp(row)} align="right" />
+    },
+    {
+      title: '涨跌幅', dataIndex: 'percent',
+      align: 'right', width: '20%', sort: true,
+      render: (percent, row) => (
+        <NumSpanSubscribe code={row.symbol} field="percent" block blink className="py-1 w-20" decimal={2} align="right" value={percent} percent isPositive={stockUtils.isUp(row)} symbol />
       )
     },
     {
-      title: '现价', dataIndex: 'close', key: 'close',
-      sort: true,
-      align: 'right',
-      render: (_, row) => <NumSpanSubscribe code={row.symbol} field="close" blink value={row.close} decimal={3} isPositive={stockUtils.isUp(row)} align="right" />
+      title: '成交额', dataIndex: 'turnover',
+      align: 'right', width: '20%', sort: true,
+      render: (turnover, row) => <NumSpanSubscribe code={row.symbol} field="turnover" blink align="right" unit decimal={2} value={turnover} />
     },
     {
-      title: '涨跌幅', dataIndex: 'percent', key: 'percent', align: 'right',
-      sort: true,
-      render: (_, row) => (
-        <NumSpanSubscribe code={row.symbol} field="percent" className="w-20 text-center" block blink value={(stockUtils.getPercent(row) ?? 0) * 100} decimal={2} percent isPositive={stockUtils.isUp(row)} align="right" />
-      )
-    },
-    {
-      title: '成交额', sort: true, dataIndex: 'turnover', key: 'turnover', align: 'right',
-      render: (_, row) => <NumSpanSubscribe code={row.symbol} field="turnover" blink value={row.turnover} decimal={2} unit align="right" />
-    },
-    {
-      title: '总市值', sort: true, dataIndex: 'marketValue', key: 'marketValue', align: 'right',
-      render: (_, row) => <NumSpanSubscribe code={row.symbol} blink field={v => stockUtils.getSubscribeMarketValue(row, v)} value={stockUtils.getMarketValue(row)} decimal={2} unit align="right" />
-    },
+      title: '总市值', dataIndex: 'marketValue',
+      align: 'right', width: '19%', sort: true,
+      render: (marketValue, row) => <NumSpanSubscribe code={row.symbol} field={v => stockUtils.getSubscribeMarketValue(row, v)} blink align="right" unit decimal={2} value={marketValue} />
+    }
   ]
 
   const onRowClick = useTableRowClickToStockTrading('symbol')

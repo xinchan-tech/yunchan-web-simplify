@@ -109,19 +109,19 @@ const GroupAlarm = (props: AlarmItemProps) => {
         render: (name, row) => <StockView code={row.symbol} name={name} />
       },
       {
-        title: '现价', dataIndex: 'close', align: 'right', sort: true, width: '10%',
+        title: '现价', dataIndex: 'close', align: 'right', sort: true,
         render: (close, row) => <NumSpanSubscribe code={row.symbol} blink field="close" value={close} decimal={2} isPositive={stockUtils.isUp(row)} align="right" />
       },
       {
-        title: '涨跌幅', dataIndex: 'percent', align: 'right', sort: true, width: '10%',
+        title: '涨跌幅', dataIndex: 'percent', align: 'right', sort: true,
         render: (percent, row) => <NumSpanSubscribe code={row.symbol} field="percent" blink className="w-20" symbol block percent decimal={2} value={percent} isPositive={stockUtils.isUp(row)} />
       },
       {
-        title: '成交额', dataIndex: 'turnover', align: 'right', sort: true, width: '10%',
+        title: '成交额', dataIndex: 'turnover', align: 'right', sort: true,
         render: (turnover, row) => <NumSpanSubscribe code={row.symbol} field="turnover" blink align="right" unit decimal={2} value={turnover} />
       },
       {
-        title: '总市值', dataIndex: 'marketValue', align: 'right', sort: true, width: '10%',
+        title: '总市值', dataIndex: 'marketValue', align: 'right', sort: true,
         render: (marketValue, row) => <NumSpanSubscribe code={row.symbol} field={v => stockUtils.getSubscribeMarketValue(row, v)} blink align="right" unit decimal={2} value={marketValue} />
       },
     ]
@@ -365,7 +365,7 @@ const AlarmGroupList = (props: AlarmGroupListProps) => {
     }
 
     return c
-  }, [props.options])
+  }, [props.options, props.type])
 
   const data = (() => {
     const r: TableDataType[] = []

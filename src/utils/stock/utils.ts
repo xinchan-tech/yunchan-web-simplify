@@ -2,7 +2,7 @@ import { StockChartInterval, type StockExtendResultMap, type StockRawRecord } fr
 import dayjs from 'dayjs'
 import Decimal from 'decimal.js'
 import { type Stock, StockRecord, type StockResultRecord, type StockTrading } from './stock'
-import type { StockSubscribeHandler } from "./subscribe"
+import type { StockSubscribeHandler } from './subscribe'
 
 export const stockUtils = {
   toStockRecord(data: StockResultRecord) {
@@ -16,8 +16,8 @@ export const stockUtils = {
   cloneFrom(data: StockRecord) {
     return StockRecord.of(data.symbol, data.name, data.rawRecord, data.extend)
   },
-  
-  toStock(data: StockRawRecord, opts?: {extend?: StockExtendResultMap, name?: string, symbol?: string}): Stock {
+
+  toStock(data: StockRawRecord, opts?: { extend?: StockExtendResultMap; name?: string; symbol?: string }): Stock {
     const stock: Stock = {
       name: opts?.name ?? '',
       symbol: opts?.symbol ?? '',
@@ -27,7 +27,7 @@ export const stockUtils = {
       high: data[3],
       low: data[4],
       volume: data[5],
-      turnover: data[6] ?  data[6] * 10000 : data[6],
+      turnover: data[6] ? data[6] * 10000 : data[6],
       extend: opts?.extend
     } as Stock
 
@@ -41,11 +41,32 @@ export const stockUtils = {
       stock.prevClose = data[7]
     }
 
-    if(opts?.extend){
+    if (opts?.extend) {
       stock.totalShare = opts?.extend.total_share
       stock.industry = opts?.extend.basic_index
       stock.thumbs = opts?.extend.thumbs
     }
+
+    return stock
+  },
+
+  toStockWithExt(
+    data: StockRawRecord,
+    opts?: { extend?: StockExtendResultMap; name?: string; symbol?: string }
+  ): Stock & { percent?: number; marketValue?: number; pe?: number; pb?: number; turnoverRate?: number } {
+    const stock = stockUtils.toStock(data, opts) as Stock & {
+      percent?: number
+      marketValue?: number
+      pe?: number
+      pb?: number
+      turnoverRate?: number
+    }
+
+    stock.percent = stockUtils.getPercent(stock)
+    stock.marketValue = stockUtils.getMarketValue(stock)
+    stock.pe = stockUtils.getPE(stock)
+    stock.pb = stockUtils.getPB(stock)
+    stock.turnoverRate = stockUtils.getTurnOverRate(stock)
 
     return stock
   },
@@ -68,16 +89,7 @@ export const stockUtils = {
 
   toShortRawRecord(data: Stock): StockRawRecord {
     const dateStr = dayjs(data.timestamp).tz('America/New_York').format('YYYY-MM-DD HH:mm:ss')
-    return [
-      dateStr,
-      data.open,
-      data.close,
-      data.high,
-      data.low,
-      data.volume,
-      data.turnover,
-      data.prevClose
-    ]
+    return [dateStr, data.open, data.close, data.high, data.low, data.volume, data.turnover, data.prevClose]
   },
 
   intervalToStr(interval: number) {
@@ -131,10 +143,10 @@ export const stockUtils = {
     }
   },
 
-  intervalToTrading(interval: StockChartInterval): StockTrading | undefined{
-    switch(interval) {
+  intervalToTrading(interval: StockChartInterval): StockTrading | undefined {
+    switch (interval) {
       case StockChartInterval.PRE_MARKET:
-        return 'preMarket'  
+        return 'preMarket'
       case StockChartInterval.INTRA_DAY:
         return 'intraDay'
       case StockChartInterval.AFTER_HOURS:
@@ -266,7 +278,6 @@ export const stockUtils = {
 
     return data.turnover / marketValue
   }
-
 }
 
 /**
@@ -275,7 +286,7 @@ export const stockUtils = {
  * @param time 添加时间戳
  */
 const parseTime = (time?: string) => {
-  if(!time) return -1
+  if (!time) return -1
   if (time.replace('-', '').length === time.length) {
     if (time.length === 10) {
       return dayjs(+time * 1000).valueOf()

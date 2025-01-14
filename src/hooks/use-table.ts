@@ -9,6 +9,10 @@ const convertToNumber = (data: any) => {
     return data
   }
 
+  if(data === undefined){
+    return -Number.NEGATIVE_INFINITY
+  }
+
   return Number.parseFloat(data)
 }
 
@@ -76,10 +80,11 @@ export const useTableData = <T extends Record<string, any>>(data: T[], orderKey:
       }
 
       setList(s => {
+        console.log(s)
         s.sort((a, b) => {
           const _a = convertToNumber(a[columnKey])
           const _b = convertToNumber(b[columnKey])
-
+         
           if (Number.isNaN(_a) || Number.isNaN(_b)) {
             return compareString(a[columnKey], b[columnKey], order!)
           }
