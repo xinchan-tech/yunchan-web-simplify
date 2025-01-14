@@ -27,3 +27,13 @@ declare const __RELEASE_VERSION__: string
 declare type Optional<T, K extends keyof T> = Omit<T, K> & Partial<T>
 
 declare type RequiredBy<T, K extends keyof T> = Partial<Omit<T, K>> & Required<Pick<T, K>>
+
+interface Google {
+  accounts: any
+}
+
+// 扩展 window 对象的类型定义
+interface Window {
+  google: Google
+  AppleID: any
+}

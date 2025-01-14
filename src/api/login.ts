@@ -1,4 +1,5 @@
-import request from "@/utils/request"
+import request from '@/utils/request'
+import qs from 'qs'
 
 type LoginParams = {
   mobile: string
@@ -28,7 +29,9 @@ type LoginResult = {
 }
 
 export const login = (params: LoginParams) => {
-  return request.post<LoginResult>('/login', params, { headers: { 'Content-Type': 'application/x-www-form-urlencoded'} }).then(r => r.data)
+  return request
+    .post<LoginResult>('/login', params, { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } })
+    .then(r => r.data)
 }
 
 export const logout = (platform?: 'window' | 'macos' | 'android' | 'linux') => {
@@ -54,25 +57,25 @@ export const getConfig = () => {
 }
 
 type getUsTimeResult = {
-     /**
-     * 美国时间
-     */
-     date: string
-     /**
-      * false：休息，0开盘前，1开盘中，2开盘后
-      */
-     open_status: boolean
-     /**
-      * 开盘时段列表
-      */
-     stock_open: {
-      active: number
-      name: string
-     }[]
-     /**
-      * 美国时间戳
-      */
-     time: number
+  /**
+   * 美国时间
+   */
+  date: string
+  /**
+   * false：休息，0开盘前，1开盘中，2开盘后
+   */
+  open_status: boolean
+  /**
+   * 开盘时段列表
+   */
+  stock_open: {
+    active: number
+    name: string
+  }[]
+  /**
+   * 美国时间戳
+   */
+  time: number
 }
 
 /**
@@ -80,4 +83,26 @@ type getUsTimeResult = {
  */
 export const getUsTime = () => {
   return request.get<getUsTimeResult>('/index/us/info').then(r => r.data)
+}
+
+/**
+ * 轮询微信登录状态
+ */
+export const getWxLoginStatus = (sid: string) => {
+  return request.get<{ platform: string; code?: string }>('/login/wxRedirect', { params: { s_id: sid } }).then(r => {
+    const { url } = r.data as any
+    if (!url) {
+      return {
+        platform: '',
+        code: undefined
+      }
+    }
+
+    const { platform, code } = qs.parse(url.split('?')[1].replace(/ /g, '')) as any
+
+    return {
+      platform,
+      code
+    }
+  })
 }

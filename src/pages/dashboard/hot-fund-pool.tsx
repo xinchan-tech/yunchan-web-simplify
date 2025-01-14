@@ -63,7 +63,7 @@ const TopList = () => {
         </CapsuleTabs>
       </div>
       <div className="h-[calc(100%-38px)] overflow-hidden">
-        <JknRcTable isLoading={query.isLoading} onSort={onSort} rowKey="code" columns={columns} data={list} onRow={onRowClick} />
+        <JknRcTable isLoading={query.isLoading} onSort={onSort} rowKey="symbol" columns={columns} data={list} onRow={onRowClick} />
       </div>
     </div>
   )

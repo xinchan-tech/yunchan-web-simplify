@@ -7,6 +7,7 @@ interface ImportMetaEnv {
   readonly PUBLIC_BASE_WS_URL: string
   readonly PUBLIC_BASE_ICON_URL: string
   readonly PUBLIC_BASE_WS_STOCK_URL: string
+  readonly PUBLIC_BASE_GOOGLE_CLIENT_ID: string
 }
 
 
