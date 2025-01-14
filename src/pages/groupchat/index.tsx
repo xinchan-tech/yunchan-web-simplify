@@ -30,6 +30,7 @@ import GroupMembers from "./group-members";
 import { MessagePerPageLimit } from "./Service/constant";
 import { revokeMessageService } from "@/api";
 import { sortMessages } from "./chat-utils";
+import JoinGroup from "./components/join-group";
 export type ReplyFn = (message: Message, isQuote?: boolean) => void;
 export const GroupChatContext = createContext<{
   handleReply: ReplyFn;
@@ -41,12 +42,14 @@ export const GroupChatContext = createContext<{
 
 const Threshold = 200;
 
+const subscriberCache: Map<string, Subscriber[]> = new Map();
+
 let connectStatusListener!: ConnectStatusListener;
 let messageListener!: MessageListener;
 let messageStatusListener!: MessageStatusListener;
 let cmdListener!: (message: Message) => void;
 let scrollStart: () => void;
-let scrollEnd: () => void
+let scrollEnd: () => void;
 
 const GroupChatPage = () => {
   const { token } = useToken();
@@ -56,7 +59,6 @@ const GroupChatPage = () => {
   const latestToChannel = useLatest(toChannel);
   const msgListRef = useRef<any>(null);
 
-  const [messages, setMessages] = useState<Message[]>([]);
   const messagesRef = useRef<Message[]>([]);
 
   const conversationWraps = useGroupChatShortStore(
@@ -76,14 +78,21 @@ const GroupChatPage = () => {
   const locatedMessageId = useGroupChatShortStore(
     (state) => state.locatedMessageId
   );
+  const readyToJoinGroup = useGroupChatShortStore(
+    (state) => state.readyToJoinGroup
+  );
+
+  const messages = useGroupChatShortStore((state) => state.messages);
+  const setMessages = useGroupChatShortStore((state) => state.setMessages);
+  const getGroupDetailData = useGroupChatShortStore(
+    (state) => state.getGroupDetailData
+  );
   // 输入框实例
   const messageInputRef = useRef();
 
-
-
   // 消息列表滚动到底部
   const scrollBottom = () => {
-    pulldowning.current = true
+    pulldowning.current = true;
     animateScroll.scrollToBottom({
       containerId: "group-chat-msglist",
       duration: 0,
@@ -127,12 +136,12 @@ const GroupChatPage = () => {
   const [jumpMsgId, setJumpMsgId] = useState("");
 
   scrollStart = () => {
-    pulldowning.current = true
-  }
+    pulldowning.current = true;
+  };
 
   scrollEnd = () => {
-    pulldowning.current = false
-  }
+    pulldowning.current = false;
+  };
 
   // 查看前面的消息 不是往下拉，是消息序号down
   const pullDown = async (isAutoExpand?: boolean) => {
@@ -183,10 +192,9 @@ const GroupChatPage = () => {
         typeof msgListRef.current.scrollTo === "function"
       ) {
         jumpToLocatedId.current = true;
-        if(locatedMessageId === existedMessage.clientMsgNo) {
-          gotoLocatedMessagePosition()
+        if (locatedMessageId === existedMessage.clientMsgNo) {
+          gotoLocatedMessagePosition();
         } else {
-
           setLocatedMessageId(existedMessage.clientMsgNo);
         }
       }
@@ -264,14 +272,12 @@ const GroupChatPage = () => {
             typeof msgListRef.current.scrollTo === "function"
           ) {
             jumpScrolling.current = true;
-            jumpToLocatedId.current = true
-            if(locatedMessageId === targetMessage.clientMsgNo) {
-              gotoLocatedMessagePosition()
+            jumpToLocatedId.current = true;
+            if (locatedMessageId === targetMessage.clientMsgNo) {
+              gotoLocatedMessagePosition();
             } else {
-    
               setLocatedMessageId(targetMessage.clientMsgNo);
             }
-            
           }
 
           pulldowning.current = false;
@@ -376,9 +382,9 @@ const GroupChatPage = () => {
     WKSDK.shared().connectManager.addConnectStatusListener(
       connectStatusListener
     );
-    Events.scrollEvent.register('start', scrollStart);
+    Events.scrollEvent.register("start", scrollStart);
 
-    Events.scrollEvent.register('end', scrollEnd);
+    Events.scrollEvent.register("end", scrollEnd);
 
     WKSDK.shared().chatManager.addMessageListener(messageListener);
 
@@ -402,8 +408,8 @@ const GroupChatPage = () => {
       );
       WKSDK.shared().chatManager.removeCMDListener(cmdListener);
       WKSDK.shared().disconnect();
-      Events.scrollEvent.remove('start')
-      Events.scrollEvent.remove('end')
+      Events.scrollEvent.remove("start");
+      Events.scrollEvent.remove("end");
     };
   }, []);
 
@@ -411,12 +417,17 @@ const GroupChatPage = () => {
 
   const handleChannelSelect = async (channel: Channel) => {
     messagesRef.current = [];
-    setJumpMsgId('');
-    setLocatedMessageId('')
-    await WKSDK.shared().channelManager.syncSubscribes(channel); // 同步订阅者
-    const members: Subscriber[] =
-      WKSDK.shared().channelManager.getSubscribes(channel);
-    setSubscribers(members);
+    setJumpMsgId("");
+    setLocatedMessageId("");
+    if (subscriberCache.has(channel.channelID)) {
+      const members = subscriberCache.get(channel.channelID) || [];
+      setSubscribers(members);
+    } else {
+      await WKSDK.shared().channelManager.syncSubscribes(channel); // 同步订阅者
+      const members: Subscriber[] =
+        WKSDK.shared().channelManager.getSubscribes(channel);
+      setSubscribers(members);
+    }
 
     // 输入框和回复内容重置
     setReplyMessage(null);
@@ -433,7 +444,8 @@ const GroupChatPage = () => {
         (item) => item.channel.channelID === selectedChannel?.channelID
       )?.channel;
       if (firstChannel) {
-        handleChannelSelect(firstChannel)
+        getGroupDetailData(firstChannel.channelID);
+        handleChannelSelect(firstChannel);
       }
       initChannelFlag.current = false;
     }
@@ -484,7 +496,7 @@ const GroupChatPage = () => {
     // }
   };
 
-  const initOverFlag = useRef(true)
+  const initOverFlag = useRef(true);
 
   useEffect(() => {
     if (jumpMsgId) {
@@ -492,9 +504,9 @@ const GroupChatPage = () => {
         containerId: "group-chat-msglist",
         duration: 0,
       });
-    } else if(messages instanceof Array && messages.length > 0){
+    } else if (messages instanceof Array && messages.length > 0) {
       // 第一屏不够高时，再查一遍前面的信息
-      if(initOverFlag.current === true) {
+      if (initOverFlag.current === true) {
         initOverFlag.current = false;
         if (
           msgListRef.current &&
@@ -502,11 +514,10 @@ const GroupChatPage = () => {
         ) {
           const notOver = msgListRef.current.judgeNotOver();
           if (notOver) {
-            console.log('auto,auto')
+            console.log("auto,auto");
             pullDown();
           }
         }
-
       }
       scrollBottom();
     }
@@ -515,19 +526,22 @@ const GroupChatPage = () => {
   let jumpToLocatedId = useRef(true);
   const gotoLocatedMessagePosition = () => {
     jumpToLocatedId.current = false;
-      const dom = document.getElementById(locatedMessageId);
-      if (dom) {
-        // 要差个300px  不然又触发pullDown
-        msgListRef.current.scrollTo(dom.offsetTop - 300);
-      }
-  }
+    const dom = document.getElementById(locatedMessageId);
+    if (dom) {
+      // 要差个300px  不然又触发pullDown
+      msgListRef.current.scrollTo(dom.offsetTop - 300);
+    }
+  };
   useEffect(() => {
-    if(messages instanceof Array && messages.length > 0 && locatedMessageId && jumpToLocatedId.current === true) {
-      if(messages.findIndex(m => m.clientMsgNo === locatedMessageId) >= 0) {
-
-        gotoLocatedMessagePosition()
+    if (
+      messages instanceof Array &&
+      messages.length > 0 &&
+      locatedMessageId &&
+      jumpToLocatedId.current === true
+    ) {
+      if (messages.findIndex((m) => m.clientMsgNo === locatedMessageId) >= 0) {
+        gotoLocatedMessagePosition();
       }
-      
     }
   }, [locatedMessageId, messages]);
 
@@ -540,33 +554,39 @@ const GroupChatPage = () => {
             handleChannelSelect(channel);
           }}
         />
+
         <div className="group-chat-right">
-          <div className="group-chat-header justify-between h-[58px]">
-            <div className="group-title flex items-center h-full">
-              {currentChannelInfo?.title}
-            </div>
-          </div>
-          <div className="flex" style={{ height: "calc(100% - 58px)" }}>
-            <div className="group-msg-panel">
-              <GroupChatMsgList
-                messages={messages}
-                ref={msgListRef}
-                handleFindPrevMsg={handleFindPrevMsg}
-                handleScroll={handleMsgScroll.run}
-              />
-              <GroupChatInput
-                onMsgSend={()=> {
-                  setJumpMsgId('')
-                }}
-                
-                subscribers={subscribers}
-                ref={messageInputRef}
-              />
-            </div>
-            <div className="w-[220px] group-member-panel">
-              <GroupMembers subscribers={subscribers} />
-            </div>
-          </div>
+          {readyToJoinGroup ? (
+            <JoinGroup data={readyToJoinGroup} />
+          ) : (
+            <>
+              <div className="group-chat-header justify-between h-[58px]">
+                <div className="group-title flex items-center h-full">
+                  {currentChannelInfo?.title}
+                </div>
+              </div>
+              <div className="flex" style={{ height: "calc(100% - 58px)" }}>
+                <div className="group-msg-panel">
+                  <GroupChatMsgList
+                    messages={messages}
+                    ref={msgListRef}
+                    handleFindPrevMsg={handleFindPrevMsg}
+                    handleScroll={handleMsgScroll.run}
+                  />
+                  <GroupChatInput
+                    onMsgSend={() => {
+                      setJumpMsgId("");
+                    }}
+                    subscribers={subscribers}
+                    ref={messageInputRef}
+                  />
+                </div>
+                <div className="w-[220px] group-member-panel">
+                  <GroupMembers subscribers={subscribers} />
+                </div>
+              </div>
+            </>
+          )}
         </div>
       </GroupChatContext.Provider>
 

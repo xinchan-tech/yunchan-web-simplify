@@ -2,7 +2,6 @@ import { Resizable } from "re-resizable";
 import React, {
   useMemo,
   useRef,
-  useState,
   useImperativeHandle,
   forwardRef,
 } from "react";
@@ -142,13 +141,14 @@ const GroupChatInput = forwardRef(
     const onFileClick = (event: any) => {
       event.target.value = ""; // 防止选中一个文件取消后不能再选中同一个文件
     };
+    const imgUploadRef = useRef<HTMLInputElement>();
     const onFileChange = () => {
       if (imgUploadRef.current) {
         let File = (imgUploadRef.current.files || [])[0];
         dealFile(File);
       }
     };
-    const imgUploadRef = useRef<HTMLInputElement>();
+ 
     const chooseFile = () => {
       imgUploadRef.current && imgUploadRef.current.click();
     };

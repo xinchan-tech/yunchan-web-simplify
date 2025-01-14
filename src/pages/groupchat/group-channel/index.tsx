@@ -18,8 +18,11 @@ import { useShallow } from "zustand/react/shallow";
 import { lastContent } from "../chat-utils";
 import { getGroupChannels } from "@/api";
 import { useQuery } from "@tanstack/react-query";
+import ChatAvatar from "../components/chat-avatar";
+import { JknIcon } from "@/components";
+import CreateGroup from "../components/create-group";
 
-type GroupData = {
+export type GroupData = {
   id: string;
   account: string;
   avatar: string;
@@ -32,10 +35,21 @@ type GroupData = {
 };
 
 const GroupChannel = (props: { onSelectChannel: (c: Channel) => void }) => {
-  const { conversationWraps, setConversationWraps } = useGroupChatShortStore(
+  const {
+    conversationWraps,
+    setConversationWraps,
+    setReadyToJoinGroup,
+    readyToJoinGroup,
+    getGroupDetailData,
+    setMessages
+  } = useGroupChatShortStore(
     useShallow((state) => ({
       conversationWraps: state.conversationWraps,
       setConversationWraps: state.setConversationWraps,
+      setReadyToJoinGroup: state.setReadyToJoinGroup,
+      readyToJoinGroup: state.readyToJoinGroup,
+      getGroupDetailData: state.getGroupDetailData,
+      setMessages: state.setMessages
     }))
   );
   const latestConversation = useLatest(conversationWraps);
@@ -104,8 +118,8 @@ const GroupChannel = (props: { onSelectChannel: (c: Channel) => void }) => {
       ];
       batchUpdateConversation(temp);
       setConversationWraps(temp);
+      handleSelectChannel(conversation.channel);
     } else if (action === ConversationAction.update) {
- 
       const index = latestConversation.current?.findIndex(
         (item) =>
           item.channel.channelID === conversation.channel.channelID &&
@@ -134,7 +148,6 @@ const GroupChannel = (props: { onSelectChannel: (c: Channel) => void }) => {
 
   // 强制刷新会话
   const channelInfoListener = (channelInfo: ChannelInfo) => {
-
     if (latestConversation.current.length > 0) {
       const temp = [...latestConversation.current];
       setConversationWraps(temp);
@@ -204,6 +217,10 @@ const GroupChannel = (props: { onSelectChannel: (c: Channel) => void }) => {
   const { data } = useQuery(option);
 
   const handleSelectChannel = (channel: Channel) => {
+    if (channel.channelID === selectedChannel?.channelID) {
+      return;
+    }
+    getGroupDetailData(channel.channelID);
     setSelectedChannel(channel);
     setToChannel(channel);
     if (typeof onSelectChannel === "function") {
@@ -235,9 +252,9 @@ const GroupChannel = (props: { onSelectChannel: (c: Channel) => void }) => {
           (con) => con.channel.channelID === item.account
         );
         if (joinedGroup) {
-          return joinedGroup
+          return joinedGroup;
         } else {
-          return item
+          return item;
         }
       });
     }
@@ -245,105 +262,122 @@ const GroupChannel = (props: { onSelectChannel: (c: Channel) => void }) => {
   }, [data?.items, conversationWraps]);
 
   return (
-    <div className="w-[270px]">
-      <div className="group-filter h-[58px]"></div>
+    <div className="w-[270px] h-full">
+      <div className="group-filter h-[58px] flex items-center justify-between pl-4 pr-4">
+        <span>我的群聊</span>
+        <CreateGroup />
+      </div>
       <div className="group-list">
-        {displayConversations.map(
-          (item: ConversationWrap  | GroupData) => {
-            if(item instanceof ConversationWrap) {
-              return (
-                <div
-                  key={item.channel.channelID}
-                  className={cn(
-                    "flex conversation-card",
-                    item.channel.channelID === selectedChannel?.channelID &&
-                      "actived"
+        {displayConversations.map((item: ConversationWrap | GroupData) => {
+          if (item instanceof ConversationWrap) {
+            return (
+              <div
+                key={item.channel.channelID}
+                className={cn(
+                  "flex conversation-card",
+                  item.channel.channelID === selectedChannel?.channelID &&
+                    !readyToJoinGroup &&
+                    "actived"
+                )}
+                onClick={() => {
+               
+                  setReadyToJoinGroup(null);
+                  handleSelectChannel(item.channel);
+                }}
+              >
+                <div className="group-avatar rounded-md flex items-center text-ellipsis justify-center relative">
+                  {/* {item.channelInfo?.logo ? (
+                    <img
+                      src={item.channelInfo?.logo}
+                      className="rounded-md"
+                      style={{ width: "48px", height: "48px" }}
+                    />
+                  ) : (
+                    <span className="text-lg">
+                      {item.channelInfo?.title[0].toLocaleUpperCase() || ""}
+                    </span>
+                  )} */}
+                  <ChatAvatar
+                    radius="10px"
+                    className="w-[44px] h-[44px]"
+                    data={{
+                      name: item.channelInfo?.title || "",
+                      uid: item.channel.channelID,
+                      avatar: item.channelInfo?.logo || "",
+                    }}
+                  />
+                  {item.unread > 0 && (
+                    <div className="absolute h-[18px] box-border  unread min-w-6">
+                      {item.unread > 99 ? "99+" : item.unread}
+                    </div>
                   )}
-                  onClick={() => {
-                    handleSelectChannel(item.channel);
-                  }}
-                >
-                  <div className="group-avatar rounded-md flex items-center text-ellipsis justify-center relative">
-                    {item.channelInfo?.logo ? (
-                      <img
-                        src={item.channelInfo?.logo}
-                        className="rounded-md"
-                        style={{ width: "48px", height: "48px" }}
-                      />
-                    ) : (
-                      <span className="text-lg">
-                        {item.channelInfo?.title[0].toLocaleUpperCase() || ""}
-                      </span>
-                    )}
-  
-                    {item.unread > 0 && (
-                      <div className="absolute h-[18px] box-border  unread min-w-6">
-                        {item.unread > 99 ? "99+" : item.unread}
-                      </div>
-                    )}
+                </div>
+                <div className="group-data flex-1">
+                  <div className="group-title">
+                    {item.channelInfo?.title || ""}
                   </div>
-                  <div className="group-data flex-1">
-                    <div className="group-title">
-                      {item.channelInfo?.title || ""}
+                  <div className="group-last-msg flex justify-between">
+                    <div className="flex-1 overflow-hidden whitespace-nowrap text-ellipsis max-w-24">
+                      {lastContent(item)}
+                      {item.lastMessage?.content.conversationDigest || ""}
                     </div>
-                    <div className="group-last-msg flex justify-between">
-                      <div className="flex-1 overflow-hidden whitespace-nowrap text-ellipsis max-w-24">
-                        {lastContent(item)}
-                        {item.lastMessage?.content.conversationDigest || ""}
-                      </div>
-                      <div className="max-w-24">{item.timestampString || ""}</div>
-                    </div>
+                    <div className="max-w-24">{item.timestampString || ""}</div>
                   </div>
                 </div>
-              );
-            }  else {
-              return (
-                <div
-                  key={item.account}
-                  className={cn(
-                    "flex conversation-card",
-                    item.account === selectedChannel?.channelID &&
-                      "actived"
-                  )}
-                 
-                >
-                  <div className="group-avatar rounded-md flex items-center text-ellipsis justify-center relative">
-                    {item.avatar ? (
-                      <img
-                        src={item.avatar}
-                        className="rounded-md"
-                        style={{ width: "48px", height: "48px" }}
-                      />
-                    ) : (
-                      <span className="text-lg">
-                        {item.name[0].toLocaleUpperCase() || ""}
-                      </span>
-                    )}
-  
-                   
-                  </div>
-                  <div className="group-data flex-1">
-                    <div className="group-title">
-                      {item.name || ""}
+              </div>
+            );
+          } else {
+            return (
+              <div
+                key={item.account}
+                className={cn(
+                  "flex conversation-card",
+                  item.account === readyToJoinGroup?.account && "actived"
+                )}
+                onClick={() => {
+                  if (readyToJoinGroup?.account === item.account) {
+                    return;
+                  }
+                  setMessages([])
+                  getGroupDetailData(item.account);
+                  setReadyToJoinGroup(item);
+                }}
+              >
+                <div className="group-avatar rounded-md flex items-center text-ellipsis justify-center relative">
+                
+                  <ChatAvatar
+                    radius="10px"
+                    className="w-[44px] h-[44px]"
+                    data={{
+                      name: item.name || "",
+                      uid: item.account,
+                      avatar: item.avatar || "",
+                    }}
+                  />
+                </div>
+                <div className="group-data flex-1">
+                  <div className="group-title">{item.name || ""}</div>
+                  <div className="group-last-msg flex justify-between">
+                    <div className="flex-1 overflow-hidden whitespace-nowrap text-ellipsis max-w-24">
+                      一起加入群组吧
                     </div>
-                    <div className="group-last-msg flex justify-between">
-                      <div className="flex-1 overflow-hidden whitespace-nowrap text-ellipsis max-w-24">
-                        一起加入群组吧
-                      </div>
-                      <div className="max-w-24"></div>
-                    </div>
+                    <div className="max-w-24"></div>
                   </div>
-                </div>)
-            }
-           
+                </div>
+              </div>
+            );
           }
-        )}
+        })}
       </div>
 
       <style jsx>
         {`
           .group-filter {
             background-color: rgb(49, 51, 57);
+          }
+          .group-list {
+            overflow-y: auto;
+            height: calc(100% - 58px);
           }
           .unread {
             background-color: rgb(218, 50, 50);
@@ -361,7 +395,6 @@ const GroupChannel = (props: { onSelectChannel: (c: Channel) => void }) => {
             width: 48px;
             height: 48px;
 
-            background-color: rgb(228, 98, 64);
             color: #fff;
             font-size: 13px;
           }

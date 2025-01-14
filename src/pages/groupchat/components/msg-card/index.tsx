@@ -11,7 +11,7 @@ import {
   ContextMenuItem,
 } from "@/components";
 import { GroupChatContext, ReplyFn } from "../..";
-import { revokeMessageService } from "@/api";
+
 
 const MsgCard = (props: { data: Message; children: string | ReactNode }) => {
   const { data } = props;

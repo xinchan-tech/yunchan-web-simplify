@@ -76,3 +76,45 @@ export const revokeMessageService = async (params: {
     .then((r) => r.data);
   return r;
 };
+// 查询群资料
+export const getGroupDetailService = async (id: string) => {
+  const r = await request.get(`/channel/${id}`).then((r) => r.data);
+  return r;
+};
+
+// 加入群
+export const joinGroupService = async (
+  id: string,
+  params?: { product_sn: string }
+) => {
+  const r = await request
+    .post(`/channel/${id}/user`, params )
+    .then((r) => r.data);
+  return r;
+};
+
+// 申请建群
+
+export interface createGroupRequest {
+  avatar: string;
+  brief: string;
+  grade: string;
+  id: string;
+  max_num: string;
+  name: string;
+  notice: string;
+  price_tag: PriceTag[];
+  tags: string;
+
+}
+
+export interface PriceTag {
+  price: string;
+  unit: string;
+ 
+}
+
+export const applyCreateGroupService = async (params:createGroupRequest) => {
+  const r = request.post('/chat/apply/save', params).then(res => res);
+  return r;
+}

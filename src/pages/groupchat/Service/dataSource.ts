@@ -23,7 +23,7 @@ import request from "@/utils/request";
 import UploadUtil from "./uploadUtil";
 import { userToChannelInfo } from "../chat-utils";
 
-const subscriberCache: Map<string, Subscriber[]> = new Map();
+
 
 export function initDataSource() {
   // 同步自己业务端的频道消息列表
@@ -109,32 +109,33 @@ export function initDataSource() {
     let resp: GroupMemberResult;
     let members: Subscriber[] = [];
     try {
-      if (subscriberCache.has(channel.channelID)) {
-        members = subscriberCache.get(channel.channelID);
-      } else {
-        resp = await getGroupMembersService(channel.channelID);
-        if (resp.items instanceof Array && resp.items.length > 0) {
-          resp.items.forEach((man) => {
-            let member = new Subscriber();
-            member.uid = man.username;
-            member.name = man.realname;
-            member.orgData = man;
-            member.avatar = man.avatar;
+      // if (subscriberCache.has(channel.channelID)) {
+      //   members = subscriberCache.get(channel.channelID) || [];
+      // } else {
 
-            // 在这里缓存群成员的头像昵称
-            const data = {
-              name: man.realname,
-              avatar: man.avatar,
-            };
-            WKSDK.shared().channelManager.setChannleInfoForCache(
-              userToChannelInfo(data, man.username)
-            );
+      // }
+      resp = await getGroupMembersService(channel.channelID);
+      if (resp.items instanceof Array && resp.items.length > 0) {
+        resp.items.forEach((man) => {
+          let member = new Subscriber();
+          member.uid = man.username;
+          member.name = man.realname;
+          member.orgData = man;
+          member.avatar = man.avatar;
 
-            members.push(member);
-          });
-        }
-        subscriberCache.set(channel.channelID, members);
+          // 在这里缓存群成员的头像昵称
+          const data = {
+            name: man.realname,
+            avatar: man.avatar,
+          };
+          WKSDK.shared().channelManager.setChannleInfoForCache(
+            userToChannelInfo(data, man.username)
+          );
+
+          members.push(member);
+        });
       }
+      // subscriberCache.set(channel.channelID, members);
     } catch (err) {
       console.error(err);
     }
