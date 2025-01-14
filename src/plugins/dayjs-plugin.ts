@@ -4,7 +4,9 @@ import tz from 'dayjs/plugin/timezone'
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter'
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore'
 import weekday from 'dayjs/plugin/weekday'
+import quarterOfYear from 'dayjs/plugin/quarterOfYear'
 import 'dayjs/locale/zh-cn'
+import { Dayjs } from 'dayjs'
 
 // https://github.com/iamkun/dayjs/blob/dev/src/constant.js
 const FORMAT_DEFAULT = '/\[([^\]]+)]|Y{1,4}|M{1,4}|D{1,2}|d{1,4}|H{1,2}|h{1,2}|a|A|m{1,2}|s{1,2}|Z{1,2}|SSS/g'
@@ -37,11 +39,29 @@ const weekFormat = function(_: any, c: any){
   }
 }
 
+declare module 'dayjs' {
+  interface Dayjs {
+    halfYearOfYear(): number;
+  }
+}
+
+const halfYearOfYear: dayjs.PluginFunc = (_option, dayjsClass, dayjsProto) => {
+  // @ts-ignore
+  dayjsProto.halfYearOfYear = function() {
+      // @ts-ignore
+    return Math.floor(this.month() / 6) + 1
+  }
+}
+
+
+dayjs.extend(utc)
 dayjs.extend(utc)
 dayjs.extend(tz)
 dayjs.extend(isSameOrAfter)
 dayjs.extend(isSameOrBefore)
 dayjs.extend(weekday)
 dayjs.extend(weekFormat)
+dayjs.extend(quarterOfYear)
+dayjs.extend(halfYearOfYear)
 dayjs.locale('zh-cn')
 dayjs.tz.setDefault('America/New_York')

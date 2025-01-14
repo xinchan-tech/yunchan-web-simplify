@@ -382,7 +382,7 @@ const StockRelated = () => {
   })
 
   useEffect(() => {
-    if (relates.data?.plates) {
+    if (relates.data?.plates && relates.data?.plates.length > 0) {
       setPlates(relates.data?.plates)
       setPlateId(relates.data?.plates[0].id)
     }

@@ -204,6 +204,7 @@ export const renderUtils = {
    *
    */
   isSameTimeByInterval: (src: Dayjs, target: Dayjs, interval: StockChartInterval) => {
+    console.log(dayjs(src).halfYearOfYear())
     switch (interval) {
       case StockChartInterval.PRE_MARKET:
       case StockChartInterval.INTRA_DAY:
@@ -212,8 +213,12 @@ export const renderUtils = {
         return src.isSame(target, 'minute')
       case StockChartInterval.TWO_MIN:
         return src.add(2, 'minute').isAfter(target)
+      case StockChartInterval.THREE_MIN:
+        return src.add(3, 'minute').isAfter(target)
       case StockChartInterval.FIVE_MIN:
         return src.add(5, 'minute').isAfter(target)
+      case StockChartInterval.TEN_MIN:
+        return src.add(10, 'minute').isAfter(target)
       case StockChartInterval.FIFTEEN_MIN:
         return src.add(15, 'minute').isAfter(target)
       case StockChartInterval.THIRTY_MIN:
@@ -230,6 +235,17 @@ export const renderUtils = {
         return src.add(4, 'hour').isAfter(target)
       case StockChartInterval.DAY:
         return src.isSame(target, 'day')
+      case StockChartInterval.WEEK:
+        return src.isSame(target, 'week')
+      case StockChartInterval.MONTH:
+        return src.isSame(target, 'month')
+      case StockChartInterval.QUARTER:
+        return src.quarter() === target.quarter() && src.year() === target.year()
+      case StockChartInterval.HALF_YEAR:
+        return src.halfYearOfYear() === target.halfYearOfYear() && src.year() === target.year()
+      case StockChartInterval.YEAR:
+        return src.isSame(target, 'year')
+      
       default:
         return false
     }
