@@ -128,7 +128,7 @@ const AppleLogin = (props: LoginFormProps) => {
   useMount(() => {
     window.AppleID.auth.init({
       clientId: 'com.jkn.app.web',
-      redirectURI: 'https://web.mgjkn.com/login/apple',
+      redirectURI: import.meta.env.PUBLIC_BASE_APPLE_REDIRECT_URI,
       scope: 'email',
       state: 'https://www.mgjkn.com/main',
       nonce: 'xxx',
@@ -138,7 +138,6 @@ const AppleLogin = (props: LoginFormProps) => {
 
   const onClick = () => {
     window.AppleID.auth.signIn().then((r: AppleLoginResult) => {
-      console.log(r)
       props.onLogin(r.authorization.code)
     })
   }
