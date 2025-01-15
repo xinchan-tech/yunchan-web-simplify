@@ -1,17 +1,18 @@
-import { getWxLoginStatus, login } from "@/api"
+import { getWxLoginStatus, login, loginByThird } from "@/api"
 import WechatLoginIcon from '@/assets/icon/wechat_login.png'
 import LoginLeftImg from '@/assets/image/login_left.png'
 import AppleIcon from '@/assets/icon/apple.png'
 import GoogleIcon from '@/assets/icon/google.png'
-import { useToken, useUser } from "@/store"
+import { useToken } from "@/store"
 import { z } from "zod"
 import { Button, Form, FormControl, FormField, FormItem, Input, useModal } from "@/components"
 import { useToast, useZForm } from "@/hooks"
 import { useMutation } from "@tanstack/react-query"
 import { useMount, useUnmount } from "ahooks"
-import { useRef } from "react"
+import { useEffect, useRef } from "react"
 import { uid } from "radash"
 import QRCode from 'qrcode'
+import { appEvent } from "@/utils/event"
 
 interface LoginFormProps {
   afterLogin?: () => void
@@ -25,25 +26,41 @@ const loginSchema = z.object({
 
 type LoginForm = z.infer<typeof loginSchema>
 
+type GoogleLoginResult = {
+  clientId: string
+  client_id: string
+  credential: string
+  select_by: string
+}
+
+type AppleLoginResult = {
+  authorization: {
+    code: string
+    id_token: string
+    state: string
+  }
+}
+
 const LoginForm = (props: LoginFormProps) => {
   const form = useZForm(loginSchema, { mobile: '', password: '' })
-  const { setUser } = useUser()
-  const { setToken } = useToken()
+  const setToken = useToken(s => s.setToken)
   const { toast } = useToast()
+
+  const onLoginSuccess = (token: string) => {
+    setToken(token)
+    props.afterLogin?.()
+  }
 
   const loginMutation = useMutation({
     mutationFn: login,
-    onSuccess: (res) => {
-      setUser(res.user)
-      setToken(res.token)
-      props.afterLogin?.()
-    },
+    onSuccess: r => onLoginSuccess(r.token),
     onError: (err) => {
       toast({
         description: err.message,
       })
     }
   })
+
 
   return (
     <div className="flex login-form">
@@ -83,9 +100,9 @@ const LoginForm = (props: LoginFormProps) => {
             <span className="border-0 border-b border-solid border-gray-300 flex-1" />
           </div>
           <div className="flex items-center justify-between px-10">
-            <AppleLogin />
+            <AppleLogin onLogin={onLoginSuccess} />
             <WeChatLogin />
-            <GoogleLogin />
+            <GoogleLogin onLogin={onLoginSuccess} />
           </div>
         </div>
       </div>
@@ -93,11 +110,15 @@ const LoginForm = (props: LoginFormProps) => {
   )
 }
 
-const AppleLogin = () => {
+interface LoginFormProps {
+  onLogin: (token: string) => void
+}
+
+const AppleLogin = (props: LoginFormProps) => {
   useMount(() => {
     window.AppleID.auth.init({
       clientId: 'com.jkn.app.web',
-      redirectURI: 'https://us.mgjkn.com/login/auto',
+      redirectURI: 'https://web.mgjkn.com/login/apple',
       scope: 'email',
       state: 'https://www.mgjkn.com/main',
       nonce: 'xxx',
@@ -106,7 +127,11 @@ const AppleLogin = () => {
   })
 
   const onClick = () => {
-    window.AppleID.auth.signIn()
+    window.AppleID.auth.signIn().then((r: AppleLoginResult) => {
+      loginByThird('apple', r.authorization.code).then(r => {
+        props.onLogin(r.token)
+      })
+    })
   }
 
   return (
@@ -126,35 +151,63 @@ const WeChatLogin = () => {
   })
 
   return (
-    <div className="wechat-login w-8 h-8 cursor-pointer" onClick={modal.modal.open} onKeyUp={() => { }}>
-      <img src={WechatLoginIcon} alt="" className="w-full h-full" />
+    <>
+      <div className="wechat-login w-8 h-8 cursor-pointer" onClick={modal.modal.open} onKeyUp={() => { }}>
+        <img src={WechatLoginIcon} alt="" className="w-full h-full" />
+      </div>
       {
         modal.context
       }
-    </div>
+    </>
+
   )
 }
 
-const GoogleLogin = () => {
-  useMount(() => {
-    window.google.accounts.id.initialize({
-      client_id: '1084914910896-skncl8a34m47fe8toeak808pvrdn18vr.apps.googleusercontent.com',
-      context: 'signin',
-      ux_mode: 'popup',
-      login_uri: "https://us.mgjkn.com/login/auto",
-    })
+const GoogleLogin = (props: LoginFormProps) => {
+  const onLoginRef = useRef(props.onLogin)
 
-    window.google.accounts.id.renderButton(document.getElementById('google-login'), {
-      theme: 'outline',
-      type: 'icon',
-      size: 'medium',
-      text: 'filled_black',
-      shape: 'circle'
-    })
+  useEffect(() => {
+    onLoginRef.current = props.onLogin
+
+    return () => {
+      onLoginRef.current = () => { }
+    }
+  }, [props.onLogin])
+
+
+
+  useMount(() => {
+    if (window.google) {
+      window.google.accounts.id.initialize({
+        client_id: '1084914910896-skncl8a34m47fe8toeak808pvrdn18vr.apps.googleusercontent.com',
+        context: 'signin',
+        ux_mode: 'popup',
+        callback: (res: GoogleLoginResult) => {
+          loginByThird('google', res.credential).then(r => {
+            props.onLogin(r.token)
+          })
+        }
+      })
+
+      window.google.accounts.id.renderButton(document.getElementById('google-login'), {
+        theme: 'outline',
+        type: 'icon',
+        size: 'medium',
+        text: 'filled_black',
+        shape: 'circle'
+      })
+    }
   })
+
+
+  const checkGoogleScript = () => {
+    if (!window.google) {
+      appEvent.emit('toast', { message: '无法连接到Google' })
+    }
+  }
   return (
     <div className="google-login cursor-pointer relative overflow-hidden w-6 h-6">
-      <div id="google-login" className="opacity-0 w-full h-full" />
+      <div id="google-login" className="opacity-0 w-full h-full" onClick={checkGoogleScript} onKeyDown={() => { }} />
       <img src={GoogleIcon} alt="" className="w-full h-full absolute top-0 left-0 pointer-events-none" />
     </div>
   )

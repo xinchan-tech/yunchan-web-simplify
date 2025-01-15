@@ -26,8 +26,11 @@ const userFormSchema = z.object({
 
 const UserCenter = (props: UserCenterProps) => {
   const form = useZForm(userFormSchema, { realname: '', avatar: '' })
-  const { user, setUser, reset } = useUser()
-  const { removeToken } = useToken()
+  const user = useUser(s => s.user)
+  const setUser = useUser(s => s.setUser)
+  const reset = useUser(s => s.reset)
+  const removeToken = useToken(s => s.removeToken)
+
   const { t } = useTranslation()
   const query = useQuery({
     queryKey: [getUser.cacheKey],
@@ -36,9 +39,9 @@ const UserCenter = (props: UserCenterProps) => {
     })
   })
 
-
   const logoutQuery = useRequest(logout, { manual: true })
   const { toast } = useToast()
+
   const authorized = useMemo(() => {
     return query.data?.authorized[0]
   }, [query.data])

@@ -82,16 +82,14 @@ export const renderUtils = {
    */
   calcGridSize: (size: [number, number], secondaryIndicatorLen: number, hasLeft: boolean) => {
     const Y_AXIS_WIDTH = 70
-    const X_AXIS_HEIGHT = 24
+    const X_AXIS_HEIGHT = 30
     const TOP_OFFSET = 10
     const [width, height] = size
 
     const gridLeft = hasLeft ? Y_AXIS_WIDTH : 1
 
     const gridSize = [width - Y_AXIS_WIDTH - gridLeft, height - X_AXIS_HEIGHT - TOP_OFFSET]
-
-    const grid: { left: number; top: number; width: number; height: number; borderColor?: string; show?: boolean }[] =
-      []
+    const grid: { left: number; top: number; width: number; height: number; borderColor?: string; show?: boolean }[] = []
 
     if (secondaryIndicatorLen === 0) {
       grid.push({
@@ -99,7 +97,7 @@ export const renderUtils = {
         top: TOP_OFFSET,
         width: gridSize[0],
         height: gridSize[1],
-        borderColor: '#fff'
+        borderColor: '#4a4848'
       })
     } else if (secondaryIndicatorLen <= 3) {
       grid.push({
@@ -111,11 +109,11 @@ export const renderUtils = {
         borderColor: '#4a4848'
       })
 
-      Array.from({ length: secondaryIndicatorLen }, _ => {
+      Array.from({ length: secondaryIndicatorLen }, (_, i) => {
         grid.push({
           show: true,
           left: gridLeft,
-          top: grid.reduce((acc, cur) => acc + cur.height, 0),
+          top: (gridSize[1] / 5) * i + grid[0].height + TOP_OFFSET,
           width: gridSize[0],
           height: gridSize[1] / 5,
           borderColor: '#4a4848'
@@ -123,20 +121,22 @@ export const renderUtils = {
       })
     } else {
       grid.push({
+        show: true,
         left: gridLeft,
         top: TOP_OFFSET,
         width: gridSize[0],
         height: gridSize[1] * 0.4,
-        borderColor: 'gray'
+        borderColor: '#4a4848'
       })
 
-      Array.from({ length: secondaryIndicatorLen }, _ => {
+      Array.from({ length: secondaryIndicatorLen }, (_, i) => {
         grid.push({
+          show: true,
           left: gridLeft,
-          top: grid.reduce((acc, cur) => acc + cur.height, 0),
+          top: (gridSize[1] * 0.6 / secondaryIndicatorLen) * i + grid[0].height + TOP_OFFSET,
           width: gridSize[0],
-          height: gridSize[1] / 5,
-          borderColor: 'gray'
+          height: gridSize[1] * 0.6 / secondaryIndicatorLen,
+          borderColor: '#4a4848'
         })
       })
     }
@@ -145,8 +145,7 @@ export const renderUtils = {
       left: gridLeft,
       top: height - X_AXIS_HEIGHT,
       width: gridSize[0],
-      height: 0,
-      borderColor: '#fff'
+      height: 0
     })
 
     return grid
@@ -204,7 +203,6 @@ export const renderUtils = {
    *
    */
   isSameTimeByInterval: (src: Dayjs, target: Dayjs, interval: StockChartInterval) => {
-    console.log(dayjs(src).halfYearOfYear())
     switch (interval) {
       case StockChartInterval.PRE_MARKET:
       case StockChartInterval.INTRA_DAY:
@@ -245,7 +243,7 @@ export const renderUtils = {
         return src.halfYearOfYear() === target.halfYearOfYear() && src.year() === target.year()
       case StockChartInterval.YEAR:
         return src.isSame(target, 'year')
-      
+
       default:
         return false
     }
@@ -314,12 +312,13 @@ export const renderUtils = {
       )
     }
 
-    const extLen = Math.round(data.length * 0.01)
+    const extLen = Math.max(Math.round(data.length * 0.01), 4)
 
     const startTime = data[data.length - 1][0]
+
     const scale = renderUtils.getIntervalScale(interval)
     const xAxisData = Array.from({ length: extLen }, (_, i) => {
-      const time = dayjs(startTime).add((i + 1) * scale, 'millisecond')
+      const time = dayjs(+startTime).add((i + 1) * scale, 'millisecond')
       return time.valueOf()
     })
     console.log()

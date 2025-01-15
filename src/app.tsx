@@ -3,7 +3,7 @@ import Logo from './assets/icon/icon_jkn@2x.png'
 import './app.scss'
 import { RouterProvider } from "react-router"
 import { router, routes } from "./router"
-import { useMount, useUpdateEffect } from "ahooks"
+import { useMount, useUnmount, useUpdateEffect } from "ahooks"
 import { useConfig, useToken, useUser } from "./store"
 import { useTranslation } from "react-i18next"
 import { Suspense, useEffect, useMemo, useRef, useState } from "react"
@@ -12,6 +12,7 @@ import { useQuery } from "@tanstack/react-query"
 import { appEvent } from "./utils/event"
 import { wsManager } from "./utils/ws"
 import { uid } from "radash"
+import { useToast } from "./hooks"
 
 const App = () => {
   const setConsults = useConfig(s => s.setConsults)
@@ -19,15 +20,17 @@ const App = () => {
   const setLanguage = useConfig(s => s.setLanguage)
   const language = useConfig(s => s.language)
   const hasSelected = useConfig(s => s.hasSelected)
+  const token = useToken(s => s.token)
   const { t, i18n } = useTranslation()
   const setUser = useUser(s => s.setUser)
   const notLogin = useRef(0)
-
+  console.log(token)
   const query = useQuery({
     queryKey: [getUser.cacheKey],
     queryFn: () => getUser({
       extends: ['authorized']
-    })
+    }),
+    enabled: !!token
   })
 
   const configQuery = useQuery({
@@ -46,6 +49,22 @@ const App = () => {
   useUpdateEffect(() => {
     setConsults(configQuery.data?.consults ?? [])
   }, [configQuery.data])
+
+  const { toast } = useToast()
+
+  useEffect(() => {
+    const handler = (params: {message: string}) => {
+      toast({
+        description: params.message
+      })
+    }
+
+    appEvent.on('toast', handler)
+
+    return () => {
+      appEvent.off('toast', handler)
+    }
+  }, [toast])
 
   useMount(() => {
     if (!hasSelected) {
@@ -77,6 +96,10 @@ const App = () => {
     }
   }, [])
 
+
+
+
+  
   return (
     <div className="container-layout dark">
       <Toaster />

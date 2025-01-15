@@ -10,7 +10,8 @@
     "preview": "rsbuild preview",
     "generate-icon": "node ./scripts/generate-icon-type.js",
     "release": "release-it",
-    "deploy": "node ./scripts/deploy.js"
+    "deploy": "node ./scripts/deploy.js",
+    "frp": "frpc -c ./frpc.toml"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",

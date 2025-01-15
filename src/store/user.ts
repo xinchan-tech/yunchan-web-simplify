@@ -13,7 +13,7 @@ interface UserStore {
 export const useUser = create<UserStore>()(persist(
   (set, get) => ({
     user: undefined,
-    setUser: (user) => set({ user: Object.assign(get().user ?? {}, user) as User }),
+    setUser: (user) => set({ user: Object.assign({}, get().user ?? {}, user) as User }),
     reset: () => set({ user: undefined })
   }),
   {

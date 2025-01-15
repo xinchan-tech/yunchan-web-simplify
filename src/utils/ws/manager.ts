@@ -8,7 +8,9 @@ export type MessageReceived<T> = {
   time: number
 }
 
-const wsUrl = `ws://${window.location.hostname}${window.location.port ? `:${window.location.port}` : ''}${import.meta.env.PUBLIC_BASE_WS_URL}`
+const wsProtocol = document.location.protocol === 'https:' ? 'wss': 'ws'
+
+const wsUrl = `${wsProtocol}://${window.location.hostname}${window.location.port ? `:${window.location.port}` : ''}${import.meta.env.PUBLIC_BASE_WS_URL}`
 
 type WsEvent =
   | 'connect'

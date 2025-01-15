@@ -106,3 +106,10 @@ export const getWxLoginStatus = (sid: string) => {
     }
   })
 }
+
+/**
+ * 第三方登录
+ */
+export const loginByThird = (platform: 'google' | 'apple', code: string) => {
+  return request.post<LoginResult>('/login/auto', { platform, code, extends: ['authorized', 'teacher', 'kefu'] }, { headers: { 'Content-Type': 'application/x-www-form-urlencoded' }}).then(r => r.data)
+}

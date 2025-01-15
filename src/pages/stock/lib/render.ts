@@ -181,7 +181,7 @@ export const createOptions = (chart: EChartsType): ECOption => ({
         showMaxLabel: false,
         showMinLabel: false,
         color: v => {
-          const scale = chart.getModel().getComponent('xAxis', 0).axis.scale.getExtent()
+          const scale = renderUtils.getScaledZoom(chart, 0)
 
           const data = chart.meta!.mainData?.slice(scale[0], scale[1])
 
@@ -214,7 +214,7 @@ export const createOptions = (chart: EChartsType): ECOption => ({
         label: {
           padding: [0, 0, 0, 0],
           formatter: (params: any) => {
-            const scale = chart.getModel().getComponent('xAxis', 0).axis.scale.getExtent()
+            const scale = renderUtils.getScaledZoom(chart, 0)
             const data = chart.meta!.mainData?.slice(scale[0], scale[1])
 
             if (!data) return params.value
@@ -266,7 +266,7 @@ export const createOptions = (chart: EChartsType): ECOption => ({
           return v
         },
         color: v => {
-          const scale = chart.getModel().getComponent('xAxis', 0).axis.scale.getExtent()
+          const scale = renderUtils.getScaledZoom(chart, 0)
 
           const data = chart.meta!.mainData?.slice(scale[0], scale[1])
 
@@ -449,12 +449,10 @@ export const renderGrid = (options: ECOption, state: ChartState, size: [number, 
     }
   }
 
-  for (let i = 0; i < state.secondaryIndicators.length; i++) {
-    renderSecondaryAxis(options, state, i, chart)
-  }
-
   /**
    * 设置底部X轴
+   * 底部x轴一定要在附图坐标之前配置，否则附图指标index会错乱
+   * 详见： https://echarts.apache.org/zh/api.html#echartsInstance.setOption 组件合并模式
    */
   Array.isArray(options.xAxis) &&
     options.xAxis.push({
@@ -469,11 +467,12 @@ export const renderGrid = (options: ECOption, state: ChartState, size: [number, 
         color: '#fff',
         formatter: (v: any) => {
           if (!v) return ''
-
+          // @ts-ignore
+          const xData = options.xAxis[0].data as any[]
           const scale = renderUtils.getScaledZoom(chart, 0)
-          const startDay = chart.meta?.mainData?.[scale[0]]?.[0]
+          const startDay = xData[scale[0]]
           //获取时间跨度
-          const time = dayjs(+v).diff(+startDay, 'day')
+          const time = dayjs(xData[scale[1]]).diff(+startDay, 'day')
 
           if (time < 1) {
             return dayjs(+v).format('hh:mm')
@@ -544,6 +543,10 @@ export const renderGrid = (options: ECOption, state: ChartState, size: [number, 
         y: [1]
       }
     })
+
+  for (let i = 0; i < state.secondaryIndicators.length; i++) {
+    renderSecondaryAxis(options, state, i, chart)
+  }
 
   return options
 }
@@ -859,7 +862,7 @@ export const renderMainIndicators = (options: ECOption, indicators: Indicator[])
             color: d.style?.color || '#ffffff'
           },
           xAxisIndex: 0,
-          yAxisIndex: 0,
+          yAxisIndex: 1,
           data: (d.data as number[]).map((s, i) => [i, s])
         })
       } else if (d.draw === 'STICKLINE') {
@@ -883,7 +886,7 @@ export const renderMainIndicators = (options: ECOption, indicators: Indicator[])
   if (stickLineData.length > 0) {
     drawRect(options, {} as any, {
       xAxisIndex: 0,
-      yAxisIndex: 0,
+      yAxisIndex: 1,
       data: stickLineData
     })
   }
@@ -891,7 +894,7 @@ export const renderMainIndicators = (options: ECOption, indicators: Indicator[])
   if (textData.length > 0) {
     drawText(options, {} as any, {
       xAxisIndex: 0,
-      yAxisIndex: 0,
+      yAxisIndex: 1,
       data: textData
     })
   }
@@ -995,6 +998,7 @@ export const renderSecondary = (options: ECOption, indicators: Indicator[]) => {
     if (!indicator.data) {
       return
     }
+    if (renderUtils.isLocalIndicator(indicator.id)) return
     const stickLineData: DrawerRectShape[] = []
     const textData: DrawerTextShape[] = []
 
@@ -1012,8 +1016,8 @@ export const renderSecondary = (options: ECOption, indicators: Indicator[]) => {
           extra: {
             color: d.style?.color || '#ffffff'
           },
-          xAxisIndex: index + 1,
-          yAxisIndex: index + 2,
+          xAxisIndex: index + 2,
+          yAxisIndex: index + 3,
           data: (d.data as number[]).map((s, i) => [i, s])
         })
       } else if (d.draw === 'STICKLINE') {
@@ -1047,8 +1051,8 @@ export const renderSecondary = (options: ECOption, indicators: Indicator[]) => {
         })
 
         drawGradient(options, {} as any, {
-          xAxisIndex: index + 1,
-          yAxisIndex: index + 2,
+          xAxisIndex: index + 2,
+          yAxisIndex: index + 3,
           data: data as any
         })
       }
@@ -1056,16 +1060,16 @@ export const renderSecondary = (options: ECOption, indicators: Indicator[]) => {
 
     if (stickLineData.length > 0) {
       drawRect(options, {} as any, {
-        xAxisIndex: index + 1,
-        yAxisIndex: index + 2,
+        xAxisIndex: index + 2,
+        yAxisIndex: index + 3,
         data: stickLineData
       })
     }
 
     if (textData.length > 0) {
       drawText(options, {} as any, {
-        xAxisIndex: index + 1,
-        yAxisIndex: index + 2,
+        xAxisIndex: index + 2,
+        yAxisIndex: index + 3,
         data: textData
       })
     }
@@ -1088,8 +1092,8 @@ export const renderSecondaryLocalIndicators = (options: ECOption, indicators: In
       result.forEach(d => {
         if (d.draw === 'STICKLINE') {
           drawRect(options, {} as any, {
-            xAxisIndex: index + 1,
-            yAxisIndex: index + 2,
+            xAxisIndex: index + 2,
+            yAxisIndex: index + 3,
             data: d.data,
             extra: {
               color: d.style?.color
@@ -1099,20 +1103,20 @@ export const renderSecondaryLocalIndicators = (options: ECOption, indicators: In
           drawHLine(options, {} as any, {
             extra: {
               color: d.style?.color,
-              type: d.style?.style_type
+              type: d.style?.style_type as any
             },
-            xAxisIndex: index + 1,
-            yAxisIndex: index + 2,
+            xAxisIndex: index + 2,
+            yAxisIndex: index + 3,
             data: (d.data as number[]).map((s, i) => [i, s])
           })
         } else {
           drawLine(options, {} as any, {
             extra: {
               color: d.style?.color,
-              type: d.style?.style_type
+              type: d.style?.style_type as any
             },
-            xAxisIndex: index + 1,
-            yAxisIndex: index + 2,
+            xAxisIndex: index + 2,
+            yAxisIndex: index + 3,
             data: (d.data as number[]).map((s, i) => [i, s])
           })
         }
@@ -1121,8 +1125,8 @@ export const renderSecondaryLocalIndicators = (options: ECOption, indicators: In
       const { S1, S2, X0, Z } = calculateTradingPoint(state.mainData.history)
 
       drawRect(options, {} as any, {
-        xAxisIndex: index + 1,
-        yAxisIndex: index + 2,
+        xAxisIndex: index + 2,
+        yAxisIndex: index + 3,
         data: [
           ...X0.map((x, i) => [i, 0, x * 1000, 20, 0, x > 0 ? 'magenta' : 'cyan'] as any),
           ...Z.map((z, i) => [i, 0, z * 1000, 20, 0, z > 0 ? 'magenta' : 'cyan'] as any)
@@ -1134,8 +1138,8 @@ export const renderSecondaryLocalIndicators = (options: ECOption, indicators: In
           type: 'solid',
           z: 10
         },
-        xAxisIndex: index + 1,
-        yAxisIndex: index + 2,
+        xAxisIndex: index + 2,
+        yAxisIndex: index + 3,
         data: S1.map((s, i) => [i, s * 1000])
       })
       drawLine(options, {} as any, {
@@ -1144,8 +1148,8 @@ export const renderSecondaryLocalIndicators = (options: ECOption, indicators: In
           type: 'solid',
           z: 10
         },
-        xAxisIndex: index + 1,
-        yAxisIndex: index + 2,
+        xAxisIndex: index + 2,
+        yAxisIndex: index + 3,
         data: S2.map((s, i) => [i, s * 1000])
       })
     }
@@ -1164,7 +1168,7 @@ const renderSecondaryAxis = (options: ECOption, _: any, index: number, chart: EC
       axisLabel: {
         show: false,
         interval: (index: number) => {
-          const scale = chart.getModel().getComponent('xAxis', 0).axis.scale.getExtent()
+          const scale = renderUtils.getScaledZoom(chart, 0)
 
           const offset = Math.round((scale[1] - scale[0]) / X_AXIS_TICK)
 

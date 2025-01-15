@@ -116,7 +116,7 @@ export class Ws {
   private startHeartbeat() {
     this.closeHeartbeat()
 
-    this.heartbeatTimer = setInterval(() => {
+    this.heartbeatTimer = window.setInterval(() => {
       this.ws?.send('ping')
     }, this.heartbeatInterval)
   }

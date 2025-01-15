@@ -3,8 +3,8 @@ import type { CustomSeriesOption, LineSeriesOption } from 'echarts/charts'
 import type { KChartState } from './ctx'
 import echarts from '@/utils/echarts'
 import { colorUtil } from '@/utils/style'
-import type { ECharts } from 'echarts'
 import { renderUtils } from './utils'
+import type { EChartsType } from "echarts/core"
 
 type XAxis = number
 type YAxis = number
@@ -42,11 +42,28 @@ type DrawerFuncOptions<T = any> = {
   /**
    * 额外的数据
    */
-  extra?: Record<string, any>
+  extra?: {
+    /**
+     * 颜色
+     */
+    color?: string
+    /**
+     * 线型
+     */
+    type?: 'solid' | 'dotted' | 'dashed'
+    /**
+     * z轴
+     */
+    z?: number
+    /**
+     * 序列
+     */
+    seriesId?: string
+  }
   /**
    *
    */
-  chart?: ECharts
+  chart?: EChartsType
 }
 
 type DrawerFunc<T = any> = (options: ECOption, state: KChartState['state'][0], params: DrawerFuncOptions<T>) => ECOption
@@ -63,6 +80,7 @@ export const drawLine: DrawerFunc<[XAxis, number | null][]> = (options, _, { xAx
     symbol: 'none',
     connectNulls: true,
     z: extra?.z ?? 0,
+    id: extra?.seriesId,
     color: extra?.color,
     lineStyle: {
       type: extra?.type ?? 'solid'
@@ -90,6 +108,7 @@ export const drawHLine: typeof drawLine = (options, _, { xAxisIndex, yAxisIndex,
     xAxisIndex: xAxisIndex,
     yAxisIndex: yAxisIndex,
     type: 'custom',
+    id: extra?.seriesId,
     renderItem: (params, _) => {
       if (params.context.rendered) return
       params.context.rendered = true
@@ -136,6 +155,7 @@ export const drawPolyline: DrawerFunc<[XAxis, YAxis, XAxis, YAxis, LineType][]> 
     xAxisIndex: xAxisIndex,
     yAxisIndex: yAxisIndex,
     type: 'custom',
+    id: extra?.seriesId,
     encode: {
       x: [0, 2],
       y: [1, 3]
@@ -207,7 +227,7 @@ export type DrawerTextShape = [XAxis, YAxis, string, DrawerColor]
  * @example ['2030-01-01', 111380, 'text', '#00943c']
  *
  */
-export const drawText: DrawerFunc<DrawerTextShape[]> = (options, _, { xAxisIndex, yAxisIndex, data }) => {
+export const drawText: DrawerFunc<DrawerTextShape[]> = (options, _, { xAxisIndex, yAxisIndex, data, }) => {
   const line: CustomSeriesOption = {
     xAxisIndex: xAxisIndex,
     yAxisIndex: yAxisIndex,

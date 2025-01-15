@@ -285,23 +285,32 @@ export const KChart = (props: KChartProps) => {
 
   const setOverlayMark: KChartContext['setOverlayMark'] = async ({ index, mark, type, title }) => {
     const chart = context.state[index ?? context.activeChartIndex]
+  
     if (chart.overlayMark?.mark === mark) return
 
-    setContext(d => {
-      const chart = d.state[index ?? d.activeChartIndex]
-      chart.overlayMark = { mark, title }
-    })
+    if (mark) {
+      setContext(d => {
+        const chart = d.state[index ?? d.activeChartIndex]
+        chart.overlayMark = { mark, title }
+      })
+      const r = await queryClient.ensureQueryData({
+        queryKey: [getStockTabData.cacheKey, { type, mark, symbol: chart.symbol }],
+        queryFn: () => getStockTabData({ param: { [type]: [mark] }, ticker: chart.symbol, start: '2010-01-01' }),
+        revalidateIfStale: true
+      })
 
-    const r = await queryClient.ensureQueryData({
-      queryKey: [getStockTabData.cacheKey, { type, mark, symbol: chart.symbol }],
-      queryFn: () => getStockTabData({ param: { [type]: [mark] }, ticker: chart.symbol, start: '2010-01-01' }),
-      revalidateIfStale: true
-    })
+      setContext(d => {
+        const chart = d.state[index ?? d.activeChartIndex]
+        chart.overlayMark = { mark, data: r[type], title }
+      })
+    } else {
+      setContext(d => {
+        const chart = d.state[index ?? d.activeChartIndex]
+        chart.overlayMark = { mark, title }
+      })
+    }
 
-    setContext(d => {
-      const chart = d.state[index ?? d.activeChartIndex]
-      chart.overlayMark = { mark, data: r[type], title }
-    })
+
   }
 
   const setYAxis: KChartContext['setYAxis'] = ({ index, yAxis }) => {

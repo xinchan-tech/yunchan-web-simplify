@@ -3,17 +3,17 @@ import TelegramPng from '@/assets/icon/telegram.png'
 import WeChatPng from '@/assets/icon/wechat.png'
 import { useTranslation } from "react-i18next"
 import { useConfig } from "@/store"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components"
+import { HoverCard, HoverCardContent, HoverCardTrigger, Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components"
 
 const HeaderService = () => {
   const { t } = useTranslation()
 
   return (
     <div className="mr-4">
-      {/* <HoverCard openDelay={100}>
+      <HoverCard openDelay={100}>
         <HoverCardTrigger asChild><span className="text-sm cursor-pointer">{t('contact')}</span></HoverCardTrigger>
-        <HoverCardContent className="w-[400px]" align="end"><Content /></HoverCardContent>
-      </HoverCard> */}
+        <HoverCardContent className="w-[400px] p-0" align="end"><Content /></HoverCardContent>
+      </HoverCard>
     </div>
   )
 }
@@ -53,7 +53,7 @@ const Content = () => {
         {
           data.map(row => (
             <TableRow key={row.type as string}>
-              <TableCell className="flex items-center"><img src={row.icon as string} className="w-8" alt="" /><span>{row.type as string}</span></TableCell>
+              <TableCell className="flex items-center"><img src={row.icon as string} className="w-6" alt="" />&nbsp;<span>{row.type as string}</span></TableCell>
               {
                 (row.concat as string[]).map(item => {
                   return <TableCell key={item}>{item}</TableCell>
