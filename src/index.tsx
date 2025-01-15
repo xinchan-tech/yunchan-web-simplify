@@ -4,12 +4,14 @@ import '@/plugins/dayjs-plugin'
 import '@/utils/i18n'
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
-import { StrictMode } from "react"
+import { StrictMode, Suspense } from "react"
 import '@/plugins/decimal-plugin'
 import { } from '@/utils/stock'
 import App from './app.tsx'
 import { initDataSource } from './services/dataSource.ts'
 import { initDataSource } from './pages/groupchat/Service/dataSource.ts'
+import { RouterProvider } from 'react-router'
+import { router, routes } from "./router"
 
 
 
@@ -36,7 +38,9 @@ if (rootEl) {
   root.render(
     <StrictMode>
       <QueryClientProvider client={queryClient}>
-        <App />
+      <Suspense fallback={<div />}>
+              <RouterProvider router={router} />
+            </Suspense> 
         <ReactQueryDevtools initialIsOpen={false} />
       </QueryClientProvider>
     </StrictMode>

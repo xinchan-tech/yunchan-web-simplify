@@ -41,7 +41,7 @@ const GroupChannel = (props: { onSelectChannel: (c: Channel) => void }) => {
     setReadyToJoinGroup,
     readyToJoinGroup,
     getGroupDetailData,
-    setMessages
+    
   } = useGroupChatShortStore(
     useShallow((state) => ({
       conversationWraps: state.conversationWraps,
@@ -49,7 +49,7 @@ const GroupChannel = (props: { onSelectChannel: (c: Channel) => void }) => {
       setReadyToJoinGroup: state.setReadyToJoinGroup,
       readyToJoinGroup: state.readyToJoinGroup,
       getGroupDetailData: state.getGroupDetailData,
-      setMessages: state.setMessages
+    
     }))
   );
   const latestConversation = useLatest(conversationWraps);
@@ -109,6 +109,7 @@ const GroupChannel = (props: { onSelectChannel: (c: Channel) => void }) => {
     conversation: Conversation,
     action: ConversationAction
   ) => {
+ 
     // 监听最近会话列表的变化
 
     if (action === ConversationAction.add) {
@@ -120,6 +121,7 @@ const GroupChannel = (props: { onSelectChannel: (c: Channel) => void }) => {
       setConversationWraps(temp);
       handleSelectChannel(conversation.channel);
     } else if (action === ConversationAction.update) {
+      
       const index = latestConversation.current?.findIndex(
         (item) =>
           item.channel.channelID === conversation.channel.channelID &&
@@ -286,17 +288,7 @@ const GroupChannel = (props: { onSelectChannel: (c: Channel) => void }) => {
                 }}
               >
                 <div className="group-avatar rounded-md flex items-center text-ellipsis justify-center relative">
-                  {/* {item.channelInfo?.logo ? (
-                    <img
-                      src={item.channelInfo?.logo}
-                      className="rounded-md"
-                      style={{ width: "48px", height: "48px" }}
-                    />
-                  ) : (
-                    <span className="text-lg">
-                      {item.channelInfo?.title[0].toLocaleUpperCase() || ""}
-                    </span>
-                  )} */}
+           
                   <ChatAvatar
                     radius="10px"
                     className="w-[44px] h-[44px]"
@@ -338,7 +330,7 @@ const GroupChannel = (props: { onSelectChannel: (c: Channel) => void }) => {
                   if (readyToJoinGroup?.account === item.account) {
                     return;
                   }
-                  setMessages([])
+         
                   getGroupDetailData(item.account);
                   setReadyToJoinGroup(item);
                 }}
@@ -378,6 +370,7 @@ const GroupChannel = (props: { onSelectChannel: (c: Channel) => void }) => {
           .group-list {
             overflow-y: auto;
             height: calc(100% - 58px);
+            background-color: rgb(49,51,57)
           }
           .unread {
             background-color: rgb(218, 50, 50);

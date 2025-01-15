@@ -1,7 +1,7 @@
 import { AiAlarmNotice, Footer, HeaderService, HeaderUser, JknAlert, Menu, MenuRight, StockSelect, Toaster } from './components'
 import Logo from './assets/icon/icon_jkn@2x.png'
 import './app.scss'
-import { RouterProvider } from "react-router"
+import { Outlet, RouterProvider } from "react-router"
 import { router, routes } from "./router"
 import { useMount, useUpdateEffect } from "ahooks"
 import { useConfig, useToken, useUser } from "./store"
@@ -78,7 +78,7 @@ const App = () => {
 
   useEffect(() => {
     const handler = () => {
-      if (notLogin.current === 0 && (window.location.pathname !== '/chat' && window.location.pathname !== '/')) {
+      if (notLogin.current === 0 && (window.location.pathname !== '/app')) {
         notLogin.current = 1
         JknAlert.info({
           content: '请先登录账号',
@@ -133,9 +133,10 @@ const App = () => {
         </div>
         <div className="content overflow-hidden">
           <div>
-            <Suspense fallback={<div />}>
+            <Outlet />
+            {/* <Suspense fallback={<div />}>
               <RouterProvider router={router} />
-            </Suspense>
+            </Suspense> */}
           </div>
 
           <div className="footer border-style-primary">

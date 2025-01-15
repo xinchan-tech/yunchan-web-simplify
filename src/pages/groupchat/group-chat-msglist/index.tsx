@@ -10,7 +10,6 @@ import ImageCell from "../Messages/Image";
 import SystemCell from "../Messages/system";
 import TextCell from "../Messages/text";
 
-import { useUpdate } from "ahooks";
 import { MessageWrap } from "../Service/Model";
 import ReplyMsg from "../components/reply-msg";
 import { cn } from "@/utils/style";
@@ -34,7 +33,7 @@ const GroupChatMsgList = forwardRef(
       return state.setLocatedMessageId;
     });
     const scrollDomRef = useRef<HTMLElement | null>(null);
-    const update = useUpdate();
+ 
 
     const getMessage = (m: Message, key: string) => {
       if (m instanceof Message) {

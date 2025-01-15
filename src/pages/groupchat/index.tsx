@@ -16,6 +16,7 @@ import WKSDK, {
   ChannelTypePerson,
   CMDContent,
   ConversationAction,
+  ChannelTypeGroup,
 } from "wukongimjssdk";
 import { useEffect, useRef, useState, createContext } from "react";
 import { useUser, useToken } from "@/store";
@@ -30,14 +31,21 @@ import GroupMembers from "./group-members";
 import { MessagePerPageLimit } from "./Service/constant";
 import { revokeMessageService } from "@/api";
 import { sortMessages } from "./chat-utils";
+import { Toaster } from "@/components";
 import JoinGroup from "./components/join-group";
-export type ReplyFn = (message: Message, isQuote?: boolean) => void;
+export type ReplyFn = (option: {
+  message?: Message;
+  isQuote?: boolean;
+  quickReplyUserId?: string;
+}) => void;
 export const GroupChatContext = createContext<{
   handleReply: ReplyFn;
   handleRevoke: (message: Message) => void;
+  syncSubscriber: (channel: Channel) => Promise<void>;
 }>({
   handleReply: () => {},
-  handleRevoke: (message: Message) => {},
+  handleRevoke: () => {},
+  syncSubscriber: async () => {},
 });
 
 const Threshold = 200;
@@ -87,6 +95,9 @@ const GroupChatPage = () => {
   const getGroupDetailData = useGroupChatShortStore(
     (state) => state.getGroupDetailData
   );
+  const groupDetailData = useGroupChatShortStore(
+    (state) => state.groupDetailData
+  );
   // 输入框实例
   const messageInputRef = useRef();
 
@@ -104,11 +115,13 @@ const GroupChatPage = () => {
     if (latestToChannel.current?.channelID !== msg.channel.channelID) {
       return;
     }
+    console.log('messagesRef.current')
     const temp = [...messagesRef.current];
 
     temp.push(msg);
+    messagesRef.current.push(msg);
     setMessages(temp);
-    messagesRef.current = temp;
+
   };
 
   // 拉取当前会话最新消息
@@ -128,7 +141,7 @@ const GroupChatPage = () => {
           messagesRef.current.push(m);
         });
       }
-      setMessages(messagesRef.current);
+      setMessages([...messagesRef.current]);
     }
   };
 
@@ -328,7 +341,10 @@ const GroupChatPage = () => {
       if (!m.messageID) {
         m.messageID = ack.messageID.toString();
       }
-      m.messageSeq = ack.messageSeq;
+      if(!m.messageSeq) {
+
+        m.messageSeq = ack.messageSeq;
+      }
       // m.reasonCode = ack.reasonCode
       if (m.clientSeq == ack.clientSeq) {
         m.status =
@@ -336,7 +352,7 @@ const GroupChatPage = () => {
         return;
       }
     });
-    setMessages(messagesRef.current);
+    setMessages([...messagesRef.current]);
   };
 
   // 监听cmd消息
@@ -357,6 +373,14 @@ const GroupChatPage = () => {
           ConversationAction.update
         );
       }
+    } else if (cmdContent.cmd === "channelUpdate") {
+      // 编辑群时也调用这个方法更新
+      WKSDK.shared().channelManager.fetchChannelInfo(
+        new Channel(msg.channel.channelID, ChannelTypeGroup)
+      );
+    } else if (cmdContent.cmd === "forbidden") {
+      // 修改了禁言后重新同步群成员
+      syncSubscriber(msg.channel);
     }
   };
 
@@ -413,9 +437,17 @@ const GroupChatPage = () => {
     };
   }, []);
 
+  const syncSubscriber = async (channel: Channel) => {
+    await WKSDK.shared().channelManager.syncSubscribes(channel); // 同步订阅者
+    const members: Subscriber[] =
+      WKSDK.shared().channelManager.getSubscribes(channel);
+    subscriberCache.set(channel.channelID, members);
+    setSubscribers(members);
+  };
+
   // 群成员
 
-  const handleChannelSelect = async (channel: Channel) => {
+  const handleChannelSelect = (channel: Channel) => {
     messagesRef.current = [];
     setJumpMsgId("");
     setLocatedMessageId("");
@@ -423,10 +455,7 @@ const GroupChatPage = () => {
       const members = subscriberCache.get(channel.channelID) || [];
       setSubscribers(members);
     } else {
-      await WKSDK.shared().channelManager.syncSubscribes(channel); // 同步订阅者
-      const members: Subscriber[] =
-        WKSDK.shared().channelManager.getSubscribes(channel);
-      setSubscribers(members);
+      syncSubscriber(channel);
     }
 
     // 输入框和回复内容重置
@@ -450,50 +479,46 @@ const GroupChatPage = () => {
       initChannelFlag.current = false;
     }
   }, [conversationWraps]);
-  let currentChannelInfo;
-  if (selectedChannel instanceof Channel) {
-    currentChannelInfo =
-      WKSDK.shared().channelManager.getChannelInfo(selectedChannel);
-  }
+
 
   // 引用
   // 回复
-  const handleReply: ReplyFn = (message: Message, isQuote) => {
-    if (message.fromUID !== user?.username) {
-    }
-    const channelInfo = WKSDK.shared().channelManager.getChannelInfo(
-      new Channel(message.fromUID, ChannelTypePerson)
-    );
-    // 回复的情况加一下@的人
-    if (isQuote !== true) {
+  const handleReply: ReplyFn = (option) => {
+    // @ 人
+    const doMention = (id: string) => {
+      const channelInfo = WKSDK.shared().channelManager.getChannelInfo(
+        new Channel(id, ChannelTypePerson)
+      );
       let name = "";
       if (channelInfo) {
         name = channelInfo.title;
       }
-
       try {
         if (messageInputRef.current) {
-          messageInputRef.current.addMention(message.fromUID, name);
+          messageInputRef.current.addMention(option.quickReplyUserId, name);
         }
       } catch (err) {
         console.error(err);
       }
+    };
+
+    if (option && option.message) {
+      if (option.message?.fromUID !== user?.username) {
+      }
+
+      // 回复的情况加一下@的人
+      if (option.isQuote !== true) {
+        doMention(option.message.fromUID);
+      }
+      setReplyMessage(option.message);
+    } else if (option.quickReplyUserId) {
+      doMention(option.quickReplyUserId);
     }
-    setReplyMessage(message);
   };
 
   // 撤回
   const handleRevoke: (message: Message) => void = async (message: Message) => {
     await revokeMessageService({ msg_id: message.messageID });
-    // let conversation =
-    // WKSDK.shared().conversationManager.findConversation(message.channel);
-    // if(conversation) {
-
-    //   WKSDK.shared().conversationManager.notifyConversationListeners(
-    //     conversation,
-    //     ConversationAction.update
-    //   );
-    // }
   };
 
   const initOverFlag = useRef(true);
@@ -506,7 +531,7 @@ const GroupChatPage = () => {
       });
     } else if (messages instanceof Array && messages.length > 0) {
       // 第一屏不够高时，再查一遍前面的信息
-      if (initOverFlag.current === true) {
+   
         initOverFlag.current = false;
         if (
           msgListRef.current &&
@@ -518,10 +543,11 @@ const GroupChatPage = () => {
             pullDown();
           }
         }
-      }
+      
       scrollBottom();
     }
   }, [messages, jumpMsgId]);
+
 
   let jumpToLocatedId = useRef(true);
   const gotoLocatedMessagePosition = () => {
@@ -545,9 +571,16 @@ const GroupChatPage = () => {
     }
   }, [locatedMessageId, messages]);
 
+  useEffect(() => {
+    window.document.title = '讨论社群'
+  }, [])
+
   return (
     <div className="group-chat-container flex">
-      <GroupChatContext.Provider value={{ handleReply, handleRevoke }}>
+      <Toaster></Toaster>
+      <GroupChatContext.Provider
+        value={{ handleReply, handleRevoke, syncSubscriber }}
+      >
         <GroupChatLeftBar />
         <GroupChannel
           onSelectChannel={(channel: Channel) => {
@@ -562,7 +595,7 @@ const GroupChatPage = () => {
             <>
               <div className="group-chat-header justify-between h-[58px]">
                 <div className="group-title flex items-center h-full">
-                  {currentChannelInfo?.title}
+                  {groupDetailData?.name}
                 </div>
               </div>
               <div className="flex" style={{ height: "calc(100% - 58px)" }}>
@@ -593,7 +626,7 @@ const GroupChatPage = () => {
       <style jsx>
         {`
           .group-chat-container {
-            height: 100%;
+            height: 100vh;
           }
           .group-chat-right {
             background-color: rgb(43, 45, 49);

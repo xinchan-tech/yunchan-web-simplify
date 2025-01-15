@@ -88,7 +88,7 @@ export const joinGroupService = async (
   params?: { product_sn: string }
 ) => {
   const r = await request
-    .post(`/channel/${id}/user`, params )
+    .post(`/channel/${id}/user`, params)
     .then((r) => r.data);
   return r;
 };
@@ -105,16 +105,69 @@ export interface createGroupRequest {
   notice: string;
   price_tag: PriceTag[];
   tags: string;
-
 }
 
 export interface PriceTag {
   price: string;
   unit: string;
- 
 }
 
-export const applyCreateGroupService = async (params:createGroupRequest) => {
-  const r = request.post('/chat/apply/save', params).then(res => res);
+export const applyCreateGroupService = async (params: createGroupRequest) => {
+  const r = request.post("/chat/apply/save", params).then((res) => res);
   return r;
-}
+};
+
+// 禁言
+export type forbiddenServicePyload = {
+  channelId: string;
+  uids: string[];
+  forbidden: string;
+};
+export const setMemberForbiddenService = async (
+  data: forbiddenServicePyload
+) => {
+  const resp = await request
+    .post<{ status: number, msg: string }>(
+      `/channel/${data.channelId}/forbidden`,
+      {
+        uids: data.uids,
+        forbidden: data.forbidden,
+      },
+      {
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+      }
+    )
+    .then((r) => r);
+
+  return resp;
+};
+
+// 管理员设置
+export type setManagerServicePayload = {
+  username: string;
+  type: "0" | "1";
+  channelId: string;
+};
+
+export const setGroupManagerService = async (
+  data: setManagerServicePayload
+) => {
+  const resp = await request
+    .post<{ status: number , msg: string}>(
+      `/channel/${data.channelId}/user/set`,
+      {
+        username: data.username,
+        type: data.type,
+      },
+      {
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+      }
+    )
+    .then((r) => r);
+
+  return resp;
+};

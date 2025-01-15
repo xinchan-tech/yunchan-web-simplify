@@ -1,10 +1,14 @@
 
-import  { Message } from "wukongimjssdk";
+import  WKSDK,{ Message } from "wukongimjssdk";
 const SystemCell = (props: { message: Message }) => {
   const { message } = props;
 
   if(message.content.cmd === 'messageRevoke') {
     return ''
+  }
+
+  if(message.content.cmd === "channelUpdate") {
+
   }
 
   return (

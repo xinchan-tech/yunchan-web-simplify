@@ -7,6 +7,7 @@ import {
 } from "wukongimjssdk";
 import MsgCard from "../../components/msg-card";
 import { getRevokeText } from "../text";
+import Viewer from "react-viewer";
 
 export class ImageContent extends MediaMessageContent {
   width!: number;
@@ -81,22 +82,43 @@ const ImageCell = (props: { message: Message }) => {
   const { message } = props;
   const [showPreview, setShowPreview] = useState(false);
 
-  const content = message.content as MessageImage;
+
 
   const getImageElement = () => {
     const content = message.content as MessageImage;
     let scaleSize = imageScale(content.width, content.height);
+    const imageURL = getImageSrc(content)
     return (
       <MsgCard data={message}>
         <img
           alt=""
-          src={getImageSrc(content)}
+          src={imageURL}
           style={{
             borderRadius: "5px",
             width: scaleSize.width,
             height: scaleSize.height,
           }}
+          onClick={() => {
+            setShowPreview(true)
+          }}
         />
+        {showPreview && (
+          <Viewer
+            noImgDetails={true}
+            visible
+            downloadable={true}
+            rotatable={false}
+            changeable={false}
+            showTotal={false}
+            onMaskClick={() => {
+              setShowPreview(false)
+            }}
+            onClose={() => {
+              setShowPreview(false)
+            }}
+            images={[{ src: imageURL, alt: "", downloadUrl: imageURL }]}
+          />
+        )}
       </MsgCard>
     );
   };

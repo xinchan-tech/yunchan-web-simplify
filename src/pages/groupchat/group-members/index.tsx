@@ -8,22 +8,110 @@ import {
   ContextMenuTrigger,
   ContextMenuItem,
 } from "@/components";
+
 import { useUser } from "@/store";
+import { useToast } from "@/hooks";
+import {
+  forbiddenServicePyload,
+  setMemberForbiddenService,
+  setManagerServicePayload,
+  setGroupManagerService,
+} from "@/api";
+import { useContext, useState } from "react";
+import { GroupChatContext } from "..";
+
 const GroupMembers = (props: { subscribers: Subscriber[] }) => {
+  const { syncSubscriber, handleReply } = useContext(GroupChatContext);
   const { subscribers } = props;
 
   const groupDetailData = useGroupChatShortStore(
     (state) => state.groupDetailData
   );
   const { user } = useUser();
+  const { toast } = useToast();
+  const conversationWraps = useGroupChatShortStore(
+    (state) => state.conversationWraps
+  );
 
-  const judgeIsOwner = (id: string) => {
-    return groupDetailData?.owner === id;
+  const judgeHasLaheiAuth = () => {
+    const self = subscribers.find((item) => item.uid === user?.username);
+    if (self) {
+      return self.orgData.type === "1" || self.orgData.type === "2";
+    }
   };
 
-  const judgeSetManagerAuth = () => {
+  const judgeSetManagerAuth = (member: Subscriber) => {
+    return (
+      user &&
+      groupDetailData &&
+      user.username === groupDetailData.owner &&
+      member.orgData?.type !== "2"
+    );
+  };
 
-    return user && groupDetailData && user.username === groupDetailData.owner;
+  const handleSetManager = async (item: Subscriber) => {
+    if (groupDetailData) {
+      let data: setManagerServicePayload = {
+        channelId: groupDetailData.account,
+        username: item.uid,
+        type: "1",
+      };
+      if (item.orgData.type === "1") {
+        data.type = "0";
+      }
+      try {
+        const resp = await setGroupManagerService(data);
+        if (resp && resp.status === 1) {
+          toast({
+            description:
+              data.type === "1" ? "设置管理员操作成功" : "取消管理员操作成功",
+          });
+          // 同步一下群成员
+          if (conversationWraps && conversationWraps.length > 0) {
+            const currenntChannel = conversationWraps.find(
+              (item) => item.channel.channelID === groupDetailData.account
+            );
+            if (currenntChannel) {
+              typeof syncSubscriber === "function" &&
+                syncSubscriber(currenntChannel.channel);
+            }
+          }
+        }
+      } catch (err: Error) {
+        if (err?.message) {
+          toast({ description: err.message });
+        }
+      }
+    }
+  };
+
+  const handleLahei = async (item: Subscriber) => {
+    if (groupDetailData) {
+      let data: forbiddenServicePyload = {
+        channelId: groupDetailData.account,
+        uids: [item.uid],
+        forbidden: "0",
+      };
+      if (item.orgData.forbidden === "0") {
+        data.forbidden = "1";
+      }
+      try {
+        const resp = await setMemberForbiddenService(data);
+
+        if (resp) {
+          if (resp.status === 1) {
+            toast({
+              description:
+                data.forbidden === "1" ? "禁言操作成功" : "取消禁言操作成功",
+            });
+          }
+        }
+      } catch (err: Error) {
+        if (err?.message) {
+          toast({ description: err.message });
+        }
+      }
+    }
   };
 
   return (
@@ -50,23 +138,42 @@ const GroupMembers = (props: { subscribers: Subscriber[] }) => {
                       <div className="member-name overflow-hidden text-ellipsis whitespace-nowrap">
                         {item.name}
                       </div>
-                      {judgeIsOwner(item.uid) === true && (
-                        <JknIcon name="owner" />
+                      {item.orgData?.type === "2" && <JknIcon name="owner" />}
+                      {item.orgData?.forbidden === "1" && (
+                        <JknIcon name="forbidden" />
                       )}
+                      {item.orgData?.type === "1" && <JknIcon name="manager" />}
                     </div>
                   </div>
                 </ContextMenuTrigger>
                 <ContextMenuContent>
-                  <ContextMenuItem onClick={() => {}}>回复用户</ContextMenuItem>
-                  {judgeSetManagerAuth() && (
-                    <ContextMenuItem onClick={() => {}}>
-                      设为管理员
+                  <ContextMenuItem
+                    onClick={() => {
+                      handleReply({ quickReplyUserId: item.uid });
+                    }}
+                  >
+                    回复用户
+                  </ContextMenuItem>
+                  {judgeSetManagerAuth(item) && (
+                    <ContextMenuItem
+                      onClick={() => {
+                        handleSetManager(item);
+                      }}
+                    >
+                      {item.orgData.type === "1" ? "取消管理员" : "设为管理员"}
                     </ContextMenuItem>
                   )}
-
-                  <ContextMenuItem onClick={() => {}}>
-                    添加黑名单
-                  </ContextMenuItem>
+                  {judgeHasLaheiAuth() === true && (
+                    <ContextMenuItem
+                      onClick={() => {
+                        handleLahei(item);
+                      }}
+                    >
+                      {item.orgData?.forbidden === "0"
+                        ? "添加黑名单"
+                        : "解除黑名单"}
+                    </ContextMenuItem>
+                  )}
                 </ContextMenuContent>
               </ContextMenu>
             </div>

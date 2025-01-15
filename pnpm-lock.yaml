@@ -224,9 +224,12 @@ importers:
       react-router:
         specifier: ^7.0.1
         version: 7.0.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      react-scan:
-        specifier: ^0.0.54
-        version: 0.0.54(react-dom@18.3.1(react@18.3.1))(react-router@7.0.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)(rollup@4.30.1)
+      react-scroll:
+        specifier: ^1.9.0
+        version: 1.9.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      react-viewer:
+        specifier: ^3.2.2
+        version: 3.2.2
       sockjs-client:
         specifier: ^1.6.1
         version: 1.6.1
@@ -4374,6 +4377,9 @@ packages:
     peerDependenciesMeta:
       '@types/react':
         optional: true
+
+  react-viewer@3.2.2:
+    resolution: {integrity: sha512-DHOq1x6cXsAViY43204ILRzLVR5ovP1MgzsC+LzZCWlInRuHjzAgpQZ8GzWm1CkiNYuHGwCxH36X0JUHl2xDSg==}
 
   react@18.3.1:
     resolution: {integrity: sha512-wS+hAgJShR0KhEvPJArfuPVN1+Hz1t0Y6n5jLrGQbkb4urgPE/0Rve+1kMB1v/oWgHgm4WIcV+i7F2pTVj+2iQ==}
@@ -9280,6 +9286,10 @@ snapshots:
       tslib: 2.8.1
     optionalDependencies:
       '@types/react': 18.3.12
+
+  react-viewer@3.2.2:
+    dependencies:
+      classnames: 2.5.1
 
   react@18.3.1:
     dependencies:

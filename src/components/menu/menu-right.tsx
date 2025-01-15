@@ -25,10 +25,6 @@ const MenuRight = () => {
     };
   }, []);
 
- 
-
-  
-
   const { token } = useToken();
   const { toast } = useToast();
 
@@ -41,17 +37,21 @@ const MenuRight = () => {
     {
       icon: "right_menu_4",
       title: "财务估值",
-      path: "/stock/finance",
+      path: "/app/stock/finance",
     },
     {
       icon: 'left_menu_6',
       title: '特色推送',
       path: '/push'
 	},
-	{
-      icon: 'right_menu_5',
-      title: '讨论社群',
-      path: '/chat'
+	 {
+      icon: "right_menu_5",
+      title: "讨论社群",
+      path: "/chat",
+      handler: () => {
+        window.open('./chat', 'whatever', 'hideit,height=1000,width=1400,resizable=yes,scrollbars=yes,status=no,location=no');
+        
+      },
     }
   ]
 
@@ -59,12 +59,12 @@ const MenuRight = () => {
   const { toast } = useToast()
 
   const onNav = (path: string) => {
-    // if (!token && path !== '/') {
-    //   toast({
-    //     title: '请先登录'
-    //   })
-    //   return
-    // }
+    if (!token && path !== "/app") {
+      toast({
+        title: "请先登录",
+      });
+      return;
+    }
 
     const search = new URLSearchParams(window.location.search);
     const symbol = search.get("symbol") ?? "QQQ";
@@ -83,7 +83,6 @@ const MenuRight = () => {
             if(typeof item.handler === 'function') {
               item.handler()
             } else {
-
               onNav(item.path);
             }
           }}

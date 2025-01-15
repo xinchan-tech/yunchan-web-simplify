@@ -2,6 +2,7 @@ import axios, { AxiosResponse } from "axios";
 import { CMDContent, Channel, ChannelTypePerson, Conversation, Message, SyncOptions, WKSDK } from "wukongimjssdk";
 import { Convert } from "./convert";
 import { Buffer } from "buffer";
+import request from "@/utils/request";
 
 
  export class CMDType {
@@ -162,7 +163,7 @@ export default class APIClient {
     // 然后后台接口再调用WuKongIM的接口，这样自己的后台可以返回一些自己的业务数据填充到Conversation.extra中
     syncConversations = async () => {
         let resultConversations = new Array<Conversation>()
-        const resp = await APIClient.shared.post('/conversation/sync', {
+        const resp = await request.post('/conversation/sync', {
             uid: WKSDK.shared().config.uid,
             msg_count: 20,
         })
@@ -176,7 +177,7 @@ export default class APIClient {
         return resultConversations
     }
     clearUnread = async (channel:Channel) => {
-       return APIClient.shared.post('/conversations/setUnread', {
+       return request.post('/channel/setUnread', {
             uid: WKSDK.shared().config.uid,
             channel_id: channel.channelID,
             channel_type: channel.channelType,

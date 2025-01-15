@@ -1,5 +1,6 @@
 import { lazy } from "react"
 import type { RouteObject } from "react-router"
+import App from "@/app"
 
 export const routes: RouteObject[] = [
   {
@@ -8,7 +9,16 @@ export const routes: RouteObject[] = [
     Component: lazy(() => import('@/pages/dashboard')),
     handle:{
       title: '首页'
-    }
+    },
+    children: [
+      {
+        path: '/app/stock/:type',
+        Component: lazy(() => import('@/pages/stock')),
+        handle:{
+          title: '个股盘口'
+        }
+      },
+    ],
   },
   {
     path: "/golden",
@@ -73,6 +83,7 @@ export const routes: RouteObject[] = [
       title: '个股盘口'
     }
   },
+  
   {
     path: '/push',
     Component: lazy(() => import('@/pages/push')),

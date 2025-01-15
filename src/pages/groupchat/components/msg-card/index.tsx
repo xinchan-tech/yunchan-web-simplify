@@ -10,13 +10,34 @@ import {
   ContextMenuTrigger,
   ContextMenuItem,
 } from "@/components";
-import { GroupChatContext, ReplyFn } from "../..";
+import { GroupChatContext } from "../..";
+import { useGroupChatShortStore } from "@/store/group-chat-new";
+import { useUser } from "@/store";
+
 
 
 const MsgCard = (props: { data: Message; children: string | ReactNode }) => {
   const { data } = props;
-  // todo 获取撤回权限
-  const revokePremession = true;
+  const subscribers = useGroupChatShortStore(state => state.subscribers)
+  const { user } = useUser()
+  //  获取撤回权限
+  const getRevokePremession = () => {
+    if(subscribers && subscribers.length > 0) {
+      const self = subscribers.find(item => item.uid === user?.username );
+      if(self &&  self.orgData.type !== '0') {
+        return true
+      }
+    }
+    
+
+    if(data.fromUID === user?.username) {
+      return true
+    }
+
+    return false
+  };
+
+ 
 
   const { handleReply , handleRevoke} = useContext(GroupChatContext);
   return (
@@ -47,19 +68,19 @@ const MsgCard = (props: { data: Message; children: string | ReactNode }) => {
           <ContextMenuContent>
             <ContextMenuItem
               onClick={() => {
-                typeof handleReply === "function" && handleReply(data, true);
+                typeof handleReply === "function" && handleReply({message:data, isQuote:true});
               }}
             >
               引用
             </ContextMenuItem>
             <ContextMenuItem
               onClick={() => {
-                typeof handleReply === "function" && handleReply(data);
+                typeof handleReply === "function" && handleReply({message:data});
               }}
             >
               回复
             </ContextMenuItem>
-            {revokePremession === true && (
+            {getRevokePremession() === true && (
               <ContextMenuItem onClick={() => {
                 typeof handleRevoke === 'function' && handleRevoke(data)
               }}>撤回</ContextMenuItem>
