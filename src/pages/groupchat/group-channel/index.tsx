@@ -116,7 +116,7 @@ const GroupChannel = (props: { onSelectChannel: (c: Channel) => void }) => {
       ];
       batchUpdateConversation(temp);
       setConversationWraps(temp);
-      handleSelectChannel(conversation.channel);
+      handleSelectChannel(conversation.channel, conversation.unread);
     } else if (action === ConversationAction.update) {
       const index = latestConversation.current?.findIndex(
         (item) =>
@@ -214,7 +214,7 @@ const GroupChannel = (props: { onSelectChannel: (c: Channel) => void }) => {
 
   const { data } = useQuery(option);
 
-  const handleSelectChannel = (channel: Channel) => {
+  const handleSelectChannel = (channel: Channel, unread?: number) => {
     if (channel.channelID === selectedChannel?.channelID) {
       return;
     }
@@ -225,8 +225,12 @@ const GroupChannel = (props: { onSelectChannel: (c: Channel) => void }) => {
       onSelectChannel(channel);
     }
 
-    APIClient.shared.clearUnread(channel);
-    // todo 调一个接口清除@提醒
+    
+    // todo 优化一下，有
+    if(unread && unread > 0) {
+
+      APIClient.shared.clearUnread(channel);
+    }
 
     clearConversationUnread(channel);
     clearConversationMentionMe(channel);
@@ -273,7 +277,7 @@ const GroupChannel = (props: { onSelectChannel: (c: Channel) => void }) => {
       });
     }
     return result;
-  }, [data?.items, conversationWraps]);
+  }, [data, conversationWraps]);
 
   return (
     <div className="w-[270px] h-full">
@@ -295,7 +299,7 @@ const GroupChannel = (props: { onSelectChannel: (c: Channel) => void }) => {
                 )}
                 onClick={() => {
                   setReadyToJoinGroup(null);
-                  handleSelectChannel(item.channel);
+                  handleSelectChannel(item.channel, item.unread);
                 }}
               >
                 <div className="group-avatar rounded-md flex items-center text-ellipsis justify-center relative">
