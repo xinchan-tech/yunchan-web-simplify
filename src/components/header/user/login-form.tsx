@@ -51,8 +51,18 @@ const LoginForm = (props: LoginFormProps) => {
     props.afterLogin?.()
   }
 
+  const loginByUsername = () => {
+    return login(form.getValues())
+  }
+
   const loginMutation = useMutation({
-    mutationFn: login,
+    mutationFn: ({ type, data }: { type: string, data: any }) => {
+      if (type === 'username') {
+        return loginByUsername()
+      }
+
+      return type === 'apple' ? loginByThird('apple', data) : loginByThird('google', data)
+    },
     onSuccess: r => onLoginSuccess(r.token),
     onError: (err) => {
       toast({
@@ -71,7 +81,7 @@ const LoginForm = (props: LoginFormProps) => {
       <div className="bg-white h-[400px] w-[280px] box-border flex flex-col px-4">
         <p className="text-[#3861F6] mt-12 text-lg">登录账号</p>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(loginMutation.mutate as any)} className="space-y-4">
+          <form onSubmit={() => loginMutation.mutate({ type: 'username', data: {} })} className="space-y-4">
             <FormField control={form.control} name="mobile"
               render={({ field }) => (
                 <FormItem>
@@ -100,9 +110,9 @@ const LoginForm = (props: LoginFormProps) => {
             <span className="border-0 border-b border-solid border-gray-300 flex-1" />
           </div>
           <div className="flex items-center justify-between px-10">
-            <AppleLogin onLogin={onLoginSuccess} />
+            <AppleLogin onLogin={(data) => loginMutation.mutate({ type: 'apple', data })} />
             <WeChatLogin />
-            <GoogleLogin onLogin={onLoginSuccess} />
+            <GoogleLogin onLogin={(data) => loginMutation.mutate({ type: 'google', data })} />
           </div>
         </div>
       </div>
@@ -111,7 +121,7 @@ const LoginForm = (props: LoginFormProps) => {
 }
 
 interface LoginFormProps {
-  onLogin: (token: string) => void
+  onLogin: (data: any) => void
 }
 
 const AppleLogin = (props: LoginFormProps) => {
@@ -128,9 +138,8 @@ const AppleLogin = (props: LoginFormProps) => {
 
   const onClick = () => {
     window.AppleID.auth.signIn().then((r: AppleLoginResult) => {
-      loginByThird('apple', r.authorization.code).then(r => {
-        props.onLogin(r.token)
-      })
+      console.log(r)
+      props.onLogin(r.authorization.code)
     })
   }
 
@@ -183,9 +192,7 @@ const GoogleLogin = (props: LoginFormProps) => {
         context: 'signin',
         ux_mode: 'popup',
         callback: (res: GoogleLoginResult) => {
-          loginByThird('google', res.credential).then(r => {
-            props.onLogin(r.token)
-          })
+          onLoginRef.current(res.credential)
         }
       })
 

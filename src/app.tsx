@@ -3,7 +3,7 @@ import Logo from './assets/icon/icon_jkn@2x.png'
 import './app.scss'
 import { RouterProvider } from "react-router"
 import { router, routes } from "./router"
-import { useMount, useUnmount, useUpdateEffect } from "ahooks"
+import { useMount, useUpdateEffect } from "ahooks"
 import { useConfig, useToken, useUser } from "./store"
 import { useTranslation } from "react-i18next"
 import { Suspense, useEffect, useMemo, useRef, useState } from "react"
@@ -24,7 +24,7 @@ const App = () => {
   const { t, i18n } = useTranslation()
   const setUser = useUser(s => s.setUser)
   const notLogin = useRef(0)
-  console.log(token)
+
   const query = useQuery({
     queryKey: [getUser.cacheKey],
     queryFn: () => getUser({
