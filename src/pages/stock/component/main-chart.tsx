@@ -226,10 +226,7 @@ export const MainChart = (props: MainChartProps) => {
     renderSecondary(_options, state.secondaryIndicators)
     renderSecondaryLocalIndicators(_options, state.secondaryIndicators, state)
     renderWatermark(_options, state.timeIndex)
-    console.log(state.secondaryIndicators)
-    console.log(_options, 'options')
     chart.current.setOption(_options, { replaceMerge: ['series', 'grid', 'xAxis', 'yAxis', 'dataZoom',] })
-    console.log(chart.current.getOption(), 'echarts options')
   }
 
   useUpdateEffect(() => {
