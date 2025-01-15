@@ -57,6 +57,7 @@ const LoginForm = (props: LoginFormProps) => {
 
   const loginMutation = useMutation({
     mutationFn: ({ type, data }: { type: string, data: any }) => {
+
       if (type === 'username') {
         return loginByUsername()
       }
@@ -81,7 +82,7 @@ const LoginForm = (props: LoginFormProps) => {
       <div className="bg-white h-[400px] w-[280px] box-border flex flex-col px-4">
         <p className="text-[#3861F6] mt-12 text-lg">登录账号</p>
         <Form {...form}>
-          <form onSubmit={() => loginMutation.mutate({ type: 'username', data: {} })} className="space-y-4">
+          <form className="space-y-4">
             <FormField control={form.control} name="mobile"
               render={({ field }) => (
                 <FormItem>
@@ -100,8 +101,9 @@ const LoginForm = (props: LoginFormProps) => {
                 </FormItem>
               )}
             />
-            <Button block loading={loginMutation.isPending}>登录</Button>
+
           </form>
+          <Button className="mt-4" onClick={() => loginMutation.mutate({ type: 'username', data: {} })} block loading={loginMutation.isPending}>登录</Button>
         </Form>
         <div className="px-4 other-login mt-12" >
           <div className="flex items-center mb-2">
