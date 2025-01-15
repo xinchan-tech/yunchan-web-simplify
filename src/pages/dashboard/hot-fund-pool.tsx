@@ -53,7 +53,7 @@ const TopList = () => {
     },
   ]
 
-  const onRowClick = useTableRowClickToStockTrading('code')
+  const onRowClick = useTableRowClickToStockTrading('symbol')
 
   return (
     <div className="w-full h-full">
