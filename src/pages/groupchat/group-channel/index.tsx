@@ -4,6 +4,7 @@ import WKSDK, {
   Conversation,
   Channel,
   ChannelInfo,
+  ChannelTypeGroup,
 } from "wukongimjssdk";
 import { ConversationWrap } from "../ConversationWrap";
 import { useEffect, useMemo } from "react";
@@ -19,7 +20,6 @@ import { lastContent } from "../chat-utils";
 import { getGroupChannels } from "@/api";
 import { useQuery } from "@tanstack/react-query";
 import ChatAvatar from "../components/chat-avatar";
-import { JknIcon } from "@/components";
 import CreateGroup from "../components/create-group";
 
 export type GroupData = {
@@ -41,7 +41,6 @@ const GroupChannel = (props: { onSelectChannel: (c: Channel) => void }) => {
     setReadyToJoinGroup,
     readyToJoinGroup,
     getGroupDetailData,
-    
   } = useGroupChatShortStore(
     useShallow((state) => ({
       conversationWraps: state.conversationWraps,
@@ -49,7 +48,6 @@ const GroupChannel = (props: { onSelectChannel: (c: Channel) => void }) => {
       setReadyToJoinGroup: state.setReadyToJoinGroup,
       readyToJoinGroup: state.readyToJoinGroup,
       getGroupDetailData: state.getGroupDetailData,
-    
     }))
   );
   const latestConversation = useLatest(conversationWraps);
@@ -109,7 +107,6 @@ const GroupChannel = (props: { onSelectChannel: (c: Channel) => void }) => {
     conversation: Conversation,
     action: ConversationAction
   ) => {
- 
     // 监听最近会话列表的变化
 
     if (action === ConversationAction.add) {
@@ -121,7 +118,6 @@ const GroupChannel = (props: { onSelectChannel: (c: Channel) => void }) => {
       setConversationWraps(temp);
       handleSelectChannel(conversation.channel);
     } else if (action === ConversationAction.update) {
-      
       const index = latestConversation.current?.findIndex(
         (item) =>
           item.channel.channelID === conversation.channel.channelID &&
@@ -150,10 +146,10 @@ const GroupChannel = (props: { onSelectChannel: (c: Channel) => void }) => {
 
   // 强制刷新会话
   const channelInfoListener = (channelInfo: ChannelInfo) => {
-    if (latestConversation.current.length > 0) {
-      const temp = [...latestConversation.current];
-      setConversationWraps(temp);
-    }
+    // if (latestConversation.current.length > 0) {
+    //   const temp = [...latestConversation.current];
+    //   setConversationWraps(temp);
+    // }
   };
 
   useEffect(() => {
@@ -241,6 +237,19 @@ const GroupChannel = (props: { onSelectChannel: (c: Channel) => void }) => {
     console.log(data, "conversationWraps");
   }, [data]);
 
+  const toChannelInfo = (data: GroupData) => {
+    let channelInfo = new ChannelInfo();
+    channelInfo.channel = new Channel(data.account, ChannelTypeGroup);
+    channelInfo.title = data.name;
+    channelInfo.mute = false;
+    channelInfo.top = false;
+    channelInfo.online = false;
+
+    channelInfo.logo = data.avatar;
+
+    return channelInfo;
+  };
+
   const displayConversations = useMemo(() => {
     let result: Array<GroupData | ConversationWrap> = [];
 
@@ -250,6 +259,9 @@ const GroupChannel = (props: { onSelectChannel: (c: Channel) => void }) => {
       conversationWraps instanceof Array
     ) {
       result = data.items.map((item) => {
+        WKSDK.shared().channelManager.setChannleInfoForCache(
+          toChannelInfo(item)
+        );
         const joinedGroup = conversationWraps.find(
           (con) => con.channel.channelID === item.account
         );
@@ -282,13 +294,11 @@ const GroupChannel = (props: { onSelectChannel: (c: Channel) => void }) => {
                     "actived"
                 )}
                 onClick={() => {
-               
                   setReadyToJoinGroup(null);
                   handleSelectChannel(item.channel);
                 }}
               >
                 <div className="group-avatar rounded-md flex items-center text-ellipsis justify-center relative">
-           
                   <ChatAvatar
                     radius="10px"
                     className="w-[44px] h-[44px]"
@@ -311,7 +321,6 @@ const GroupChannel = (props: { onSelectChannel: (c: Channel) => void }) => {
                   <div className="group-last-msg flex justify-between">
                     <div className="flex-1 overflow-hidden whitespace-nowrap text-ellipsis max-w-24">
                       {lastContent(item)}
-                      {item.lastMessage?.content.conversationDigest || ""}
                     </div>
                     <div className="max-w-24">{item.timestampString || ""}</div>
                   </div>
@@ -330,13 +339,12 @@ const GroupChannel = (props: { onSelectChannel: (c: Channel) => void }) => {
                   if (readyToJoinGroup?.account === item.account) {
                     return;
                   }
-         
+
                   getGroupDetailData(item.account);
                   setReadyToJoinGroup(item);
                 }}
               >
                 <div className="group-avatar rounded-md flex items-center text-ellipsis justify-center relative">
-                
                   <ChatAvatar
                     radius="10px"
                     className="w-[44px] h-[44px]"
@@ -370,7 +378,7 @@ const GroupChannel = (props: { onSelectChannel: (c: Channel) => void }) => {
           .group-list {
             overflow-y: auto;
             height: calc(100% - 58px);
-            background-color: rgb(49,51,57)
+            background-color: rgb(49, 51, 57);
           }
           .unread {
             background-color: rgb(218, 50, 50);

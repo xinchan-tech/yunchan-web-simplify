@@ -3,24 +3,26 @@ import WKSDK, {
   ChannelTypePerson,
   Message,
   ChannelInfo,
+  CMDContent,
 } from "wukongimjssdk";
 
 import { ConversationWrap } from "../ConversationWrap";
 import { getChatNameAndAvatar } from "@/api";
+import { ReactNode } from "react";
 
 export const lastContent = (conversationWrap: ConversationWrap) => {
-
   if (!conversationWrap.lastMessage) {
     return;
   }
-
+  let head: ReactNode | string;
+  let content: ReactNode | string;
   const draft = conversationWrap.remoteExtra.draft;
   if (draft && draft !== "") {
-    return draft;
+    head = draft;
   }
 
   if (conversationWrap.isMentionMe === true) {
-    return <span style={{ color: "red" }}>[有人@我]</span>;
+    head = <span style={{ color: "red" }}>[有人@我]</span>;
   }
 
   // if (conversationWrap.lastMessage.content.cmd === "messageRevoke") {
@@ -30,6 +32,29 @@ export const lastContent = (conversationWrap: ConversationWrap) => {
 
   //   return (fromUser?.title || "") + "撤回了一条消息";
   // }
+  if (conversationWrap.lastMessage) {
+    const channelInfo = WKSDK.shared().channelManager.getChannelInfo(
+      new Channel(conversationWrap.lastMessage.fromUID, ChannelTypePerson)
+    );
+    if (channelInfo) {
+      head = channelInfo.title + "：";
+    } else {
+      // 没有就缓存下
+      // setPersonChannelCache(conversationWrap.lastMessage.fromUID)
+    }
+
+    content = conversationWrap.lastMessage.content.conversationDigest || "";
+    if (conversationWrap.lastMessage.content instanceof CMDContent) {
+      content = "[系统消息]";
+    }
+  }
+
+  return (
+    <span>
+      {head}
+      {content}
+    </span>
+  );
 };
 
 // 缓存单聊头像名称信息
@@ -75,9 +100,8 @@ export class MentionModel {
 }
 
 export const sortMessages = (messages: Message[]) => {
-  let result = [...messages]
+  let result = [...messages];
   for (let i = 0; i < result.length; i++) {
-
     const msg = result[i];
     if (msg.content.cmd === "messageRevoke") {
       if (msg.content.param && msg.content.param.message_id) {
@@ -88,14 +112,13 @@ export const sortMessages = (messages: Message[]) => {
         // 目标消息位置
         let targetMessagePos = result.findIndex((m) => m.messageID === msgId);
         // revoke标志,到时渲染成 xxx 撤回了一条消息
-        if(result[targetMessagePos]) {
-
+        if (result[targetMessagePos]) {
           result[targetMessagePos].content.revoke = true;
-          result[targetMessagePos].content.revoker = msg.fromUID
+          result[targetMessagePos].content.revoker = msg.fromUID;
           // result.splice(targetMessagePos, 0, temp[0]);
         }
       }
     }
   }
-  return result
+  return result;
 };
