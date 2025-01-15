@@ -22,12 +22,12 @@ export const stockUtils = {
       name: opts?.name ?? '',
       symbol: opts?.symbol ?? '',
       timestamp: parseTime(data[0]),
-      open: data[1],
-      close: data[2],
-      high: data[3],
-      low: data[4],
-      volume: data[5],
-      turnover: data[6] ? data[6] * 10000 : data[6],
+      open: Decimal.create(data[1]).toNumber(),
+      close: Decimal.create(data[2]).toNumber(),
+      high: Decimal.create(data[3]).toNumber(),
+      low: Decimal.create(data[4]).toNumber(),
+      volume: Decimal.create(data[5]).toNumber(),
+      turnover: data[6] ? Decimal.create(data[5]).mul(10000).toNumber()  : Decimal.create(data[5]).toNumber(),
       extend: opts?.extend
     } as Stock
 
