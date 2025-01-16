@@ -1,26 +1,47 @@
 import { cn } from "@/utils/style";
-import WKSDK, { Message, Channel, ChannelTypePerson, MessageStatus } from "wukongimjssdk";
+import WKSDK, {
+  Message,
+  Channel,
+  ChannelTypePerson,
+  MessageStatus,
+} from "wukongimjssdk";
 import ChatAvatar from "../chat-avatar";
+import { ContextMenu, ContextMenuTrigger } from "@/components";
+import { useMemberSetting } from "../../hooks";
+import { useGroupChatShortStore } from "@/store/group-chat-new";
+import { useMemo } from "react";
 const MsgHead = (props: { message: Message; type: "left" | "right" }) => {
   const { message, type } = props;
-
+  const subscribers = useGroupChatShortStore((state) => state.subscribers);
+  const { renderContextMenu } = useMemberSetting();
+  // 群成员
+  const member = useMemo(() => {
+    let result = null;
+    if (subscribers instanceof Array && subscribers.length > 0) {
+      const target = subscribers.find((item) => item.uid === message.fromUID);
+      if (target) {
+        result = target;
+      }
+    }
+    return result;
+  }, [subscribers, message]);
   const channelInfo = WKSDK.shared().channelManager.getChannelInfo(
     new Channel(message.fromUID, ChannelTypePerson)
   );
 
   const getMessageStatus = () => {
-    if(!message.send) {
-      return ''
+    if (!message.send) {
+      return "";
     }
-    if(message.status === MessageStatus.Fail) {
-      return '被拉黑'
+    if (message.status === MessageStatus.Fail) {
+      return "被拉黑";
     }
-    if(message.status === MessageStatus.Wait) {
-        return '发送中'
+    if (message.status === MessageStatus.Wait) {
+      return "发送中";
     }
 
-    return '已发送'
-  }
+    return "已发送";
+  };
 
   return (
     <div className="relative">
@@ -32,25 +53,24 @@ const MsgHead = (props: { message: Message; type: "left" | "right" }) => {
       >
         {channelInfo?.title}
       </div>
+      <ContextMenu>
+        <ContextMenuTrigger asChild>
+          <div>
+            <ChatAvatar
+              data={{
+                name: channelInfo?.title || "",
+                avatar: channelInfo?.logo || "",
+                uid: channelInfo?.channel.channelID || "",
+              }}
+              radius="8px"
+            />
+          </div>
+        </ContextMenuTrigger>
+        {member && renderContextMenu(member)}
+      </ContextMenu>
 
-      {/* {channelInfo?.logo ? (
-        <img className="w-12 h-12 rounded-md" src={channelInfo.logo} />
-      ) : (
-        <div className="w-12 h-12 rounded-md bg-orange-700 flex items-center text-lg justify-center">
-          {channelInfo?.title[0].toLocaleUpperCase()}
-        </div>
-      )} */}
-      <ChatAvatar
-        data={{
-          name: channelInfo?.title || "",
-          avatar: channelInfo?.logo || "",
-          uid: channelInfo?.channel.channelID || "",
-        }}
-        radius="8px"
-      />
       <div>
-
-      <div className="text-xs mt-2 text-gray-500">{getMessageStatus()}</div>
+        <div className="text-xs mt-2 text-gray-500">{getMessageStatus()}</div>
       </div>
       <style jsx>
         {`

@@ -33,6 +33,7 @@ import {
 } from "@/components/ui/popover";
 import data from "@emoji-mart/data";
 import Picker from "@emoji-mart/react";
+import i18n from '@emoji-mart/data/i18n/zh.json'
 import { cn } from "@/utils/style";
 import ChatAvatar from "../components/chat-avatar";
 import { MentionModel } from "../chat-utils";
@@ -297,6 +298,7 @@ const GroupChatInput = forwardRef(
                   previewPosition="none"
                   searchPosition="none"
                   data={data}
+                  i18n={i18n}
                   onEmojiSelect={(emoji, event) => {
                     event.stopPropagation();
                     const prevVal = inputValue;
@@ -340,6 +342,7 @@ const GroupChatInput = forwardRef(
             <MentionsInput
               placeholder={`按 Ctrl + Enter 换行，按 Enter 发送`}
               className="messageinput-input"
+              allowSuggestionsAboveCursor={true}
               value={inputValue}
               onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => {
                 setInputValue(e.target.value);
@@ -351,6 +354,7 @@ const GroupChatInput = forwardRef(
                 }
                 if (e.charCode === 13 && e.ctrlKey) {
                   // ctrl+Enter不处理
+                  setInputValue(inputValue + '\n')
                   return;
                 }
                 e.preventDefault();

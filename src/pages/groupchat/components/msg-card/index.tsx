@@ -1,5 +1,5 @@
 import { cn } from "@/utils/style";
-import { Message } from "wukongimjssdk";
+import { Message, MessageImage, MessageText } from "wukongimjssdk";
 
 import MsgHead from "../msg-head";
 import { ReactNode, useContext } from "react";
@@ -13,13 +13,50 @@ import {
 import { GroupChatContext } from "../..";
 import { useGroupChatShortStore } from "@/store/group-chat-new";
 import { useUser } from "@/store";
+import { useToast } from "@/hooks";
 
+function copyToClipboard(text: string) {
+  return navigator.clipboard.writeText(text)
+    .then(function() {
+      console.log('Text copied to clipboard');
+    })
+    .catch(function(err) {
+      console.error('Failed to copy text: ', err);
+    });
+}
+
+function copyImage(imgUrl:string) {
+	// 创建一个img的dom，用来承载图片
+	// 创建 img 元素并设置 src 属性
+	const tempImg = document.createElement("img");
+	tempImg.src = imgUrl;
+	console.log("打印地址", tempImg.src);
+	// 将 div 添加到 document
+	document.body.appendChild(tempImg);
+ 
+	// 选择 div 中的内容
+	const range = document.createRange();
+	range.selectNode(tempImg);
+	window.getSelection().removeAllRanges(); // 清除现有的选择
+	window.getSelection().addRange(range);
+ 
+	// 执行复制命令
+	document.execCommand("copy");
+ 
+	// 清理选择和临时元素
+	window.getSelection().removeAllRanges();
+	document.body.removeChild(tempImg);
+ 
+	console.log("图像元素已成功复制");
+	// window.electron.sendMsg("图片已复制到粘贴板"); // 不需要返回值，不需要等promise
+}
 
 
 const MsgCard = (props: { data: Message; children: string | ReactNode }) => {
   const { data } = props;
   const subscribers = useGroupChatShortStore(state => state.subscribers)
-  const { user } = useUser()
+  const { user } = useUser();
+  const {toast} = useToast()
   //  获取撤回权限
   const getRevokePremession = () => {
     if(subscribers && subscribers.length > 0) {
@@ -85,6 +122,20 @@ const MsgCard = (props: { data: Message; children: string | ReactNode }) => {
                 typeof handleRevoke === 'function' && handleRevoke(data)
               }}>撤回</ContextMenuItem>
             )}
+             <ContextMenuItem
+              onClick={() => {
+                if(data.content instanceof MessageText && data.content.text) {
+                  copyToClipboard(data.content.text).then(() => {
+                    toast({description: '复制成功'})
+                  })
+                } else if(data.content instanceof MessageImage && data.content.remoteUrl) {
+                  copyImage(data.content.remoteUrl);
+                  toast({description: '复制成功'})
+                }
+              }}
+            >
+              复制
+            </ContextMenuItem>
           </ContextMenuContent>
         </ContextMenu>
       </div>

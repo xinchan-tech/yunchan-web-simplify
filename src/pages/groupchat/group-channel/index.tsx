@@ -343,7 +343,7 @@ const GroupChannel = (props: { onSelectChannel: (c: Channel) => void }) => {
                   if (readyToJoinGroup?.account === item.account) {
                     return;
                   }
-
+                  setSelectedChannel(null)
                   getGroupDetailData(item.account);
                   setReadyToJoinGroup(item);
                 }}

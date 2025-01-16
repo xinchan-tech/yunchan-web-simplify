@@ -9,7 +9,7 @@ interface GroupChatStore {
   bottomHeight: number;
   setBottomHeight: (payload: number) => void;
   selectedChannel: Channel | null;
-  setSelectedChannel: (payload: Channel) => void;
+  setSelectedChannel: (payload: Channel | null) => void;
   toChannel: Channel | null;
   setToChannel: (payload: Channel) => void;
 }
@@ -20,7 +20,7 @@ export const useGroupChatStoreNew = create<GroupChatStore>()(
       bottomHeight: 185,
       setBottomHeight: (payload: number) => set({ bottomHeight: payload }),
       selectedChannel: null,
-      setSelectedChannel: (payload: Channel) =>
+      setSelectedChannel: (payload: Channel| null) =>
         set({ selectedChannel: payload }),
       toChannel: null,
       setToChannel(payload: Channel) {
