@@ -9,7 +9,7 @@ const convertToNumber = (data: any) => {
     return data
   }
 
-  if(data === undefined){
+  if (data === undefined) {
     return -Number.NEGATIVE_INFINITY
   }
 
@@ -42,27 +42,54 @@ const setDataOnIdle = <T extends any[] = any[]>(data: T, setFn: (data: T) => voi
   })
 }
 
-export const useTableData = <T extends Record<string, any>>(data: T[], orderKey: OrderKey<T>) => {
-  const [list, setList] = useState<T[]>(data)
-  const initOrderKey = useRef<(keyof T)[]>([])
-  const lastOrderKey = useRef<(keyof T)[]>([])
+const sortData = <T extends Record<string, any>>(s: T[], columnKey: keyof T, order: 'asc' | 'desc') => {
+  const _s = [...s]
+  _s.sort((a, b) => {
+    const _a = convertToNumber(a[columnKey])
+    const _b = convertToNumber(b[columnKey])
 
-  const _orderKey = useRef(orderKey)
-
-  const getOrderKey = useCallback((item: T) => {
-    if (isFunction(_orderKey.current)) {
-      return _orderKey.current(item)
+    if (Number.isNaN(_a) || Number.isNaN(_b)) {
+      return compareString(a[columnKey], b[columnKey], order!)
+    }
+    if (order === 'asc') {
+      return a[columnKey] - b[columnKey]
+    }
+    if (order === 'desc') {
+      return b[columnKey] - a[columnKey]
     }
 
-    return item[_orderKey.current]
-  }, [])
+    return 0
+  })
+
+  return _s
+}
+
+export const useTableData = <T extends Record<string, any>>(data: T[], _?: OrderKey<T>) => {
+  const [list, setList] = useState<T[]>(data)
+  const initList = useRef<T[]>([])
+  const lastOrder = useRef<{ field?: keyof T; order?: 'asc' | 'desc' }>({ field: undefined, order: undefined })
+
+  // const _orderKey = useRef(orderKey)
+
+  // const getOrderKey = useCallback((item: T) => {
+  //   if (isFunction(_orderKey.current)) {
+  //     return _orderKey.current(item)
+  //   }
+
+  //   return item[_orderKey.current]
+  // }, [])
 
   const _setList = useCallback(
     (data: T[]) => {
-      initOrderKey.current = data.map(getOrderKey)
-      setDataOnIdle(data, setList, 0)
+      initList.current = [...data]
+
+      if (lastOrder.current.field && lastOrder.current.order) {
+        setList(sortData(data, lastOrder.current.field, lastOrder.current.order))
+      } else {
+        setList(data)
+      }
     },
-    [getOrderKey]
+    []
   )
 
   const updateList = useCallback(setList, [])
@@ -70,38 +97,17 @@ export const useTableData = <T extends Record<string, any>>(data: T[], orderKey:
   const onSort = useCallback(
     (columnKey: keyof T, order: 'asc' | 'desc' | undefined) => {
       if (!order) {
-        setList(s => {
-          const _s = initOrderKey.current.map(key => {
-            return s.find(item => getOrderKey(item) === key)
-          })
-          lastOrderKey.current = []
-          return _s as T[]
-        })
+        lastOrder.current = { field: undefined, order: undefined }  
+        setList([...initList.current])
+        return
       }
 
+      lastOrder.current = { field: columnKey, order }
       setList(s => {
-        s.sort((a, b) => {
-          const _a = convertToNumber(a[columnKey])
-          const _b = convertToNumber(b[columnKey])
-         
-          if (Number.isNaN(_a) || Number.isNaN(_b)) {
-            return compareString(a[columnKey], b[columnKey], order!)
-          }
-          if (order === 'asc') {
-            return a[columnKey] - b[columnKey]
-          }
-          if (order === 'desc') {
-            return b[columnKey] - a[columnKey]
-          }
-
-          return 0
-        })
-
-        lastOrderKey.current = s.map(getOrderKey)
-        return [...s]
+        return sortData(s, columnKey, order)
       })
     },
-    [getOrderKey]
+    []
   )
 
   return [list, { setList: _setList, onSort, updateList }] as const
