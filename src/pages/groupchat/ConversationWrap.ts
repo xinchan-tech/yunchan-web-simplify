@@ -3,7 +3,8 @@ import { Conversation, Message } from "wukongimjssdk"
 export class ConversationWrap {
     conversation: Conversation
     constructor(conversation: Conversation) {
-        this.conversation = conversation
+        this.conversation = conversation;
+        this.total_user = 0
     }
 
     avatarHashTag?: string
@@ -80,6 +81,7 @@ export class ConversationWrap {
         return this.conversation.extra
     }
    
+    public total_user: string|number
 
 
     isEqual(c: ConversationWrap): boolean {

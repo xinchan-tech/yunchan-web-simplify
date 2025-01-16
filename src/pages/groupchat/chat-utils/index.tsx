@@ -3,59 +3,9 @@ import WKSDK, {
   ChannelTypePerson,
   Message,
   ChannelInfo,
-  CMDContent,
 } from "wukongimjssdk";
 
-import { ConversationWrap } from "../ConversationWrap";
 import { getChatNameAndAvatar } from "@/api";
-import { ReactNode } from "react";
-
-export const lastContent = (conversationWrap: ConversationWrap) => {
-  if (!conversationWrap.lastMessage) {
-    return;
-  }
-  let head: ReactNode | string;
-  let content: ReactNode | string;
-  const draft = conversationWrap.remoteExtra.draft;
-  if (draft && draft !== "") {
-    head = draft;
-  }
-
-  if (conversationWrap.isMentionMe === true) {
-    head = <span style={{ color: "red" }}>[有人@我]</span>;
-  }
-
-  // if (conversationWrap.lastMessage.content.cmd === "messageRevoke") {
-  //   const fromUser = WKSDK.shared().channelManager.getChannelInfo(
-  //     new Channel(conversationWrap.lastMessage.fromUID, ChannelTypePerson)
-  //   );
-
-  //   return (fromUser?.title || "") + "撤回了一条消息";
-  // }
-  if (conversationWrap.lastMessage) {
-    const channelInfo = WKSDK.shared().channelManager.getChannelInfo(
-      new Channel(conversationWrap.lastMessage.fromUID, ChannelTypePerson)
-    );
-    if (channelInfo) {
-      head = channelInfo.title + "：";
-    } else {
-      // 没有就缓存下
-      // setPersonChannelCache(conversationWrap.lastMessage.fromUID)
-    }
-
-    content = conversationWrap.lastMessage.content.conversationDigest || "";
-    if (conversationWrap.lastMessage.content instanceof CMDContent) {
-      content = "[系统消息]";
-    }
-  }
-
-  return (
-    <span>
-      {head}
-      {content}
-    </span>
-  );
-};
 
 // 缓存单聊头像名称信息
 export const setPersonChannelCache = (fromUID: string) => {

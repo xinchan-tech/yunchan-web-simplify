@@ -77,6 +77,7 @@ const GroupChatPage = () => {
   const setSubscribers = useGroupChatShortStore(
     (state) => state.setSubscribers
   );
+  const setFetchingSubscribers =  useGroupChatShortStore((state) => state.setFetchingSubscribers);
   const setReplyMessage = useGroupChatShortStore(
     (state) => state.setReplyMessage
   );
@@ -383,6 +384,8 @@ const GroupChatPage = () => {
       WKSDK.shared().channelManager.fetchChannelInfo(
         new Channel(msg.channel.channelID, ChannelTypeGroup)
       );
+      // 有人加群后也触发updatechannel
+      syncSubscriber(msg.channel);
     } else if (cmdContent.cmd === "forbidden") {
       // 修改了禁言后重新同步群成员
       syncSubscriber(msg.channel);
@@ -396,10 +399,10 @@ const GroupChatPage = () => {
     if (!user?.username || !token) {
       return;
     }
-    // config.uid = user.username;
-    config.uid = "m39ovNFC";
-    // config.uid = '753';
-    config.token = "m39ovNFC";
+    config.uid = user.username;
+
+    config.token = user.username;
+ 
     config.addr = addr;
     WKSDK.shared().config = config;
 
@@ -443,7 +446,14 @@ const GroupChatPage = () => {
   }, []);
 
   const syncSubscriber = async (channel: Channel) => {
-    await WKSDK.shared().channelManager.syncSubscribes(channel); // 同步订阅者
+    setFetchingSubscribers(true);
+    try {
+
+      await WKSDK.shared().channelManager.syncSubscribes(channel); // 同步订阅者
+      setFetchingSubscribers(false)
+    } catch (err) {
+      setFetchingSubscribers(false)
+    }
     const members: Subscriber[] =
       WKSDK.shared().channelManager.getSubscribes(channel);
     subscriberCache.set(channel.channelID, members);
@@ -581,9 +591,12 @@ const GroupChatPage = () => {
     }
   };
 
+  const [total, setTotal] = useState<string| number>(0)
   useEffect(() => {
     window.document.title = "讨论社群";
   }, []);
+
+
 
   return (
     <div className="group-chat-container flex">
@@ -593,8 +606,9 @@ const GroupChatPage = () => {
       >
         <GroupChatLeftBar />
         <GroupChannel
-          onSelectChannel={(channel: Channel) => {
+          onSelectChannel={(channel: Channel, conversation: ConversationWrap) => {
             handleChannelSelect(channel);
+            setTotal(conversation.total_user)
           }}
         />
 
@@ -625,7 +639,7 @@ const GroupChatPage = () => {
                   />
                 </div>
                 <div className="w-[220px] group-member-panel">
-                  <GroupMembers subscribers={subscribers} />
+                  <GroupMembers total={total} />
                 </div>
               </div>
             </>

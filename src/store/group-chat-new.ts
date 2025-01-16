@@ -68,6 +68,8 @@ interface GroupChatShortStore {
   setInputValue: (s: string) => void;
   subscribers: Subscriber[]; // 当前群的群成员
   setSubscribers: (payload: Subscriber[]) => void;
+  fetchingSubscribers: boolean;
+  setFetchingSubscribers: (payload: boolean) => void;
   setReplyMessage: (message: Message | null) => void;
   messages: Message[];
   setMessages: (data: Message[]) => void;
@@ -106,6 +108,10 @@ export const useGroupChatShortStore = create<GroupChatShortStore>(
       set({
         subscribers: payload,
       });
+    },
+    fetchingSubscribers: false,
+    setFetchingSubscribers(payload: boolean) {
+      set({ fetchingSubscribers: payload });
     },
     messages: [],
     setMessages: (data: Message[]) => {

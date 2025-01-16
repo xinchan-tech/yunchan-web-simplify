@@ -1,11 +1,19 @@
 import ChatAvatar from "../components/chat-avatar";
 import { useGroupChatShortStore } from "@/store/group-chat-new";
-import { JknIcon, ContextMenu, ContextMenuTrigger } from "@/components";
+import {
+  JknIcon,
+  ContextMenu,
+  ContextMenuTrigger,
+  Skeleton,
+} from "@/components";
 
 import { useMemberSetting } from "../hooks";
 
-const GroupMembers = () => {
+const GroupMembers = (props: { total: string | number }) => {
   const subscribers = useGroupChatShortStore((state) => state.subscribers);
+  const fetchingSubscribers = useGroupChatShortStore(
+    (state) => state.fetchingSubscribers
+  );
   const groupDetailData = useGroupChatShortStore(
     (state) => state.groupDetailData
   );
@@ -22,33 +30,49 @@ const GroupMembers = () => {
       </div>
       <div className="group-members">
         <div className="box-title flex items-center">活跃成员</div>
-        {subscribers.map((item) => {
-          return (
-            <div
-              key={item.uid}
-              className="member-item flex items-center justify-between"
-            >
-              <ContextMenu>
-                <ContextMenuTrigger asChild>
-                  <div className="flex h-full items-center w-[200px]">
-                    <ChatAvatar data={item} size="sm" />
-                    <div className="flex w-full h-full items-center">
-                      <div className="member-name overflow-hidden text-ellipsis whitespace-nowrap">
-                        {item.name}
+        {fetchingSubscribers === true &&
+          Array.from({
+            length:
+              typeof props.total === "number"
+                ? props.total
+                : parseInt(props.total),
+          }).map((_, i) => (
+            <Skeleton
+              style={{ background: "#555" }}
+              key={i}
+              className="mt-[6px] h-5"
+            />
+          ))}
+        {fetchingSubscribers === false &&
+          subscribers.map((item) => {
+            return (
+              <div
+                key={item.uid}
+                className="member-item flex items-center justify-between"
+              >
+                <ContextMenu>
+                  <ContextMenuTrigger asChild>
+                    <div className="flex h-full items-center w-[200px]">
+                      <ChatAvatar data={item} size="sm" />
+                      <div className="flex w-full h-full items-center">
+                        <div className="member-name overflow-hidden text-ellipsis whitespace-nowrap">
+                          {item.name}
+                        </div>
+                        {item.orgData?.type === "2" && <JknIcon name="owner" />}
+                        {item.orgData?.forbidden === "1" && (
+                          <JknIcon name="forbidden" />
+                        )}
+                        {item.orgData?.type === "1" && (
+                          <JknIcon name="manager" />
+                        )}
                       </div>
-                      {item.orgData?.type === "2" && <JknIcon name="owner" />}
-                      {item.orgData?.forbidden === "1" && (
-                        <JknIcon name="forbidden" />
-                      )}
-                      {item.orgData?.type === "1" && <JknIcon name="manager" />}
                     </div>
-                  </div>
-                </ContextMenuTrigger>
-                {renderContextMenu(item)}
-              </ContextMenu>
-            </div>
-          );
-        })}
+                  </ContextMenuTrigger>
+                  {renderContextMenu(item)}
+                </ContextMenu>
+              </div>
+            );
+          })}
       </div>
 
       <style jsx>{`

@@ -5,9 +5,11 @@ import WKSDK, {
   Channel,
   ChannelInfo,
   ChannelTypeGroup,
+  CMDContent,
+  ChannelTypePerson,
 } from "wukongimjssdk";
 import { ConversationWrap } from "../ConversationWrap";
-import { useEffect, useMemo } from "react";
+import { ReactNode, useEffect, useMemo, useRef } from "react";
 import {
   useGroupChatStoreNew,
   useGroupChatShortStore,
@@ -16,11 +18,12 @@ import { cn } from "@/utils/style";
 import APIClient from "../Service/APIClient";
 import { useLatest } from "ahooks";
 import { useShallow } from "zustand/react/shallow";
-import { lastContent } from "../chat-utils";
+
 import { getGroupChannels } from "@/api";
 import { useQuery } from "@tanstack/react-query";
 import ChatAvatar from "../components/chat-avatar";
 import CreateGroup from "../components/create-group";
+import { setPersonChannelCache } from "../chat-utils";
 
 export type GroupData = {
   id: string;
@@ -34,7 +37,9 @@ export type GroupData = {
   in_channel: number;
 };
 
-const GroupChannel = (props: { onSelectChannel: (c: Channel) => void }) => {
+const GroupChannel = (props: {
+  onSelectChannel: (c: Channel, con: ConversationWrap) => void;
+}) => {
   const {
     conversationWraps,
     setConversationWraps,
@@ -116,7 +121,7 @@ const GroupChannel = (props: { onSelectChannel: (c: Channel) => void }) => {
       ];
       batchUpdateConversation(temp);
       setConversationWraps(temp);
-      handleSelectChannel(conversation.channel, conversation.unread);
+      handleSelectChannel(conversation.channel, conversation);
     } else if (action === ConversationAction.update) {
       const index = latestConversation.current?.findIndex(
         (item) =>
@@ -150,6 +155,54 @@ const GroupChannel = (props: { onSelectChannel: (c: Channel) => void }) => {
     //   const temp = [...latestConversation.current];
     //   setConversationWraps(temp);
     // }
+  };
+
+  const fetchingUserFlag = useRef(false);
+  const lastContent = (conversationWrap: ConversationWrap) => {
+    if (!conversationWrap.lastMessage) {
+      return;
+    }
+    let head: ReactNode | string;
+    let content: ReactNode | string;
+    const draft = conversationWrap.remoteExtra.draft;
+    if (draft && draft !== "") {
+      head = draft;
+    }
+
+    if (conversationWrap.isMentionMe === true) {
+      head = <span style={{ color: "red" }}>[有人@我]</span>;
+    }
+
+    if (conversationWrap.lastMessage) {
+      const channelInfo = WKSDK.shared().channelManager.getChannelInfo(
+        new Channel(conversationWrap.lastMessage.fromUID, ChannelTypePerson)
+      );
+      if (channelInfo) {
+        head = channelInfo.title + "：";
+      } else if (fetchingUserFlag.current === false) {
+        // 没有就缓存下
+        fetchingUserFlag.current = true;
+        setPersonChannelCache(conversationWrap.lastMessage.fromUID).then(() => {
+          fetchingUserFlag.current = false;
+        });
+      }
+
+      content = conversationWrap.lastMessage.content.conversationDigest || "";
+      if (conversationWrap.lastMessage.content instanceof CMDContent) {
+        if (conversationWrap.lastMessage.content.cmd === "messageRevoke") {
+          content = "撤回了一条消息";
+        } else {
+          content = "加入了群聊";
+        }
+      }
+    }
+
+    return (
+      <span>
+        {head}
+        {content}
+      </span>
+    );
   };
 
   useEffect(() => {
@@ -214,7 +267,10 @@ const GroupChannel = (props: { onSelectChannel: (c: Channel) => void }) => {
 
   const { data } = useQuery(option);
 
-  const handleSelectChannel = (channel: Channel, unread?: number) => {
+  const handleSelectChannel = (
+    channel: Channel,
+    conversation: ConversationWrap
+  ) => {
     if (channel.channelID === selectedChannel?.channelID) {
       return;
     }
@@ -222,13 +278,11 @@ const GroupChannel = (props: { onSelectChannel: (c: Channel) => void }) => {
     setSelectedChannel(channel);
     setToChannel(channel);
     if (typeof onSelectChannel === "function") {
-      onSelectChannel(channel);
+      onSelectChannel(channel, conversation);
     }
 
-    
-    // todo 优化一下，有
-    if(unread && unread > 0) {
-
+    //  优化一下，有未读消息才clear unread
+    if (conversation && conversation.unread && conversation.unread > 0) {
       APIClient.shared.clearUnread(channel);
     }
 
@@ -270,6 +324,7 @@ const GroupChannel = (props: { onSelectChannel: (c: Channel) => void }) => {
           (con) => con.channel.channelID === item.account
         );
         if (joinedGroup) {
+          joinedGroup.total_user = item.total_user;
           return joinedGroup;
         } else {
           return item;
@@ -299,7 +354,7 @@ const GroupChannel = (props: { onSelectChannel: (c: Channel) => void }) => {
                 )}
                 onClick={() => {
                   setReadyToJoinGroup(null);
-                  handleSelectChannel(item.channel, item.unread);
+                  handleSelectChannel(item.channel, item);
                 }}
               >
                 <div className="group-avatar rounded-md flex items-center text-ellipsis justify-center relative">
@@ -321,6 +376,9 @@ const GroupChannel = (props: { onSelectChannel: (c: Channel) => void }) => {
                 <div className="group-data flex-1">
                   <div className="group-title">
                     {item.channelInfo?.title || ""}
+                    <span className="text-xs text-gray-400">
+                      ({item.total_user})
+                    </span>
                   </div>
                   <div className="group-last-msg flex justify-between">
                     <div className="flex-1 overflow-hidden whitespace-nowrap text-ellipsis max-w-24">
@@ -343,7 +401,7 @@ const GroupChannel = (props: { onSelectChannel: (c: Channel) => void }) => {
                   if (readyToJoinGroup?.account === item.account) {
                     return;
                   }
-                  setSelectedChannel(null)
+                  setSelectedChannel(null);
                   getGroupDetailData(item.account);
                   setReadyToJoinGroup(item);
                 }}
