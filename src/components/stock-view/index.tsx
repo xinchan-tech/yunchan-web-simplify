@@ -1,6 +1,6 @@
 import { useStockList } from "@/store"
 import { JknIcon } from "../jkn/jkn-icon"
-import { useNavigate } from "react-router"
+import { router } from "@/router"
 
 interface StockViewProps {
   code: string
@@ -11,11 +11,10 @@ interface StockViewProps {
 
 const StockView = ({ code, name }: StockViewProps) => {
   const listMap = useStockList(s => s.listMap)
-  const navigate = useNavigate()
   const stock = listMap[code]
 
   return (
-    <div className="overflow-hidden flex items-center w-full" onDoubleClick={() => navigate(`/stock/trading?symbol=${code}`)}>
+    <div className="overflow-hidden flex items-center w-full" onDoubleClick={() => router.navigate(`/stock/trading?symbol=${code}`)}>
       <div>
         {
           stock?.[0] ? (

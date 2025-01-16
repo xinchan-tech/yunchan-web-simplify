@@ -29,7 +29,7 @@ export type StockRawRecord =
       StockCumulativeTurnover,
       StockPrevClose
     ]
-  | [StockTime, StockOpen, StockClose, StockHigh, StockLow, StockVolume, StockTurnover, StockPrevClose]
+  | [StockTime, StockOpen, StockClose, StockHigh, StockLow, StockVolume, StockTurnover, StockPrevClose] | []
 
 /**
  * 股票接口通用extend参数

@@ -1,6 +1,8 @@
 import type { RsbuildPlugin } from '@rsbuild/core'
 import {execSync} from 'node:child_process'
 import packageJson from '../package.json'
+import fs from 'node:fs'
+import path from 'node:path'
 
 export type ReleaseTagOptions = {
   outFile?: boolean
@@ -30,6 +32,15 @@ export const pluginReleaseTag = (options: ReleaseTagOptions): RsbuildPlugin => (
 
       config.source.define.__RELEASE_TAG__ = JSON.stringify(version)
       config.source.define.__RELEASE_VERSION__ = JSON.stringify(packageJson.version)
+    })
+
+    api.onAfterBuild(() => {
+      if(options.outFile){
+        fs.writeFileSync(path.resolve(__dirname, '../dist/release-tag.json'), JSON.stringify({
+          version,
+          packageVersion: packageJson.version
+        }, null, 2))
+      }
     })
   }
 })

@@ -17,7 +17,26 @@ export const stockUtils = {
     return StockRecord.of(data.symbol, data.name, data.rawRecord, data.extend)
   },
 
-  toStock(data: StockRawRecord, opts?: { extend?: StockExtendResultMap; name?: string; symbol?: string }): Stock {
+  toStock(data: StockRawRecord | null, opts?: { extend?: StockExtendResultMap; name?: string; symbol?: string }): Stock {
+
+    if(!data || data.length === 0) {
+      return {
+        name: opts?.name ?? '',
+        symbol: opts?.symbol ?? '',
+        timestamp: 0,
+        open: 0,
+        close: 0,
+        high: 0,
+        low: 0,
+        volume: 0,
+        turnover: 0,
+        cumulativeVolume: 0,
+        cumulativeTurnover: 0,
+        prevClose: 0,
+        extend: opts?.extend
+      }
+    }
+
     const stock: Stock = {
       name: opts?.name ?? '',
       symbol: opts?.symbol ?? '',

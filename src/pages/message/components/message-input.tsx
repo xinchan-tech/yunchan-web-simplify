@@ -1,4 +1,5 @@
 import { JknIcon, FormField, Textarea, FormControl, FormItem, Button, } from "@/components"
+import { uploadUtils } from "@/utils/oss"
 import { FormProvider, useForm } from "react-hook-form"
 
 interface MessageInputProps {
@@ -15,10 +16,12 @@ export const MessageInput = (props: MessageInputProps) => {
     props.onSend(values.message)
   }
 
+
+
   return (
     <div className="py-4 h-[170px] p-4 box-border flex flex-col">
       <div>
-        <JknIcon name="pick_image" className="rounded-none" />
+        <JknIcon name="pick_image" className="rounded-none" onClick={() => {}} />
       </div>
       <div className="flex justify-stretch flex-1 overflow-hidden h-full">
         <FormProvider {...form}>

@@ -96,7 +96,17 @@ export const updateUser = (params: UpdateUserParams) => {
   return request.post('/user/update', params).then(r => r.data)
 }
 
+type OssResult = {
+  credentials: {
+    accessKeyId: string
+    accessKeySecret: string
+    expiration: string
+    securityToken: string
+  }
+  bucket: string
+  endpoint: string
+}
 
 export const getAliOssToken = () => {
-  return request.get('/upload/getOssToken').then(r => r.data)
+  return request.get<OssResult>('/upload/getOssToken').then(r => r.data)
 }

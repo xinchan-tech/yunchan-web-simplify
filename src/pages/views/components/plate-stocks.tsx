@@ -10,6 +10,8 @@ interface PlateStocksProps {
   plateId?: number
 }
 
+type TableDataType = ReturnType<typeof stockUtils.toStockWithExt>
+
 const PlateStocks = (props: PlateStocksProps) => {
   const plateStocks = useQuery({
     queryKey: [getPlateStocks.cacheKey, props.plateId],
@@ -17,12 +19,12 @@ const PlateStocks = (props: PlateStocksProps) => {
     enabled: !!props.plateId
   })
 
-  const [list, { setList, onSort, updateList }] = useTableData<Stock>([], 'symbol')
+  const [list, { setList, onSort, updateList }] = useTableData<TableDataType>([], 'symbol')
   const { checked, onChange, setCheckedAll, getIsChecked } = useCheckboxGroup([])
 
   useEffect(() => {
     setList(
-      plateStocks.data?.map(item => stockUtils.toStock(item.stock, { extend: item.extend, name: item.name, symbol: item.symbol })) ?? []
+      plateStocks.data?.map(item => stockUtils.toStockWithExt(item.stock, { extend: item.extend, name: item.name, symbol: item.symbol })) ?? []
     )
   }, [plateStocks.data, setList])
 
@@ -41,37 +43,37 @@ const PlateStocks = (props: PlateStocksProps) => {
   useStockQuoteSubscribe(plateStocks.data?.map(o => o.symbol) ?? [])
 
 
-  const columns = useMemo<JknRcTableProps<Stock>['columns']>(() => [
+  const columns = useMemo<JknRcTableProps<TableDataType>['columns']>(() => [
     { title: '序号', dataIndex: 'index', render: (_, __, index) => index + 1, align: 'center', width: 60 },
     {
-      title: '名称代码', dataIndex: 'name', align: 'left', width: 'full',
+      title: '名称代码', dataIndex: 'name', align: 'left', width: 'full', sort: true,
       render: (_, row) => (
         <StockView name={row.name} code={row.symbol as string} />
       )
     },
     {
-      title: '现价', dataIndex: 'close', align: 'right', width: '10%',
-      render: (_, row) => (
-        <NumSpanSubscribe blink code={row.symbol} field="close" value={row.close} decimal={2} isPositive={stockUtils.isUp(row)} align="right" />
+      title: '现价', dataIndex: 'close', align: 'right', width: '10%', sort: true,
+      render: (close, row) => (
+        <NumSpanSubscribe blink code={row.symbol} field="close" value={close} decimal={2} isPositive={stockUtils.isUp(row)} align="right" />
       )
     },
     {
-      title: '涨跌幅', dataIndex: 'percent', align: 'right', width: 100,
-      render: (_, row) => (
-        <NumSpanSubscribe blink code={row.symbol} field="percent" block className="py-0.5 w-20" decimal={2} value={Decimal.create(stockUtils.getPercent(row)).toNumber()} percent align="right" />
+      title: '涨跌幅', dataIndex: 'percent', align: 'right', width: 100, sort: true,
+      render: (percent, row) => (
+        <NumSpanSubscribe blink code={row.symbol} field="percent" block className="py-0.5 w-20" decimal={2} value={percent} isPositive={stockUtils.isUp(row)} percent align="right" />
       )
     },
     {
-      title: '总市值', dataIndex: 'marketValue', align: 'right', width: '10%',
-      render: (_, row) =>  <NumSpanSubscribe blink code={row.symbol} field={v => stockUtils.getSubscribeMarketValue(row, v)} value={stockUtils.getMarketValue(row)} decimal={2} align="right" unit />
+      title: '总市值', dataIndex: 'marketValue', align: 'right', width: '10%', sort: true,
+      render: (marketValue, row) => <NumSpanSubscribe blink code={row.symbol} field={v => stockUtils.getSubscribeMarketValue(row, v)} value={marketValue} decimal={2} align="right" unit />
     },
     {
-      title: '成交额', dataIndex: 'turnover', align: 'right', width: '10%',
-      render: (_, row) => <NumSpanSubscribe blink code={row.symbol} field="turnover" value={row.turnover} decimal={2} align="right" unit />
+      title: '成交额', dataIndex: 'turnover', align: 'right', width: '10%', sort: true,
+      render: (turnover, row) => <NumSpanSubscribe blink code={row.symbol} field="turnover" value={turnover} decimal={2} align="right" unit />
     },
     {
       title: '换手率', dataIndex: 'turnOverRate', align: 'right', width: '7%',
-      render: (_, row) => `${Decimal.create(stockUtils.getTurnOverRate(row)).mul(100).toFixed(2)}%`
+      render: (turnOverRate) => `${Decimal.create(turnOverRate).mul(100).toFixed(2)}%`
     },
     {
       title: '市盈率', dataIndex: 'pe', align: 'right', width: '7%',
@@ -104,7 +106,7 @@ const PlateStocks = (props: PlateStocksProps) => {
   ], [checked, list, getIsChecked, onChange, setCheckedAll, updateStockCollect])
 
 
-  const onRowClick = useTableRowClickToStockTrading('code')
+  const onRowClick = useTableRowClickToStockTrading('symbol')
 
   return (
     <JknRcTable isLoading={plateStocks.isLoading}

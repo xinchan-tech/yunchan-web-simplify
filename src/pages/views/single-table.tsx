@@ -82,10 +82,10 @@ const SingleTable = (props: SingleTableProps) => {
 
     for (const item of query.data) {
       // const [lastData, beforeData, afterData] = stockUtils.toStock(item)
-      const lastData = stockUtils.toStock(item.stock, {extend: item.extend})
-     
-      const beforeData = stockUtils.toStock(item.extend.stock_before, {extend: item.extend})
-      const afterData = stockUtils.toStock(item.extend.stock_after, {extend: item.extend})
+      const lastData = stockUtils.toStock(item.stock, { extend: item.extend })
+
+      const beforeData = stockUtils.toStock(item.extend.stock_before, { extend: item.extend })
+      const afterData = stockUtils.toStock(item.extend.stock_after, { extend: item.extend })
 
       if (!lastData) continue
       r.push({
@@ -96,8 +96,8 @@ const SingleTable = (props: SingleTableProps) => {
         total: stockUtils.getMarketValue(lastData),
         amount: lastData.turnover,
         industry: lastData.industry,
-        prePercent: stockUtils.getPercent(beforeData),
-        afterPercent: stockUtils.getPercent(afterData),
+        prePercent: stockUtils.getPercent(beforeData) && Decimal.create(stockUtils.getPercent(beforeData)).mul(100).toNumber(),
+        afterPercent: stockUtils.getPercent(afterData) && Decimal.create(stockUtils.getPercent(afterData)).mul(100).toNumber(),
         turnoverRate: stockUtils.getTurnOverRate(lastData),
         pe: stockUtils.getPE(lastData),
         pb: stockUtils.getPB(lastData),

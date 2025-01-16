@@ -32,11 +32,6 @@ const FooterTime = () => {
   })
 
   useEffect(() => {
-    console.log('usTime', usTime, localStamp)
-
-  }, [usTime, localStamp])
-
-  useEffect(() => {
     updateUsTimeToStore(updateTimeStamp())
 
     return () => {

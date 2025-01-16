@@ -6,7 +6,7 @@ import { pluginReleaseTag } from './scripts/release-tag'
 import { pluginTypedCSSModules } from '@rsbuild/plugin-typed-css-modules'
 
 export default defineConfig({
-  plugins: [pluginReact(), pluginSass(), pluginReleaseTag({}), pluginTypedCSSModules()],
+  plugins: [pluginReact(), pluginSass(), pluginReleaseTag({outFile: true}), pluginTypedCSSModules()],
   source: {
     alias: {
       '@': './src'

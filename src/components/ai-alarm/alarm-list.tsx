@@ -1,6 +1,7 @@
 import { AlarmType, deleteAlarm, getAlarms, getAlarmsGroup } from "@/api"
 import { Button, JknIcon, JknRcTable, type JknRcTableProps, JknTable, type JknTableProps, NumSpanSubscribe, Popover, PopoverAnchor, PopoverClose, PopoverContent, PopoverTrigger, StockView } from "@/components"
 import { useCheckboxGroup, useTableData, useToast } from "@/hooks"
+import { router } from "@/router"
 import { type Stock, stockUtils } from "@/utils/stock"
 import { cn } from "@/utils/style"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
@@ -196,16 +197,11 @@ const GroupAlarm = (props: AlarmItemProps) => {
     return c
   }, [props.options, checked, deleteAlarmMutation.mutate, getIsChecked, props.type, setCheckedAll, toggle])
 
-
-
-
-  const navigate = useNavigate()
-
   return (
     <div className="h-full overflow-hidden">
       <JknRcTable rowKey="symbol" onRow={(row) => ({
         onClick: () => props.onChange?.(row.symbol),
-        onDoubleClick: () => navigate(`/stock/trading?symbol=${row.symbol}`)
+        onDoubleClick: () => router.navigate(`/stock/trading?symbol=${row.symbol}`)
       })} data={list} columns={columns} onSort={onSort} />
     </div>
   )

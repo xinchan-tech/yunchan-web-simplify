@@ -80,7 +80,6 @@ export const useTableData = <T extends Record<string, any>>(data: T[], orderKey:
       }
 
       setList(s => {
-        console.log(s)
         s.sort((a, b) => {
           const _a = convertToNumber(a[columnKey])
           const _b = convertToNumber(b[columnKey])
