@@ -27,6 +27,7 @@ import { userToChannelInfo } from "../chat-utils";
 
 export function initDataSource() {
   // 同步自己业务端的频道消息列表
+  // WKSDK.shared().config.deviceFlag = 0;
   WKSDK.shared().config.provider.syncMessagesCallback = async (
     channel: Channel,
     opts: SyncOptions

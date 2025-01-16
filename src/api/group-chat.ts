@@ -127,7 +127,7 @@ export const setMemberForbiddenService = async (
   data: forbiddenServicePyload
 ) => {
   const resp = await request
-    .post<{ status: number, msg: string }>(
+    .post<{ status: number; msg: string }>(
       `/channel/${data.channelId}/forbidden`,
       {
         uids: data.uids,
@@ -155,7 +155,7 @@ export const setGroupManagerService = async (
   data: setManagerServicePayload
 ) => {
   const resp = await request
-    .post<{ status: number , msg: string}>(
+    .post<{ status: number; msg: string }>(
       `/channel/${data.channelId}/user/set`,
       {
         username: data.username,
@@ -170,4 +170,18 @@ export const setGroupManagerService = async (
     .then((r) => r);
 
   return resp;
+};
+
+export type ImgLoginPayload = {
+  device_flag: string;
+  device_level: string;
+};
+
+export const loginImService = async (params: ImgLoginPayload) => {
+  const r = await request.post("/im/login", params, {
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+  });
+  return r;
 };

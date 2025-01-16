@@ -54,7 +54,7 @@ const GroupMembers = (props: { total: string | number }) => {
                   <ContextMenuTrigger asChild>
                     <div className="flex h-full items-center w-[200px]">
                       <ChatAvatar data={item} size="sm" />
-                      <div className="flex w-full h-full items-center">
+                      <div className="flex flex-1 h-full items-center">
                         <div className="member-name overflow-hidden text-ellipsis whitespace-nowrap">
                           {item.name}
                         </div>

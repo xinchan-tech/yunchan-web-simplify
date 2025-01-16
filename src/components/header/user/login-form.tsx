@@ -1,4 +1,4 @@
-import { getWxLoginStatus, login, loginByThird } from "@/api"
+import { getWxLoginStatus, login, loginByThird, loginImService} from "@/api"
 import WechatLoginIcon from '@/assets/icon/wechat_login.png'
 import LoginLeftImg from '@/assets/image/login_left.png'
 import AppleIcon from '@/assets/icon/apple.png'
@@ -48,6 +48,12 @@ const LoginForm = (props: LoginFormProps) => {
 
   const onLoginSuccess = (token: string) => {
     setToken(token)
+
+	loginImService({
+       device_flag: '1',
+       device_level: '1'
+     })
+
     props.afterLogin?.()
   }
 
@@ -57,7 +63,6 @@ const LoginForm = (props: LoginFormProps) => {
 
   const loginMutation = useMutation({
     mutationFn: ({ type, data }: { type: string, data: any }) => {
-
       if (type === 'username') {
         return loginByUsername()
       }

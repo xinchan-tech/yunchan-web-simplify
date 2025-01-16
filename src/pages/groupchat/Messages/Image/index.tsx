@@ -82,12 +82,10 @@ const ImageCell = (props: { message: Message }) => {
   const { message } = props;
   const [showPreview, setShowPreview] = useState(false);
 
-
-
   const getImageElement = () => {
     const content = message.content as MessageImage;
     let scaleSize = imageScale(content.width, content.height);
-    const imageURL = getImageSrc(content)
+    const imageURL = getImageSrc(content);
     return (
       <MsgCard data={message}>
         <img
@@ -99,7 +97,7 @@ const ImageCell = (props: { message: Message }) => {
             height: scaleSize.height,
           }}
           onClick={() => {
-            setShowPreview(true)
+            setShowPreview(true);
           }}
         />
         {showPreview && (
@@ -111,10 +109,18 @@ const ImageCell = (props: { message: Message }) => {
             changeable={false}
             showTotal={false}
             onMaskClick={() => {
-              setShowPreview(false)
+              setShowPreview(false);
             }}
             onClose={() => {
-              setShowPreview(false)
+              setShowPreview(false);
+            }}
+            customToolbar={(defaultConfigs) => {
+              console.log(defaultConfigs, "defaultConfigsdefaultConfigs");
+              return defaultConfigs.filter(
+                (conf) => {
+                  return ![3, 4, 5, 6, 7, 9, 10].includes(conf.actionType as number)
+                }
+              );
             }}
             images={[{ src: imageURL, alt: "", downloadUrl: imageURL }]}
           />

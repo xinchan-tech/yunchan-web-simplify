@@ -399,10 +399,11 @@ const GroupChatPage = () => {
     if (!user?.username || !token) {
       return;
     }
-    config.uid = user.username;
+    // config.uid = user.username;
 
-    config.token = user.username;
- 
+    // config.token = user.username;
+    config.uid = user.username
+    config.token = token
     config.addr = addr;
     WKSDK.shared().config = config;
 

@@ -97,7 +97,11 @@ export const useMemberSetting = () => {
     }
   };
 
-  const judgeHasLaheiAuth = () => {
+  const judgeHasLaheiAuth = (member: Subscriber) => {
+    // 拉黑不了群主
+    if(member.orgData.type === '2') {
+      return
+    }
     const self = subscribers.find((item) => item.uid === user?.username);
     if (self) {
       return self.orgData.type === "1" || self.orgData.type === "2";
@@ -123,7 +127,7 @@ export const useMemberSetting = () => {
             {item.orgData.type === "1" ? "取消管理员" : "设为管理员"}
           </ContextMenuItem>
         )}
-        {judgeHasLaheiAuth() === true && (
+        {judgeHasLaheiAuth(item) === true && (
           <ContextMenuItem
             onClick={() => {
               handleLahei(item);

@@ -15,10 +15,10 @@ import './app.scss'
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      gcTime: 1000 * 60 * 60 * 6
-    }
-  }
-})
+      gcTime: 1000 * 60 * 60 * 6,
+    },
+  },
+});
 
 if (typeof window !== 'undefined' && import.meta.env.MODE === 'development') {
   scan({
@@ -28,10 +28,9 @@ if (typeof window !== 'undefined' && import.meta.env.MODE === 'development') {
 }
 initDataSource()
 
-
-const rootEl = document.getElementById('root')
+const rootEl = document.getElementById("root");
 if (rootEl) {
-  const root = ReactDOM.createRoot(rootEl)
+  const root = ReactDOM.createRoot(rootEl);
   root.render(
     <StrictMode>
       <QueryClientProvider client={queryClient}>
@@ -41,5 +40,5 @@ if (rootEl) {
         <ReactQueryDevtools initialIsOpen={false} />
       </QueryClientProvider>
     </StrictMode>
-  )
+  );
 }

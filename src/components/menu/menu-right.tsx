@@ -49,7 +49,12 @@ const MenuRight = () => {
       title: "讨论社群",
       path: "/chat",
       handler: () => {
-
+        if (!token) {
+          toast({
+            title: "请先登录",
+          });
+          return;
+        }
         window.open(`${window.location.origin}/chat`, 'whatever', 'hideit,height=1000,width=1400,resizable=yes,scrollbars=yes,status=no,location=no');
         
       },
