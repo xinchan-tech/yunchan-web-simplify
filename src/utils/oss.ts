@@ -28,8 +28,7 @@ let ossClient: OSS | null = null
 const getOssClient = async () => {
   if (ossClient) {
     const expiration = ossConfig.credentials.expiration!
-
-    if (dayjs(expiration).isBefore(dayjs())) {
+    if (dayjs(expiration).isAfter(dayjs())) {
       return ossClient
     }
   }
@@ -50,7 +49,7 @@ const getOssClient = async () => {
     endpoint: ossConfig.endpoint!,
     region: 'oss-cn-shenzhen'
   })
-
+  
   return ossClient
 }
 
