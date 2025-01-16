@@ -1,7 +1,7 @@
 import { useBoolean } from "ahooks"
 import { JknIcon } from "../jkn/jkn-icon"
 import { Popover, PopoverAnchor, PopoverContent } from "../ui/popover"
-import { useConfig, useTime } from "@/store"
+import { useConfig, useTime, useToken } from "@/store"
 import { dateToWeek, getLatestTradingDay } from "@/utils/date"
 import dayjs from "dayjs"
 import { useQuery } from "@tanstack/react-query"
@@ -15,6 +15,7 @@ export const AiAlarmNotice = () => {
   const [open, { setTrue, setFalse }] = useBoolean(false)
   const time = useTime()
   const config = useConfig()
+  const token = useToken(s => s.token)
   const prevDate = getLatestTradingDay(dayjs(time.usTime).tz('America/New_York'))
   const query = useQuery({
     queryKey: [getAlarmLogs.cacheKey, 0, prevDate.hour(4).minute(0).second(0).format('YYYY-MM-DD HH:mm:ss')],
@@ -22,7 +23,8 @@ export const AiAlarmNotice = () => {
       start: prevDate.hour(4).minute(0).second(0).format('YYYY-MM-DD HH:mm:ss'),
       page: 1,
       limit: 2000
-    })
+    }),
+    enabled: !!token
   })
 
   const dataByGroup = (() => {

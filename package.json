@@ -108,6 +108,7 @@
     "@rsbuild/plugin-sass": "^1.1.1",
     "@swc/plugin-styled-jsx": "^5.0.0",
     "@tanstack/react-query-devtools": "^5.61.5",
+    "@types/ali-oss": "^6.16.11",
     "@types/d3": "^7.4.3",
     "@types/pako": "^2.0.3",
     "@types/qrcode": "^1.5.5",

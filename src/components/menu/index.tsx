@@ -32,54 +32,54 @@ const Menu = () => {
     {
       icon: 'left_menu_1@2x',
       title: '首页',
-      path: '/app',
+      path: '/',
     },
     {
       icon: 'left_menu_2@2x',
       title: '行情浏览',
-      path: '/app/views',
+      path: '/views',
     },
     {
       icon: 'left_menu_3@2x',
       title: '股票金池',
-      path: '/app/golden',
+      path: '/golden',
     },
     {
       icon: 'left_menu_4@2x',
       title: '超级选股',
-      path: '/app/super'
+      path: '/super'
     },
     {
       icon: 'left_menu_5@2x',
       title: 'AI报警',
-      path: '/app/alarm',
+      path: '/alarm',
     },
     {
       icon: 'left_menu_6@2x',
       title: '股票日历',
-      path: '/app/calendar',
+      path: '/calendar',
     },
     {
       icon: 'left_menu_7@2x',
       title: '消息中心',
-      path: '/app/message',
+      path: '/message',
     },
     {
       icon: 'left_menu_8@2x',
       title: '大V快评',
-      path: '/app/shout',
+      path: '/shout',
     },
     {
       icon: <Settings className="text-[#3c3c3c]" />,
       title: '设置',
-      path: '/app/setting'
+      path: '/setting'
     }
   ], [])
 
 
 
   const onNav = (path: string) => {
-    if (!token && path !== '/app') {
+    if (!token && path !== '/') {
       toast({
         title: '请先登录'
       })

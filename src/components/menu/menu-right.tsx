@@ -4,29 +4,29 @@ import { router } from "@/router"
 import { useEffect, useState } from "react"
 import { useToken } from "@/store"
 import { useToast } from "@/hooks"
-import {WKSDK} from 'wukongimjssdk'
+import { WKSDK } from 'wukongimjssdk'
 type MenuItem = {
-  icon: IconName;
-  title: string;
-  path: string;
-  handler?: () => void;
-};
+  icon: IconName
+  title: string
+  path: string
+  handler?: () => void
+}
 
 const MenuRight = () => {
-  const [pathname, setPathname] = useState(router.state.location.pathname);
+  const [pathname, setPathname] = useState(router.state.location.pathname)
 
   useEffect(() => {
     const s = router.subscribe((s) => {
-      setPathname(s.location.pathname);
-    });
+      setPathname(s.location.pathname)
+    })
 
     return () => {
-      s();
-    };
-  }, []);
+      s()
+    }
+  }, [])
 
-  const { token } = useToken();
-  const { toast } = useToast();
+  const { token } = useToken()
+  const { toast } = useToast()
 
   const menus: MenuItem[] = [
     {
@@ -37,56 +37,54 @@ const MenuRight = () => {
     {
       icon: "right_menu_4",
       title: "财务估值",
-      path: "/app/stock/finance",
+      path: "/stock/finance",
     },
     {
       icon: 'left_menu_6',
       title: '特色推送',
       path: '/push'
-	},
-	 {
+    },
+    {
       icon: "right_menu_5",
       title: "讨论社群",
       path: "/chat",
       handler: () => {
-        window.open('./chat', 'whatever', 'hideit,height=1000,width=1400,resizable=yes,scrollbars=yes,status=no,location=no');
-        
+        window.open('./chat', 'whatever', 'hideit,height=1000,width=1400,resizable=yes,scrollbars=yes,status=no,location=no')
+
       },
     }
   ]
 
-  const { token } = useToken()
-  const { toast } = useToast()
 
   const onNav = (path: string) => {
     if (!token && path !== "/app") {
       toast({
         title: "请先登录",
-      });
-      return;
+      })
+      return
     }
 
-    const search = new URLSearchParams(window.location.search);
-    const symbol = search.get("symbol") ?? "QQQ";
+    const search = new URLSearchParams(window.location.search)
+    const symbol = search.get("symbol") ?? "QQQ"
 
     if (path.startsWith('/stock')) {
       router.navigate(`${path}?symbol=${symbol}`)
     } else {
       router.navigate(path)
     }
-  };
+  }
 
   return (
     <div>
       {menus.map((item) => (
         <div key={item.title} onClick={() => {
-            if(typeof item.handler === 'function') {
-              item.handler()
-            } else {
-              onNav(item.path);
-            }
-          }}
-           onKeyDown={() => { }} className="mb-4 flex flex-col items-center cursor-pointer">
+          if (typeof item.handler === 'function') {
+            item.handler()
+          } else {
+            onNav(item.path)
+          }
+        }}
+          onKeyDown={() => { }} className="mb-4 flex flex-col items-center cursor-pointer">
           <div className={cn(pathname === item.path && 'active-icon')}>
             <JknIcon name={item.icon}
               className="inline-block w-6 h-6 mb-1 rounded-none"
@@ -115,7 +113,7 @@ const MenuRight = () => {
         </div>
       ))}
     </div>
-  );
-};
+  )
+}
 
-export default MenuRight;
+export default MenuRight

@@ -1,18 +1,17 @@
 import { AiAlarmNotice, Footer, HeaderService, HeaderUser, JknAlert, Menu, MenuRight, StockSelect, Toaster } from './components'
 import Logo from './assets/icon/icon_jkn@2x.png'
-import './app.scss'
-import { Outlet, RouterProvider } from "react-router"
+import { Outlet } from "react-router"
 import { router, routes } from "./router"
 import { useMount, useUpdateEffect } from "ahooks"
 import { useConfig, useToken, useUser } from "./store"
 import { useTranslation } from "react-i18next"
-import { Suspense, useEffect, useMemo, useRef, useState } from "react"
-import { getConfig, getUser } from "./api"
+import { useEffect, useMemo, useRef, useState } from "react"
+import { getConfig, getUser } from "@/api"
 import { useQuery } from "@tanstack/react-query"
-import { appEvent } from "./utils/event"
-// import { wsManager } from "./utils/ws"
+import { appEvent } from "@/utils/event"
 import { uid } from "radash"
-import { useToast } from "./hooks"
+import { useToast } from "@/hooks"
+import { wsManager } from "@/utils/ws"
 
 const App = () => {
   const setConsults = useConfig(s => s.setConsults)
@@ -54,7 +53,7 @@ const App = () => {
   const { toast } = useToast()
 
   useEffect(() => {
-    const handler = (params: {message: string}) => {
+    const handler = (params: { message: string }) => {
       toast({
         description: params.message
       })
@@ -100,7 +99,7 @@ const App = () => {
 
 
 
-  
+
   return (
     <div className="container-layout dark">
       <Toaster />
@@ -220,9 +219,9 @@ const AppTitle = () => {
         })
       })
 
-  //     return close
-  //   }
-  // }, [token])
+      return close
+    }
+  }, [token])
 
   useEffect(() => {
     const s = router.subscribe((s) => {

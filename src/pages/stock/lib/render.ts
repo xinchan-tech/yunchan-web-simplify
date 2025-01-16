@@ -48,7 +48,7 @@ type ChartState = ArrayItem<KChartState['state']>
 /**
  * 初始化配置
  */
-export const initOptions = (chart: EChartsType): ECOption => {
+export const initOptions = (): ECOption => {
   return {
     tooltip: {
       trigger: 'axis',
