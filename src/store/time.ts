@@ -2,7 +2,7 @@ import dayjs from 'dayjs'
 import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
 import { getTrading } from '@/utils/date'
-import type { StockTrading } from '@/utils/stock'
+import { stockUtils, type StockTrading } from '@/utils/stock'
 
 interface TimeStore {
   /**
@@ -42,9 +42,9 @@ export const useTime = create<TimeStore>()(
         set(() => ({ localStamp }))
       },
       getTrading: () => {
-        const usTime = dayjs(get().usTime).tz('America/New_York').format('YYYY-MM-DD HH:mm:ss')
+        const usTime = dayjs(get().usTime).tz('America/New_York').valueOf()
         
-        return getTrading(usTime)
+        return stockUtils.getTrading(usTime)
       },
       isToday: data => {
         const date = dayjs(data)

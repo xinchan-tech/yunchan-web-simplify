@@ -166,7 +166,7 @@ export const stockUtils = {
    * 4:00 PM - 8:00 PM 美国东部时间
    */
   getTrading: (time: Stock['timestamp']): StockTrading => {
-    const usTime = dayjs(time)
+    const usTime = dayjs(time).tz('America/New_York')
 
     if (
       usTime.isSameOrAfter(usTime.hour(4).minute(0).second(0)) &&

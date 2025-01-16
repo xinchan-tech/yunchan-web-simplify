@@ -321,7 +321,17 @@ export const renderUtils = {
       const time = dayjs(+startTime).add((i + 1) * scale, 'millisecond')
       return time.valueOf()
     })
-    console.log()
+
     return [...data.map(o => o[0]), ...xAxisData]
+  },
+
+  /**
+   * 日期格式化
+   */
+  getDateFormatter: (interval: StockChartInterval) => {
+    if(interval <= StockChartInterval.DAY) {
+      return 'YYYY-MM-DD HH:mm w'
+    }
+    return 'YYYY-MM-DD w'
   }
 }

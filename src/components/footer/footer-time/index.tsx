@@ -1,10 +1,10 @@
 import { getUsTime } from "@/api"
 import { useTime } from "@/store"
-import { dateToWeek, getTrading as getTradingByDate } from "@/utils/date"
 import { useRequest } from "ahooks"
 import dayjs from "dayjs"
 import { useEffect, useRef, useState } from "react"
 import { JknIcon } from "../../jkn/jkn-icon"
+import { stockUtils } from "@/utils/stock"
 
 const FooterTime = () => {
   const [localUsTime, setLocalUsTime] = useState(0)
@@ -23,12 +23,18 @@ const FooterTime = () => {
     onSuccess: (data) => {
       const local = new Date().valueOf()
       setLocalStamp(local)
+
       const uTime = data.time * 1000
       setUsTime(uTime)
       timeForOnline.current = uTime
       timeForLocal.current = local
     }
   })
+
+  useEffect(() => {
+    console.log('usTime', usTime, localStamp)
+
+  }, [usTime, localStamp])
 
   useEffect(() => {
     updateUsTimeToStore(updateTimeStamp())
@@ -48,9 +54,11 @@ const FooterTime = () => {
   // 优化render
   const updateUsTimeToStore = (newTime: number) => {
     const trading = getTrading()
-    const localTrading = getTradingByDate(dayjs(newTime).tz('America/New_York').format('YYYY-MM-DD HH:mm:ss'))
+    const localTrading = stockUtils.getTrading(dayjs(newTime).tz('America/New_York').valueOf())
+ 
     if (trading !== localTrading) {
       setUsTime(newTime)
+      setLocalStamp(new Date().valueOf())
     }
 
     timer.current = requestAnimationFrame(() => {
@@ -65,9 +73,9 @@ const FooterTime = () => {
           <span className="flex items-center">
             <JknIcon name="ic_us" className="w-3 h-3" /> &nbsp;
             美东时间：
-            {dayjs(localUsTime).tz('America/New_York').format('MM-DD')} &nbsp;
-            {dateToWeek(dayjs(localUsTime).tz('America/New_York'))} &nbsp;
-            {dayjs(localUsTime).tz('America/New_York').format('HH:mm:ss')}
+            {
+              dayjs(localUsTime).tz('America/New_York').format('MM-DD  W  HH:mm:ss')
+            }
           </span>
         )
       }

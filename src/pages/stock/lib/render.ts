@@ -48,7 +48,7 @@ type ChartState = ArrayItem<KChartState['state']>
 /**
  * 初始化配置
  */
-export const initOptions = (): ECOption => {
+export const initOptions = (chart: EChartsType): ECOption => {
   return {
     tooltip: {
       trigger: 'axis',
@@ -68,7 +68,11 @@ export const initOptions = (): ECOption => {
         if (!data) return ''
         const stock = stockUtils.toStock(data)
 
-        const time = dayjs(stock.timestamp).format('MM-DD hh:mm w')
+        let time = dayjs(stock.timestamp).format('MM-DD HH:mm w')
+
+        if (time.slice(6, 11) === '00:00') {
+          time = dayjs(stock.timestamp).format('YYYY-MM-DD w')
+        }
 
         const isUp = stockUtils.isUp(stock)
         return `
@@ -475,7 +479,7 @@ export const renderGrid = (options: ECOption, state: ChartState, size: [number, 
           const time = dayjs(xData[scale[1]]).diff(+startDay, 'day')
 
           if (time < 1) {
-            return dayjs(+v).format('hh:mm')
+            return dayjs(+v).format('HH:mm')
           }
 
           if (time < 365) {
@@ -505,9 +509,13 @@ export const renderGrid = (options: ECOption, state: ChartState, size: [number, 
           backgroundColor: '#353535',
           formatter: params => {
             if (params.axisDimension === 'x') {
-              let time = dayjs(+params.value).format('MM-DD hh:mm') + dateToWeek(params.value as string, '周')
+              let time = dayjs(+params.value).format('MM-DD HH:mm w')
               if (isTimeIndexChart(state.timeIndex) && state.timeIndex !== StockChartInterval.FIVE_DAY) {
-                time = dayjs(+params.value).format('YYYY-MM-DD hh:mm')
+                time = dayjs(+params.value).format('YYYY-MM-DD HH:mm')
+              } else {
+                if (time.slice(6, 11) === '00:00') {
+                  time = dayjs(+params.value).format('YYYY-MM-DD w')
+                }
               }
 
               return time
