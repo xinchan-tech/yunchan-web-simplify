@@ -2,7 +2,7 @@ import {
   useGroupChatStoreNew,
   useGroupChatShortStore,
 } from "@/store/group-chat-new";
-import { useEffect, useRef, UIEventHandler, useState, useMemo } from "react";
+import { useEffect, useRef, UIEventHandler,  useMemo } from "react";
 import { Message, MessageText, MessageImage } from "wukongimjssdk";
 
 import { useImperativeHandle, forwardRef, ReactNode } from "react";

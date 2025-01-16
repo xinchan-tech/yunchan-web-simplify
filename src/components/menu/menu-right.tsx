@@ -49,8 +49,9 @@ const MenuRight = () => {
       title: "讨论社群",
       path: "/chat",
       handler: () => {
-        window.open('./chat', 'whatever', 'hideit,height=1000,width=1400,resizable=yes,scrollbars=yes,status=no,location=no')
 
+        window.open(`${window.location.origin}/chat`, 'whatever', 'hideit,height=1000,width=1400,resizable=yes,scrollbars=yes,status=no,location=no');
+        
       },
     }
   ]

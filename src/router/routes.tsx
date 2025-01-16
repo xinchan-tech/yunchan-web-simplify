@@ -3,6 +3,7 @@ import type { RouteObject } from "react-router"
 import App from "@/app"
 
 export const routes: RouteObject[] = [
+ 
   {
     path: "/",
     element: <App />,
