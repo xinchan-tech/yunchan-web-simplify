@@ -1624,6 +1624,7 @@ type GetStockPushResult = {
   name: string
   stock: StockRawRecord
   extend: StockExtendResultMap
+  create_time: string
 }
 
 /**

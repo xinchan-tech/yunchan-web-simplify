@@ -20,7 +20,7 @@ const StockView = ({ code, name }: StockViewProps) => {
           stock?.[0] ? (
             <JknIcon stock={stock?.[0]} className="h-6 w-6 mr-3" />
           ) : (
-            <div className="h-8 w-8 mr-3 leading-8 text-center rounded-full bg-black" >{code?.slice(0, 1)}</div>
+            <div className="h-6 w-6 mr-3 leading-6 text-center rounded-full bg-black" >{code?.slice(0, 1)}</div>
           )
         }
       </div>

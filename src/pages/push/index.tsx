@@ -1,6 +1,7 @@
 import { StockPushType, getStockPush } from "@/api"
 import { AiAlarm, CapsuleTabs, CollectStar, JknCheckbox, JknIcon, JknRcTable, type JknRcTableProps, NumSpanSubscribe, StockView } from "@/components"
 import { useCheckboxGroup, useTableData, useTableRowClickToStockTrading } from "@/hooks"
+import { useTime } from "@/store"
 import { type Stock, stockUtils } from "@/utils/stock"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import dayjs from "dayjs"
@@ -12,6 +13,7 @@ import { useEffect, useMemo, useState } from "react"
 type TableDataType = Stock & {
   star: string
   update_time: string
+  create_time: string
   /**
    * warning = 0, 画闪电
    * warning = 1, 画绿色火苗
@@ -30,11 +32,13 @@ type TableDataType = Stock & {
   id: string
   percent?: number
   marketValue?: number
+  
 }
 
 const PushPage = () => {
   const [activeType, setActiveType] = useState<StockPushType>(StockPushType.STOCK_KING)
-  const [date, setDate] = useState(dayjs().format('YYYY-MM-DD'))
+  const getCurrentUsTime = useTime(s => s.getCurrentUsTime)
+  const [date, setDate] = useState(dayjs(getCurrentUsTime()).format('YYYY-MM-DD'))
   const [list, { setList, onSort }] = useTableData<TableDataType>([], 'id')
   const { checked, onChange, setCheckedAll, getIsChecked } = useCheckboxGroup([])
 
@@ -63,6 +67,7 @@ const PushPage = () => {
         stock.bull = item.bull
         stock.coiling_signal = item.coiling_signal
         stock.interval = item.interval
+        stock.create_time = item.create_time
         return stock
       }))
     } else {
@@ -150,6 +155,13 @@ const PushPage = () => {
               (row.bull === '1' ? 'ic_fire_green' : 'ic_fire_red')
           } />
         ))
+      },
+      {
+        title: '首次入选时间',
+        dataIndex: 'create_time',
+        align: 'center',
+        sort: true,
+        render: v => v ? `${dayjs(+v * 1000).tz('America/New_York').format('MM-DD W HH:mm')}` : '-'
       },
       {
         title: '更新时间',
