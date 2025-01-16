@@ -271,6 +271,13 @@ const GroupChannel = (props: {
     channel: Channel,
     conversation: ConversationWrap
   ) => {
+    //  优化一下，有未读消息才clear unread
+    if (conversation && conversation.unread && conversation.unread > 0) {
+      APIClient.shared.clearUnread(channel);
+    }
+
+    clearConversationUnread(channel);
+    clearConversationMentionMe(channel);
     if (channel.channelID === selectedChannel?.channelID) {
       return;
     }
@@ -280,14 +287,6 @@ const GroupChannel = (props: {
     if (typeof onSelectChannel === "function") {
       onSelectChannel(channel, conversation);
     }
-
-    //  优化一下，有未读消息才clear unread
-    if (conversation && conversation.unread && conversation.unread > 0) {
-      APIClient.shared.clearUnread(channel);
-    }
-
-    clearConversationUnread(channel);
-    clearConversationMentionMe(channel);
   };
   // console.log(conversationWraps, "conversationWraps");
 
