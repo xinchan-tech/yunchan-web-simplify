@@ -93,7 +93,9 @@ type UpdateUserParams = {
 }
 
 export const updateUser = (params: UpdateUserParams) => {
-  return request.post('/user/update', params).then(r => r.data)
+  return request
+    .post('/user/update', params, { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } })
+    .then(r => r.data)
 }
 
 type OssResult = {
