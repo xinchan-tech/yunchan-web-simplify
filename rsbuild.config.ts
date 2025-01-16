@@ -36,6 +36,13 @@ export default defineConfig({
       '/websocket': {
         target: 'ws://web.mgjkn.com',
         ws: true
+      },
+      '/im-ws': {
+        target: 'ws://im.mgjkn.com:5200',
+        ws: true,
+        pathRewrite: {
+          '^/im-ws': ''
+        }
       }
     }
   },

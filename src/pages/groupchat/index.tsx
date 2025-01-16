@@ -429,7 +429,7 @@ const GroupChatPage = () => {
   };
 
   useEffect(() => {
-    connectIM("ws://im.mgjkn.com:5200");
+    connectIM("/im-ws");
     // connectIM('ws://175.27.245.108:15200')
     return () => {
       WKSDK.shared().connectManager.removeConnectStatusListener(
