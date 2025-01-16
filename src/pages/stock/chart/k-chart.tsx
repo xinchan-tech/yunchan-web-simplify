@@ -88,6 +88,7 @@ export const KChart = (props: KChartProps) => {
   })
 
   const setMainSystem: KChartContext['setMainSystem'] = ({ index, system }) => {
+    if(context.state[index ?? context.activeChartIndex].system === system) return
     setContext(d => {
       const chart = d.state[index ?? d.activeChartIndex]
       chart.system = system

@@ -95,3 +95,8 @@ type UpdateUserParams = {
 export const updateUser = (params: UpdateUserParams) => {
   return request.post('/user/update', params).then(r => r.data)
 }
+
+
+export const getAliOssToken = () => {
+  return request.get('/upload/getOssToken').then(r => r.data)
+}

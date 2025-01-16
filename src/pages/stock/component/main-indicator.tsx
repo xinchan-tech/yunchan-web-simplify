@@ -21,10 +21,10 @@ export const MainIndicator = (props: MainIndicatorProps) => {
       </HoverCardTrigger>
       <HoverCardContent side="top" className="w-fit p-0">
         <SearchList
-          data={props.data?.main.find(i => i.name === '缠论系统')?.indicators.map(item => ({ label: item.name ?? '', value: item.id, extra: item })) ?? []}
+          data={props.data?.main.find(i => i.name === '缠论系统')?.indicators.map(item => ({ label: item.name ?? '', value: item.id, extra: item, notAuthorized: item.authorized !== 1 })) ?? []}
           name="缠论系统"
           value={state[activeChartIndex].system}
-          onChange={(system) => setMainSystem({ system })}
+          onChange={(system) => system && setMainSystem({ system })}
           type="single"
         />
       </HoverCardContent>

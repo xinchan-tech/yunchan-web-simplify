@@ -12,8 +12,6 @@ import { RouterProvider } from 'react-router'
 import { router } from "./router"
 import './app.scss'
 
-
-
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {

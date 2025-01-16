@@ -1,8 +1,8 @@
-import { Input, Label, RadioGroup, RadioGroupItem, ScrollArea } from "@/components"
+import { Input, JknIcon, Label, RadioGroup, RadioGroupItem, ScrollArea } from "@/components"
 import { useState, type ReactNode } from "react"
 
 interface BaseSearchListProps {
-  data: { label: string, value: string, extra: NormalizedRecord }[]
+  data: { label: string, value: string, extra: NormalizedRecord, notAuthorized?: boolean }[]
   name: string
   search?: boolean
   children?: (value: string, item: { label: string, value: string }) => ReactNode
@@ -17,7 +17,7 @@ interface SingleSearchListProps extends BaseSearchListProps {
 interface MultiSearchListProps extends BaseSearchListProps {
   type: 'multi'
   value?: string[]
-  onChange?: (value: string[], data:BaseSearchListProps['data']) => void
+  onChange?: (value: string[], data: BaseSearchListProps['data']) => void
 }
 
 type SearchListProps<T extends 'single' | 'multi'> = T extends 'single'
@@ -27,18 +27,18 @@ type SearchListProps<T extends 'single' | 'multi'> = T extends 'single'
 export const SearchList = <T extends 'single' | 'multi'>(props: SearchListProps<T>) => {
   const { data, value, onChange, name, children } = props
   const [searchKey, setSearchKey] = useState('')
-  
+
   const _onChange = (v: string, data: ArrayItem<BaseSearchListProps['data']>, event: any) => {
     event.stopPropagation()
     event.preventDefault()
-
+  
     if (props.type === 'single') {
       onChange?.(v === value ? '' : v as any, data as any)
     } else {
       if (!value) onChange?.([v] as any, [data] as any)
       const _value = value as string[]
       const _data = props.data.filter(item => _value.includes(item.value))
-  
+
       if (!_value.find(vl => vl === v)) {
         onChange?.([..._value, v] as any, [..._data, data] as any)
       } else {
@@ -61,7 +61,7 @@ export const SearchList = <T extends 'single' | 'multi'>(props: SearchListProps<
       {
         props.search !== false ? (
           <Input placeholder="搜索指标" className="border-none placeholder:text-tertiary" value={searchKey} onChange={(e) => setSearchKey(e.target.value)} />
-        ): null
+        ) : null
       }
       <div className="border-0 border-b border-t border-solid border-border text-center py-1 bg-background">{name}</div>
       <ScrollArea className="h-[300px]">
@@ -70,13 +70,18 @@ export const SearchList = <T extends 'single' | 'multi'>(props: SearchListProps<
             <div
               className="hover:bg-primary cursor-pointer px-2 flex items-center w-full"
               key={ele.value}
-              onClick={(e) => _onChange?.(ele.value, ele, e)}
+              onClick={(e) => !ele.notAuthorized && _onChange(ele.value, ele, e)}
               onKeyDown={() => { }}
             >
               <RadioGroupItem value={ele.value} checked={checked(ele.value)} id={`stock-indicator-${ele.value}`} />
               <Label className="ml-2 flex-1 py-3" htmlFor={`stock-indicator-${ele.value}`}>
                 {
                   children ? children(value as string, ele) : ele.label
+                }
+                {
+                  ele.notAuthorized ? (
+                    <JknIcon name="ic_lock" className="w-3 h-3 ml-1 rounded-none" />
+                  ) : null
                 }
               </Label>
             </div>

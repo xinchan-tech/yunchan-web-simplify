@@ -40,6 +40,7 @@ export const ChartToolSelect = () => {
     const s = indicators.data?.main.find(i => i.name === '缠论系统')
     if (s) {
       const activeSystem = state[activeChartIndex].system
+
       if (s.indicators.find(i => i.id === activeSystem)?.authorized !== 1) {
         const newSys = s.indicators.find(i => i.authorized === 1)?.id
         if (!newSys) return
