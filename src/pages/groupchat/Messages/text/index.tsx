@@ -102,7 +102,14 @@ const TextCell = (props: { message: Message; messageWrap?: MessageWrap }) => {
   const getNormalText = () => {
     let text = new Array<JSX.Element>(); 
     if(messageWrap?.content.text) {
-      text.push(messageWrap?.content.text)
+      const goodText = messageWrap.content.text.split('\n');
+      goodText.forEach((str, idx) => {
+        
+        text.push(<span>{str}</span>)
+        if(idx !== goodText.length - 1) {
+          text.push(<br/>)
+        }
+      });
     };
     if(messageWrap?.content.mention && messageWrap?.content.mention.uids instanceof Array ) {
       let mentoions = messageWrap.content.mention.uids.map((uid:string) => {

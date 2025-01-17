@@ -80,7 +80,9 @@ interface GroupChatShortStore {
   groupDetailData: GroupDetailData | null;
   getGroupDetailData: (id: string) => Promise<void>;
   filterMode: boolean;
-  setFilterMode: (mode:boolean) => void
+  setFilterMode: (mode:boolean) => void;
+  mentions: {name:string, uid:string}[];
+  setMentions: (payload:{name:string, uid:string}[]) => void;
 }
 
 export const useGroupChatShortStore = create<GroupChatShortStore>(
@@ -141,6 +143,10 @@ export const useGroupChatShortStore = create<GroupChatShortStore>(
     filterMode: false,
     setFilterMode: (mode) => {
       set({filterMode: mode})
-    }
+    },
+    setMentions: (data) => {
+      set({mentions: data})
+    },
+    mentions: []
   })
 );

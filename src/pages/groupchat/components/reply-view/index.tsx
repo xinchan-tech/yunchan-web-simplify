@@ -1,28 +1,50 @@
 import { JknIcon } from "@/components";
 import { useMemo } from "react";
 import WKSDK, { Message, Channel, ChannelTypePerson } from "wukongimjssdk";
+import { useGroupChatShortStore } from "@/store/group-chat-new";
 
-const ReplyMessageView = (props: { message: Message; onClose: () => void }) => {
+const ReplyMessageView = (props: {
+  message?: Message;
+  onClose: () => void;
+}) => {
   const { message, onClose } = props;
 
+  const { mentions } = useGroupChatShortStore();
   const fromChannelInfo = useMemo(() => {
+    let id;
     if (message) {
-      return WKSDK.shared().channelManager.getChannelInfo(
-        new Channel(message.fromUID, ChannelTypePerson)
-      );
+      id = message.fromUID;
+    } else if (mentions && mentions.length > 0) {
+      id = mentions[0].uid;
     }
-    return null;
-  }, [message]);
+    if (id) {
+      return WKSDK.shared().channelManager.getChannelInfo(
+        new Channel(id, ChannelTypePerson)
+      );
+    } else {
+      return null;
+    }
+  }, [message, mentions]);
 
   return (
     <div className="absolute items-center reply-message-container w-full box-border flex justify-between">
       <div>
-        <div>{fromChannelInfo?.title}</div>
-        <div>{message?.content?.conversationDigest}</div>
+        <div className="text-sm text-gray-300">
+          {mentions && mentions.length >= 0 ? "回复" : "引用"}
+          {fromChannelInfo?.title}
+        </div>
+        {message && (
+          <div className="text-xs text-gray-400 mt-2">
+            {message.content?.conversationDigest}
+          </div>
+        )}
       </div>
-      <JknIcon name='close' onClick={() => {
-        typeof onClose === 'function' && onClose()
-      }}/>
+      <JknIcon
+        name="close"
+        onClick={() => {
+          typeof onClose === "function" && onClose();
+        }}
+      />
       <style jsx>
         {`
            {

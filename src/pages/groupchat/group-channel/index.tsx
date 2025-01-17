@@ -291,9 +291,7 @@ const GroupChannel = (props: {
   };
   // console.log(conversationWraps, "conversationWraps");
 
-  useEffect(() => {
-    console.log(data, "conversationWraps");
-  }, [data]);
+
 
   const toChannelInfo = (data: GroupData) => {
     let channelInfo = new ChannelInfo();

@@ -16,6 +16,7 @@ import { cn } from "@/utils/style";
 import { sortMessages } from "../chat-utils";
 import MsgFilter, { FilterKey } from "./msg-filterbar";
 import { useUser } from "@/store";
+
 import { useShallow } from "zustand/react/shallow";
 
 const GroupChatMsgList = forwardRef(
@@ -24,6 +25,7 @@ const GroupChatMsgList = forwardRef(
       messages: Message[];
       handleScroll: UIEventHandler<HTMLDivElement>;
       handleFindPrevMsg: (messageSeq: number) => void;
+      loading?: boolean
     },
     ref
   ) => {
@@ -201,7 +203,7 @@ const GroupChatMsgList = forwardRef(
                 )}
               >
                 {getMessage(msg)}
-                {msg.content?.reply && (
+                {msg.content?.reply && msg.content?.revoke !== true && (
                   <ReplyMsg
                     locateMessage={locateMessage}
                     message={msg}

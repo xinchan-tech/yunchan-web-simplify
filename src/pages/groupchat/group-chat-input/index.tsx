@@ -42,6 +42,7 @@ import { useShallow } from "zustand/react/shallow";
 import { useUser } from "@/store";
 import { useToast } from "@/hooks";
 
+
 class MemberSuggestionDataItem implements SuggestionDataItem {
   id!: string | number;
   display!: string;
@@ -57,10 +58,10 @@ const GroupChatInput = forwardRef(
   ) => {
     const { bottomHeight, setBottomHeight, toChannel } = useGroupChatStoreNew();
     const lastBottomHeighti = useRef(185);
-  
+
     const { onMsgSend } = props;
     const { user } = useUser();
-    const {toast} = useToast()
+    const { toast } = useToast();
     const mentionCache = useRef<any>({});
     // 文本内容
     const {
@@ -70,6 +71,8 @@ const GroupChatInput = forwardRef(
       setReplyMessage,
       groupDetailData,
       subscribers,
+      setMentions,
+      mentions
     } = useGroupChatShortStore(
       useShallow((state) => ({
         inputValue: state.inputValue,
@@ -78,6 +81,8 @@ const GroupChatInput = forwardRef(
         setReplyMessage: state.setReplyMessage,
         groupDetailData: state.groupDetailData,
         subscribers: state.subscribers,
+        setMentions: state.setMentions,
+        mentions: state.mentions
       }))
     );
 
@@ -132,17 +137,18 @@ const GroupChatInput = forwardRef(
       if (value?.trim() === "") {
         return;
       }
-
+     
       let formatValue = formatMentionText(value);
-      let mention = parseMention(formatValue);
+      // let mention = parseMention(formatValue);
 
       const setting = Setting.fromUint8(0);
       const content = new MessageText(formatValue);
 
-      if (mention) {
+    
+      if (mentions.length > 0) {
         const mn = new Mention();
-        mn.all = mention.all;
-        mn.uids = mention.uids;
+        mn.all = false;
+        mn.uids = mentions.map((item) => item.uid);
         content.mention = mn;
       }
 
@@ -171,6 +177,8 @@ const GroupChatInput = forwardRef(
           onMsgSend();
         }
       }
+       // 清空AT的人
+       setMentions([])
     };
     const onFileClick = (event: any) => {
       event.target.value = ""; // 防止选中一个文件取消后不能再选中同一个文件
@@ -185,7 +193,7 @@ const GroupChatInput = forwardRef(
 
     const chooseFile = () => {
       if (groupChatIsForbidden === true) {
-        toast({description: '群组禁言中，无法操作'})
+        toast({ description: "群组禁言中，无法操作" });
         return;
       }
       imgUploadRef.current && imgUploadRef.current.click();
@@ -280,7 +288,7 @@ const GroupChatInput = forwardRef(
     const addMention = (uid: string, name: string) => {
       if (name) {
         mentionCache.current[`${name}`] = { uid: uid, name: name };
-        insertText(`@[${name}] `);
+        // insertText(`@[${name}] `);
       }
     };
 
@@ -289,6 +297,8 @@ const GroupChatInput = forwardRef(
         addMention,
       };
     });
+
+    const inputRef = useRef<any>();
 
     return (
       <Resizable
@@ -310,10 +320,11 @@ const GroupChatInput = forwardRef(
           style={{ height: bottomHeight + "px" }}
           className="chat-msg-inputer relative"
         >
-          {replyMessage && (
+          {(replyMessage || (mentions && mentions.length > 0))&& (
             <ReplyMessageView
-              message={replyMessage}
+              message={replyMessage || undefined}
               onClose={() => {
+                setMentions([])
                 setReplyMessage(null);
               }}
             ></ReplyMessageView>
@@ -324,7 +335,7 @@ const GroupChatInput = forwardRef(
                 <JknIcon
                   name="smile"
                   onClick={() => {
-                    toast({description: '群组禁言中，无法操作'})
+                    toast({ description: "群组禁言中，无法操作" });
                   }}
                   className="ml-2"
                 />
@@ -382,72 +393,110 @@ const GroupChatInput = forwardRef(
                 群组禁言中
               </div>
             ) : (
-              <MentionsInput
-                placeholder={`按 Ctrl + Enter 换行，按 Enter 发送`}
-                className="messageinput-input"
-                allowSuggestionsAboveCursor={true}
+              <textarea
+                ref={inputRef}
                 value={inputValue}
                 onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => {
                   setInputValue(e.target.value);
                 }}
-                onKeyPress={(e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-                  if (e.charCode !== 13) {
+                placeholder={`按 Ctrl + Enter 换行，按 Enter 发送`}
+                className="w-full text-white h-full bg-transparent resize-none border-0 outline-none"
+                onKeyDown={(e) => {
+                  if (e.keyCode !== 13) {
                     //非回车
                     return;
                   }
-                  if (e.charCode === 13 && e.ctrlKey) {
+                  if (e.keyCode === 13 && e.ctrlKey) {
                     // ctrl+Enter不处理
-                    setInputValue(inputValue + "\n");
+                    if (inputRef.current) {
+                      const position = inputRef.current.selectionStart;
+                      const newValue =
+                        inputValue.substring(0, position) +
+                        "\n" +
+                        inputValue.substring(position);
+                      setInputValue(newValue);
+                    }
                     return;
                   }
                   e.preventDefault();
                   handleSend();
                 }}
-              >
-                <MentionComponent
-                  trigger={new RegExp(`(@([^'\\s'@]*))$`)}
-                  markup="@[__display__]"
-                  data={suggestionsMember}
-                  displayTransform={(id: string, display: string) =>
-                    `@${display}`
-                  }
-                  appendSpaceOnAdd={true}
-                  onAdd={(id: string, display: string) => {
-                    mentionCache.current[display] = { uid: id, name: display };
-                  }}
-                  renderSuggestion={(
-                    suggestion,
-                    search,
-                    highlightedDisplay,
-                    index,
-                    focused
-                  ) => {
-                    const item = suggestion as MemberSuggestionDataItem;
-                    return (
-                      <div
-                        className={cn(
-                          "messageinput-member flex items-center",
-                          focused ? "messageinput-selected" : null
-                        )}
-                      >
-                        <div className="messageinput-iconbox">
-                          <ChatAvatar
-                            size="sm"
-                            data={{
-                              uid: String(item.id),
-                              avatar: item.icon,
-                              name: item.display,
-                            }}
-                          ></ChatAvatar>
-                        </div>
-                        <div className="ml-2">
-                          <strong>{highlightedDisplay}</strong>
-                        </div>
-                      </div>
-                    );
-                  }}
-                ></MentionComponent>
-              </MentionsInput>
+              ></textarea>
+              // <MentionsInput
+              //   placeholder={`按 Ctrl + Enter 换行，按 Enter 发送`}
+              //   className="messageinput-input"
+              //   allowSuggestionsAboveCursor={true}
+              //   value={inputValue}
+              //   onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => {
+              //     setInputValue(e.target.value);
+              //   }}
+              //   ref={inputRef}
+              //   onKeyPress={(e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+              //     if (e.charCode !== 13) {
+              //       //非回车
+              //       return;
+              //     }
+              //     if (e.charCode === 13 && e.ctrlKey) {
+              //       // ctrl+Enter不处理
+              //       if (inputRef.current) {
+              //         const position =
+              //           inputRef.current.inputElement.selectionStart;
+              //         const newValue =
+              //           inputValue.substring(0, position) +
+              //           "\n" +
+              //           inputValue.substring(position);
+              //         setInputValue(newValue);
+              //       }
+              //       return;
+              //     }
+              //     e.preventDefault();
+              //     handleSend();
+              //   }}
+              // >
+              //   <MentionComponent
+              //     trigger={new RegExp(`(@([^'\\s'@]*))$`)}
+              //     markup="@[__display__]"
+              //     data={suggestionsMember}
+              //     displayTransform={(id: string, display: string) =>
+              //       `@${display}`
+              //     }
+              //     appendSpaceOnAdd={true}
+              //     onAdd={(id: string, display: string) => {
+              //       mentionCache.current[display] = { uid: id, name: display };
+              //     }}
+              //     renderSuggestion={(
+              //       suggestion,
+              //       search,
+              //       highlightedDisplay,
+              //       index,
+              //       focused
+              //     ) => {
+              //       const item = suggestion as MemberSuggestionDataItem;
+              //       return (
+              //         <div
+              //           className={cn(
+              //             "messageinput-member flex items-center",
+              //             focused ? "messageinput-selected" : null
+              //           )}
+              //         >
+              //           <div className="messageinput-iconbox">
+              //             <ChatAvatar
+              //               size="sm"
+              //               data={{
+              //                 uid: String(item.id),
+              //                 avatar: item.icon,
+              //                 name: item.display,
+              //               }}
+              //             ></ChatAvatar>
+              //           </div>
+              //           <div className="ml-2">
+              //             <strong>{highlightedDisplay}</strong>
+              //           </div>
+              //         </div>
+              //       );
+              //     }}
+              //   ></MentionComponent>
+              // </MentionsInput>
             )}
           </div>
         </div>

@@ -68,6 +68,7 @@ const GroupChatPage = () => {
   const { toChannel, selectedChannel } = useGroupChatStoreNew();
   const latestToChannel = useLatest(toChannel);
   const msgListRef = useRef<any>(null);
+  const [messageFetching, setMessageFetching] = useState(false)
 
   const messagesRef = useRef<Message[]>([]);
 
@@ -88,6 +89,8 @@ const GroupChatPage = () => {
     getGroupDetailData,
     groupDetailData,
     filterMode,
+    // mentions,
+    setMentions,
   } = useGroupChatShortStore(
     useShallow((state) => {
       return {
@@ -105,6 +108,8 @@ const GroupChatPage = () => {
         getGroupDetailData: state.getGroupDetailData,
         groupDetailData: state.groupDetailData,
         filterMode: state.filterMode,
+        // mentions: state.mentions,
+        setMentions: state.setMentions
       };
     })
   );
@@ -140,19 +145,25 @@ const GroupChatPage = () => {
     if (channel) {
       pulldowning.current = true;
       pulldownFinished.current = false;
-      const msgs = await WKSDK.shared().chatManager.syncMessages(channel, {
-        limit: MessagePerPageLimit,
-        startMessageSeq: 0,
-        endMessageSeq: 0,
-        pullMode: PullMode.Up,
-      });
-      pulldowning.current = false;
-      if (msgs && msgs.length > 0) {
-        msgs.forEach((m) => {
-          messagesRef.current.push(m);
+      try {
+        setMessageFetching(true)
+        const msgs = await WKSDK.shared().chatManager.syncMessages(channel, {
+          limit: MessagePerPageLimit,
+          startMessageSeq: 0,
+          endMessageSeq: 0,
+          pullMode: PullMode.Up,
         });
+        setMessageFetching(false)
+        pulldowning.current = false;
+        if (msgs && msgs.length > 0) {
+          msgs.forEach((m) => {
+            messagesRef.current.push(m);
+          });
+        }
+        setMessages([...messagesRef.current]);
+      } catch (err) {
+        setMessageFetching(false)
       }
-      setMessages([...messagesRef.current]);
     }
   };
 
@@ -476,6 +487,7 @@ const GroupChatPage = () => {
 
     // 输入框和回复内容重置
     setReplyMessage(null);
+    setMentions([])
     setInputValue("");
     pullLast(channel);
   };
@@ -508,13 +520,19 @@ const GroupChatPage = () => {
       if (channelInfo) {
         name = channelInfo.title;
       }
-      try {
-        if (messageInputRef.current) {
-          messageInputRef.current.addMention(option.quickReplyUserId, name);
-        }
-      } catch (err) {
-        console.error(err);
+      // 现在只@一个人
+      const curMention = {
+        name: channelInfo?.title,
+        uid: id
       }
+      setMentions([curMention])
+      // try {
+      //   if (messageInputRef.current) {
+      //     messageInputRef.current.addMention(option.quickReplyUserId, name);
+      //   }
+      // } catch (err) {
+      //   console.error(err);
+      // }
     };
 
     if (option && option.message) {
@@ -628,6 +646,7 @@ const GroupChatPage = () => {
                   <GroupChatMsgList
                     messages={messages}
                     ref={msgListRef}
+                    loading={messageFetching}
                     handleFindPrevMsg={handleFindPrevMsg}
                     handleScroll={handleMsgScroll.run}
                   />
@@ -635,7 +654,7 @@ const GroupChatPage = () => {
                     onMsgSend={() => {
                       jumpMsgIdRef.current = "";
                     }}
-                    subscribers={subscribers}
+           
                     ref={messageInputRef}
                   />
                 </div>
