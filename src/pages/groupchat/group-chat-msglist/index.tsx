@@ -131,9 +131,9 @@ const GroupChatMsgList = forwardRef(
       return result;
     }, [messages, filterType, filterKeyWord]);
 
-    useEffect(() => {
-      console.log(goodMessages, "goodMessages");
-    }, [goodMessages]);
+    // useEffect(() => {
+    //   console.log(goodMessages, "goodMessages");
+    // }, [goodMessages]);
 
     useImperativeHandle(ref, () => ({
       scrollToBottom: () => {

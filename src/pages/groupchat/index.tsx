@@ -102,7 +102,7 @@ const GroupChatPage = () => {
         setInputValue: state.setInputValue,
         setLocatedMessageId: state.setLocatedMessageId,
         readyToJoinGroup: state.readyToJoinGroup,
-        setConversationWraps: state.readyToJoinGroup,
+        setConversationWraps: state.setConversationWraps,
         messages: state.messages,
         setMessages: state.setMessages,
         getGroupDetailData: state.getGroupDetailData,
