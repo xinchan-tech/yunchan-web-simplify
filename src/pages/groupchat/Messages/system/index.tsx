@@ -13,7 +13,7 @@ const SystemCell = (props: { message: Message }) => {
     if (userInfo) {
       return (
         <div className="message-system">
-          {userInfo.title}加入了群聊
+          {userInfo.title}[系统消息]
           <style jsx>
             {`
               .message-system {

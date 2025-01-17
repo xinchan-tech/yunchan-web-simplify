@@ -2,7 +2,7 @@ import {
   useGroupChatStoreNew,
   useGroupChatShortStore,
 } from "@/store/group-chat-new";
-import { useEffect, useRef, UIEventHandler,  useMemo } from "react";
+import { useEffect, useRef, UIEventHandler, useMemo, useState } from "react";
 import { Message, MessageText, MessageImage } from "wukongimjssdk";
 
 import { useImperativeHandle, forwardRef, ReactNode } from "react";
@@ -14,6 +14,9 @@ import { MessageWrap } from "../Service/Model";
 import ReplyMsg from "../components/reply-msg";
 import { cn } from "@/utils/style";
 import { sortMessages } from "../chat-utils";
+import MsgFilter, { FilterKey } from "./msg-filterbar";
+import { useUser } from "@/store";
+import { useShallow } from "zustand/react/shallow";
 
 const GroupChatMsgList = forwardRef(
   (
@@ -26,26 +29,37 @@ const GroupChatMsgList = forwardRef(
   ) => {
     const { messages, handleFindPrevMsg } = props;
     const { bottomHeight } = useGroupChatStoreNew();
-    const locatedMessageId = useGroupChatShortStore(
-      (state) => state.locatedMessageId
-    );
-    const setLocatedMessageId = useGroupChatShortStore((state) => {
-      return state.setLocatedMessageId;
-    });
-    const scrollDomRef = useRef<HTMLElement | null>(null);
- 
+    const { user } = useUser();
 
-    const getMessage = (m: Message, key: string) => {
+    const scrollDomRef = useRef<HTMLElement | null>(null);
+
+    const {
+      setFilterMode,
+      groupDetailData,
+      setLocatedMessageId,
+      locatedMessageId,
+    } = useGroupChatShortStore(
+      useShallow((state) => {
+        return {
+          setFilterMode: state.setFilterMode,
+          groupDetailData: state.groupDetailData,
+          setLocatedMessageId: state.setLocatedMessageId,
+          locatedMessageId: state.locatedMessageId,
+        };
+      })
+    );
+
+    const getMessage = (m: Message) => {
       if (m instanceof Message) {
         const streams = m.streams;
         let text: string | ReactNode = "";
         const messageWrap = new MessageWrap(m);
         if (m.content instanceof MessageText) {
-          text = <TextCell key={key} message={m} messageWrap={messageWrap} />;
+          text = <TextCell message={m} messageWrap={messageWrap} />;
         } else if (m.content instanceof MessageImage) {
-          text = <ImageCell key={key} message={m}></ImageCell>;
+          text = <ImageCell message={m}></ImageCell>;
         } else {
-          text = <SystemCell key={key} message={m} />;
+          text = <SystemCell message={m} />;
         }
 
         if (streams && streams.length > 0) {
@@ -62,18 +76,62 @@ const GroupChatMsgList = forwardRef(
 
       return "未知消息";
     };
+    const [filterType, setFilterType] = useState<FilterKey>("live");
+    const [filterKeyWord, setFilterKeyWord] = useState("");
 
     const goodMessages = useMemo(() => {
       let result: Message[] = [];
       if (messages instanceof Array && messages.length > 0) {
         result = sortMessages(messages);
       }
+
+      switch (filterType) {
+        case "owner":
+          result = result.filter((msg) => {
+            return msg.fromUID === groupDetailData?.owner;
+          });
+          break;
+        case "mention":
+          result = result.filter((msg) => {
+            let result = false;
+            if (
+              msg.content &&
+              msg.content.mention &&
+              msg.content.mention.uids instanceof Array &&
+              msg.content.mention.uids.indexOf(user?.username) >= 0
+            ) {
+              result = true;
+            }
+            return result;
+          });
+          break;
+        default:
+          break;
+      }
+      if (filterKeyWord) {
+        result = result.filter((item) => {
+          let res = false;
+          if (
+            item.content instanceof MessageText &&
+            item.content.text &&
+            item.content.text.indexOf(filterKeyWord) >= 0
+          ) {
+            res = true;
+          }
+          return res;
+        });
+      }
+      if(result.length !== messages.length) {
+        setFilterMode(true)
+      } else {
+        setFilterMode(false)
+      }
       return result;
-    }, [messages]);
-    // 更新message时，查询聊发送人头像和姓名信息，并缓存
+    }, [messages, filterType, filterKeyWord]);
+
     useEffect(() => {
-      console.log(messages, "messages");
-    }, [messages]);
+      console.log(goodMessages, "goodMessages");
+    }, [goodMessages]);
 
     useImperativeHandle(ref, () => ({
       scrollToBottom: () => {
@@ -83,9 +141,12 @@ const GroupChatMsgList = forwardRef(
       },
       judgeNotOver: () => {
         if (scrollDomRef.current) {
-          return scrollDomRef.current.scrollHeight <= scrollDomRef.current.offsetHeight;
+          return (
+            scrollDomRef.current.scrollHeight <=
+            scrollDomRef.current.offsetHeight
+          );
         }
-        return true
+        return true;
       },
       scrollTo: (position: number) => {
         if (scrollDomRef.current) {
@@ -108,37 +169,49 @@ const GroupChatMsgList = forwardRef(
       <div
         className="group-chat-msglist"
         style={{ height: `calc(100% - ${bottomHeight}px)` }}
-        ref={scrollDomRef}
-        onScroll={handleScroll}
-        id="group-chat-msglist"
       >
-        {(goodMessages || []).map((msg: Message, idx: number) => {
-          const key = msg.clientMsgNo + idx;
-          
-          return (
-            <div
-              key={key}
-              id={msg.clientMsgNo}
-              onMouseLeave={() => {
-                if (locatedMessageId === msg.clientMsgNo) {
-                  setLocatedMessageId("");
-                }
-              }}
-              className={cn(
-                "message-item",
-                locatedMessageId === msg.clientMsgNo && "located"
-              )}
-            >
-              {getMessage(msg, key)}
-              {msg.content?.reply && (
-                <ReplyMsg
-                  locateMessage={locateMessage}
-                  message={msg}
-                ></ReplyMsg>
-              )}
-            </div>
-          );
-        })}
+        <MsgFilter
+          onFilterChange={(type) => setFilterType(type)}
+          onKeywordFilter={(word) => {
+            setFilterKeyWord(word);
+          }}
+        />
+        <div
+          style={{ height: `calc(100% - 40px)` }}
+          ref={scrollDomRef}
+          className="scroll-content"
+          onScroll={handleScroll}
+          id="group-chat-msglist"
+        >
+          {(goodMessages || []).map((msg: Message, idx: number) => {
+            const key = msg.clientMsgNo + idx;
+
+            return (
+              <div
+                key={key}
+                id={msg.clientMsgNo}
+                onMouseLeave={() => {
+                  if (locatedMessageId === msg.clientMsgNo) {
+                    setLocatedMessageId("");
+                  }
+                }}
+                className={cn(
+                  "message-item",
+                  locatedMessageId === msg.clientMsgNo && "located"
+                )}
+              >
+                {getMessage(msg)}
+                {msg.content?.reply && (
+                  <ReplyMsg
+                    locateMessage={locateMessage}
+                    message={msg}
+                  ></ReplyMsg>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
         <style jsx>
           {`
              {
@@ -149,6 +222,8 @@ const GroupChatMsgList = forwardRef(
                 background-color: rgb(69, 70, 73);
               }
               .group-chat-msglist {
+              }
+              .scroll-content {
                 padding: 0 12px;
                 overflow-y: auto;
                 ::-webkit-scrollbar {

@@ -19,6 +19,9 @@ const JoinGroup = (props: { data: GroupData }) => {
     }
 
     return tags.map((tag, idx) => {
+      if(!tag) {
+        return null;
+      }
       return (
         <div
           key={`${tag}${idx}`}

@@ -192,7 +192,8 @@ const GroupChannel = (props: {
         if (conversationWrap.lastMessage.content.cmd === "messageRevoke") {
           content = "撤回了一条消息";
         } else {
-          content = "加入了群聊";
+          // content = "加入了群聊";
+          content = "[系统消息]";
         }
       }
     }

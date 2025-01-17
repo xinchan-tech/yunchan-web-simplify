@@ -25,6 +25,7 @@ import {
   useGroupChatShortStore,
   useGroupChatStoreNew,
 } from "@/store/group-chat-new";
+import { useShallow } from "zustand/react/shallow";
 import { useLatest, useThrottleFn } from "ahooks";
 
 import GroupMembers from "./group-members";
@@ -70,39 +71,44 @@ const GroupChatPage = () => {
 
   const messagesRef = useRef<Message[]>([]);
 
-  const conversationWraps = useGroupChatShortStore(
-    (state) => state.conversationWraps
-  );
-  const subscribers = useGroupChatShortStore((state) => state.subscribers);
-  const setSubscribers = useGroupChatShortStore(
-    (state) => state.setSubscribers
-  );
-  const setFetchingSubscribers =  useGroupChatShortStore((state) => state.setFetchingSubscribers);
-  const setReplyMessage = useGroupChatShortStore(
-    (state) => state.setReplyMessage
-  );
-  const setInputValue = useGroupChatShortStore((state) => state.setInputValue);
-  const setLocatedMessageId = useGroupChatShortStore(
-    (state) => state.setLocatedMessageId
-  );
   const locatedMessageIdRef = useRef("");
 
-  const readyToJoinGroup = useGroupChatShortStore(
-    (state) => state.readyToJoinGroup
+  const {
+    conversationWraps,
+    subscribers,
+    setSubscribers,
+    setFetchingSubscribers,
+    setReplyMessage,
+    setInputValue,
+    setLocatedMessageId,
+    readyToJoinGroup,
+    setConversationWraps,
+    messages,
+    setMessages,
+    getGroupDetailData,
+    groupDetailData,
+    filterMode,
+  } = useGroupChatShortStore(
+    useShallow((state) => {
+      return {
+        conversationWraps: state.conversationWraps,
+        subscribers: state.subscribers,
+        setSubscribers: state.setSubscribers,
+        setFetchingSubscribers: state.setFetchingSubscribers,
+        setReplyMessage: state.setReplyMessage,
+        setInputValue: state.setInputValue,
+        setLocatedMessageId: state.setLocatedMessageId,
+        readyToJoinGroup: state.readyToJoinGroup,
+        setConversationWraps: state.readyToJoinGroup,
+        messages: state.messages,
+        setMessages: state.setMessages,
+        getGroupDetailData: state.getGroupDetailData,
+        groupDetailData: state.groupDetailData,
+        filterMode: state.filterMode,
+      };
+    })
   );
 
-  const setConversationWraps = useGroupChatShortStore(
-    (state) => state.setConversationWraps
-  );
-
-  const messages = useGroupChatShortStore((state) => state.messages);
-  const setMessages = useGroupChatShortStore((state) => state.setMessages);
-  const getGroupDetailData = useGroupChatShortStore(
-    (state) => state.getGroupDetailData
-  );
-  const groupDetailData = useGroupChatShortStore(
-    (state) => state.groupDetailData
-  );
   // 输入框实例
   const messageInputRef = useRef();
 
@@ -162,7 +168,7 @@ const GroupChatPage = () => {
 
   const jumpMsgIdRef = useRef("");
   // 查看前面的消息 不是往下拉，是消息序号down
-  const pullDown = async (isAutoExpand?: boolean) => {
+  const pullDown = async () => {
     if (messagesRef.current.length == 0 || pulldownFinished.current === true) {
       return;
     }
@@ -201,21 +207,23 @@ const GroupChatPage = () => {
 
   // 定位到之前消息位置
   const handleFindPrevMsg = async (initMessageSeq: number) => {
+    // 筛选模式下不跳转
+    if (filterMode === true) {
+      return;
+    }
     const existedMessage = messagesRef.current.find(
       (item) => item.messageSeq === initMessageSeq
     );
     if (existedMessage) {
+      locatedMessageIdRef.current = existedMessage.clientMsgNo;
       if (
         msgListRef.current &&
         typeof msgListRef.current.scrollTo === "function"
       ) {
         jumpToLocatedId.current = true;
-        if (locatedMessageIdRef.current === existedMessage.clientMsgNo) {
-          gotoLocatedMessagePosition();
-        } else {
-          locatedMessageIdRef.current = existedMessage.clientMsgNo;
-          setLocatedMessageId(existedMessage.clientMsgNo);
-        }
+
+        gotoLocatedMessagePosition();
+        setLocatedMessageId(existedMessage.clientMsgNo);
       }
 
       return;
@@ -285,19 +293,16 @@ const GroupChatPage = () => {
 
         if (targetMessage) {
           // 等待dom更新后修改滚动位置
-
+          locatedMessageIdRef.current = targetMessage.clientMsgNo;
           if (
             msgListRef.current &&
             typeof msgListRef.current.scrollTo === "function"
           ) {
             jumpScrolling.current = true;
             jumpToLocatedId.current = true;
-            if (locatedMessageIdRef.current === targetMessage.clientMsgNo) {
-              gotoLocatedMessagePosition();
-            } else {
-              setLocatedMessageId(targetMessage.clientMsgNo);
-              locatedMessageIdRef.current = targetMessage.clientMsgNo;
-            }
+
+            gotoLocatedMessagePosition();
+            setLocatedMessageId(targetMessage.clientMsgNo);
           }
 
           pulldowning.current = false;
@@ -365,11 +370,12 @@ const GroupChatPage = () => {
   cmdListener = (msg: Message) => {
     console.log("收到CMD：", msg);
     const cmdContent = msg.content as CMDContent;
+    const temp = [...messagesRef.current];
+    temp.push(msg);
+    setMessages(temp);
     if (cmdContent.cmd === "messageRevoke") {
       const channel = msg.channel;
-      const temp = [...messagesRef.current];
-      temp.push(msg);
-      setMessages(temp);
+
       let conversation =
         WKSDK.shared().conversationManager.findConversation(channel);
 
@@ -384,6 +390,8 @@ const GroupChatPage = () => {
       WKSDK.shared().channelManager.fetchChannelInfo(
         new Channel(msg.channel.channelID, ChannelTypeGroup)
       );
+      // 修改了群公告，群权限后触发
+      getGroupDetailData(msg.channel.channelID);
       // 有人加群后也触发updatechannel
       syncSubscriber(msg.channel);
     } else if (cmdContent.cmd === "forbidden") {
@@ -399,11 +407,8 @@ const GroupChatPage = () => {
     if (!user?.username || !token) {
       return;
     }
-    // config.uid = user.username;
-
-    // config.token = user.username;
-    config.uid = user.username
-    config.token = token
+    config.uid = user.username;
+    config.token = token;
     config.addr = addr;
     WKSDK.shared().config = config;
 
@@ -416,15 +421,10 @@ const GroupChatPage = () => {
       connectStatusListener
     );
     Events.scrollEvent.register("start", scrollStart);
-
     Events.scrollEvent.register("end", scrollEnd);
-
     WKSDK.shared().chatManager.addMessageListener(messageListener);
-
     WKSDK.shared().chatManager.addMessageStatusListener(messageStatusListener);
-
     WKSDK.shared().chatManager.addCMDListener(cmdListener);
-
     WKSDK.shared().connect();
   };
 
@@ -449,11 +449,10 @@ const GroupChatPage = () => {
   const syncSubscriber = async (channel: Channel) => {
     setFetchingSubscribers(true);
     try {
-
       await WKSDK.shared().channelManager.syncSubscribes(channel); // 同步订阅者
-      setFetchingSubscribers(false)
+      setFetchingSubscribers(false);
     } catch (err) {
-      setFetchingSubscribers(false)
+      setFetchingSubscribers(false);
     }
     const members: Subscriber[] =
       WKSDK.shared().channelManager.getSubscribes(channel);
@@ -592,12 +591,10 @@ const GroupChatPage = () => {
     }
   };
 
-  const [total, setTotal] = useState<string| number>(0)
+  const [total, setTotal] = useState<string | number>(0);
   useEffect(() => {
     window.document.title = "讨论社群";
   }, []);
-
-
 
   return (
     <div className="group-chat-container flex">
@@ -607,9 +604,12 @@ const GroupChatPage = () => {
       >
         <GroupChatLeftBar />
         <GroupChannel
-          onSelectChannel={(channel: Channel, conversation: ConversationWrap) => {
+          onSelectChannel={(
+            channel: Channel,
+            conversation: ConversationWrap
+          ) => {
             handleChannelSelect(channel);
-            setTotal(conversation.total_user)
+            setTotal(conversation.total_user);
           }}
         />
 
@@ -652,6 +652,7 @@ const GroupChatPage = () => {
         {`
           .group-chat-container {
             height: 100vh;
+            min-width: 1080px;
           }
           .group-chat-right {
             background-color: rgb(43, 45, 49);
@@ -667,7 +668,7 @@ const GroupChatPage = () => {
             border-left: 1px solid rgb(50, 50, 50);
           }
           .group-chat-header {
-            border-bottom: 1px solid hsl(var(--border));
+            border-bottom: 1px solid rgb(50, 50, 50);
           }
           .group-msg-panel {
             flex: 1;

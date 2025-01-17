@@ -185,3 +185,20 @@ export const loginImService = async (params: ImgLoginPayload) => {
   });
   return r;
 };
+
+// 编辑群
+export type EditGroupPayload = {
+  chat_type?: "0" | '1' | '2',
+  notice?: string;
+  name? : string;
+  brief?: string;
+  account: string
+}
+export const editGroupService =async (params:EditGroupPayload) => {
+  const r = await request.post(`/channel/${params.account}/edit`, params, {
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+  })
+  return r
+}

@@ -79,6 +79,8 @@ interface GroupChatShortStore {
   setReadyToJoinGroup: (data: GroupData | null) => void;
   groupDetailData: GroupDetailData | null;
   getGroupDetailData: (id: string) => Promise<void>;
+  filterMode: boolean;
+  setFilterMode: (mode:boolean) => void
 }
 
 export const useGroupChatShortStore = create<GroupChatShortStore>(
@@ -136,5 +138,9 @@ export const useGroupChatShortStore = create<GroupChatShortStore>(
         groupDetailData: resp,
       });
     },
+    filterMode: false,
+    setFilterMode: (mode) => {
+      set({filterMode: mode})
+    }
   })
 );
