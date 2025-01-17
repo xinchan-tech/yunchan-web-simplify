@@ -89,6 +89,7 @@ export const MainChart = (props: MainChartProps) => {
 
   }, [state.symbol, state.timeIndex])
 
+  const trading = useTime(s => s.getTrading())
 
 
   const subscribeHandler: StockSubscribeHandler<'bar'> = useCallback((data) => {
@@ -101,6 +102,28 @@ export const MainChart = (props: MainChartProps) => {
     const s = stockUtils.toShortRawRecord(stock)
 
     s[0] = dayjs(s[0]).valueOf().toString()
+
+    if([StockChartInterval.PRE_MARKET, StockChartInterval.INTRA_DAY, StockChartInterval.AFTER_HOURS].includes(state.timeIndex)) {
+      if(trading === 'preMarket' && state.timeIndex !== StockChartInterval.PRE_MARKET) {
+        return
+      }
+
+      if(trading === 'intraDay' && state.timeIndex !== StockChartInterval.INTRA_DAY) {
+        return
+      }
+
+      if(trading === 'afterHours' && state.timeIndex !== StockChartInterval.AFTER_HOURS) {
+        return
+      }
+
+      if(trading === 'close'){
+        return
+      }
+    }else{
+      if(trading !== 'intraDay'){
+        return
+      }
+    }
 
     if (!renderUtils.isSameTimeByInterval(dayjs(lastData.timestamp), dayjs(+s[0]), state.timeIndex)) {
       setMainData({
@@ -120,7 +143,7 @@ export const MainChart = (props: MainChartProps) => {
         dateConvert: false
       })
     }
-  }, [state.timeIndex, setMainData, props.index, query.data])
+  }, [state.timeIndex, setMainData, props.index, query.data, trading])
 
   useStockBarSubscribe([subscribeSymbol], subscribeHandler)
 
