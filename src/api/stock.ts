@@ -290,6 +290,7 @@ type GetHotSectorsResult = {
   tops: {
     code: string
     increase: number
+    increase_abs: number
     lifting: number
     name: string
     plate_id: string

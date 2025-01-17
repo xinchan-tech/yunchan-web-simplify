@@ -1,8 +1,7 @@
 import { StockChartInterval, type StockRawRecord, type getStockChart } from '@/api'
 import { useConfig } from '@/store'
-import { dateToWeek } from '@/utils/date'
 import { echartUtils, type ECOption } from '@/utils/echarts'
-import { StockRecord, stockUtils } from '@/utils/stock'
+import {  stockUtils } from '@/utils/stock'
 import { colorUtil } from '@/utils/style'
 import dayjs from 'dayjs'
 import Decimal from 'decimal.js'
@@ -171,10 +170,10 @@ export const createOptions = (chart: EChartsType): ECOption => ({
         }
       },
       min: v => {
-        return Math.round(v.min - (v.max - v.min) * 0.2)
+        return v.min - (v.max - v.min) * 0.2
       },
       max: v => {
-        return Math.round(v.max + (v.max - v.min) * 0.2)
+        return v.max + (v.max - v.min) * 0.2
       },
       splitLine: {
         lineStyle: {
@@ -209,10 +208,10 @@ export const createOptions = (chart: EChartsType): ECOption => ({
         show: false
       },
       min: v => {
-        return Math.round(v.min - (v.max - v.min) * 0.2)
+        return v.min - (v.max - v.min) * 0.2
       },
       max: v => {
-        return Math.round(v.max + (v.max - v.min) * 0.2)
+        return v.max + (v.max - v.min) * 0.2
       },
       axisPointer: {
         label: {
@@ -258,7 +257,7 @@ export const createOptions = (chart: EChartsType): ECOption => ({
           if (chart.meta?.yAxis?.right === 'percent') {
             const scale = echartUtils.getAxisScale(chart, 0)
 
-            const data = chart.meta!.mainData?.slice(scale[0], scale[1])
+            const data = chart.meta!.mainData?.[scale[0]]
 
             if (!data) return '-'
 
@@ -273,7 +272,7 @@ export const createOptions = (chart: EChartsType): ECOption => ({
           const scale = renderUtils.getScaledZoom(chart, 0)
 
           const data = chart.meta!.mainData?.slice(scale[0], scale[1])
-
+        
           if (!data || !v) return TEXT_COLOR
 
           const start = data[0]
@@ -592,10 +591,10 @@ export const renderMainChart: ChartRender = (options, state) => {
   } else {
     let color = '#4784cf'
 
-    const lastData = StockRecord.of('', '', data[data.length - 1])
+    const lastData = stockUtils.toStock(data[data.length - 1])
 
     if (isTimeIndexChart(state.timeIndex)) {
-      color = getStockColor(lastData.isUp, 'hex')
+      color = getStockColor(stockUtils.isUp(lastData), 'hex')
     }
     const rgbColor = colorUtil.hexToRGB(color)
     const _mainSeries = mainSeries as LineSeriesOption
@@ -1248,54 +1247,54 @@ export const renderZoom = (options: ECOption, zoom: [number, number]) => {
   }
 }
 
-/**
- * 显示坐标轴的线，因为坐标轴要根据dataZoom最左边的点来显示
- */
-export const renderAxisLine = (state: ChartState, start: number, end: number) => {
-  const rightAxisLine: LineSeriesOption = {
-    type: 'line',
-    name: 'right-axis-line',
-    xAxisIndex: 0,
-    data: [],
-    yAxisIndex: 1,
-    encode: {
-      x: [0],
-      y: [2]
-    },
-    symbol: 'none',
-    lineStyle: {
-      color: 'transparent',
-      width: 1
-    }
-  }
+// /**
+//  * 显示坐标轴的线，因为坐标轴要根据dataZoom最左边的点来显示
+//  */
+// export const renderAxisLine = (state: ChartState, start: number, end: number) => {
+//   const rightAxisLine: LineSeriesOption = {
+//     type: 'line',
+//     name: 'right-axis-line',
+//     xAxisIndex: 0,
+//     data: [],
+//     yAxisIndex: 1,
+//     encode: {
+//       x: [0],
+//       y: [2]
+//     },
+//     symbol: 'none',
+//     lineStyle: {
+//       color: 'transparent',
+//       width: 1
+//     }
+//   }
 
-  if (state.yAxis.right === 'price') {
-    rightAxisLine.data = state.mainData.history
-  } else {
-    rightAxisLine.data = state.mainData.history.map((h, i) => {
-      /**
-       * 1.01，x轴100%是state.mainData.length * 1.01，100%的时候要向左偏移0.01
-       * 所以对应data的100%其实是100/1.01 = 98.02%
-       * 所以差值是100 - 98.02 = 1.98
-       */
-      const _start = start + 0.95 > 100 ? 100 : start + 0.95
-      const _end = end + 0.95 > 100 ? 100 : end + 0.95
+//   if (state.yAxis.right === 'price') {
+//     rightAxisLine.data = state.mainData.history
+//   } else {
+//     rightAxisLine.data = state.mainData.history.map((h, i) => {
+//       /**
+//        * 1.01，x轴100%是state.mainData.length * 1.01，100%的时候要向左偏移0.01
+//        * 所以对应data的100%其实是100/1.01 = 98.02%
+//        * 所以差值是100 - 98.02 = 1.98
+//        */
+//       const _start = start + 0.95 > 100 ? 100 : start + 0.95
+//       const _end = end + 0.95 > 100 ? 100 : end + 0.95
 
-      const startIndex = Math.round((_start / 100) * (state.mainData.history.length - 1))
-      const endIndex = Math.round((_end / 100) * (state.mainData.history.length - 1))
-      if (i < startIndex) {
-        return 0
-      }
-      if (i > endIndex) {
-        return (
-          ((state.mainData.history[endIndex][2] - state.mainData.history[startIndex][2]) /
-            state.mainData.history[startIndex][2]) *
-          100
-        )
-      }
-      return ((h[2] - state.mainData.history[startIndex][2]) / state.mainData.history[startIndex][2]) * 100
-    })
-  }
+//       const startIndex = Math.round((_start / 100) * (state.mainData.history.length - 1))
+//       const endIndex = Math.round((_end / 100) * (state.mainData.history.length - 1))
+//       if (i < startIndex) {
+//         return 0
+//       }
+//       if (i > endIndex) {
+//         return (
+//           ((state.mainData.history[endIndex][2] - state.mainData.history[startIndex][2]) /
+//             state.mainData.history[startIndex][2]) *
+//           100
+//         )
+//       }
+//       return ((h[2] - state.mainData.history[startIndex][2]) / state.mainData.history[startIndex][2]) * 100
+//     })
+//   }
 
-  return rightAxisLine
-}
+//   return rightAxisLine
+// }

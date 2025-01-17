@@ -1,12 +1,15 @@
 import { useStockList } from "@/store"
 import { useMount, useSize, useUnmount, useUpdateEffect } from "ahooks"
-import { useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { select, hierarchy, treemap, type Selection, type HierarchyRectangularNode } from 'd3'
 import { numToFixed } from "@/utils/price"
+import { getStringWidth } from "@/utils/string"
+import Decimal from "decimal.js"
+import { router } from "@/router"
 
 type TreeMapData = {
   name: string
-  value?: number
+  area?: number
   data?: number
   children?: TreeMapData[]
   x0?: number
@@ -17,6 +20,23 @@ type TreeMapData = {
   size?: number
   img?: string
   plateId?: number | string
+  titleWidth?: number
+  /**
+   * 图片顶部像素
+   */
+  iconTop?: number
+  /**
+   * symbol底部像素
+   */
+  symbolLabelTop?: number
+  /**
+   * symbol长度
+   */
+  symbolLabelLen?: number
+  /**
+   * price底部像素
+   */
+  priceLabelTop?: number
   [key: string]: unknown
 }
 
@@ -26,60 +46,15 @@ interface TreeMapProps {
   loading?: boolean
 }
 
-const IMG_LIMIT_MIN = 25
+
+const SINGLE_CHART_WIDTH = getStringWidth('树', '12px sans-serif')
+const ELLIPSIS_WIDTH = getStringWidth('...', '12px sans-serif')
 
 const TreeMap = (props: TreeMapProps) => {
-  const stockList = useStockList()
+  const listMap = useStockList(s => s.listMap)
   const chartRef = useRef<Selection<SVGSVGElement, unknown, null, undefined>>()
   const chartDomRef = useRef<HTMLDivElement>(null)
-
-  // const [data, setData] = useState<TreeMapData[]>([])
-
-  // console.log(props.data)
-  // const treeMapSize = useSize(chartDomRef)  const subscribeHandler: StockSubscribeHandler<'quote'> = useCallback((data) => {
-    
-  //   setTreeData(s => {
-  //     const dataset: Record<string, { value: number, originValue: number }> = {}
-  //     const items = s.map((item) => {
-  //       return {
-  //         ...item,
-  //         children: item.children.map((child: any) => {
-  //           if (child.name === data.topic) {
-  //             const percent = (data.record.close - data.record.preClose) / data.record.preClose
-  //             const _child =  { name: child.name, value: data.record.turnover!, data: percent, color: getColorByStep(percent ?? 0) , plateId: child.plateId, originValue: data.record.turnover }
-  //             dataset[_child.name + _child.plateId] = _child
-  //             return _child
-  //           }
-  //           dataset[child.name + child.plateId] = child
-  //           return child
-  //         })
-  //       }
-  //     })
-
-  //     const absValues = Object.keys(dataset).map(key => dataset[key as keyof typeof dataset].originValue)
-  //     const min = Math.min(...absValues)
-  //     const max = Math.max(...absValues)
-  
-  //     for (const k of Object.keys(dataset)) {
-  //       dataset[k].value = ((dataset[k].originValue - min) / (max - min)) * (5 - 1) + 1
-  //     }
-
-  //     return items
-  //   })
-  // }, [])
-
-  // const subscribeStocks = useMemo(() => {
-  //   if(!query.data) return []
-  //   const stocks: string[] = []
-  //   for (const node of query.data) {
-  //     for (const t of node.tops) {
-  //       stocks.push(t.symbol)
-  //     }
-  //   }
-  //   return stocks
-  // }, [query.data])
-
-  //  useStockQuoteSubscribe(subscribeStocks, subscribeHandler)
+  const tipRef = useRef<HTMLDivElement>(null)
 
   useMount(() => {
     if (!chartDomRef.current) {
@@ -92,14 +67,20 @@ const TreeMap = (props: TreeMapProps) => {
       .append('svg')
       .attr('width', clientWidth)
       .attr('height', clientHeight)
-    render()
 
     chartRef.current = svg
   })
 
-  
+  useUnmount(() => {
+    chartRef.current?.remove()
+  })
 
-  const render = () => {
+  useEffect(() => {
+
+    render(props.data)
+  }, [props.data])
+
+  const render = (data: TreeMapData[]) => {
     if (!chartDomRef.current) {
       console.warn('DOM element not found')
       return
@@ -111,38 +92,29 @@ const TreeMap = (props: TreeMapProps) => {
     }
 
     const { clientWidth, clientHeight } = chartDomRef.current
-    const root = treemap<TreeMapData>().size([clientWidth, clientHeight]).padding(1).paddingTop(18)(hierarchy<TreeMapData>({ name: 'root', children: props.data }).sum(d => d.value ?? 0))
+    const root = treemap<TreeMapData>().size([clientWidth, clientHeight]).padding(1).paddingTop(18)(hierarchy<TreeMapData>({ name: 'root', children: data }).sum(d => d.area ?? 0))
     chartRef.current.selectAll('*').remove()
     renderRect(root)
     renderTitles(root)
     renderIcon(root)
     renderLabel(root)
     renderPercent(root)
-
   }
-
-
-  // useUpdateEffect(() => {
-  //   render()
-  // }, [treeMapSize])
+  
 
   useUnmount(() => {
     chartRef.current?.remove()
   })
 
 
-  useUpdateEffect(() => {
-    // // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-    render()
-
-  }, [props.data])
-
   const renderRect = (root: HierarchyRectangularNode<TreeMapData>) => {
     chartRef.current!.selectAll('rect').data(root.leaves()).enter().append('rect').attr('x', (d) => d.x0)
       .attr('y', (d) => d.y0)
       .attr('width', (d) => d.x1 - d.x0)
       .attr('height', (d) => d.y1 - d.y0)
-      .attr('fill', d => d.data.color ?? 'transport')
+      .attr('fill', d => d.data.color ?? 'transport').on('dblclick', (_, d) => {
+        router.navigate(`/stock/trading?symbol=${d.data.name}`)
+      })
   }
 
   const renderTitles = (root: HierarchyRectangularNode<TreeMapData>) => {
@@ -153,15 +125,36 @@ const TreeMap = (props: TreeMapProps) => {
       .append("text")
       .attr("x", (d) => d.x0)
       .attr("y", (d) => d.y0 + 14)
-      .text((d) => d.data.name)
+      .text((d) => {
+        const totalWidth = d.x1 - d.x0
+        let title = `${d.data.name}`
+        const percentTitle = ` ${Decimal.create(d.data.data).mul(100).toDP(3).toNumber()}%`
+        const titleWidth = getStringWidth(title, '12px sans-serif')
+        const percentWidth = getStringWidth(percentTitle, '12px sans-serif') + 2
+        if (titleWidth + percentWidth < totalWidth) {
+          d.data.titleWidth = titleWidth
+          return d.data.name
+        }
+
+        const singleWidth = titleWidth / title.length
+
+        while (singleWidth * title.length + percentWidth > totalWidth) {
+          title = title.slice(0, -1)
+        }
+        const _title = `${title}...`
+
+        d.data.titleWidth = getStringWidth(_title, '12px sans-serif')
+
+        return _title
+      })
       .attr("font-size", "12px")
       .attr("fill", () => 'white')
 
     chartRef.current!.selectAll('titles').data(root.descendants().filter(d => d.depth === 1)).enter()
       .append("text")
-      .attr("x", (d) => d.x0 + 13 * d.data.name.replace(' ', '').length)
+      .attr("x", (d) => d.x0 + (d.data.titleWidth ?? 0) + 2)
       .attr("y", (d) => d.y0 + 14)
-      .text((d) => `${numToFixed((d.data.data ?? 0) * 100)}%`)
+      .text((d) => `${Decimal.create(d.data.data).mul(100).toDP(3).toNumber()}%`)
       .attr("font-size", "12px")
       .attr("fill", (d) => (d.data.data ?? 0) >= 0 ? 'hsl(var(--stock-up-color)' : 'hsl(var(--stock-down-color))')
   }
@@ -169,38 +162,34 @@ const TreeMap = (props: TreeMapProps) => {
   const renderLabel = (root: HierarchyRectangularNode<TreeMapData>) => {
     chartRef.current!
       .selectAll("labels")
-      .data(root.leaves().filter(d => {
-        if (!d.data.img) return true
-
-        const offsetY = d.y0 + (d.y1 - d.y0) / 2 - d.data.size! / 2 - 6 + d.data.size!
-
-        if ((d.y1 - offsetY) < 30) return false
-
-
-
-        return true
-      }))
+      .data(root.leaves().filter(d => !!d.data.symbolLabelTop))
       .enter()
       .append("text")
       .attr("x", (d) => {
-        const textWidth = d.data.name.length * 12
+        let textWidth = getStringWidth(d.data.name, '12px sans-serif')
         const rectWidth = d.x1 - d.x0
-        if ((textWidth - rectWidth) < 20) {
-          return rectWidth / 2 - textWidth / 3 + d.x0
+
+        let count = d.data.name.length
+
+        if (textWidth > rectWidth) {
+          count = Math.floor((rectWidth - ELLIPSIS_WIDTH) / SINGLE_CHART_WIDTH)
+          d.data.symbolLabelLen = count
+          textWidth = getStringWidth(`${d.data.name.slice(0, count)}...`, '12px sans-serif')
         }
 
-        return d.x0
+        return d.x0 + (d.x1 - d.x0) / 2 - textWidth / 2
       })    // +10 to adjust position (more right)
-      .attr("y", (d) => {
-        if (d.data.img) {
-          return d.y0 + (d.y1 - d.y0) / 2 - d.data.size! / 2 - 6 + d.data.size! + 16
+      .attr("y", (d) => d.data.symbolLabelTop!)
+      .text((d) => {
+        if (d.data.symbolLabelLen) {
+          return `${d.data.name.slice(0, d.data.symbolLabelLen)}...`
         }
-
-        return d.y0 + (d.y1 - d.y0) / 2
+        return d.data.name
       })
-      .text((d) => d.data.name)
       .attr("font-size", "12px")
-      .attr("fill", "white")
+      .attr("fill", "white").on('dblclick', (_, d) => {
+        router.navigate(`/stock/trading?symbol=${d.data.name}`)
+      })
   }
 
   const renderIcon = (root: HierarchyRectangularNode<TreeMapData>) => {
@@ -210,13 +199,76 @@ const TreeMap = (props: TreeMapProps) => {
         const rectWidth = d.x1 - d.x0
         const rectHeight = d.y1 - d.y0
 
-        const imgSize = Math.min(rectWidth / 2, rectHeight / 2)
+        /**
+         * label格式: icon + padding + label + padding + percent
+         * padding = 2
+         * labelHeight = 12 * 1.2
+         * percentHeight = 10 * 1.2
+         * 优先级： icon + label + percent > icon+percent > label + percent > icon > label
+         */
+        let imgSize = Math.min(rectWidth / 2, rectHeight / 2)
+        const icon = listMap[d.data.name]
 
-        if (imgSize < IMG_LIMIT_MIN) return false
+        if (!icon?.[0]) {
+          imgSize = 0
+        }
 
-        const icon = stockList.list.find(item => item[1] === d.data.name)
+        const padding = 2
+        const labelHeight = 12 * 1.2
+        const percentHeight = 10 * 1.2
 
-        if (!icon?.[0]) return false
+        let totalHeight = imgSize + (imgSize ? padding : 0) + labelHeight + padding + percentHeight
+
+        if (imgSize !== 0) {
+          if (totalHeight < rectHeight - 6) {
+            // icon + label + percent 
+            const top = d.y0 + (rectHeight - totalHeight) / 2
+            d.data.iconTop = top
+            d.data.symbolLabelTop = top + imgSize + padding + labelHeight
+            d.data.priceLabelTop = top + imgSize + padding + labelHeight + padding + percentHeight
+          } else if (totalHeight - labelHeight - padding < rectHeight - 6) {
+            // icon + percent
+            totalHeight = imgSize + padding + percentHeight
+            const top = d.y0 + (rectHeight - totalHeight) / 2
+            d.data.iconTop = top
+            d.data.priceLabelTop = top + imgSize + percentHeight
+          } else if (totalHeight - imgSize - padding < rectHeight - 6) {
+            // label + percent
+            totalHeight = labelHeight + padding + percentHeight
+            const top = d.y0 + (rectHeight - totalHeight) / 2
+            d.data.symbolLabelTop = top + labelHeight
+            d.data.priceLabelTop = top + labelHeight + padding + percentHeight
+          } else if (imgSize < rectHeight - 6) {
+            // icon
+            const top = d.y0 + (rectHeight - imgSize) / 2
+            d.data.iconTop = top
+          } else if (labelHeight < rectHeight - 6) {
+            // label
+            const top = d.y0 + (rectHeight - labelHeight) / 2
+            d.data.symbolLabelTop = top
+          }
+        } else {
+          if (totalHeight < rectHeight - 6) {
+            // label + percent
+            const top = d.y0 + (rectHeight - labelHeight) / 2
+            d.data.symbolLabelTop = top + labelHeight / 2
+            d.data.priceLabelTop = d.data.symbolLabelTop + padding + percentHeight
+          } else if (labelHeight < rectHeight - 6) {
+            // label
+            const top = d.y0 + (rectHeight - labelHeight) / 2
+            d.data.symbolLabelTop = top + labelHeight / 2 + 2
+          } else if (percentHeight < rectHeight - 6) {
+            // percent
+            const top = d.y0 + (rectHeight - percentHeight) / 2
+            d.data.priceLabelTop = top
+          }
+        }
+
+        if (!d.data.iconTop) return false
+
+        if (!icon?.[0]) {
+          return false
+        }
 
         d.data.size = imgSize
         d.data.img = import.meta.env.PUBLIC_BASE_ICON_URL + icon[0]
@@ -225,41 +277,54 @@ const TreeMap = (props: TreeMapProps) => {
       .enter()
       .append("image")
       .attr("x", (d) => d.x0 + (d.x1 - d.x0) / 2 - d.data.size! / 2)    // +10 to adjust position (more right)
-      .attr("y", (d) => d.y0 + (d.y1 - d.y0) / 2 - d.data.size! / 2 - 6)
+      .attr("y", (d) => d.data.iconTop!)
       .attr("width", (d) => d.data.size!)
       .attr("height", (d) => d.data.size!)
       .attr('href', (d) => d.data.img!)
-      .attr('clip-path', d => `inset(0% round ${d.data.size!}px)`)
+      .attr('clip-path', d => `inset(0% round ${d.data.size!}px)`).on('dblclick', (_, d) => {
+        router.navigate(`/stock/trading?symbol=${d.data.name}`)
+      })
   }
 
   const renderPercent = (root: HierarchyRectangularNode<TreeMapData>) => {
     chartRef.current!
       .selectAll("percent")
-      .data(root.leaves())
+      .data(root.leaves().filter(d => !!d.data.priceLabelTop))
       .enter()
       .append("text")
-      .attr("x", (d) => {
-        const textWidth = (numToFixed(d.data.data! * 100, 2)?.length ?? -1 + 1) * 10
+      .text((d) => {
+        const text = `${Decimal.create(d.data.data)}%`
+        const textWidth = getStringWidth(text, '10px sans-serif')
         const rectWidth = d.x1 - d.x0
 
-        return d.x0 + rectWidth / 2 - textWidth / 3
-      })
-      .attr("y", (d) => {
-        if (d.data.img) {
-          const offsetY = d.y0 + (d.y1 - d.y0) / 2 - d.data.size! / 2 - 6 + d.data.size!
-          return d.y0 + (d.y1 - d.y0) / 2 - d.data.size! / 2 - 6 + d.data.size! + ((d.y1 - offsetY) < 30 ? 13 : 32)
+        if (textWidth > rectWidth) {
+          return ''
         }
 
-        return d.y0 + (d.y1 - d.y0) / 2 + 16
+        return text
       })
-      .text((d) => `${numToFixed(d.data.data! * 100, 2)}%`)
+      .attr("x", (d) => {
+        const text = `${Decimal.create(d.data.data)}%`
+        const textWidth = getStringWidth(text, '10px sans-serif')
+        const rectWidth = d.x1 - d.x0
+
+        return d.x0 + rectWidth / 2 - textWidth / 2
+      })
+      .attr("y", (d) => d.data.priceLabelTop!)
       .attr("font-size", "10px")
-      .attr("fill", d => (d.data.data ?? 0) >= 0 ? 'hsl(var(--stock-up-color)' : 'hsl(var(--stock-down-color))')
+      .attr("fill", d => (d.data.data ?? 0) >= 0 ? 'hsl(var(--stock-up-color)' : 'hsl(var(--stock-down-color))').on('dblclick', (_, d) => {
+        router.navigate(`/stock/trading?symbol=${d.data.name}`)
+      })
   }
 
   return (
-    <div ref={chartDomRef} className="w-full h-full overflow-hidden" />
+    <div className="w-full h-full overflow-hidden relative">
+      <div ref={chartDomRef} className="w-full h-full" />
+      <div className="absolute top-0 left-0" ref={tipRef} />
+    </div>
   )
 }
+
+
 
 export default TreeMap

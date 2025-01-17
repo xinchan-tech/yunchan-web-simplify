@@ -59,38 +59,69 @@ const StockTree = () => {
     }
 
     const root = []
-    const dataset: Record<string, { value: number, originValue: number }> = {}
+    const dataset: Record<string, { area: number, originArea: number }> = {}
 
     const colors = filter.map(v => getColorByStep(v / 100))
+    let max = Number.MIN_SAFE_INTEGER
+    let min = Number.MAX_SAFE_INTEGER
 
     for (const node of query.data) {
-      const n = { name: node.sector_name, data: node.change, children: [] }
+      const n = { name: node.sector_name, data: node.change, children: [], area: 0, originArea: 0 }
       root.push(n)
 
       for (const t of node.tops) {
-        if (StockRecord.isValid(t.stock)) {
-          const stockRecord = stockUtils.toSimpleStockRecord(t.stock)
-          const _color = getColorByStep(stockRecord.percent ?? 0)
-          if (!colors.includes(_color)) continue
-          const child = { name: t.symbol, value: stockRecord.turnover!, data: stockRecord.percent, color: getColorByStep(stockRecord.percent ?? 0), plateId: t.plate_id, originValue: stockRecord.turnover! }
-          dataset[child.name + t.plate_id] = child
-          n.children.push(child as never)
-        } else {
-          n.children.push({ name: t.symbol, value: 0, data: 0, plateId: t.plate_id, originValue: 0 } as never)
-        }
+        const stock = stockUtils.toStock(t.stock)
+        const percent = stockUtils.getPercent(stock, 2, true)!
+        const _color = getColorByStep(percent / 100)
+
+        if (!colors.includes(_color)) continue
+
+        const child = { name: t.symbol, area: stock.volume, data: percent, color: _color, originArea: stock.volume, plateId: t.plate_id }
+        n.children.push(child as never)
+        max = Math.max(max, stock.volume)
+        min = Math.min(min, stock.volume)
+        dataset[child.name + t.plate_id] = child
       }
     }
 
-    const absValues = Object.keys(dataset).map(key => dataset[key as keyof typeof dataset].originValue)
-    const min = Math.min(...absValues)
-    const max = Math.max(...absValues)
 
     for (const k of Object.keys(dataset)) {
-      dataset[k].value = ((dataset[k].originValue - min) / (max - min)) * (5 - 1) + 1
+      dataset[k].area = ((dataset[k].originArea - min) / (max - min)) * (5 - 1) + 1
     }
-
+    console.log(root)
     setTreeData(root)
   }, [query.data, filter])
+
+
+
+  const subscribeStocks = useMemo(() => {
+    if (!query.data) return []
+    const stocks = new Set<string>()
+    for (const node of query.data) {
+      for (const t of node.tops) {
+        stocks.add(t.symbol)
+      }
+    }
+    return Array.from(stocks)
+  }, [query.data])
+
+  const subscribeHandler: StockSubscribeHandler<'quote'> = useCallback((data) => {
+    if (!subscribeStocks.includes(data.topic)) return
+
+    setTreeData(s => {
+      for (const node of s) {
+        for (const child of node.children) {
+          if (child.name === data.topic) {
+            child.data = Decimal.create(data.record.percent).toDP(3).toNumber()
+            return [...s]
+          }
+        }
+      }
+      return [...s]
+    })
+  }, [subscribeStocks])
+
+  useStockQuoteSubscribe(subscribeStocks, subscribeHandler)
 
   const queryPlate = useQuery({
     queryKey: [getPlateList.cacheKey, type],
@@ -103,24 +134,24 @@ const StockTree = () => {
 
     if (!queryPlate.data) return []
 
-    const dataset: Record<string, { value: number }> = {}
+    const dataset: Record<string, { area: number }> = {}
+    let max = Number.MIN_SAFE_INTEGER
+    let min = Number.MAX_SAFE_INTEGER
 
     const _colors = filter.map(v => getColorByStep(v / 100))
 
     for (const plate of queryPlate.data) {
       const _color = getColorByStep(plate.change / 100)
       if (!_colors.includes(_color)) continue
-      const n = { name: plate.name, value: plate.amount, data: plate.change / 100, color: getColorByStep(plate.change / 100) }
+      const n = { name: plate.name, area: plate.amount, data: plate.change, color: getColorByStep(plate.change / 100) }
       dataset[plate.id] = n
+      max = Math.max(max, plate.amount)
+      min = Math.min(min, plate.amount)
       r.push(n)
     }
 
-    const absValues = Object.keys(dataset).map(key => dataset[key as keyof typeof dataset].value)
-    const min = Math.min(...absValues)
-    const max = Math.max(...absValues)
-
     for (const k of Object.keys(dataset)) {
-      dataset[k].value = ((dataset[k].value - min) / (max - min)) * (10 - 1) + 1
+      dataset[k].area = ((dataset[k].area - min) / (max - min)) * (10 - 1) + 1
     }
 
     return r
@@ -146,29 +177,25 @@ const StockTree = () => {
 
     if (!queryStock.data) return []
 
-    const dataset: Record<string, { value: number }> = {}
-
+    const dataset: Record<string, { area: number }> = {}
+    let max = Number.MIN_SAFE_INTEGER
+    let min = Number.MAX_SAFE_INTEGER
     const colors = filter.map(v => getColorByStep(v / 100))
 
     for (const stock of queryStock.data.items) {
-      if (StockRecord.isValid(stock.stock)) {
-        const stockRecord = stockUtils.toSimpleStockRecord(stock.stock)
-        const _color = getColorByStep(stockRecord.percent ?? 0)
-        if (!colors.includes(_color)) continue
-        const child = { name: stock.symbol, value: stockRecord.turnover ?? 0, data: stockRecord.percent, color: getColorByStep(stockRecord.percent ?? 0) }
-        dataset[child.name] = child
-        r.push(child as never)
-      } else {
-        r.push({ name: stock.symbol, value: 0, data: 0 } as never)
-      }
+      const stockRecord = stockUtils.toStock(stock.stock)
+      const percent = stockUtils.getPercent(stockRecord, 2, true)!
+      const _color = getColorByStep(percent / 100)
+      if (!colors.includes(_color)) continue
+      const child = { name: stock.symbol, area: stockRecord.turnover ?? 0, data: percent, color: _color }
+      dataset[child.name] = child
+      max = Math.max(max, stockRecord.turnover)
+      min = Math.min(min, stockRecord.turnover)
+      r.push(child as never)
     }
 
-    const absValues = Object.keys(dataset).map(key => dataset[key as keyof typeof dataset].value)
-    const min = Math.min(...absValues)
-    const max = Math.max(...absValues)
-
     for (const k of Object.keys(dataset)) {
-      dataset[k].value = ((dataset[k].value - min) / (max - min)) * (10 - 1) + 1
+      dataset[k].area = ((dataset[k].area - min) / (max - min)) * (10 - 1) + 1
     }
 
     return r

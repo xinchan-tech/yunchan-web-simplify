@@ -1,6 +1,8 @@
 import Decimal from "decimal.js"
 
 /**
+ * @deprecated
+ * 使用 Decimal.create(price).toShortCN() 替代
  * 1000000 -> 100万
  * 1000000000 -> 10亿
  * @deprecated
