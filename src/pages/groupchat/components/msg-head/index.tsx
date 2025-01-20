@@ -11,7 +11,10 @@ import { ContextMenu, ContextMenuTrigger } from "@/components";
 import { useMemberSetting } from "../../hooks";
 import { useGroupChatShortStore } from "@/store/group-chat-new";
 import { useLayoutEffect, useMemo, useRef, useState } from "react";
-import { getTimeStringAutoShort2, setPersonChannelCache } from "../../chat-utils";
+import {
+  getTimeStringAutoShort2,
+  setPersonChannelCache,
+} from "../../chat-utils";
 const MsgHead = (props: { message: Message; type: "left" | "right" }) => {
   const { message, type } = props;
   const subscribers = useGroupChatShortStore((state) => state.subscribers);
@@ -28,28 +31,47 @@ const MsgHead = (props: { message: Message; type: "left" | "right" }) => {
     return result;
   }, [subscribers, message]);
   const [channelInfo, setChannelInfo] = useState<ChannelInfo | undefined>();
-  const fetchingChannel = useRef(false)
+  const fetchingChannel = useRef(false);
   useLayoutEffect(() => {
-
     const temp = WKSDK.shared().channelManager.getChannelInfo(
       new Channel(message.fromUID, ChannelTypePerson)
     );
-    if(temp ) {
-      setChannelInfo(temp)
-    } else if(fetchingChannel.current === false){
-      fetchingChannel.current = true
-      setPersonChannelCache(message.fromUID).then(() => {
-        const temp = WKSDK.shared().channelManager.getChannelInfo(
-          new Channel(message.fromUID, ChannelTypePerson)
+    if (temp) {
+      setChannelInfo(temp);
+    } else if (fetchingChannel.current === false) {
+      fetchingChannel.current = true;
+      let session = sessionStorage.getItem("syncUserChannelIds");
+      let syncUserChannelIds: Record<string, boolean> = {};
+      if (session) {
+        syncUserChannelIds = JSON.parse(session) as Record<string, boolean>;
+      }
+
+      if (syncUserChannelIds[message.fromUID] === true) {
+        return;
+      } else {
+        syncUserChannelIds[message.fromUID] = true;
+        sessionStorage.setItem(
+          "syncUserChannelIds",
+          JSON.stringify(syncUserChannelIds)
         );
-        if(temp ) {
-          setChannelInfo(temp)
-        }
-        fetchingChannel.current = false
-      })
+
+        setPersonChannelCache(message.fromUID).then(() => {
+          const temp = WKSDK.shared().channelManager.getChannelInfo(
+            new Channel(message.fromUID, ChannelTypePerson)
+          );
+          if (temp) {
+            setChannelInfo(temp);
+          }
+          fetchingChannel.current = false;
+          syncUserChannelIds[message.fromUID] = false;
+          sessionStorage.setItem(
+            "syncUserChannelIds",
+            JSON.stringify(syncUserChannelIds)
+          );
+        });
+      }
     }
-  }, [])
-  
+  }, []);
 
   const getMessageStatus = () => {
     if (!message.send) {

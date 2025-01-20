@@ -312,7 +312,7 @@ const GroupChatPage = () => {
             jumpScrolling.current = true;
             jumpToLocatedId.current = true;
 
-            gotoLocatedMessagePosition();
+            // gotoLocatedMessagePosition();
             setLocatedMessageId(targetMessage.clientMsgNo);
           }
 
