@@ -93,6 +93,14 @@ export const routes: RouteObject[] = [
           title: '特色推送'
         }
       },
+
+      {
+        path: '/mall',
+        Component: lazy(() => import('@/pages/mall')),
+        handle: {
+          title: '特色商城'
+        }
+      },
     ],
   },
   {

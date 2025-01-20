@@ -7,11 +7,12 @@ import { useConfig, useToken, useUser } from "./store"
 import { useTranslation } from "react-i18next"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { getConfig, getStockCollectCates, getUser } from "@/api"
-import { usePrefetchQuery, useQuery, useQueryClient } from "@tanstack/react-query"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { appEvent } from "@/utils/event"
 import { uid } from "radash"
 import { useToast } from "@/hooks"
 import { wsManager } from "@/utils/ws"
+import { HeaderMall } from "./components/header/mall"
 
 const App = () => {
   const setConsults = useConfig(s => s.setConsults)
@@ -126,6 +127,7 @@ const App = () => {
           <AppTitle />
         </div>
         <div className="float-right flex items-center h-full space-x-2xl">
+          <HeaderMall />
           <HeaderService />
           <HeaderUser />
         </div>
