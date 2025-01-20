@@ -54,13 +54,13 @@ const MarketCap = () => {
   return (
     <div className="min-h-24 flex border-0 border-b border-solid border-background items-stretch">
       <div className="w-36 px-4 flex items-center flex-shrink-0  border-t-0 border border-solid border-background">
-        第二步：估值指标
+        第二步：行情指标
       </div>
       <div className="space-y-4 p-4">
         {
           data.map(item => (
             <div key={item.key} className="flex items-center text-sm">
-              <span className="w-16">
+              <span className="w-24">
                 {item.name}
               </span>
               <Select onValueChange={v => onValueChange(item.key, v)}>

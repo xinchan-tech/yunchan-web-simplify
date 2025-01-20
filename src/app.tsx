@@ -6,8 +6,8 @@ import { useMount, useUpdateEffect } from "ahooks"
 import { useConfig, useToken, useUser } from "./store"
 import { useTranslation } from "react-i18next"
 import { useEffect, useMemo, useRef, useState } from "react"
-import { getConfig, getUser } from "@/api"
-import { useQuery } from "@tanstack/react-query"
+import { getConfig, getStockCollectCates, getUser } from "@/api"
+import { usePrefetchQuery, useQuery, useQueryClient } from "@tanstack/react-query"
 import { appEvent } from "@/utils/event"
 import { uid } from "radash"
 import { useToast } from "@/hooks"
@@ -23,7 +23,7 @@ const App = () => {
   const { t, i18n } = useTranslation()
   const setUser = useUser(s => s.setUser)
   const notLogin = useRef(0)
-
+  const queryClient = useQueryClient()
 
   const query = useQuery({
     queryKey: [getUser.cacheKey],
@@ -49,6 +49,19 @@ const App = () => {
   useUpdateEffect(() => {
     setConsults(configQuery.data?.consults ?? [])
   }, [configQuery.data])
+
+  /**
+   * 登录完成
+   */
+  useEffect(() => {
+    if (token) {
+      queryClient.prefetchQuery({
+        queryKey: [getStockCollectCates.cacheKey],
+        queryFn: () => getStockCollectCates(),
+        initialData: [{ id: '1', name: '股票金池', create_time: '', active: 1, total: '0' }]
+      })
+    }
+  }, [token, queryClient.prefetchQuery])
 
   const { toast } = useToast()
 

@@ -1,8 +1,7 @@
-import { addStockCollectCate } from "@/api"
+import { addStockCollectCate, getStockCollectCates } from "@/api"
 import { Button, Input, Popover, PopoverClose, PopoverContent, PopoverTrigger } from "@/components"
 import { useToast } from "@/hooks"
-import { useCollectCates } from "@/store"
-import { useMutation } from "@tanstack/react-query"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { nanoid } from "nanoid"
 import { useState } from "react"
 
@@ -13,23 +12,39 @@ interface AddCollectProps {
 }
 
 export const AddCollect = ({ children, sideOffset, alignOffset }: AddCollectProps) => {
-  const { collects, refresh, setCollects } = useCollectCates()
   const [name, setName] = useState<string>()
   const { toast } = useToast()
+  const collects = useQuery({
+    queryKey: [getStockCollectCates.cacheKey],
+    queryFn: () => getStockCollectCates(),
+    
+  })
+  const queryClient = useQueryClient()
   const addMutation = useMutation({
     mutationFn: async (name: string) => addStockCollectCate(name),
     onMutate: async (name: string) => {
-      const previous = [...collects]
+      const previous = collects.data
 
       if (previous) {
-        setCollects([...previous, { name, id: nanoid(), create_time: new Date().valueOf().toString(), total: '0', active: 0 }])
+        queryClient.setQueryData([getStockCollectCates.cacheKey], (old: any) => {
+          return [
+            ...old,
+            {
+              id: nanoid(),
+              name,
+              create_time: '',
+              active: 1,
+              total: '0'
+            }
+          ]
+        })
       }
 
       return { previous }
     },
     onError: (err, _, context) => {
       if (context?.previous) {
-        setCollects(context.previous)
+        queryClient.setQueryData([getStockCollectCates.cacheKey], context.previous)
       }
 
       if (err) {
@@ -38,7 +53,9 @@ export const AddCollect = ({ children, sideOffset, alignOffset }: AddCollectProp
     },
 
     onSettled: () => {
-      refresh()
+      queryClient.invalidateQueries({
+        queryKey: [getStockCollectCates.cacheKey]
+      })
     }
   })
 

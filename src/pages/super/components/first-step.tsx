@@ -1,6 +1,5 @@
-import { type StockExtend, getPlateList, getPlateStocks, getStockCollects } from "@/api"
+import { type StockExtend, getPlateList, getPlateStocks, getStockCollectCates, getStockCollects } from "@/api"
 import { Checkbox, JknIcon, JknRcTable, type JknRcTableProps, JknTable, type JknTableProps, NumSpan, NumSpanSubscribe, ScrollArea, StockView, ToggleGroup, ToggleGroupItem } from "@/components"
-import { useCollectCates } from "@/store"
 import { type Stock, stockUtils } from "@/utils/stock"
 import { cn } from "@/utils/style"
 import { useQuery } from '@tanstack/react-query'
@@ -9,7 +8,7 @@ import { useMount, useUnmount, useUpdateEffect } from "ahooks"
 import Decimal from "decimal.js"
 import { useContext, useEffect, useMemo, useRef, useState } from "react"
 import { SuperStockContext } from "../ctx"
-import { useTableData, useTableRowClickToStockTrading } from "@/hooks"
+import { useCheckboxGroup, useTableData, useTableRowClickToStockTrading } from "@/hooks"
 
 const baseExtends: StockExtend[] = ['total_share', 'basic_index', 'day_basic', 'alarm_ai', 'alarm_all', 'financials']
 
@@ -73,12 +72,14 @@ interface GoldenPoolProps {
 }
 
 const GoldenPool = (props: GoldenPoolProps) => {
-  const { collects, refresh } = useCollectCates()
   const selection = useRef<string[]>([])
   const ctx = useContext(SuperStockContext)
-
+  const { checked, setCheckedAll, onChange, toggle, getIsChecked } = useCheckboxGroup([])
+  const collects = useQuery({
+    queryKey: [getStockCollectCates.cacheKey],
+    queryFn: () => getStockCollectCates()
+  })
   useMount(() => {
-    refresh()
     ctx.register('collect', 1, () => [...selection.current], () => selection.current.length > 0)
   })
 
@@ -87,40 +88,41 @@ const GoldenPool = (props: GoldenPoolProps) => {
     selection.current = []
   })
 
-  const _onSelect: JknTableProps['onSelection'] = (e) => {
-    selection.current = e
-  }
+  useEffect(() => {
+    selection.current = checked
+  }, [checked])
 
-  const columns: JknTableProps<{ name: string, id: string }>['columns'] = [
+  const columns: JknRcTableProps<{ name: string, id: string }>['columns'] = [
     {
-      header: () => <JknIcon name="checkbox_mult_nor_dis" className="w-4 h-4" />,
-      accessorKey: 'select',
-      id: 'select',
-      enableSorting: false,
-      meta: { align: 'center', width: 40 },
-      cell: ({ row }) => (
-        <div className="flex items-center justify-center w-full"><Checkbox checked={row.getIsSelected()} onCheckedChange={(e) => row.toggleSelected(e as boolean)} /></div>
+      title: <JknIcon name="checkbox_mult_nor_dis" className="w-4 h-4" />,
+      dataIndex: 'select',
+      align: 'center', width: 40,
+      render: (_, row) => (
+        <div className="flex items-center justify-center w-full"><Checkbox checked={getIsChecked(row.id)} onCheckedChange={() => toggle(row.id)} /></div>
       ),
     },
     {
-      header: '序号',
-      accessorKey: 'index',
-      enableSorting: false,
-      meta: { align: 'center', width: 40 },
-      cell: ({ row }) => (
-        <div className="text-center">{row.index + 1}</div>
+      title: '序号',
+      dataIndex: 'index',
+      align: 'center', width: 40,
+      render: (_, __, index) => (
+        <div className="text-center">{index + 1}</div>
       )
     },
     {
-      header: '金池名称',
-      accessorKey: 'name',
-      enableSorting: false,
+      title: '金池名称',
+      dataIndex: 'name'
     }
   ]
 
   return (
     <div className="h-[calc(100%-52px)] w-[30%]">
-      <JknTable rowKey="id" onSelection={_onSelect} onRowClick={(r, row) => { row.toggleSelected(); props.onChange?.(+r.id) }} data={collects} columns={columns} />
+      <JknRcTable rowKey="id" onRow={(r) => ({
+        onClick: () => {
+          toggle(r.id)
+          props.onChange?.(+r.id)
+        }
+      })} data={collects.data ?? []} columns={columns} />
     </div>
   )
 

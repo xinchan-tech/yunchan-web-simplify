@@ -2,6 +2,7 @@ import { StockPushType, getStockPush } from "@/api"
 import { AiAlarm, CapsuleTabs, CollectStar, JknCheckbox, JknIcon, JknRcTable, type JknRcTableProps, NumSpanSubscribe, StockView } from "@/components"
 import { useCheckboxGroup, useTableData, useTableRowClickToStockTrading } from "@/hooks"
 import { useTime } from "@/store"
+import {  getPrevTradingDays } from "@/utils/date"
 import { type Stock, stockUtils } from "@/utils/stock"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import dayjs from "dayjs"
@@ -32,13 +33,18 @@ type TableDataType = Stock & {
   id: string
   percent?: number
   marketValue?: number
-  
+}
+
+const getLastTime = () => {
+  const usTime = useTime.getState().usTime
+  const localTime = useTime.getState().localStamp
+  const localDate = dayjs(new Date().valueOf() - localTime + usTime).tz('America/New_York')
+  return getPrevTradingDays(localDate, 1)[0]
 }
 
 const PushPage = () => {
   const [activeType, setActiveType] = useState<StockPushType>(StockPushType.STOCK_KING)
-  const getCurrentUsTime = useTime(s => s.getCurrentUsTime)
-  const [date, setDate] = useState(dayjs(getCurrentUsTime()).format('YYYY-MM-DD'))
+  const [date, setDate] = useState(getLastTime())
   const [list, { setList, onSort }] = useTableData<TableDataType>([], 'id')
   const { checked, onChange, setCheckedAll, getIsChecked } = useCheckboxGroup([])
 
@@ -77,21 +83,10 @@ const PushPage = () => {
   }, [query.data, setList, setCheckedAll])
 
   const dates = useMemo(() => {
-    const current = dayjs().format('YYYY-MM-DD')
-    const r = []
+    return getPrevTradingDays(date, 5)
+  }, [date])
 
-    for (let i = 0; i < 7; i++) {
-      const d = dayjs(current).subtract(i, 'day')
-      if (d.day() === 0 || d.day() === 6) {
-        continue
-      }
-
-      r.unshift(d.format('YYYY-MM-DD'))
-    }
-
-    return r
-
-  }, [])
+  console.log('dates', dates, date)
 
   const onUpdateCollect = (id: string, checked: boolean) => {
     queryClient.setQueryData<TableDataType[]>([getStockPush.cacheKey, queryParams], (data) => {

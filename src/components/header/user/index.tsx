@@ -1,5 +1,4 @@
-import UserDefaultPng from '@/assets/icon/user_default.png'
-import { Avatar, AvatarFallback, AvatarImage, JknAvatar } from "@/components"
+import { JknAvatar } from "@/components"
 import { useModal } from "@/components/modal"
 import { useToken, useUser } from "@/store"
 import { appEvent } from "@/utils/event"
@@ -15,6 +14,7 @@ const HeaderUser = () => {
 
   useMount(() => {
     appEvent.on('login', () => {
+      console.log('login')
       if(!token){
         loginForm.modal.open()
       }
@@ -26,7 +26,7 @@ const HeaderUser = () => {
   })
 
   const loginForm = useModal({
-    content: <LoginForm afterLogin={() => loginForm.modal.close()} onClose={() => loginForm.modal.close()} />,
+    content: <LoginForm afterLogin={() => loginForm.modal.close()} onClose={() => loginForm.modal.close()}  />,
     footer: null,
     onOpen: () => { }
   })

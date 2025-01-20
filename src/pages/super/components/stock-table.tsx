@@ -1,5 +1,5 @@
-import { type getStockSelection } from "@/api"
-import { AiAlarm, CollectStar, JknCheckbox, JknIcon, JknRcTable, JknRcTableProps, NumSpan, NumSpanSubscribe, StockView } from "@/components"
+import type { getStockSelection } from "@/api"
+import { AiAlarm, CollectStar, JknCheckbox, JknIcon, JknRcTable, type JknRcTableProps, NumSpan, NumSpanSubscribe, StockView } from "@/components"
 import { useCheckboxGroup, useTableData, useTableRowClickToStockTrading } from "@/hooks"
 import { stockUtils } from "@/utils/stock"
 import { produce } from "immer"

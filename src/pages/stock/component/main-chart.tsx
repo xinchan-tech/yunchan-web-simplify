@@ -32,10 +32,6 @@ export const MainChart = (props: MainChartProps) => {
     chart.current.setOption({
       ...initOptions()
     }, { lazyUpdate: true })
-
-    chart.current.on('dataZoom', (e) => {
-      console.log(e)
-    })
   })
 
   useUnmount(() => {
@@ -253,7 +249,6 @@ export const MainChart = (props: MainChartProps) => {
     renderSecondary(_options, state.secondaryIndicators)
     renderSecondaryLocalIndicators(_options, state.secondaryIndicators, state)
     renderWatermark(_options, state.timeIndex)
-    console.log('options', _options)
     chart.current.setOption(_options, { replaceMerge: ['series', 'grid', 'xAxis', 'yAxis', 'dataZoom',] })
   }
 

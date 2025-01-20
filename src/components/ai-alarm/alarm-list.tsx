@@ -217,8 +217,9 @@ const AlarmGroupList = (props: AlarmGroupListProps) => {
   const options = {
     queryKey: [getAlarms.cacheKey, props.type, props.symbol],
     queryFn: () => getAlarms({ type: +props.type, limit: 1000, page: 1, symbol: props.symbol }),
-    enabled: !!props.options && !!props.symbol
+    enabled: !!props.symbol
   }
+
   const query = useQuery(options)
   const queryClient = useQueryClient()
   const { toast } = useToast()
@@ -251,6 +252,11 @@ const AlarmGroupList = (props: AlarmGroupListProps) => {
 
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: options.queryKey })
+    },
+    onSuccess: () => {
+      queryClient.refetchQueries({
+        queryKey: [getAlarmsGroup.cacheKey, props.type]
+      })
     }
   })
 

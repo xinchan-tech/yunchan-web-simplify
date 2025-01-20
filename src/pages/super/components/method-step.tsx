@@ -49,7 +49,12 @@ const MethodStep = () => {
   }
 
   useMount(() => {
-    ctx.register('category_ids', 3, () => [...selection.current], () => selection.current.length > 0)
+    ctx.register('category_ids', 3, () => [...selection.current], (v) => {
+      if(selection.current.length === 0){
+        return v.category_ids_ext?.getData().length > 0
+      }
+      return selection.current.length > 0
+    })
   })
 
   useUnmount(() => {

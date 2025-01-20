@@ -1,29 +1,24 @@
-import { type StockExtend, addStockCollectCate, type getStockCollectCates, getStockCollects, removeStockCollect, removeStockCollectCate, updateStockCollectCate } from "@/api"
-import { AddCollect, AiAlarm, Button, CapsuleTabs, JknAlert, JknCheckbox, JknIcon, JknRcTable, type JknRcTableProps, NumSpan, NumSpanSubscribe, Popover, PopoverAnchor, PopoverContent, StockView, useFormModal, useModal } from "@/components"
+import { type StockExtend, addStockCollectCate, getStockCollectCates, getStockCollects, removeStockCollect, removeStockCollectCate, updateStockCollectCate } from "@/api"
+import { AddCollect, AiAlarm, Button, CapsuleTabs, CollectCapsuleTabs, JknAlert, JknCheckbox, JknIcon, JknRcTable, type JknRcTableProps, NumSpan, NumSpanSubscribe, Popover, PopoverAnchor, PopoverContent, StockView, useFormModal, useModal } from "@/components"
 import { useCheckboxGroup, useTableData, useTableRowClickToStockTrading, useToast, useZForm } from "@/hooks"
-import { useCollectCates } from "@/store"
-import { type Stock, stockUtils } from "@/utils/stock"
-import { useQuery } from "@tanstack/react-query"
+import { stockUtils } from "@/utils/stock"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { useMount } from "ahooks"
 import to from "await-to-js"
 import dayjs from "dayjs"
 import Decimal from "decimal.js"
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { memo, useCallback, useEffect, useMemo, useState } from "react"
 import type { z } from "zod"
 import { GoldenPoolForm, poolSchema } from "./components/golden-pool-form"
 
 const baseExtends: StockExtend[] = ['total_share', 'basic_index', 'day_basic', 'alarm_ai', 'alarm_all', 'financials']
-type CollectCate = Awaited<ReturnType<typeof getStockCollectCates>>[0]
 
 type TableDataType = ReturnType<typeof stockUtils.toStockWithExt>
 
 const GoldenPool = () => {
-  const cates = useCollectCates()
   const [activeStock, setActiveStock] = useState<string>('1')
   const { checked, onChange, setCheckedAll, getIsChecked } = useCheckboxGroup([])
-  useMount(() => {
-    cates.refresh()
-  })
+  const queryClient = useQueryClient()
 
   const collects = useQuery({
     queryKey: [getStockCollects.cacheKey, activeStock],
@@ -57,11 +52,13 @@ const GoldenPool = () => {
           return
         }
 
-        cates.refresh()
         collects.refetch()
+        queryClient.refetchQueries({
+          queryKey: [getStockCollectCates.cacheKey]
+        })
       }
     })
-  }, [activeStock, cates, collects, toast])
+  }, [activeStock, collects, toast, queryClient])
 
   const onRemoveBatch = useCallback(async () => {
     if (!activeStock) return
@@ -78,9 +75,12 @@ const GoldenPool = () => {
         }
 
         collects.refetch()
+        queryClient.refetchQueries({
+          queryKey: [getStockCollectCates.cacheKey]
+        })
       }
     })
-  }, [activeStock, collects, toast, checked])
+  }, [activeStock, collects, toast, checked, queryClient])
 
 
   const columns: JknRcTableProps<TableDataType>['columns'] = useMemo(() => [
@@ -149,7 +149,7 @@ const GoldenPool = () => {
             <div className="bg-background px-16 py-2">批量操作 {checked.length} 项</div>
             <div className="text-center px-4 py-4">
               {
-                cates.collects.find(c => c.id === activeStock)?.name
+                collects.data?.items.find(c => c.id === activeStock)?.name
               }
               &emsp;
               <span
@@ -167,7 +167,7 @@ const GoldenPool = () => {
         </div>
       )
     },
-  ], [cates.collects, activeStock, onRemoveBatch, checked, getIsChecked, onChange, setCheckedAll, list, onRemove])
+  ], [activeStock, onRemoveBatch, checked, getIsChecked, onChange, setCheckedAll, list, onRemove, collects.data])
 
   const onRowClick = useTableRowClickToStockTrading('symbol')
 
@@ -175,7 +175,8 @@ const GoldenPool = () => {
     <div className="h-full overflow-hidden flex flex-col golden-pool">
       <div className="flex-shrink-0 h-8 py-1.5 box-border flex items-center">
         <div className="flex-1 overflow-x-auto">
-          <CapsuleTabs activeKey={activeStock} onChange={onActiveStockChange}>
+          <CollectCapsuleTabs activeKey={activeStock} onChange={onActiveStockChange} />
+          {/* <CapsuleTabs activeKey={activeStock} onChange={onActiveStockChange}>
             {
               cates.collects.map((cate) => (
                 <CapsuleTabs.Tab
@@ -186,10 +187,10 @@ const GoldenPool = () => {
                   value={cate.id} />
               ))
             }
-          </CapsuleTabs>
+          </CapsuleTabs> */}
         </div>
         <div className="text-secondary">
-          <GoldenPoolManager data={cates.collects ?? []} onUpdate={cates.refresh} />
+          <GoldenPoolManager />
         </div>
       </div>
       <div className="flex-1 overflow-hidden">
@@ -213,41 +214,36 @@ const GoldenPool = () => {
   )
 }
 
-interface GoldenPoolManagerProps {
-  data: CollectCate[]
-  onUpdate: () => void
-}
-
-const GoldenPoolManager = (props: GoldenPoolManagerProps) => {
-
+const GoldenPoolManager = memo(() => {
   const table = useModal({
-    content: <GoldenPoolTable data={props.data} onUpdate={props.onUpdate} />,
+    content: <GoldenPoolTable />,
     title: '管理金池',
     footer: null,
     closeIcon: true,
     className: 'w-[780px]',
-    onOpen: () => {
-    }
+    onOpen: () => {}
   })
+
 
   return (
     <>
-      <div className="cursor-pointer text-sm pr-2" onClick={() => table.modal.open()} onKeyDown={() => { }}>管理金池</div>
+      <div className="cursor-pointer text-sm pr-2 flex items-center" onClick={() => table.modal.open()} onKeyDown={() => { }}>
+        <JknIcon name="ic_setting_sm" className="mr-1" />
+        管理金池
+      </div>
       {
         table.context
       }
     </>
   )
-}
-
-interface GoldenPoolTableProps {
-  data: CollectCate[]
-  onUpdate: () => void
-}
+})
 
 
-
-const GoldenPoolTable = (props: GoldenPoolTableProps) => {
+const GoldenPoolTable = () => {
+  const cates = useQuery({
+    queryKey: [getStockCollectCates.cacheKey],
+    queryFn: () => getStockCollectCates(),
+  })
 
   const columns: JknRcTableProps['columns'] = [
     {
@@ -268,7 +264,7 @@ const GoldenPoolTable = (props: GoldenPoolTableProps) => {
       render: (_, row) => (
         row.id !== '1' ? (
           <div className="flex items-center justify-around">
-            <span className="cursor-pointer" onClick={() => edit.open(row.original)} onKeyDown={() => { }}>重命名</span>
+            <span className="cursor-pointer" onClick={() => edit.open(row)} onKeyDown={() => { }}>重命名</span>
             <span className="cursor-pointer" onClick={() => onDelete(row.id as string, row.name as string)} onKeyDown={() => { }}>删除</span>
           </div>
         ) : null
@@ -285,6 +281,7 @@ const GoldenPoolTable = (props: GoldenPoolTableProps) => {
   const edit = useFormModal<typeof poolSchema>({
     content: <GoldenPoolForm />,
     title: '编辑金池',
+    className: 'w-[480px]',
     form,
     onOk: async (values) => {
       const [err] = await to(values.id ? updateStockCollectCate(values) : addStockCollectCate(values.name))
@@ -294,7 +291,8 @@ const GoldenPoolTable = (props: GoldenPoolTableProps) => {
         return
       }
       edit.close()
-      props.onUpdate()
+      cates.refetch()
+
     },
     onOpen: (values?: z.infer<typeof poolSchema>) => {
       if (values) {
@@ -320,7 +318,7 @@ const GoldenPoolTable = (props: GoldenPoolTableProps) => {
             return false
           }
 
-          props.onUpdate()
+          cates.refetch()
         }
       }
 
@@ -330,11 +328,13 @@ const GoldenPoolTable = (props: GoldenPoolTableProps) => {
   return (
     <div className="w-full overflow-hidden">
       <div className="h-[480px] w-full overflow-hidden">
-        <JknRcTable columns={columns} data={props.data} />
+        <JknRcTable columns={columns} data={cates.data} isLoading={cates.isLoading} />
       </div>
       <div className="text-center mb-4">
         <AddCollect>
-          <Button variant="default">新建金池</Button>
+          <Button variant="default">
+            <span>新建金池</span>
+          </Button>
         </AddCollect>
       </div>
       {

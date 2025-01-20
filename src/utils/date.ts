@@ -1,6 +1,6 @@
 import { useConfig, useTime } from '@/store'
 import dayjs, { type Dayjs } from 'dayjs'
-import type { StockTrading } from "./stock"
+import type { StockTrading } from './stock'
 
 /**
  * 将小时和分钟转换为数字
@@ -26,12 +26,11 @@ export const dateToWeek = (date: Dayjs | string, unit = '星期') => {
 /**
  * @deprecated
  * @param time 时间
- * @returns 
+ * @returns
  */
 export const getTrading = (time: string): StockTrading => {
-
   const usTime = dayjs(time)
-  
+
   if (time.length === 10) {
     return 'intraDay'
   }
@@ -90,7 +89,7 @@ export const getTradingPeriod = (trading: StockTrading, date?: string | Dayjs) =
       break
   }
 
-  const day = date ? dayjs.isDayjs(date) ? date : dayjs(date) : dayjs(useTime.getState().getCurrentUsTime())
+  const day = date ? (dayjs.isDayjs(date) ? date : dayjs(date)) : dayjs(useTime.getState().getCurrentUsTime())
   const start = day.set('hour', startTime[0]).set('minute', startTime[1]).set('second', 0)
   const end = day.set('hour', endTime[0]).set('minute', endTime[1]).set('second', 0)
   return Array.from({ length: end.diff(start, 'minute') }, (_, i) => {
@@ -98,17 +97,22 @@ export const getTradingPeriod = (trading: StockTrading, date?: string | Dayjs) =
   })
 }
 
-
 /**
  * 根据时间获取上一交易日期
  */
 export const getPrevTradingDay = (date?: string | Dayjs) => {
   const day = dayjs.isDayjs(date) ? date : dayjs(date)
-  let prevDay = day.subtract(1, 'day')
-  while (prevDay.day() === 0 || prevDay.day() === 6) {
-    prevDay = prevDay.subtract(1, 'day')
+  let c = 0
+
+  while (c < 99) {
+    const d = day.subtract(c, 'day') as Dayjs
+    if (!isMarketOpen(d)) {
+      c++
+      continue
+    }
+    return d
   }
-  return prevDay
+  return date
 }
 
 /**
@@ -117,8 +121,92 @@ export const getPrevTradingDay = (date?: string | Dayjs) => {
 export const getLatestTradingDay = (date?: string | Dayjs) => {
   const day = dayjs.isDayjs(date) ? date : dayjs(date)
 
-  if(day.day() !== 0 && day.day() !== 6 && day.hour() >= 4){
+  if (day.day() !== 0 && day.day() !== 6 && day.hour() >= 4) {
     return day
   }
   return getPrevTradingDay(day)
+}
+
+/**
+ * 是否休市
+ */
+export const isMarketOpen = (date?: string | Dayjs) => {
+  const day = dayjs.isDayjs(date) ? date : dayjs(date)
+  if (day.day() === 0 || day.day() === 6) {
+    return false
+  }
+
+  // 元旦
+  if (day.month() === 0 && day.date() === 1) {
+    return false
+  }
+
+  // 马丁·路德·金纪念日（每年1月的第三个星期一）
+  if (day.month() === 0 && day.day() === 1 && day.date() >= 15 && day.date() <= 21) {
+    return false
+  }
+
+  // 总统日（每年2月的第三个星期一）
+  if (day.month() === 1 && day.day() === 1 && day.date() >= 15 && day.date() <= 21) {
+    return false
+  }
+
+  // 耶稣受难日（复活节前的星期五，通常在3月或4月）
+  if (day.month() === 3 && day.day() === 5 && day.date() >= 15 && day.date() <= 21) {
+    return false
+  }
+
+  // 阵亡将士纪念日（每年5月的最后一个星期一）
+  if (day.month() === 4 && day.day() === 1 && day.date() >= 25) {
+    return false
+  }
+
+  // 六月节（Juneteenth，6月19日）
+  if (day.month() === 5 && day.date() === 19) {
+    return false
+  }
+
+  // 美国独立日（7月4日）
+  if (day.month() === 6 && day.date() === 4) {
+    return false
+  }
+
+  // 劳工日（每年9月的第一个星期一）
+  if (day.month() === 8 && day.day() === 1 && day.date() <= 7) {
+    return false
+  }
+
+  // 感恩节（每年11月的第四个星期四）
+  if (day.month() === 10 && day.day() === 4 && day.date() >= 22 && day.date() <= 28) {
+    return false
+  }
+
+  // 圣诞节（12月25日）
+  if (day.month() === 11 && day.date() === 25) {
+    return false
+  }
+
+  return true
+}
+
+/**
+ * 获取前几个交易日
+ */
+export const getPrevTradingDays = (date?: string | Dayjs, count = 1) => {
+  const day = dayjs.isDayjs(date) ? date : dayjs(date)
+  // 防止死循环
+  let c = 0
+  const r = []
+
+  while (c < 99 && r.length < count) {
+    const d = day.subtract(c, 'day') as Dayjs
+    if (!isMarketOpen(d)) {
+      c++
+      continue
+    }
+    c++
+    r.unshift(d.format('YYYY-MM-DD'))
+  }
+
+  return r
 }

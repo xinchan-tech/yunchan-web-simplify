@@ -45,7 +45,7 @@ const PeriodStep = () => {
   return (
     <div className="min-h-24 flex border-0 border-b border-solid border-background items-stretch">
       <div className="w-36 px-4 flex items-center flex-shrink-0  border-t-0 border border-solid border-background">
-        第五步：量价指标
+        第四步：量价指标
       </div>
       <div className="space-y-4 p-4">
         {

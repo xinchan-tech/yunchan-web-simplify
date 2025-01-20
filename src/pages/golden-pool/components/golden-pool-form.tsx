@@ -13,6 +13,18 @@ export const GoldenPoolForm = () => {
     <div className="p-4">
       <FormField
         control={form.control}
+        name="id"
+        render={({ field }) => (
+          <FormItem hidden>
+            <FormLabel>id</FormLabel>
+            <FormControl>
+              <Input placeholder="请输入金池名称" {...field} value={field.value} />
+            </FormControl>
+          </FormItem>
+        )}
+      />
+      <FormField
+        control={form.control}
         name="name"
         render={({ field }) => (
           <FormItem>

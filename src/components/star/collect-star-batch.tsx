@@ -1,10 +1,10 @@
-import { Button, Checkbox, JknCheckbox, Popover, PopoverAnchor, PopoverContent } from ".."
-import { useCollectCates } from "@/store"
-import { addStockCollect } from "@/api"
+import { Button, JknCheckbox, Popover, PopoverAnchor, PopoverContent } from ".."
+import { addStockCollect, getStockCollectCates } from "@/api"
 import to from "await-to-js"
 import { useToast } from "@/hooks"
 import type { PropsWithChildren } from "react"
 import type { CheckboxProps } from "@radix-ui/react-checkbox"
+import { useQuery } from "@tanstack/react-query"
 
 interface CollectStarBatchProps {
   checked: string[]
@@ -47,7 +47,10 @@ interface CollectStarBatchContentProps {
 }
 
 const CollectStarBatchContent = (props: CollectStarBatchContentProps) => {
-  const { collects } = useCollectCates()
+  const collects = useQuery({
+    queryKey: [getStockCollectCates.cacheKey],
+    queryFn: () => getStockCollectCates(),
+  })
 
   const { toast } = useToast()
   const updateCollectMutation = async (cates: number[]) => {
@@ -78,7 +81,7 @@ const CollectStarBatchContent = (props: CollectStarBatchContentProps) => {
       <div className="bg-background text-center py-2">批量操作 {props.checked.length} 项</div>
       <div className="text-center px-4 py-4 space-y-4">
         {
-          collects.map((cate) => (
+          collects.data?.map((cate) => (
             <div key={cate.id} className="flex space-x-2 items-center justify-between">
               <div>{cate.name}</div>
               <div onClick={() => updateCollectMutation([+cate.id])} onKeyDown={() => { }}>

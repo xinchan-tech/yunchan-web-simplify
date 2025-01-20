@@ -1,9 +1,9 @@
 import { getStockCollects } from "@/api"
-import { Button, CapsuleTabs, JknRcTable, NumSpanSubscribe, StockView } from "@/components"
+import { Button, CollectCapsuleTabs, JknRcTable, NumSpanSubscribe, StockView } from "@/components"
 import { useStockQuoteSubscribe, useTableData, useTableRowClickToStockTrading } from "@/hooks"
-import { useCollectCates, useToken } from "@/store"
+import { useToken } from "@/store"
 import { appEvent } from "@/utils/event"
-import { type Stock, stockUtils } from "@/utils/stock"
+import { stockUtils } from "@/utils/stock"
 import { useQuery } from "@tanstack/react-query"
 import type { TableProps } from 'rc-table'
 import { useEffect, useState } from "react"
@@ -11,11 +11,9 @@ import { useEffect, useState } from "react"
 type TableDataType = ReturnType<typeof stockUtils.toStockWithExt>
 
 const GoldenStockPool = () => {
-  const { collects } = useCollectCates()
-  const [type, setType] = useState(collects[0].id)
+  const [type, setType] = useState('1')
   const { token } = useToken()
   const [list, { setList, onSort }] = useTableData<TableDataType>([], 'symbol')
-
 
   const query = useQuery({
     queryKey: [getStockCollects.cacheKey, type],
@@ -74,28 +72,12 @@ const GoldenStockPool = () => {
   return (
     <div className="w-full h-full flex flex-col overflow-hidden">
       <div className="border-style-primary px-1 py-2">
-        <CapsuleTabs activeKey={type} onChange={(v) => setType(v)}>
-          {
-            collects.map(c => (
-              <CapsuleTabs.Tab key={c.id} value={c.id} label={
-                <span>
-                  {
-                    c.name
-                  }
-                  {
-                    +c.total > 0 && `(${c.total})`
-                  }
-                </span>
-              } />
-            ))
-          }
-        </CapsuleTabs>
+        <CollectCapsuleTabs activeKey={type} onChange={setType} />
       </div>
       <div className="flex-1 overflow-hidden">
         {
           token ? (
             <JknRcTable isLoading={query.isLoading} columns={columns} data={list} onSort={onSort} rowKey="symbol" className="w-full" onRow={onRowClick} />
-            // <JknTable loading={query.isLoading} rowKey="symbol" data={list} columns={columns} />
           ) : (
             <div className="w-full text-center mt-40">
               <div className="mb-4 text-secondary">尚未登录账号</div>

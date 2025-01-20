@@ -1,20 +1,14 @@
 
-import { HoverCard, HoverCardTrigger, HoverCardContent, HoverCardPortal } from "../ui/hover-card"
+import { addStockCollectBatch, getStockCollectCates } from "@/api"
+import { usePropValue, useToast } from "@/hooks"
 import type { HoverCardContentProps } from "@radix-ui/react-hover-card"
-import Star from "./index"
-import { useCollectCates } from "@/store"
-import { addStockCollectBatch, addStockCollectCate, getStockCollectCates, updateStockCollectCate } from "@/api"
-import { AddCollect, Checkbox, ScrollArea, useFormModal } from ".."
-import to from "await-to-js"
-import { useToast } from "@/hooks"
-import { z } from "zod"
-import { useZForm } from "@/hooks"
-import { GoldenPoolForm } from "@/pages/golden-pool/components/golden-pool-form"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { useBoolean, useMemoizedFn } from "ahooks"
 import { produce } from "immer"
+import { AddCollect, Checkbox, ScrollArea } from ".."
+import { HoverCard, HoverCardContent, HoverCardPortal, HoverCardTrigger } from "../ui/hover-card"
 import { CollectStarBatch } from "./collect-star-batch"
-import { useBoolean } from "ahooks"
-
+import Star from "./index"
 
 
 interface CollectStarProps extends Partial<Pick<HoverCardContentProps, 'sideOffset' | 'alignOffset' | 'side' | 'align'>> {
@@ -23,13 +17,15 @@ interface CollectStarProps extends Partial<Pick<HoverCardContentProps, 'sideOffs
   onUpdate?: (checked: boolean) => void
 }
 
-const poolSchema = z.object({
-  id: z.string(),
-  name: z.string()
-})
-
 const _CollectStar = (props: CollectStarProps) => {
   const [render, { setTrue, setFalse }] = useBoolean()
+  const [checked, setChecked] = usePropValue(props.checked)
+  
+  const _onUpdate = useMemoizedFn((checked: boolean) => {
+    setChecked(checked)
+    props.onUpdate?.(checked)
+  })
+
   return (
     <HoverCard
       onOpenChange={open => open ? setTrue() : setFalse()}
@@ -37,7 +33,7 @@ const _CollectStar = (props: CollectStarProps) => {
       closeDelay={100}
     >
       <HoverCardTrigger asChild>
-        <div className="flex justify-center items-center"><Star checked={props.checked} /></div>
+        <div className="flex justify-center items-center"><Star checked={checked} /></div>
       </HoverCardTrigger>
       <HoverCardPortal >
         <HoverCardContent sideOffset={props.sideOffset ?? -10} alignOffset={props.alignOffset ?? -50}
@@ -48,7 +44,7 @@ const _CollectStar = (props: CollectStarProps) => {
             props.alignOffset
           }
           {
-            render ? <CollectList code={props.code} onUpdate={props.onUpdate} /> : null
+            render ? <CollectList code={props.code} onUpdate={_onUpdate} /> : null
           }
         </HoverCardContent>
       </HoverCardPortal>
@@ -62,11 +58,12 @@ interface CollectListProps {
 }
 
 const CollectList = (props: CollectListProps) => {
-  const { collects, setCollects } = useCollectCates()
+
   const queryClient = useQueryClient()
   const cateQuery = useQuery({
     queryKey: [getStockCollectCates.cacheKey, props.code],
     queryFn: () => getStockCollectCates(props.code),
+    initialData: [{ id: '1', name: '股票金池', create_time: '', active: 1, total: '0' }]
   })
 
   const updateCollectMutation = useMutation({
@@ -107,7 +104,7 @@ const CollectList = (props: CollectListProps) => {
 
   const { toast } = useToast()
 
-  const onCheck = async (cate: typeof collects[0]) => {
+  const onCheck = async (cate: (typeof cateQuery)['data'][0]) => {
     const cates = cateQuery.data?.filter(item => item.active === 1).map(item => +item.id) ?? []
     if (cates.includes(+cate.id)) {
       cates.splice(cates.indexOf(+cate.id), 1)
@@ -118,35 +115,12 @@ const CollectList = (props: CollectListProps) => {
     updateCollectMutation.mutate(cates)
   }
 
-  const form = useZForm(poolSchema, {
-    id: '',
-    name: ''
-  })
-
-  const edit = useFormModal<typeof poolSchema>({
-    content: <GoldenPoolForm />,
-    title: '新建金池',
-    form,
-    onOk: async (values) => {
-      const [err] = await to(values.id ? updateStockCollectCate(values) : addStockCollectCate(values.name))
-
-      if (err) {
-        toast({ description: err.message })
-        return
-      }
-      edit.close()
-      getStockCollectCates().then(r => setCollects(r))
-    },
-    onOpen: () => {
-    }
-  })
-
   return (
     <>
       <div className="bg-background py-2 text-center">加入金池</div>
       <ScrollArea className="h-[240px] space-y-2 ">
         {
-          collects.map(item => (
+          cateQuery.data?.map(item => (
             <div key={item.id} onClick={() => onCheck(item)} onKeyDown={() => { }} className="flex cursor-pointer items-center pl-4 space-x-4 hover:bg-primary py-1">
               {
                 <Checkbox checked={cateQuery.data?.some(cate => cate.id === item.id && cate.active === 1)} />

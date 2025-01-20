@@ -27,7 +27,7 @@ enum SuperStockType {
 type StepRegister = Record<string, {
   step: number
   getData: () => any
-  validate: () => boolean
+  validate: (form: any) => boolean
 }>
 
 const SuperStock = () => {
@@ -60,7 +60,7 @@ const SuperStock = () => {
 
   const onSubmit = async () => {
 
-    if (Object.keys(registerRef.current).some(key => !registerRef.current[key].validate())) {
+    if (Object.keys(registerRef.current).some(key => !registerRef.current[key].validate(registerRef.current))) {
       toast({
         description: '选股范围错误'
       })
@@ -74,6 +74,10 @@ const SuperStock = () => {
     }, {} as Record<string, unknown>) as Parameters<typeof getStockSelection>[0]
 
     data.tab_page = type
+
+    if ((data as any).category_ids_ext.length > 0) {
+      data.category_ids = [...data.category_ids, ...(data as any).category_ids_ext]
+    }
 
     setTrue()
 
@@ -110,7 +114,7 @@ const SuperStock = () => {
             </div>
             <div className="flex flex-shrink-0 relative items-center justify-center pb-4">
               <div className="absolute left-2 top-3 text-sm">
-                选股结果：当前共选出 {data.length} 只股票
+                选股结果：当前共选出 {data?.length} 只股票
               </div>
               <Button className="w-32 mx-auto" onClick={onResetStockPick}>重新选股</Button>
             </div>
@@ -152,9 +156,9 @@ const SuperStock = () => {
                   (type === SuperStockType.Basic || type === SuperStockType.Super) && (
                     <>
                       <MarketCap />
-                      <BubbleStep />
                       <FinanceStep />
                       <PeriodStep />
+                      <BubbleStep />
                       <CompareStep />
                     </>
                   )

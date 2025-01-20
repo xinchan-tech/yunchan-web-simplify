@@ -100,7 +100,6 @@ export const useModal = ({ content, onOpen, title, closeIcon, className, footer,
 
   const modal: UseModalAction = {
     open: (...arg: unknown[]) => {
-
       toggleModalVisible()
       setTrue()
       onOpen?.(...arg)

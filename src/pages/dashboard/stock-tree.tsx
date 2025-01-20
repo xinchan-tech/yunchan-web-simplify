@@ -6,7 +6,7 @@ import TreeMap from "./components/tree-map"
 import Decimal from "decimal.js"
 import { CapsuleTabs, Skeleton } from "@/components"
 import { useQuery } from "@tanstack/react-query"
-import { stockUtils, StockRecord, type StockSubscribeHandler } from "@/utils/stock"
+import { stockUtils, type StockSubscribeHandler } from "@/utils/stock"
 import { useStockQuoteSubscribe } from "@/hooks"
 
 type StockTreeType = 'industry' | 'concept' | 'bull' | 'etf' | 'industry-heatmap' | 'etf-heatmap'
@@ -57,7 +57,6 @@ const StockTree = () => {
       setTreeData([])
       return
     }
-
     const root = []
     const dataset: Record<string, { area: number, originArea: number }> = {}
 
@@ -67,7 +66,7 @@ const StockTree = () => {
 
     for (const node of query.data) {
       const n = { name: node.sector_name, data: node.change, children: [], area: 0, originArea: 0 }
-      root.push(n)
+
 
       for (const t of node.tops) {
         const stock = stockUtils.toStock(t.stock)
@@ -76,18 +75,18 @@ const StockTree = () => {
 
         if (!colors.includes(_color)) continue
 
-        const child = { name: t.symbol, area: Math.abs((Math.log(stock.volume) ** 5)) + 0.1, data: percent, color: _color, originArea: stock.volume, plateId: t.plate_id }
+        // Math.abs((Math.log(stock.volume) ** 5)) + 0.1
+        const child = { name: t.symbol, area: Decimal.create(stock.volume).log().pow(5).abs().plus(0.1).toNumber(), data: percent, color: _color, originArea: stock.volume, plateId: t.plate_id }
+
         n.children.push(child as never)
         max = Math.max(max, stock.volume)
         min = Math.min(min, stock.volume)
         dataset[child.name + t.plate_id] = child
       }
+      if (n.children.length > 0) {
+        root.push(n)
+      }
     }
-
-
-    // for (const k of Object.keys(dataset)) {
-    //   dataset[k].area = ((dataset[k].originArea - min) / (max - min)) * (5 - 1) + 1
-    // }
 
     setTreeData(root)
   }, [query.data, filter])
@@ -143,16 +142,13 @@ const StockTree = () => {
     for (const plate of queryPlate.data) {
       const _color = getColorByStep(plate.change / 100)
       if (!_colors.includes(_color)) continue
-      const n = { name: plate.name, area:  Math.abs((Math.log(plate.amount) ** 5)) + 0.1, data: plate.change, color: getColorByStep(plate.change / 100) }
+      const n = { name: plate.name, area: Math.abs((Math.log(plate.amount) ** 5)) + 0.1, data: plate.change, color: getColorByStep(plate.change / 100) }
       dataset[plate.id] = n
       max = Math.max(max, plate.amount)
       min = Math.min(min, plate.amount)
       r.push(n)
     }
 
-    // for (const k of Object.keys(dataset)) {
-    //   dataset[k].area = ((dataset[k].area - min) / (max - min)) * (10 - 1) + 1
-    // }
 
     return r
   }, [queryPlate.data, filter])
@@ -193,11 +189,6 @@ const StockTree = () => {
       min = Math.min(min, stockRecord.turnover)
       r.push(child as never)
     }
-
-    // for (const k of Object.keys(dataset)) {
-    //   dataset[k].area = ((dataset[k].area - min) / (max - min)) * (10 - 1) + 1
-    // }
-
     return r
   }, [queryStock.data, filter])
 

@@ -66,13 +66,13 @@ const FinanceStep = () => {
   return (
     <div className="min-h-24 flex border-0 border-b border-solid border-background items-stretch">
       <div className="w-36 px-4 flex items-center flex-shrink-0  border-t-0 border border-solid border-background">
-        第四步：财务状况
+        第三步：核心财务
       </div>
       <div className="p-4 w-full">
         <ToggleGroup onValueChange={v => onValueChange('fiscal_period', v)} type="single" style={{ '--toggle-active-bg': 'hsl(var(--stock-up-color))' } as CSSProperties}>
           {
             data.fiscal_period?.items.map(item => (
-              <ToggleGroupItem className="w-16" variant="outline" key={item.name} value={item.value}>
+              <ToggleGroupItem className="w-16" key={item.name} value={item.value}>
                 {item.name}
               </ToggleGroupItem>
             ))

@@ -100,7 +100,7 @@ const TreeMap = (props: TreeMapProps) => {
     renderLabel(root)
     renderPercent(root)
   }
-  
+
 
   useUnmount(() => {
     chartRef.current?.remove()
@@ -138,10 +138,10 @@ const TreeMap = (props: TreeMapProps) => {
 
         const singleWidth = titleWidth / title.length
 
-        while (singleWidth * title.length + percentWidth > totalWidth) {
+        while (title.length > 0 && singleWidth * title.length + percentWidth > totalWidth) {
           title = title.slice(0, -1)
         }
-        const _title = `${title}...`
+        const _title = title.length > 0 ? `${title}...` : ''
 
         d.data.titleWidth = getStringWidth(_title, '12px sans-serif')
 
@@ -157,6 +157,7 @@ const TreeMap = (props: TreeMapProps) => {
       .text((d) => `${Decimal.create(d.data.data).mul(100).toDP(3).toNumber()}%`)
       .attr("font-size", "12px")
       .attr("fill", (d) => (d.data.data ?? 0) >= 0 ? 'hsl(var(--stock-up-color)' : 'hsl(var(--stock-down-color))')
+
   }
 
   const renderLabel = (root: HierarchyRectangularNode<TreeMapData>) => {

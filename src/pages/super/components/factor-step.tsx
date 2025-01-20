@@ -10,17 +10,19 @@ const FactorStep = () => {
   const data = (ctx.data?.technology?.children?.factor.children) as unknown as StockCategory[]
 
   const [selection, setSelection] = useState<string[]>([])
+  const result = useRef<string[]>([])
   useMount(() => {
     ctx.register(
       'category_ids_ext',
       10,
-      () => [...selection],
+      () => [...result.current],
       () => true
     )
   })
 
   useUnmount(() => {
     ctx.unregister('category_ids_ext')
+    result.current = []
     setSelection([])
   })
   
@@ -28,6 +30,7 @@ const FactorStep = () => {
   //TODO 临时方案 待优化
   useMount(() => {
     appEvent.on('cleanPickerStockFactor', () => {
+      result.current = []
       setSelection([])
     })
   })
@@ -38,6 +41,7 @@ const FactorStep = () => {
 
   const _onValueChange = (e: string[]) => {
     appEvent.emit('cleanPickerStockMethod')
+    result.current = e
     setSelection(e)
   }
 

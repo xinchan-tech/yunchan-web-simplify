@@ -127,11 +127,11 @@ const LoginForm = (props: LoginFormProps) => {
   )
 }
 
-interface LoginFormProps {
+interface ThirdLoginFormProps {
   onLogin: (data: any) => void
 }
 
-const AppleLogin = (props: LoginFormProps) => {
+const AppleLogin = (props: ThirdLoginFormProps) => {
   useMount(() => {
     window.AppleID.auth.init({
       clientId: 'com.jkn.app.web',
@@ -178,7 +178,7 @@ const WeChatLogin = () => {
   )
 }
 
-const GoogleLogin = (props: LoginFormProps) => {
+const GoogleLogin = (props: ThirdLoginFormProps) => {
   const onLoginRef = useRef(props.onLogin)
 
   useEffect(() => {
