@@ -1,12 +1,12 @@
 import { StockChartInterval, type StockRawRecord, type getStockChart } from '@/api'
 import { useConfig } from '@/store'
 import { echartUtils, type ECOption } from '@/utils/echarts'
-import {  stockUtils } from '@/utils/stock'
+import { stockUtils } from '@/utils/stock'
 import { colorUtil } from '@/utils/style'
 import dayjs from 'dayjs'
 import Decimal from 'decimal.js'
 import type { CandlestickSeriesOption, LineSeriesOption } from 'echarts/charts'
-import { CoilingIndicatorId, type Indicator, type KChartState, isTimeIndexChart } from './ctx'
+import { CoilingIndicatorId, type Indicator, type KChartState, chartEvent, isTimeIndexChart } from './ctx'
 import {
   type DrawerRectShape,
   type DrawerTextShape,
@@ -33,6 +33,7 @@ import { renderUtils } from './utils'
 import type { GraphicComponentOption } from 'echarts/components'
 import type { XAXisOption, YAXisOption } from 'echarts/types/dist/shared'
 import type { EChartsType } from 'echarts/core'
+import type { Emitter } from 'mitt'
 
 const MAIN_CHART_NAME = 'kChart'
 const MAIN_CHART_NAME_VIRTUAL = 'kChart-virtual'
@@ -74,6 +75,9 @@ export const initOptions = (): ECOption => {
         }
 
         const isUp = stockUtils.isUp(stock)
+
+        chartEvent.event.emit('tooltip', v)
+
         return `
             <span class="text-xs">
              ${time}<br/>
@@ -272,7 +276,7 @@ export const createOptions = (chart: EChartsType): ECOption => ({
           const scale = renderUtils.getScaledZoom(chart, 0)
 
           const data = chart.meta!.mainData?.slice(scale[0], scale[1])
-        
+
           if (!data || !v) return TEXT_COLOR
 
           const start = data[0]
@@ -761,23 +765,25 @@ export const renderMainCoiling = (options: ECOption, state: ChartState, chart: E
         xAxisIndex: 0,
         yAxisIndex: 1,
         data: p,
+        name: `coiling_${CoilingIndicatorId.PEN}`,
         extra: { color: '#ffffff' },
         chart: chart
       })
     } else if (coiling === CoilingIndicatorId.PIVOT) {
-      drawPivots(options, {} as any, { xAxisIndex: 0, yAxisIndex: 1, data: expands as any })
-      drawPivots(options, {} as any, { xAxisIndex: 0, yAxisIndex: 1, data: pivots as any })
+      drawPivots(options, {} as any, { xAxisIndex: 0, yAxisIndex: 1, data: expands as any, name: `coiling_${CoilingIndicatorId.PIVOT}_ext` })
+      drawPivots(options, {} as any, { xAxisIndex: 0, yAxisIndex: 1, data: pivots as any, name: `coiling_${CoilingIndicatorId.PIVOT}` })
     } else if (
       [CoilingIndicatorId.ONE_TYPE, CoilingIndicatorId.TWO_TYPE, CoilingIndicatorId.THREE_TYPE].includes(coiling)
     ) {
       const tradePoints = calcTradePoints(state.mainData.coiling_data, points, coiling as any)
-      drawTradePoints(options, {} as any, { xAxisIndex: 0, yAxisIndex: 1, data: tradePoints })
+      drawTradePoints(options, {} as any, { xAxisIndex: 0, yAxisIndex: 1, data: tradePoints, name: `coiling_${coiling}` })
     } else if (coiling === CoilingIndicatorId.SHORT_LINE) {
       const cma = calculateMA(20, state.mainData.history)
       const cma2 = calculateMA(30, state.mainData.history)
       drawLine(options, {} as any, {
         yAxisIndex: 1,
         xAxisIndex: 0,
+        name: `coiling_${coiling}`,
         data: cma.map((s, i) => [i, s]),
         extra: {
           color: 'rgb(186, 64, 127)'
@@ -786,6 +792,7 @@ export const renderMainCoiling = (options: ECOption, state: ChartState, chart: E
       drawLine(options, {} as any, {
         yAxisIndex: 1,
         xAxisIndex: 0,
+        name: `coiling_${coiling}_2`,
         data: cma2.map((s, i) => [i, s]),
         extra: {
           color: 'rgb(156, 171, 232)'
@@ -800,6 +807,7 @@ export const renderMainCoiling = (options: ECOption, state: ChartState, chart: E
       drawLine(options, {} as any, {
         yAxisIndex: 1,
         xAxisIndex: 0,
+        name: 'coiling_cma',
         data: cma.map((s, i) => [i, s]),
         extra: {
           color: 'rgb(250,28,19)'
@@ -808,6 +816,7 @@ export const renderMainCoiling = (options: ECOption, state: ChartState, chart: E
       drawLine(options, {} as any, {
         yAxisIndex: 1,
         xAxisIndex: 0,
+        name: 'coiling_cma1',
         data: cma1.map((s, i) => [i, s]),
         extra: {
           color: 'rgb(255,255,255)'
@@ -816,6 +825,7 @@ export const renderMainCoiling = (options: ECOption, state: ChartState, chart: E
       drawLine(options, {} as any, {
         yAxisIndex: 1,
         xAxisIndex: 0,
+        name: 'coiling_cma2',
         data: cma2.map((s, i) => [i, s]),
         extra: {
           color: 'rgb(51,251,41)'
@@ -824,6 +834,7 @@ export const renderMainCoiling = (options: ECOption, state: ChartState, chart: E
       drawLine(options, {} as any, {
         yAxisIndex: 1,
         xAxisIndex: 0,
+        name: 'coiling_cma3',
         data: cma3.map((s, i) => [i, s]),
         extra: {
           color: 'rgb(51,251,41)'
@@ -832,6 +843,7 @@ export const renderMainCoiling = (options: ECOption, state: ChartState, chart: E
       drawLine(options, {} as any, {
         yAxisIndex: 1,
         xAxisIndex: 0,
+        name: 'coiling_cma4',
         data: cma4.map((s, i) => [i, s]),
         extra: {
           color: 'rgb(249,42,251)'
@@ -848,7 +860,7 @@ export const renderMainIndicators = (options: ECOption, indicators: Indicator[])
   /** 合并绘制 */
   const stickLineData: DrawerRectShape[] = []
   const textData: DrawerTextShape[] = []
-
+  console.log(indicators)
   indicators.forEach(indicator => {
     if (!indicator.data) {
       return
@@ -868,6 +880,7 @@ export const renderMainIndicators = (options: ECOption, indicators: Indicator[])
           extra: {
             color: d.style?.color || '#ffffff'
           },
+          name: `main_${indicator.id}_${d.name}`,
           xAxisIndex: 0,
           yAxisIndex: 1,
           data: (d.data as number[]).map((s, i) => [i, s])
@@ -894,6 +907,7 @@ export const renderMainIndicators = (options: ECOption, indicators: Indicator[])
     drawRect(options, {} as any, {
       xAxisIndex: 0,
       yAxisIndex: 1,
+      name: 'main_stick_line',
       data: stickLineData
     })
   }
@@ -902,6 +916,7 @@ export const renderMainIndicators = (options: ECOption, indicators: Indicator[])
     drawText(options, {} as any, {
       xAxisIndex: 0,
       yAxisIndex: 1,
+      name: 'main_text',
       data: textData
     })
   }
@@ -1025,6 +1040,7 @@ export const renderSecondary = (options: ECOption, indicators: Indicator[]) => {
           },
           xAxisIndex: index + 2,
           yAxisIndex: index + 3,
+          name: `secondary_${index}_${indicator.id}_${d.name}`,
           data: (d.data as number[]).map((s, i) => [i, s])
         })
       } else if (d.draw === 'STICKLINE') {
@@ -1059,6 +1075,7 @@ export const renderSecondary = (options: ECOption, indicators: Indicator[]) => {
 
         drawGradient(options, {} as any, {
           xAxisIndex: index + 2,
+          name: `secondary_${index}_${indicator.id}_${d.name}`,
           yAxisIndex: index + 3,
           data: data as any
         })

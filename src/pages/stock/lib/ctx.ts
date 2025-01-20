@@ -1,5 +1,6 @@
 import { type getStockChart, type getStockTabList, StockChartInterval } from '@/api'
 import type echarts from '@/utils/echarts'
+import mitt, { Emitter } from "mitt"
 import { nanoid } from 'nanoid'
 import { createContext, useContext } from 'react'
 import type { Updater } from 'use-immer'
@@ -366,3 +367,13 @@ export const isTimeIndexChart = (timeIndex: StockChartInterval) =>
     StockChartInterval.INTRA_DAY,
     StockChartInterval.FIVE_DAY
   ].includes(timeIndex)
+
+
+
+export const chartEvent = {
+  event: mitt(),
+  create() {
+    this.event = mitt()
+    return this.event
+  }
+}

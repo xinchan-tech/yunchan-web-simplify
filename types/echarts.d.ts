@@ -1,5 +1,6 @@
 import type { StockChartInterval } from "@/api"
 import type {EChartsType as EEChartsType} from 'echarts/core'
+import type { Emitter } from "mitt"
 
 declare module 'echarts/core' {
   interface EChartsType extends EEChartsType {
@@ -13,7 +14,8 @@ declare module 'echarts/core' {
         right: 'price' | 'percent'
       },
       mainData: any[],
-      timeIndex: StockChartInterval
+      timeIndex: StockChartInterval,
+      event: Emitter<any>
     }
   }
 }

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { useKChartContext } from "../lib"
+import { chartEvent, useKChartContext } from "../lib"
 import { useIndicator, useTime } from "@/store"
 import { useQueries, useQuery } from "@tanstack/react-query"
 import { getStockChart, getStockIndicatorData, StockChartInterval } from "@/api"
@@ -15,7 +15,7 @@ import echarts from "@/utils/echarts"
 import { stockUtils, type StockSubscribeHandler } from "@/utils/stock"
 import dayjs from "dayjs"
 import type { EChartsType } from 'echarts/core'
-
+import { IndicatorTooltip } from "./indicator-tooltip"
 
 interface MainChartProps {
   index: number
@@ -29,12 +29,21 @@ export const MainChart = (props: MainChartProps) => {
     chart.current = echarts.init(dom.current)
     chart.current.meta = {} as any
 
+  
+    chart.current.meta.event = chartEvent.event
+
+    chartEvent.event.on('tooltip', (params: any) => {
+      // console.log(params)
+      chartEvent.event.emit('data', params)
+    })
+
     chart.current.setOption({
       ...initOptions()
     }, { lazyUpdate: true })
   })
 
   useUnmount(() => {
+    chart.current?.meta?.event.all.clear()
     chart.current?.dispose()
   })
 
@@ -250,6 +259,8 @@ export const MainChart = (props: MainChartProps) => {
     renderSecondaryLocalIndicators(_options, state.secondaryIndicators, state)
     renderWatermark(_options, state.timeIndex)
     chart.current.setOption(_options, { replaceMerge: ['series', 'grid', 'xAxis', 'yAxis', 'dataZoom',] })
+
+    console.log(chart.current.getOption())
   }
 
   useUpdateEffect(() => {
@@ -329,8 +340,9 @@ export const MainChart = (props: MainChartProps) => {
             }
           </div>
         ) : null
-      }
-
+      },
+      
+      <IndicatorTooltip />
     </div>
   )
 }
