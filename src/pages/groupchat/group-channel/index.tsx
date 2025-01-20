@@ -182,9 +182,9 @@ const GroupChannel = (props: {
       } else if (fetchingUserFlag.current === false) {
         // 没有就缓存下
         fetchingUserFlag.current = true;
-        setPersonChannelCache(conversationWrap.lastMessage.fromUID).then(() => {
-          fetchingUserFlag.current = false;
-        });
+        // setPersonChannelCache(conversationWrap.lastMessage.fromUID).then(() => {
+        //   fetchingUserFlag.current = false;
+        // });
       }
 
       content = conversationWrap.lastMessage.content.conversationDigest || "";

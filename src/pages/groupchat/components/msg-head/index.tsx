@@ -4,12 +4,14 @@ import WKSDK, {
   Channel,
   ChannelTypePerson,
   MessageStatus,
+  ChannelInfo,
 } from "wukongimjssdk";
 import ChatAvatar from "../chat-avatar";
 import { ContextMenu, ContextMenuTrigger } from "@/components";
 import { useMemberSetting } from "../../hooks";
 import { useGroupChatShortStore } from "@/store/group-chat-new";
-import { useMemo } from "react";
+import { useLayoutEffect, useMemo, useRef, useState } from "react";
+import { getTimeStringAutoShort2, setPersonChannelCache } from "../../chat-utils";
 const MsgHead = (props: { message: Message; type: "left" | "right" }) => {
   const { message, type } = props;
   const subscribers = useGroupChatShortStore((state) => state.subscribers);
@@ -25,16 +27,36 @@ const MsgHead = (props: { message: Message; type: "left" | "right" }) => {
     }
     return result;
   }, [subscribers, message]);
-  const channelInfo = WKSDK.shared().channelManager.getChannelInfo(
-    new Channel(message.fromUID, ChannelTypePerson)
-  );
+  const [channelInfo, setChannelInfo] = useState<ChannelInfo | undefined>();
+  const fetchingChannel = useRef(false)
+  useLayoutEffect(() => {
+
+    const temp = WKSDK.shared().channelManager.getChannelInfo(
+      new Channel(message.fromUID, ChannelTypePerson)
+    );
+    if(temp ) {
+      setChannelInfo(temp)
+    } else if(fetchingChannel.current === false){
+      fetchingChannel.current = true
+      setPersonChannelCache(message.fromUID).then(() => {
+        const temp = WKSDK.shared().channelManager.getChannelInfo(
+          new Channel(message.fromUID, ChannelTypePerson)
+        );
+        if(temp ) {
+          setChannelInfo(temp)
+        }
+        fetchingChannel.current = false
+      })
+    }
+  }, [])
+  
 
   const getMessageStatus = () => {
     if (!message.send) {
       return "";
     }
     if (message.status === MessageStatus.Fail) {
-      return "被拉黑";
+      return "发送失败";
     }
     if (message.status === MessageStatus.Wait) {
       return "发送中";
@@ -47,11 +69,16 @@ const MsgHead = (props: { message: Message; type: "left" | "right" }) => {
     <div className="relative">
       <div
         className={cn(
-          "absolute user-name",
+          "absolute user-name text-nowrap",
           type === "left" ? "left-name" : "right-name"
         )}
       >
         {channelInfo?.title}
+        {type === "left" && (
+          <span className="ml-2 text-gray-400">
+            {getTimeStringAutoShort2(message.timestamp * 1000, true)}
+          </span>
+        )}
       </div>
       <ContextMenu>
         <ContextMenuTrigger asChild>

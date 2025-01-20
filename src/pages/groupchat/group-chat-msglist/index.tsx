@@ -60,9 +60,10 @@ const GroupChatMsgList = forwardRef(
           text = <TextCell message={m} messageWrap={messageWrap} />;
         } else if (m.content instanceof MessageImage) {
           text = <ImageCell message={m}></ImageCell>;
-        } else {
-          text = <SystemCell message={m} />;
         }
+        //  else {
+        //   text = <SystemCell message={m} />;
+        // }
 
         if (streams && streams.length > 0) {
           // 流式消息拼接
@@ -131,9 +132,9 @@ const GroupChatMsgList = forwardRef(
       return result;
     }, [messages, filterType, filterKeyWord]);
 
-    // useEffect(() => {
-    //   console.log(goodMessages, "goodMessages");
-    // }, [goodMessages]);
+    useEffect(() => {
+      console.log(messages, "originMessages");
+    }, [messages]);
 
     useImperativeHandle(ref, () => ({
       scrollToBottom: () => {

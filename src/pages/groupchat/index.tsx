@@ -552,11 +552,11 @@ const GroupChatPage = () => {
   // 撤回
   const handleRevoke: (message: Message) => void = async (message: Message) => {
     await revokeMessageService({ msg_id: message.messageID });
-    const newConversations =
-      await WKSDK.shared().config.provider.syncConversationsCallback();
-    const newWarps = newConversations.map((item) => new ConversationWrap(item));
+    // const newConversations =
+    //   await WKSDK.shared().config.provider.syncConversationsCallback();
+    // const newWarps = newConversations.map((item) => new ConversationWrap(item));
 
-    setConversationWraps(newWarps);
+    // setConversationWraps(newWarps);
   };
 
   const initOverFlag = useRef(true);

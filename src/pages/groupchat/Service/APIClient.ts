@@ -16,8 +16,15 @@ export class CMDType {
 }
 
 export default class APIClient {
-  private constructor() {}
+  isFetchingMessage:boolean
+  lastMessageFetchChannel:string
+  private constructor() {
+    this.isFetchingMessage = false;
+    this.lastMessageFetchChannel = ''
+  }
   public static shared = new APIClient();
+
+  
 
   // 同步频道的消息
   // 仅仅做演示，所以直接调用的WuKongIM的接口，实际项目中，建议调用自己的后台接口，

@@ -1,6 +1,6 @@
 import { cn } from "@/utils/style";
 import { Message, MessageImage, MessageText } from "wukongimjssdk";
-import copy from 'copy-to-clipboard';
+import copy from "copy-to-clipboard";
 import MsgHead from "../msg-head";
 import { ReactNode, useContext } from "react";
 
@@ -15,59 +15,54 @@ import { useGroupChatShortStore } from "@/store/group-chat-new";
 import { useUser } from "@/store";
 import { useToast } from "@/hooks";
 
+function copyImage(message: Message) {
+  // 创建一个img的dom，用来承载图片
+  // 创建 img 元素并设置 src 属性
+  const messagebox = document.getElementById(message.clientMsgNo);
+  let tempImg;
+  if (messagebox) {
+    tempImg = messagebox.querySelector(`.msgcard-img`);
+  }
 
+  // 将 div 添加到 document
 
-function copyImage(imgUrl:string) {
-	// 创建一个img的dom，用来承载图片
-	// 创建 img 元素并设置 src 属性
-	const tempImg = document.createElement("img");
-	tempImg.src = imgUrl;
+  if (tempImg) {
+    // 选择 div 中的内容
+    const range = document.createRange();
+    range.selectNode(tempImg);
+    window.getSelection().removeAllRanges(); // 清除现有的选择
+    window.getSelection().addRange(range);
 
-	// 将 div 添加到 document
-	document.body.appendChild(tempImg);
- 
-	// 选择 div 中的内容
-	const range = document.createRange();
-	range.selectNode(tempImg);
-	window.getSelection().removeAllRanges(); // 清除现有的选择
-	window.getSelection().addRange(range);
- 
-	// 执行复制命令
-	document.execCommand("copy");
- 
-	// 清理选择和临时元素
-	window.getSelection().removeAllRanges();
-	document.body.removeChild(tempImg);
- 
-	console.log("图像元素已成功复制");
+    // 执行复制命令
+    document.execCommand("copy");
+
+    // 清理选择和临时元素
+    window.getSelection().removeAllRanges();
+  }
 }
-
 
 const MsgCard = (props: { data: Message; children: string | ReactNode }) => {
   const { data } = props;
-  const subscribers = useGroupChatShortStore(state => state.subscribers)
+  const subscribers = useGroupChatShortStore((state) => state.subscribers);
   const { user } = useUser();
-  const {toast} = useToast()
+  const { toast } = useToast();
   //  获取撤回权限
   const getRevokePremession = () => {
-    if(subscribers && subscribers.length > 0) {
-      const self = subscribers.find(item => item.uid === user?.username );
-      if(self &&  self.orgData.type !== '0') {
-        return true
+    if (subscribers && subscribers.length > 0) {
+      const self = subscribers.find((item) => item.uid === user?.username);
+      if (self && self.orgData.type !== "0") {
+        return true;
       }
     }
-    
 
-    if(data.fromUID === user?.username) {
-      return true
+    if (data.fromUID === user?.username) {
+      return true;
     }
 
-    return false
+    return false;
   };
 
- 
-
-  const { handleReply , handleRevoke} = useContext(GroupChatContext);
+  const { handleReply, handleRevoke } = useContext(GroupChatContext);
   return (
     <div
       key={data.clientMsgNo}
@@ -96,31 +91,40 @@ const MsgCard = (props: { data: Message; children: string | ReactNode }) => {
           <ContextMenuContent>
             <ContextMenuItem
               onClick={() => {
-                typeof handleReply === "function" && handleReply({message:data, isQuote:true});
+                typeof handleReply === "function" &&
+                  handleReply({ message: data, isQuote: true });
               }}
             >
               引用
             </ContextMenuItem>
             <ContextMenuItem
               onClick={() => {
-                typeof handleReply === "function" && handleReply({message:data});
+                typeof handleReply === "function" &&
+                  handleReply({ message: data });
               }}
             >
               回复
             </ContextMenuItem>
             {getRevokePremession() === true && (
-              <ContextMenuItem onClick={() => {
-                typeof handleRevoke === 'function' && handleRevoke(data)
-              }}>撤回</ContextMenuItem>
+              <ContextMenuItem
+                onClick={() => {
+                  typeof handleRevoke === "function" && handleRevoke(data);
+                }}
+              >
+                撤回
+              </ContextMenuItem>
             )}
-             <ContextMenuItem
+            <ContextMenuItem
               onClick={() => {
-                if(data.content instanceof MessageText && data.content.text) {
+                if (data.content instanceof MessageText && data.content.text) {
                   copy(data.content.text);
-                  toast({description: '复制成功'})
-                } else if(data.content instanceof MessageImage && data.content.remoteUrl) {
-                  copyImage(data.content.remoteUrl);
-                  toast({description: '复制成功'})
+                  toast({ description: "复制成功" });
+                } else if (
+                  data.content instanceof MessageImage &&
+                  data.content.remoteUrl
+                ) {
+                  copyImage(data);
+                  toast({ description: "复制成功" });
                 }
               }}
             >

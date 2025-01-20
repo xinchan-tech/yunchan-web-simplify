@@ -91,6 +91,7 @@ const ImageCell = (props: { message: Message }) => {
         <img
           alt=""
           src={imageURL}
+          className='msgcard-img'
           style={{
             borderRadius: "5px",
             width: scaleSize.width,
@@ -115,7 +116,7 @@ const ImageCell = (props: { message: Message }) => {
               setShowPreview(false);
             }}
             customToolbar={(defaultConfigs) => {
-              console.log(defaultConfigs, "defaultConfigsdefaultConfigs");
+      
               return defaultConfigs.filter(
                 (conf) => {
                   return ![3, 4, 5, 6, 7, 9, 10].includes(conf.actionType as number)
