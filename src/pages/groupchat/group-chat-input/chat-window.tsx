@@ -28,48 +28,32 @@ const ChatWindow = forwardRef(
             setHtmlValue(tgt.innerHTML + emoji);
           }
         },
+        insertImage
       };
     });
 
     // 插入文件
     const insertFile = (file: File) => {
+  
       const URL = window.URL || window.webkitURL;
       const url = URL.createObjectURL(file);
       if (file.type.includes("image")) {
+        const sizeAllow = file.size / 1024 / 1024 <= 5;
+        if (!sizeAllow) {
+          toast({ description: '图片限制最大5M'})
+          return;
+        }
         insertImage(url, file);
+      } else {
+        toast({ description: '暂不支持发送此类文件'})
       }
-      //   else{
-      //     const fileSuffix = file.name.substring(file.name.lastIndexOf("."));
-      //     if (acceptList[1].includes(fileSuffix.toLowerCase())) {
-      //       const fileType = [
-      //         [".doc", ".docx"],
-      //         [".xlsx", ".xls", ".csv"],
-      //         [".zip", ".rar", ".7z"],
-      //         [".txt", ".md"],
-      //         [".pdf"],
-      //       ];
-      //       const index = fileType.findIndex((item) =>
-      //         item.includes(fileSuffix.toLowerCase())
-      //       );
-      //       if (~index) {
-      //         const img = showFileImageList[index];
-      //         insertFiles(img,file)
-      //       } else {
-      //         console.error("error", "暂不支持该文件类型进行该操作")
-      //       }
-      //     }
-
-      //   }
+     
     };
 
     // 处理图片和文件在input框中的显示逻辑
     const handleFileAndImageInsert = (item: any) => {
       const file = item.getAsFile();
-      const sizeAllow = file.size / 1024 / 1024 <= 5;
-      if (!sizeAllow) {
-        toast({ description: '图片限制最大5M'})
-        return;
-      }
+     
       insertFile(file);
     };
 

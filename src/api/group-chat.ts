@@ -85,10 +85,14 @@ export const getGroupDetailService = async (id: string) => {
 // 加入群
 export const joinGroupService = async (
   id: string,
-  params?: { product_sn: string }
+  params?: { product_sn: string; payment_type: string }
 ) => {
   const r = await request
-    .post(`/channel/${id}/user`, params)
+    .post(`/channel/${id}/user`, params, {
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+    })
     .then((r) => r.data);
   return r;
 };
@@ -188,17 +192,25 @@ export const loginImService = async (params: ImgLoginPayload) => {
 
 // 编辑群
 export type EditGroupPayload = {
-  chat_type?: "0" | '1' | '2',
+  chat_type?: "0" | "1" | "2";
   notice?: string;
-  name? : string;
+  name?: string;
   brief?: string;
-  account: string
-}
-export const editGroupService =async (params:EditGroupPayload) => {
+  account: string;
+};
+export const editGroupService = async (params: EditGroupPayload) => {
   const r = await request.post(`/channel/${params.account}/edit`, params, {
     headers: {
       "Content-Type": "application/x-www-form-urlencoded",
     },
-  })
-  return r
-}
+  });
+  return r;
+};
+
+// 支付状态更新
+export const loopUpdatePaymentStatus = async (pay_sn: string) => {
+  const resp = await request
+    .get("/order/pay/payStatus", { params: { pay_sn } })
+    .then((r) => r.data);
+  return resp;
+};

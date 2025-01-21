@@ -20,7 +20,7 @@ export const useGroupChatStoreNew = create<GroupChatStore>()(
       bottomHeight: 185,
       setBottomHeight: (payload: number) => set({ bottomHeight: payload }),
       selectedChannel: null,
-      setSelectedChannel: (payload: Channel| null) =>
+      setSelectedChannel: (payload: Channel | null) =>
         set({ selectedChannel: payload }),
       toChannel: null,
       setToChannel(payload: Channel) {
@@ -80,9 +80,10 @@ interface GroupChatShortStore {
   groupDetailData: GroupDetailData | null;
   getGroupDetailData: (id: string) => Promise<void>;
   filterMode: boolean;
-  setFilterMode: (mode:boolean) => void;
-  mentions: {name:string, uid:string}[];
-  setMentions: (payload:{name:string, uid:string}[]) => void;
+  setFilterMode: (mode: boolean) => void;
+  mentions: { name: string; uid: string }[];
+  setMentions: (payload: { name: string; uid: string }[]) => void;
+  groupDetailFetching: boolean;
 }
 
 export const useGroupChatShortStore = create<GroupChatShortStore>(
@@ -134,19 +135,30 @@ export const useGroupChatShortStore = create<GroupChatShortStore>(
       });
     },
     groupDetailData: null,
+    groupDetailFetching: false,
     getGroupDetailData: async (id: string) => {
-      const resp = await getGroupDetailService(id);
       set({
-        groupDetailData: resp,
+        groupDetailFetching: true,
       });
+      try {
+        const resp = await getGroupDetailService(id);
+        set({
+          groupDetailData: resp,
+          groupDetailFetching: false,
+        });
+      } catch (er) {
+        set({
+          groupDetailFetching: false,
+        });
+      }
     },
     filterMode: false,
     setFilterMode: (mode) => {
-      set({filterMode: mode})
+      set({ filterMode: mode });
     },
     setMentions: (data) => {
-      set({mentions: data})
+      set({ mentions: data });
     },
-    mentions: []
+    mentions: [],
   })
 );

@@ -37,7 +37,12 @@ export class MediaMessageUploadTask extends MessageTask {
     const mediaContent = this.message.content as MediaMessageContent;
     if (mediaContent.file) {
       // const fileName = mediaContent.file.name;
-      const fileName = this.getUUID();
+      let fileName = this.getUUID();
+      let fileType = 'png';
+      if(mediaContent.file.type) {
+        fileType = mediaContent.file.type.split('/')[1]
+      }
+      fileName = `${fileName}.${fileType}`
       const resp = await UploadUtil.shared
         .uploadImg(mediaContent.file, fileName)
         .catch((error) => {

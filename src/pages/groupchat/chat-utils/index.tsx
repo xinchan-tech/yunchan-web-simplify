@@ -190,25 +190,39 @@ export function getTimeStringAutoShort2(
   return ret;
 }
 
-export const genImgFileByUrl = (url: string) => {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.src = url;
-    const canvas = document.createElement("canvas");
-    const context = canvas.getContext("2d");
+export const genImgFileByUrl = (url: string, mime?: string) => {
+  // return new Promise((resolve, reject) => {
+  //   const img = new Image();
+  //   img.src = url;
+  //   const canvas = document.createElement("canvas");
+  //   const context = canvas.getContext("2d");
 
-    img.onload = () => {
-      try {
-        canvas.height = img.height;
-        canvas.width = img.width;
-        context?.drawImage(img, 0, 0);
-        const data = canvas.toDataURL("");
-        resolve(data);
-      } catch (er) {
-        reject(er);
-      }
-    };
-  });
+  //   img.onload = () => {
+  //     try {
+  //       canvas.height = img.height;
+  //       canvas.width = img.width;
+  //       context?.drawImage(img, 0, 0);
+  //       const data = canvas.toDataURL(mime);
+  //       debugger;
+  //       resolve(data);
+  //     } catch (er) {
+  //       console.log(er)
+  //       reject(er);
+  //     }
+  //   };
+  // });
+  return fetch(url)
+    .then((response) => response.arrayBuffer())
+    .then((buffer) => {
+  
+      const base64String = btoa(
+        new Uint8Array(buffer).reduce(
+          (data, byte) => data + String.fromCharCode(byte),
+          ""
+        )
+      );
+      return `data:${mime || "image/png"};base64,${base64String}`;
+    });
 };
 
 export const genBase64ToFile = (base64: string) => {
@@ -278,7 +292,7 @@ export const judgeIsUserInSyncChannelCache = (uid: string) => {
   }
 };
 
-export const setUserInSyncChannelCache = (uid:string, payload: boolean) => {
+export const setUserInSyncChannelCache = (uid: string, payload: boolean) => {
   let syncUserChannelIds: Record<string, boolean> = {};
   let session = sessionStorage.getItem("syncUserChannelIds");
   if (session) {
@@ -289,4 +303,4 @@ export const setUserInSyncChannelCache = (uid:string, payload: boolean) => {
     "syncUserChannelIds",
     JSON.stringify(syncUserChannelIds)
   );
-}
+};

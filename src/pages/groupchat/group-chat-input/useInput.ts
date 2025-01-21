@@ -170,6 +170,7 @@ export const useInput = ({ editorKey }: { editorKey: string }) => {
     const imgSrc = url;
     const imgElement = document.createElement("img") as any;
     imgElement.src = imgSrc;
+
     const reader = new FileReader();
     reader.onload = function (event: any) {
       img.onload = () => {
@@ -193,6 +194,7 @@ export const useInput = ({ editorKey }: { editorKey: string }) => {
         imgMap.current[imgSrc] = file;
         insertContent(imgElement.outerHTML);
       };
+ 
       img.src = event.target.result;
     };
     reader.readAsDataURL(file);
@@ -341,6 +343,7 @@ export const useInput = ({ editorKey }: { editorKey: string }) => {
             url: item.url,
             width: item.width,
             height: item.height,
+        
           });
         } else if (item.id) {
           const fileType = item.type ? "aov" : "file";

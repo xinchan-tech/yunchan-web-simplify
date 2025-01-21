@@ -88,7 +88,7 @@ const GroupChatInput = forwardRef(
       }))
     );
 
-    const { insertImage } = useInput({ editorKey: "xc-chat-input" });
+  
     const [openEmoji, setOpenEmoji] = useState(false);
     const emojiRefTrigger = useRef();
 
@@ -170,25 +170,30 @@ const GroupChatInput = forwardRef(
         let formatValue = formatMentionText(value);
 
         content = new MessageText(formatValue);
-        await MacroTask()
+        await MacroTask() 
         finalSend(content, index)
       } else if (type === "img") {
         // const
-
+   
         const temp = data as InputBoxImage;
         content = new MessageImage();
         if (temp.url) {
           try {
-            const res = await genImgFileByUrl(temp.url);
+            const res = await genImgFileByUrl(temp.url, temp.file?.type);
             const blob = genBase64ToFile(res);
-            let file = new File([blob], "image.png", {
-              type: "image/png",
+            let fileType = 'png';
+            if(temp.file?.type) {
+              fileType = temp.file.type.split('/')[1]
+            }
+            let file = new File([blob], `image.${fileType}`, {
+              type: temp.file?.type || 'image/png',
             });
             content.width = temp.width || 60; // 图片宽度
             content.height = temp.height || 60; // 图片高度
             content.file = file;
             return finalSend(content, index);
           } catch (er) {
+            console.log(er)
             content.width = temp.width || 60; // 图片宽度
             content.height = temp.height || 60; // 图片高度
             content.remoteUrl = temp.url;
@@ -252,8 +257,14 @@ const GroupChatInput = forwardRef(
           toast({ description: "图片限制最大5M" });
           return;
         }
+ 
         const url = URL.createObjectURL(file);
-        insertImage(url, file);
+        if (inputRef.current) {
+          inputRef.current.insertImage(url, file);
+        }
+    
+      } else {
+        toast({ description: '暂不支持发送此类文件'})
       }
     };
 
@@ -438,114 +449,6 @@ const GroupChatInput = forwardRef(
             ) : (
               // -----------
               <ChatWindow handleSend={handleSend} ref={inputRef} />
-
-              // ---------
-              // <textarea
-              //   ref={inputRef}
-              //   value={inputValue}
-              //   onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => {
-              //     setInputValue(e.target.value);
-              //   }}
-              //   placeholder={`按 Ctrl + Enter 换行，按 Enter 发送`}
-              //   className="w-full text-white h-full bg-transparent resize-none border-0 outline-none"
-              //   onKeyDown={(e) => {
-              //     if (e.keyCode !== 13) {
-              //       //非回车
-              //       return;
-              //     }
-              //     if (e.keyCode === 13 && e.ctrlKey) {
-              //       // ctrl+Enter不处理
-              //       if (inputRef.current) {
-              //         const position = inputRef.current.selectionStart;
-              //         const newValue =
-              //           inputValue.substring(0, position) +
-              //           "\n" +
-              //           inputValue.substring(position);
-              //         setInputValue(newValue);
-              //       }
-              //       return;
-              //     }
-              //     e.preventDefault();
-              //     handleSend();
-              //   }}
-              // ></textarea>
-
-              // --------------
-              // <MentionsInput
-              //   placeholder={`按 Ctrl + Enter 换行，按 Enter 发送`}
-              //   className="messageinput-input"
-              //   allowSuggestionsAboveCursor={true}
-              //   value={inputValue}
-              //   onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => {
-              //     setInputValue(e.target.value);
-              //   }}
-              //   ref={inputRef}
-              //   onKeyPress={(e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-              //     if (e.charCode !== 13) {
-              //       //非回车
-              //       return;
-              //     }
-              //     if (e.charCode === 13 && e.ctrlKey) {
-              //       // ctrl+Enter不处理
-              //       if (inputRef.current) {
-              //         const position =
-              //           inputRef.current.inputElement.selectionStart;
-              //         const newValue =
-              //           inputValue.substring(0, position) +
-              //           "\n" +
-              //           inputValue.substring(position);
-              //         setInputValue(newValue);
-              //       }
-              //       return;
-              //     }
-              //     e.preventDefault();
-              //     handleSend();
-              //   }}
-              // >
-              //   <MentionComponent
-              //     trigger={new RegExp(`(@([^'\\s'@]*))$`)}
-              //     markup="@[__display__]"
-              //     data={suggestionsMember}
-              //     displayTransform={(id: string, display: string) =>
-              //       `@${display}`
-              //     }
-              //     appendSpaceOnAdd={true}
-              //     onAdd={(id: string, display: string) => {
-              //       mentionCache.current[display] = { uid: id, name: display };
-              //     }}
-              //     renderSuggestion={(
-              //       suggestion,
-              //       search,
-              //       highlightedDisplay,
-              //       index,
-              //       focused
-              //     ) => {
-              //       const item = suggestion as MemberSuggestionDataItem;
-              //       return (
-              //         <div
-              //           className={cn(
-              //             "messageinput-member flex items-center",
-              //             focused ? "messageinput-selected" : null
-              //           )}
-              //         >
-              //           <div className="messageinput-iconbox">
-              //             <ChatAvatar
-              //               size="sm"
-              //               data={{
-              //                 uid: String(item.id),
-              //                 avatar: item.icon,
-              //                 name: item.display,
-              //               }}
-              //             ></ChatAvatar>
-              //           </div>
-              //           <div className="ml-2">
-              //             <strong>{highlightedDisplay}</strong>
-              //           </div>
-              //         </div>
-              //       );
-              //     }}
-              //   ></MentionComponent>
-              // </MentionsInput>
             )}
           </div>
         </div>

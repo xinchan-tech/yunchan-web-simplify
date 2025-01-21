@@ -1,4 +1,4 @@
-import { joinGroupService } from "@/api";
+import { joinGroupService, loopUpdatePaymentStatus } from "@/api";
 import { GroupData } from "../../group-channel";
 import ChatAvatar from "../chat-avatar";
 import { Button } from "@/components";
@@ -8,10 +8,27 @@ import { useEffect, useState } from "react";
 import { useShallow } from "zustand/react/shallow";
 import WKSDK from "wukongimjssdk";
 import { useToast } from "@/hooks";
+import FullScreenLoading from "@/components/loading";
+import { Checkbox } from "@/components";
 
 const JoinGroup = (props: { data: GroupData }) => {
   const { data } = props;
-  const {toast} = useToast()
+  const { toast } = useToast();
+  const payMethods = [
+    {
+      label: "apple",
+      value: "apple",
+    },
+    {
+      label: "stripe",
+      value: "stripe",
+    },
+    {
+      label: "paypal",
+      value: "paypal",
+    },
+  ];
+  const [curPayMethod, setCurPayMethod] = useState(() => payMethods[0].value);
   const renderTags = () => {
     let tags: string[] = [];
     if (data.tags) {
@@ -19,7 +36,7 @@ const JoinGroup = (props: { data: GroupData }) => {
     }
 
     return tags.map((tag, idx) => {
-      if(!tag) {
+      if (!tag) {
         return null;
       }
       return (
@@ -39,16 +56,30 @@ const JoinGroup = (props: { data: GroupData }) => {
       );
     });
   };
-  const { groupDetailData, setReadyToJoinGroup } = useGroupChatShortStore(
-    useShallow((state) => ({
-      groupDetailData: state.groupDetailData,
-      setReadyToJoinGroup: state.setReadyToJoinGroup
-    }))
-  );
-
-
+  const { groupDetailData, setReadyToJoinGroup, groupDetailFetching } =
+    useGroupChatShortStore(
+      useShallow((state) => ({
+        groupDetailData: state.groupDetailData,
+        setReadyToJoinGroup: state.setReadyToJoinGroup,
+        groupDetailFetching: state.groupDetailFetching,
+      }))
+    );
 
   const [joinIng, setJoinIng] = useState(false);
+
+  const loopCheckStatus = (sn: string) => {
+    let timer = setInterval(() => {
+      loopUpdatePaymentStatus(sn).then(res => {
+        if(res.pay_status === 1) {
+          clearInterval(timer);
+          setReadyToJoinGroup(null);
+          WKSDK.shared().config.provider.syncConversationsCallback();
+          toast({description: '加群成功'})
+          setJoinIng(false);
+        }
+      })
+    }, [10000])
+  }
 
   const handleJoinGroup = async () => {
     if (data.account) {
@@ -59,21 +90,25 @@ const JoinGroup = (props: { data: GroupData }) => {
         if (selectedProdSn) {
           resp = await joinGroupService(data.account, {
             product_sn: selectedProdSn,
+            payment_type: curPayMethod
           });
-        } else {
-          resp = await joinGroupService(data.account);
+          console.log(resp)
+        } 
+        if (resp === true) {
+          setReadyToJoinGroup(null);
+          WKSDK.shared().config.provider.syncConversationsCallback();
+          toast({ description: "加群成功" });
+          setJoinIng(false);
+        } else if(resp.pay_sn && resp.config) {
+          if(resp.config.url) {
+            window.open(resp.config.url)
+            loopCheckStatus(resp.pay_sn)
+          }
         }
-        if(resp === true) {
-            setReadyToJoinGroup(null);
-            WKSDK.shared().config.provider.syncConversationsCallback();
-            toast({ description:  '加群成功' })
-        } else {
-            toast({ description: resp?.msg  || '加群失败' })
-        }
-        setJoinIng(false);
+        
       } catch (er) {
         console.error(er);
-        toast({ description: er?.message  || '加群失败' })
+        toast({ description: er?.message || "加群失败" });
         setJoinIng(false);
       }
     }
@@ -93,6 +128,7 @@ const JoinGroup = (props: { data: GroupData }) => {
 
   return (
     <div className="join-group-panel">
+      {(groupDetailFetching === true || joinIng === true) && <FullScreenLoading />}
       <div className="join-group-content">
         <div className="flex items-center justify-between mb-10">
           <div className="flex ">
@@ -112,13 +148,13 @@ const JoinGroup = (props: { data: GroupData }) => {
               <div className="flex">{renderTags()}</div>
             </div>
           </div>
-          <Button
+          {/* <Button
             loading={joinIng}
             onClick={handleJoinGroup}
             className="w-[200px] h-[52px] leading-[52px] rounded-md text-lg font-bold"
           >
             加入群聊
-          </Button>
+          </Button> */}
         </div>
         <div className="group-info">{groupDetailData?.notice || ""}</div>
         <div className="prod-list flex justify-center">
@@ -146,6 +182,36 @@ const JoinGroup = (props: { data: GroupData }) => {
                 </div>
               );
             })}
+        </div>
+        <div className="mt-20">
+          <div className="flex justify-center items-center">
+            {payMethods.map((item) => {
+              return (
+                <div className="flex items-center mr-5">
+                  <Checkbox
+                    key={item.value}
+                    checked={curPayMethod === item.value}
+                    onCheckedChange={(chk) => {
+                      if (chk === true) {
+                        setCurPayMethod(item.value);
+                      }
+                    }}
+                  ></Checkbox>
+
+                  <span className="ml-2">{item.label}</span>
+                </div>
+              );
+            })}
+          </div>
+          <div className="flex justify-center items-center mt-4">
+            <Button
+              loading={joinIng}
+              onClick={handleJoinGroup}
+              className="w-[200px] h-[52px] leading-[52px] rounded-md text-lg font-bold"
+            >
+              加入群聊
+            </Button>
+          </div>
         </div>
       </div>
       <style jsx>

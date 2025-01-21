@@ -374,20 +374,28 @@ const GroupChatPage = () => {
   );
 
   messageStatusListener = (ack: SendackPacket) => {
-    messagesRef.current.forEach((m) => {
-      if (!m.messageID) {
-        m.messageID = ack.messageID.toString();
+    // 有时一次会发多条消息，要缓存一下已经赋值过id和seq的消息
+    let msgIdCache:Record<string, boolean> = {}
+    let seqCache:Record<string, boolean> = {}
+    for (let i = 0; i < messagesRef.current.length; i++) {
+      const m = messagesRef.current[i];
+      const newMsgId = ack.messageID.toString();
+      if (!m.messageID && !msgIdCache[newMsgId]) {
+        m.messageID = newMsgId;
+        msgIdCache[newMsgId] = true;
       }
-      if (!m.messageSeq) {
+      if (!m.messageSeq && !seqCache[newMsgId]) {
         m.messageSeq = ack.messageSeq;
+        seqCache[newMsgId] = true
       }
-      // m.reasonCode = ack.reasonCode
+  
       if (m.clientSeq == ack.clientSeq) {
         m.status =
           ack.reasonCode == 1 ? MessageStatus.Normal : MessageStatus.Fail;
-        return;
+   
       }
-    });
+    }
+    
     setMessages([...messagesRef.current]);
   };
 
@@ -455,7 +463,6 @@ const GroupChatPage = () => {
 
   useEffect(() => {
     connectIM("/im-ws");
-    // connectIM('ws://175.27.245.108:15200')
     return () => {
       WKSDK.shared().connectManager.removeConnectStatusListener(
         connectStatusListener

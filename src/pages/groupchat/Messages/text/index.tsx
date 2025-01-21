@@ -105,9 +105,9 @@ const TextCell = (props: { message: Message; messageWrap?: MessageWrap }) => {
       const goodText = messageWrap.content.text.split('\n');
       goodText.forEach((str, idx) => {
         
-        text.push(<span>{str}</span>)
+        text.push(<span key={str+idx}>{str}</span>)
         if(idx !== goodText.length - 1) {
-          text.push(<br/>)
+          text.push(<br  key={str+idx + 'br'}></br>)
         }
       });
     };
