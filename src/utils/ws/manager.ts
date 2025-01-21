@@ -30,6 +30,7 @@ type WsEvent =
   | 'shout_order'
   | 'ack'
   | 'default'
+  | 'alarm_v2'
 
 type DefaultEventResult = {
   cluster_name: string

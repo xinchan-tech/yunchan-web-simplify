@@ -77,7 +77,6 @@ export const IndicatorTooltip = (props: IndicatorTooltipProps) => {
           color: indicator.color
         })
       })
-      console.log(data)
       setData(data)
     })
 

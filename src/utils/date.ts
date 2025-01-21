@@ -112,7 +112,7 @@ export const getPrevTradingDay = (date?: string | Dayjs) => {
     }
     return d
   }
-  return date
+  return day
 }
 
 /**

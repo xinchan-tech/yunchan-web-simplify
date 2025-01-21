@@ -7,16 +7,17 @@ import dayjs from "dayjs"
 import { useQuery } from "@tanstack/react-query"
 import { AlarmType, getAlarmLogs, PriceAlarmTrigger } from "@/api"
 import { useEffect, useMemo } from "react"
-import JknTable, { type JknTableProps } from "../jkn/jkn-table"
 import StockView from "../stock-view"
 import { cn } from "@/utils/style"
+import { JknRcTable, type JknRcTableProps } from "../jkn/jkn-rc-table"
+import { wsManager } from "@/utils/ws"
 
 export const AiAlarmNotice = () => {
   const [open, { setTrue, setFalse }] = useBoolean(false)
-  const time = useTime()
+  const getCurrentUsTime = useTime(s => s.getCurrentUsTime)
   const config = useConfig()
   const token = useToken(s => s.token)
-  const prevDate = getLatestTradingDay(dayjs(time.usTime).tz('America/New_York'))
+  const prevDate = getLatestTradingDay(dayjs(getCurrentUsTime()).tz('America/New_York'))
   const query = useQuery({
     queryKey: [getAlarmLogs.cacheKey, 0, prevDate.hour(4).minute(0).second(0).format('YYYY-MM-DD HH:mm:ss')],
     queryFn: () => getAlarmLogs({
@@ -27,14 +28,26 @@ export const AiAlarmNotice = () => {
     enabled: !!token
   })
 
-  const dataByGroup = (() => {
+  useEffect(() => {
+    const handler = () => {
+
+    }
+
+    const unSubscribe = wsManager.on('alarm_v2', handler)
+
+    return () => {
+      unSubscribe()
+    }
+  }, [])
+
+  const dataByGroup = useMemo(() => {
     return query.data?.items?.reduce((acc, cur) => {
       const group = acc[cur.alarm_time.slice(0, 11)] || []
       group.push(cur)
       acc[cur.alarm_time.slice(0, 11)] = group
       return acc
     }, {} as Record<string, typeof query.data.items>) ?? {}
-  })()
+  }, [query.data])
 
   useEffect(() => {
     if (query.isFetched && config.aiAlarmAutoNotice && query.data?.items?.length) {
@@ -42,49 +55,48 @@ export const AiAlarmNotice = () => {
     }
   }, [query.isFetched, config.aiAlarmAutoNotice, setTrue, query.data?.items])
 
-  const columns = useMemo<JknTableProps<Awaited<ReturnType<typeof getAlarmLogs>>['items'][0]>['columns']>(() => [
+  const columns = useMemo<JknRcTableProps<Awaited<ReturnType<typeof getAlarmLogs>>['items'][0]>['columns']>(() => [
     {
-      header: '序号', accessorKey: 'id', enableSorting: false, meta: { align: 'center', width: 40 },
-      cell: ({ row }) => (
-        <span>{row.index + 1}</span>
+      title: '序号', dataIndex: 'id', enableSorting: false, align: 'center', width: 40,
+      render: (_, __, index) => (
+        <span>{index + 1}</span>
       )
     },
     {
-      header: '名称代码', accessorKey: 'name', enableSorting: false,
-      meta: { width: 'auto' },
-      cell: ({ row }) => (
-        <StockView name={row.getValue('name')} code={row.original.symbol} />
+      title: '名称代码', dataIndex: 'name',
+      render: (_, row) => (
+        <StockView name={row.symbol} code={row.symbol} />
       )
     }, {
-      header: '周期', accessorKey: 'cycle', enableSorting: false, meta: { align: 'center', width: 60 },
-      cell: ({ row }) => (
-        <span>{row.original.stock_cycle}分</span>
+      title: '周期', dataIndex: 'cycle', align: 'center', width: 60,
+      render: (_, row) => (
+        <span>{row.stock_cycle}分</span>
       )
     }, {
-      header: '报警类型', accessorKey: 'type', enableSorting: false, meta: { align: 'center', width: 120 },
-      cell: ({ row }) => (
-        +row.original.type === AlarmType.AI ? (
-          <span className={cn(row.original.condition.bull === '1' ? 'text-stock-up' : 'text-stock-down', 'flex items-center')}>
-            <JknIcon name={row.original.condition.bull === '1' ? 'ic_price_up_green' : 'ic_price_down_red'} />
-            {row.original.condition.indicators}
+      title: '报警类型', dataIndex: 'type', align: 'center', width: 120,
+      render: (_, row) => (
+        +row.type === AlarmType.AI ? (
+          <span className={cn(row.condition.bull === '1' ? 'text-stock-up' : 'text-stock-down', 'flex items-center')}>
+            <JknIcon name={row.condition.bull === '1' ? 'ic_price_up_green' : 'ic_price_down_red'} />
+            {row.condition.indicators}
           </span>
         ) : (
-          <span className={cn(row.original.condition.trigger === PriceAlarmTrigger.UP ? 'text-stock-up' : 'text-stock-down', 'flex items-center')}>
-            <JknIcon name={row.original.condition.trigger === PriceAlarmTrigger.UP ? 'ic_price_up_green' : 'ic_price_down_red'} />
-            <span>{row.original.condition.trigger === PriceAlarmTrigger.UP ? '涨到' : '跌到'}</span>
-            {row.original.condition.price}
+          <span className={cn(row.condition.trigger === PriceAlarmTrigger.UP ? 'text-stock-up' : 'text-stock-down', 'flex items-center')}>
+            <JknIcon name={row.condition.trigger === PriceAlarmTrigger.UP ? 'ic_price_up_green' : 'ic_price_down_red'} />
+            <span>{row.condition.trigger === PriceAlarmTrigger.UP ? '涨到' : '跌到'}</span>
+            {row.condition.price}
           </span>
         )
       )
     }, {
-      header: '底部类型', accessorKey: 'bottom', enableSorting: false, meta: { align: 'center', width: 70 },
-      cell: ({ row }) => (
-        <span>{row.original.condition.category_hdly_name ?? '-'}</span>
+      title: '底部类型', dataIndex: 'bottom', align: 'center', width: 70,
+      render: (_, row) => (
+        <span>{row.condition.category_hdly_name ?? '-'}</span>
       )
     }, {
-      header: '报警时间', accessorKey: 'alarm_time', enableSorting: false, meta: { align: 'center', width: 80 },
-      cell: ({ row }) => (
-        <span>{row.original.alarm_time.slice(11)}</span>
+      title: '报警时间', dataIndex: 'alarm_time', align: 'center', width: 80,
+      render: (_, row) => (
+        <span>{row.alarm_time.slice(11)}</span>
       )
     }
   ], [])
@@ -125,7 +137,7 @@ export const AiAlarmNotice = () => {
                     &nbsp;[美东时间]
                   </div>
                   <div>
-                    <JknTable
+                    <JknRcTable
                       columns={columns}
                       data={dataByGroup[date]}
                       rowKey="id"
