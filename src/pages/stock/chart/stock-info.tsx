@@ -303,7 +303,7 @@ const StockNews = () => {
   return (
     <>
       {
-        newList.data && newList.data.event.length > 0 ? (<div className="flex p-2 w-full box-border">
+        newList.data ? (<div className="flex p-2 w-full box-border">
           <HoverCard openDelay={100}>
             <HoverCardTrigger >
               <JknIcon name="ic_notice" className="mr-2 mt-0.5" />

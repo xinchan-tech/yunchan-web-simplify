@@ -118,15 +118,17 @@ export const IndicatorTooltip = (props: IndicatorTooltipProps) => {
       {
         props.type === 'main' && <span className="text-secondary">{props.indicator.name}:&emsp;</span>
       }
-      {
-        data.length > 0 && visible && (
-          data.map(item => (
-            <span className="text-secondary" key={item.name} style={{ color: item.color }}>
-              {item.name}: {item.value}&emsp;
-            </span>
-          ))
-        )
-      }
+      <span className="pointer-events-none">
+        {
+          data.length > 0 && visible && (
+            data.map(item => (
+              <span className="text-secondary" key={item.name} style={{ color: item.color }}>
+                {item.name}: {item.value}&emsp;
+              </span>
+            ))
+          )
+        }
+      </span>
       {
         props.type === 'main' && (
           <span>
