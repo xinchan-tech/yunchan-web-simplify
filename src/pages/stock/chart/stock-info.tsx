@@ -109,24 +109,25 @@ const StockBaseInfo = () => {
   }, [codeInfo.data, trading])
 
   const stockSubscribeHandler = useCallback<StockSubscribeHandler<'quote'>>((data) => {
-
+    if (code !== data.topic) {
+      return
+    }
     setData((s) => {
-      if (!s) return
-      if (s.code === data.topic) {
-        if (trading === 'intraDay') {
-          s.close = data.record.close
-          s.percent = (data.record.close - data.record.preClose) / data.record.preClose
-          s.prevClose = data.record.preClose
-          s.time = dayjs(data.record.time).format('YYYY-MM-DD HH:mm:ss')
-        } else {
-          s.subClose = data.record.close
-          s.subPercent = (data.record.close - data.record.preClose) / data.record.preClose
-          s.subTime = dayjs(data.record.time).format('YYYY-MM-DD HH:mm:ss')
-        }
+      if (!s) return s
+
+      if (trading === 'intraDay') {
+        s.close = data.record.close
+        s.percent = (data.record.close - data.record.preClose) / data.record.preClose
+        s.prevClose = data.record.preClose
+        s.time = dayjs(data.record.time).format('YYYY-MM-DD HH:mm:ss')
+      } else {
+        s.subClose = data.record.close
+        s.subPercent = (data.record.close - data.record.preClose) / data.record.preClose
+        s.subTime = dayjs(data.record.time).format('YYYY-MM-DD HH:mm:ss')
       }
       return { ...s }
     })
-  }, [trading])
+  }, [trading, code])
 
   useStockQuoteSubscribe([code], stockSubscribeHandler)
 
@@ -191,7 +192,7 @@ const StockBaseInfo = () => {
               </span>
               <span className="text-tertiary">
                 {
-                  trading === 'preMarket' ? '盘前' : '盘后' 
+                  trading === 'preMarket' ? '盘前' : '盘后'
                 }价
                 {data?.subTime?.slice(5, 11).replace('-', '/')}
               </span>

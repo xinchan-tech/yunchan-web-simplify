@@ -130,6 +130,7 @@ interface StockListItemProps {
 }
 
 const StockListItem = ({ stock, onCollectChange, children }: PropsWithChildren<StockListItemProps>) => {
+  const [innverValue, setInnerValue] = useState(stock)
   const trading = useTime(s => s.getTrading())
   const priceBlink = useConfig(s => s.setting.priceBlink)
   const lastValue = useRef(stock.price)
@@ -145,12 +146,12 @@ const StockListItem = ({ stock, onCollectChange, children }: PropsWithChildren<S
   
           if (lastValue.current === undefined || !data.record.close) return
           const randomDelay = Math.random() * 500
-  
+          
           priceBlinkTimer.current = window.setTimeout(() => {
             const blinkState = lastValue.current! < data.record.close! ? 'down' : 'up'
             lastValue.current = data.record.close
             span.current?.setAttribute('data-blink', blinkState)
-  
+            
             setTimeout(() => {
               span.current?.removeAttribute('data-blink')
               priceBlinkTimer.current = undefined
@@ -162,11 +163,6 @@ const StockListItem = ({ stock, onCollectChange, children }: PropsWithChildren<S
   }, [stock.code, priceBlink])
 
   useStockQuoteSubscribe([stock.code], updateHandler)
-
-  // useEffect(() => {
-    
-  // }, [value, priceBlink])
-
 
   return (
     <div
@@ -210,8 +206,8 @@ const StockListItem = ({ stock, onCollectChange, children }: PropsWithChildren<S
               {
                 stock.subPrice ? (
                   <span>
-                    <span>{Decimal.create(stock.subPrice).toFixed(3)}</span>&nbsp;&nbsp;
-                    <span>{Decimal.create(stock.subPercent).mul(100).toFixed(2)}%</span>
+                    <NumSpanSubscribe code={stock.code} field="close" value={stock.subPrice} decimal={3}/>&nbsp;&nbsp;
+                    <NumSpanSubscribe code={stock.code} field="percent" value={stock.subPercent} decimal={2} percent />
                   </span>
                 ) : '--'
               }

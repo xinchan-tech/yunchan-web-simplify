@@ -75,7 +75,8 @@ export const MainChart = (props: MainChartProps) => {
   const queryKey = [getStockChart.cacheKey, params]
   const query = useQuery({
     queryKey,
-    queryFn: () => getStockChart(params)
+    queryFn: () => getStockChart(params),
+    refetchInterval: 60 * 1000,
   })
 
   // const queryV2 = useQuery({

@@ -173,10 +173,10 @@ export const createOptions = (chart: EChartsType): ECOption => ({
         }
       },
       min: v => {
-        return v.min - (v.max - v.min) * 0.2
+        return v.min - (v.max - v.min) * 0.2 - 1
       },
       max: v => {
-        return v.max + (v.max - v.min) * 0.2
+        return v.max + (v.max - v.min) * 0.2 + 1
       },
       splitLine: {
         lineStyle: {
@@ -211,10 +211,10 @@ export const createOptions = (chart: EChartsType): ECOption => ({
         show: false
       },
       min: v => {
-        return v.min - (v.max - v.min) * 0.2
+        return v.min - (v.max - v.min) * 0.2 - 1
       },
       max: v => {
-        return v.max + (v.max - v.min) * 0.2
+        return v.max + (v.max - v.min) * 0.2 + 1
       },
       axisPointer: {
         label: {
@@ -379,10 +379,10 @@ const defaultXAxis: XAXisOption = {
 const defaultYAxis: YAXisOption = {
   scale: true,
   min: v => {
-    return Math.round(v.min - (v.max - v.min) * 0.2)
+    return v.min - (v.max - v.min) * 0.2 - 1
   },
   max: v => {
-    return Math.round(v.max + (v.max - v.min) * 0.2)
+    return v.max + (v.max - v.min) * 0.2 + 1
   },
   position: 'right',
   axisLine: { onZero: false, show: false },
