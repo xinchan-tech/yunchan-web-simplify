@@ -41,7 +41,7 @@ export const calcCoilingPoints = (
   return coiling.points.map(v => {
     const p = {
       xIndex: v,
-      y: isTop ? history[v][3] : history[v][4]
+      y: (isTop ? history[v][3] : history[v][4]) as number
     }
 
     isTop = !isTop

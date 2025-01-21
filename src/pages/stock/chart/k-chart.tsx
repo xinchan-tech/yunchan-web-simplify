@@ -102,6 +102,7 @@ export const KChart = (props: KChartProps) => {
   }
 
   const setMainIndicators: KChartContext['setMainIndicators'] = ({ index, indicators }) => {
+    console.log(indicators)
     const _indicators = Array.isArray(indicators) ? indicators : [indicators]
     const _indicatorsMap: NormalizedRecord<Indicator> = {}
     const chart = context.state[index ?? context.activeChartIndex]
@@ -113,6 +114,7 @@ export const KChart = (props: KChartProps) => {
       d.state[index ?? d.activeChartIndex].mainIndicators = _indicatorsMap
     })
   }
+
 
   const toggleMainChartType: KChartContext['toggleMainChartType'] = ({ index, type }) => {
     setContext(d => {
@@ -321,6 +323,19 @@ export const KChart = (props: KChartProps) => {
     })
   }
 
+  const setIndicatorVisible: KChartContext['setIndicatorVisible'] = useCallback(({ index, indicatorId, visible, secondaryIndex }) => {
+    setContext(d => {
+      const chart = d.state[index ?? d.activeChartIndex]
+      if (secondaryIndex !== undefined){
+        chart.secondaryIndicators[secondaryIndex].visible = visible
+      }else{
+        chart.mainIndicators[indicatorId].visible = visible
+      }
+    })
+  }, [setContext])
+
+
+
   const chartCount = useMemo(() => renderUtils.getViewMode(context.viewMode), [context.viewMode])
 
   return (
@@ -328,7 +343,7 @@ export const KChart = (props: KChartProps) => {
       <KChartContext.Provider value={{
         ...context,
         setState: setContext, setMainIndicators, setMainSystem, toggleMainChartType, setMainCoiling, setTimeIndex, setActiveChart,
-        setSecondaryIndicatorsCount, setSecondaryIndicator, setMainData, addOverlayStock, removeOverlayStock, setOverlayMark,
+        setSecondaryIndicatorsCount, setSecondaryIndicator, setMainData, addOverlayStock, removeOverlayStock, setOverlayMark, setIndicatorVisible,
         setIndicatorData, setViewMode, setYAxis, setSymbol, overMarkList: tabList.data ?? []
       }}>
         <div className="w-full flex-shrink-0">

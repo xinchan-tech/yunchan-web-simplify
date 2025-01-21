@@ -33,7 +33,6 @@ import { renderUtils } from './utils'
 import type { GraphicComponentOption } from 'echarts/components'
 import type { XAXisOption, YAXisOption } from 'echarts/types/dist/shared'
 import type { EChartsType } from 'echarts/core'
-import type { Emitter } from 'mitt'
 
 const MAIN_CHART_NAME = 'kChart'
 const MAIN_CHART_NAME_VIRTUAL = 'kChart-virtual'
@@ -862,7 +861,7 @@ export const renderMainIndicators = (options: ECOption, indicators: Indicator[])
   const textData: DrawerTextShape[] = []
   console.log(indicators)
   indicators.forEach(indicator => {
-    if (!indicator.data) {
+    if (!indicator.data || indicator.visible === false) {
       return
     }
 
@@ -1040,7 +1039,7 @@ export const renderSecondary = (options: ECOption, indicators: Indicator[]) => {
           },
           xAxisIndex: index + 2,
           yAxisIndex: index + 3,
-          name: `secondary_${index}_${indicator.id}_${d.name}`,
+          name: `secondary_${indicator.id}_${d.name}_${index}`,
           data: (d.data as number[]).map((s, i) => [i, s])
         })
       } else if (d.draw === 'STICKLINE') {
@@ -1075,7 +1074,7 @@ export const renderSecondary = (options: ECOption, indicators: Indicator[]) => {
 
         drawGradient(options, {} as any, {
           xAxisIndex: index + 2,
-          name: `secondary_${index}_${indicator.id}_${d.name}`,
+          name: `secondary_${indicator.id}_${d.name}_${index}`,
           yAxisIndex: index + 3,
           data: data as any
         })

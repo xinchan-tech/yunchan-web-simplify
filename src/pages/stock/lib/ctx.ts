@@ -1,6 +1,6 @@
 import { type getStockChart, type getStockTabList, StockChartInterval } from '@/api'
 import type echarts from '@/utils/echarts'
-import mitt, { Emitter } from "mitt"
+import mitt, { Emitter } from 'mitt'
 import { nanoid } from 'nanoid'
 import { createContext, useContext } from 'react'
 import type { Updater } from 'use-immer'
@@ -79,7 +79,7 @@ export interface KChartContext {
    * @param params
    * @param params.index 窗口索引, 默认为当前激活的窗口
    * @param params.symbol 股票代码
-   * @returns 
+   * @returns
    */
   setSymbol: (params: { index?: number; symbol: string }) => void
 
@@ -87,7 +87,6 @@ export interface KChartContext {
    * 切换当前激活的窗口
    */
   setActiveChart: (index: StockChartInterval) => void
-  
 
   /**
    * 叠加标记列表
@@ -153,7 +152,11 @@ export interface KChartContext {
   /**
    * 设置主图数据
    */
-  setMainData: (params: { index?: number; data?: Awaited<ReturnType<typeof getStockChart>>, dateConvert?: boolean }) => void
+  setMainData: (params: {
+    index?: number
+    data?: Awaited<ReturnType<typeof getStockChart>>
+    dateConvert?: boolean
+  }) => void
 
   /**
    * 设置指标数据，主图和附图的指标数据都可以设置
@@ -162,7 +165,7 @@ export interface KChartContext {
    * @param params.indicator 指标
    * @param params.data 数据
    */
-  setIndicatorData: (params: {index: number, indicatorId: string; data: any }) => void
+  setIndicatorData: (params: { index: number; indicatorId: string; data: any }) => void
 
   /**
    * 修改视图模式
@@ -187,7 +190,17 @@ export interface KChartContext {
   /**
    * 设置坐标轴
    */
-  setYAxis: (params: { index?: number; yAxis: {left?: MainYAxis, right: MainYAxis} }) => void
+  setYAxis: (params: { index?: number; yAxis: { left?: MainYAxis; right: MainYAxis } }) => void
+
+  /**
+   * 修改指标可见性
+   */
+  setIndicatorVisible: (params: {
+    index?: number
+    indicatorId: string
+    visible: boolean
+    secondaryIndex?: number
+  }) => void
 }
 
 /**
@@ -200,6 +213,8 @@ export type Indicator = {
   symbol: string
   start_at?: string
   key: string
+  name: string
+  visible?: boolean
   data?: IndicatorData
 }
 
@@ -224,7 +239,6 @@ export type IndicatorData =
  * 坐标轴
  */
 type MainYAxis = 'price' | 'percent'
-
 
 /**
  * K线图实例状态
@@ -330,20 +344,36 @@ export const createDefaultChartState = (opts: { symbol?: string; index: number }
      * 9: 底部信号
      * 10: 买卖点位
      */
-    secondaryIndicators: defaultState?.secondaryIndicators ? [
-      ...defaultState.secondaryIndicators.map(item => ({ ...item, key: nanoid() }))
-    ] : [
-      { id: '9', type: 'system', timeIndex: StockChartInterval.DAY, symbol: opts.symbol ?? 'QQQ', key: nanoid() },
-      { id: '10', type: 'system', timeIndex: StockChartInterval.DAY, symbol: opts.symbol ?? 'QQQ', key: nanoid() }
-    ],
+    secondaryIndicators: defaultState?.secondaryIndicators
+      ? [...defaultState.secondaryIndicators.map(item => ({ ...item, key: nanoid() }))]
+      : [
+          {
+            id: '9',
+            type: 'system',
+            timeIndex: StockChartInterval.DAY,
+            symbol: opts.symbol ?? 'QQQ',
+            key: nanoid(),
+            name: '底部信号'
+          },
+          {
+            id: '10',
+            type: 'system',
+            timeIndex: StockChartInterval.DAY,
+            symbol: opts.symbol ?? 'QQQ',
+            key: nanoid(),
+            name: '买卖点位'
+          }
+        ],
     mainIndicators: {},
-    mainCoiling: defaultState?.mainCoiling ? [...defaultState.mainCoiling] :  [
-      CoilingIndicatorId.PEN,
-      CoilingIndicatorId.ONE_TYPE,
-      CoilingIndicatorId.TWO_TYPE,
-      CoilingIndicatorId.THREE_TYPE,
-      CoilingIndicatorId.PIVOT
-    ],
+    mainCoiling: defaultState?.mainCoiling
+      ? [...defaultState.mainCoiling]
+      : [
+          CoilingIndicatorId.PEN,
+          CoilingIndicatorId.ONE_TYPE,
+          CoilingIndicatorId.TWO_TYPE,
+          CoilingIndicatorId.THREE_TYPE,
+          CoilingIndicatorId.PIVOT
+        ],
     mainData: {
       history: [],
       coiling_data: undefined,
@@ -367,8 +397,6 @@ export const isTimeIndexChart = (timeIndex: StockChartInterval) =>
     StockChartInterval.INTRA_DAY,
     StockChartInterval.FIVE_DAY
   ].includes(timeIndex)
-
-
 
 export const chartEvent = {
   event: mitt(),

@@ -11,13 +11,13 @@ interface BaseSearchListProps {
 interface SingleSearchListProps extends BaseSearchListProps {
   type: 'single'
   value?: string
-  onChange?: (value: string, data: ArrayItem<BaseSearchListProps['data']>) => void
+  onChange?: (value: string, data: ArrayItem<BaseSearchListProps['data']>, name: string) => void
 }
 
 interface MultiSearchListProps extends BaseSearchListProps {
   type: 'multi'
   value?: string[]
-  onChange?: (value: string[], data: BaseSearchListProps['data']) => void
+  onChange?: (value: string[], data: BaseSearchListProps['data'], name: string) => void
 }
 
 type SearchListProps<T extends 'single' | 'multi'> = T extends 'single'
@@ -31,18 +31,18 @@ export const SearchList = <T extends 'single' | 'multi'>(props: SearchListProps<
   const _onChange = (v: string, data: ArrayItem<BaseSearchListProps['data']>, event: any) => {
     event.stopPropagation()
     event.preventDefault()
-  
+
     if (props.type === 'single') {
-      onChange?.(v === value ? '' : v as any, data as any)
+      onChange?.(v === value ? '' : v as any, data as any, data.label)
     } else {
-      if (!value) onChange?.([v] as any, [data] as any)
+      if (!value) onChange?.([v] as any, [data] as any, data.label)
       const _value = value as string[]
       const _data = props.data.filter(item => _value.includes(item.value))
 
       if (!_value.find(vl => vl === v)) {
-        onChange?.([..._value, v] as any, [..._data, data] as any)
+        onChange?.([..._value, v] as any, [..._data, data] as any, data.label)
       } else {
-        onChange?.(_value.filter(vl => vl !== v) as any, _data.filter(item => item.value !== v) as any)
+        onChange?.(_value.filter(vl => vl !== v) as any, _data.filter(item => item.value !== v) as any, data.label)
       }
     }
   }

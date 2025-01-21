@@ -63,8 +63,9 @@ export const ChartToolSelect = () => {
     setMainCoiling({ coiling })
   }
 
-  const onChangeMainIndicator = (_: any, data: any[]) => {
-    setMainIndicators({ indicators: data.map(v => ({ id: v.value, type: v.extra.db_type, timeIndex: activeChart.timeIndex, symbol: activeChart.symbol, key: nanoid() })) })
+  const onChangeMainIndicator = (_: any, data: any[], name: string) => {
+
+    setMainIndicators({ indicators: data.map(v => ({ id: v.value, type: v.extra.db_type, timeIndex: activeChart.timeIndex, symbol: activeChart.symbol, key: nanoid(), name: name })) })
   }
 
   const onOverlayClick = (symbol: string) => {

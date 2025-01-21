@@ -23,7 +23,7 @@ interface SecondaryIndicatorProps {
   /**
    * 附图的指标
    */
-  onIndicatorChange: (params: { value: string, index: number, type: string }) => void
+  onIndicatorChange: (params: { value: string, index: number, type: string, name: string }) => void
 }
 
 export const SecondaryIndicator = (props: SecondaryIndicatorProps) => {
@@ -41,7 +41,7 @@ export const SecondaryIndicator = (props: SecondaryIndicatorProps) => {
 
     const indicator = findIndicator(v)
 
-    props.onIndicatorChange({ value: v, index: props.index, type: (indicator as any)?.db_type })
+    props.onIndicatorChange({ value: v, index: props.index, type: (indicator as any)?.db_type,  name: indicator?.name ?? '' })
   }
 
   const findIndicator = (id: string) => {

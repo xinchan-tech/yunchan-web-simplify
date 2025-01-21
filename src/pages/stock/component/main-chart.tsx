@@ -29,13 +29,16 @@ export const MainChart = (props: MainChartProps) => {
     chart.current = echarts.init(dom.current)
     chart.current.meta = {} as any
 
-  
+
     chart.current.meta.event = chartEvent.event
 
     chartEvent.event.on('tooltip', (params: any) => {
-      // console.log(params)
       chartEvent.event.emit('data', params)
     })
+
+    // chart.current.on('globalout', () => {
+    //   chartEvent.event.emit('data', [])
+    // })
 
     chart.current.setOption({
       ...initOptions()
@@ -108,24 +111,24 @@ export const MainChart = (props: MainChartProps) => {
 
     s[0] = dayjs(s[0]).valueOf().toString()
 
-    if([StockChartInterval.PRE_MARKET, StockChartInterval.INTRA_DAY, StockChartInterval.AFTER_HOURS].includes(state.timeIndex)) {
-      if(trading === 'preMarket' && state.timeIndex !== StockChartInterval.PRE_MARKET) {
+    if ([StockChartInterval.PRE_MARKET, StockChartInterval.INTRA_DAY, StockChartInterval.AFTER_HOURS].includes(state.timeIndex)) {
+      if (trading === 'preMarket' && state.timeIndex !== StockChartInterval.PRE_MARKET) {
         return
       }
 
-      if(trading === 'intraDay' && state.timeIndex !== StockChartInterval.INTRA_DAY) {
+      if (trading === 'intraDay' && state.timeIndex !== StockChartInterval.INTRA_DAY) {
         return
       }
 
-      if(trading === 'afterHours' && state.timeIndex !== StockChartInterval.AFTER_HOURS) {
+      if (trading === 'afterHours' && state.timeIndex !== StockChartInterval.AFTER_HOURS) {
         return
       }
 
-      if(trading === 'close'){
+      if (trading === 'close') {
         return
       }
-    }else{
-      if(trading !== 'intraDay'){
+    } else {
+      if (trading !== 'intraDay') {
         return
       }
     }
@@ -269,12 +272,12 @@ export const MainChart = (props: MainChartProps) => {
 
   }, [state, startTime])
 
-  const onChangeSecondaryIndicators = async (params: { value: string, index: number, type: string }) => {
+  const onChangeSecondaryIndicators = async (params: { value: string, index: number, type: string, name: string }) => {
 
     setSecondaryIndicator({
       index: props.index,
       indicatorIndex: params.index,
-      indicator: { id: params.value, type: params.type, timeIndex: state.timeIndex, symbol: state.symbol, key: state.secondaryIndicators[params.index].key }
+      indicator: { id: params.value, type: params.type, timeIndex: state.timeIndex, symbol: state.symbol, key: state.secondaryIndicators[params.index].key, name: params.name }
     })
   }
 
@@ -307,13 +310,14 @@ export const MainChart = (props: MainChartProps) => {
           )
           return (
             <div key={item.key}
-              className="absolute rounded-sm left-2"
+              className="absolute rounded-sm left-2 flex items-center"
               style={{
                 top: `calc(${grids[index + 1]?.top ?? 0}px + 10px)`,
                 left: `calc(${grids[index + 1]?.left ?? 0}px + 10px)`,
               }}
             >
               <SecondaryIndicator onIndicatorChange={onChangeSecondaryIndicators} index={index} mainIndex={props.index} />
+              <IndicatorTooltip mainIndex={props.index} index={index} key={item.key} type="secondary" indicator={item} />
             </div>
           )
         })
@@ -340,9 +344,15 @@ export const MainChart = (props: MainChartProps) => {
             }
           </div>
         ) : null
-      },
-      
-      <IndicatorTooltip />
+      }
+
+      {
+        Object.keys(state.mainIndicators).length > 0 ? (
+          <div className="absolute top-4 left-2 space-y-2">
+            {Object.entries(state.mainIndicators).map(([key, item]) => <IndicatorTooltip mainIndex={props.index} key={key} type="main" indicator={item} />)}
+          </div>
+        ): null
+      }
     </div>
   )
 }
