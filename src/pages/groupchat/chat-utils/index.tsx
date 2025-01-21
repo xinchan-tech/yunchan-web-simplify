@@ -191,17 +191,24 @@ export function getTimeStringAutoShort2(
 }
 
 export const genImgFileByUrl = (url: string) => {
-  return fetch(url)
-    .then((response) => response.blob())
-    .then(
-      (blob) =>
-        new Promise<string>((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(reader.result); // 分割数据URL的Base64部分
-          reader.onerror = (error) => reject(error);
-          reader.readAsDataURL(blob);
-        })
-    );
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.src = url;
+    const canvas = document.createElement("canvas");
+    const context = canvas.getContext("2d");
+
+    img.onload = () => {
+      try {
+        canvas.height = img.height;
+        canvas.width = img.width;
+        context?.drawImage(img, 0, 0);
+        const data = canvas.toDataURL("");
+        resolve(data);
+      } catch (er) {
+        reject(er);
+      }
+    };
+  });
 };
 
 export const genBase64ToFile = (base64: string) => {
@@ -215,3 +222,71 @@ export const genBase64ToFile = (base64: string) => {
   }
   return new Blob([uInt8Array], { type: contentType });
 };
+
+type Task = () => void;
+
+export class MicroTaskQueue {
+  private queue: Task[] = [];
+  private isProcessing: boolean = false;
+
+  enqueue(task: Task) {
+    this.queue.push(task);
+    // if (!this.isProcessing) {
+    //   this.processQueue();
+    // }
+  }
+
+  async processQueue() {
+    this.isProcessing = true;
+
+    while (this.queue.length > 0) {
+      const task = this.queue.shift();
+      if (task) {
+        await this.runTask(task);
+      }
+    }
+    this.isProcessing = false;
+  }
+
+  private runTask(task: Task) {
+    return new Promise<void>((resolve) => {
+      task();
+      resolve();
+    });
+  }
+}
+
+export const MacroTask = () => {
+  return new Promise((resolve, reject) => {
+    let timer = setTimeout(() => {
+      clearTimeout(timer);
+      resolve("");
+    }, 0);
+  });
+};
+
+export const judgeIsUserInSyncChannelCache = (uid: string) => {
+  let session = sessionStorage.getItem("syncUserChannelIds");
+  let syncUserChannelIds: Record<string, boolean> = {};
+  if (session) {
+    syncUserChannelIds = JSON.parse(session) as Record<string, boolean>;
+  }
+  if (syncUserChannelIds[uid] === true) {
+    return true;
+  } else {
+    return false;
+  }
+};
+
+export const setUserInSyncChannelCache = (uid:string, payload: boolean) => {
+  let syncUserChannelIds: Record<string, boolean> = {};
+  let session = sessionStorage.getItem("syncUserChannelIds");
+  if (session) {
+    syncUserChannelIds = JSON.parse(session) as Record<string, boolean>;
+  }
+  syncUserChannelIds[uid] = payload;
+  sessionStorage.setItem(
+    "syncUserChannelIds",
+    JSON.stringify(syncUserChannelIds)
+  );
+}

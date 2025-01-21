@@ -1,5 +1,5 @@
 import { Resizable } from "re-resizable";
-import React, {
+import {
   useMemo,
   useRef,
   useImperativeHandle,
@@ -11,11 +11,6 @@ import {
   useGroupChatStoreNew,
 } from "@/store/group-chat-new";
 
-import {
-  MentionsInput,
-  Mention as MentionComponent,
-  SuggestionDataItem,
-} from "react-mentions";
 import WKSDK, {
   Channel,
   ChannelTypePerson,
@@ -34,7 +29,7 @@ import {
 import data from "@emoji-mart/data";
 import Picker from "@emoji-mart/react";
 import i18n from "@emoji-mart/data/i18n/zh.json";
-import { genBase64ToFile, genImgFileByUrl, MentionModel } from "../chat-utils";
+import { genBase64ToFile, genImgFileByUrl, MacroTask, MentionModel } from "../chat-utils";
 import ReplyMessageView from "../components/reply-view";
 import { useShallow } from "zustand/react/shallow";
 import { useUser } from "@/store";
@@ -53,12 +48,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-
-class MemberSuggestionDataItem implements SuggestionDataItem {
-  id!: string | number;
-  display!: string;
-  icon!: string;
-}
+import { MicroTaskQueue } from "../chat-utils";
+const sendTask = new MicroTaskQueue();
 
 const GroupChatInput = forwardRef(
   (
@@ -127,30 +118,6 @@ const GroupChatInput = forwardRef(
       return result;
     }, [groupDetailData, subscribers]);
 
-    const suggestionsMember = useMemo(() => {
-      let selectedItems = new Array<MemberSuggestionDataItem>();
-      if (subscribers && subscribers.length > 0) {
-        selectedItems = subscribers.map<MemberSuggestionDataItem>((member) => {
-          const item = new MemberSuggestionDataItem();
-          item.id = member.uid;
-          const cahce = WKSDK.shared().channelManager.getChannelInfo(
-            new Channel(member.uid, ChannelTypePerson)
-          );
-          if (cahce) {
-            item.icon = cahce?.logo;
-          }
-          item.display = member.name;
-          return item;
-        });
-        selectedItems.splice(0, 0, {
-          icon: "all",
-          id: -1,
-          display: "所有人",
-        });
-      }
-      return selectedItems;
-    }, [subscribers]);
-
     // 最终的发送方法
     const finalSend = (content: any, index: number) => {
       const setting = Setting.fromUint8(0);
@@ -190,7 +157,7 @@ const GroupChatInput = forwardRef(
       }
     };
 
-    const sendOneMsg = (type: string, data: any, index: number) => {
+    const sendOneMsg = async (type: string, data: any, index: number) => {
       let content: MessageImage | MessageText;
       if (type === "text") {
         const temp = data as InputBoxText;
@@ -203,49 +170,32 @@ const GroupChatInput = forwardRef(
         let formatValue = formatMentionText(value);
 
         content = new MessageText(formatValue);
-
-        finalSend(content, index);
+        await MacroTask()
+        finalSend(content, index)
       } else if (type === "img") {
         // const
 
         const temp = data as InputBoxImage;
         content = new MessageImage();
         if (temp.url) {
-          // 上传文件进来
-          if (temp.url.indexOf("data:image/png;base64") >= 0) {
-            const blob = genBase64ToFile(temp.url);
-
+          try {
+            const res = await genImgFileByUrl(temp.url);
+            const blob = genBase64ToFile(res);
             let file = new File([blob], "image.png", {
               type: "image/png",
             });
             content.width = temp.width || 60; // 图片宽度
             content.height = temp.height || 60; // 图片高度
             content.file = file;
-            finalSend(content, index);
-          } else {
-            genImgFileByUrl(temp.url)
-              .then((res) => {
-                const blob = genBase64ToFile(res);
-                let file = new File([blob], "image.png", {
-                  type: "image/png",
-                });
-                content.width = temp.width || 60; // 图片宽度
-                content.height = temp.height || 60; // 图片高度
-                content.file = file;
-                finalSend(content, index);
-              })
-              .catch(() => {
-                // 复制自己前面的阿里云的就发不出去，跨域了，
-                content.width = temp.width || 60; // 图片宽度
-                content.height = temp.height || 60; // 图片高度
-                content.remoteUrl = temp.url;
-                finalSend(content, index);
-              });
+            return finalSend(content, index);
+          } catch (er) {
+            content.width = temp.width || 60; // 图片宽度
+            content.height = temp.height || 60; // 图片高度
+            content.remoteUrl = temp.url;
+            return finalSend(content, index);
           }
         }
       }
-
-      // 清空AT的人
     };
 
     const handleSend = (data: InputBoxResult) => {
@@ -266,11 +216,13 @@ const GroupChatInput = forwardRef(
         });
       }
 
-      // msgQueue.sort((a, b) => a.order - b.order);
+      msgQueue.sort((a, b) => a.order - b.order);
 
       msgQueue.forEach((msg, index) => {
-        sendOneMsg(msg.type, msg, index);
+        sendTask.enqueue(sendOneMsg(msg.type, msg, index));
       });
+
+      sendTask.processQueue();
 
       setMentions([]);
     };
@@ -295,6 +247,11 @@ const GroupChatInput = forwardRef(
 
     const dealFile = (file: any) => {
       if (file.type && file.type.startsWith("image/")) {
+        const sizeAllow = file.size / 1024 / 1024 <= 5;
+        if (!sizeAllow) {
+          toast({ description: "图片限制最大5M" });
+          return;
+        }
         const url = URL.createObjectURL(file);
         insertImage(url, file);
       }
@@ -463,7 +420,7 @@ const GroupChatInput = forwardRef(
                 </TooltipTrigger>
                 <TooltipContent>
                   windows 截图快捷键： PrScrn
-                  <br/>
+                  <br />
                   macos截图快捷键： Shift、Command 和 4
                 </TooltipContent>
               </Tooltip>

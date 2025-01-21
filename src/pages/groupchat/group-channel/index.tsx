@@ -23,7 +23,11 @@ import { getGroupChannels } from "@/api";
 import { useQuery } from "@tanstack/react-query";
 import ChatAvatar from "../components/chat-avatar";
 import CreateGroup from "../components/create-group";
-import { setPersonChannelCache } from "../chat-utils";
+import {
+  judgeIsUserInSyncChannelCache,
+  setPersonChannelCache,
+  setUserInSyncChannelCache,
+} from "../chat-utils";
 
 export type GroupData = {
   id: string;
@@ -179,11 +183,15 @@ const GroupChannel = (props: {
       );
       if (channelInfo) {
         head = channelInfo.title + "：";
-      } else if (fetchingUserFlag.current === false) {
+      } else {
         // 没有就缓存下
-        fetchingUserFlag.current = true;
+        const uid = conversationWrap.lastMessage.fromUID;
+        if (judgeIsUserInSyncChannelCache(uid) === true) {
+          return;
+        }
+        setUserInSyncChannelCache(uid, true);
         setPersonChannelCache(conversationWrap.lastMessage.fromUID).then(() => {
-          fetchingUserFlag.current = false;
+          setUserInSyncChannelCache(uid, false);
         });
       }
 
@@ -290,8 +298,6 @@ const GroupChannel = (props: {
     }
   };
   // console.log(conversationWraps, "conversationWraps");
-
-
 
   const toChannelInfo = (data: GroupData) => {
     let channelInfo = new ChannelInfo();

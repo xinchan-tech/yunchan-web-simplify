@@ -13,7 +13,9 @@ import { useGroupChatShortStore } from "@/store/group-chat-new";
 import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
   getTimeStringAutoShort2,
+  judgeIsUserInSyncChannelCache,
   setPersonChannelCache,
+  setUserInSyncChannelCache,
 } from "../../chat-utils";
 const MsgHead = (props: { message: Message; type: "left" | "right" }) => {
   const { message, type } = props;
@@ -40,20 +42,12 @@ const MsgHead = (props: { message: Message; type: "left" | "right" }) => {
       setChannelInfo(temp);
     } else if (fetchingChannel.current === false) {
       fetchingChannel.current = true;
-      let session = sessionStorage.getItem("syncUserChannelIds");
-      let syncUserChannelIds: Record<string, boolean> = {};
-      if (session) {
-        syncUserChannelIds = JSON.parse(session) as Record<string, boolean>;
-      }
+     
 
-      if (syncUserChannelIds[message.fromUID] === true) {
+      if (judgeIsUserInSyncChannelCache(message.fromUID)) {
         return;
       } else {
-        syncUserChannelIds[message.fromUID] = true;
-        sessionStorage.setItem(
-          "syncUserChannelIds",
-          JSON.stringify(syncUserChannelIds)
-        );
+        setUserInSyncChannelCache(message.fromUID,true)
 
         setPersonChannelCache(message.fromUID).then(() => {
           const temp = WKSDK.shared().channelManager.getChannelInfo(
@@ -63,11 +57,7 @@ const MsgHead = (props: { message: Message; type: "left" | "right" }) => {
             setChannelInfo(temp);
           }
           fetchingChannel.current = false;
-          syncUserChannelIds[message.fromUID] = false;
-          sessionStorage.setItem(
-            "syncUserChannelIds",
-            JSON.stringify(syncUserChannelIds)
-          );
+          setUserInSyncChannelCache(message.fromUID,false)
         });
       }
     }
