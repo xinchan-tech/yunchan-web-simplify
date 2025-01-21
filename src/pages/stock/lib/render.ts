@@ -859,7 +859,6 @@ export const renderMainIndicators = (options: ECOption, indicators: Indicator[])
   /** 合并绘制 */
   const stickLineData: DrawerRectShape[] = []
   const textData: DrawerTextShape[] = []
-  console.log(indicators)
   indicators.forEach(indicator => {
     if (!indicator.data || indicator.visible === false) {
       return

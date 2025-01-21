@@ -274,7 +274,7 @@ export const MainChart = (props: MainChartProps) => {
     renderWatermark(_options, state.timeIndex)
     chart.current.setOption(_options, { replaceMerge: ['series', 'grid', 'xAxis', 'yAxis', 'dataZoom',] })
 
-    console.log(chart.current.getOption())
+    // console.log(chart.current.getOption())
   }
 
   useUpdateEffect(() => {

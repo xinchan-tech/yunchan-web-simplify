@@ -102,7 +102,7 @@ export const KChart = (props: KChartProps) => {
   }
 
   const setMainIndicators: KChartContext['setMainIndicators'] = ({ index, indicators }) => {
-    console.log(indicators)
+
     const _indicators = Array.isArray(indicators) ? indicators : [indicators]
     const _indicatorsMap: NormalizedRecord<Indicator> = {}
     const chart = context.state[index ?? context.activeChartIndex]
