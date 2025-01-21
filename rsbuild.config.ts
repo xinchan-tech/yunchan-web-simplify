@@ -19,6 +19,13 @@ export default defineConfig({
     host: "0.0.0.0",
 
     proxy: {
+      '/apiv2': {
+        target: 'https://awstest.mgjkn.com/',
+        changeOrigin: true,
+        pathRewrite: {
+          "^/apiv2": "",
+        }
+      },
       "/api": {
         target: "http://cn.mgjkn.com/",
         changeOrigin: true,

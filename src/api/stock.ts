@@ -1,4 +1,5 @@
 import request from '@/utils/request'
+import axios from "axios"
 import dayjs from 'dayjs'
 import { md5 } from 'js-md5'
 import { sha256 } from 'js-sha256'
@@ -311,9 +312,9 @@ export const getStockChartV2 = async (params: GetStockChartV2Params) => {
   const paramsStr = `${paramsKeySort.reduce((acc, key) => `${acc}${key}=${params[key]}&`, '').slice(0, -1)}&app_key=${'LMOl&8skLax%ls1Haapd'}`
 
   const sign = md5(sha256(paramsStr))
-
-  const r = await request
-    .get<StockRawRecord[]>('/stock/kline', {
+  
+  const r = await axios
+    .get<StockRawRecord[]>('/apiv2/chart/kline', {
       params,
       headers: { sign }
     })

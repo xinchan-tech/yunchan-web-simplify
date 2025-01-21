@@ -78,10 +78,10 @@ export const MainChart = (props: MainChartProps) => {
     queryFn: () => getStockChart(params)
   })
 
-  const queryV2 = useQuery({
-    queryKey: [getStockChartV2.cacheKey],
-    queryFn: () => getStockChartV2({ symbol: state.symbol, period: StockPeriod.DAY, start_at: dayjs().add(-10, 'd').format('YYYY-MM-DD HH:mm:ss'), end_at: dayjs().format('YYYY-MM-DD HH:mm:ss'), time_format: 'int' })
-  })
+  // const queryV2 = useQuery({
+  //   queryKey: [getStockChartV2.cacheKey],
+  //   queryFn: () => getStockChartV2({ symbol: state.symbol, period: StockPeriod.DAY, start_at: dayjs().add(-10, 'd').format('YYYY-MM-DD HH:mm:ss'), end_at: dayjs().format('YYYY-MM-DD HH:mm:ss'), time_format: 'int' })
+  // })
 
   const subscribeSymbol = useMemo(() => {
     if (state.timeIndex <= 1) {
