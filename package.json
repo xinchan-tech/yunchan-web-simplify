@@ -108,6 +108,8 @@
     "@rsbuild/plugin-less": "^1.1.0",
     "@rsbuild/plugin-react": "^1.0.7",
     "@rsbuild/plugin-sass": "^1.1.1",
+    "@rsdoctor/cli": "^0.4.13",
+    "@rsdoctor/rspack-plugin": "^0.4.13",
     "@swc/plugin-styled-jsx": "^5.0.0",
     "@tanstack/react-query-devtools": "^5.61.5",
     "@types/ali-oss": "^6.16.11",
