@@ -7,7 +7,7 @@ import { type Stock, stockUtils } from "@/utils/stock"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import dayjs from "dayjs"
 import { produce } from "immer"
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 
 
 
@@ -47,6 +47,7 @@ const PushPage = () => {
   const [date, setDate] = useState(getLastTime())
   const [list, { setList, onSort }] = useTableData<TableDataType>([], 'id')
   const { checked, onChange, setCheckedAll, getIsChecked } = useCheckboxGroup([])
+  const dates = useRef(getPrevTradingDays(date, 5))
 
   const queryParams: Parameters<typeof getStockPush>[0] = {
     type: activeType,
@@ -81,12 +82,6 @@ const PushPage = () => {
     }
     setCheckedAll([])
   }, [query.data, setList, setCheckedAll])
-
-  const dates = useMemo(() => {
-    return getPrevTradingDays(date, 5)
-  }, [date])
-
-  console.log('dates', dates, date)
 
   const onUpdateCollect = (id: string, checked: boolean) => {
     queryClient.setQueryData<TableDataType[]>([getStockPush.cacheKey, queryParams], (data) => {
@@ -220,7 +215,7 @@ const PushPage = () => {
       </div>
       <div className="border-0 border-b border-solid border-border py-1 px-2">
         <CapsuleTabs activeKey={date} onChange={v => setDate(v)} type="text">
-          {dates.map(d => (
+          {dates.current.map(d => (
             <CapsuleTabs.Tab key={d} value={d} label={dayjs(d).format('MM-DD W')} />
           ))}
         </CapsuleTabs>
