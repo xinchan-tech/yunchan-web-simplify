@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { chartEvent, useKChartContext } from "../lib"
 import { useIndicator, useTime } from "@/store"
 import { useQueries, useQuery } from "@tanstack/react-query"
-import { getStockChart, getStockIndicatorData, StockChartInterval } from "@/api"
+import { getStockChart, getStockChartV2, getStockIndicatorData, StockChartInterval, StockPeriod } from "@/api"
 import { useMount, useUnmount, useUpdateEffect } from "ahooks"
 import { useDomSize, useStockBarSubscribe } from "@/hooks"
 import { initOptions, renderChart, renderGrid, renderMainChart, renderMainCoiling, renderMainIndicators, renderMarkLine, renderOverlay, renderOverlayMark, renderSecondary, renderSecondaryLocalIndicators, renderWatermark, renderZoom } from "../lib/render"
@@ -76,6 +76,11 @@ export const MainChart = (props: MainChartProps) => {
   const query = useQuery({
     queryKey,
     queryFn: () => getStockChart(params)
+  })
+
+  const queryV2 = useQuery({
+    queryKey: [getStockChartV2.cacheKey],
+    queryFn: () => getStockChartV2({ symbol: state.symbol, period: StockPeriod.DAY, start_at: dayjs().add(-10, 'd').format('YYYY-MM-DD HH:mm:ss'), end_at: dayjs().format('YYYY-MM-DD HH:mm:ss'), time_format: 'int' })
   })
 
   const subscribeSymbol = useMemo(() => {

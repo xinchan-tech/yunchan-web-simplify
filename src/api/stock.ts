@@ -29,7 +29,8 @@ export type StockRawRecord =
       StockCumulativeTurnover,
       StockPrevClose
     ]
-  | [StockTime, StockOpen, StockClose, StockHigh, StockLow, StockVolume, StockTurnover, StockPrevClose] | []
+  | [StockTime, StockOpen, StockClose, StockHigh, StockLow, StockVolume, StockTurnover, StockPrevClose]
+  | []
 
 /**
  * 股票接口通用extend参数
@@ -131,6 +132,31 @@ export enum StockChartInterval {
   QUARTER = 129600,
   HALF_YEAR = 259200,
   YEAR = 518400
+}
+
+export enum StockPeriod {
+  INTRA_DAY = '1m',
+  PRE_MARKET = '1m',
+  AFTER_HOURS = '1m',
+  FIVE_DAY = '5d',
+  ONE_MIN = '1m',
+  TWO_MIN = '2m',
+  THREE_MIN = '3m',
+  FIVE_MIN = '5m',
+  TEN_MIN = '10m',
+  FIFTEEN_MIN = '15m',
+  THIRTY_MIN = '30m',
+  FORTY_FIVE_MIN = '45m',
+  ONE_HOUR = '60m',
+  TWO_HOUR = '120m',
+  THREE_HOUR = '180m',
+  FOUR_HOUR = '240m',
+  DAY = '1d',
+  WEEK = '1w',
+  MONTH = '1M',
+  QUARTER = '1q',
+  HALF_YEAR = '6M',
+  YEAR = '1y'
 }
 
 export enum StockChartType {
@@ -249,6 +275,52 @@ export const getStockChart = async (params: GetStockChartParams) => {
   return r
 }
 getStockChart.cacheKey = 'stock:chart'
+
+/**
+ * 股票K线数据V2
+ */
+type GetStockChartV2Params = {
+  /**
+   * 股票代码
+   */
+  symbol: string
+  /**
+   * 周期
+   */
+  period: StockPeriod
+  /**
+   * 开始时间
+   * @example 2021-01-01 00:00:00
+   */
+  start_at: string
+  /**
+   * 结束时间
+   * @example 2021-01-01 00:00:00
+   */
+  end_at: string
+  /**
+   * 时间格式
+   * @example int 时间戳
+   * @example string 时间字符串
+   */
+  time_format: string
+}
+export const getStockChartV2 = async (params: GetStockChartV2Params) => {
+  const paramsKeySort = Object.keys(params).sort() as (keyof typeof params)[]
+
+  const paramsStr = `${paramsKeySort.reduce((acc, key) => `${acc}${key}=${params[key]}&`, '').slice(0, -1)}&app_key=${'LMOl&8skLax%ls1Haapd'}`
+
+  const sign = md5(sha256(paramsStr))
+
+  const r = await request
+    .get<StockRawRecord[]>('/stock/kline', {
+      params,
+      headers: { sign }
+    })
+    .then(r => r.data)
+  return r
+}
+getStockChartV2.cacheKey = 'stock:kline:v2'
 
 type GetHotSectorsParams = {
   type: 'day' | 'month' | 'week'
