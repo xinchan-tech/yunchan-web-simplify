@@ -46,7 +46,7 @@ export const stockUtils = {
       high: Decimal.create(data[3]).toNumber(),
       low: Decimal.create(data[4]).toNumber(),
       volume: Decimal.create(data[5]).toNumber(),
-      turnover: data[6] ? Decimal.create(data[5]).mul(10000).toNumber()  : Decimal.create(data[5]).toNumber(),
+      turnover: data[6] ? Decimal.create(data[6]).mul(10000).toNumber()  : Decimal.create(data[6]).toNumber(),
       extend: opts?.extend
     } as Stock
 
