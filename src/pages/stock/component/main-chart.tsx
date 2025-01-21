@@ -36,9 +36,15 @@ export const MainChart = (props: MainChartProps) => {
       chartEvent.event.emit('data', params)
     })
 
-    // chart.current.on('globalout', () => {
-    //   chartEvent.event.emit('data', [])
-    // })
+    chart.current.on('globalout', (e) => {
+      // 检测鼠标是否在图表内
+      const toElement = (e.event?.event as any).toElement as HTMLElement
+
+      if(!toElement?.className.includes('main-indicator-tooltip') || !toElement?.className.includes('secondary-indicator-tool')) {
+        chartEvent.event.emit('data', [])
+      }
+      
+    })
 
     chart.current.setOption({
       ...initOptions()
@@ -292,6 +298,17 @@ export const MainChart = (props: MainChartProps) => {
     removeOverlayStock({ index: props.index, symbol: symbol })
   }
 
+  // const mouse = useMouse(containerRef)
+
+  // useEffect(() => {
+  //   if(!chartEvent) return
+
+  //   if(mouse.elementX > 0 && mouse.elementX < mouse.elementW && mouse.elementY > 0 && mouse.elementY < mouse.elementH) return
+
+  //   chartEvent.event.emit('data', undefined)
+  // }, [mouse])
+
+
   return (
     <div className={
       cn(
@@ -310,7 +327,7 @@ export const MainChart = (props: MainChartProps) => {
           )
           return (
             <div key={item.key}
-              className="absolute rounded-sm left-2 flex items-center"
+              className="absolute rounded-sm left-2 flex items-center secondary-indicator-tool"
               style={{
                 top: `calc(${grids[index + 1]?.top ?? 0}px + 10px)`,
                 left: `calc(${grids[index + 1]?.left ?? 0}px + 10px)`,
@@ -348,7 +365,7 @@ export const MainChart = (props: MainChartProps) => {
 
       {
         Object.keys(state.mainIndicators).length > 0 ? (
-          <div className="absolute top-4 left-2 space-y-2">
+          <div className="absolute top-4 left-2 space-y-2 main-indicator-tooltip">
             {Object.entries(state.mainIndicators).map(([key, item]) => <IndicatorTooltip mainIndex={props.index} key={key} type="main" indicator={item} />)}
           </div>
         ): null

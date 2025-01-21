@@ -12,7 +12,7 @@ export const ChartContextMenu = (props: PropsWithChildren<ChartContextMenuProps>
   const { state, setSecondaryIndicatorsCount, setYAxis } = useKChartContext()
   const chart = state[props.index]
   const onChangeSecondaryIndicators = (count: number) => () => {
-    setSecondaryIndicatorsCount({ count, index: props.index, indicator: { id: '9', type: 'system', timeIndex: chart.timeIndex, symbol: chart.symbol, key: nanoid() } })
+    setSecondaryIndicatorsCount({ count, index: props.index, indicator: { id: '9', type: 'system', timeIndex: chart.timeIndex, symbol: chart.symbol, key: nanoid(), name: '买卖点位' } })
   }
 
   const _setYAxis = (type: Parameters<typeof setYAxis>[0]['yAxis']) => () => setYAxis({ index: props.index, yAxis: type })
