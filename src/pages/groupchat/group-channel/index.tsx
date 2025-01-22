@@ -63,7 +63,7 @@ const GroupChannel = (props: {
   const { onSelectChannel } = props;
   const { setSelectedChannel, selectedChannel, setToChannel } =
     useGroupChatStoreNew();
-  const latestChannel = useLatest(selectedChannel)
+  const latestChannel = useLatest(selectedChannel);
   // 排序最近会话列表
   const sortConversations = (conversations?: Array<ConversationWrap>) => {
     let newConversations = conversations;
@@ -130,10 +130,10 @@ const GroupChannel = (props: {
         new ConversationWrap(conversation)
       );
     } else if (action === ConversationAction.update) {
-      if(conversation.channel.channelID === latestChannel.current?.channelID) {
-     
-            // 避免未读消息在选中时还展示
-            conversation.unread = 0;
+      if (conversation.channel.channelID === latestChannel.current?.channelID) {
+        // 避免未读消息在选中时还展示
+        conversation.unread = 0;
+      
       }
       const index = latestConversation.current?.findIndex(
         (item) =>
@@ -141,7 +141,8 @@ const GroupChannel = (props: {
           item.channel.channelType === conversation.channel.channelType
       );
       if (index !== undefined && index >= 0) {
-    
+        // conversation.reloadIsMentionMe();
+     
         latestConversation.current![index] = new ConversationWrap(conversation);
         const temp = sortConversations();
         batchUpdateConversation(temp);
@@ -297,9 +298,9 @@ const GroupChannel = (props: {
     //  优化一下，有未读消息才clear unread
     if (conversation && conversation.unread && conversation.unread > 0) {
       APIClient.shared.clearUnread(channel);
+      clearConversationUnread(channel);
     }
 
-    clearConversationUnread(channel);
     clearConversationMentionMe(channel);
     if (channel.channelID === selectedChannel?.channelID) {
       return;

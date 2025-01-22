@@ -7,7 +7,7 @@ import { Message, MessageText, MessageImage } from "wukongimjssdk";
 
 import { useImperativeHandle, forwardRef, ReactNode } from "react";
 import ImageCell from "../Messages/Image";
-import SystemCell from "../Messages/system";
+// import SystemCell from "../Messages/system";
 import TextCell from "../Messages/text";
 
 import { MessageWrap } from "../Service/Model";
@@ -25,7 +25,7 @@ const GroupChatMsgList = forwardRef(
       messages: Message[];
       handleScroll: UIEventHandler<HTMLDivElement>;
       handleFindPrevMsg: (messageSeq: number) => void;
-      loading?: boolean
+      loading?: boolean;
     },
     ref
   ) => {
@@ -53,7 +53,6 @@ const GroupChatMsgList = forwardRef(
 
     const getMessage = (m: Message) => {
       if (m instanceof Message) {
-        const streams = m.streams;
         let text: string | ReactNode = "";
         const messageWrap = new MessageWrap(m);
         if (m.content instanceof MessageText) {
@@ -65,15 +64,6 @@ const GroupChatMsgList = forwardRef(
         //   text = <SystemCell message={m} />;
         // }
 
-        if (streams && streams.length > 0) {
-          // 流式消息拼接
-          for (const stream of streams) {
-            if (stream.content instanceof MessageText) {
-              const messageText = stream.content as MessageText;
-              text = text + (messageText.text || "");
-            }
-          }
-        }
         return text;
       }
 
@@ -124,17 +114,16 @@ const GroupChatMsgList = forwardRef(
           return res;
         });
       }
-      if(result.length !== messages.length) {
-        setFilterMode(true)
+      if (result.length !== messages.length) {
+        setFilterMode(true);
       } else {
-        setFilterMode(false)
+        setFilterMode(false);
       }
       return result;
     }, [messages, filterType, filterKeyWord]);
 
     useEffect(() => {
-      if(window.showMessage === true) {
-
+      if (window.showMessage === true) {
         console.log(messages, "originMessages");
       }
     }, [messages]);

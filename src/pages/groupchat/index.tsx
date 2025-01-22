@@ -36,6 +36,7 @@ import { Toaster } from "@/components";
 import JoinGroup from "./components/join-group";
 import { ConversationWrap } from "./ConversationWrap";
 import FullScreenLoading from "@/components/loading";
+import APIClient from "./Service/APIClient";
 export type ReplyFn = (option: {
   message?: Message;
   isQuote?: boolean;
@@ -139,6 +140,25 @@ const GroupChatPage = () => {
     messagesRef.current.push(msg);
     setMessages(temp);
     jumpMsgIdRef.current = "";
+    // 及时更新ismentionme
+
+    if (
+      msg.content &&
+      msg.content.mention &&
+      msg.content.mention.uids instanceof Array &&
+      msg.content.mention.uids.includes(WKSDK.shared().config.uid)
+    ) {
+      const conversation = WKSDK.shared().conversationManager.findConversation(
+        msg.channel
+      );
+      if (conversation) {
+        conversation.isMentionMe = true;
+        WKSDK.shared().conversationManager.notifyConversationListeners(
+          conversation,
+          ConversationAction.update
+        );
+      }
+    }
   };
 
   // 拉取当前会话最新消息
@@ -400,25 +420,25 @@ const GroupChatPage = () => {
     setMessages(temp);
     if (cmdContent.cmd === "messageRevoke") {
       const channel = msg.channel;
-      WKSDK.shared()
-        .config.provider.syncConversationsCallback()
-        .then((newConversations) => {
-          const newWarps = newConversations.map(
-            (item) => new ConversationWrap(item)
-          );
+      // WKSDK.shared()
+      //   .config.provider.syncConversationsCallback()
+      //   .then((newConversations) => {
+      //     const newWarps = newConversations.map(
+      //       (item) => new ConversationWrap(item)
+      //     );
 
-          setConversationWraps(newWarps);
-        });
+      //     setConversationWraps(newWarps);
+      //   });
 
-      // let conversation =
-      //   WKSDK.shared().conversationManager.findConversation(channel);
+      let conversation =
+        WKSDK.shared().conversationManager.findConversation(channel);
 
-      // if (conversation) {
-      //   WKSDK.shared().conversationManager.notifyConversationListeners(
-      //     conversation,
-      //     ConversationAction.update
-      //   );
-      // }
+      if (conversation) {
+        WKSDK.shared().conversationManager.notifyConversationListeners(
+          conversation,
+          ConversationAction.update
+        );
+      }
     } else if (cmdContent.cmd === "channelUpdate") {
       // 编辑群时也调用这个方法更新
       WKSDK.shared().channelManager.fetchChannelInfo(
@@ -528,6 +548,17 @@ const GroupChatPage = () => {
       if (firstChannel) {
         getGroupDetailData(firstChannel.channelID);
         handleChannelSelect(firstChannel);
+        // 进来自动清理未读
+        const conversation =
+          WKSDK.shared().conversationManager.findConversation(firstChannel);
+        if (conversation && conversation.unread > 0) {
+          APIClient.shared.clearUnread(firstChannel);
+          conversation.unread = 0;
+          WKSDK.shared().conversationManager.notifyConversationListeners(
+            conversation,
+            ConversationAction.update
+          );
+        }
       }
       initChannelFlag.current = false;
     }
@@ -691,9 +722,9 @@ const GroupChatPage = () => {
             height: 100vh;
             min-width: 1080px;
           }
-            .group-chat-container div {
-              box-sizing: border-box;
-            }
+          .group-chat-container div {
+            box-sizing: border-box;
+          }
           .group-chat-right {
             background-color: rgb(43, 45, 49);
             height: 100%;
