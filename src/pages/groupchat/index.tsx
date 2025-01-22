@@ -537,32 +537,29 @@ const GroupChatPage = () => {
     setInputValue("");
   };
 
-  // 初始化群聊列表和消息
-  const initChannelFlag = useRef(true);
-  useEffect(() => {
-    if (conversationWraps.length > 0 && initChannelFlag.current === true) {
-      // selectedChannel是缓存了起来的
-      const firstChannel = conversationWraps.find(
-        (item) => item.channel.channelID === selectedChannel?.channelID
-      )?.channel;
-      if (firstChannel) {
-        getGroupDetailData(firstChannel.channelID);
-        handleChannelSelect(firstChannel);
-        // 进来自动清理未读
-        const conversation =
-          WKSDK.shared().conversationManager.findConversation(firstChannel);
-        if (conversation && conversation.unread > 0) {
-          APIClient.shared.clearUnread(firstChannel);
-          conversation.unread = 0;
-          WKSDK.shared().conversationManager.notifyConversationListeners(
-            conversation,
-            ConversationAction.update
-          );
-        }
+  // // 初始化群聊列表和消息
+  const onInitChannel = (list: ConversationWrap[]) => {
+
+    const firstChannel = list.find(
+      (item) => item.channel.channelID === selectedChannel?.channelID
+    )?.channel;
+    if (firstChannel) {
+      handleChannelSelect(firstChannel);
+      getGroupDetailData(firstChannel.channelID);
+      // 进来自动清理未读
+      const conversation =
+        WKSDK.shared().conversationManager.findConversation(firstChannel);
+      if (conversation && conversation.unread > 0) {
+        APIClient.shared.clearUnread(firstChannel);
+        conversation.unread = 0;
+        WKSDK.shared().conversationManager.notifyConversationListeners(
+          conversation,
+          ConversationAction.update
+        );
       }
-      initChannelFlag.current = false;
     }
-  }, [conversationWraps]);
+  };
+  
 
   // 引用
   // 回复
@@ -672,6 +669,7 @@ const GroupChatPage = () => {
       >
         <GroupChatLeftBar />
         <GroupChannel
+          onInitChannel={onInitChannel}
           onSelectChannel={(
             channel: Channel,
             conversation: ConversationWrap

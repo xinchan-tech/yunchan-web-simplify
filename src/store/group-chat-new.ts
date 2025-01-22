@@ -61,7 +61,7 @@ export interface GroupDetailData {
 interface GroupChatShortStore {
   avatarColorMap: Map<string, string>;
   setAvatarColorMap: (map: Map<string, string>) => void;
-  conversationWraps: ConversationWrap[];
+  conversationWraps: ConversationWrap[] | null;
   setConversationWraps: (data: ConversationWrap[]) => void;
   replyMessage: Message | null; // 回复的消息
   inputValue: string; // 输入框消息
@@ -96,7 +96,7 @@ export const useGroupChatShortStore = create<GroupChatShortStore>(
     setInputValue: (str: string) => {
       set({ inputValue: str });
     },
-    conversationWraps: [],
+    conversationWraps: null,
     setConversationWraps: (data: ConversationWrap[]) => {
       set({
         conversationWraps: data,

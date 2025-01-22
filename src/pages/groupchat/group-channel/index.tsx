@@ -9,7 +9,7 @@ import WKSDK, {
   ChannelTypePerson,
 } from "wukongimjssdk";
 import { ConversationWrap } from "../ConversationWrap";
-import { ReactNode, useEffect, useMemo, useRef } from "react";
+import { ReactNode, useEffect, useRef, useState } from "react";
 import {
   useGroupChatStoreNew,
   useGroupChatShortStore,
@@ -28,6 +28,7 @@ import {
   setPersonChannelCache,
   setUserInSyncChannelCache,
 } from "../chat-utils";
+import { Skeleton } from "@/components";
 
 export type GroupData = {
   id: string;
@@ -43,6 +44,7 @@ export type GroupData = {
 
 const GroupChannel = (props: {
   onSelectChannel: (c: Channel, con: ConversationWrap) => void;
+  onInitChannel: (conversations: ConversationWrap[]) => void
 }) => {
   const {
     conversationWraps,
@@ -94,19 +96,59 @@ const GroupChannel = (props: {
       });
     }
   };
+
+  const option = {
+    queryKey: [getGroupChannels.cacheKey],
+    queryFn: () =>
+      getGroupChannels({
+        type: "1",
+      }),
+  };
+
+  const { data, isLoading } = useQuery(option);
+
+  // const [data, setData] = useState({});
+  // const [isLoading, setIsLoading] = useState(false);
+
+  // const fetchData = () => {
+  //   setIsLoading(true);
+
+  //   getGroupChannels({ type: "1" })
+  //     .then((res) => {
+  //       setData(res);
+  //     })
+  //     .finally(() => {
+  //       setIsLoading(false);
+  //     });
+  // };
+
   // 监听连接状态
+  const firstInitFlag = useRef(true)
+  const [fetchingConversation, setFetchingConversation] = useState(false);
   const connectStatusListener = async (status: ConnectStatus) => {
     if (status === ConnectStatus.Connected) {
-      const remoteConversations =
-        await WKSDK.shared().conversationManager.sync(); // 同步最近会话列表
-      if (remoteConversations && remoteConversations.length > 0) {
-        const temp = sortConversations(
-          remoteConversations.map(
-            (conversation) => new ConversationWrap(conversation)
-          )
-        );
-        batchUpdateConversation(temp);
-        setConversationWraps(temp);
+      setFetchingConversation(true);
+      try {
+        const remoteConversations =
+          await WKSDK.shared().conversationManager.sync(); // 同步最近会话列表
+        setFetchingConversation(false);
+        if (remoteConversations && remoteConversations.length > 0) {
+          const temp = sortConversations(
+            remoteConversations.map(
+              (conversation) => new ConversationWrap(conversation)
+            )
+          );
+          batchUpdateConversation(temp);
+          setConversationWraps(temp);
+          if(firstInitFlag.current === true) {
+            firstInitFlag.current = false;
+            typeof props.onInitChannel === 'function' && props.onInitChannel(temp)
+          } 
+        } else {
+          setConversationWraps([]);
+        }
+      } catch (er) {
+        setFetchingConversation(false);
       }
     }
   };
@@ -133,7 +175,6 @@ const GroupChannel = (props: {
       if (conversation.channel.channelID === latestChannel.current?.channelID) {
         // 避免未读消息在选中时还展示
         conversation.unread = 0;
-      
       }
       const index = latestConversation.current?.findIndex(
         (item) =>
@@ -142,7 +183,7 @@ const GroupChannel = (props: {
       );
       if (index !== undefined && index >= 0) {
         // conversation.reloadIsMentionMe();
-     
+
         latestConversation.current![index] = new ConversationWrap(conversation);
         const temp = sortConversations();
         batchUpdateConversation(temp);
@@ -175,7 +216,6 @@ const GroupChannel = (props: {
     // }
   };
 
-  const fetchingUserFlag = useRef(false);
   const lastContent = (conversationWrap: ConversationWrap) => {
     if (!conversationWrap.lastMessage) {
       return;
@@ -281,15 +321,7 @@ const GroupChannel = (props: {
     }
   };
 
-  const option = {
-    queryKey: [getGroupChannels.cacheKey],
-    queryFn: () =>
-      getGroupChannels({
-        type: "1",
-      }),
-  };
 
-  const { data } = useQuery(option);
 
   const handleSelectChannel = (
     channel: Channel,
@@ -327,30 +359,36 @@ const GroupChannel = (props: {
     return channelInfo;
   };
 
-  const displayConversations = useMemo(() => {
-    let result: Array<GroupData | ConversationWrap> = [];
-
+  const [goodConversations, setGoodConversations] = useState<
+    ConversationWrap[]
+  >([]);
+  const [goodGroups, setGoodGroups] = useState<GroupData[]>([]);
+  useEffect(() => {
+    let filteConversations: ConversationWrap[] = [];
+    let filteGroup: GroupData[] = [];
     if (
       data &&
       data.items instanceof Array &&
       conversationWraps instanceof Array
     ) {
-      result = data.items.map((item) => {
+      data.items.forEach((item) => {
         WKSDK.shared().channelManager.setChannleInfoForCache(
           toChannelInfo(item)
         );
-        const joinedGroup = conversationWraps.find(
+
+        const joinedChannel = conversationWraps.find(
           (con) => con.channel.channelID === item.account
         );
-        if (joinedGroup) {
-          joinedGroup.total_user = item.total_user;
-          return joinedGroup;
+        if (joinedChannel) {
+          joinedChannel.total_user = item.total_user;
+          filteConversations.push(joinedChannel);
         } else {
-          return item;
+          filteGroup.push(item);
         }
       });
     }
-    return result;
+    setGoodGroups(filteGroup);
+    setGoodConversations(filteConversations);
   }, [data, conversationWraps]);
 
   return (
@@ -360,97 +398,110 @@ const GroupChannel = (props: {
         <CreateGroup />
       </div>
       <div className="group-list">
-        {displayConversations.map((item: ConversationWrap | GroupData) => {
-          if (item instanceof ConversationWrap) {
-            return (
-              <div
-                key={item.channel.channelID}
-                className={cn(
-                  "flex conversation-card",
-                  item.channel.channelID === selectedChannel?.channelID &&
-                    !readyToJoinGroup &&
-                    "actived"
-                )}
-                onClick={() => {
-                  setReadyToJoinGroup(null);
-                  handleSelectChannel(item.channel, item);
-                }}
-              >
-                <div className="group-avatar rounded-md flex items-center text-ellipsis justify-center relative">
-                  <ChatAvatar
-                    radius="10px"
-                    className="w-[44px] h-[44px]"
-                    data={{
-                      name: item.channelInfo?.title || "",
-                      uid: item.channel.channelID,
-                      avatar: item.channelInfo?.logo || "",
-                    }}
-                  />
-                  {item.unread > 0 && (
-                    <div className="absolute h-[18px] box-border  unread min-w-6">
-                      {item.unread > 99 ? "99+" : item.unread}
-                    </div>
+        {(!conversationWraps  || fetchingConversation === true) &&
+          Array.from({
+            length: 10,
+          }).map((_, i) => (
+            <Skeleton
+              style={{ background: "#555" }}
+              key={i + "channel"}
+              className="h-[76px]"
+            />
+          ))}
+        {conversationWraps &&  fetchingConversation === false && (
+          <>
+            {goodConversations.map((item: ConversationWrap) => {
+              return (
+                <div
+                  key={item.channel.channelID}
+                  className={cn(
+                    "flex conversation-card",
+                    item.channel.channelID === selectedChannel?.channelID &&
+                      !readyToJoinGroup &&
+                      "actived"
                   )}
-                </div>
-                <div className="group-data flex-1">
-                  <div className="group-title">
-                    {item.channelInfo?.title || ""}
-                    <span className="text-xs text-gray-400">
-                      ({item.total_user})
-                    </span>
+                  onClick={() => {
+                    setReadyToJoinGroup(null);
+                    handleSelectChannel(item.channel, item);
+                  }}
+                >
+                  <div className="group-avatar rounded-md flex items-center text-ellipsis justify-center relative">
+                    <ChatAvatar
+                      radius="10px"
+                      className="w-[44px] h-[44px]"
+                      data={{
+                        name: item.channelInfo?.title || "",
+                        uid: item.channel.channelID,
+                        avatar: item.channelInfo?.logo || "",
+                      }}
+                    />
+                    {item.unread > 0 && (
+                      <div className="absolute h-[18px] box-border  unread min-w-6">
+                        {item.unread > 99 ? "99+" : item.unread}
+                      </div>
+                    )}
                   </div>
-                  <div className="group-last-msg flex justify-between">
-                    <div className="flex-1 overflow-hidden whitespace-nowrap text-ellipsis max-w-24 text-xs">
-                      {lastContent(item)}
+                  <div className="group-data flex-1">
+                    <div className="group-title">
+                      {item.channelInfo?.title || ""}
+                      <span className="text-xs text-gray-400">
+                        ({item.total_user})
+                      </span>
                     </div>
-                    <div className="max-w-30 text-xs">
-                      {item.timestampString || ""}
+                    <div className="group-last-msg flex justify-between">
+                      <div className="flex-1 overflow-hidden whitespace-nowrap text-ellipsis max-w-24 text-xs">
+                        {lastContent(item)}
+                      </div>
+                      <div className="max-w-30 text-xs">
+                        {item.timestampString || ""}
+                      </div>
                     </div>
-                  </div>
-                </div>
-              </div>
-            );
-          } else {
-            return (
-              <div
-                key={item.account}
-                className={cn(
-                  "flex conversation-card",
-                  item.account === readyToJoinGroup?.account && "actived"
-                )}
-                onClick={() => {
-                  if (readyToJoinGroup?.account === item.account) {
-                    return;
-                  }
-                  setSelectedChannel(null);
-                  getGroupDetailData(item.account);
-                  setReadyToJoinGroup(item);
-                }}
-              >
-                <div className="group-avatar rounded-md flex items-center text-ellipsis justify-center relative">
-                  <ChatAvatar
-                    radius="10px"
-                    className="w-[44px] h-[44px]"
-                    data={{
-                      name: item.name || "",
-                      uid: item.account,
-                      avatar: item.avatar || "",
-                    }}
-                  />
-                </div>
-                <div className="group-data flex-1">
-                  <div className="group-title">{item.name || ""}</div>
-                  <div className="group-last-msg flex justify-between">
-                    <div className="flex-1 overflow-hidden whitespace-nowrap text-ellipsis max-w-24 text-xs">
-                      一起加入群组吧
-                    </div>
-                    <div className="max-w-24 text-xs"></div>
                   </div>
                 </div>
-              </div>
-            );
-          }
-        })}
+              );
+            })}
+            {goodGroups.map((item: GroupData) => {
+              return (
+                <div
+                  key={item.account}
+                  className={cn(
+                    "flex conversation-card",
+                    item.account === readyToJoinGroup?.account && "actived"
+                  )}
+                  onClick={() => {
+                    if (readyToJoinGroup?.account === item.account) {
+                      return;
+                    }
+                    setSelectedChannel(null);
+                    getGroupDetailData(item.account);
+                    setReadyToJoinGroup(item);
+                  }}
+                >
+                  <div className="group-avatar rounded-md flex items-center text-ellipsis justify-center relative">
+                    <ChatAvatar
+                      radius="10px"
+                      className="w-[44px] h-[44px]"
+                      data={{
+                        name: item.name || "",
+                        uid: item.account,
+                        avatar: item.avatar || "",
+                      }}
+                    />
+                  </div>
+                  <div className="group-data flex-1">
+                    <div className="group-title">{item.name || ""}</div>
+                    <div className="group-last-msg flex justify-between">
+                      <div className="flex-1 overflow-hidden whitespace-nowrap text-ellipsis max-w-24 text-xs">
+                        一起加入群组吧
+                      </div>
+                      <div className="max-w-24 text-xs"></div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </>
+        )}
       </div>
 
       <style jsx>

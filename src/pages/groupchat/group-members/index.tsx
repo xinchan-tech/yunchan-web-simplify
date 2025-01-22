@@ -8,6 +8,7 @@ import {
 } from "@/components";
 
 import { useMemberSetting } from "../hooks";
+import { useMemo } from "react";
 
 const GroupMembers = (props: { total: string | number }) => {
   const subscribers = useGroupChatShortStore((state) => state.subscribers);
@@ -19,6 +20,15 @@ const GroupMembers = (props: { total: string | number }) => {
   );
 
   const { renderContextMenu } = useMemberSetting();
+  const skeletonArr = useMemo(() => {
+    let result = [];
+    const len = props.total as number;
+    for (let i = 0; i < len; i++) {
+      result.push(i);
+    }
+    console.log(result, 'resultresult')
+    return result;
+  }, [props.total]);
 
   return (
     <div className="h-full">
@@ -31,18 +41,15 @@ const GroupMembers = (props: { total: string | number }) => {
       <div className="group-members">
         <div className="box-title flex items-center">活跃成员</div>
         {fetchingSubscribers === true &&
-          Array.from({
-            length:
-              typeof props.total === "number"
-                ? props.total
-                : parseInt(props.total),
-          }).map((_, i) => (
-            <Skeleton
-              style={{ background: "#555" }}
-              key={i}
-              className="mt-[6px] h-5"
-            />
-          ))}
+          skeletonArr.map((idx) => {
+            return (
+              <Skeleton
+                key={idx}
+                style={{ background: "#555" }}
+                className="mt-[6px] h-5"
+              />
+            );
+          })}
         {fetchingSubscribers === false &&
           subscribers.map((item) => {
             return (
