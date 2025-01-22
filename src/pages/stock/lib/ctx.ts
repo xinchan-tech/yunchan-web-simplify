@@ -775,7 +775,8 @@ export const kChartUtils: KChartUtils = {
           })
         }
         return item
-      })
+      }),
+      activeChartIndex: 0
     }))
   },
   setYAxis: ({ index, yAxis }) => {

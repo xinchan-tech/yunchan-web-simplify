@@ -119,8 +119,8 @@ const VirtualStockList = (props: VirtualStockListProps) => {
     if (!props.keyword) {
       return [...stockList]
     }
-    console.log()
-    return trie.searchPrefix(props.keyword).map(item => stockMap[item])
+   
+    return trie.searchPrefix(props.keyword.toUpperCase()).map(item => stockMap[item])
   }, [stockMap, props.keyword, stockList, trie])
 
   useEffect(() => {

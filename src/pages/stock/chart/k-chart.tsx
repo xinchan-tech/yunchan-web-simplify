@@ -1,13 +1,13 @@
 import { JknIcon } from "@/components"
 import { cn } from "@/utils/style"
 import { useUpdateEffect } from "ahooks"
-import { useMemo } from "react"
+import { useEffect, useMemo } from "react"
 import { useNavigate } from "react-router"
 import { ChartContextMenu } from "../component/chart-context-menu"
 import { ChartToolSelect } from "../component/chart-tool"
 import { MainChart } from "../component/main-chart"
 import { TimeIndexSelect } from "../component/time-index"
-import { useKChartStore, useSymbolQuery } from "../lib"
+import { kChartUtils, useKChartStore, useSymbolQuery } from "../lib"
 import { renderUtils } from "../lib/utils"
 
 interface KChartProps {
@@ -27,9 +27,9 @@ export const KChart = (props: KChartProps) => {
   const viewMode = useKChartStore(s => s.viewMode)
   const symbol = useSymbolQuery()
 
-  // useUpdateEffect(() => {
-  //   setSymbol({ symbol })
-  // }, [symbol])
+  useEffect(() => {
+    kChartUtils.setSymbol({ symbol })
+  }, [symbol])
 
   const navigate = useNavigate()
 

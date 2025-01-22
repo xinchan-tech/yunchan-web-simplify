@@ -58,14 +58,14 @@ const StockTree = () => {
       return
     }
     const root = []
-    const dataset: Record<string, { area: number, originArea: number }> = {}
+    const dataset: Record<string, { value: number, originValue: number }> = {}
 
     const colors = filter.map(v => getColorByStep(v / 100))
     let max = Number.MIN_SAFE_INTEGER
     let min = Number.MAX_SAFE_INTEGER
 
     for (const node of query.data) {
-      const n = { name: node.sector_name, data: node.change, children: [], area: 0, originArea: 0 }
+      const n = { name: node.sector_name, data: node.change, children: [], value: 0, originValue: 0 }
 
 
       for (const t of node.tops) {
@@ -76,7 +76,7 @@ const StockTree = () => {
         if (!colors.includes(_color)) continue
 
         // Math.abs((Math.log(stock.volume) ** 5)) + 0.1
-        const child = { name: t.symbol, area: Decimal.create(stock.volume).log().pow(5).abs().plus(0.1).toNumber(), data: percent, color: _color, originArea: stock.volume, plateId: t.plate_id }
+        const child = { name: t.symbol, value: Decimal.create(stock.volume).log().pow(5).abs().plus(0.1).toNumber(), data: percent, color: _color, originValue: stock.volume, plateId: t.plate_id }
 
         n.children.push(child as never)
         max = Math.max(max, stock.volume)
@@ -133,24 +133,17 @@ const StockTree = () => {
 
     if (!queryPlate.data) return []
 
-    const dataset: Record<string, { area: number }> = {}
-    let max = Number.MIN_SAFE_INTEGER
-    let min = Number.MAX_SAFE_INTEGER
-
     const _colors = filter.map(v => getColorByStep(v / 100))
 
     for (const plate of queryPlate.data) {
       const _color = getColorByStep(plate.change / 100)
       if (!_colors.includes(_color)) continue
-      const n = { name: plate.name, area: Math.abs((Math.log(plate.amount) ** 5)) + 0.1, data: plate.change, color: getColorByStep(plate.change / 100) }
-      dataset[plate.id] = n
-      max = Math.max(max, plate.amount)
-      min = Math.min(min, plate.amount)
+      const n = { name: plate.name, value: Math.abs((Math.log(plate.amount) ** 5)) + 0.1, data: plate.change, color: getColorByStep(plate.change / 100) }
+
       r.push(n)
     }
 
-
-    return r
+    return r.slice(0, 60)
   }, [queryPlate.data, filter])
 
 
@@ -173,9 +166,7 @@ const StockTree = () => {
 
     if (!queryStock.data) return []
 
-    const dataset: Record<string, { area: number }> = {}
-    let max = Number.MIN_SAFE_INTEGER
-    let min = Number.MAX_SAFE_INTEGER
+    const dataset: Record<string, { value: number }> = {}
     const colors = filter.map(v => getColorByStep(v / 100))
 
     for (const stock of queryStock.data.items) {
@@ -183,10 +174,8 @@ const StockTree = () => {
       const percent = stockUtils.getPercent(stockRecord, 2, true)!
       const _color = getColorByStep(percent / 100)
       if (!colors.includes(_color)) continue
-      const child = { name: stock.symbol, area: Math.abs((Math.log(stockRecord.volume) ** 5)) + 0.1, data: percent, color: _color }
+      const child = { name: stock.symbol, value: Math.abs((Math.log(stockRecord.volume) ** 5)) + 0.1, data: percent, color: _color }
       dataset[child.name] = child
-      max = Math.max(max, stockRecord.turnover)
-      min = Math.min(min, stockRecord.turnover)
       r.push(child as never)
     }
     return r

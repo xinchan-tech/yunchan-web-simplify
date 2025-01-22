@@ -9,7 +9,7 @@ import { router } from "@/router"
 
 type TreeMapData = {
   name: string
-  area?: number
+  value?: number
   data?: number
   children?: TreeMapData[]
   x0?: number
@@ -92,7 +92,7 @@ const TreeMap = (props: TreeMapProps) => {
     }
 
     const { clientWidth, clientHeight } = chartDomRef.current
-    const root = treemap<TreeMapData>().size([clientWidth, clientHeight]).padding(1).paddingTop(18)(hierarchy<TreeMapData>({ name: 'root', children: data }).sum(d => d.area ?? 0))
+    const root = treemap<TreeMapData>().size([clientWidth, clientHeight]).padding(1).paddingTop(18)(hierarchy<TreeMapData>({ name: 'root', children: data }).sum(d => d.value ?? 0))
     chartRef.current.selectAll('*').remove()
     renderRect(root)
     renderTitles(root)

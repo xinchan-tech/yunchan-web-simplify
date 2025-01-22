@@ -74,7 +74,7 @@ interface GoldenPoolProps {
 const GoldenPool = (props: GoldenPoolProps) => {
   const selection = useRef<string[]>([])
   const ctx = useContext(SuperStockContext)
-  const { checked, setCheckedAll, onChange, toggle, getIsChecked } = useCheckboxGroup([])
+  const { checked, toggle, getIsChecked } = useCheckboxGroup([])
   const collects = useQuery({
     queryKey: [getStockCollectCates.cacheKey],
     queryFn: () => getStockCollectCates()
@@ -297,7 +297,7 @@ interface PlateListProps {
 }
 
 const PlateList = (props: PlateListProps) => {
-
+  const { checked, toggle, getIsChecked } = useCheckboxGroup([])
   const ctx = useContext(SuperStockContext)
   const selection = useRef<string[]>([])
 
@@ -310,42 +310,49 @@ const PlateList = (props: PlateListProps) => {
     selection.current = []
   })
 
-  const _onRowClick = (data: PlateDataType, row: Row<PlateDataType>) => {
-    props.onRowClick(data)
-    row.toggleSelected()
-  }
+  useEffect(() => {
+    selection.current = checked
+  }, [checked])
 
-  const column = useMemo<JknTableProps<PlateDataType>['columns']>(() => [
+  const [list, { onSort, setList }] = useTableData<PlateDataType>(props.data)
+
+  useUpdateEffect(() => {
+    setList(props.data)
+  }, [props.data])
+
+  const columns = useMemo<JknRcTableProps<PlateDataType>['columns']>(() => [
     {
-      header: () => <JknIcon name="checkbox_mult_nor_dis" className="w-4 h-4" />,
-      enableSorting: false,
-      accessorKey: 'select',
+      title: <JknIcon name="checkbox_mult_nor_dis" className="w-4 h-4" />,
+      dataIndex: 'select',
       id: 'select',
-      meta: { align: 'center', width: 30 },
-      cell: ({ row }) => (
-        <div className="w-full flex justify-center">
-          <Checkbox checked={row.getIsSelected()} onCheckedChange={(e) => row.getToggleSelectedHandler()({ target: e })} />
-        </div>
+      align: 'center', width: 30,
+      render: (_, row) => (
+        <div className="flex items-center justify-center w-full"><Checkbox checked={getIsChecked(row.id)} onCheckedChange={() => toggle(row.id)} /></div>
       )
     },
-    { header: '序号', enableSorting: false, accessorKey: 'index', meta: { align: 'center', width: 40 }, cell: ({ row }) => row.index + 1 },
+    { title: '序号', align: 'left', dataIndex: 'index', width: 40, render: (_, __, index) => index + 1 },
     {
-      header: '行业', enableSorting: false, accessorKey: 'name', meta: { width: 'auto' },
-      cell: ({ row }) => <div className="w-full overflow-hidden text-ellipsis whitespace-nowrap">{row.getValue('name')}</div>
+      title: '行业', align: 'left', dataIndex: 'name',
+      render: (_, row) => <div className="w-full overflow-hidden text-ellipsis whitespace-nowrap">{row.name}</div>
     },
     {
-      header: '涨跌幅', accessorKey: 'change',
-      meta: { width: 90 },
-      cell: ({ row }) => <NumSpan className="w-20" block percent value={row.original.change} isPositive={row.original.change > 0} />
+      title: '涨跌幅', dataIndex: 'change', sort: true,
+      width: 90,
+      render: (_, row) => <NumSpan className="w-20" block percent value={row.change} isPositive={row.change > 0} />
     },
     {
-      header: '成交额', accessorKey: 'amount',
-      meta: { align: 'right', width: 120 },
-      cell: ({ row }) => Decimal.create(row.original.amount).toShortCN(3)
+      title: '成交额', dataIndex: 'amount', sort: true,
+      align: 'right', width: 120,
+      render: (_, row) => Decimal.create(row.amount).toShortCN(3)
     }
-  ], [])
+  ], [getIsChecked, toggle])
   return (
-    <JknTable onSelection={v => { selection.current = v }} onRowClick={_onRowClick} columns={column} data={props.data} />
+    <JknRcTable rowKey="id" onRow={(r) => ({
+      onClick: () => {
+        toggle(r.id)
+        props.onRowClick?.(r)
+      }
+    })} data={list} columns={columns} onSort={onSort} />
   )
 }
 

@@ -10,7 +10,7 @@ import { useMount, useUnmount, useUpdateEffect } from "ahooks"
 import dayjs from "dayjs"
 import type { EChartsType } from 'echarts/core'
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { chartEvent, kChartUtils, useKChartStore } from "../lib"
+import { chartEvent, kChartUtils, useKChartStore, useSymbolQuery } from "../lib"
 import { initOptions, renderChart, renderGrid, renderMainChart, renderMainCoiling, renderMainIndicators, renderMarkLine, renderOverlay, renderOverlayMark, renderSecondary, renderSecondaryLocalIndicators, renderWatermark, renderZoom } from "../lib/render"
 import { renderUtils } from "../lib/utils"
 import { IndicatorTooltip } from "./indicator-tooltip"
@@ -40,10 +40,10 @@ export const MainChart = (props: MainChartProps) => {
       // 检测鼠标是否在图表内
       const toElement = (e.event?.event as any).toElement as HTMLElement
 
-      if(!toElement?.className.includes('main-indicator-tooltip') || !toElement?.className.includes('secondary-indicator-tool')) {
+      if (!toElement?.className.includes('main-indicator-tooltip') || !toElement?.className.includes('secondary-indicator-tool')) {
         chartEvent.event.emit('data', [])
       }
-      
+
     })
 
     chart.current.setOption({
@@ -242,7 +242,7 @@ export const MainChart = (props: MainChartProps) => {
   }, [size])
 
   useEffect(() => {
-  
+
     kChartUtils.setMainData({ index: props.index, data: query.data, dateConvert: true })
   }, [query.data, props.index])
 
@@ -274,7 +274,7 @@ export const MainChart = (props: MainChartProps) => {
 
     renderMainIndicators(_options, Object.values(state.mainIndicators))
     renderOverlayMark(_options, state)
-   
+
     renderSecondary(_options, state.secondaryIndicators)
     renderSecondaryLocalIndicators(_options, state.secondaryIndicators, state)
     renderWatermark(_options, state.timeIndex)
@@ -379,7 +379,7 @@ export const MainChart = (props: MainChartProps) => {
           <div className="absolute top-4 left-2 space-y-2 main-indicator-tooltip">
             {Object.entries(state.mainIndicators).map(([key, item]) => <IndicatorTooltip mainIndex={props.index} key={key} type="main" indicator={item} />)}
           </div>
-        ): null
+        ) : null
       }
     </div>
   )

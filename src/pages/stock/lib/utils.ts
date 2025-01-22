@@ -36,10 +36,8 @@ export const renderUtils = {
     }
   },
 
-  getGridSize: (chart: EChartsType, index = 0) => {
+  getGridSize: (chart: EChartsType) => {
     const grid = chart.getOption().grid
-
-    console.log(grid)
   },
 
   getTooltipIndex: (options: ECOption, index: number) => {
@@ -83,7 +81,7 @@ export const renderUtils = {
   calcGridSize: (size: [number, number], secondaryIndicatorLen: number, hasLeft: boolean) => {
     const Y_AXIS_WIDTH = 70
     const X_AXIS_HEIGHT = 30
-    const TOP_OFFSET = 10
+    const TOP_OFFSET = 0
     const [width, height] = size
 
     const gridLeft = hasLeft ? Y_AXIS_WIDTH : 1
@@ -293,6 +291,8 @@ export const renderUtils = {
         return 30 * 24 * 60 * 60 * 1000
       case StockChartInterval.QUARTER:
         return 90 * 24 * 60 * 60 * 1000
+      case StockChartInterval.HALF_YEAR:
+        return 180 * 24 * 60 * 60 * 1000
       case StockChartInterval.YEAR:
         return 365 * 24 * 60 * 60 * 1000
       default:

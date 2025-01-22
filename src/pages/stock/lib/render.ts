@@ -6,7 +6,7 @@ import { colorUtil } from '@/utils/style'
 import dayjs from 'dayjs'
 import Decimal from 'decimal.js'
 import type { CandlestickSeriesOption, LineSeriesOption } from 'echarts/charts'
-import { CoilingIndicatorId, type Indicator, KChartContext, chartEvent, isTimeIndexChart } from './ctx'
+import { CoilingIndicatorId, type Indicator, type KChartContext, chartEvent, isTimeIndexChart } from './ctx'
 import {
   type DrawerRectShape,
   type DrawerTextShape,
@@ -173,10 +173,10 @@ export const createOptions = (chart: EChartsType): ECOption => ({
         }
       },
       min: v => {
-        return v.min - (v.max - v.min) * 0.2 - 1
+        return v.min - (v.max - v.min) * 0.2 - 0.1
       },
       max: v => {
-        return v.max + (v.max - v.min) * 0.2 + 1
+        return v.max + (v.max - v.min) * 0.2 + 0.1
       },
       splitLine: {
         lineStyle: {
@@ -195,6 +195,8 @@ export const createOptions = (chart: EChartsType): ECOption => ({
 
           const start = data[0]
 
+          if(!start || start.length < 2) return TEXT_COLOR
+ 
           const getStockColor = useConfig.getState().getStockColor
 
           return v >= start[2] ? getStockColor(true, 'hex') : getStockColor(false, 'hex')
@@ -211,10 +213,10 @@ export const createOptions = (chart: EChartsType): ECOption => ({
         show: false
       },
       min: v => {
-        return v.min - (v.max - v.min) * 0.2 - 1
+        return v.min - (v.max - v.min) * 0.2 - 0.1
       },
       max: v => {
-        return v.max + (v.max - v.min) * 0.2 + 1
+        return v.max + (v.max - v.min) * 0.2 + 0.1
       },
       axisPointer: {
         label: {
@@ -265,6 +267,8 @@ export const createOptions = (chart: EChartsType): ECOption => ({
             if (!data) return '-'
 
             const start = data[0]
+     
+            if(!start || start.length < 2) return TEXT_COLOR
 
             return `${(((v - start[2]) / start[2]) * 100).toFixed(2)}%`
           }
@@ -276,10 +280,10 @@ export const createOptions = (chart: EChartsType): ECOption => ({
 
           const data = chart.meta!.mainData?.slice(scale[0], scale[1])
 
-          if (!data || !v) return TEXT_COLOR
-
+          if (!data || data.length === 0 || !v) return TEXT_COLOR
+         
           const start = data[0]
-
+   
           const getStockColor = useConfig.getState().getStockColor
 
           return v >= start[2] ? getStockColor(true, 'hex') : getStockColor(false, 'hex')
@@ -379,10 +383,10 @@ const defaultXAxis: XAXisOption = {
 const defaultYAxis: YAXisOption = {
   scale: true,
   min: v => {
-    return v.min - (v.max - v.min) * 0.2 - 1
+    return v.min - (v.max - v.min) * 0.2 - 0.1
   },
   max: v => {
-    return v.max + (v.max - v.min) * 0.2 + 1
+    return v.max + (v.max - v.min) * 0.2 + 0.1
   },
   position: 'right',
   axisLine: { onZero: false, show: false },

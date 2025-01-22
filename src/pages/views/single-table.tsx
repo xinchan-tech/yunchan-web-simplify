@@ -112,26 +112,30 @@ const SingleTable = (props: SingleTableProps) => {
   }, [query.data, setList])
 
   const onSortChange: JknRcTableProps<TableDataType>['onSort'] = (columnKey, sort) => {
-    const columnMap: Record<string, UsStockColumn> = {
-      code: 'symbol',
-      price: 'close',
-      amount: 'amount',
-      percent: "increase",
-      total: "total_mv",
-      prePercent: "stock_before",
-      afterPercent: "stock_after",
-      turnoverRate: "turnover_rate",
-    }
+    if (!props.type || ['all', 'ixic', 'spx', 'dji', 'etf'].includes(props.type)) {
+      const columnMap: Record<string, UsStockColumn> = {
+        code: 'symbol',
+        price: 'close',
+        amount: 'amount',
+        percent: "increase",
+        total: "total_mv",
+        prePercent: "stock_before",
+        afterPercent: "stock_after",
+        turnoverRate: "turnover_rate",
+      }
 
-    if (columnKey === 'name') {
+      if (columnKey === 'name') {
+        onSort(columnKey, sort)
+        return
+      }
+
+      setSort({
+        column: sort !== undefined ? columnMap[columnKey as string] : 'total_mv',
+        order: sort === undefined ? 'desc' : sort
+      })
+    } else { 
       onSort(columnKey, sort)
-      return
     }
-
-    setSort({
-      column: sort !== undefined ? columnMap[columnKey as string] : 'total_mv',
-      order: sort === undefined ? 'desc' : sort
-    })
   }
 
   const updateStockCollect = useCallback((id: string, checked: boolean) => {
@@ -176,7 +180,7 @@ const SingleTable = (props: SingleTableProps) => {
     {
       title: '总市值', dataIndex: 'total', align: 'right', width: '8%', sort: true,
       render: (_, row) => (
-        <NumSpanSubscribe blink code={row.symbol} field={v => stockUtils.getSubscribeMarketValue({ totalShare: row.total }, v)} value={row.amount} decimal={2} align="right" unit />
+        <NumSpanSubscribe blink code={row.symbol} field={v => stockUtils.getSubscribeMarketValue({ totalShare: row.total }, v)} value={row.total} decimal={2} align="right" unit />
       )
     },
     {
