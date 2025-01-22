@@ -1,6 +1,6 @@
 import { type StockExtend, type StockRawRecord, getStockCollects } from "@/api"
-import { AddCollect, CollectCapsuleTabs, JknIcon, NumSpan, NumSpanSubscribe } from "@/components"
-import { usePropValue, useStockQuoteSubscribe, useTableData } from "@/hooks"
+import { AddCollect, CollectCapsuleTabs, JknIcon, NumSpanSubscribe } from "@/components"
+import { useStockQuoteSubscribe, useTableData } from "@/hooks"
 import { useConfig, useTime } from "@/store"
 import { getTradingPeriod } from "@/utils/date"
 import echarts, { type ECOption } from "@/utils/echarts"
@@ -8,8 +8,7 @@ import { type Stock, type StockSubscribeHandler, stockUtils } from "@/utils/stoc
 import { colorUtil } from "@/utils/style"
 import { useQuery } from "@tanstack/react-query"
 import { useMount, useUnmount, useUpdateEffect } from "ahooks"
-import Decimal from "decimal.js"
-import { type PropsWithChildren, useCallback, useEffect, useRef, useState } from "react"
+import { memo, type PropsWithChildren, useCallback, useEffect, useRef, useState } from "react"
 import { withSort } from "../jkn/jkn-icon/with-sort"
 
 const extend: StockExtend[] = ['basic_index', 'day_basic', 'alarm_ai', 'alarm_all', 'total_share', 'financials', 'thumbs', 'stock_before', 'stock_after']
@@ -31,7 +30,7 @@ interface CollectListProps {
 
 const SortSpan = withSort((props: PropsWithChildren) => <span>{props.children}</span>)
 
-export const CollectList = (props: CollectListProps) => {
+export const CollectList = memo((props: CollectListProps) => {
   const [collect, setCollect] = useState('1')
   const trading = useTime(s => s.getTrading())
   const [stockList, { setList, onSort }] = useTableData<TableDataType>([], 'code')
@@ -87,42 +86,44 @@ export const CollectList = (props: CollectListProps) => {
   }
 
   return (
-    <div className="flex flex-col border border-solid border-border overflow-hidden h-full">
-      <div className="flex w-full flex-nowrap justify-start flex-shrink-0 border-0 border-b border-solid border-border">
-        <CollectCapsuleTabs onChange={setCollect} type="text" />
-        <AddCollect>
-          <JknIcon name="add" />
-        </AddCollect>
-      </div>
-      <div className="flex-1 overflow-hidden flex flex-col">
-        <div className="border-0 border-b border-solid border-border flex text-xs py-1 px-1 ">
-          <span className="flex-1">
-            <SortSpan onSort={_onSort} field="code" sort={sort.field === 'code' ? sort.sort : undefined}>名称</SortSpan>
-          </span>
-          <span className="w-20 flex-shrink-0 text-right box-border pr-1">
-            <SortSpan onSort={_onSort} field="price" sort={sort.field === 'price' ? sort.sort : undefined}>现价</SortSpan>
-          </span>
-          <span className="w-16 flex-shrink-0 text-right">
-            <SortSpan onSort={_onSort} field="percent" sort={sort.field === 'percent' ? sort.sort : undefined}>涨跌幅%</SortSpan>
-          </span>
+    <>
+      <div className="flex flex-col border border-solid border-border overflow-hidden h-full">
+        <div className="flex w-full flex-nowrap justify-start flex-shrink-0 border-0 border-b border-solid border-border">
+          <CollectCapsuleTabs onChange={setCollect} type="text" />
+          <AddCollect>
+            <JknIcon name="add" />
+          </AddCollect>
         </div>
-        <div className="flex-1 overflow-y-auto w-full">
-          {
-            stockList.map(stock => (
-              <StockListItem key={stock.code} stock={stock} onCollectChange={props.onCollectChange}>
-                {
-                  props.visible === 'full' ? (
-                    <StockChart data={stock.thumbs.filter(v => +v > 0) ?? []} type={(stock.percent ?? 0) >= 0 ? 'up' : 'down'} />
-                  ) : null
-                }
-              </StockListItem>
-            ))
-          }
+        <div className="flex-1 overflow-hidden flex flex-col">
+          <div className="border-0 border-b border-solid border-border flex text-xs py-1 px-1 ">
+            <span className="flex-1">
+              <SortSpan onSort={_onSort} field="code" sort={sort.field === 'code' ? sort.sort : undefined}>名称</SortSpan>
+            </span>
+            <span className="w-20 flex-shrink-0 text-right box-border pr-1">
+              <SortSpan onSort={_onSort} field="price" sort={sort.field === 'price' ? sort.sort : undefined}>现价</SortSpan>
+            </span>
+            <span className="w-16 flex-shrink-0 text-right">
+              <SortSpan onSort={_onSort} field="percent" sort={sort.field === 'percent' ? sort.sort : undefined}>涨跌幅%</SortSpan>
+            </span>
+          </div>
+          <div className="flex-1 overflow-y-auto w-full">
+            {
+              stockList.map(stock => (
+                <StockListItem key={stock.code} stock={stock} onCollectChange={props.onCollectChange}>
+                  {
+                    props.visible === 'full' ? (
+                      <StockChart data={stock.thumbs.filter(v => +v > 0) ?? []} type={(stock.percent ?? 0) >= 0 ? 'up' : 'down'} />
+                    ) : null
+                  }
+                </StockListItem>
+              ))
+            }
+          </div>
         </div>
       </div>
-    </div>
+    </>
   )
-}
+})
 
 interface StockListItemProps {
   stock: TableDataType
@@ -130,7 +131,6 @@ interface StockListItemProps {
 }
 
 const StockListItem = ({ stock, onCollectChange, children }: PropsWithChildren<StockListItemProps>) => {
-  const [innverValue, setInnerValue] = useState(stock)
   const trading = useTime(s => s.getTrading())
   const priceBlink = useConfig(s => s.setting.priceBlink)
   const lastValue = useRef(stock.price)
@@ -143,15 +143,15 @@ const StockListItem = ({ stock, onCollectChange, children }: PropsWithChildren<S
       if (priceBlink === '1') {
 
         if (!priceBlinkTimer.current) {
-  
+
           if (lastValue.current === undefined || !data.record.close) return
           const randomDelay = Math.random() * 500
-          
+
           priceBlinkTimer.current = window.setTimeout(() => {
             const blinkState = lastValue.current! < data.record.close! ? 'down' : 'up'
             lastValue.current = data.record.close
             span.current?.setAttribute('data-blink', blinkState)
-            
+
             setTimeout(() => {
               span.current?.removeAttribute('data-blink')
               priceBlinkTimer.current = undefined
@@ -206,7 +206,7 @@ const StockListItem = ({ stock, onCollectChange, children }: PropsWithChildren<S
               {
                 stock.subPrice ? (
                   <span>
-                    <NumSpanSubscribe code={stock.code} field="close" value={stock.subPrice} decimal={3}/>&nbsp;&nbsp;
+                    <NumSpanSubscribe code={stock.code} field="close" value={stock.subPrice} decimal={3} />&nbsp;&nbsp;
                     <NumSpanSubscribe code={stock.code} field="percent" value={stock.subPercent} decimal={2} percent />
                   </span>
                 ) : '--'

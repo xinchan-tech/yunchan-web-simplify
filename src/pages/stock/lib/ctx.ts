@@ -1,11 +1,18 @@
-import { type getStockChart, type getStockTabList, StockChartInterval } from '@/api'
+import { getStockChart, getStockIndicatorData, getStockTabData, type getStockTabList, StockChartInterval } from '@/api'
 import type echarts from '@/utils/echarts'
+import { queryClient } from '@/utils/query-client'
+import { produce } from 'immer'
 import mitt, { Emitter } from 'mitt'
 import { nanoid } from 'nanoid'
 import { createContext, useContext } from 'react'
 import type { Updater } from 'use-immer'
+import { create } from 'zustand'
+import { createJSONStorage, persist } from 'zustand/middleware'
+import { renderUtils } from './utils'
+import { useIndicator, useTime } from '@/store'
+import dayjs from 'dayjs'
 
-type ViewMode =
+export type ViewMode =
   | 'single'
   | 'double'
   | 'double-vertical'
@@ -67,12 +74,14 @@ export interface KChartContext {
    * 从0开始
    */
   activeChartIndex: number
+}
 
-  /**
-   * 设置状态
-   * @deprecated
-   */
-  setState: Updater<KChartState>
+type KChartUtils = {
+  // /**
+  //  * 设置状态
+  //  * @deprecated
+  //  */
+  // setState: Updater<KChartState>
 
   /**
    * 设置图表symbol
@@ -89,11 +98,6 @@ export interface KChartContext {
   setActiveChart: (index: StockChartInterval) => void
 
   /**
-   * 叠加标记列表
-   */
-  overMarkList: Awaited<ReturnType<typeof getStockTabList>>
-
-  /**
    * 修改分时图
    * @param params
    * @param params.index 窗口索引, 默认为当前激活的窗口
@@ -108,7 +112,7 @@ export interface KChartContext {
    * @param params.system 缠论系统
    * @returns
    */
-  setMainSystem: (params: { index?: number; system: string }) => void
+  setMainSystem: (params: { index?: number; system?: string }) => void
 
   /**
    * 修改主图的指标
@@ -262,7 +266,7 @@ type MainChartState = {
   /**
    * 缠论系统
    */
-  system: string
+  system?: string
   /**
    * 附图的指标，有几个指标就有几个附图
    */
@@ -312,13 +316,7 @@ type MainChartState = {
   }
 }
 
-export const KChartContext = createContext<KChartContext>({} as unknown as KChartContext)
 
-export type KChartState = Pick<KChartContext, 'activeChartIndex' | 'state' | 'viewMode'>
-
-export const useKChartContext = () => {
-  return useContext(KChartContext)
-}
 
 /**
  * 创建默认的图表状态
@@ -328,9 +326,9 @@ export const useKChartContext = () => {
  * @returns 图表实例状态
  *
  */
-export const createDefaultChartState = (opts: { symbol?: string; index: number }): ArrayItem<KChartState['state']> => {
+export const createDefaultChartState = (opts: { symbol?: string; index: number }): ArrayItem<KChartContext['state']> => {
   const defaultState = JSON.parse(localStorage.getItem('k-chart-state') ?? 'null') as ArrayItem<
-    KChartState['state']
+  KChartContext['state']
   > | null
   return {
     symbol: opts.symbol ?? 'QQQ',
@@ -403,5 +401,393 @@ export const chartEvent = {
   create() {
     this.event = mitt()
     return this.event
+  }
+}
+
+export const useKChartStore = create<KChartContext>()(
+  persist(
+    (_, __) => ({
+      activeChartIndex: 0,
+      viewMode: 'single',
+      state: [createDefaultChartState({ index: 0, symbol: 'QQQ' })]
+    }),
+    {
+      name: 'k-chart',
+      storage: createJSONStorage(() => localStorage),
+      partialize: state => {
+        const r = state.state[0] 
+
+        return {
+          activeChartIndex: 0,
+          viewMode: 'single',
+          state: [{
+            symbol: r.symbol,
+            type: r.type,
+            id: r.id,
+            index: r.index,
+            timeIndex: r.timeIndex,
+            system: r.system,
+            secondaryIndicators: r.secondaryIndicators.map(item => ({
+              ...item,
+              data: undefined
+            })),
+            mainIndicators: r.mainIndicators,
+            mainCoiling: r.mainCoiling,
+            mainData: {
+              history: [],
+              coiling_data: undefined,
+              md5: ''
+            },
+            
+            overlayStock: r.overlayStock,
+            overlayMark: r.overlayMark,
+            yAxis: r.yAxis
+          }]
+        }
+      }
+    }
+  )
+)
+
+export const kChartUtils: KChartUtils = {
+  setSymbol: ({ index, symbol }) => {
+    useKChartStore.setState(state => ({
+      state: state.state.map(item => {
+        if (item.index === (index ?? state.activeChartIndex)) {
+          return produce(item, draft => {
+            draft.symbol = symbol
+          })
+        }
+        return item
+      })
+    }))
+  },
+  setTimeIndex: ({ index, timeIndex }) => {
+    useKChartStore.setState(state => ({
+      state: state.state.map(item => {
+        if (item.index === (index ?? state.activeChartIndex)) {
+          return produce(item, draft => {
+            draft.timeIndex = timeIndex
+
+            Object.values(draft.mainIndicators).forEach(v => {
+              v.timeIndex = timeIndex
+              v.data = undefined
+            })
+
+            draft.secondaryIndicators.forEach(v => {
+              v.timeIndex = timeIndex
+              v.data = undefined
+            })
+          })
+        }
+        return item
+      })
+    }))
+  },
+  toggleMainChartType: ({ index, type }) => {
+    const state = useKChartStore.getState().state[index ?? useKChartStore.getState().activeChartIndex]
+    if (type && state.type === type) return
+
+    useKChartStore.setState(state => ({
+      state: state.state.map(item => {
+        if (item.index === (index ?? state.activeChartIndex)) {
+          return produce(item, draft => {
+            draft.type = draft.type === 'k-line' ? 'line' : 'k-line'
+          })
+        }
+        return item
+      })
+    }))
+  },
+  setMainIndicators: ({ index, indicators }) => {
+    const _indicators = Array.isArray(indicators) ? indicators : [indicators]
+    const _indicatorsMap: NormalizedRecord<Indicator> = {}
+    const chart = useKChartStore.getState().state[index ?? useKChartStore.getState().activeChartIndex]
+    _indicators.forEach(indicator => {
+      _indicatorsMap[indicator.id] = chart.mainIndicators[indicator.id] ?? indicator
+    })
+
+    useKChartStore.setState(state => ({
+      state: state.state.map(item => {
+        if (item.index === (index ?? state.activeChartIndex)) {
+          return produce(item, draft => {
+            draft.mainIndicators = _indicatorsMap
+          })
+        }
+        return item
+      })
+    }))
+  },
+  setMainSystem: ({ index, system }) => {
+    useKChartStore.setState(state => ({
+      state: state.state.map(item => {
+        if (item.index === (index ?? state.activeChartIndex)) {
+          return produce(item, draft => {
+            draft.system = system
+          })
+        }
+        return item
+      })
+    }))
+  },
+  setOverlayMark: async ({ index, mark, type, title }) => {
+    const chart = useKChartStore.getState().state[index ?? useKChartStore.getState().activeChartIndex]
+
+    if (chart.overlayMark?.mark === mark) return
+
+    if (mark) {
+      queryClient
+        .ensureQueryData({
+          queryKey: [getStockTabData.cacheKey, { type, mark, symbol: chart.symbol }],
+          queryFn: () => getStockTabData({ param: { [type]: [mark] }, ticker: chart.symbol, start: '2010-01-01' }),
+          revalidateIfStale: true
+        })
+        .then(r => {
+          useKChartStore.setState(state => ({
+            state: state.state.map(item => {
+              if (item.index === (index ?? state.activeChartIndex)) {
+                return produce(item, draft => {
+                  draft.overlayMark = {
+                    mark,
+                    title,
+                    data: r[type]
+                  }
+                })
+              }
+              return item
+            })
+          }))
+        })
+    }
+
+    useKChartStore.setState(state => ({
+      state: state.state.map(item => {
+        if (item.index === (index ?? state.activeChartIndex)) {
+          return produce(item, draft => {
+            draft.overlayMark = {
+              mark,
+              title
+            }
+          })
+        }
+        return item
+      })
+    }))
+  },
+  setMainCoiling: ({ index, coiling }) => {
+    useKChartStore.setState(state => ({
+      state: state.state.map(item => {
+        if (item.index === (index ?? state.activeChartIndex)) {
+          return produce(item, draft => {
+            draft.mainCoiling = coiling
+          })
+        }
+        return item
+      })
+    }))
+  },
+  addOverlayStock: ({ index, symbol }) => {
+    const chart = useKChartStore.getState().state[index ?? useKChartStore.getState().activeChartIndex]
+    if (chart.overlayStock.some(item => item.symbol === symbol)) return
+    const startTime = renderUtils.getStartTime(useTime.getState().getCurrentUsTime(), chart.timeIndex)
+    const params = {
+      start_at: startTime,
+      ticker: symbol,
+      interval: chart.timeIndex,
+      gzencode: true
+    }
+
+    queryClient
+      .ensureQueryData({
+        queryKey: [getStockChart.cacheKey, { symbol }],
+        queryFn: () => getStockChart(params)
+      })
+      .then(data => {
+        useKChartStore.setState(state => ({
+          state: state.state.map(item => {
+            if (item.index === (index ?? state.activeChartIndex)) {
+              return produce(item, draft => {
+                draft.overlayStock.push({
+                  symbol,
+                  data
+                })
+              })
+            }
+            return item
+          })
+        }))
+      })
+  },
+  setViewMode: ({ viewMode }) => {
+    useKChartStore.setState(state => {
+      const count = renderUtils.getViewMode(viewMode)
+      let newState: typeof state.state | null = null
+
+      if (count > state.state.length) {
+        const activeChart = state.state[state.activeChartIndex]
+        newState = [
+          ...state.state,
+          ...Array.from({ length: count - state.state.length }, (_, i) => createDefaultChartState({ index: state.state.length + i, symbol: activeChart.symbol })
+          )
+        ]
+      } else if (count < state.state.length) {
+        newState = state.state.slice(0, count)
+      }
+
+      if (newState) {
+        return {
+          viewMode,
+          state: newState
+        }
+      }
+
+      return {
+        viewMode
+      }
+    })
+  },
+  setMainData: ({ index, data, dateConvert }) => {
+  
+    useKChartStore.setState(state => ({
+      state: state.state.map(item => {
+        if (item.index === (index ?? state.activeChartIndex)) {
+          const newD = produce(item, draft => {
+            draft.mainData = data
+              ? dateConvert
+                ? ({
+                  ...data,
+                  history: data.history.map(v => [dayjs(v[0]).valueOf().toString(), ...v.slice(1)])
+                } as any)
+                : data
+              : {
+                history: [],
+                coiling_data: undefined,
+                md5: ''
+              }
+          })
+          return newD
+        }
+        return item
+      })
+    }))
+  },
+  setIndicatorData: ({ index, indicatorId, data }) => {
+    useKChartStore.setState(state => ({
+      state: state.state.map(item => {
+        if (item.index === (index ?? state.activeChartIndex)) {
+          return produce(item, draft => {
+            const indicators = []
+
+            if (draft.mainIndicators[indicatorId]) {
+              indicators.push(draft.mainIndicators[indicatorId])
+            }
+
+            indicators.push(...draft.secondaryIndicators.filter(i => i.id === indicatorId))
+
+            if (indicators.length === 0) return
+
+            indicators.forEach(indicator => {
+              indicator.data = data
+            })
+          })
+        }
+        return item
+      })
+    }))
+  },
+  setSecondaryIndicator: ({ index, indicatorIndex, indicator }) => {
+    const queryKey = [
+      getStockIndicatorData.cacheKey,
+      { symbol: indicator.symbol, cycle: indicator.timeIndex, id: indicator.id, db_type: indicator.type }
+    ] as any[]
+
+    if (!useIndicator.getState().isDefaultIndicatorParams(indicator.id)) {
+      queryKey.push(useIndicator.getState().getIndicatorQueryParams(indicator.id))
+    }
+
+    const queryData = queryClient.getQueryData(queryKey) as { id: string; data: any[]} 
+
+    useKChartStore.setState(state => ({
+      state: state.state.map(item => {
+        if (item.index === (index ?? state.activeChartIndex)) {
+          return produce(item, draft => {
+            if (queryData) {
+              draft.secondaryIndicators[indicatorIndex] = { ...indicator, data: queryData.data }
+              queryClient.invalidateQueries({ queryKey })
+            } else {
+              draft.secondaryIndicators[indicatorIndex] = indicator
+            }
+          })
+        }
+        return item
+      })
+    }))
+  },
+  removeOverlayStock: ({ index, symbol }) => {
+    useKChartStore.setState(state => ({
+      state: state.state.map(item => {
+        if (item.index === (index ?? state.activeChartIndex)) {
+          return produce(item, draft => {
+            draft.overlayStock = draft.overlayStock.filter(item => item.symbol !== symbol)
+          })
+        }
+        return item
+      })
+    }))
+  },
+  setActiveChart: index => {
+    useKChartStore.setState(() => ({
+      activeChartIndex: index
+    }))
+  },
+  setIndicatorVisible: ({ index, indicatorId, visible, secondaryIndex }) => {
+    useKChartStore.setState(state => ({
+      state: state.state.map(item => {
+        if (item.index === (index ?? state.activeChartIndex)) {
+          return produce(item, draft => {
+            if (secondaryIndex !== undefined) {
+              draft.secondaryIndicators[secondaryIndex].visible = visible
+            } else {
+              draft.mainIndicators[indicatorId].visible = visible
+            }
+          })
+        }
+        return item
+      })
+    }))
+  },
+  setSecondaryIndicatorsCount: ({ index, count, indicator }) => {
+    const state = useKChartStore.getState().state[index ?? useKChartStore.getState().activeChartIndex]
+
+    if (state.secondaryIndicators.length === count) return
+
+    useKChartStore.setState(state => ({
+      state: state.state.map(item => {
+        if (item.index === (index ?? state.activeChartIndex)) {
+          return produce(item, draft => {
+            if(draft.secondaryIndicators.length > count){
+              draft.secondaryIndicators = draft.secondaryIndicators.slice(0, count)
+            }else{
+              for(let i = draft.secondaryIndicators.length; i < count; i++){
+                draft.secondaryIndicators.push({...indicator, key: nanoid()})
+              }
+            }
+          })
+        }
+        return item
+      })
+    }))
+  },
+  setYAxis: ({ index, yAxis }) => {
+    useKChartStore.setState(state => ({
+      state: state.state.map(item => {
+        if (item.index === (index ?? state.activeChartIndex)) {
+          return produce(item, draft => {
+            draft.yAxis = yAxis
+          })
+        }
+        return item
+      })
+    }))
   }
 }

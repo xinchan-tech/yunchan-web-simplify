@@ -1,21 +1,21 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { chartEvent, useKChartContext } from "../lib"
-import { useIndicator, useTime } from "@/store"
-import { useQueries, useQuery } from "@tanstack/react-query"
-import { getStockChart, getStockChartV2, getStockIndicatorData, StockChartInterval, StockPeriod } from "@/api"
-import { useMount, useUnmount, useUpdateEffect } from "ahooks"
-import { useDomSize, useStockBarSubscribe } from "@/hooks"
-import { initOptions, renderChart, renderGrid, renderMainChart, renderMainCoiling, renderMainIndicators, renderMarkLine, renderOverlay, renderOverlayMark, renderSecondary, renderSecondaryLocalIndicators, renderWatermark, renderZoom } from "../lib/render"
-import { SecondaryIndicator } from "./secondary-indicator"
-import { renderUtils } from "../lib/utils"
+import { StockChartInterval, getStockChart, getStockIndicatorData } from "@/api"
 import { StockSelect } from "@/components"
-import { cn, colorUtil } from "@/utils/style"
-import { TimeIndexMenu } from "./time-index"
+import { useDomSize, useStockBarSubscribe } from "@/hooks"
+import { useIndicator, useTime } from "@/store"
 import echarts from "@/utils/echarts"
-import { stockUtils, type StockSubscribeHandler } from "@/utils/stock"
+import { type StockSubscribeHandler, stockUtils } from "@/utils/stock"
+import { cn, colorUtil } from "@/utils/style"
+import { useQueries, useQuery } from "@tanstack/react-query"
+import { useMount, useUnmount, useUpdateEffect } from "ahooks"
 import dayjs from "dayjs"
 import type { EChartsType } from 'echarts/core'
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { chartEvent, kChartUtils, useKChartStore } from "../lib"
+import { initOptions, renderChart, renderGrid, renderMainChart, renderMainCoiling, renderMainIndicators, renderMarkLine, renderOverlay, renderOverlayMark, renderSecondary, renderSecondaryLocalIndicators, renderWatermark, renderZoom } from "../lib/render"
+import { renderUtils } from "../lib/utils"
 import { IndicatorTooltip } from "./indicator-tooltip"
+import { SecondaryIndicator } from "./secondary-indicator"
+import { TimeIndexMenu } from "./time-index"
 
 interface MainChartProps {
   index: number
@@ -56,9 +56,13 @@ export const MainChart = (props: MainChartProps) => {
     chart.current?.dispose()
   })
 
-  const { state: ctxState, setMainData, setIndicatorData, setSecondaryIndicator, removeOverlayStock, setActiveChart, setSymbol, activeChartIndex } = useKChartContext()
+  // const { state: ctxState, setMainData, setIndicatorData, setSecondaryIndicator, removeOverlayStock, setActiveChart, setSymbol, activeChartIndex } = useKChartContext()
   const { usTime } = useTime()
-  const state = ctxState[props.index]
+  const state = useKChartStore(s => s.state[props.index])
+
+  const stateLen = useKChartStore(s => s.state.length)
+  const activeChartIndex = useKChartStore(s => s.activeChartIndex)
+  // const state = ctxState[props.index]
   const startTime = renderUtils.getStartTime(usTime, state.timeIndex)
   const lastMainHistory = useRef(state.mainData.history)
 
@@ -146,7 +150,7 @@ export const MainChart = (props: MainChartProps) => {
     }
 
     if (!renderUtils.isSameTimeByInterval(dayjs(lastData.timestamp), dayjs(+s[0]), state.timeIndex)) {
-      setMainData({
+      kChartUtils.setMainData({
         index: props.index, data: {
           ...query.data,
           history: [...lastMainHistory.current as any, s],
@@ -154,7 +158,7 @@ export const MainChart = (props: MainChartProps) => {
         dateConvert: false
       })
     } else {
-      setMainData({
+      kChartUtils.setMainData({
         index: props.index,
         data: {
           ...query.data,
@@ -163,7 +167,7 @@ export const MainChart = (props: MainChartProps) => {
         dateConvert: false
       })
     }
-  }, [state.timeIndex, setMainData, props.index, query.data, trading])
+  }, [state.timeIndex, props.index, query.data, trading])
 
   useStockBarSubscribe([subscribeSymbol], subscribeHandler)
 
@@ -198,9 +202,9 @@ export const MainChart = (props: MainChartProps) => {
     mainQueryIndicatorQueries.forEach((query) => {
       if (!query.data) return
 
-      setIndicatorData({ index: props.index, indicatorId: query.data.id, data: query.data.data })
+      kChartUtils.setIndicatorData({ index: props.index, indicatorId: query.data.id, data: query.data.data })
     })
-  }, [mainQueryIndicatorQueries, setIndicatorData, props.index])
+  }, [mainQueryIndicatorQueries, props.index])
 
   const secondaryIndicatorQueries = useQueries({
     queries: Array.from(new Set(state.secondaryIndicators.filter(v => !renderUtils.isLocalIndicator(v.id)).map(v => `${v.id}_${v.type}`))).map((item) => {
@@ -227,9 +231,9 @@ export const MainChart = (props: MainChartProps) => {
     secondaryIndicatorQueries.forEach((query) => {
 
       if (!query.data) return
-      setIndicatorData({ index: props.index, indicatorId: query.data.id, data: query.data.data })
+      kChartUtils.setIndicatorData({ index: props.index, indicatorId: query.data.id, data: query.data.data })
     })
-  }, [secondaryIndicatorQueries, setIndicatorData, props.index])
+  }, [secondaryIndicatorQueries, props.index])
 
 
   useUpdateEffect(() => {
@@ -238,8 +242,9 @@ export const MainChart = (props: MainChartProps) => {
   }, [size])
 
   useEffect(() => {
-    setMainData({ index: props.index, data: query.data, dateConvert: true })
-  }, [query.data, props.index, setMainData])
+  
+    kChartUtils.setMainData({ index: props.index, data: query.data, dateConvert: true })
+  }, [query.data, props.index])
 
   const render = () => {
     if (!chart.current) return
@@ -248,7 +253,6 @@ export const MainChart = (props: MainChartProps) => {
       left: state.yAxis.left,
       right: state.yAxis.right
     }
-
     chart.current.meta.timeIndex = state.timeIndex
 
     // 优化卡顿，不要删除
@@ -270,6 +274,7 @@ export const MainChart = (props: MainChartProps) => {
 
     renderMainIndicators(_options, Object.values(state.mainIndicators))
     renderOverlayMark(_options, state)
+   
     renderSecondary(_options, state.secondaryIndicators)
     renderSecondaryLocalIndicators(_options, state.secondaryIndicators, state)
     renderWatermark(_options, state.timeIndex)
@@ -284,14 +289,14 @@ export const MainChart = (props: MainChartProps) => {
 
   }, [state, startTime])
 
-  const onChangeSecondaryIndicators = async (params: { value: string, index: number, type: string, name: string }) => {
+  const onChangeSecondaryIndicators = useCallback(async (params: { value: string, index: number, type: string, name: string }) => {
 
-    setSecondaryIndicator({
+    kChartUtils.setSecondaryIndicator({
       index: props.index,
       indicatorIndex: params.index,
       indicator: { id: params.value, type: params.type, timeIndex: state.timeIndex, symbol: state.symbol, key: state.secondaryIndicators[params.index].key, name: params.name }
     })
-  }
+  }, [props.index, state.symbol, state.timeIndex, state.secondaryIndicators])
 
   const [selectSymbol, setSelectSymbol] = useState<string | undefined>(state.symbol)
 
@@ -301,7 +306,7 @@ export const MainChart = (props: MainChartProps) => {
 
 
   const closeOverlayStock = (symbol: string) => {
-    removeOverlayStock({ index: props.index, symbol: symbol })
+    kChartUtils.removeOverlayStock({ index: props.index, symbol: symbol })
   }
 
   // const mouse = useMouse(containerRef)
@@ -319,9 +324,9 @@ export const MainChart = (props: MainChartProps) => {
     <div className={
       cn(
         'w-full h-full relative border border-transparent border-solid box-border',
-        ctxState.length > 1 && activeChartIndex === props.index ? 'border-primary' : ''
+        stateLen > 1 && activeChartIndex === props.index ? 'border-primary' : ''
       )
-    } onClick={() => setActiveChart(props.index)} onKeyDown={() => { }}>
+    } onClick={() => kChartUtils.setActiveChart(props.index)} onKeyDown={() => { }}>
       <div className="w-full h-full" ref={dom}>
       </div>
       {
@@ -346,9 +351,9 @@ export const MainChart = (props: MainChartProps) => {
         })
       }
       {
-        ctxState.length > 1 ? (
+        stateLen > 1 ? (
           <div className="absolute top-2 left-2 flex items-center bg-muted border border-solid border-dialog-border rounded pr-2 h-6">
-            <StockSelect className="border-none" width={80} size="mini" onChange={(v) => { setSymbol({ index: props.index, symbol: v }) }} onInput={v => setSelectSymbol((v.target as any).value)} value={selectSymbol} />
+            <StockSelect className="border-none" width={80} size="mini" onChange={(v) => { kChartUtils.setSymbol({ index: props.index, symbol: v }) }} onInput={v => setSelectSymbol((v.target as any).value)} value={selectSymbol} />
             <TimeIndexMenu index={props.index} />
           </div>
         ) : null

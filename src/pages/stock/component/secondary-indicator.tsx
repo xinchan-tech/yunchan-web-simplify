@@ -4,10 +4,10 @@ import { useToast, useZForm } from "@/hooks"
 import { useIndicator } from "@/store"
 import { useQuery } from "@tanstack/react-query"
 import Decimal from "decimal.js"
-import { useEffect, useState } from "react"
+import { memo, useEffect, useState } from "react"
 import { useFieldArray } from "react-hook-form"
 import { z } from "zod"
-import { useKChartContext } from "../lib"
+import { useKChartStore } from "../lib"
 
 interface SecondaryIndicatorProps {
   /**
@@ -26,16 +26,14 @@ interface SecondaryIndicatorProps {
   onIndicatorChange: (params: { value: string, index: number, type: string, name: string }) => void
 }
 
-export const SecondaryIndicator = (props: SecondaryIndicatorProps) => {
+export const SecondaryIndicator = memo((props: SecondaryIndicatorProps) => {
   const indicators = useQuery({
     queryKey: [getStockIndicators.cacheKey],
     queryFn: () => getStockIndicators(),
     select: data => data?.secondary ?? []
   })
   const [searchKey, setSearchKey] = useState('')
-  const { state } = useKChartContext()
-
-  const currentSecondaryIndicator = state[props.mainIndex].secondaryIndicators[props.index]
+  const currentSecondaryIndicator = useKChartStore(s => s.state[props.mainIndex].secondaryIndicators[props.index])
 
   const _onChange = (v: string) => {
 
@@ -140,7 +138,7 @@ export const SecondaryIndicator = (props: SecondaryIndicatorProps) => {
     </div>
   )
 }
-
+)
 const indicatorParamsSchema = z.object({
   params: z.array(z.object({
     min: z.string().optional(),

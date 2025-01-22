@@ -76,10 +76,11 @@ type StockBaseInfoData = {
 const StockBaseInfo = () => {
   const code = useSymbolQuery()
   const trading = useTime(s => s.getTrading())
-  const queryOptions = {
-    queryKey: [getStockBaseCodeInfo.cacheKey, code, stockBaseCodeInfoExtend],
-    queryFn: () => getStockBaseCodeInfo({ symbol: code, extend: stockBaseCodeInfoExtend })
-  }
+  const queryOptions = useMemo(() => ( {
+      queryKey: [getStockBaseCodeInfo.cacheKey, code, stockBaseCodeInfoExtend],
+      queryFn: () => getStockBaseCodeInfo({ symbol: code, extend: stockBaseCodeInfoExtend })
+    }
+  ), [code])
   const queryClient = useQueryClient()
 
   const codeInfo = useQuery(queryOptions)
@@ -131,7 +132,7 @@ const StockBaseInfo = () => {
 
   useStockQuoteSubscribe([code], stockSubscribeHandler)
 
-  const onStarUpdate = (check: boolean) => {
+  const onStarUpdate = useCallback((check: boolean) => {
     queryClient.cancelQueries(queryOptions)
 
     queryClient.setQueryData(queryOptions.queryKey, {
@@ -143,8 +144,7 @@ const StockBaseInfo = () => {
     })
 
     queryClient.invalidateQueries(queryOptions)
-  }
-
+  }, [queryClient, codeInfo.data, queryOptions])
   return (
     <>
       <div className="flex w-full items-center px-2 box-border py-2 border-0 border-b border-solid border-border">

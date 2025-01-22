@@ -3,7 +3,8 @@ import { EyeClosedIcon, EyeOpenIcon, TrashIcon } from "@radix-ui/react-icons"
 import { useBoolean } from "ahooks"
 import { throttle } from "radash"
 import { type CSSProperties, useCallback, useEffect, useRef, useState } from "react"
-import { type Indicator, chartEvent, useKChartContext } from "../lib"
+import { type Indicator, chartEvent, kChartUtils, useKChartStore } from "../lib"
+import { useShallow } from "zustand/react/shallow"
 
 interface IndicatorTooltipProps {
   type: 'main' | 'secondary'
@@ -25,10 +26,10 @@ type IndicatorRef = {
 type IndicatorData = { name: string, id: string, value: string, color: string }
 
 export const IndicatorTooltip = (props: IndicatorTooltipProps) => {
-  const { setIndicatorVisible, state, setMainIndicators } = useKChartContext()
   const [data, setData] = useState<IndicatorData[]>([])
   const [visible, { setTrue, setFalse }] = useBoolean(true)
   const indicatorRef = useRef<IndicatorRef>({ indicatorId: '', indicators: [] })
+  const mainIndicators = useKChartStore(useShallow(s => s.state[props.mainIndex].mainIndicators))
 
   useEffect(() => {
     if (props.indicator.data) {
@@ -48,6 +49,7 @@ export const IndicatorTooltip = (props: IndicatorTooltipProps) => {
         indicatorId: props.indicator.id,
         indicators: []
       }
+      setData([])
     }
   }, [props.indicator])
 
@@ -89,7 +91,7 @@ export const IndicatorTooltip = (props: IndicatorTooltipProps) => {
 
   const _onChangeIndicatorVisible = (visible: boolean) => {
     if (props.type === 'main') {
-      setIndicatorVisible({ indicatorId: props.indicator.id, visible })
+      kChartUtils.setIndicatorVisible({ indicatorId: props.indicator.id, visible })
     }
 
     visible ? setTrue() : setFalse()
@@ -99,18 +101,17 @@ export const IndicatorTooltip = (props: IndicatorTooltipProps) => {
    * 主图才能删除指标
    */
   const deleteIndicator = useCallback(() => {
-    const ids = state[props.mainIndex].mainIndicators
     const r: Indicator[] = []
-    Object.keys(ids).forEach(key => {
+    Object.keys(mainIndicators).forEach(key => {
       if (key === props.indicator.id) {
         return
       }
 
-      r.push(ids[key])
+      r.push(mainIndicators[key])
     })
 
-    setMainIndicators({ index: props.mainIndex, indicators: r })
-  }, [props.indicator.id, state, props.mainIndex, setMainIndicators])
+    kChartUtils.setMainIndicators({ index: props.mainIndex, indicators: r })
+  }, [props.indicator.id, mainIndicators, props.mainIndex])
 
   return (
     <div className={cn('text-xs flex items-center text-transparent hover:text-secondary', props.className, !visible && 'opacity-60')} style={props.style}>

@@ -9,6 +9,7 @@ import { AddCollect, Checkbox, ScrollArea } from ".."
 import { HoverCard, HoverCardContent, HoverCardPortal, HoverCardTrigger } from "../ui/hover-card"
 import { CollectStarBatch } from "./collect-star-batch"
 import Star from "./index"
+import { memo } from "react"
 
 
 interface CollectStarProps extends Partial<Pick<HoverCardContentProps, 'sideOffset' | 'alignOffset' | 'side' | 'align'>> {
@@ -17,7 +18,7 @@ interface CollectStarProps extends Partial<Pick<HoverCardContentProps, 'sideOffs
   onUpdate?: (checked: boolean) => void
 }
 
-const _CollectStar = (props: CollectStarProps) => {
+const _CollectStar = memo((props: CollectStarProps) => {
   const [render, { setTrue, setFalse }] = useBoolean()
   const [checked, setChecked] = usePropValue(props.checked)
   
@@ -50,7 +51,7 @@ const _CollectStar = (props: CollectStarProps) => {
       </HoverCardPortal>
     </HoverCard>
   )
-}
+})
 
 interface CollectListProps {
   code: string

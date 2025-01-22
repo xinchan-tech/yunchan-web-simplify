@@ -1,14 +1,21 @@
 import type { getStockIndicators } from "@/api"
 import { HoverCard, HoverCardContent, HoverCardTrigger, JknIcon } from "@/components"
 import { SearchList } from "./search-list"
-import { useKChartContext } from "../lib"
+import { kChartUtils, useKChartStore } from "../lib"
+import { useCallback } from "react"
 
 interface MainIndicatorProps {
   data?: Awaited<ReturnType<typeof getStockIndicators>>
 }
 export const MainIndicator = (props: MainIndicatorProps) => {
   //TODO, 修改缠论系统版本时，去除不在目标版本里的指标
-  const { setMainSystem, state, activeChartIndex } = useKChartContext()
+  const system = useKChartStore(s => s.state[s.activeChartIndex].system)
+  const _setMainSystem = useCallback((system: string) => {
+    kChartUtils.setMainSystem({ system })
+    if(system){
+
+    }
+  }, [])
 
   return (
 
@@ -23,8 +30,8 @@ export const MainIndicator = (props: MainIndicatorProps) => {
         <SearchList
           data={props.data?.main.find(i => i.name === '缠论系统')?.indicators.map(item => ({ label: item.name ?? '', value: item.id, extra: item, notAuthorized: item.authorized !== 1 })) ?? []}
           name="缠论系统"
-          value={state[activeChartIndex].system}
-          onChange={(system) => system && setMainSystem({ system })}
+          value={system}
+          onChange={_setMainSystem}
           type="single"
         />
       </HoverCardContent>

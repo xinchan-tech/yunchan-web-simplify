@@ -1,9 +1,14 @@
 import { Button, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, JknIcon } from "@/components"
-import { type KChartContext, useKChartContext } from "../lib"
+import { kChartUtils, useKChartStore, type ViewMode } from "../lib"
+import { useCallback } from "react"
 
 
 export const ViewModeSelect = () => {
-  const { viewMode, setViewMode } = useKChartContext()
+  const viewMode = useKChartStore(s => s.viewMode)
+
+  const setViewMode = useCallback((params: { viewMode: string }) => {
+    kChartUtils.setViewMode({ viewMode: params.viewMode as ViewMode })
+  }, [])
 
 
   return (
@@ -19,7 +24,7 @@ export const ViewModeSelect = () => {
   )
 }
 
-const DoubleViewMode = ({ check, onClick }: { check: boolean, onClick: (s: KChartContext['viewMode']) => void }) => {
+const DoubleViewMode = ({ check, onClick }: { check: boolean, onClick: (s: ViewMode) => void }) => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -35,7 +40,7 @@ const DoubleViewMode = ({ check, onClick }: { check: boolean, onClick: (s: KChar
   )
 }
 
-const ThreeViewMode = ({ check, onClick }: { check: boolean, onClick: (s: KChartContext['viewMode']) => void }) => {
+const ThreeViewMode = ({ check, onClick }: { check: boolean, onClick: (s: ViewMode) => void }) => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>

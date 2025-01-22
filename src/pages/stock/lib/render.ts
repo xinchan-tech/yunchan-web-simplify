@@ -6,7 +6,7 @@ import { colorUtil } from '@/utils/style'
 import dayjs from 'dayjs'
 import Decimal from 'decimal.js'
 import type { CandlestickSeriesOption, LineSeriesOption } from 'echarts/charts'
-import { CoilingIndicatorId, type Indicator, type KChartState, chartEvent, isTimeIndexChart } from './ctx'
+import { CoilingIndicatorId, type Indicator, KChartContext, chartEvent, isTimeIndexChart } from './ctx'
 import {
   type DrawerRectShape,
   type DrawerTextShape,
@@ -42,7 +42,7 @@ const LINE_COLOR = 'rgb(31, 32, 33)'
 
 const X_AXIS_TICK = 8
 
-type ChartState = ArrayItem<KChartState['state']>
+type ChartState = ArrayItem<KChartContext['state']>
 
 /**
  * 初始化配置

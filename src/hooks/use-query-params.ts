@@ -1,4 +1,4 @@
-import { useMemo } from "react"
+import { useCallback, useMemo } from "react"
 import { useLocation, useNavigate } from "react-router"
 
 export const useQueryParams = <T = NormalizedRecord<any>>(): [T, (params: Partial<T>) => void] => {
@@ -14,12 +14,12 @@ export const useQueryParams = <T = NormalizedRecord<any>>(): [T, (params: Partia
     return result as T
   }, [search])
 
-  const setSearch = (params: Partial<T>) => {
+  const setSearch = useCallback((params: Partial<T>) => {
     const searchParams = new URLSearchParams(params as any)
   
     navigate(`${pathname}?${searchParams.toString()}`)
     
-  }
+  }, [navigate, pathname])
 
   return [searchParams, setSearch]
 }

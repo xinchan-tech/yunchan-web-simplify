@@ -1,21 +1,22 @@
 import { ContextMenu, ContextMenuTrigger, ContextMenuContent, ContextMenuItem, ContextMenuSub, ContextMenuSubTrigger, ContextMenuSubContent, ContextMenuSeparator } from "@/components"
 import { cn } from "@/utils/style"
 import type { PropsWithChildren } from "react"
-import { useKChartContext } from "../lib"
 import { nanoid } from "nanoid"
+import { kChartUtils, useKChartStore } from "../lib"
 
 interface ChartContextMenuProps {
   index: number
 }
 
 export const ChartContextMenu = (props: PropsWithChildren<ChartContextMenuProps>) => {
-  const { state, setSecondaryIndicatorsCount, setYAxis } = useKChartContext()
-  const chart = state[props.index]
+  const timeIndex = useKChartStore(s => s.state[props.index].timeIndex)
+  const symbol = useKChartStore(s => s.state[props.index].symbol)
+
   const onChangeSecondaryIndicators = (count: number) => () => {
-    setSecondaryIndicatorsCount({ count, index: props.index, indicator: { id: '9', type: 'system', timeIndex: chart.timeIndex, symbol: chart.symbol, key: nanoid(), name: '买卖点位' } })
+    kChartUtils.setSecondaryIndicatorsCount({ count, index: props.index, indicator: { id: '9', type: 'system', timeIndex, symbol, key: nanoid(), name: '买卖点位' } })
   }
 
-  const _setYAxis = (type: Parameters<typeof setYAxis>[0]['yAxis']) => () => setYAxis({ index: props.index, yAxis: type })
+  const _setYAxis = (type: Parameters<typeof kChartUtils.setYAxis>[0]['yAxis']) => () => kChartUtils.setYAxis({ index: props.index, yAxis: type })
 
   return (
     <ContextMenu>
