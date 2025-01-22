@@ -338,10 +338,10 @@ export const MainChart = (props: MainChartProps) => {
           )
           return (
             <div key={item.key}
-              className="absolute rounded-sm left-2 flex items-center secondary-indicator-tool"
+              className="absolute rounded-sm left-2 flex items-center secondary-indicator-tool space-x-2"
               style={{
-                top: `calc(${grids[index + 1]?.top ?? 0}px + 10px)`,
-                left: `calc(${grids[index + 1]?.left ?? 0}px + 10px)`,
+                top: `calc(${grids[index + 1]?.top ?? 0}px + 4px)`,
+                left: `calc(${grids[index + 1]?.left ?? 0}px + 4px)`,
               }}
             >
               <SecondaryIndicator onIndicatorChange={onChangeSecondaryIndicators} index={index} mainIndex={props.index} />
