@@ -47,17 +47,35 @@ const MsgCard = (props: { data: Message; children: string | ReactNode }) => {
   const { user } = useUser();
   const { toast } = useToast();
   //  获取撤回权限
-  const getRevokePremession = () => {
-    if (subscribers && subscribers.length > 0) {
-      const self = subscribers.find((item) => item.uid === user?.username);
-      if (self && self.orgData.type !== "0") {
-        return true;
-      }
-    }
-
+  const getRevokePremession = (data: Message) => {
+   
+    // 自己的都能撤回
     if (data.fromUID === user?.username) {
       return true;
     }
+    if (subscribers && subscribers.length > 0) {
+
+      const msgUid = data.fromUID;
+      const self = subscribers.find((item) => item.uid === user?.username);
+      const sender = subscribers.find((item) => item.uid === msgUid);
+      // 发送人是群主的不能撤回
+      if (sender?.orgData.type === "2") {
+        return false;
+      }
+      if (self && self.orgData.type !== "0") {
+        // 自己是群主都能撤回
+        if(self.orgData.type === '2') {
+          return true;
+        } else if(self.orgData.type === '1') {
+          // 管理员只能撤回普通群员的
+          if(sender?.orgData.type === '0') {
+            return true
+          }
+        }
+      }
+    }
+
+    
 
     return false;
   };
@@ -105,7 +123,7 @@ const MsgCard = (props: { data: Message; children: string | ReactNode }) => {
             >
               回复
             </ContextMenuItem>
-            {getRevokePremession() === true && (
+            {getRevokePremession(data) === true && (
               <ContextMenuItem
                 onClick={() => {
                   typeof handleRevoke === "function" && handleRevoke(data);

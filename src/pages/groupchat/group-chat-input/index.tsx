@@ -5,6 +5,7 @@ import {
   useImperativeHandle,
   forwardRef,
   useState,
+  useEffect,
 } from "react";
 import {
   useGroupChatShortStore,
@@ -29,7 +30,7 @@ import {
 import data from "@emoji-mart/data";
 import Picker from "@emoji-mart/react";
 import i18n from "@emoji-mart/data/i18n/zh.json";
-import { genBase64ToFile, genImgFileByUrl, MacroTask, MentionModel } from "../chat-utils";
+import { genBase64ToFile, genImgFileByUrl, MacroTask } from "../chat-utils";
 import ReplyMessageView from "../components/reply-view";
 import { useShallow } from "zustand/react/shallow";
 import { useUser } from "@/store";
@@ -38,10 +39,9 @@ import ChatWindow from "./chat-window";
 import {
   InputBoxImage,
   InputBoxResult,
-  InputBoxText,
-  useInput,
+  InputBoxText
 } from "./useInput";
-import { useClickAway } from "ahooks";
+
 import {
   Tooltip,
   TooltipContent,
@@ -50,6 +50,33 @@ import {
 } from "@/components/ui/tooltip";
 import { MicroTaskQueue } from "../chat-utils";
 const sendTask = new MicroTaskQueue();
+
+function useClickaway(callback, ref, excludeRefs) {
+  useEffect(() => {
+    const handler = (event) => {
+
+      if (!ref.current || excludeRefs.some(excludeRef => excludeRef.current && excludeRef.current.contains(event.target))) {
+        return;
+      }
+ 
+      if (ref.current && !ref.current.contains(event.target)) {
+        callback();
+      }
+    };
+ 
+    // 监听文档的点击事件
+    document.addEventListener('mousedown', handler);
+    document.addEventListener('touchstart', handler);
+ 
+    return () => {
+      // 清理函数，以防止内存泄漏
+      document.removeEventListener('mousedown', handler);
+      document.removeEventListener('touchstart', handler);
+    };
+  }, [callback, ref, excludeRefs]);
+}
+ 
+
 
 const GroupChatInput = forwardRef(
   (
@@ -91,10 +118,10 @@ const GroupChatInput = forwardRef(
   
     const [openEmoji, setOpenEmoji] = useState(false);
     const emojiRefTrigger = useRef();
-
-    useClickAway(() => {
+    const pickerRef = useRef()
+    useClickaway(() => {
       setOpenEmoji(false);
-    }, emojiRefTrigger);
+    }, emojiRefTrigger, [pickerRef]);
 
     const groupChatIsForbidden = useMemo(() => {
       let result = false;
@@ -224,7 +251,7 @@ const GroupChatInput = forwardRef(
       msgQueue.sort((a, b) => a.order - b.order);
 
       msgQueue.forEach((msg, index) => {
-        sendTask.enqueue(sendOneMsg(msg.type, msg, index));
+        sendTask.enqueue(() => sendOneMsg(msg.type, msg, index));
       });
 
       sendTask.processQueue();
@@ -268,40 +295,40 @@ const GroupChatInput = forwardRef(
       }
     };
 
-    // 解析@
-    const parseMention = (text: string) => {
-      let mention: MentionModel = new MentionModel();
-      if (mentionCache.current) {
-        let mentions = Object.values(mentionCache.current);
-        let all = false;
-        if (mentions.length > 0) {
-          let mentionUIDS = new Array();
-          let mentionMatchResult = text.match(/@([^ ]+) /g);
-          if (mentionMatchResult && mentionMatchResult.length > 0) {
-            for (let i = 0; i < mentionMatchResult.length; i++) {
-              let mentionStr = mentionMatchResult[i];
-              let name = mentionStr.trim().replace("@", "");
-              let member = mentionCache.current[name];
-              if (member) {
-                if (member.uid === -1) {
-                  // -1表示@所有人
-                  all = true;
-                } else {
-                  mentionUIDS.push(member.uid);
-                }
-              }
-            }
-          }
-          if (all) {
-            mention.all = true;
-          } else {
-            mention.uids = mentionUIDS;
-          }
-        }
-        return mention;
-      }
-      return undefined;
-    };
+    // // 解析@
+    // const parseMention = (text: string) => {
+    //   let mention: MentionModel = new MentionModel();
+    //   if (mentionCache.current) {
+    //     let mentions = Object.values(mentionCache.current);
+    //     let all = false;
+    //     if (mentions.length > 0) {
+    //       let mentionUIDS = new Array();
+    //       let mentionMatchResult = text.match(/@([^ ]+) /g);
+    //       if (mentionMatchResult && mentionMatchResult.length > 0) {
+    //         for (let i = 0; i < mentionMatchResult.length; i++) {
+    //           let mentionStr = mentionMatchResult[i];
+    //           let name = mentionStr.trim().replace("@", "");
+    //           let member = mentionCache.current[name];
+    //           if (member) {
+    //             if (member.uid === -1) {
+    //               // -1表示@所有人
+    //               all = true;
+    //             } else {
+    //               mentionUIDS.push(member.uid);
+    //             }
+    //           }
+    //         }
+    //       }
+    //       if (all) {
+    //         mention.all = true;
+    //       } else {
+    //         mention.uids = mentionUIDS;
+    //       }
+    //     }
+    //     return mention;
+    //   }
+    //   return undefined;
+    // };
 
     const formatMentionText = (text: string) => {
       let newText = text;
@@ -389,23 +416,26 @@ const GroupChatInput = forwardRef(
                   </span>
                 </PopoverTrigger>
                 <PopoverContent side="bottom" className="w-[355px]">
-                  <Picker
-                    theme="dark"
-                    previewPosition="none"
-                    searchPosition="none"
-                    data={data}
-                    i18n={i18n}
-                    onEmojiSelect={(emoji, event) => {
-                      event.stopPropagation();
-                      // const prevVal = inputValue;
-                      if (inputRef.current) {
-                        inputRef.current.addEmoji(emoji.native);
-                      }
+                  <div ref={pickerRef}>
 
-                      setOpenEmoji(false);
-                      // setInputValue(msg);
-                    }}
-                  />
+                    <Picker
+                      theme="dark"
+                      previewPosition="none"
+                      searchPosition="none"
+                      data={data}
+                      i18n={i18n}
+                      onEmojiSelect={(emoji, event) => {
+                        event.stopPropagation();
+                        // const prevVal = inputValue;
+                        if (inputRef.current) {
+                          inputRef.current.addEmoji(emoji.native);
+                        }
+
+                        setOpenEmoji(false);
+                        // setInputValue(msg);
+                      }}
+                    />
+                  </div>
                 </PopoverContent>
               </Popover>
             )}
@@ -455,6 +485,8 @@ const GroupChatInput = forwardRef(
         <style jsx>
           {`
             .chat-msg-inputer {
+              box-sizing: border-box;
+   
               border-top: 1px solid rgb(50, 50, 50);
             }
             .fake-border {

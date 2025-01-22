@@ -192,29 +192,31 @@ export function getTimeStringAutoShort2(
 
 export const genImgFileByUrl = (url: string, mime?: string) => {
   // return new Promise((resolve, reject) => {
-  //   const img = new Image();
-  //   img.src = url;
-  //   const canvas = document.createElement("canvas");
-  //   const context = canvas.getContext("2d");
+  // const img = new Image();
+  // img.src = url;
 
-  //   img.onload = () => {
-  //     try {
-  //       canvas.height = img.height;
-  //       canvas.width = img.width;
-  //       context?.drawImage(img, 0, 0);
-  //       const data = canvas.toDataURL(mime);
-  //       debugger;
-  //       resolve(data);
-  //     } catch (er) {
-  //       console.log(er)
-  //       reject(er);
-  //     }
-  //   };
+  // const canvas = document.createElement("canvas");
+  // const context = canvas.getContext("2d");
+
+  // img.onload = () => {
+  //   try {
+  //     canvas.height = img.height;
+  //     canvas.width = img.width;
+  //     context?.drawImage(img, 0, 0);
+  //     const data = canvas.toDataURL(mime);
+  //     const base64String = data.split(",")[1];
+  //     console.log(`data:${mime || "image/png"};base64,${base64String}`, '`data:${mime || "image/png"};base64,${base64String}`')
+  //     resolve(`data:${mime || "image/png"};base64,${base64String}`);
+  //   } catch (er) {
+  //     console.log(er);
+  //     reject(er);
+  //   }
+  // };
+
   // });
   return fetch(url)
     .then((response) => response.arrayBuffer())
     .then((buffer) => {
-  
       const base64String = btoa(
         new Uint8Array(buffer).reduce(
           (data, byte) => data + String.fromCharCode(byte),
@@ -222,6 +224,9 @@ export const genImgFileByUrl = (url: string, mime?: string) => {
         )
       );
       return `data:${mime || "image/png"};base64,${base64String}`;
+    })
+    .catch((err) => {
+      console.error(err);
     });
 };
 

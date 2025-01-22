@@ -63,7 +63,7 @@ const GroupChannel = (props: {
   const { onSelectChannel } = props;
   const { setSelectedChannel, selectedChannel, setToChannel } =
     useGroupChatStoreNew();
-
+  const latestChannel = useLatest(selectedChannel)
   // 排序最近会话列表
   const sortConversations = (conversations?: Array<ConversationWrap>) => {
     let newConversations = conversations;
@@ -125,14 +125,23 @@ const GroupChannel = (props: {
       ];
       batchUpdateConversation(temp);
       setConversationWraps(temp);
-      handleSelectChannel(conversation.channel, conversation);
+      handleSelectChannel(
+        conversation.channel,
+        new ConversationWrap(conversation)
+      );
     } else if (action === ConversationAction.update) {
+      if(conversation.channel.channelID === latestChannel.current?.channelID) {
+     
+            // 避免未读消息在选中时还展示
+            conversation.unread = 0;
+      }
       const index = latestConversation.current?.findIndex(
         (item) =>
           item.channel.channelID === conversation.channel.channelID &&
           item.channel.channelType === conversation.channel.channelType
       );
       if (index !== undefined && index >= 0) {
+    
         latestConversation.current![index] = new ConversationWrap(conversation);
         const temp = sortConversations();
         batchUpdateConversation(temp);
@@ -156,8 +165,12 @@ const GroupChannel = (props: {
   // 强制刷新会话
   const channelInfoListener = (channelInfo: ChannelInfo) => {
     // if (latestConversation.current.length > 0) {
-    //   const temp = [...latestConversation.current];
-    //   setConversationWraps(temp);
+    //   const temp = [...latestConversation.current]
+    //   const idx = latestConversation.current.findIndex(c => c.channel.channelID === channelInfo.channel.channelID);
+    //   if(idx >= 0) {
+    //     temp[idx].reloadIsMentionMe()
+    //     setConversationWraps(temp);
+    //   }
     // }
   };
 
@@ -166,6 +179,7 @@ const GroupChannel = (props: {
     if (!conversationWrap.lastMessage) {
       return;
     }
+    let mention: ReactNode | string = "";
     let head: ReactNode | string;
     let content: ReactNode | string;
     const draft = conversationWrap.remoteExtra.draft;
@@ -174,9 +188,8 @@ const GroupChannel = (props: {
     }
 
     if (conversationWrap.isMentionMe === true) {
-      head = <span style={{ color: "red" }}>[有人@我]</span>;
+      mention = <span style={{ color: "red" }}>[有人@我]</span>;
     }
-
     if (conversationWrap.lastMessage) {
       const channelInfo = WKSDK.shared().channelManager.getChannelInfo(
         new Channel(conversationWrap.lastMessage.fromUID, ChannelTypePerson)
@@ -208,6 +221,7 @@ const GroupChannel = (props: {
 
     return (
       <span>
+        {mention}
         {head}
         {content}
       </span>
@@ -385,10 +399,12 @@ const GroupChannel = (props: {
                     </span>
                   </div>
                   <div className="group-last-msg flex justify-between">
-                    <div className="flex-1 overflow-hidden whitespace-nowrap text-ellipsis max-w-24">
+                    <div className="flex-1 overflow-hidden whitespace-nowrap text-ellipsis max-w-24 text-xs">
                       {lastContent(item)}
                     </div>
-                    <div className="max-w-24">{item.timestampString || ""}</div>
+                    <div className="max-w-30 text-xs">
+                      {item.timestampString || ""}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -424,10 +440,10 @@ const GroupChannel = (props: {
                 <div className="group-data flex-1">
                   <div className="group-title">{item.name || ""}</div>
                   <div className="group-last-msg flex justify-between">
-                    <div className="flex-1 overflow-hidden whitespace-nowrap text-ellipsis max-w-24">
+                    <div className="flex-1 overflow-hidden whitespace-nowrap text-ellipsis max-w-24 text-xs">
                       一起加入群组吧
                     </div>
-                    <div className="max-w-24"></div>
+                    <div className="max-w-24 text-xs"></div>
                   </div>
                 </div>
               </div>

@@ -84,7 +84,7 @@ export default class APIClient {
       })
       .catch((err) => {
         console.log(err);
-        alert(err.msg);
+    
       });
   };
 }

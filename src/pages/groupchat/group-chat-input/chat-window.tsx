@@ -168,9 +168,14 @@ const ChatWindow = forwardRef(
             .chat-window {
               padding: 6px 10px;
               overflow-y: auto;
+              box-sizing: border-box;
+
               img {
                 max-width: 200px !important;
                 max-height: 200px !important;
+                object-content: fit;
+                padding: 0 !important;
+                margin: 0 !important;
               }
             }
             .chat-window:empty:before {

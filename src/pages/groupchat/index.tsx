@@ -348,16 +348,9 @@ const GroupChatPage = () => {
       if (targetScrollTop <= Threshold) {
         // 下拉
         if (pulldowning.current || pulldownFinished.current) {
-          console.log(
-            "不允许下拉",
-            "pulldowning",
-            pulldowning.current,
-            "pulldownFinished",
-            pulldownFinished.current
-          );
           return;
         }
-        console.log("下拉");
+
         pulldowning.current = true;
         pullDown()
           .then(() => {
@@ -375,8 +368,8 @@ const GroupChatPage = () => {
 
   messageStatusListener = (ack: SendackPacket) => {
     // 有时一次会发多条消息，要缓存一下已经赋值过id和seq的消息
-    let msgIdCache:Record<string, boolean> = {}
-    let seqCache:Record<string, boolean> = {}
+    let msgIdCache: Record<string, boolean> = {};
+    let seqCache: Record<string, boolean> = {};
     for (let i = 0; i < messagesRef.current.length; i++) {
       const m = messagesRef.current[i];
       const newMsgId = ack.messageID.toString();
@@ -386,16 +379,15 @@ const GroupChatPage = () => {
       }
       if (!m.messageSeq && !seqCache[newMsgId]) {
         m.messageSeq = ack.messageSeq;
-        seqCache[newMsgId] = true
+        seqCache[newMsgId] = true;
       }
-  
+
       if (m.clientSeq == ack.clientSeq) {
         m.status =
           ack.reasonCode == 1 ? MessageStatus.Normal : MessageStatus.Fail;
-   
       }
     }
-    
+
     setMessages([...messagesRef.current]);
   };
 
@@ -408,16 +400,25 @@ const GroupChatPage = () => {
     setMessages(temp);
     if (cmdContent.cmd === "messageRevoke") {
       const channel = msg.channel;
+      WKSDK.shared()
+        .config.provider.syncConversationsCallback()
+        .then((newConversations) => {
+          const newWarps = newConversations.map(
+            (item) => new ConversationWrap(item)
+          );
 
-      let conversation =
-        WKSDK.shared().conversationManager.findConversation(channel);
+          setConversationWraps(newWarps);
+        });
 
-      if (conversation) {
-        WKSDK.shared().conversationManager.notifyConversationListeners(
-          conversation,
-          ConversationAction.update
-        );
-      }
+      // let conversation =
+      //   WKSDK.shared().conversationManager.findConversation(channel);
+
+      // if (conversation) {
+      //   WKSDK.shared().conversationManager.notifyConversationListeners(
+      //     conversation,
+      //     ConversationAction.update
+      //   );
+      // }
     } else if (cmdContent.cmd === "channelUpdate") {
       // 编辑群时也调用这个方法更新
       WKSDK.shared().channelManager.fetchChannelInfo(
@@ -502,15 +503,18 @@ const GroupChatPage = () => {
     if (subscriberCache.has(channel.channelID)) {
       const members = subscriberCache.get(channel.channelID) || [];
       setSubscribers(members);
+      pullLast(channel);
     } else {
-      syncSubscriber(channel);
+      syncSubscriber(channel).finally(() => {
+        // 查完群员之后缓存了人员头像昵称再拉消息，优化性能
+        pullLast(channel);
+      });
     }
 
     // 输入框和回复内容重置
     setReplyMessage(null);
     setMentions([]);
     setInputValue("");
-    pullLast(channel);
   };
 
   // 初始化群聊列表和消息
@@ -687,6 +691,9 @@ const GroupChatPage = () => {
             height: 100vh;
             min-width: 1080px;
           }
+            .group-chat-container div {
+              box-sizing: border-box;
+            }
           .group-chat-right {
             background-color: rgb(43, 45, 49);
             height: 100%;

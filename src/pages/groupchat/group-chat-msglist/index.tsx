@@ -133,7 +133,10 @@ const GroupChatMsgList = forwardRef(
     }, [messages, filterType, filterKeyWord]);
 
     useEffect(() => {
-      console.log(messages, "originMessages");
+      if(window.showMessage === true) {
+
+        console.log(messages, "originMessages");
+      }
     }, [messages]);
 
     useImperativeHandle(ref, () => ({
