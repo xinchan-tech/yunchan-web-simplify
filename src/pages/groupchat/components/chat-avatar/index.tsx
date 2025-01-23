@@ -7,7 +7,7 @@ function getRandomRgbColor() {
   // 生成三个随机数，范围在 0 到 255 之间
   const r = 100 + Math.floor(Math.random() * 100);
   const g = 100 + Math.floor(Math.random() * 100);
-  const b = 100 + Math.floor(Math.random() * 100);
+  const b = 100 + Math.floor(Math.random() * 155);
   const rgbColor = `rgb(${r}, ${g}, ${b})`;
   return rgbColor;
 }

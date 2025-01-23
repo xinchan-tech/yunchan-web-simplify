@@ -16,7 +16,7 @@ import { cn } from "@/utils/style";
 import { sortMessages } from "../chat-utils";
 import MsgFilter, { FilterKey } from "./msg-filterbar";
 import { useUser } from "@/store";
-
+import { useThrottleFn } from "ahooks";
 import { useShallow } from "zustand/react/shallow";
 
 const GroupChatMsgList = forwardRef(
@@ -151,9 +151,20 @@ const GroupChatMsgList = forwardRef(
     }));
 
     // 滚动事件，距离顶部小于minHeight 时通知外面加载前面的消息
-    const handleScroll: UIEventHandler<HTMLDivElement> = (e: any) => {
-      typeof props.handleScroll === "function" && props.handleScroll(e);
-    };
+    const handleScroll = useThrottleFn(
+      (e: any) => {
+        const targetScrollTop = e?.target?.scrollTop;
+        if (targetScrollTop <= 50) {
+    
+          // 下拉
+          typeof props.handleScroll === "function" && props.handleScroll(e);
+        }
+      },
+      { wait: 200 }
+    );
+    // const handleScroll: UIEventHandler<HTMLDivElement> = (e: any) => {
+    //   typeof props.handleScroll === "function" && props.handleScroll(e);
+    // };
 
     // 定位到引用消息位置
     const locateMessage = (messageSeq: number) => {
@@ -175,7 +186,7 @@ const GroupChatMsgList = forwardRef(
           style={{ height: `calc(100% - 40px)` }}
           ref={scrollDomRef}
           className="scroll-content"
-          onScroll={handleScroll}
+          onScroll={handleScroll.run}
           id="group-chat-msglist"
         >
           {(goodMessages || []).map((msg: Message, idx: number) => {

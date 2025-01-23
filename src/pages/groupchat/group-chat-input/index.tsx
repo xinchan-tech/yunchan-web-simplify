@@ -92,10 +92,8 @@ const GroupChatInput = forwardRef(
     const { user } = useUser();
     const { toast } = useToast();
     const mentionCache = useRef<any>({});
-    // 文本内容
+
     const {
-      // inputValue,
-      // setInputValue,
       replyMessage,
       setReplyMessage,
       groupDetailData,
@@ -104,8 +102,6 @@ const GroupChatInput = forwardRef(
       mentions,
     } = useGroupChatShortStore(
       useShallow((state) => ({
-        // inputValue: state.inputValue,
-        // setInputValue: state.setInputValue,
         replyMessage: state.replyMessage,
         setReplyMessage: state.setReplyMessage,
         groupDetailData: state.groupDetailData,
@@ -194,9 +190,9 @@ const GroupChatInput = forwardRef(
           return;
         }
 
-        let formatValue = formatMentionText(value);
+        // let formatValue = formatMentionText(value);
 
-        content = new MessageText(formatValue);
+        content = new MessageText(value);
         await MacroTask() 
         finalSend(content, index)
       } else if (type === "img") {
@@ -330,18 +326,18 @@ const GroupChatInput = forwardRef(
     //   return undefined;
     // };
 
-    const formatMentionText = (text: string) => {
-      let newText = text;
-      let mentionMatchResult = newText.match(/@([^ ]+) /g);
-      if (mentionMatchResult && mentionMatchResult.length > 0) {
-        for (let i = 0; i < mentionMatchResult.length; i++) {
-          let mentionStr = mentionMatchResult[i];
-          let name = mentionStr.replace("@[", "@").replace("]", "");
-          newText = newText.replace(mentionStr, name);
-        }
-      }
-      return newText;
-    };
+    // const formatMentionText = (text: string) => {
+    //   let newText = text;
+    //   let mentionMatchResult = newText.match(/@([^ ]+) /g);
+    //   if (mentionMatchResult && mentionMatchResult.length > 0) {
+    //     for (let i = 0; i < mentionMatchResult.length; i++) {
+    //       let mentionStr = mentionMatchResult[i];
+    //       let name = mentionStr.replace("@[", "@").replace("]", "");
+    //       newText = newText.replace(mentionStr, name);
+    //     }
+    //   }
+    //   return newText;
+    // };
 
     // 聊天列表里点击右键回复时，这样添加
     const addMention = (uid: string, name: string) => {

@@ -12,6 +12,7 @@ const ReplyMessageView = (props: {
   const { mentions } = useGroupChatShortStore();
   const fromChannelInfo = useMemo(() => {
     let id;
+    console.log(mentions, 'mentionsmentionsmentions')
     if (message) {
       id = message.fromUID;
     } else if (mentions && mentions.length > 0) {
@@ -30,7 +31,7 @@ const ReplyMessageView = (props: {
     <div className="absolute items-center reply-message-container w-full box-border flex justify-between">
       <div>
         <div className="text-sm text-gray-300">
-          {mentions && mentions.length >= 0 ? "回复" : "引用"}
+          {mentions && mentions.length > 0 ? "回复" : "引用"}
           {fromChannelInfo?.title}
         </div>
         {message && (

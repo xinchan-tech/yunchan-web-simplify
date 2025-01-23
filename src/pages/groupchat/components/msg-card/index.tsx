@@ -98,7 +98,7 @@ const MsgCard = (props: { data: Message; children: string | ReactNode }) => {
 
       <div
         className={cn(
-          "bubble  rounded-lg relative",
+          "bubble  rounded-lg relative text-sm",
           data.send && "right-bubble"
         )}
       >

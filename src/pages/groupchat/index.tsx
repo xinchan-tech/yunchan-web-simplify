@@ -26,7 +26,7 @@ import {
   useGroupChatStoreNew,
 } from "@/store/group-chat-new";
 import { useShallow } from "zustand/react/shallow";
-import { useLatest, useThrottleFn } from "ahooks";
+import { useLatest } from "ahooks";
 
 import GroupMembers from "./group-members";
 import { MessagePerPageLimit } from "./Service/constant";
@@ -52,7 +52,7 @@ export const GroupChatContext = createContext<{
   syncSubscriber: async () => {},
 });
 
-const Threshold = 200;
+
 
 const subscriberCache: Map<string, Subscriber[]> = new Map();
 
@@ -77,15 +77,12 @@ const GroupChatPage = () => {
   const locatedMessageIdRef = useRef("");
 
   const {
-    conversationWraps,
-    subscribers,
     setSubscribers,
     setFetchingSubscribers,
     setReplyMessage,
     setInputValue,
     setLocatedMessageId,
     readyToJoinGroup,
-    setConversationWraps,
     messages,
     setMessages,
     getGroupDetailData,
@@ -120,7 +117,8 @@ const GroupChatPage = () => {
   const messageInputRef = useRef();
 
   // 消息列表滚动到底部
-  const scrollBottom = () => {
+  const scrollBottom = async () => {
+
     pulldowning.current = true;
     animateScroll.scrollToBottom({
       containerId: "group-chat-msglist",
@@ -133,9 +131,7 @@ const GroupChatPage = () => {
     if (latestToChannel.current?.channelID !== msg.channel.channelID) {
       return;
     }
-    console.log("messagesRef.current");
     const temp = [...messagesRef.current];
-
     temp.push(msg);
     messagesRef.current.push(msg);
     setMessages(temp);
@@ -198,7 +194,7 @@ const GroupChatPage = () => {
     pulldowning.current = false;
   };
 
-  const jumpMsgIdRef = useRef("");
+  const jumpMsgIdRef = useRef(""); // 加载上一页消息后滚动条会自动滚到最前面，要用jumpMsgIdRef记住上一次停留的信息位置，在message更新后滚动回上一次停留的消息
   // 查看前面的消息 不是往下拉，是消息序号down
   const pullDown = async () => {
     if (messagesRef.current.length == 0 || pulldownFinished.current === true) {
@@ -253,17 +249,16 @@ const GroupChatPage = () => {
       (item) => item.messageSeq === initMessageSeq
     );
     if (existedMessage) {
+      // 消息列表里有要跳转的消息了
       locatedMessageIdRef.current = existedMessage.clientMsgNo;
       if (
         msgListRef.current &&
         typeof msgListRef.current.scrollTo === "function"
       ) {
         jumpToLocatedId.current = true;
-
         gotoLocatedMessagePosition();
         setLocatedMessageId(existedMessage.clientMsgNo);
       }
-
       return;
     }
     const lastRemoteMessageSeq =
@@ -299,7 +294,6 @@ const GroupChatPage = () => {
         } catch (er) {
           setMessageFetching(false);
         }
-
         const newMessages = new Array<Message>();
         if (remoteMessages && remoteMessages.length > 0) {
           remoteMessages.forEach((msg) => {
@@ -339,16 +333,11 @@ const GroupChatPage = () => {
         if (targetMessage) {
           // 等待dom更新后修改滚动位置
           locatedMessageIdRef.current = targetMessage.clientMsgNo;
-          if (
-            msgListRef.current &&
-            typeof msgListRef.current.scrollTo === "function"
-          ) {
-            jumpScrolling.current = true;
-            jumpToLocatedId.current = true;
 
-            // gotoLocatedMessagePosition();
-            setLocatedMessageId(targetMessage.clientMsgNo);
-          }
+          jumpScrolling.current = true;
+          jumpToLocatedId.current = true;
+
+          setLocatedMessageId(targetMessage.clientMsgNo);
 
           pulldowning.current = false;
         }
@@ -358,33 +347,27 @@ const GroupChatPage = () => {
 
   const pulldowning = useRef(false);
   const pulldownFinished = useRef(false);
-  const handleMsgScroll = useThrottleFn(
-    (e: any) => {
-      if (jumpScrolling.current === true) {
-        jumpScrolling.current = false;
-        return;
-      }
-      const targetScrollTop = e?.target?.scrollTop;
-      if (targetScrollTop <= Threshold) {
-        // 下拉
-        if (pulldowning.current || pulldownFinished.current) {
-          return;
-        }
-
-        pulldowning.current = true;
-        pullDown()
-          .then(() => {
-            pulldowning.current = false;
-          })
-          .catch(() => {
-            pulldowning.current = false;
-          });
-      }
-    },
-    {
-      wait: 200,
+  const handleMsgScroll = (e: any) => {
+    if (jumpScrolling.current === true) {
+      jumpScrolling.current = false;
+      return;
     }
-  );
+
+    if (pulldowning.current || pulldownFinished.current) {
+      return;
+    }
+
+    pulldowning.current = true;
+    pullDown()
+      .then(() => {
+        pulldowning.current = false;
+      })
+      .catch(() => {
+        pulldowning.current = false;
+      });
+
+   
+  }
 
   messageStatusListener = (ack: SendackPacket) => {
     // 有时一次会发多条消息，要缓存一下已经赋值过id和seq的消息
@@ -419,26 +402,14 @@ const GroupChatPage = () => {
     temp.push(msg);
     setMessages(temp);
     if (cmdContent.cmd === "messageRevoke") {
-      const channel = msg.channel;
       // WKSDK.shared()
       //   .config.provider.syncConversationsCallback()
       //   .then((newConversations) => {
       //     const newWarps = newConversations.map(
       //       (item) => new ConversationWrap(item)
       //     );
-
       //     setConversationWraps(newWarps);
       //   });
-
-      let conversation =
-        WKSDK.shared().conversationManager.findConversation(channel);
-
-      if (conversation) {
-        WKSDK.shared().conversationManager.notifyConversationListeners(
-          conversation,
-          ConversationAction.update
-        );
-      }
     } else if (cmdContent.cmd === "channelUpdate") {
       // 编辑群时也调用这个方法更新
       WKSDK.shared().channelManager.fetchChannelInfo(
@@ -451,6 +422,16 @@ const GroupChatPage = () => {
     } else if (cmdContent.cmd === "forbidden") {
       // 修改了禁言后重新同步群成员
       syncSubscriber(msg.channel);
+    }
+    const channel = msg.channel;
+    let conversation =
+      WKSDK.shared().conversationManager.findConversation(channel);
+
+    if (conversation) {
+      WKSDK.shared().conversationManager.notifyConversationListeners(
+        conversation,
+        ConversationAction.update
+      );
     }
   };
 
@@ -539,7 +520,6 @@ const GroupChatPage = () => {
 
   // // 初始化群聊列表和消息
   const onInitChannel = (list: ConversationWrap[]) => {
-
     const firstChannel = list.find(
       (item) => item.channel.channelID === selectedChannel?.channelID
     )?.channel;
@@ -559,7 +539,6 @@ const GroupChatPage = () => {
       }
     }
   };
-  
 
   // 引用
   // 回复
@@ -610,7 +589,6 @@ const GroupChatPage = () => {
   useEffect(() => {
     if (messages instanceof Array && messages.length > 0) {
       // 第一屏不够高时，再查一遍前面的信息
-
       initOverFlag.current = false;
       if (
         msgListRef.current &&
@@ -618,11 +596,11 @@ const GroupChatPage = () => {
       ) {
         const notOver = msgListRef.current.judgeNotOver();
         if (notOver) {
-          console.log("auto,auto");
           pullDown();
         }
       }
 
+      // message 更新完成，并且dom也渲染结束胡，如果有要定位过去的消息，就自动scroll过去
       if (jumpMsgIdRef.current) {
         scroller.scrollTo(jumpMsgIdRef.current, {
           containerId: "group-chat-msglist",
@@ -632,6 +610,7 @@ const GroupChatPage = () => {
         locatedMessageIdRef.current &&
         jumpToLocatedId.current === true
       ) {
+        // 点击了引用信息后，要跳转并高亮引用的原信息
         if (
           messages.findIndex(
             (m) => m.clientMsgNo === locatedMessageIdRef.current
@@ -696,7 +675,7 @@ const GroupChatPage = () => {
                     ref={msgListRef}
                     loading={messageFetching}
                     handleFindPrevMsg={handleFindPrevMsg}
-                    handleScroll={handleMsgScroll.run}
+                    handleScroll={handleMsgScroll}
                   />
                   <GroupChatInput
                     onMsgSend={() => {
