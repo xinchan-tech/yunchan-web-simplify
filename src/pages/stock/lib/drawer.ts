@@ -1,10 +1,10 @@
 import type { ECOption } from '@/utils/echarts'
 import type { CustomSeriesOption, LineSeriesOption } from 'echarts/charts'
-import type { KChartState } from './ctx'
+import type { KChartContext } from './ctx'
 import echarts from '@/utils/echarts'
 import { colorUtil } from '@/utils/style'
 import { renderUtils } from './utils'
-import type { EChartsType } from "echarts/core"
+import type { EChartsType } from 'echarts/core'
 
 type XAxis = number
 type YAxis = number
@@ -38,7 +38,7 @@ type DrawerFuncOptions<T = any> = {
   /**
    * 对应的数据
    */
-  data: T,
+  data: T
   /**
    * 数据名称
    */
@@ -70,12 +70,20 @@ type DrawerFuncOptions<T = any> = {
   chart?: EChartsType
 }
 
-type DrawerFunc<T = any> = (options: ECOption, state: KChartState['state'][0], params: DrawerFuncOptions<T>) => ECOption
+type DrawerFunc<T = any> = (
+  options: ECOption,
+  state: KChartContext['state'][0],
+  params: DrawerFuncOptions<T>
+) => ECOption
 
 /**
  * 画一条线
  */
-export const drawLine: DrawerFunc<[XAxis, number | null][]> = (options, _, { xAxisIndex, yAxisIndex, data, extra, name }) => {
+export const drawLine: DrawerFunc<[XAxis, number | null][]> = (
+  options,
+  _,
+  { xAxisIndex, yAxisIndex, data, extra, name }
+) => {
   const line: LineSeriesOption = {
     xAxisIndex: xAxisIndex,
     yAxisIndex: yAxisIndex,
@@ -107,7 +115,7 @@ export const drawHLine: typeof drawLine = (options, _, { xAxisIndex, yAxisIndex,
 
   const maxRight = left + (grid[0] ? (grid[0].width as number) : 0)
 
-  const currentGrid = grid[yAxisIndex - 1]
+  const currentGrid = grid[yAxisIndex - 2]
 
   const line: CustomSeriesOption = {
     xAxisIndex: xAxisIndex,
@@ -300,13 +308,15 @@ export const drawRect: DrawerFunc<DrawerRectShape[]> = (options, _, { xAxisIndex
       const startX = api.value(0) as number
       const startY = api.value(1) as number
       const y2 = api.value(2) as number
-      const height = (api.size!([0, Math.abs(y2 - startY)]) as number[])[1] as number
+
       const start = api.coord([startX, startY])
+      const size = (api.size!([0, Math.abs(y2 - startY)]) as number[]) as number[]
+      const height = size[1]
       let width = api.value(3) as number
+      // let width = api.value(3) as number
       const empty = api.value(4) as number
       const color = (api.value(5) as string) || extraColor || '#00943c'
-
-      if(start[0] + width > maxRight){
+      if (start[0] + (width / 2) > maxRight) {
         width = maxRight - start[0]
       }
 
@@ -585,7 +595,11 @@ type DrawTradePointsShape = {
 /**
  * 绘制主图买卖点
  */
-export const drawTradePoints: DrawerFunc<DrawTradePointsShape[]> = (options, _, { xAxisIndex, yAxisIndex, data, name }) => {
+export const drawTradePoints: DrawerFunc<DrawTradePointsShape[]> = (
+  options,
+  _,
+  { xAxisIndex, yAxisIndex, data, name }
+) => {
   const series: CustomSeriesOption = {
     xAxisIndex: xAxisIndex,
     yAxisIndex: yAxisIndex,
@@ -658,4 +672,52 @@ export const drawTradePoints: DrawerFunc<DrawTradePointsShape[]> = (options, _, 
   Array.isArray(options.series) && options.series.push(series)
 
   return options
+}
+
+type YOffset = number
+type Text = string
+type FontSize = number
+/**
+ * 神奇九转数字
+ */
+export const drawNumber = (
+  options: ECOption,
+  params: DrawerFuncOptions<[XAxis, YAxis, Text, YOffset, FontSize, DrawerColor]>
+) => {
+
+  const custom: CustomSeriesOption = {
+    xAxisIndex: params.xAxisIndex,
+    yAxisIndex: params.yAxisIndex,
+    encode: {
+      x: [0],
+      y: [1]
+    },
+    type: 'custom',
+    renderItem: (_, api) => {
+      const x = api.value(0) as number
+      const y = api.value(1) as number
+      const text = api.value(2) as string
+      const yOffset = api.value(4) as number
+      const _yOffset = yOffset + (yOffset >= 0 ? -40 : 10)
+      const xOffset = api.value(3) as number
+      const color = api.value(5) as string
+
+      const point = api.coord([x, y])
+
+      return {
+        type: 'text',
+        style: {
+          text,
+          fill: color ?? '#00943c',
+          fontSize: 16,
+          textAlign: 'left'
+        },
+        position: [point[0] + xOffset, point[1] + _yOffset]
+      }
+    },
+    name: params.name,
+    data: params.data
+  }
+
+  Array.isArray(options.series) && options.series.push(custom)
 }

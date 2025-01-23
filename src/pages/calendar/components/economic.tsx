@@ -1,5 +1,5 @@
 import { getStockEconomic, getStockEconomicDetail } from "@/api"
-import { JknIcon, JknTable, type JknTableProps, useModal } from "@/components"
+import { JknIcon, JknRcTable, type JknRcTableProps, useFormModal, useModal } from "@/components"
 import { useTime } from "@/store"
 import echarts, { type ECOption } from "@/utils/echarts"
 import { useQuery } from "@tanstack/react-query"
@@ -7,6 +7,7 @@ import { useMount, useUnmount } from "ahooks"
 import dayjs from "dayjs"
 import Decimal from "decimal.js"
 import { useCallback, useEffect, useMemo, useRef } from "react"
+import { useForm, useFormContext } from "react-hook-form"
 
 type TableDataType = {
   name: string
@@ -45,97 +46,111 @@ const StockEconomic = () => {
     predict: item.estimate
   })) ?? []
 
+  const form = useForm({
+    defaultValues: {
+      id: '',
+      nextDate: ''
+    }
+  })
+
+  const formModal = useFormModal({
+    content: <DetailForm />,
+    title: '详解',
+    form,
+    footer: null,
+    closeIcon: true,
+    className: 'w-auto',
+    onOpen: ({ id, nextDate }) => {
+      form.setValue('id', id)
+      form.setValue('nextDate', nextDate)
+      formModal.title(id)
+    },
+    onOk: () => {
+
+    }
+  })
+
   const getColor = useCallback((date: string) => {
     const current = dayjs(time.usTime + new Date().valueOf() - time.localStamp).tz('America/New_York')
     const usDay = dayjs(date)
     if (current.format('YYYY-MM-DD') > usDay.format('YYYY-MM-DD')) {
       return '#5e5f61'
     }
-
-    if (current.day(6).format('YYYY-MM-DD') >= usDay.format('YYYY-MM-DD')) {
+    console.log(current.day(6).format('YYYY-MM-DD'))
+    if (current.day(6).isAfter(usDay)) {
       return 'hsl(var(--primary))'
     }
 
     return ''
   }, [time])
 
-  const columns: JknTableProps<TableDataType>['columns'] = useMemo(() => [
-    { header: '序号', size: 40, enableSorting: false, accessorKey: 'rank', cell: ({ row }) => <span style={{ color: getColor(row.original.date) }}>{row.index + 1}</span>, meta: { align: 'center' } },
+  const columns: JknRcTableProps<TableDataType>['columns'] = [
+    { title: '序号', dataIndex: 'rank', width: 60, render: (_, row, index) => <span style={{ color: getColor(row.date) }}>{index + 1}</span>, align: 'center' },
     {
-      header: '名称', accessorKey: 'name', size: 240, enableSorting: false,
-      cell: ({ row }) => (<span className="block py-1" style={{ color: getColor(row.original.date) }}>{row.getValue('name')}</span>)
+      title: '名称', dataIndex: 'name',
+      render: (_, row) => (<span className="block py-1" style={{ color: getColor(row.date) }}>{row.name}</span>)
     },
     {
-      header: '前值', size: 120, enableSorting: false, accessorKey: 'before', meta: { align: 'center' },
-      cell: ({ row }) => (<span style={{ color: getColor(row.original.date) }}>{row.getValue('before') ?? '--'}</span>)
+      title: '前值', dataIndex: 'before', align: 'center',
+      render: (_, row) => (<span style={{ color: getColor(row.date) }}>{row.before ?? '--'}</span>)
     },
     {
-      header: '现值', size: 120, enableSorting: false, accessorKey: 'current', meta: { align: 'center' },
-      cell: ({ row }) => (<span style={{ color: getColor(row.original.date) }}>{row.getValue('current') ?? '--'}</span>)
+      title: '现值', dataIndex: 'current', align: 'center',
+      render: (_, row) => (<span style={{ color: getColor(row.date) }}>{row.current ?? '--'}</span>)
     },
     {
-      header: '预测值', size: 120, enableSorting: false, accessorKey: 'predict', meta: { align: 'center' },
-      cell: ({ row }) => (<span style={{ color: getColor(row.original.date) }}>{row.getValue('predict') ?? '--'}</span>)
+      title: '预测值', dataIndex: 'predict', align: 'center',
+      render: (_, row) => (<span style={{ color: getColor(row.date) }}>{row.predict ?? '--'}</span>)
     },
     {
-      header: '发布时间（美东）', enableSorting: false, size: 120, accessorKey: 'date', meta: { align: 'center' },
-      cell: ({ row }) => (<span style={{ color: getColor(row.original.date) }}>{row.getValue<string>('date')?.slice(0, 16) || '--'}</span>)
+      title: '发布时间（美东）', dataIndex: 'date', align: 'center',
+      render: (_, row) => (<span style={{ color: getColor(row.date) }}>{row.date?.slice(0, 16) || '--'}</span>)
     },
     {
-      header: '下次发布时间（美东）', enableSorting: false, size: 120, accessorKey: 'nextDate', meta: { align: 'center' },
-      cell: ({ row }) => (<span style={{ color: getColor(row.original.date) }}>{row.getValue<string>('nextDate')?.slice(0, 16) || '--'}</span>)
+      title: '下次发布时间（美东）', dataIndex: 'nextDate', align: 'center',
+      render: (_, row) => (<span style={{ color: getColor(row.date) }}>{row.nextDate?.slice(0, 16) || '--'}</span>)
     },
     {
-      header: '重要性', size: 120, enableSorting: false, accessorKey: 'star', meta: { align: 'center' },
-      cell: ({ row }) => (<div className="space-x-1 text-right" style={{ color: getColor(row.original.date) }}>
+      title: '重要性', dataIndex: 'star', align: 'center',
+      render: (_, row) => (<div className="space-x-1 text-right" style={{ color: getColor(row.date) }}>
         {
           // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
-          Array.from(new Array(row.getValue('star'))).map((_, i) => <JknIcon name="ic_star_on" key={i} className="w-3 h-3" />)
+          Array.from(new Array(row.star)).map((_, i) => <JknIcon name="ic_star_on" key={i} className="w-3 h-3" />)
         }
       </div>)
     },
     {
-      header: '详解', size: 120, enableSorting: false, accessorKey: 'opt', meta: { align: 'center' },
-      cell: ({ row }) => {
-        const form = useModal({
-          content: <DetailForm id={row.original.key} nextDate={row.original.nextDate.slice(0, 11) || '--'} />,
-          title: '详解',
-          footer: null,
-          className: 'w-auto',
-          onOpen: () => {
-          }
-        })
-
+      title: '详解', dataIndex: 'opt', align: 'center', width: 60,
+      render: (_, row) => {
         return (
           <>
-            <span className="cursor-pointer" onClick={() => form.modal.open()} onKeyDown={() => { }} style={{ color: getColor(row.original.date) }}>详解</span>
-            {
-              form.context
-            }
+            <span className="cursor-pointer" onClick={() => formModal.open({ id: row.key, nextDate: row.nextDate.slice(0, 11) || '--' })} onKeyDown={() => { }} style={{ color: getColor(row.date) }}>详解</span>
           </>
         )
       }
     }
-  ], [getColor])
+  ]
 
   return (
-    <div className="bg-background">
-      <JknTable
+    <div className="bg-background h-full overflow-hidden">
+      <JknRcTable
         rowKey="id"
         columns={columns}
         data={data}
       />
+      {
+        formModal.context
+      }
     </div>
   )
 }
 
 
-interface DetailDialogProps {
-  id: string
-  nextDate: string
-}
 
-const DetailForm = ({ id, nextDate }: DetailDialogProps) => {
+const DetailForm = () => {
+  const form = useFormContext()
+  const id = form.watch('id')
+  const nextDate = form.watch('nextDate')
   const query = useQuery({
     queryKey: [getStockEconomicDetail.cacheKey, id],
     queryFn: () => getStockEconomicDetail(id),
@@ -153,6 +168,7 @@ const DetailForm = ({ id, nextDate }: DetailDialogProps) => {
       bottom: 20
     },
     legend: {
+      itemHeight: 1,
       data: [
         { name: '实际值', icon: 'rect', textStyle: { color: '#fff' } },
         { name: '预测值', icon: 'rect', textStyle: { color: '#fff' } }
@@ -162,8 +178,8 @@ const DetailForm = ({ id, nextDate }: DetailDialogProps) => {
       show: true
     },
     yAxis: [
-      { type: 'value', axisLabel: {formatter: v => Decimal.create(v).toFixed(2)} },
-      { type: 'value', position: 'right', axisLine: {show: false},  axisLabel: {formatter: v => Decimal.create(v).toFixed(2)} }
+      { type: 'value', axisLabel: { formatter: v => Decimal.create(v).toFixed(2) }, splitLine: { lineStyle: { color: '#6e7079' } } },
+      { type: 'value', show: false, position: 'right', axisLine: { show: false }, axisLabel: { formatter: v => Decimal.create(v).toFixed(2) } }
     ],
     xAxis: {
       type: 'category',
@@ -173,8 +189,8 @@ const DetailForm = ({ id, nextDate }: DetailDialogProps) => {
       }
     },
     series: [
-      { name: '实际值', type: 'line', data: [], color: '#1e8bf1' },
-      { name: '预测值', type: 'line', data: [], yAxisIndex: 1, color: '#f23b2f' }
+      { name: '实际值', type: 'line', data: [], color: '#ff8d00' },
+      { name: '预测值', type: 'line', data: [], yAxisIndex: 1, color: '#9123a7' }
     ]
   }
 
@@ -231,12 +247,12 @@ const DetailForm = ({ id, nextDate }: DetailDialogProps) => {
         }
       ],
       xAxis: { data: category },
-      series: [{ data: d1, symbol: false }, { data: d2, symbol: false }]
+      series: [{ data: d1, symbol: false, connectNulls: true }, { data: d2, symbol: false, connectNulls: true }]
     })
 
   }, [query.data])
 
-  console.log(nextDate)
+
   return (
     <div className="w-[900px] h-[750px] box-border px-8 py-4">
       <div className="h-[340px] w-full" ref={chartRef} />

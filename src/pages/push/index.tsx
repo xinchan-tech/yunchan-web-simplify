@@ -7,7 +7,7 @@ import { type Stock, stockUtils } from "@/utils/stock"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import dayjs from "dayjs"
 import { produce } from "immer"
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 
 
 
@@ -47,7 +47,7 @@ const PushPage = () => {
   const [date, setDate] = useState(getLastTime())
   const [list, { setList, onSort }] = useTableData<TableDataType>([], 'id')
   const { checked, onChange, setCheckedAll, getIsChecked } = useCheckboxGroup([])
-  const dates = useRef(getPrevTradingDays(date, 5))
+  const dates = useRef(getPrevTradingDays(date, 7))
 
   const queryParams: Parameters<typeof getStockPush>[0] = {
     type: activeType,

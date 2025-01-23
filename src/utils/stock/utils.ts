@@ -3,6 +3,7 @@ import dayjs from 'dayjs'
 import Decimal from 'decimal.js'
 import { type Stock, StockRecord, type StockResultRecord, type StockTrading } from './stock'
 import type { StockSubscribeHandler } from './subscribe'
+import { isNumber } from "radash"
 
 export const stockUtils = {
   toStockRecord(data: StockResultRecord) {
@@ -306,12 +307,13 @@ export const stockUtils = {
  */
 const parseTime = (time?: string) => {
   if (!time) return -1
-  if (time.replace('-', '').length === time.length) {
-    if (time.length === 10) {
+  if(isNumber(time) || time.replace('-', '').length === time.length){
+    if (time.toString().length === 10) {
       return dayjs(+time * 1000).valueOf()
     }
     return dayjs(+time).valueOf()
   }
+
   if (time.length === 10) {
     return dayjs(`${dayjs(time).format('YYYY-MM-DD')} 15:59:00`).valueOf()
   }

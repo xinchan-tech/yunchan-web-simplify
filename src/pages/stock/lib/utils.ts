@@ -1,4 +1,4 @@
-import { StockChartInterval } from '@/api'
+import { StockChartInterval, type StockRawRecord } from '@/api'
 import type { ECOption } from '@/utils/echarts'
 import dayjs, { type Dayjs } from 'dayjs'
 import type { ECBasicOption } from 'echarts/types/dist/shared'
@@ -87,7 +87,8 @@ export const renderUtils = {
     const gridLeft = hasLeft ? Y_AXIS_WIDTH : 1
 
     const gridSize = [width - Y_AXIS_WIDTH - gridLeft, height - X_AXIS_HEIGHT - TOP_OFFSET]
-    const grid: { left: number; top: number; width: number; height: number; borderColor?: string; show?: boolean }[] = []
+    const grid: { left: number; top: number; width: number; height: number; borderColor?: string; show?: boolean }[] =
+      []
 
     if (secondaryIndicatorLen === 0) {
       grid.push({
@@ -131,9 +132,9 @@ export const renderUtils = {
         grid.push({
           show: true,
           left: gridLeft,
-          top: (gridSize[1] * 0.6 / secondaryIndicatorLen) * i + grid[0].height + TOP_OFFSET,
+          top: ((gridSize[1] * 0.6) / secondaryIndicatorLen) * i + grid[0].height + TOP_OFFSET,
           width: gridSize[0],
-          height: gridSize[1] * 0.6 / secondaryIndicatorLen,
+          height: (gridSize[1] * 0.6) / secondaryIndicatorLen,
           borderColor: '#4a4848'
         })
       })
@@ -329,9 +330,41 @@ export const renderUtils = {
    * 日期格式化
    */
   getDateFormatter: (interval: StockChartInterval) => {
-    if(interval <= StockChartInterval.DAY) {
+    if (interval <= StockChartInterval.DAY) {
       return 'YYYY-MM-DD HH:mm w'
     }
     return 'YYYY-MM-DD w'
+  },
+
+  /**
+   * 根据提供的时间找到最接近的时间
+   * 必须是有序数组, 使用二分查找
+   */
+  findNearestTime: (data: StockRawRecord[], time: number, gte?: boolean) => {
+    if (data.length === 0) return
+    if (data.length === 1) return data[0]
+
+    let left = 0
+    let right = data.length - 1
+
+    while (left < right) {
+      const mid = Math.floor((left + right) / 2)
+      const midTime = +data[mid][0]!
+
+      if (midTime === time) {
+        return data[mid]
+      }
+
+      if (midTime < time) {
+        left = mid + 1
+      } else {
+        right = mid
+      }
+    }
+
+    if (gte) {
+      return data[left]
+    }
+    return data[left - 1]
   }
 }

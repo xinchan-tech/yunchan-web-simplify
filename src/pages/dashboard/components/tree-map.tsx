@@ -167,8 +167,13 @@ const TreeMap = (props: TreeMapProps) => {
       .enter()
       .append("text")
       .attr("x", (d) => {
-        let textWidth = getStringWidth(d.data.name, '12px sans-serif')
         const rectWidth = d.x1 - d.x0
+        if (rectWidth < 4) {
+          d.data.symbolLabelLen = 0
+          return 0
+        }
+        
+        let textWidth = getStringWidth(d.data.name, '12px sans-serif')
 
         let count = d.data.name.length
 

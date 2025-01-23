@@ -138,12 +138,12 @@ const StockTree = () => {
     for (const plate of queryPlate.data) {
       const _color = getColorByStep(plate.change / 100)
       if (!_colors.includes(_color)) continue
-      const n = { name: plate.name, value: Math.abs((Math.log(plate.amount) ** 5)) + 0.1, data: plate.change, color: getColorByStep(plate.change / 100) }
+      const n = { name: plate.name, value: plate.amount ? Math.abs((Math.log(plate.amount) ** 5)) + 0.1 : 0, data: plate.change, color: getColorByStep(plate.change / 100) }
 
       r.push(n)
     }
 
-    return r.slice(0, 60)
+    return r
   }, [queryPlate.data, filter])
 
 

@@ -36,13 +36,15 @@ import {
   DataZoomComponent,
   type DataZoomComponentOption,
   GraphicComponent,
-  type GraphicComponentOption
+  type GraphicComponentOption,
+  type MarkPointComponentOption,
+  MarkPointComponent
 } from 'echarts/components'
 
 import { LabelLayout, UniversalTransition } from 'echarts/features'
 // 引入 Canvas 渲染器，注意引入 CanvasRenderer 或者 SVGRenderer 是必须的一步
 import { CanvasRenderer } from 'echarts/renderers'
-import { Stock } from "./stock"
+
 
 echarts.use([
   TitleComponent,
@@ -65,7 +67,8 @@ echarts.use([
   GraphicComponent,
   CustomChart,
   BarChart,
-  PieChart
+  PieChart,
+  MarkPointComponent
 ])
 
 export type ECOption = echarts.ComposeOption<
@@ -85,6 +88,7 @@ export type ECOption = echarts.ComposeOption<
   | CustomSeriesOption
   | BarSeriesOption
   | PieSeriesOption
+  | MarkPointComponentOption
 >
 
 

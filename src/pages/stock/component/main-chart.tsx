@@ -10,7 +10,7 @@ import { useMount, useUnmount, useUpdateEffect } from "ahooks"
 import dayjs from "dayjs"
 import type { EChartsType } from 'echarts/core'
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { chartEvent, kChartUtils, useKChartStore, useSymbolQuery } from "../lib"
+import { chartEvent, kChartUtils, useKChartStore } from "../lib"
 import { initOptions, renderChart, renderGrid, renderMainChart, renderMainCoiling, renderMainIndicators, renderMarkLine, renderOverlay, renderOverlayMark, renderSecondary, renderSecondaryLocalIndicators, renderWatermark, renderZoom } from "../lib/render"
 import { renderUtils } from "../lib/utils"
 import { IndicatorTooltip } from "./indicator-tooltip"
@@ -259,27 +259,28 @@ export const MainChart = (props: MainChartProps) => {
     chart.current.meta.mainData = state.mainData.history
 
     const [start, end] = chart.current.getOption() ? renderUtils.getZoom(chart.current.getOption()) : [90, 100]
-
-
+    // calcCoiling()
     const _options = renderChart(chart.current)
     renderGrid(_options, state, [chart.current.getWidth(), chart.current.getHeight()], chart.current)
-    renderMainChart(_options, state)
-    renderMarkLine(_options, state)
-    renderZoom(_options, [start, end])
-    /**
-     * 画主图指标
-     */
-    renderOverlay(_options, state.overlayStock)
-    renderMainCoiling(_options, state, chart.current)
+    if (state.mainData.history.length > 0) {
+      renderMainChart(_options, state)
+      renderMarkLine(_options, state)
+      renderZoom(_options, [start, end])
+      /**
+       * 画主图指标
+       */
+      renderOverlay(_options, state.overlayStock)
+      renderMainCoiling(_options, state, chart.current)
 
-    renderMainIndicators(_options, Object.values(state.mainIndicators))
-    renderOverlayMark(_options, state)
+      renderMainIndicators(_options, Object.values(state.mainIndicators))
+      renderOverlayMark(_options, state)
 
-    renderSecondary(_options, state.secondaryIndicators)
-    renderSecondaryLocalIndicators(_options, state.secondaryIndicators, state)
+      renderSecondary(_options, state.secondaryIndicators)
+      renderSecondaryLocalIndicators(_options, state.secondaryIndicators, state)
+
+    }
     renderWatermark(_options, state.timeIndex)
     chart.current.setOption(_options, { replaceMerge: ['series', 'grid', 'xAxis', 'yAxis', 'dataZoom',] })
-
     // console.log(chart.current.getOption())
   }
 

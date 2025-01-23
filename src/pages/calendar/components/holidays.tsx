@@ -1,8 +1,10 @@
 import { getStockHoliday } from "@/api"
-import { CapsuleTabs, JknDatePicker, JknTable, type JknTableProps } from "@/components"
+import { CapsuleTabs, JknDatePicker, JknRcTable, type JknRcTableProps } from "@/components"
+import { useTime } from "@/store"
 import { useQuery } from "@tanstack/react-query"
 import dayjs from "dayjs"
-import { useMemo, useState } from "react"
+import { time } from "echarts/core"
+import { useCallback, useMemo, useState } from "react"
 
 type TableDataType = Awaited<ReturnType<typeof getStockHoliday>>[0]
 
@@ -13,24 +15,43 @@ const Holidays = () => {
     queryKey: [getStockHoliday.cacheKey, ...queryData],
     queryFn: () => getStockHoliday(queryData[0], queryData[1])
   })
-  const columns = useMemo<JknTableProps<TableDataType>['columns']>(() => [
-    {
-      header: '交易所', enableSorting: false, accessorKey: 'exchange', meta: { align: 'center' },
-      cell: ({ row }) => <span className="text-white inline-block my-4">{row.original.exchange}</span>
-    },
-    {
-      header: '日期', enableSorting: false, accessorKey: 'date', meta: { align: 'center' }
-    },
-    {
-      header: '节日', enableSorting: false, accessorKey: 'name', meta: { align: 'center' }
-    },
-    {
-      header: '状态', enableSorting: false, accessorKey: 'status', meta: { align: 'center' }
+  const getCurrentUsTime = useTime(s => s.getCurrentUsTime)
+
+  const getColor = useCallback((date: string) => {
+    const current = dayjs(getCurrentUsTime()).tz('America/New_York')
+    const usDay = dayjs(date)
+    if (current.format('YYYY-MM-DD') > usDay.format('YYYY-MM-DD')) {
+      return '#5e5f61'
     }
-  ], [])
+
+    if (current.day(6).format('YYYY-MM-DD') >= usDay.format('YYYY-MM-DD')) {
+      return 'hsl(var(--primary))'
+    }
+
+    return ''
+  }, [getCurrentUsTime])
+
+  const columns = useMemo<JknRcTableProps<TableDataType>['columns']>(() => [
+    {
+      title: '交易所', dataIndex: 'exchange', align: 'center',
+      render: (_, row) => <span style={{color: getColor(row.date)}} className="text-white inline-block my-4">{row.exchange}</span>
+    },
+    {
+      title: '日期', dataIndex: 'date', align: 'center',
+      render: (_, row) => <span style={{color: getColor(row.date)}} className="text-white inline-block my-4">{row.date}</span>
+    },
+    {
+      title: '节日', dataIndex: 'name', align: 'center',
+      render: (_, row) => <span style={{color: getColor(row.date)}} className="text-white inline-block my-4">{row.name}</span>
+    },
+    {
+      title: '状态', dataIndex: 'status', align: 'center',
+      render: (_, row) => <span style={{color: getColor(row.date)}} className="text-white inline-block my-4">{row.status}</span>
+    }
+  ], [getColor])
 
   return (
-    <div>
+    <div className="h-full overflow-hidden flex flex-col">
       <div className="py-1">
         <CapsuleTabs type="text" activeKey={active} onChange={setActive}>
           <CapsuleTabs.Tab label="今年" value={dayjs().format('YYYY')} />
@@ -43,8 +64,8 @@ const Holidays = () => {
         </CapsuleTabs>
 
       </div>
-      <div className="w-[960px] mx-auto">
-        <JknTable columns={columns} data={query.data ?? []} />
+      <div className="w-[960px] mx-auto flex-1 overflow-hidden">
+        <JknRcTable columns={columns} data={query.data ?? []} />
       </div>
     </div>
   )

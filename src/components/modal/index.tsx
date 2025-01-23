@@ -8,6 +8,7 @@ import type { z } from "zod"
 import { Button } from "../ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "../ui/dialog"
 import { useConfig } from "@/store"
+import { usePropValue } from "@/hooks"
 
 export interface UseModalProps {
   content: ReactNode
@@ -22,10 +23,12 @@ export interface UseModalProps {
 export interface UseModalAction {
   open: (...arg: unknown[]) => void
   close: () => void
+  title: (title?: string) => string
 }
 
 export const useModal = ({ content, onOpen, title, closeIcon, className, footer, ...props }: UseModalProps) => {
   const [modalVisible, { toggle: toggleModalVisible }] = useBoolean(false)
+  const [innerTitle, setInnerTitle] = usePropValue(title)
   const [visible, { setFalse, setTrue }] = useBoolean(false)
   const platform = useConfig(s => s.platform)
   const _onOpenChange = (open?: boolean) => {
@@ -52,7 +55,7 @@ export const useModal = ({ content, onOpen, title, closeIcon, className, footer,
             <DialogTitle asChild>
               <div>
                 {
-                  title && (
+                  innerTitle && (
                     <div className="title text-center h-10" style={{}}>
                       {
                         closeIcon && (
@@ -70,7 +73,7 @@ export const useModal = ({ content, onOpen, title, closeIcon, className, footer,
                           </span>
                         )
                       }
-                      <span className="leading-[40px]">{title}</span>
+                      <span className="leading-[40px]">{innerTitle}</span>
                     </div>
                   )
                 }
@@ -106,6 +109,14 @@ export const useModal = ({ content, onOpen, title, closeIcon, className, footer,
     },
     close: () => {
       toggleModalVisible()
+    },
+    title: (title?: string) => {
+      if (title) {
+        setInnerTitle(title)
+        return title
+      }
+
+      return ''
     }
   }
 
@@ -159,6 +170,7 @@ export const useFormModal = <T extends z.ZodTypeAny>({ content, onOk, onOpen, fo
     context,
     open: modal.open,
     close: modal.close,
+    title: modal.title,
     setFieldsValue: form.setValue,
     getFieldValue: form.getValues
   }

@@ -13,6 +13,7 @@ import {
   drawGradient,
   drawHLine,
   drawLine,
+  drawNumber,
   drawPivots,
   drawPolyline,
   drawRect,
@@ -63,7 +64,8 @@ export const initOptions = (): ECOption => {
       },
       formatter: (v: any) => {
         const series = (v as any[]).find(_v => _v.seriesName === MAIN_CHART_NAME) as any
-        const data = series?.data as StockRawRecord
+        const data = series?.data.value as StockRawRecord
+
         if (!data) return ''
         const stock = stockUtils.toStock(data)
 
@@ -131,7 +133,7 @@ export const createOptions = (chart: EChartsType): ECOption => ({
       axisTick: {
         show: false
       },
-      boundaryGap: false,
+      boundaryGap: true,
       axisLabel: {
         show: false,
         interval: (index: number) => {
@@ -195,8 +197,8 @@ export const createOptions = (chart: EChartsType): ECOption => ({
 
           const start = data[0]
 
-          if(!start || start.length < 2) return TEXT_COLOR
- 
+          if (!start || start.length < 2) return TEXT_COLOR
+
           const getStockColor = useConfig.getState().getStockColor
 
           return v >= start[2] ? getStockColor(true, 'hex') : getStockColor(false, 'hex')
@@ -267,8 +269,8 @@ export const createOptions = (chart: EChartsType): ECOption => ({
             if (!data) return '-'
 
             const start = data[0]
-     
-            if(!start || start.length < 2) return TEXT_COLOR
+
+            if (!start || start.length < 2) return TEXT_COLOR
 
             return `${(((v - start[2]) / start[2]) * 100).toFixed(2)}%`
           }
@@ -281,9 +283,9 @@ export const createOptions = (chart: EChartsType): ECOption => ({
           const data = chart.meta!.mainData?.slice(scale[0], scale[1])
 
           if (!data || data.length === 0 || !v) return TEXT_COLOR
-         
+
           const start = data[0]
-   
+
           const getStockColor = useConfig.getState().getStockColor
 
           return v >= start[2] ? getStockColor(true, 'hex') : getStockColor(false, 'hex')
@@ -353,7 +355,7 @@ export const createOptions = (chart: EChartsType): ECOption => ({
  */
 const defaultXAxis: XAXisOption = {
   type: 'category',
-  boundaryGap: false,
+  boundaryGap: true,
   axisLine: {
     onZero: false,
     lineStyle: {
@@ -470,7 +472,7 @@ export const renderGrid = (options: ECOption, state: ChartState, size: [number, 
       id: 'xAxis-x',
       axisLabel: {
         show: true,
-        alignMinLabel: 'right',
+        alignMinLabel: 'left',
         color: '#fff',
         formatter: (v: any) => {
           if (!v) return ''
@@ -479,7 +481,7 @@ export const renderGrid = (options: ECOption, state: ChartState, size: [number, 
           const scale = renderUtils.getScaledZoom(chart, 0)
           const startDay = xData[scale[0]]
           //获取时间跨度
-          const time = dayjs(xData[scale[1]]).diff(+startDay, 'day')
+          const time = dayjs(+xData[scale[1]]).diff(+startDay, 'day')
 
           if (time < 1) {
             return dayjs(+v).format('HH:mm')
@@ -489,22 +491,26 @@ export const renderGrid = (options: ECOption, state: ChartState, size: [number, 
             return dayjs(+v).format('MM-DD')
           }
 
-          return dayjs(+v).format('YY-MM-DD')
+          if(time < 365 * 5) {
+            return dayjs(+v).format('YY-MM')
+          }
+
+          return dayjs(+v).format('YYYY')
         },
-        interval: (index: number) => {
-          if (isTimeIndexChart(state.timeIndex) && state.timeIndex !== StockChartInterval.FIVE_DAY) {
-            return index % 15 === 0
-          }
-          const scale = renderUtils.getScaledZoom(chart, 0)
+        // interval: (index: number) => {
+        //   if (isTimeIndexChart(state.timeIndex) && state.timeIndex !== StockChartInterval.FIVE_DAY) {
+        //     return index % 15 === 0
+        //   }
+        //   const scale = renderUtils.getScaledZoom(chart, 0)
 
-          const offset = Math.round((scale[1] - scale[0]) / X_AXIS_TICK)
+        //   const offset = Math.round((scale[1] - scale[0]) / X_AXIS_TICK)
 
-          if (offset <= X_AXIS_TICK) {
-            return index % 4 === 0
-          }
+        //   if (offset <= X_AXIS_TICK) {
+        //     return index % 4 === 0
+        //   }
 
-          return (index - scale[0]) % offset === 0
-        }
+        //   return (index - scale[0]) % offset === 0
+        // }
       },
       axisPointer: {
         label: {
@@ -587,7 +593,22 @@ export const renderMainChart: ChartRender = (options, state) => {
       borderColor0: downColor
     }
 
-    mainSeries.data = data
+    mainSeries.data = data.map(item => {
+      const percent = stockUtils.toStockWithExt(item).percent ?? 0
+
+      if (Math.abs(percent) < 0.09) {
+        return {
+          value: item
+        }
+      }
+      return {
+        value: item,
+        itemStyle: {
+          color: percent > 0 ? '#ffffff' : '#9123a7',
+          borderColor: percent > 0 ? '#ffffff' : '#9123a7'
+        }
+      }
+    })
     mainSeries.encode = {
       x: [0],
       y: [1, 2, 4, 3]
@@ -608,7 +629,9 @@ export const renderMainChart: ChartRender = (options, state) => {
       x: [0],
       y: [2]
     }
-    _mainSeries.data = data
+    _mainSeries.data = data.map(item => ({
+      value: item
+    }))
     _mainSeries.color = color
     _mainSeries.areaStyle = {
       color: {
@@ -738,6 +761,46 @@ export const renderMarkLine: ChartRender = (options, state) => {
       ]
     ]
   }
+
+  mainSeries.markPoint = {
+    symbol: 'rect',
+    symbolSize: [20, 1],
+    symbolOffset: (_: any, p: any) => {
+      if (p.data.type === 'min') {
+        return [10, 4]
+      }
+      return [-10, -4]
+    },
+    label: {
+      show: true,
+      color: '#fff'
+    },
+    silent: true,
+    emphasis: {
+      disabled: true
+    },
+    itemStyle: {
+      color: '#fff'
+    },
+    data: [
+      {
+        type: 'max',
+        name: '最大值',
+        valueIndex: 3,
+        label: {
+          position: 'left'
+        }
+      },
+      {
+        type: 'min',
+        name: '最小值',
+        valueIndex: 4,
+        label: {
+          position: 'right'
+        }
+      }
+    ]
+  }
 }
 
 /**
@@ -770,13 +833,28 @@ export const renderMainCoiling = (options: ECOption, state: ChartState, chart: E
         chart: chart
       })
     } else if (coiling === CoilingIndicatorId.PIVOT) {
-      drawPivots(options, {} as any, { xAxisIndex: 0, yAxisIndex: 1, data: expands as any, name: `coiling_${CoilingIndicatorId.PIVOT}_ext` })
-      drawPivots(options, {} as any, { xAxisIndex: 0, yAxisIndex: 1, data: pivots as any, name: `coiling_${CoilingIndicatorId.PIVOT}` })
+      drawPivots(options, {} as any, {
+        xAxisIndex: 0,
+        yAxisIndex: 1,
+        data: expands as any,
+        name: `coiling_${CoilingIndicatorId.PIVOT}_ext`
+      })
+      drawPivots(options, {} as any, {
+        xAxisIndex: 0,
+        yAxisIndex: 1,
+        data: pivots as any,
+        name: `coiling_${CoilingIndicatorId.PIVOT}`
+      })
     } else if (
       [CoilingIndicatorId.ONE_TYPE, CoilingIndicatorId.TWO_TYPE, CoilingIndicatorId.THREE_TYPE].includes(coiling)
     ) {
       const tradePoints = calcTradePoints(state.mainData.coiling_data, points, coiling as any)
-      drawTradePoints(options, {} as any, { xAxisIndex: 0, yAxisIndex: 1, data: tradePoints, name: `coiling_${coiling}` })
+      drawTradePoints(options, {} as any, {
+        xAxisIndex: 0,
+        yAxisIndex: 1,
+        data: tradePoints,
+        name: `coiling_${coiling}`
+      })
     } else if (coiling === CoilingIndicatorId.SHORT_LINE) {
       const cma = calculateMA(20, state.mainData.history)
       const cma2 = calculateMA(30, state.mainData.history)
@@ -898,6 +976,18 @@ export const renderMainIndicators = (options: ECOption, indicators: Indicator[])
           d.style.color
         ]) as any[]
         textData.push(...data)
+      } else if (d.draw === 'DRAWNUMBER') {
+        const data = Object.entries(d.data as NormalizedRecord<number[]>).map(([key, value]) => [
+          +key,
+          ...value,
+          d.style.color
+        ])
+
+        drawNumber(options, {
+          xAxisIndex: 0,
+          yAxisIndex: 1,
+          data: data as any
+        })
       }
     })
   })
@@ -927,7 +1017,7 @@ export const renderMainIndicators = (options: ECOption, indicators: Indicator[])
 export const renderOverlay = (options: ECOption, data?: ChartState['overlayStock']) => {
   if (!data || data.length === 0) return options
 
-  data.forEach(stock => {
+  data.forEach((stock, index) => {
     const series: LineSeriesOption = {
       name: stock.symbol,
       id: stock.symbol,
@@ -935,11 +1025,12 @@ export const renderOverlay = (options: ECOption, data?: ChartState['overlayStock
       symbol: 'none',
       type: 'line',
       data: stock.data.history.map(o => [dayjs(o[0]).valueOf().toString(), ...o.slice(1)]),
+      color: colorUtil.colorPalette[index],
       encode: {
         x: [0],
         y: [2]
       },
-      yAxisIndex: 0,
+      yAxisIndex: 1,
       xAxisIndex: 0
     }
 
@@ -1076,6 +1167,15 @@ export const renderSecondary = (options: ECOption, indicators: Indicator[]) => {
           xAxisIndex: index + 2,
           name: `secondary_${indicator.id}_${d.name}_${index}`,
           yAxisIndex: index + 3,
+          data: data as any
+        })
+      } else if (d.draw === 'DRAWNUMBER') {
+        const data = Object.entries(d.data as NormalizedRecord<number[]>).forEach(([key, value]) => [key, ...value])
+
+        drawNumber(options, {
+          xAxisIndex: index + 2,
+          yAxisIndex: index + 3,
+          name: `secondary_${indicator.id}_${d.name}_${index}`,
           data: data as any
         })
       }
