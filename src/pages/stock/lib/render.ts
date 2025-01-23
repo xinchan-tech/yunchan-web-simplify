@@ -808,20 +808,20 @@ export const renderMarkLine: ChartRender = (options, state) => {
  */
 export const renderMainCoiling = (options: ECOption, state: ChartState, chart: EChartsType) => {
   if (state.mainCoiling.length === 0) return options
-  const points = calcCoilingPoints(state.mainData.history, state.mainData.coiling_data)
-  const pivots = calcCoilingPivots(state.mainData.coiling_data, points)
-  const expands = calcCoilingPivotsExpands(state.mainData.coiling_data, points)
+  const points = state.mainData.coilingData?.points
+  const pivots = state.mainData.coilingData?.pivots
+  const expands = state.mainData.coilingData?.expands
   state.mainCoiling.forEach(coiling => {
     if (coiling === CoilingIndicatorId.PEN) {
       const p: any[] = []
-      points.slice(1).forEach((point, index) => {
+      points?.slice(1).forEach((point, index) => {
         const prev = points[index]
         p.push([
-          prev.xIndex,
-          prev.y,
-          point.xIndex,
-          point.y,
-          index === points.length - 2 && state.mainData.coiling_data?.status !== 1 ? LineType.DASH : LineType.SOLID
+          prev.index,
+          prev.price,
+          point.index,
+          point.price,
+          index === points.length - 2 && state.mainData.coilingData?.status !== 1 ? LineType.DASH : LineType.SOLID
         ])
       })
       drawPolyline(options, {} as any, {
@@ -848,7 +848,7 @@ export const renderMainCoiling = (options: ECOption, state: ChartState, chart: E
     } else if (
       [CoilingIndicatorId.ONE_TYPE, CoilingIndicatorId.TWO_TYPE, CoilingIndicatorId.THREE_TYPE].includes(coiling)
     ) {
-      const tradePoints = calcTradePoints(state.mainData.coiling_data, points, coiling as any)
+      const tradePoints = calcTradePoints(state.mainData.coilingData, coiling as any)
       drawTradePoints(options, {} as any, {
         xAxisIndex: 0,
         yAxisIndex: 1,

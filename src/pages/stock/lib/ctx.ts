@@ -11,6 +11,8 @@ import { createJSONStorage, persist } from 'zustand/middleware'
 import { renderUtils } from './utils'
 import { useIndicator, useTime } from '@/store'
 import dayjs from 'dayjs'
+import { replace } from 'radash'
+import { calcCoiling } from '@/utils/coiling'
 
 export type ViewMode =
   | 'single'
@@ -158,9 +160,10 @@ type KChartUtils = {
    */
   setMainData: (params: {
     index?: number
-    data?: Awaited<ReturnType<typeof getStockChart>>
+    data?: Awaited<ReturnType<typeof getStockChart>>['history']
+    timeIndex?: StockChartInterval
     dateConvert?: boolean
-  }) => void
+  }) => Promise<void>
 
   /**
    * 设置指标数据，主图和附图的指标数据都可以设置
@@ -286,7 +289,10 @@ type MainChartState = {
   /**
    * 主图数据
    */
-  mainData: Awaited<ReturnType<typeof getStockChart>>
+  mainData: {
+    history: Awaited<ReturnType<typeof getStockChart>>['history']
+    coilingData?: CoilingData
+  }
   /**
    * chart实例
    */
@@ -316,8 +322,6 @@ type MainChartState = {
   }
 }
 
-
-
 /**
  * 创建默认的图表状态
  * @param opts
@@ -326,9 +330,11 @@ type MainChartState = {
  * @returns 图表实例状态
  *
  */
-export const createDefaultChartState = (opts: { symbol?: string; index: number }): ArrayItem<KChartContext['state']> => {
-  const defaultState = JSON.parse(localStorage.getItem('k-chart-state') ?? 'null') as ArrayItem<
+export const createDefaultChartState = (opts: { symbol?: string; index: number }): ArrayItem<
   KChartContext['state']
+> => {
+  const defaultState = JSON.parse(localStorage.getItem('k-chart-state') ?? 'null') as ArrayItem<
+    KChartContext['state']
   > | null
   return {
     symbol: opts.symbol ?? 'QQQ',
@@ -374,8 +380,7 @@ export const createDefaultChartState = (opts: { symbol?: string; index: number }
         ],
     mainData: {
       history: [],
-      coiling_data: undefined,
-      md5: ''
+      coilingData: undefined
     },
     overlayStock: [],
     overlayMark: undefined,
@@ -415,34 +420,36 @@ export const useKChartStore = create<KChartContext>()(
       name: 'k-chart',
       storage: createJSONStorage(() => localStorage),
       partialize: state => {
-        const r = state.state[0] 
+        const r = state.state[0]
 
         return {
           activeChartIndex: 0,
           viewMode: 'single',
-          state: [{
-            symbol: r.symbol,
-            type: r.type,
-            id: r.id,
-            index: r.index,
-            timeIndex: r.timeIndex,
-            system: r.system,
-            secondaryIndicators: r.secondaryIndicators.map(item => ({
-              ...item,
-              data: undefined
-            })),
-            mainIndicators: r.mainIndicators,
-            mainCoiling: r.mainCoiling,
-            mainData: {
-              history: [],
-              coiling_data: undefined,
-              md5: ''
-            },
-            
-            overlayStock: r.overlayStock,
-            overlayMark: r.overlayMark,
-            yAxis: r.yAxis
-          }]
+          state: [
+            {
+              symbol: r.symbol,
+              type: r.type,
+              id: r.id,
+              index: r.index,
+              timeIndex: r.timeIndex,
+              system: r.system,
+              secondaryIndicators: r.secondaryIndicators.map(item => ({
+                ...item,
+                data: undefined
+              })),
+              mainIndicators: r.mainIndicators,
+              mainCoiling: r.mainCoiling,
+              mainData: {
+                history: [],
+                coiling_data: undefined,
+                md5: ''
+              },
+
+              overlayStock: r.overlayStock,
+              overlayMark: r.overlayMark,
+              yAxis: r.yAxis
+            }
+          ]
         }
       }
     }
@@ -627,7 +634,8 @@ export const kChartUtils: KChartUtils = {
         const activeChart = state.state[state.activeChartIndex]
         newState = [
           ...state.state,
-          ...Array.from({ length: count - state.state.length }, (_, i) => createDefaultChartState({ index: state.state.length + i, symbol: activeChart.symbol })
+          ...Array.from({ length: count - state.state.length }, (_, i) =>
+            createDefaultChartState({ index: state.state.length + i, symbol: activeChart.symbol })
           )
         ]
       } else if (count < state.state.length) {
@@ -646,30 +654,47 @@ export const kChartUtils: KChartUtils = {
       }
     })
   },
-  setMainData: ({ index, data, dateConvert }) => {
-  
-    useKChartStore.setState(state => ({
-      state: state.state.map(item => {
-        if (item.index === (index ?? state.activeChartIndex)) {
-          const newD = produce(item, draft => {
-            draft.mainData = data
-              ? dateConvert
-                ? ({
-                  ...data,
-                  history: data.history.map(v => [dayjs(v[0]).valueOf().toString(), ...v.slice(1)])
-                } as any)
-                : data
-              : {
-                history: [],
-                coiling_data: undefined,
-                md5: ''
-              }
-          })
-          return newD
+  setMainData: async ({ index, data, dateConvert, timeIndex }) => {
+    const history = data ? (dateConvert ? data.map(v => [dayjs(v[0]).valueOf().toString(), ...v.slice(1)]) : data) : []
+    let coilingData = undefined
+
+    if (data?.length && timeIndex !== undefined) {
+      coilingData = await calcCoiling(data, timeIndex)
+    }
+
+    useKChartStore.setState(s => ({
+      state: produce(s.state, draft => {
+        const item = draft.find(item => item.index === (index ?? s.activeChartIndex))
+        if (item) {
+          item.mainData = {
+            history: history as any,
+            coilingData
+          }
         }
-        return item
       })
     }))
+    // useKChartStore.setState(state => ({
+    //   state: state.state.map(item => {
+    //     if (item.index === (index ?? state.activeChartIndex)) {
+    //       const newD = produce(item, draft => {
+    //         draft.mainData = data
+    //           ? dateConvert
+    //             ? ({
+    //               ...data,
+    //               history: data.history.map(v => [dayjs(v[0]).valueOf().toString(), ...v.slice(1)])
+    //             } as any)
+    //             : data
+    //           : {
+    //             history: [],
+    //             coiling_data: undefined,
+    //             md5: ''
+    //           }
+    //       })
+    //       return newD
+    //     }
+    //     return item
+    //   })
+    // }))
   },
   setIndicatorData: ({ index, indicatorId, data }) => {
     useKChartStore.setState(state => ({
@@ -705,7 +730,7 @@ export const kChartUtils: KChartUtils = {
       queryKey.push(useIndicator.getState().getIndicatorQueryParams(indicator.id))
     }
 
-    const queryData = queryClient.getQueryData(queryKey) as { id: string; data: any[]} 
+    const queryData = queryClient.getQueryData(queryKey) as { id: string; data: any[] }
 
     useKChartStore.setState(state => ({
       state: state.state.map(item => {
@@ -765,11 +790,11 @@ export const kChartUtils: KChartUtils = {
       state: state.state.map(item => {
         if (item.index === (index ?? state.activeChartIndex)) {
           return produce(item, draft => {
-            if(draft.secondaryIndicators.length > count){
+            if (draft.secondaryIndicators.length > count) {
               draft.secondaryIndicators = draft.secondaryIndicators.slice(0, count)
-            }else{
-              for(let i = draft.secondaryIndicators.length; i < count; i++){
-                draft.secondaryIndicators.push({...indicator, key: nanoid()})
+            } else {
+              for (let i = draft.secondaryIndicators.length; i < count; i++) {
+                draft.secondaryIndicators.push({ ...indicator, key: nanoid() })
               }
             }
           })

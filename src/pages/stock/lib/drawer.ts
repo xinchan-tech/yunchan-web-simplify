@@ -583,8 +583,8 @@ export const drawPivots: DrawerFunc<DrawPivotsShape[]> = (options, _, { xAxisInd
 }
 
 type DrawTradePointsShape = {
-  xIndex: XAxis
-  y: YAxis
+  index: XAxis
+  price: YAxis
   large: boolean
   buy: boolean
   positive: number
@@ -666,7 +666,7 @@ export const drawTradePoints: DrawerFunc<DrawTradePointsShape[]> = (
       }
     },
     name,
-    data: data.map(item => [item.xIndex, item.y, item.large, item.buy, item.positive, item.color, item.type])
+    data: data.map(item => [item.index, item.price, item.large, item.buy, item.positive, item.color, item.type])
   }
 
   Array.isArray(options.series) && options.series.push(series)

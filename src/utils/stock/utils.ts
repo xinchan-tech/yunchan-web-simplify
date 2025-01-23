@@ -5,6 +5,27 @@ import { type Stock, StockRecord, type StockResultRecord, type StockTrading } fr
 import type { StockSubscribeHandler } from './subscribe'
 import { isNumber } from "radash"
 
+/**
+ * 判断时间数据
+ * 2024-09-10 不带时间默认为盘中数据，自动补齐
+ * @param time 添加时间戳
+ */
+const parseTime = (time?: string) => {
+  if (!time) return -1
+  if(isNumber(time) || time.replace('-', '').length === time.length){
+    if (time.toString().length === 10) {
+      return dayjs(+time * 1000).valueOf()
+    }
+    return dayjs(+time).valueOf()
+  }
+
+  if (time.length === 10) {
+    return dayjs(`${dayjs(time).format('YYYY-MM-DD')} 15:59:00`).valueOf()
+  }
+  return dayjs(time).valueOf()
+}
+
+
 export const stockUtils = {
   toStockRecord(data: StockResultRecord) {
     return StockRecord.create(data)
@@ -297,25 +318,8 @@ export const stockUtils = {
     if (!marketValue) return
 
     return data.turnover / marketValue
-  }
+  },
+
+  parseTime
 }
 
-/**
- * 判断时间数据
- * 2024-09-10 不带时间默认为盘中数据，自动补齐
- * @param time 添加时间戳
- */
-const parseTime = (time?: string) => {
-  if (!time) return -1
-  if(isNumber(time) || time.replace('-', '').length === time.length){
-    if (time.toString().length === 10) {
-      return dayjs(+time * 1000).valueOf()
-    }
-    return dayjs(+time).valueOf()
-  }
-
-  if (time.length === 10) {
-    return dayjs(`${dayjs(time).format('YYYY-MM-DD')} 15:59:00`).valueOf()
-  }
-  return dayjs(time).valueOf()
-}

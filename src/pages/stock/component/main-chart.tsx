@@ -16,6 +16,7 @@ import { renderUtils } from "../lib/utils"
 import { IndicatorTooltip } from "./indicator-tooltip"
 import { SecondaryIndicator } from "./secondary-indicator"
 import { TimeIndexMenu } from "./time-index"
+import { calcCoiling } from "@/utils/coiling"
 
 interface MainChartProps {
   index: number
@@ -151,19 +152,13 @@ export const MainChart = (props: MainChartProps) => {
 
     if (!renderUtils.isSameTimeByInterval(dayjs(lastData.timestamp), dayjs(+s[0]), state.timeIndex)) {
       kChartUtils.setMainData({
-        index: props.index, data: {
-          ...query.data,
-          history: [...lastMainHistory.current as any, s],
-        },
+        index: props.index, data: [...lastMainHistory.current as any, s],
         dateConvert: false
       })
     } else {
       kChartUtils.setMainData({
         index: props.index,
-        data: {
-          ...query.data,
-          history: [...lastMainHistory.current.slice(0, -1) as any, s]
-        },
+        data: [...lastMainHistory.current.slice(0, -1) as any, s],
         dateConvert: false
       })
     }
@@ -243,7 +238,7 @@ export const MainChart = (props: MainChartProps) => {
 
   useEffect(() => {
 
-    kChartUtils.setMainData({ index: props.index, data: query.data, dateConvert: true })
+    kChartUtils.setMainData({ index: props.index, data: query.data?.history, dateConvert: true })
   }, [query.data, props.index])
 
   const render = () => {
@@ -259,10 +254,11 @@ export const MainChart = (props: MainChartProps) => {
     chart.current.meta.mainData = state.mainData.history
 
     const [start, end] = chart.current.getOption() ? renderUtils.getZoom(chart.current.getOption()) : [90, 100]
-    // calcCoiling()
+ 
     const _options = renderChart(chart.current)
     renderGrid(_options, state, [chart.current.getWidth(), chart.current.getHeight()], chart.current)
     if (state.mainData.history.length > 0) {
+     
       renderMainChart(_options, state)
       renderMarkLine(_options, state)
       renderZoom(_options, [start, end])

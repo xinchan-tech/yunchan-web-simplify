@@ -58,13 +58,12 @@ export const calcCoilingPoints = (
  * @returns
  */
 export const calcTradePoints = (
-  coiling: StockData['coiling_data'],
-  points: ReturnType<typeof calcCoilingPoints>,
+  coiling: CoilingData | undefined,
   type: CoilingIndicatorId.ONE_TYPE | CoilingIndicatorId.TWO_TYPE | CoilingIndicatorId.THREE_TYPE
 ) => {
   if (!coiling) return []
 
-  let data: number[][] = []
+  let data: CoilingData['class_1_trade_points'] | undefined = undefined
 
   if (type === CoilingIndicatorId.ONE_TYPE) {
     data = coiling.class_1_trade_points
@@ -79,25 +78,18 @@ export const calcTradePoints = (
   return data.map(v => {
     let color = ''
 
-    const buy = Boolean(v[2])
-    const large = Boolean(v[1])
-
-    if (buy) {
-      color = large
+    if (v.buy) {
+      color = v.large
         ? colorUtil.rgbaToString(colorUtil.argbToRGBA('FF185EFF'))
         : colorUtil.rgbaToString(colorUtil.argbToRGBA('FF00B050'))
     } else {
-      color = large
+      color = v.large
         ? colorUtil.rgbaToString(colorUtil.argbToRGBA('FFF323C5'))
         : colorUtil.rgbaToString(colorUtil.argbToRGBA('FFFE1818'))
     }
 
     return {
-      xIndex: points[v[0]].xIndex,
-      y: points[v[0]].y,
-      large,
-      buy,
-      positive: v[3],
+      ...v,
       color,
       type: Decimal.create(type).minus(CoilingIndicatorId.ONE_TYPE).plus(1).toNumber()
     }
