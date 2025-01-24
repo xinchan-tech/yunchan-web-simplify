@@ -52,6 +52,7 @@ export const GroupChatContext = createContext<{
   syncSubscriber: async () => {},
 });
 
+const wsUrlPrefix = `${window.location.protocol === "https:" ? "wss" : "ws"}://${window.location.host}`;
 
 
 const subscriberCache: Map<string, Subscriber[]> = new Map();
@@ -464,7 +465,7 @@ const GroupChatPage = () => {
   };
 
   useEffect(() => {
-    connectIM("/im-ws");
+    connectIM(`${wsUrlPrefix}/im-ws`);
     return () => {
       WKSDK.shared().connectManager.removeConnectStatusListener(
         connectStatusListener
