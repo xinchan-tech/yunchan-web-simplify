@@ -27,6 +27,20 @@ export default defineConfig({
           '^/apiv2': ''
         }
       },
+      '/api/send/code/email': {
+        target: 'https://awstest.mgjkn.com/',
+        changeOrigin: true,
+        pathRewrite: {
+          '^/api': ''
+        }
+      },
+      '/api/login/register': {
+        target: 'https://awstest.mgjkn.com/',
+        changeOrigin: true,
+        pathRewrite: {
+          '^/api': ''
+        }
+      },
       '/api': {
         target: 'http://cn.mgjkn.com/',
         changeOrigin: true,
@@ -57,11 +71,13 @@ export default defineConfig({
   tools: {
     rspack(_, { appendPlugins }) {
       if (process.env.NODE_ENV === 'production') {
-        appendPlugins(new RsdoctorRspackPlugin({
-          supports: {
-            generateTileGraph: true
-          }
-        }))
+        appendPlugins(
+          new RsdoctorRspackPlugin({
+            supports: {
+              generateTileGraph: true
+            }
+          })
+        )
       }
 
       appendPlugins(new CompressionPlugin({}))

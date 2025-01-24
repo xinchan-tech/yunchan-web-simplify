@@ -125,3 +125,40 @@ export const loginByThird = (platform: 'google' | 'apple', code: string) => {
     )
     .then(r => r.data)
 }
+
+/**
+ * 发送邮箱验证码
+ */
+export const sendEmailCode = (email: string, type: 'register' | 'forgot') => {
+  return request
+    .post('/send/code/email', { email, type }, { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } })
+    .then(r => r.data)
+}
+
+/**
+ * 邮箱注册
+ */
+export const registerByEmail = (params: {
+  username: string
+  password: string
+  password_confirm: string
+  code: string
+}) => {
+  return request
+    .post('/login/register', params, { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } })
+    .then(r => r.data)
+}
+
+/**
+ * 忘记密码
+ */
+export const forgotPassword = (params: {
+  username: string
+  password: string
+  password_confirm: string
+  code: string
+}) => {
+  return request
+    .post('/login/forgot', params, { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } })
+    .then(r => r.data)
+}

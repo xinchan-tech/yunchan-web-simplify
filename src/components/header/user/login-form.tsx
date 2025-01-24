@@ -1,18 +1,20 @@
-import { getWxLoginStatus, login, loginByThird, loginImService} from "@/api"
+import { forgotPassword, getWxLoginStatus, login, loginByThird, loginImService, registerByEmail, sendEmailCode } from "@/api"
 import WechatLoginIcon from '@/assets/icon/wechat_login.png'
 import LoginLeftImg from '@/assets/image/login_left.png'
 import AppleIcon from '@/assets/icon/apple.png'
 import GoogleIcon from '@/assets/icon/google.png'
 import { useToken } from "@/store"
 import { z } from "zod"
-import { Button, Form, FormControl, FormField, FormItem, Input, useModal } from "@/components"
-import { useToast, useZForm } from "@/hooks"
+import { Button, Form, FormControl, FormField, FormItem, Input, JknCheckbox, Separator, useModal } from "@/components"
+import { useCheckbox, useToast, useZForm } from "@/hooks"
 import { useMutation } from "@tanstack/react-query"
-import { useMount, useUnmount } from "ahooks"
-import { useEffect, useRef } from "react"
+import { useCountDown, useMount, useUnmount } from "ahooks"
+import { useEffect, useRef, useState } from "react"
 import { uid } from "radash"
 import QRCode from 'qrcode'
 import { appEvent } from "@/utils/event"
+import { LockIcon, MailIcon, RectangleEllipsisIcon } from "lucide-react"
+import type { SubmitErrorHandler } from "react-hook-form"
 
 interface LoginFormProps {
   afterLogin?: () => void
@@ -41,7 +43,26 @@ type AppleLoginResult = {
   }
 }
 
-const LoginForm = (props: LoginFormProps) => {
+const LoginModal = (props: LoginFormProps) => {
+  const [page, setPage] = useState<'login' | 'register' | 'resetPassword'>('login')
+  return (
+    <div className="flex login-form">
+      <div className="w-[380px] h-[400px] relative">
+        <div className="absolute left-0 top-0 w-8 h-8 cursor-pointer" onClick={() => props.onClose?.()} onKeyUp={() => { }} />
+        <img src={LoginLeftImg} alt="" className="w-full h-full" />
+      </div>
+      <div className="bg-white h-[400px] w-[280px] box-border flex flex-col px-4">
+        {{
+          login: <LoginForm afterLogin={props.afterLogin} onClose={props.onClose} setPage={setPage} />,
+          register: <RegisterForm setPage={setPage} type="register" />,
+          resetPassword: <RegisterForm setPage={setPage} type="forgot" />
+        }[page] ?? null}
+      </div>
+    </div>
+  )
+}
+
+const LoginForm = (props: LoginFormProps & { setPage: (page: 'login' | 'register' | 'resetPassword') => void }) => {
   const form = useZForm(loginSchema, { mobile: '', password: '' })
   const setToken = useToken(s => s.setToken)
   const { toast } = useToast()
@@ -49,10 +70,10 @@ const LoginForm = (props: LoginFormProps) => {
   const onLoginSuccess = (token: string) => {
     setToken(token)
 
-	loginImService({
-       device_flag: '1',
-       device_level: '1'
-     })
+    loginImService({
+      device_flag: '1',
+      device_level: '1'
+    })
 
     props.afterLogin?.()
   }
@@ -79,12 +100,8 @@ const LoginForm = (props: LoginFormProps) => {
 
 
   return (
-    <div className="flex login-form">
-      <div className="w-[380px] h-[400px] relative">
-        <div className="absolute left-0 top-0 w-8 h-8 cursor-pointer" onClick={() => props.onClose?.()} onKeyUp={() => { }} />
-        <img src={LoginLeftImg} alt="" className="w-full h-full" />
-      </div>
-      <div className="bg-white h-[400px] w-[280px] box-border flex flex-col px-4">
+    <>
+      <div className="bg-white h-full w-full box-border flex flex-col">
         <p className="text-[#3861F6] mt-12 text-lg">登录账号</p>
         <Form {...form}>
           <form className="space-y-4">
@@ -110,7 +127,12 @@ const LoginForm = (props: LoginFormProps) => {
           </form>
           <Button className="mt-4" onClick={() => loginMutation.mutate({ type: 'username', data: {} })} block loading={loginMutation.isPending}>登录</Button>
         </Form>
-        <div className="px-4 other-login mt-12" >
+        <div className="flex text-xs text-secondary justify-center space-x-4 mt-4">
+          <div className="cursor-pointer" onClick={() => props.setPage('resetPassword')} onKeyDown={() => { }}>忘记密码</div>
+          <Separator orientation="vertical" className="bg-[hsl(var(--text-secondary))]" />
+          <div className="cursor-pointer" onClick={() => props.setPage('register')} onKeyDown={() => { }}>立即注册</div>
+        </div>
+        <div className="px-4 other-login mt-8" >
           <div className="flex items-center mb-2">
             <span className="border-0 border-b border-solid border-gray-300 flex-1" />
             <span className="text-secondary mx-2 text-xs">其他登录方式</span>
@@ -123,7 +145,7 @@ const LoginForm = (props: LoginFormProps) => {
           </div>
         </div>
       </div>
-    </div>
+    </>
   )
 }
 
@@ -281,4 +303,170 @@ const WxLoginForm = () => {
   )
 }
 
-export default LoginForm
+const registerSchema = z.object({
+  username: z.string().email({ message: '请输入正确的邮箱' }),
+  password: z.string().min(6, { message: '最少输入6位密码' }).max(50),
+  passwordConfirm: z.string(),
+  code: z.string()
+}).refine(data => data.password === data.passwordConfirm, { message: '两次密码输入不一致' })
+
+type RegisterSchema = z.infer<typeof registerSchema>
+
+const RegisterForm = (props: { type: 'forgot' | 'register', setPage: (page: 'login' | 'register' | 'resetPassword') => void }) => {
+  const form = useZForm(registerSchema, { username: '', password: '', passwordConfirm: '', code: '' })
+  const [time, setTime] = useState<number | undefined>()
+  const { checked, toggle } = useCheckbox(false)
+
+  const { toast } = useToast()
+  const onError: SubmitErrorHandler<RegisterSchema> = (err) => {
+    toast({
+      description: Object.values(err)[0].message
+    })
+  }
+
+  const sendCode = useMutation({
+    mutationFn: async () => {
+      const r = await form.trigger('username')
+      if (!r) {
+        toast({
+          description: '请输入正确的邮箱'
+        })
+        throw new Error('请输入正确的邮箱')
+      }
+
+      await sendEmailCode(form.getValues('username'), props.type)
+    },
+    onSuccess: () => {
+      toast({
+        description: '验证码已发送'
+      })
+      setTime(60 * 1000)
+    },
+    onError: e => {
+      toast({
+        description: e.message
+      })
+    }
+  })
+
+  const register = useMutation({
+    mutationFn: (data: RegisterSchema) => {
+      if (props.type === 'register' && !checked) {
+        throw new Error('请先阅读并接受《服务条款》')
+      }
+      const r: Parameters<typeof registerByEmail>[0] = {
+        username: data.username,
+        password: data.password,
+        password_confirm: data.passwordConfirm,
+        code: data.code
+      }
+
+      return props.type === 'register' ? registerByEmail(r) : forgotPassword(r)
+    },
+    onSuccess: () => {
+      toast({
+        description: '注册成功'
+      })
+      props.setPage('login')
+    },
+    onError: e => {
+      toast({
+        description: e.message
+      })
+    }
+  })
+
+  return (
+    <div className="bg-white h-full w-full box-border flex flex-col">
+      <p className="text-[#3861F6] mt-8 text-lg">
+        {
+          props.type === 'register' ? '注册账号' : '忘记密码'
+        }
+      </p>
+      <Form {...form}>
+        <form className="space-y-2" onSubmit={form.handleSubmit(v => register.mutate(v), onError)}>
+          <FormField control={form.control} name="username"
+            render={({ field }) => (
+              <FormItem className="flex items-center bg-[#dcdcdc] border-none rounded-sm overflow-hidden text-tertiary space-y-0 px-2">
+                <MailIcon className="w-4 h-4" />
+                <FormControl>
+                  <Input className="border-none placeholder:text-tertiary text-tertiary" placeholder="请输入邮箱" {...field} />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+          <FormField control={form.control} name="password"
+            render={({ field }) => (
+              <FormItem className="flex items-center bg-[#dcdcdc] border-none rounded-sm overflow-hidden text-tertiary space-y-0 px-2">
+                <LockIcon className="w-4 h-4" />
+                <FormControl>
+                  <Input className="border-none placeholder:text-tertiary text-tertiary" placeholder="请输入密码" {...field} type="password" />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+          <FormField control={form.control} name="passwordConfirm"
+            render={({ field }) => (
+              <FormItem className="flex items-center bg-[#dcdcdc] border-none rounded-sm overflow-hidden text-tertiary space-y-0 px-2">
+                <LockIcon className="w-4 h-4" />
+                <FormControl>
+                  <Input className="border-none placeholder:text-tertiary text-tertiary" placeholder="请再次输入密码" {...field} type="password" />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+
+          <FormField control={form.control} name="code"
+            render={({ field }) => (
+              <FormItem className="flex items-center bg-[#dcdcdc] border-none rounded-sm overflow-hidden text-tertiary space-y-0 px-2">
+                <RectangleEllipsisIcon className="w-4 h-4 flex-shrink-0" />
+                <FormControl>
+                  <Input className="border-none placeholder:text-tertiary text-tertiary" placeholder="请输入验证码" {...field} />
+                </FormControl>
+                {
+                  time ? (
+                    <CountDownSpan onEnd={() => setTime(undefined)} />
+                  ) : (
+                    <Button variant="icon" loading={sendCode.isPending} onClick={() => sendCode.mutate()} type="button" className="text-primary !mt-0 mr-0 text-xs">获取验证码</Button>
+                  )
+                }
+              </FormItem>
+            )}
+          />
+
+          <div className="!mt-6">
+            {
+              props.type === 'register' ? (
+                <FormItem className="flex items-center space-y-0">
+                  <JknCheckbox checked={checked} onChange={toggle} className="text-xs" />&nbsp;
+                  <span className="text-xs text-secondary">我已阅读并接受《服务条款》</span>
+                </FormItem>
+              ) : null
+            }
+            <Button className="mt-2" block loading={register.isPending}>
+              {
+                props.type === 'register' ? '注册' : '重置密码'
+              }
+            </Button>
+          </div>
+        </form>
+        <div className="text-xs text-center mt-4 text-secondary cursor-pointer" onClick={() => props.setPage('login')} onKeyDown={() => { }}>
+          账号密码登录
+        </div>
+      </Form>
+    </div>
+  )
+}
+
+const CountDownSpan = ({ onEnd }: { onEnd: () => void }) => {
+  const [count] = useCountDown({
+    leftTime: 60 * 1000,
+    onEnd
+  })
+
+  return (
+    <span className="text-primary text-xs whitespace-nowrap cursor-pointer">剩余{Math.round(count / 1000)}秒</span>
+  )
+}
+
+export default LoginModal
