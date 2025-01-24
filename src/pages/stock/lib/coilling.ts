@@ -155,23 +155,24 @@ export const calcCoilingPivotsExpands = (expands: CoilingData['expands'] | undef
 
   return expands.map(p => {
     const mark = `${p.direction === 1 ? '↑' : '↓'}_${labels[p.level]}_1_`
+    const segmentNum = p.end - p.start
 
     let bgColor = 'transparent'
     let color = 'transparent'
     // 中枢背景颜色
     if (p.direction === 1) {
-      if (p.level === PIVOTS_EXPAND_LIMIT) {
+      if (segmentNum === PIVOTS_EXPAND_LIMIT) {
         bgColor = colorUtil.rgbaToString(colorUtil.argbToRGBA('BCFF1DFC'))
         color = colorUtil.rgbaToString(colorUtil.argbToRGBA('FFFF1DFC'))
-      } else if (p.level > PIVOTS_EXPAND_LIMIT) {
+      } else if (segmentNum > PIVOTS_EXPAND_LIMIT) {
         bgColor = colorUtil.rgbaToString(colorUtil.argbToRGBA('CB315FFF'))
         color = colorUtil.rgbaToString(colorUtil.argbToRGBA('FF315FFF'))
       }
     } else {
-      if (p.level === PIVOTS_EXPAND_LIMIT) {
+      if (segmentNum === PIVOTS_EXPAND_LIMIT) {
         bgColor = colorUtil.rgbaToString(colorUtil.argbToRGBA('CB315FFF'))
         color = colorUtil.rgbaToString(colorUtil.argbToRGBA('FF315FFF'))
-      } else if (p.level > PIVOTS_EXPAND_LIMIT) {
+      } else if (segmentNum > PIVOTS_EXPAND_LIMIT) {
         bgColor = colorUtil.rgbaToString(colorUtil.argbToRGBA('BCFF1DFC'))
         color = colorUtil.rgbaToString(colorUtil.argbToRGBA('FFFF1DFC'))
       }
