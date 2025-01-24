@@ -26,7 +26,7 @@ const GroupMembers = (props: { total: string | number }) => {
     for (let i = 0; i < len; i++) {
       result.push(i);
     }
-    console.log(result, 'resultresult')
+
     return result;
   }, [props.total]);
 

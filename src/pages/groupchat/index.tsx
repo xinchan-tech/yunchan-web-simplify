@@ -115,9 +115,9 @@ const GroupChatPage = () => {
 
   // 输入框实例
   const messageInputRef = useRef();
-
+  // 
   // 消息列表滚动到底部
-  const scrollBottom = async () => {
+  const scrollBottom = () => {
 
     pulldowning.current = true;
     animateScroll.scrollToBottom({

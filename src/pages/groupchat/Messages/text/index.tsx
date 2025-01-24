@@ -1,22 +1,37 @@
 import MsgCard from "../../components/msg-card";
 
-import WKSDK, {
-  Channel,
-  ChannelTypePerson,
-  Message,
-  MessageText,
-} from "wukongimjssdk";
+import WKSDK, { Channel, ChannelTypePerson, Message } from "wukongimjssdk";
 import { MessageWrap, PartType, Part } from "../../Service/Model";
-import { cn } from "@/utils/style";
+import { useChatNoticeStore } from "@/store/group-chat-new";
 
-export const getRevokeText = (fromUID: string) => {
+export const getRevokeText = (data: {
+  revoker: string;
+  sender: string;
+  originType: number;
+  originText: string;
+}) => {
   const fromUser = WKSDK.shared().channelManager.getChannelInfo(
-    new Channel(fromUID, ChannelTypePerson)
+    new Channel(data.revoker, ChannelTypePerson)
   );
+  const { setReEditData } = useChatNoticeStore();
+  const loginid = WKSDK.shared().config.uid;
 
   return (
-    <div className='message-system'>
+    <div className="message-system">
       {fromUser?.title + "撤回了一条消息"}
+      {/* 自己发的自己撤回的文本消息才能重新编辑 */}
+      {data.revoker === WKSDK.shared().config.uid &&
+        data.sender === loginid &&
+        data.originType === 1 && (
+          <span
+            className="cursor-pointer text-xs text-primary ml-2"
+            onClick={() => {
+              setReEditData({text:data.originText, timestap: new Date().getTime()});
+            }}
+          >
+            重新编辑
+          </span>
+        )}
       <style jsx>{`
         .message-system {
           margin: 20px auto;
@@ -100,33 +115,41 @@ const TextCell = (props: { message: Message; messageWrap?: MessageWrap }) => {
   // }
 
   const getNormalText = () => {
-    let text = new Array<JSX.Element>(); 
-    if(messageWrap?.content.text) {
-      const goodText = messageWrap.content.text.split('\n');
+    let text = new Array<JSX.Element>();
+    if (messageWrap?.content.text) {
+      const goodText = messageWrap.content.text.split("\n");
       goodText.forEach((str, idx) => {
-        
-        text.push(<span key={str+idx}>{str}</span>)
-        if(idx !== goodText.length - 1) {
-          text.push(<br  key={str+idx + 'br'}></br>)
+        text.push(<span key={str + idx}>{str}</span>);
+        if (idx !== goodText.length - 1) {
+          text.push(<br key={str + idx + "br"}></br>);
         }
       });
-    };
-    if(messageWrap?.content.mention && messageWrap?.content.mention.uids instanceof Array ) {
-      let mentoions = messageWrap.content.mention.uids.map((uid:string) => {
-        const info = WKSDK.shared().channelManager.getChannelInfo(new Channel(uid, ChannelTypePerson));
-        if(info) {
-          return <span key={uid} className='message-text-richmention'>&nbsp;@{info.title}</span>
-        }
-      });
-      text.push(mentoions)
     }
-    return text
-  }
+    if (
+      messageWrap?.content.mention &&
+      messageWrap?.content.mention.uids instanceof Array
+    ) {
+      let mentoions = messageWrap.content.mention.uids.map((uid: string) => {
+        const info = WKSDK.shared().channelManager.getChannelInfo(
+          new Channel(uid, ChannelTypePerson)
+        );
+        if (info) {
+          return (
+            <span key={uid} className="message-text-richmention">
+              &nbsp;@{info.title}
+            </span>
+          );
+        }
+      });
+      text.push(mentoions);
+    }
+    return text;
+  };
 
   return (
     <>
-      {message.content.revoke === true ? (
-        getRevokeText(message.content.revoker)
+      {message.remoteExtra.revoke === true ? (
+        getRevokeText(message.remoteExtra.extra)
       ) : (
         <MsgCard data={message}>{getNormalText()}</MsgCard>
       )}

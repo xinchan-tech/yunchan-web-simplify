@@ -4,9 +4,11 @@ import {
   useState,
   forwardRef,
   useImperativeHandle,
+  useEffect,
 } from "react";
 import { InputBoxResult, useInput } from "./useInput";
 import { useToast } from "@/hooks";
+import { useChatNoticeStore } from "@/store/group-chat-new";
 
 const ChatWindow = forwardRef(
   (
@@ -19,7 +21,8 @@ const ChatWindow = forwardRef(
     const { insertImage, exportMsgData, insertContent } = useInput({
       editorKey: "xc-chat-input",
     });
-    const {toast} = useToast()
+    const { reEditData, setReEditData } = useChatNoticeStore();
+    const { toast } = useToast();
     useImperativeHandle(ref, () => {
       return {
         addEmoji: (emoji: string) => {
@@ -28,32 +31,30 @@ const ChatWindow = forwardRef(
             setHtmlValue(tgt.innerHTML + emoji);
           }
         },
-        insertImage
+        insertImage,
       };
     });
 
     // 插入文件
     const insertFile = (file: File) => {
-  
       const URL = window.URL || window.webkitURL;
       const url = URL.createObjectURL(file);
       if (file.type.includes("image")) {
         const sizeAllow = file.size / 1024 / 1024 <= 5;
         if (!sizeAllow) {
-          toast({ description: '图片限制最大5M'})
+          toast({ description: "图片限制最大5M" });
           return;
         }
         insertImage(url, file);
       } else {
-        toast({ description: '暂不支持发送此类文件'})
+        toast({ description: "暂不支持发送此类文件" });
       }
-     
     };
 
     // 处理图片和文件在input框中的显示逻辑
     const handleFileAndImageInsert = (item: any) => {
       const file = item.getAsFile();
-     
+
       insertFile(file);
     };
 
@@ -120,18 +121,30 @@ const ChatWindow = forwardRef(
       const tgt = document.getElementById("xc-chat-input");
       if (tgt) {
         const msgListData = exportMsgData();
-        console.log(exportMsgData(), "exportMsgData");
-
         typeof props.handleSend === "function" && props.handleSend(msgListData);
+
         tgt.innerHTML = "";
         setHtmlValue("");
       }
     };
+
+    // 重新编辑
+    useEffect(() => {
+      if (reEditData?.text !== "") {
+        const tgt = document.getElementById("xc-chat-input");
+        if (tgt) {
+          tgt.innerHTML = reEditData.text;
+
+          setHtmlValue(reEditData.text);
+        }
+      }
+    }, [reEditData]);
+
     return (
       <>
         <div
           id="xc-chat-input"
-          data-placeholder='按 Ctrl + Enter 换行，按 Enter 发送'
+          data-placeholder="按 Ctrl + Enter 换行，按 Enter 发送"
           onKeyDown={(e: React.KeyboardEvent<HTMLDivElement>) => {
             if (e.keyCode !== 13) {
               //非回车

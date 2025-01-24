@@ -119,6 +119,7 @@ const GroupChatMsgList = forwardRef(
       } else {
         setFilterMode(false);
       }
+
       return result;
     }, [messages, filterType, filterKeyWord]);
 
@@ -154,7 +155,7 @@ const GroupChatMsgList = forwardRef(
     const handleScroll = useThrottleFn(
       (e: any) => {
         const targetScrollTop = e?.target?.scrollTop;
-        if (targetScrollTop <= 50) {
+        if (targetScrollTop <= 30) {
     
           // 下拉
           typeof props.handleScroll === "function" && props.handleScroll(e);
@@ -207,7 +208,7 @@ const GroupChatMsgList = forwardRef(
                 )}
               >
                 {getMessage(msg)}
-                {msg.content?.reply && msg.content?.revoke !== true && (
+                {msg.content?.reply && msg.remoteExtra?.revoke !== true && (
                   <ReplyMsg
                     locateMessage={locateMessage}
                     message={msg}

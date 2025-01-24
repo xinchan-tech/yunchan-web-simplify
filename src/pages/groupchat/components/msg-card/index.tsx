@@ -16,29 +16,47 @@ import { useUser } from "@/store";
 import { useToast } from "@/hooks";
 
 function copyImage(message: Message) {
-  // 创建一个img的dom，用来承载图片
-  // 创建 img 元素并设置 src 属性
-  const messagebox = document.getElementById(message.clientMsgNo);
-  let tempImg;
-  if (messagebox) {
-    tempImg = messagebox.querySelector(`.msgcard-img`);
-  }
+  const tempImg = document.createElement("img");
+	tempImg.src = message.content.remoteUrl;
 
-  // 将 div 添加到 document
+	// 将 div 添加到 document
+	document.body.appendChild(tempImg);
+ 
+	// 选择 div 中的内容
+	const range = document.createRange();
+	range.selectNode(tempImg);
+	window.getSelection().removeAllRanges(); // 清除现有的选择
+	window.getSelection().addRange(range);
+ 
+	// 执行复制命令
+	document.execCommand("copy");
+ 
+	// 清理选择和临时元素
+	window.getSelection().removeAllRanges();
+	document.body.removeChild(tempImg);
+  // // 创建一个img的dom，用来承载图片
+  // // 创建 img 元素并设置 src 属性
+  // const messagebox = document.getElementById(message.clientMsgNo);
+  // let tempImg;
+  // if (messagebox) {
+  //   tempImg = messagebox.querySelector(`.msgcard-img`);
+  // }
 
-  if (tempImg) {
-    // 选择 div 中的内容
-    const range = document.createRange();
-    range.selectNode(tempImg);
-    window.getSelection().removeAllRanges(); // 清除现有的选择
-    window.getSelection().addRange(range);
+  // // 将 div 添加到 document
 
-    // 执行复制命令
-    document.execCommand("copy");
+  // if (tempImg) {
+  //   // 选择 div 中的内容
+  //   const range = document.createRange();
+  //   range.selectNode(tempImg);
+  //   window.getSelection().removeAllRanges(); // 清除现有的选择
+  //   window.getSelection().addRange(range);
 
-    // 清理选择和临时元素
-    window.getSelection().removeAllRanges();
-  }
+  //   // 执行复制命令
+  //   document.execCommand("copy");
+
+  //   // 清理选择和临时元素
+  //   window.getSelection().removeAllRanges();
+  // }
 }
 
 const MsgCard = (props: { data: Message; children: string | ReactNode }) => {

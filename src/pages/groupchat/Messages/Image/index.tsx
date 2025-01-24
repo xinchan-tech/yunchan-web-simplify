@@ -132,8 +132,8 @@ const ImageCell = (props: { message: Message }) => {
 
   return (
     <>
-      {message.content.revoke === true
-        ? getRevokeText(message.content.revoker)
+      {message.remoteExtra?.revoke === true
+        ? getRevokeText(message.remoteExtra?.extra)
         : getImageElement()}
     </>
   );
