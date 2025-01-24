@@ -6,7 +6,7 @@ import {
   Message,
 } from "wukongimjssdk";
 import MsgCard from "../../components/msg-card";
-import { getRevokeText } from "../text";
+import { RevokeText } from "../text";
 import Viewer from "react-viewer";
 
 export class ImageContent extends MediaMessageContent {
@@ -132,8 +132,10 @@ const ImageCell = (props: { message: Message }) => {
 
   return (
     <>
-      {message.remoteExtra?.revoke === true
-        ? getRevokeText(message.remoteExtra?.extra)
+      {message?.remoteExtra?.revoke === true
+        ? <RevokeText data={
+          message?.remoteExtra?.extra
+        } />
         : getImageElement()}
     </>
   );

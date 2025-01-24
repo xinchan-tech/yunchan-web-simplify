@@ -4,12 +4,15 @@ import WKSDK, { Channel, ChannelTypePerson, Message } from "wukongimjssdk";
 import { MessageWrap, PartType, Part } from "../../Service/Model";
 import { useChatNoticeStore } from "@/store/group-chat-new";
 
-export const getRevokeText = (data: {
-  revoker: string;
-  sender: string;
-  originType: number;
-  originText: string;
+export const RevokeText = (props: {
+  data: {
+    revoker: string;
+    sender: string;
+    originType: number;
+    originText: string;
+  };
 }) => {
+  const { data } = props;
   const fromUser = WKSDK.shared().channelManager.getChannelInfo(
     new Channel(data.revoker, ChannelTypePerson)
   );
@@ -26,7 +29,10 @@ export const getRevokeText = (data: {
           <span
             className="cursor-pointer text-xs text-primary ml-2"
             onClick={() => {
-              setReEditData({text:data.originText, timestap: new Date().getTime()});
+              setReEditData({
+                text: data.originText,
+                timestap: new Date().getTime(),
+              });
             }}
           >
             重新编辑
@@ -149,7 +155,7 @@ const TextCell = (props: { message: Message; messageWrap?: MessageWrap }) => {
   return (
     <>
       {message.remoteExtra.revoke === true ? (
-        getRevokeText(message.remoteExtra.extra)
+        <RevokeText data={message.remoteExtra.extra} />
       ) : (
         <MsgCard data={message}>{getNormalText()}</MsgCard>
       )}
