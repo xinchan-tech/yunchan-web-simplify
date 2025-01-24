@@ -490,12 +490,12 @@ export const renderGrid = (options: ECOption, state: ChartState, size: [number, 
             return dayjs(+v).format('MM-DD')
           }
 
-          if(time < 365 * 5) {
+          if (time < 365 * 5) {
             return dayjs(+v).format('YY-MM')
           }
 
           return dayjs(+v).format('YYYY')
-        },
+        }
         // interval: (index: number) => {
         //   if (isTimeIndexChart(state.timeIndex) && state.timeIndex !== StockChartInterval.FIVE_DAY) {
         //     return index % 15 === 0
@@ -761,44 +761,46 @@ export const renderMarkLine: ChartRender = (options, state) => {
     ]
   }
 
-  mainSeries.markPoint = {
-    symbol: 'rect',
-    symbolSize: [20, 1],
-    symbolOffset: (_: any, p: any) => {
-      if (p.data.type === 'min') {
-        return [10, 4]
-      }
-      return [-10, -4]
-    },
-    label: {
-      show: true,
-      color: '#fff'
-    },
-    silent: true,
-    emphasis: {
-      disabled: true
-    },
-    itemStyle: {
-      color: '#fff'
-    },
-    data: [
-      {
-        type: 'max',
-        name: '最大值',
-        valueIndex: 3,
-        label: {
-          position: 'left'
+  if (mainSeries.type === 'candlestick') {
+    mainSeries.markPoint = {
+      symbol: 'rect',
+      symbolSize: [20, 1],
+      symbolOffset: (_: any, p: any) => {
+        if (p.data.type === 'min') {
+          return [10, 4]
         }
+        return [-10, -4]
       },
-      {
-        type: 'min',
-        name: '最小值',
-        valueIndex: 4,
-        label: {
-          position: 'right'
+      label: {
+        show: true,
+        color: '#fff'
+      },
+      silent: true,
+      emphasis: {
+        disabled: true
+      },
+      itemStyle: {
+        color: '#fff'
+      },
+      data: [
+        {
+          type: 'max',
+          name: '最大值',
+          valueIndex: 3,
+          label: {
+            position: 'left'
+          }
+        },
+        {
+          type: 'min',
+          name: '最小值',
+          valueIndex: 4,
+          label: {
+            position: 'right'
+          }
         }
-      }
-    ]
+      ]
+    }
   }
 }
 
@@ -1319,9 +1321,15 @@ const renderSecondaryAxis = (options: ECOption, _: any, index: number, chart: EC
  * 只有在盘前盘中盘后显示
  */
 export const renderWatermark = (options: ECOption, timeIndex: ChartState['timeIndex']) => {
-  if (!isTimeIndexChart(timeIndex)) return
+  if (!isTimeIndexChart(timeIndex)) {
+    options.graphic = []
+    return
+  }
 
-  if (timeIndex === StockChartInterval.FIVE_DAY) return
+  if (timeIndex === StockChartInterval.FIVE_DAY){
+    options.graphic = []
+    return
+  }
 
   const watermark: GraphicComponentOption = {
     type: 'text',

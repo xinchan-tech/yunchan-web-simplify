@@ -1,4 +1,4 @@
-import { getStockBaseCodeInfo, getStockBrief, getStockNotice, getStockQuote, getStockRelated, getStockTrades } from "@/api"
+import { getStockBaseCodeInfo, getStockBrief, getStockNotice, getStockQuote, getStockRelated, getStockTrades, StockChartInterval } from "@/api"
 import { AiAlarm, Button, CapsuleTabs, Carousel, CarouselContent, CollectStar, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, HoverCard, HoverCardContent, HoverCardTrigger, JknIcon, JknRcTable, type JknRcTableProps, NumSpan, NumSpanSubscribe, PriceAlarm, ScrollArea, Separator, withTooltip } from "@/components"
 import { useStockQuoteSubscribe, useTableData, useTableRowClickToStockTrading } from "@/hooks"
 import { useTime } from "@/store"
@@ -9,8 +9,8 @@ import dayjs from "dayjs"
 import Decimal from "decimal.js"
 import Autoplay from "embla-carousel-autoplay"
 import { nanoid } from "nanoid"
-import { memo, ReactNode, useCallback, useEffect, useMemo, useState } from "react"
-import { stockBaseCodeInfoExtend, useSymbolQuery } from "../lib"
+import { memo, useCallback, useEffect, useMemo, useState } from "react"
+import { kChartUtils, stockBaseCodeInfoExtend, useSymbolQuery } from "../lib"
 export const StockInfo = () => {
   const [active, setActive] = useState<'quote' | 'news'>('quote')
   const code = useSymbolQuery()
@@ -155,49 +155,29 @@ const StockBaseInfo = () => {
         }
       </div>
       <div className="mt-1 py-2 border-0 border-b border-solid border-border">
-        <StockQuoteBar label="点击查看盘中分时走势" percent={data?.percent} close={data?.close} prevClose={data?.prevClose} tradingLabel={trading === 'intraDay' ? '交易中' : '收盘价'} time={data?.time} />
-        <div className={cn(
-          (data?.percent ?? 0) >= 0 ? 'text-stock-up' : 'text-stock-down',
-          'flex items-center justify-between px-2 box-border text-xs'
-        )}>
-          <span className="text-lg font-bold">
-            <NumSpan arrow decimal={3} isPositive={Decimal.create(data?.percent).gte(0)} value={Decimal.create(data?.close).toNumber()} />
-          </span>
-          <span>
-            <NumSpan decimal={3} symbol isPositive={Decimal.create(data?.percent).gte(0)} value={(data?.close ?? 0) - (data?.prevClose ?? 0)} />
-          </span>
-          <span>
-            {Decimal.create(data?.percent).mul(100).toFixed(2)}%
-          </span>
-          <span className="text-tertiary">
-            {
-              trading === 'intraDay' ? '交易中' : '收盘价'
-            }
-            {data?.time?.slice(5, 11).replace('-', '/')}
-          </span>
-        </div>
+        <StockQuoteBar
+          label="点击查看盘中分时走势"
+          percent={data?.percent}
+          close={data?.close}
+          prevClose={data?.prevClose}
+          tradingLabel={trading === 'intraDay' ? '交易中' : '收盘价'} time={data?.time}
+          side="bottom"
+          contentClassName="text-xs"
+          interval={StockChartInterval.INTRA_DAY}
+        />
+
         {
           trading !== 'intraDay' ? (
-            <div className={cn(
-              (data?.percent ?? 0) >= 0 ? 'text-stock-up' : 'text-stock-down',
-              'flex items-center justify-between px-2 box-border text-xs my-1'
-            )}>
-              <span className="text-base font-bold">
-                <NumSpan arrow decimal={3} isPositive={Decimal.create(data?.subPercent).gte(0)} value={Decimal.create(data?.subClose).toNumber()} />
-              </span>
-              <span>
-                <NumSpan decimal={3} symbol isPositive={Decimal.create(data?.subPercent).gte(0)} value={(data?.subClose ?? 0) - (data?.subPrevClose ?? 0)} />
-              </span>
-              <span>
-                <NumSpan decimal={2} symbol isPositive={Decimal.create(data?.subPercent).gte(0)} value={Decimal.create(data?.subPercent).mul(100).toNumber()} percent />
-              </span>
-              <span className="text-tertiary">
-                {
-                  trading === 'preMarket' ? '盘前' : '盘后'
-                }价
-                {data?.subTime?.slice(5, 11).replace('-', '/')}
-              </span>
-            </div>
+            <StockQuoteBar
+              label={trading === 'preMarket' ? '点击盘前分时走势' : '点击盘后分时走势'}
+              percent={data?.subPercent}
+              close={data?.subClose}
+              prevClose={data?.subPrevClose}
+              tradingLabel={trading === 'preMarket' ? '盘前价' : '盘后价'} time={data?.subTime}
+              side="bottom"
+              contentClassName="text-xs"
+              interval={trading === 'preMarket' ? StockChartInterval.PRE_MARKET : StockChartInterval.AFTER_HOURS}
+            />
           ) : null
         }
       </div>
@@ -211,12 +191,17 @@ interface StockQuoteBarProps {
   prevClose?: number
   tradingLabel?: string
   time?: string
+  interval: number
 }
 const StockQuoteBar = withTooltip(memo((props: StockQuoteBarProps) => {
   const symbol = useSymbolQuery()
+
+  const onClick = () => {
+    kChartUtils.setTimeIndex({ timeIndex: props.interval })
+  }
   return (
-    <div className={cn('flex items-center justify-between px-2 box-border text-xs my-1')}>
-      <span className="text-base font-bold">
+    <div className={cn('flex items-center justify-between px-2 box-border text-xs my-1 cursor-pointer')} onClick={onClick} onKeyDown={() => { }}>
+      <span className={cn('text-base font-bold', props.interval === StockChartInterval.INTRA_DAY && 'text-lg')}>
         <NumSpanSubscribe code={symbol} field="close" arrow decimal={3} isPositive={Decimal.create(props?.percent).gte(0)} value={props.close} />
       </span>
       <span>

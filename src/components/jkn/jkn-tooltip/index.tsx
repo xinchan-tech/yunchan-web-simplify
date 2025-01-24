@@ -1,21 +1,35 @@
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import type { ComponentType } from "react"
+import type { TooltipContentProps } from "@radix-ui/react-tooltip"
+import { forwardRef, type RefObject, type ComponentType } from "react"
 
-type WithTooltipProps<T> = T & { label?: string }
+type WithTooltipProps<T> = T & {
+  label?: string,
+  contentClassName?: string
+} & TooltipContentProps
 
 export const withTooltip = <T extends {}>(Component: ComponentType<T>) => {
-  return ({ label, ...props }: WithTooltipProps<T>) => {
+  return ({ label, contentClassName, align, alignOffset, side, sideOffset, ...props }: WithTooltipProps<T>) => {
     return (
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
-            <Component {...(props as T)} />
+            <RefWrapper>
+              <Component {...(props as T)} />
+            </RefWrapper>
           </TooltipTrigger>
-          <TooltipContent>
-            <p>{label}</p>
+          <TooltipContent side={side} align={align} sideOffset={sideOffset} alignOffset={alignOffset} className={contentClassName}>
+            <div >{label}</div>
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
     )
   }
 }
+
+const RefWrapper = forwardRef<any, any>(({ children, ...props }, ref) => {
+  return (
+    <div ref={ref as RefObject<HTMLDivElement>} {...props}>
+      {children}
+    </div>
+  )
+})

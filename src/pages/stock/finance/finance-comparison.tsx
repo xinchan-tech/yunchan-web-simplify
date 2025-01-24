@@ -60,7 +60,7 @@ export const FinanceComparison = () => {
         <div>
           {
             params.symbols.map((symbol, index) => (
-              <div key={symbol} className="inline-block min-w-16 mr-3 px-2 py-1 bg-accent text-white rounded-sm text-center relative" style={{ backgroundColor: colors[index] }}>
+              <div key={symbol} className="inline-block min-w-16 mr-3 px-2 py-1 bg-accent text-white rounded-sm text-center relative" style={{ backgroundColor: colorUtil.colorPalette[index] }}>
                 <span className="absolute -right-2 -top-2 cursor-pointer w-4 h-4 text-xs bg-gray-600 rounded-full text-center" onClick={() => setParams(d => { d.symbols.splice(index, 1) })} onKeyDown={() => { }}>x</span>
                 <span>{symbol}</span>
               </div>

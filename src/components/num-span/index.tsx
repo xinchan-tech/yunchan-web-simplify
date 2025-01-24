@@ -160,8 +160,8 @@ interface NumSpanSubscribeProps extends Omit<NumSpanProps, 'value'> {
 
 export const NumSpanSubscribe = ({ value, code, isPositive, field, subscribe = true, ...props }: NumSpanSubscribeProps) => {
   const [innerValue, setInnerValue] = useState(value && props.percent ? +value * 100 : value)
-  const [isUp, setIsUp] = useState(isPositive)
-  const isPos = useLatest(isPositive)
+  const [isUp, setIsUp] = usePropValue(isPositive)
+  const isPos = useRef(isPositive)
   const fieldFn = useRef<NumSpanSubscribeProps['field']>(field)
 
   useEffect(() => {
@@ -186,7 +186,7 @@ export const NumSpanSubscribe = ({ value, code, isPositive, field, subscribe = t
     return () => {
       unSubscribe()
     }
-  }, [code, props.percent, isPos, subscribe])
+  }, [code, props.percent, subscribe, setIsUp])
 
   useEffect(() => {
     setInnerValue(value && props.percent ? +value * 100 : value)
@@ -220,9 +220,9 @@ interface SubscribeSpanProps extends HTMLAttributes<HTMLSpanElement> {
 export const SubscribeSpan = ({ value, symbol, field, positive, format, ...props }: SubscribeSpanProps) => {
   const [innerValue, setInnerValue] = usePropValue(value)
   const spanRef = useRef<HTMLSpanElement>(null)
-  const isPos = useLatest(positive)
-  const fieldFn = useLatest(field)
-  const formatFn = useLatest(format)
+  const isPos = useRef(positive)
+  const fieldFn = useRef(field)
+  const formatFn = useRef(format)
 
 
   useEffect(() => {
@@ -251,7 +251,7 @@ export const SubscribeSpan = ({ value, symbol, field, positive, format, ...props
     return () => {
       unSubscribe()
     }
-  }, [symbol, isPos, fieldFn, formatFn, setInnerValue])
+  }, [symbol, setInnerValue])
 
 
   return <span ref={spanRef} {...props}>{innerValue}</span>
