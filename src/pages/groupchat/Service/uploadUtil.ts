@@ -68,6 +68,17 @@ class UploadUtil {
       stsToken: this.tokenRes.credentials.securityToken,
       endpoint: this.tokenRes.endpoint,
       aclMode: "public-read",
+      refreshSTSToken: async () => {
+        // 调用后端接口获取新的 STS Token
+        const result = await request.get("/upload/getOssToken");
+
+        return {
+          accessKeyId: result.data.accessKeyId,
+          accessKeySecret: result.data.accessKeySecret,
+          stsToken: result.data.securityToken,
+        };
+      },
+      refreshSTSTokenInterval: 300000
     });
     this.store = cos;
     // 更改图片权限
