@@ -52,8 +52,9 @@ export const GroupChatContext = createContext<{
   syncSubscriber: async () => {},
 });
 
-const wsUrlPrefix = `${window.location.protocol === "https:" ? "wss" : "ws"}://${window.location.host}`;
-
+const wsUrlPrefix = `${
+  window.location.protocol === "https:" ? "wss" : "ws"
+}://${window.location.host}`;
 
 const subscriberCache: Map<string, Subscriber[]> = new Map();
 
@@ -116,10 +117,9 @@ const GroupChatPage = () => {
 
   // 输入框实例
   const messageInputRef = useRef();
-  // 
+  //
   // 消息列表滚动到底部
   const scrollBottom = () => {
-
     pulldowning.current = true;
     animateScroll.scrollToBottom({
       containerId: "group-chat-msglist",
@@ -129,22 +129,17 @@ const GroupChatPage = () => {
 
   // 监听消息
   messageListener = (msg) => {
-    if (latestToChannel.current?.channelID !== msg.channel.channelID) {
-      return;
-    }
-    const temp = [...messagesRef.current];
-    temp.push(msg);
-    messagesRef.current.push(msg);
-    setMessages(temp);
-    jumpMsgIdRef.current = "";
     // 及时更新ismentionme
-
     if (
       msg.content &&
       msg.content.mention &&
       msg.content.mention.uids instanceof Array &&
       msg.content.mention.uids.includes(WKSDK.shared().config.uid)
     ) {
+      // 已打开的对话不提示@
+      if (latestToChannel.current?.channelID === msg.channel.channelID) {
+        return;
+      }
       const conversation = WKSDK.shared().conversationManager.findConversation(
         msg.channel
       );
@@ -156,6 +151,15 @@ const GroupChatPage = () => {
         );
       }
     }
+    // 只更新当前channel的message
+    if (latestToChannel.current?.channelID !== msg.channel.channelID) {
+      return;
+    }
+    const temp = [...messagesRef.current];
+    temp.push(msg);
+    messagesRef.current.push(msg);
+    setMessages(temp);
+    jumpMsgIdRef.current = "";
   };
 
   // 拉取当前会话最新消息
@@ -366,9 +370,7 @@ const GroupChatPage = () => {
       .catch(() => {
         pulldowning.current = false;
       });
-
-   
-  }
+  };
 
   messageStatusListener = (ack: SendackPacket) => {
     // 有时一次会发多条消息，要缓存一下已经赋值过id和seq的消息

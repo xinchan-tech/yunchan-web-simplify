@@ -7,15 +7,15 @@ class UploadUtil {
   tokenRes: {
     bucket: string
     credentials: {
-      accessKeyId: string
-      accessKeySecret: string
-      expiration: string
-      securityToken: string
-    }
-    endpoint: string
-  }
-  client: any
-  store: any
+      accessKeyId: string;
+      accessKeySecret: string;
+      expiration: string;
+      securityToken: string;
+    };
+    endpoint: string;
+  };
+  client: any;
+  store: any;
   constructor(/* fileType = "image" */) {
     this.tokenRes = {
       bucket: '',
@@ -25,10 +25,10 @@ class UploadUtil {
         expiration: '',
         securityToken: ''
       },
-      endpoint: ''
-    }
-    this.client = {}
-    this.store = null
+      endpoint: "",
+    };
+    this.client = {};
+    this.store = null;
   }
 
   init() {
@@ -67,9 +67,9 @@ class UploadUtil {
       bucket: this.tokenRes.bucket,
       stsToken: this.tokenRes.credentials.securityToken,
       endpoint: this.tokenRes.endpoint,
-      aclMode: 'public-read'
-    })
-    this.store = cos
+      aclMode: "public-read",
+    });
+    this.store = cos;
     // 更改图片权限
     // cos.putBucketACL(this.tokenRes.bucket, 'public-read')
     try {
@@ -90,14 +90,13 @@ class UploadUtil {
 
   // 上传
   async uploadImg(file, filename: string) {
-    try {
-      const res = await this.client.upload(file, filename).catch(e => console.error(e))
-      return {
-        url: res.url
-      }
-    } catch (error) {
-      throw new Error(error)
-    }
+    const res = await this.client.upload(file, filename).catch((e) => {
+      debugger;
+      console.error(e);
+    });
+    return {
+      url: res.url,
+    };
   }
 }
 

@@ -44,7 +44,7 @@ export type GroupData = {
 
 const GroupChannel = (props: {
   onSelectChannel: (c: Channel, con: ConversationWrap) => void;
-  onInitChannel: (conversations: ConversationWrap[]) => void
+  onInitChannel: (conversations: ConversationWrap[]) => void;
 }) => {
   const {
     conversationWraps,
@@ -105,7 +105,7 @@ const GroupChannel = (props: {
       }),
   };
 
-  const { data, isLoading } = useQuery(option);
+  const { data } = useQuery(option);
 
   // const [data, setData] = useState({});
   // const [isLoading, setIsLoading] = useState(false);
@@ -123,7 +123,7 @@ const GroupChannel = (props: {
   // };
 
   // 监听连接状态
-  const firstInitFlag = useRef(true)
+  const firstInitFlag = useRef(true);
   const [fetchingConversation, setFetchingConversation] = useState(false);
   const connectStatusListener = async (status: ConnectStatus) => {
     if (status === ConnectStatus.Connected) {
@@ -140,10 +140,11 @@ const GroupChannel = (props: {
           );
           batchUpdateConversation(temp);
           setConversationWraps(temp);
-          if(firstInitFlag.current === true) {
+          if (firstInitFlag.current === true) {
             firstInitFlag.current = false;
-            typeof props.onInitChannel === 'function' && props.onInitChannel(temp)
-          } 
+            typeof props.onInitChannel === "function" &&
+              props.onInitChannel(temp);
+          }
         } else {
           setConversationWraps([]);
         }
@@ -175,6 +176,7 @@ const GroupChannel = (props: {
       if (conversation.channel.channelID === latestChannel.current?.channelID) {
         // 避免未读消息在选中时还展示
         conversation.unread = 0;
+        conversation.isMentionMe = false;
       }
       const index = latestConversation.current?.findIndex(
         (item) =>
@@ -321,8 +323,6 @@ const GroupChannel = (props: {
     }
   };
 
-
-
   const handleSelectChannel = (
     channel: Channel,
     conversation: ConversationWrap
@@ -398,7 +398,7 @@ const GroupChannel = (props: {
         <CreateGroup />
       </div>
       <div className="group-list">
-        {(!conversationWraps  || fetchingConversation === true) &&
+        {(!conversationWraps || fetchingConversation === true) &&
           Array.from({
             length: 10,
           }).map((_, i) => (
@@ -408,7 +408,7 @@ const GroupChannel = (props: {
               className="h-[76px]"
             />
           ))}
-        {conversationWraps &&  fetchingConversation === false && (
+        {conversationWraps && fetchingConversation === false && (
           <>
             {goodConversations.map((item: ConversationWrap) => {
               return (
@@ -442,9 +442,14 @@ const GroupChannel = (props: {
                     )}
                   </div>
                   <div className="group-data flex-1">
-                    <div className="group-title">
-                      {item.channelInfo?.title || ""}
-                      <span className="text-xs text-gray-400">
+                    <div className="group-title flex items-baseline">
+                      <div
+                        title={item.channelInfo?.title || ""}
+                        className="overflow-hidden whitespace-nowrap text-ellipsis max-w-42"
+                      >
+                        {item.channelInfo?.title || ""}
+                      </div>
+                      <span className="text-xs ml-1 text-gray-400">
                         ({item.total_user})
                       </span>
                     </div>
@@ -489,7 +494,12 @@ const GroupChannel = (props: {
                     />
                   </div>
                   <div className="group-data flex-1">
-                    <div className="group-title">{item.name || ""}</div>
+                    <div
+                      title={item.name || ""}
+                      className="group-title max-w-200[px] overflow-hidden whitespace-nowrap text-ellipsis"
+                    >
+                      {item.name || ""}
+                    </div>
                     <div className="group-last-msg flex justify-between">
                       <div className="flex-1 overflow-hidden whitespace-nowrap text-ellipsis max-w-24 text-xs">
                         一起加入群组吧

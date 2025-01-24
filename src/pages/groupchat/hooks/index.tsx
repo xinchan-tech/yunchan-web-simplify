@@ -75,8 +75,14 @@ export const useMemberSetting = () => {
         uids: [item.uid],
         forbidden: "0",
       };
+      
+     
       if (item.orgData.forbidden === "0") {
         data.forbidden = "1";
+        if(item.orgData.type === '1') {
+          toast({description: '请先取消对方管理员权限再拉黑'})
+          return;
+        }
       }
       try {
         const resp = await setMemberForbiddenService(data);
