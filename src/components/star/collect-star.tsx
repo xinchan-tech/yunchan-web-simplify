@@ -21,7 +21,7 @@ interface CollectStarProps extends Partial<Pick<HoverCardContentProps, 'sideOffs
 const _CollectStar = memo((props: CollectStarProps) => {
   const [render, { setTrue, setFalse }] = useBoolean()
   const [checked, setChecked] = usePropValue(props.checked)
-  
+
   const _onUpdate = useMemoizedFn((checked: boolean) => {
     setChecked(checked)
     props.onUpdate?.(checked)
@@ -42,9 +42,6 @@ const _CollectStar = memo((props: CollectStarProps) => {
           className="p-0 w-48 bg-muted border-dialog-border border border-solid"
         >
           {
-            props.alignOffset
-          }
-          {
             render ? <CollectList code={props.code} onUpdate={_onUpdate} /> : null
           }
         </HoverCardContent>
@@ -64,7 +61,7 @@ const CollectList = (props: CollectListProps) => {
   const cateQuery = useQuery({
     queryKey: [getStockCollectCates.cacheKey, props.code],
     queryFn: () => getStockCollectCates(props.code),
-    initialData: [{ id: '1', name: '股票金池', create_time: '', active: 1, total: '0' }]
+    initialData: [{ id: '1', name: '股票金池', create_time: '', active: 0, total: '0' }]
   })
 
   const updateCollectMutation = useMutation({
@@ -124,7 +121,7 @@ const CollectList = (props: CollectListProps) => {
           cateQuery.data?.map(item => (
             <div key={item.id} onClick={() => onCheck(item)} onKeyDown={() => { }} className="flex cursor-pointer items-center pl-4 space-x-4 hover:bg-primary py-1">
               {
-                <Checkbox checked={cateQuery.data?.some(cate => cate.id === item.id && cate.active === 1)} />
+                <Checkbox checked={item.active === 1} />
               }
               <span>{item.name}</span>
             </div>
