@@ -3,6 +3,7 @@ import WKSDK, {
   ChannelTypePerson,
   Message,
   ChannelInfo,
+  ChannelTypeGroup,
 } from "wukongimjssdk";
 
 import { getChatNameAndAvatar } from "@/api";
@@ -23,6 +24,26 @@ export const setPersonChannelCache = (fromUID: string) => {
       resolve(data);
     });
   });
+};
+
+
+export const groupToChannelInfo = (
+  data: {
+    name: string;
+    avatar: string;
+  },
+  fromUID: string
+): ChannelInfo => {
+  let channelInfo = new ChannelInfo();
+  channelInfo.channel = new Channel(fromUID, ChannelTypeGroup);
+  channelInfo.title = data.name;
+  channelInfo.mute = false;
+  channelInfo.top = false;
+  channelInfo.online = false;
+
+  channelInfo.logo = data.avatar;
+
+  return channelInfo;
 };
 
 export const userToChannelInfo = (

@@ -267,7 +267,7 @@ const GroupChatPage = () => {
       return;
     }
     const lastRemoteMessageSeq =
-      messagesRef.current[messagesRef.current.length - 1].messageSeq; // 服务器最新的一条消息的序号
+      messagesRef.current[messagesRef.current.length - 1].messageSeq; // 消息列表最后一条
     const firstMessageSeq = messagesRef.current[0].messageSeq;
     const opts: any = {
       pullMode: PullMode.Down,
@@ -276,12 +276,12 @@ const GroupChatPage = () => {
     };
     if (initMessageSeq && initMessageSeq > 0) {
       if (initMessageSeq > lastRemoteMessageSeq) {
-        opts.startMessageSeq = lastRemoteMessageSeq + 6;
+        opts.startMessageSeq = lastRemoteMessageSeq;
         opts.endMessageSeq = 0;
         opts.limit = initMessageSeq - lastRemoteMessageSeq + 5;
         opts.pullMode = PullMode.Up;
       } else if (initMessageSeq < firstMessageSeq) {
-        opts.startMessageSeq = firstMessageSeq - 6;
+        opts.startMessageSeq = firstMessageSeq;
         opts.endMessageSeq = 0;
         opts.limit = firstMessageSeq - initMessageSeq + 5;
         opts.pullMode = PullMode.Down;
@@ -641,6 +641,14 @@ const GroupChatPage = () => {
   useEffect(() => {
     window.document.title = "讨论社群";
   }, []);
+  // const InitSyncSubscriberLock = useRef(false);
+  // useEffect(() => {
+    
+  //   if (selectedChannel && InitSyncSubscriberLock.current === false) {
+  //     InitSyncSubscriberLock.current = true;
+  //     syncSubscriber(new Channel(selectedChannel.channelID, ChannelTypeGroup));
+  //   }
+  // }, [selectedChannel]);
 
   return (
     <div className="group-chat-container flex">

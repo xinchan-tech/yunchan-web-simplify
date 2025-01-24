@@ -20,10 +20,11 @@ import { useLatest } from "ahooks";
 import { useShallow } from "zustand/react/shallow";
 
 import { getGroupChannels } from "@/api";
-import { useQuery } from "@tanstack/react-query";
+// import { useQuery } from "@tanstack/react-query";
 import ChatAvatar from "../components/chat-avatar";
 import CreateGroup from "../components/create-group";
 import {
+  groupToChannelInfo,
   judgeIsUserInSyncChannelCache,
   setPersonChannelCache,
   setUserInSyncChannelCache,
@@ -97,30 +98,39 @@ const GroupChannel = (props: {
     }
   };
 
-  const option = {
-    queryKey: [getGroupChannels.cacheKey],
-    queryFn: () =>
-      getGroupChannels({
-        type: "1",
-      }),
-  };
+  // const option = {
+  //   queryKey: [getGroupChannels.cacheKey],
+  //   queryFn: () => {
+  //     return getGroupChannels({
+  //       type: "1",
+  //     })
+  //   }
+  // };
 
-  const { data } = useQuery(option);
+  // const { data } = useQuery(option);
 
-  // const [data, setData] = useState({});
+  const [data, setData] = useState({});
   // const [isLoading, setIsLoading] = useState(false);
 
-  // const fetchData = () => {
-  //   setIsLoading(true);
+  const fetchData = () => {
+    // setIsLoading(true);
 
-  //   getGroupChannels({ type: "1" })
-  //     .then((res) => {
-  //       setData(res);
-  //     })
-  //     .finally(() => {
-  //       setIsLoading(false);
-  //     });
-  // };
+    getGroupChannels({ type: "1" })
+      .then((res) => {
+        setData(res);
+        if (res.items instanceof Array) {
+          res.items.forEach((channel) => {
+            const cacheData = { name: channel.name, avatar: channel.avatar };
+            WKSDK.shared().channelManager.setChannleInfoForCache(
+              groupToChannelInfo(cacheData, channel.account)
+            );
+          });
+        }
+      })
+      .finally(() => {
+        // setIsLoading(false);
+      });
+  };
 
   // 监听连接状态
   const firstInitFlag = useRef(true);
@@ -272,6 +282,7 @@ const GroupChannel = (props: {
   };
 
   useEffect(() => {
+    fetchData();
     WKSDK.shared().connectManager.addConnectStatusListener(
       connectStatusListener
     ); // 监听连接状态
@@ -398,7 +409,7 @@ const GroupChannel = (props: {
         <CreateGroup />
       </div>
       <div className="group-list">
-        {(!conversationWraps || fetchingConversation === true) &&
+        {!conversationWraps &&
           Array.from({
             length: 10,
           }).map((_, i) => (
@@ -408,7 +419,7 @@ const GroupChannel = (props: {
               className="h-[76px]"
             />
           ))}
-        {conversationWraps && fetchingConversation === false && (
+        {conversationWraps && (
           <>
             {goodConversations.map((item: ConversationWrap) => {
               return (
