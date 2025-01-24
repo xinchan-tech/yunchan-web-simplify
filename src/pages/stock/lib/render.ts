@@ -25,7 +25,6 @@ import {
   calcBottomSignal,
   calcCoilingPivots,
   calcCoilingPivotsExpands,
-  calcCoilingPoints,
   calcTradePoints,
   calculateMA,
   calculateTradingPoint

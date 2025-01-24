@@ -1,5 +1,5 @@
 import { getStockBaseCodeInfo, getStockBrief, getStockNotice, getStockQuote, getStockRelated, getStockTrades } from "@/api"
-import { AiAlarm, Button, CapsuleTabs, Carousel, CarouselContent, CollectStar, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, HoverCard, HoverCardContent, HoverCardTrigger, JknIcon, JknRcTable, type JknRcTableProps, NumSpan, NumSpanSubscribe, PriceAlarm, ScrollArea, Separator } from "@/components"
+import { AiAlarm, Button, CapsuleTabs, Carousel, CarouselContent, CollectStar, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, HoverCard, HoverCardContent, HoverCardTrigger, JknIcon, JknRcTable, type JknRcTableProps, NumSpan, NumSpanSubscribe, PriceAlarm, ScrollArea, Separator, withTooltip } from "@/components"
 import { useStockQuoteSubscribe, useTableData, useTableRowClickToStockTrading } from "@/hooks"
 import { useTime } from "@/store"
 import { type StockSubscribeHandler, stockUtils } from "@/utils/stock"
@@ -9,7 +9,7 @@ import dayjs from "dayjs"
 import Decimal from "decimal.js"
 import Autoplay from "embla-carousel-autoplay"
 import { nanoid } from "nanoid"
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { memo, ReactNode, useCallback, useEffect, useMemo, useState } from "react"
 import { stockBaseCodeInfoExtend, useSymbolQuery } from "../lib"
 export const StockInfo = () => {
   const [active, setActive] = useState<'quote' | 'news'>('quote')
@@ -76,10 +76,10 @@ type StockBaseInfoData = {
 const StockBaseInfo = () => {
   const code = useSymbolQuery()
   const trading = useTime(s => s.getTrading())
-  const queryOptions = useMemo(() => ( {
-      queryKey: [getStockBaseCodeInfo.cacheKey, code, stockBaseCodeInfoExtend],
-      queryFn: () => getStockBaseCodeInfo({ symbol: code, extend: stockBaseCodeInfoExtend })
-    }
+  const queryOptions = useMemo(() => ({
+    queryKey: [getStockBaseCodeInfo.cacheKey, code, stockBaseCodeInfoExtend],
+    queryFn: () => getStockBaseCodeInfo({ symbol: code, extend: stockBaseCodeInfoExtend })
+  }
   ), [code])
   const queryClient = useQueryClient()
 
@@ -155,6 +155,7 @@ const StockBaseInfo = () => {
         }
       </div>
       <div className="mt-1 py-2 border-0 border-b border-solid border-border">
+        <StockQuoteBar label="点击查看盘中分时走势" percent={data?.percent} close={data?.close} prevClose={data?.prevClose} tradingLabel={trading === 'intraDay' ? '交易中' : '收盘价'} time={data?.time} />
         <div className={cn(
           (data?.percent ?? 0) >= 0 ? 'text-stock-up' : 'text-stock-down',
           'flex items-center justify-between px-2 box-border text-xs'
@@ -203,6 +204,36 @@ const StockBaseInfo = () => {
     </>
   )
 }
+
+interface StockQuoteBarProps {
+  percent?: number
+  close?: number
+  prevClose?: number
+  tradingLabel?: string
+  time?: string
+}
+const StockQuoteBar = withTooltip(memo((props: StockQuoteBarProps) => {
+  const symbol = useSymbolQuery()
+  return (
+    <div className={cn('flex items-center justify-between px-2 box-border text-xs my-1')}>
+      <span className="text-base font-bold">
+        <NumSpanSubscribe code={symbol} field="close" arrow decimal={3} isPositive={Decimal.create(props?.percent).gte(0)} value={props.close} />
+      </span>
+      <span>
+        <NumSpanSubscribe code={symbol} field={v => v.close - v.preClose} decimal={3} symbol isPositive={Decimal.create(props?.percent).gte(0)} value={(props?.close ?? 0) - (props?.prevClose ?? 0)} />
+      </span>
+      <span>
+        <NumSpanSubscribe code={symbol} field="percent" decimal={2} symbol isPositive={Decimal.create(props?.percent).gte(0)} value={props.percent} percent />
+      </span>
+      <span className="text-tertiary">
+        {props.tradingLabel}
+        {props?.time?.slice(5, 11).replace('-', '/')}
+      </span>
+    </div>
+  )
+}))
+
+
 
 
 

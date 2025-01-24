@@ -21,6 +21,13 @@ export enum LineType {
   DASH = 1
 }
 
+/**
+ * X轴一个TICK和指标宽度的比例
+ * x轴一个Tick默认是8
+ * 指标宽度默认是10
+ */
+const TICK_WIDTH_PERCENT = 11
+
 type DrawerFuncOptions<T = any> = {
   /**
    * @deprecated
@@ -291,9 +298,9 @@ export type DrawerRectShape = [XAxis, YAxis, YAxis, Width, empty, DrawerColor]
  */
 export const drawRect: DrawerFunc<DrawerRectShape[]> = (options, _, { xAxisIndex, yAxisIndex, data, extra, name }) => {
   const grid = renderUtils.getGridIndex(options, 0)
-  const left = grid?.left ?? 1
+  const left = (grid?.left ?? 1) + 6
 
-  const maxRight = left + (grid?.width ?? 0)
+  const maxRight = left + (grid?.width ?? 0) - 6
 
   const extraColor = extra?.color
   const line: CustomSeriesOption = {
@@ -304,19 +311,22 @@ export const drawRect: DrawerFunc<DrawerRectShape[]> = (options, _, { xAxisIndex
       y: [1, 2]
     },
     type: 'custom',
-    renderItem: (_, api) => {
+    renderItem: (params, api) => {
+      if (!params.context.tickWidth) {
+        params.context.tickWidth = (api.size!([TICK_WIDTH_PERCENT, 0]) as number[])[0]
+      }
       const startX = api.value(0) as number
       const startY = api.value(1) as number
       const y2 = api.value(2) as number
 
       const start = api.coord([startX, startY])
-      const size = (api.size!([0, Math.abs(y2 - startY)]) as number[]) as number[]
+      const size = api.size!([0, Math.abs(y2 - startY)]) as number[] as number[]
       const height = size[1]
-      let width = api.value(3) as number
+      let width = ((api.value(3) as number) / TICK_WIDTH_PERCENT) * (params.context.tickWidth as number)
       // let width = api.value(3) as number
       const empty = api.value(4) as number
-      const color = (api.value(5) as string) || extraColor || '#00943c'
-      if (start[0] + (width / 2) > maxRight) {
+      const color = (api.value(5) as string) || extraColor || '#fff'
+      if (start[0] + width / 2 > maxRight) {
         width = maxRight - start[0]
       }
 
@@ -477,9 +487,9 @@ type DrawPivotsShape = {
  */
 export const drawPivots: DrawerFunc<DrawPivotsShape[]> = (options, _, { xAxisIndex, yAxisIndex, data, name }) => {
   const grid = Array.isArray(options.grid) ? options.grid : [options.grid]
-  const left = grid[0] ? (grid[0].left as number) : 0
+  const left = (grid[0] ? (grid[0].left as number) : 0) + 6
 
-  const maxRight = left + (grid[0] ? (grid[0].width as number) : 0)
+  const maxRight = left + (grid[0] ? (grid[0].width as number) : 0) - 6
 
   const pivots: CustomSeriesOption = {
     xAxisIndex: xAxisIndex,
@@ -684,7 +694,6 @@ export const drawNumber = (
   options: ECOption,
   params: DrawerFuncOptions<[XAxis, YAxis, Text, YOffset, FontSize, DrawerColor]>
 ) => {
-
   const custom: CustomSeriesOption = {
     xAxisIndex: params.xAxisIndex,
     yAxisIndex: params.yAxisIndex,

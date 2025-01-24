@@ -198,7 +198,7 @@ const StockTree = () => {
         </div>
 
       </div>
-      <div className="flex-1">
+      <div className="flex-1 overflow-hidden">
         {
           ['industry', 'concept'].includes(type) ? (
             <div className="h-full flex flex-col">
@@ -207,7 +207,7 @@ const StockTree = () => {
                 <CapsuleTabs.Tab value="week" label={t('stockTree.week')} />
                 <CapsuleTabs.Tab value="month" label={t('stockTree.month')} />
               </CapsuleTabs>
-              <div className="flex-1 p-1">
+              <div className="flex-1 p-1 overflow-hidden">
                 {
                   !query.isLoading ? (
                     <TreeMap data={treeData} />
@@ -225,7 +225,7 @@ const StockTree = () => {
               </div>
             </div>
           ) : ['industry-heatmap', 'etf-heatmap'].includes(type) ? (
-            <div className="h-full">
+            <div className="h-full overflow-hidden">
               {
                 !queryPlate.isLoading ? (
                   <TreeMap data={dataPlate} />
@@ -242,7 +242,7 @@ const StockTree = () => {
               }
             </div>
           ) : ['bull', 'etf'].includes(type) ? (
-            <div className="h-full">
+            <div className="h-full overflow-hidden">
               {
                 !queryStock.isLoading ? (
                   <TreeMap data={dataStock} />

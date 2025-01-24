@@ -1,11 +1,12 @@
 import { useStockList } from "@/store"
-import { useMount, useSize, useUnmount, useUpdateEffect } from "ahooks"
-import { useEffect, useRef, useState } from "react"
+import { useMount, useUnmount } from "ahooks"
+import { useEffect, useRef } from "react"
 import { select, hierarchy, treemap, type Selection, type HierarchyRectangularNode } from 'd3'
-import { numToFixed } from "@/utils/price"
+
 import { getStringWidth } from "@/utils/string"
 import Decimal from "decimal.js"
 import { router } from "@/router"
+import { debounce, } from "radash"
 
 type TreeMapData = {
   name: string
@@ -76,8 +77,19 @@ const TreeMap = (props: TreeMapProps) => {
   })
 
   useEffect(() => {
-
     render(props.data)
+
+    const resizeObserver = new ResizeObserver(debounce({ delay: 1000 }, (entries) => {
+      const { width, height } = entries[0].contentRect
+      chartRef.current?.attr('width', width).attr('height', height)
+      render(props.data)
+    }))
+
+    resizeObserver.observe(chartDomRef.current!)
+
+    return () => {
+      resizeObserver.disconnect()
+    }
   }, [props.data])
 
   const render = (data: TreeMapData[]) => {
@@ -100,7 +112,6 @@ const TreeMap = (props: TreeMapProps) => {
     renderLabel(root)
     renderPercent(root)
   }
-
 
   useUnmount(() => {
     chartRef.current?.remove()
@@ -172,7 +183,7 @@ const TreeMap = (props: TreeMapProps) => {
           d.data.symbolLabelLen = 0
           return 0
         }
-        
+
         let textWidth = getStringWidth(d.data.name, '12px sans-serif')
 
         let count = d.data.name.length
@@ -190,6 +201,10 @@ const TreeMap = (props: TreeMapProps) => {
         if (d.data.symbolLabelLen) {
           return `${d.data.name.slice(0, d.data.symbolLabelLen)}...`
         }
+
+        if (d.data.symbolLabelLen === 0) {
+          return ''
+        }
         return d.data.name
       })
       .attr("font-size", "12px")
@@ -204,6 +219,10 @@ const TreeMap = (props: TreeMapProps) => {
       .data(root.leaves().filter(d => {
         const rectWidth = d.x1 - d.x0
         const rectHeight = d.y1 - d.y0
+        d.data.iconTop = undefined
+        d.data.symbolLabelTop = undefined
+        d.data.priceLabelTop = undefined
+        d.data.symbolLabelLen = undefined
 
         /**
          * label格式: icon + padding + label + padding + percent
@@ -324,8 +343,8 @@ const TreeMap = (props: TreeMapProps) => {
   }
 
   return (
-    <div className="w-full h-full overflow-hidden relative">
-      <div ref={chartDomRef} className="w-full h-full" />
+    <div className="w-full h-full overflow-hidden relative" >
+      <div ref={chartDomRef} className="w-full h-full overflow-hidden" />
       <div className="absolute top-0 left-0" ref={tipRef} />
     </div>
   )
