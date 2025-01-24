@@ -427,7 +427,6 @@ export const useKChartStore = create<KChartContext>()(
           viewMode: 'single',
           state: [
             {
-              symbol: r.symbol,
               type: r.type,
               id: r.id,
               index: r.index,
@@ -445,8 +444,8 @@ export const useKChartStore = create<KChartContext>()(
                 md5: ''
               },
 
-              overlayStock: r.overlayStock,
-              overlayMark: r.overlayMark,
+              overlayStock: [],
+              overlayMark: undefined,
               yAxis: r.yAxis
             }
           ]
@@ -664,7 +663,7 @@ export const kChartUtils: KChartUtils = {
     if (data?.length && timeIndex !== undefined) {
       coilingData = await calcCoiling(data, timeIndex)
     }
-    console.log(coilingData)
+ 
     useKChartStore.setState(s => ({
       state: produce(s.state, draft => {
         const item = draft.find(item => item.index === (index ?? s.activeChartIndex))

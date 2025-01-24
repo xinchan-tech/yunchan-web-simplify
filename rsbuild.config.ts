@@ -27,20 +27,6 @@ export default defineConfig({
           '^/apiv2': ''
         }
       },
-      '/api/send/code/email': {
-        target: 'https://awstest.mgjkn.com/',
-        changeOrigin: true,
-        pathRewrite: {
-          '^/api': ''
-        }
-      },
-      '/api/login/register': {
-        target: 'https://awstest.mgjkn.com/',
-        changeOrigin: true,
-        pathRewrite: {
-          '^/api': ''
-        }
-      },
       '/api': {
         target: 'http://cn.mgjkn.com/',
         changeOrigin: true,
