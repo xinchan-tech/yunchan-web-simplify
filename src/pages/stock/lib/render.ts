@@ -807,7 +807,7 @@ export const renderMarkLine: ChartRender = (options, state) => {
  * 主图缠论
  */
 export const renderMainCoiling = (options: ECOption, state: ChartState, chart: EChartsType) => {
-  if (state.mainCoiling.length === 0) return options
+  if (state.mainCoiling.length === 0 || !state.mainData.coilingData) return options
   const points = state.mainData.coilingData?.points
   const pivots = state.mainData.coilingData?.pivots
   const expands = state.mainData.coilingData?.expands
@@ -836,13 +836,13 @@ export const renderMainCoiling = (options: ECOption, state: ChartState, chart: E
       drawPivots(options, {} as any, {
         xAxisIndex: 0,
         yAxisIndex: 1,
-        data: expands as any,
+        data: calcCoilingPivotsExpands(expands) as any,
         name: `coiling_${CoilingIndicatorId.PIVOT}_ext`
       })
       drawPivots(options, {} as any, {
         xAxisIndex: 0,
         yAxisIndex: 1,
-        data: pivots as any,
+        data: calcCoilingPivots(pivots) as any,
         name: `coiling_${CoilingIndicatorId.PIVOT}`
       })
     } else if (

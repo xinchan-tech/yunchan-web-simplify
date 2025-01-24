@@ -144,5 +144,5 @@ type CoilingPivotExt = Omit<CoilingPivot, 'segmentNum' | 'mark' | 'positive'> & 
   /**
    * 扩展级数
    */
-  extend: number
+  level: number
 }

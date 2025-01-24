@@ -153,13 +153,13 @@ export const MainChart = (props: MainChartProps) => {
     if (!renderUtils.isSameTimeByInterval(dayjs(lastData.timestamp), dayjs(+s[0]), state.timeIndex)) {
       kChartUtils.setMainData({
         index: props.index, data: [...lastMainHistory.current as any, s],
-        dateConvert: false
+        dateConvert: false, timeIndex: state.timeIndex
       })
     } else {
       kChartUtils.setMainData({
         index: props.index,
         data: [...lastMainHistory.current.slice(0, -1) as any, s],
-        dateConvert: false
+        dateConvert: false, timeIndex: state.timeIndex
       })
     }
   }, [state.timeIndex, props.index, query.data, trading])
@@ -238,8 +238,8 @@ export const MainChart = (props: MainChartProps) => {
 
   useEffect(() => {
 
-    kChartUtils.setMainData({ index: props.index, data: query.data?.history, dateConvert: true })
-  }, [query.data, props.index])
+    kChartUtils.setMainData({ index: props.index, data: query.data?.history, dateConvert: true, timeIndex: state.timeIndex })
+  }, [query.data, props.index, state.timeIndex])
 
   const render = () => {
     if (!chart.current) return
@@ -254,11 +254,11 @@ export const MainChart = (props: MainChartProps) => {
     chart.current.meta.mainData = state.mainData.history
 
     const [start, end] = chart.current.getOption() ? renderUtils.getZoom(chart.current.getOption()) : [90, 100]
- 
+
     const _options = renderChart(chart.current)
     renderGrid(_options, state, [chart.current.getWidth(), chart.current.getHeight()], chart.current)
     if (state.mainData.history.length > 0) {
-     
+
       renderMainChart(_options, state)
       renderMarkLine(_options, state)
       renderZoom(_options, [start, end])

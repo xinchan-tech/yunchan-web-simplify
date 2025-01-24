@@ -661,7 +661,7 @@ export const kChartUtils: KChartUtils = {
     if (data?.length && timeIndex !== undefined) {
       coilingData = await calcCoiling(data, timeIndex)
     }
-
+    console.log(coilingData)
     useKChartStore.setState(s => ({
       state: produce(s.state, draft => {
         const item = draft.find(item => item.index === (index ?? s.activeChartIndex))

@@ -586,7 +586,7 @@ type DrawTradePointsShape = {
   index: XAxis
   price: YAxis
   large: boolean
-  buy: boolean
+  buy: number
   positive: number
   color: string
   type: number
@@ -613,7 +613,7 @@ export const drawTradePoints: DrawerFunc<DrawTradePointsShape[]> = (
       const y = api.value(1) as number
       const type = api.value(6) as string
       const buy = api.value(3) as number
-      const height = !buy ? -40 : 40
+      const height = !buy ? -30 : 30
 
       const start = api.coord([x, y])
       const cStart = [start[0], start[1] + height + (!buy ? -12 : 12)]

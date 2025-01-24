@@ -1,4 +1,4 @@
-import type { getStockChart, getStockIndicatorData, StockRawRecord } from '@/api'
+import type { getStockChart, getStockIndicatorData } from '@/api'
 import { CoilingIndicatorId } from './ctx'
 import { colorUtil } from '@/utils/style'
 import Decimal from 'decimal.js'
@@ -103,31 +103,17 @@ const SEGMENT_NUM_LIMIT = 7
  * @param points 笔端点
  * @description 中枢数据格式, 具体算法查看examples/coiling.js/readPivots
  */
-export const calcCoilingPivots = (coiling: StockData['coiling_data'], points: ReturnType<typeof calcCoilingPoints>) => {
-  if (!coiling) return []
+export const calcCoilingPivots = (pivots: CoilingData['pivots'] | undefined) => {
+  if (!pivots) return []
 
-  return coiling.pivots.map(p => {
-    // 中枢的起始位置，points索引
-    const start = Number(p[0])
-    // 中枢的结束位置，points索引
-    const end = Number(p[1])
-    // 中枢的顶，points索引
-    const top = Number(p[2])
-    // 中枢的底，points索引
-    const bottom = Number(p[3])
-    // 中枢方向（向上或向下）
-    const direction = Number(p[4])
-    // 中枢结束方向，1为正向结束，-1为反向结束
-    const positive = Number(p[5])
-    const segmentNum = end - start
-    // 中枢标记
-    const mark = `${direction === 1 ? '↑' : '↓'}_${String.fromCharCode(Number(p[6]))}_0_${segmentNum >= 9 ? 2 : ''}`
+  return pivots.map(p => {
+    const mark = `${p.direction === 1 ? '↑' : '↓'}_${String.fromCharCode(p.mark)}_0_${p.segmentNum >= 9 ? 2 : ''}`
 
     let bgColor = ''
     let color = ''
     // 中枢背景颜色
-    if (direction === 1) {
-      if (segmentNum <= SEGMENT_NUM_LIMIT) {
+    if (p.direction === 1) {
+      if (p.segmentNum <= SEGMENT_NUM_LIMIT) {
         bgColor = colorUtil.rgbaToString(colorUtil.argbToRGBA('B2007C37'))
         color = colorUtil.rgbaToString(colorUtil.argbToRGBA('FF007C37'))
       } else {
@@ -135,7 +121,7 @@ export const calcCoilingPivots = (coiling: StockData['coiling_data'], points: Re
         color = colorUtil.rgbaToString(colorUtil.argbToRGBA('FF315FFF'))
       }
     } else {
-      if (segmentNum <= SEGMENT_NUM_LIMIT) {
+      if (p.segmentNum <= SEGMENT_NUM_LIMIT) {
         bgColor = colorUtil.rgbaToString(colorUtil.argbToRGBA('9DF50D0D'))
         color = colorUtil.rgbaToString(colorUtil.argbToRGBA('FFF50D0D'))
       } else {
@@ -145,12 +131,10 @@ export const calcCoilingPivots = (coiling: StockData['coiling_data'], points: Re
     }
 
     return {
-      start: [points[start].xIndex, points[bottom].y],
-      end: [points[end].xIndex, points[top].y],
-      direction,
-      positive,
+      ...p,
+      start: [p.start, p.bottom],
+      end: [p.end, p.top],
       mark,
-      segmentNum,
       bgColor,
       color
     }
@@ -164,54 +148,41 @@ const PIVOTS_EXPAND_LIMIT = 2
  * @param points 笔端点
  * @returns
  */
-export const calcCoilingPivotsExpands = (
-  coiling: StockData['coiling_data'],
-  points: ReturnType<typeof calcCoilingPoints>
-) => {
-  if (!coiling) return []
+export const calcCoilingPivotsExpands = (expands: CoilingData['expands'] | undefined) => {
+  if (!expands) return []
 
   const labels = ['A0', 'A1', 'A²', 'A³', 'A⁴', 'A⁵', 'A⁶', 'A⁷', 'A⁸']
 
-  return coiling.expands.map(p => {
-    const start = Number(p[0])
-    const end = Number(p[1])
-    const top = Number(p[2])
-    const bottom = Number(p[3])
-    const direction = Number(p[4])
-    // 中枢扩展级数
-    const level = Number(p[5])
-    // 中枢标记
-    const segmentNum = end - start
-    const mark = `${direction === 1 ? '↑' : '↓'}_${labels[level]}_1_`
+  return expands.map(p => {
+    const mark = `${p.direction === 1 ? '↑' : '↓'}_${labels[p.level]}_1_`
 
     let bgColor = 'transparent'
     let color = 'transparent'
     // 中枢背景颜色
-    if (direction === 1) {
-      if (segmentNum === PIVOTS_EXPAND_LIMIT) {
+    if (p.direction === 1) {
+      if (p.level === PIVOTS_EXPAND_LIMIT) {
         bgColor = colorUtil.rgbaToString(colorUtil.argbToRGBA('BCFF1DFC'))
         color = colorUtil.rgbaToString(colorUtil.argbToRGBA('FFFF1DFC'))
-      } else if (segmentNum > PIVOTS_EXPAND_LIMIT) {
+      } else if (p.level > PIVOTS_EXPAND_LIMIT) {
         bgColor = colorUtil.rgbaToString(colorUtil.argbToRGBA('CB315FFF'))
         color = colorUtil.rgbaToString(colorUtil.argbToRGBA('FF315FFF'))
       }
     } else {
-      if (segmentNum === PIVOTS_EXPAND_LIMIT) {
+      if (p.level === PIVOTS_EXPAND_LIMIT) {
         bgColor = colorUtil.rgbaToString(colorUtil.argbToRGBA('CB315FFF'))
         color = colorUtil.rgbaToString(colorUtil.argbToRGBA('FF315FFF'))
-      } else if (segmentNum > PIVOTS_EXPAND_LIMIT) {
+      } else if (p.level > PIVOTS_EXPAND_LIMIT) {
         bgColor = colorUtil.rgbaToString(colorUtil.argbToRGBA('BCFF1DFC'))
         color = colorUtil.rgbaToString(colorUtil.argbToRGBA('FFFF1DFC'))
       }
     }
 
     return {
-      start: [points[start].xIndex, points[bottom].y],
-      end: [points[end].xIndex, points[top].y],
-      direction,
+      ...p,
+      start: [p.start, p.bottom],
+      end: [p.end, p.top],
       mark,
       bgColor,
-      level,
       color
     }
   })
