@@ -8,6 +8,14 @@ const barActionResultParser = (data: any) => {
   const [topic, ...raws] = data.b.split(',')
   const rawRecord = raws.map((raw: string, index: number) => index === 0 ? raw : Number.parseFloat(raw as string)) as StockRawRecord
 
+  /**
+   * 新版是开高低收
+   * 旧版是开收高低
+   */
+  rawRecord[2] = raws[4]
+  rawRecord[3] = raws[2]
+  rawRecord[4] = raws[3]
+
   return {
     action,
     topic: topic as string,

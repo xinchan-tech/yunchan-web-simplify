@@ -56,6 +56,7 @@ const TreeMap = (props: TreeMapProps) => {
   const chartRef = useRef<Selection<SVGSVGElement, unknown, null, undefined>>()
   const chartDomRef = useRef<HTMLDivElement>(null)
   const tipRef = useRef<HTMLDivElement>(null)
+  const sizeRef = useRef<{ width: number, height: number }>({ width: 0, height: 0 })
 
   useMount(() => {
     if (!chartDomRef.current) {
@@ -78,11 +79,16 @@ const TreeMap = (props: TreeMapProps) => {
 
   useEffect(() => {
     render(props.data)
-
+   
     const resizeObserver = new ResizeObserver(debounce({ delay: 1000 }, (entries) => {
       const { width, height } = entries[0].contentRect
       chartRef.current?.attr('width', width).attr('height', height)
-      render(props.data)
+      if(sizeRef.current.width === width && sizeRef.current.height === height) {
+        sizeRef.current.width = width
+        sizeRef.current.height = height
+        render(props.data)
+      }
+  
     }))
 
     resizeObserver.observe(chartDomRef.current!)

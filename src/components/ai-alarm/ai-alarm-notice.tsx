@@ -4,13 +4,14 @@ import { Popover, PopoverAnchor, PopoverContent } from "../ui/popover"
 import { useConfig, useTime, useToken } from "@/store"
 import { dateToWeek, getLatestTradingDay } from "@/utils/date"
 import dayjs from "dayjs"
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { AlarmType, getAlarmLogs, PriceAlarmTrigger } from "@/api"
-import { useEffect, useMemo } from "react"
+import { useEffect, useMemo, useRef } from "react"
 import StockView from "../stock-view"
 import { cn } from "@/utils/style"
 import { JknRcTable, type JknRcTableProps } from "../jkn/jkn-rc-table"
-import { wsManager } from "@/utils/ws"
+import { type EventResult, wsManager } from "@/utils/ws"
+import { uid } from "radash"
 
 export const AiAlarmNotice = () => {
   const [open, { setTrue, setFalse }] = useBoolean(false)
@@ -19,10 +20,14 @@ export const AiAlarmNotice = () => {
   const setAiAlarmAutoNotice = useConfig(s => s.setAiAlarmAutoNotice)
   const token = useToken(s => s.token)
   const prevDate = getLatestTradingDay(dayjs(getCurrentUsTime()).tz('America/New_York'))
+  const lastData = useRef<any[]>([])
+  const startData = useMemo(() => prevDate.hour(4).minute(0).second(0).format('YYYY-MM-DD HH:mm:ss'), [prevDate])
+  const queryClient = useQueryClient()
   const query = useQuery({
-    queryKey: [getAlarmLogs.cacheKey, 0, prevDate.hour(4).minute(0).second(0).format('YYYY-MM-DD HH:mm:ss')],
+    queryKey: [getAlarmLogs.cacheKey, 0, startData],
+    refetchInterval: 1000 * 60,
     queryFn: () => getAlarmLogs({
-      start: prevDate.hour(4).minute(0).second(0).format('YYYY-MM-DD HH:mm:ss'),
+      start: startData,
       page: 1,
       limit: 2000
     }),
@@ -30,16 +35,31 @@ export const AiAlarmNotice = () => {
   })
 
   useEffect(() => {
-    const handler = () => {
-
+    const handler = (e: EventResult<'alarm'>) => {
+      const r: ArrayItem< Awaited<ReturnType<typeof getAlarmLogs>>['items']> = {
+        alarm_time:  e.data.content.alarm_time,
+        id: uid(6),
+        stock_cycle: `${e.data.content.stock_cycle}`,
+        symbol: e.data.content.symbol,
+        type: AlarmType.AI,
+        condition: {
+          ...e.data.content
+        }
+      }
+      queryClient.setQueryData([getAlarmLogs.cacheKey, 0, startData], (data: Awaited<ReturnType<typeof getAlarmLogs>>) => {
+        return {
+          ...data,
+          items: [r, ...data.items]
+        }
+      })
     }
 
-    const unSubscribe = wsManager.on('alarm_v2', handler)
+    const unSubscribe = wsManager.on('alarm', handler)
 
     return () => {
       unSubscribe()
     }
-  }, [])
+  }, [queryClient, startData])
 
   const dataByGroup = useMemo(() => {
     return query.data?.items?.reduce((acc, cur) => {
@@ -52,7 +72,16 @@ export const AiAlarmNotice = () => {
 
   useEffect(() => {
     if (query.isFetched && aiAlarmAutoNotice && query.data?.items?.length) {
-      setTrue()
+      if(lastData.current.length === 0){
+        lastData.current = query.data.items
+        setTrue()
+      }else{
+        const newItems = query.data.items.filter(item => !lastData.current.some(lastItem => lastItem.id === item.id))
+        if(newItems.length > 0){
+          lastData.current = query.data.items
+          setTrue()
+        }
+      }
     }
   }, [query.isFetched, aiAlarmAutoNotice, setTrue, query.data?.items])
 

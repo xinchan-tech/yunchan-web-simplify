@@ -109,28 +109,29 @@ const StockBaseInfo = () => {
 
   }, [codeInfo.data, trading])
 
-  const stockSubscribeHandler = useCallback<StockSubscribeHandler<'quote'>>((data) => {
-    if (code !== data.topic) {
-      return
-    }
-    setData((s) => {
-      if (!s) return s
+  // const stockSubscribeHandler = useCallback<StockSubscribeHandler<'quote'>>((data) => {
+  //   if (code !== data.topic) {
+  //     return
+  //   }
+  //   setData((s) => {
+  //     if (!s) return s
+  //     console.log(trading)
+  //     if (trading === 'intraDay') {
+  //       s.close = data.record.close
+  //       s.percent = (data.record.close - data.record.preClose) / data.record.preClose
+  //       s.prevClose = data.record.preClose
+  //       s.time = dayjs(data.record.time).format('YYYY-MM-DD HH:mm:ss')
+  //     } else {
+  //       s.subClose = data.record.close
+  //       s.subPercent = (data.record.close - data.record.preClose) / data.record.preClose
+  //       s.subTime = dayjs(data.record.time).format('YYYY-MM-DD HH:mm:ss')
+  //     }
+  //     console.log(s)
+  //     return { ...s }
+  //   })
+  // }, [trading, code])
 
-      if (trading === 'intraDay') {
-        s.close = data.record.close
-        s.percent = (data.record.close - data.record.preClose) / data.record.preClose
-        s.prevClose = data.record.preClose
-        s.time = dayjs(data.record.time).format('YYYY-MM-DD HH:mm:ss')
-      } else {
-        s.subClose = data.record.close
-        s.subPercent = (data.record.close - data.record.preClose) / data.record.preClose
-        s.subTime = dayjs(data.record.time).format('YYYY-MM-DD HH:mm:ss')
-      }
-      return { ...s }
-    })
-  }, [trading, code])
-
-  useStockQuoteSubscribe([code], stockSubscribeHandler)
+  useStockQuoteSubscribe([code])
 
   const onStarUpdate = useCallback((check: boolean) => {
     queryClient.cancelQueries(queryOptions)
@@ -195,20 +196,30 @@ interface StockQuoteBarProps {
 }
 const StockQuoteBar = withTooltip(memo((props: StockQuoteBarProps) => {
   const symbol = useSymbolQuery()
+  const trading = useTime(s => s.getTrading())
 
   const onClick = () => {
     kChartUtils.setTimeIndex({ timeIndex: props.interval })
   }
+
+  const hasSubscribed = useMemo(() => {
+    if(props.interval === StockChartInterval.INTRA_DAY) {
+      return trading === 'intraDay'
+    }
+
+    return trading !== 'intraDay'
+  }, [props.interval, trading])
+
   return (
     <div className={cn('flex items-center justify-between px-2 box-border text-xs my-1 cursor-pointer')} onClick={onClick} onKeyDown={() => { }}>
       <span className={cn('text-base font-bold', props.interval === StockChartInterval.INTRA_DAY && 'text-lg')}>
-        <NumSpanSubscribe code={symbol} field="close" arrow decimal={3} isPositive={Decimal.create(props?.percent).gte(0)} value={props.close} />
+        <NumSpanSubscribe subscribe={hasSubscribed} code={symbol} field="close" arrow decimal={3} isPositive={Decimal.create(props?.percent).gte(0)} value={props.close} />
       </span>
       <span>
-        <NumSpanSubscribe code={symbol} field={v => v.close - v.preClose} decimal={3} symbol isPositive={Decimal.create(props?.percent).gte(0)} value={(props?.close ?? 0) - (props?.prevClose ?? 0)} />
+        <NumSpanSubscribe subscribe={hasSubscribed} code={symbol} field={v => v.close - v.preClose} decimal={3} symbol isPositive={Decimal.create(props?.percent).gte(0)} value={(props?.close ?? 0) - (props?.prevClose ?? 0)} />
       </span>
       <span>
-        <NumSpanSubscribe code={symbol} field="percent" decimal={2} symbol isPositive={Decimal.create(props?.percent).gte(0)} value={props.percent} percent />
+        <NumSpanSubscribe subscribe={hasSubscribed} code={symbol} field="percent" decimal={2} symbol isPositive={Decimal.create(props?.percent).gte(0)} value={props.percent} percent />
       </span>
       <span className="text-tertiary">
         {props.tradingLabel}

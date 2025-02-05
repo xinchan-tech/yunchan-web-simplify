@@ -51,10 +51,26 @@ type LoginEventResult = MessageReceived<{
     user_type: number
   }
 }>
-type EventResult<T extends WsEvent> = T extends 'default'
+
+type AlarmEventResult = MessageReceived<{
+  content: {
+    bull: string
+    category_ids: number[]
+    category_hdly_ids: number[]
+    indicators: string
+    coiling: any
+    symbol: string
+    stock_cycle: number
+    alarm_time: string
+  }
+}>
+
+export type EventResult<T extends WsEvent> = T extends 'default'
   ? DefaultEventResult
   : T extends 'login'
     ? LoginEventResult
+    : T extends 'alarm'
+      ? AlarmEventResult
     : MessageReceived<any>
 
 export class WsManager {
