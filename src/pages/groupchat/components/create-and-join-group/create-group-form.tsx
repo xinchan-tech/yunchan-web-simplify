@@ -132,8 +132,11 @@ const CreateGroupForm = (props: {
     if (initData?.price_tag) {
       try {
         const data = JSON.parse(initData.price_tag);
-        form.setValue("price_tag_year", data[1].price);
-        form.setValue("price_tag_month", data[0].price);
+        // todo find
+        const monprice = data.find((item: any) => item.unit === "月");
+        const yearprice = data.find((item: any) => item.unit === "年");
+        form.setValue("price_tag_year", monprice.price);
+        form.setValue("price_tag_month", yearprice.price);
       } catch (err) {}
     }
   }, [initData]);
