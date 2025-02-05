@@ -20,7 +20,6 @@ interface KChartProps {
 
 /**
  * @examples
- * TODO: 用store代替context，减少render范围
  */
 export const KChart = (props: KChartProps) => {
   const currentSymbol = useKChartStore(s => s.state[s.activeChartIndex].symbol)

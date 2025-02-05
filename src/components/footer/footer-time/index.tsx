@@ -16,6 +16,7 @@ const FooterTime = () => {
   const timer = useRef<number | null>(null)
   const timeForOnline = useRef<number>(usTime)
   const timeForLocal = useRef<number>(localStamp)
+  const lastLocalStamp = useRef<number>(localUsTime)
 
 
   useRequest(getUsTime, {
@@ -42,8 +43,12 @@ const FooterTime = () => {
   const updateTimeStamp = (): number => {
     const currentTimestamp = new Date().valueOf()
     const diffTime = (currentTimestamp - timeForLocal.current)
-    setLocalUsTime(timeForOnline.current + diffTime)
-    return timeForOnline.current + diffTime
+    const _local = timeForOnline.current + diffTime
+    if(Math.floor((_local) / 1000) !== Math.floor(lastLocalStamp.current / 1000)) {
+      setLocalUsTime(_local)
+      lastLocalStamp.current = _local
+    }
+    return _local
   }
 
   // 优化render

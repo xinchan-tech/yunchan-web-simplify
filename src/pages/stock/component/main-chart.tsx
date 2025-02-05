@@ -16,7 +16,8 @@ import { renderUtils } from "../lib/utils"
 import { IndicatorTooltip } from "./indicator-tooltip"
 import { SecondaryIndicator } from "./secondary-indicator"
 import { TimeIndexMenu } from "./time-index"
-import { calcCoiling } from "@/utils/coiling"
+import type { Canvas } from 'fabric'
+import { initGraphicTool } from "../lib/graphic"
 
 interface MainChartProps {
   index: number
@@ -25,11 +26,11 @@ interface MainChartProps {
 export const MainChart = (props: MainChartProps) => {
   const [size, dom] = useDomSize<HTMLDivElement>()
   const chart = useRef<EChartsType>()
-
+  const canvas = useRef<Canvas>()
   useMount(() => {
-    chart.current = echarts.init(dom.current)
+    chart.current = echarts.init(dom.current, {})
     chart.current.meta = {} as any
-
+    
 
     chart.current.meta.event = chartEvent.event
 
@@ -44,12 +45,25 @@ export const MainChart = (props: MainChartProps) => {
       if (!toElement?.className.includes('main-indicator-tooltip') || !toElement?.className.includes('secondary-indicator-tool')) {
         chartEvent.event.emit('data', [])
       }
-
     })
 
     chart.current.setOption({
       ...initOptions()
     }, { lazyUpdate: true })
+
+    // initGraphicTool(chart.current)
+
+    // dom.current?.addEventListener('click', (e) => {
+
+    //   const r = createLine({ start: [e.zrX, e.zrY], chart: chart.current as EChartsType })
+    //   console.log(e, r)
+    //   chart.current?.setOption({
+    //     graphic: [
+    //       r
+    //     ]
+    //   })
+    // }, { passive: true })
+
   })
 
   useUnmount(() => {
@@ -75,7 +89,7 @@ export const MainChart = (props: MainChartProps) => {
     start_at: startTime,
     ticker: state.symbol,
     interval: state.timeIndex,
-    gzencode: false
+    gzencode: true
   }
   const queryKey = [getStockChart.cacheKey, params]
   const query = useQuery({
@@ -277,7 +291,6 @@ export const MainChart = (props: MainChartProps) => {
     }
     renderWatermark(_options, state.timeIndex)
     chart.current.setOption(_options, { replaceMerge: ['series', 'grid', 'xAxis', 'yAxis', 'dataZoom', 'graphic'] })
-    // console.log(chart.current.getOption())
   }
 
   useUpdateEffect(() => {
@@ -326,6 +339,8 @@ export const MainChart = (props: MainChartProps) => {
     } onClick={() => kChartUtils.setActiveChart(props.index)} onKeyDown={() => { }}>
       <div className="w-full h-full" ref={dom}>
       </div>
+      <canvas className="w-full h-full">
+      </canvas>
       {
         state.secondaryIndicators.map((item, index, arr) => {
           const grids = renderUtils.calcGridSize(

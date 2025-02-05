@@ -15,7 +15,8 @@ import { wsManager } from "@/utils/ws"
 export const AiAlarmNotice = () => {
   const [open, { setTrue, setFalse }] = useBoolean(false)
   const getCurrentUsTime = useTime(s => s.getCurrentUsTime)
-  const config = useConfig()
+  const aiAlarmAutoNotice = useConfig(s => s.aiAlarmAutoNotice)
+  const setAiAlarmAutoNotice = useConfig(s => s.setAiAlarmAutoNotice)
   const token = useToken(s => s.token)
   const prevDate = getLatestTradingDay(dayjs(getCurrentUsTime()).tz('America/New_York'))
   const query = useQuery({
@@ -50,10 +51,10 @@ export const AiAlarmNotice = () => {
   }, [query.data])
 
   useEffect(() => {
-    if (query.isFetched && config.aiAlarmAutoNotice && query.data?.items?.length) {
+    if (query.isFetched && aiAlarmAutoNotice && query.data?.items?.length) {
       setTrue()
     }
-  }, [query.isFetched, config.aiAlarmAutoNotice, setTrue, query.data?.items])
+  }, [query.isFetched, aiAlarmAutoNotice, setTrue, query.data?.items])
 
   const columns = useMemo<JknRcTableProps<Awaited<ReturnType<typeof getAlarmLogs>>['items'][0]>['columns']>(() => [
     {
@@ -121,12 +122,12 @@ export const AiAlarmNotice = () => {
             </div>
             <div className="absolute right-2 top-2.5 flex items-center">
               {
-                config.aiAlarmAutoNotice ? <JknIcon name="checkbox_mult_sel" onClick={() => config.setAiAlarmAutoNotice(false)} /> : <JknIcon name="checkbox_mult_nor" onClick={() => config.setAiAlarmAutoNotice(true)} />
+                aiAlarmAutoNotice ? <JknIcon name="checkbox_mult_sel" onClick={() => setAiAlarmAutoNotice(false)} /> : <JknIcon name="checkbox_mult_nor" onClick={() => setAiAlarmAutoNotice(true)} />
               }
               自动弹出
             </div>
           </div>
-          <div className="h-[400px]">
+          <div className="h-[400px] overflow-y-auto">
             {
               Object.keys(dataByGroup).map(date => (
                 <div key={date}>
@@ -138,6 +139,7 @@ export const AiAlarmNotice = () => {
                   </div>
                   <div>
                     <JknRcTable
+                      scroll={{ y: 'auto' }}
                       columns={columns}
                       data={dataByGroup[date]}
                       rowKey="id"
