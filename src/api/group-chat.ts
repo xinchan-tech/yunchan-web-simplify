@@ -77,8 +77,63 @@ export const revokeMessageService = async (params: {
   return r;
 };
 // 查询群资料
+export interface GroupDetailData {
+  /**
+   * 群账号
+   */
+  account: string;
+  /**
+   * 群头像
+   */
+  avatar: string;
+  /**
+   * 群简介
+   */
+  brief: string;
+  /**
+   * 群id
+   */
+  id: string;
+  /**
+   * 最大人数
+   */
+  max_num: string;
+  /**
+   * 群名称
+   */
+  name: string;
+  /**
+   * 群通知
+   */
+  notice: string;
+  /**
+   * 群标签
+   */
+  tags: string;
+  /**
+   * 当前成员数量
+   */
+  total_user: string;
+  /**
+   * 创建者
+   */
+  user: User;
+  [property: string]: any;
+}
+
+/**
+ * 创建者
+ */
+export interface User {
+  avatar: null;
+  id: string;
+  username: string;
+  [property: string]: any;
+}
 export const getGroupDetailService = async (id: string) => {
-  const r = await request.get(`/channel/${id}`).then((r) => r.data);
+  const r = await request
+    .get<GroupDetailData>(`/channel/${id}`)
+    .then((r) => r.data);
   return r;
 };
 

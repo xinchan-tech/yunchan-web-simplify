@@ -3,7 +3,7 @@ import { createJSONStorage, persist } from "zustand/middleware";
 import { Channel, Message, Subscriber } from "wukongimjssdk";
 import { ConversationWrap } from "@/pages/groupchat/ConversationWrap";
 import { GroupData } from "@/pages/groupchat/group-channel";
-import { getGroupDetailService } from "@/api";
+import { getGroupDetailService, GroupDetailData } from "@/api";
 
 interface GroupChatStore {
   bottomHeight: number;
@@ -38,24 +38,6 @@ export interface Product {
   product_sn: string;
   price: string;
   unit: "月" | "年";
-}
-
-export interface GroupDetailData {
-  id: string;
-  account: string;
-  name: string;
-  avatar: string;
-  notice: string;
-  max_num: string;
-  brief: string;
-  chat_type: string;
-  tags: string;
-  owner: string;
-  total_user: string;
-  products: Product[];
-  editable: boolean;
-  blacklist: any[];
-  in_channel: number;
 }
 
 interface GroupChatShortStore {
