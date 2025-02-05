@@ -37,7 +37,7 @@ export const useGroupChatStoreNew = create<GroupChatStore>()(
 export interface Product {
   product_sn: string;
   price: string;
-  unit: string;
+  unit: "月" | "年";
 }
 
 export interface GroupDetailData {
@@ -139,6 +139,7 @@ export const useGroupChatShortStore = create<GroupChatShortStore>(
     getGroupDetailData: async (id: string) => {
       set({
         groupDetailFetching: true,
+        groupDetailData: null,
       });
       try {
         const resp = await getGroupDetailService(id);
@@ -164,18 +165,16 @@ export const useGroupChatShortStore = create<GroupChatShortStore>(
 );
 
 type ChatWindowStore = {
-  reEditData: {timestap: number, text: string};
-  setReEditData: (data:{timestap: number, text: string}) => void
-}
-export const useChatNoticeStore = create<ChatWindowStore>(
-  (set, get) => {
-    return {
-      reEditData: {timestap: 0, text: ''},
-      setReEditData : (data:{timestap: number, text: string}) => {
-        set({
-          reEditData: data
-        })
-      }
-    }
-  }
-)
+  reEditData: { timestap: number; text: string };
+  setReEditData: (data: { timestap: number; text: string }) => void;
+};
+export const useChatNoticeStore = create<ChatWindowStore>((set, get) => {
+  return {
+    reEditData: { timestap: 0, text: "" },
+    setReEditData: (data: { timestap: number; text: string }) => {
+      set({
+        reEditData: data,
+      });
+    },
+  };
+});

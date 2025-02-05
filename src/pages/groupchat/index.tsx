@@ -84,7 +84,7 @@ const GroupChatPage = () => {
     setReplyMessage,
     setInputValue,
     setLocatedMessageId,
-    readyToJoinGroup,
+    // readyToJoinGroup,
     messages,
     setMessages,
     getGroupDetailData,
@@ -102,7 +102,7 @@ const GroupChatPage = () => {
         setReplyMessage: state.setReplyMessage,
         setInputValue: state.setInputValue,
         setLocatedMessageId: state.setLocatedMessageId,
-        readyToJoinGroup: state.readyToJoinGroup,
+        // readyToJoinGroup: state.readyToJoinGroup,
         setConversationWraps: state.setConversationWraps,
         messages: state.messages,
         setMessages: state.setMessages,
@@ -557,7 +557,7 @@ const GroupChatPage = () => {
       }
       // 现在只@一个人
       const curMention = {
-        name: channelInfo?.title,
+        name: channelInfo?.title || "",
         uid: id,
       };
       setMentions([curMention]);
@@ -603,7 +603,7 @@ const GroupChatPage = () => {
         }
       }
 
-      // message 更新完成，并且dom也渲染结束胡，如果有要定位过去的消息，就自动scroll过去
+      // message 更新完成，并且dom也渲染结束，如果有要定位过去的消息，就自动scroll过去
       if (jumpMsgIdRef.current) {
         scroller.scrollTo(jumpMsgIdRef.current, {
           containerId: "group-chat-msglist",
@@ -643,7 +643,7 @@ const GroupChatPage = () => {
   }, []);
   // const InitSyncSubscriberLock = useRef(false);
   // useEffect(() => {
-    
+
   //   if (selectedChannel && InitSyncSubscriberLock.current === false) {
   //     InitSyncSubscriberLock.current = true;
   //     syncSubscriber(new Channel(selectedChannel.channelID, ChannelTypeGroup));
@@ -670,37 +670,41 @@ const GroupChatPage = () => {
         />
 
         <div className="group-chat-right">
-          {readyToJoinGroup ? (
+          {/* {readyToJoinGroup ? (
             <JoinGroup data={readyToJoinGroup} />
           ) : (
-            <>
-              <div className="group-chat-header justify-between h-[58px]">
-                <div className="group-title flex items-center h-full">
-                  {groupDetailData?.name}
-                </div>
+           <></>
+          )} */}
+          <>
+            <div className="group-chat-header justify-between h-[58px]">
+              <div className="group-title items-center pt-2 h-full">
+                <p className="mb-0 mt-0">{groupDetailData?.name}</p>
+                <p className="text-xs text-gray-400 mt-0 mb-0">
+                  {groupDetailData?.brief}
+                </p>
               </div>
-              <div className="flex" style={{ height: "calc(100% - 58px)" }}>
-                <div className="group-msg-panel">
-                  <GroupChatMsgList
-                    messages={messages}
-                    ref={msgListRef}
-                    loading={messageFetching}
-                    handleFindPrevMsg={handleFindPrevMsg}
-                    handleScroll={handleMsgScroll}
-                  />
-                  <GroupChatInput
-                    onMsgSend={() => {
-                      jumpMsgIdRef.current = "";
-                    }}
-                    ref={messageInputRef}
-                  />
-                </div>
-                <div className="w-[220px] group-member-panel">
-                  <GroupMembers total={total} />
-                </div>
+            </div>
+            <div className="flex" style={{ height: "calc(100% - 58px)" }}>
+              <div className="group-msg-panel">
+                <GroupChatMsgList
+                  messages={messages}
+                  ref={msgListRef}
+                  loading={messageFetching}
+                  handleFindPrevMsg={handleFindPrevMsg}
+                  handleScroll={handleMsgScroll}
+                />
+                <GroupChatInput
+                  onMsgSend={() => {
+                    jumpMsgIdRef.current = "";
+                  }}
+                  ref={messageInputRef}
+                />
               </div>
-            </>
-          )}
+              <div className="w-[220px] group-member-panel">
+                <GroupMembers total={total} />
+              </div>
+            </div>
+          </>
         </div>
       </GroupChatContext.Provider>
 
@@ -720,8 +724,9 @@ const GroupChatPage = () => {
           }
           .group-title {
             padding-left: 20px;
-            font-weight: bold;
-            font-size: 20px;
+          }
+          .group-title p {
+            line-height: 22px;
           }
           .group-member-panel {
             border-left: 1px solid rgb(50, 50, 50);

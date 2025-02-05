@@ -22,7 +22,7 @@ import { useShallow } from "zustand/react/shallow";
 import { getGroupChannels } from "@/api";
 // import { useQuery } from "@tanstack/react-query";
 import ChatAvatar from "../components/chat-avatar";
-import CreateGroup from "../components/create-group";
+import CreateGroup from "../components/create-and-join-group";
 import {
   groupToChannelInfo,
   judgeIsUserInSyncChannelCache,
@@ -98,18 +98,9 @@ const GroupChannel = (props: {
     }
   };
 
-  // const option = {
-  //   queryKey: [getGroupChannels.cacheKey],
-  //   queryFn: () => {
-  //     return getGroupChannels({
-  //       type: "1",
-  //     })
-  //   }
-  // };
-
-  // const { data } = useQuery(option);
-
-  const [data, setData] = useState({});
+  const [data, setData] = useState<
+    Awaited<ReturnType<typeof getGroupChannels>>
+  >({});
   // const [isLoading, setIsLoading] = useState(false);
 
   const fetchData = () => {
@@ -373,10 +364,10 @@ const GroupChannel = (props: {
   const [goodConversations, setGoodConversations] = useState<
     ConversationWrap[]
   >([]);
-  const [goodGroups, setGoodGroups] = useState<GroupData[]>([]);
+  // const [goodGroups, setGoodGroups] = useState<GroupData[]>([]);
   useEffect(() => {
     let filteConversations: ConversationWrap[] = [];
-    let filteGroup: GroupData[] = [];
+    // let filteGroup: GroupData[] = [];
     if (
       data &&
       data.items instanceof Array &&
@@ -393,12 +384,13 @@ const GroupChannel = (props: {
         if (joinedChannel) {
           joinedChannel.total_user = item.total_user;
           filteConversations.push(joinedChannel);
-        } else {
-          filteGroup.push(item);
         }
+        //  else {
+        //   filteGroup.push(item);
+        // }
       });
     }
-    setGoodGroups(filteGroup);
+    // setGoodGroups(filteGroup);
     setGoodConversations(filteConversations);
   }, [data, conversationWraps]);
 
@@ -476,7 +468,7 @@ const GroupChannel = (props: {
                 </div>
               );
             })}
-            {goodGroups.map((item: GroupData) => {
+            {/* {goodGroups.map((item: GroupData) => {
               return (
                 <div
                   key={item.account}
@@ -520,7 +512,7 @@ const GroupChannel = (props: {
                   </div>
                 </div>
               );
-            })}
+            })} */}
           </>
         )}
       </div>

@@ -11,7 +11,11 @@ import { useToast } from "@/hooks";
 import FullScreenLoading from "@/components/loading";
 import { Checkbox } from "@/components";
 
-const JoinGroup = (props: { data: GroupData }) => {
+const JoinGroup = (props: {
+  data: GroupData;
+  onSuccess: () => void;
+  onClose: () => void;
+}) => {
   const { data } = props;
   const { toast } = useToast();
   const payMethods = [
@@ -56,30 +60,29 @@ const JoinGroup = (props: { data: GroupData }) => {
       );
     });
   };
-  const { groupDetailData, setReadyToJoinGroup, groupDetailFetching } =
-    useGroupChatShortStore(
-      useShallow((state) => ({
-        groupDetailData: state.groupDetailData,
-        setReadyToJoinGroup: state.setReadyToJoinGroup,
-        groupDetailFetching: state.groupDetailFetching,
-      }))
-    );
+  const { groupDetailData, setReadyToJoinGroup } = useGroupChatShortStore(
+    useShallow((state) => ({
+      groupDetailData: state.groupDetailData,
+      setReadyToJoinGroup: state.setReadyToJoinGroup,
+    }))
+  );
 
   const [joinIng, setJoinIng] = useState(false);
 
   const loopCheckStatus = (sn: string) => {
     let timer = setInterval(() => {
-      loopUpdatePaymentStatus(sn).then(res => {
-        if(res.pay_status === 1) {
+      loopUpdatePaymentStatus(sn).then((res) => {
+        if (res.pay_status === 1) {
           clearInterval(timer);
           setReadyToJoinGroup(null);
           WKSDK.shared().config.provider.syncConversationsCallback();
-          toast({description: '加群成功'})
+          toast({ description: "加群成功" });
           setJoinIng(false);
+          typeof props.onSuccess === "function" && props.onSuccess();
         }
-      })
-    }, [10000])
-  }
+      });
+    }, 10000);
+  };
 
   const handleJoinGroup = async () => {
     if (data.account) {
@@ -90,22 +93,22 @@ const JoinGroup = (props: { data: GroupData }) => {
         if (selectedProdSn) {
           resp = await joinGroupService(data.account, {
             product_sn: selectedProdSn,
-            payment_type: curPayMethod
+            payment_type: curPayMethod,
           });
-          console.log(resp)
-        } 
+          console.log(resp);
+        }
         if (resp === true) {
           setReadyToJoinGroup(null);
           WKSDK.shared().config.provider.syncConversationsCallback();
           toast({ description: "加群成功" });
+          typeof props.onSuccess === "function" && props.onSuccess();
           setJoinIng(false);
-        } else if(resp.pay_sn && resp.config) {
-          if(resp.config.url) {
-            window.open(resp.config.url)
-            loopCheckStatus(resp.pay_sn)
+        } else if (resp.pay_sn && resp.config) {
+          if (resp.config.url) {
+            window.open(resp.config.url);
+            loopCheckStatus(resp.pay_sn);
           }
         }
-        
       } catch (er) {
         console.error(er);
         toast({ description: er?.message || "加群失败" });
@@ -128,18 +131,25 @@ const JoinGroup = (props: { data: GroupData }) => {
 
   return (
     <div className="join-group-panel">
-      {(groupDetailFetching === true || joinIng === true) && <FullScreenLoading />}
+      <div
+        className="back-btn text-sm text-gray-400 cursor-pointer"
+        onClick={() => {
+          typeof props.onClose === "function" && props.onClose();
+        }}
+      >
+        返回
+      </div>
+      {joinIng === true && <FullScreenLoading fullScreen={false} />}
       <div className="join-group-content">
-        <div className="flex items-center justify-between mb-10">
-          <div className="flex ">
+        <div className="flex items-center justify-center mb-[20px]">
+          <div className="flex justify-center items-center">
             <ChatAvatar
               data={{
                 avatar: data.avatar,
                 name: data.name,
                 uid: data.account,
               }}
-              radius="16px"
-              className="w-16 h-16"
+              className="w-[80px] h-[80px]"
             />
             <div className="ml-[20px]">
               <div className="text-xl font-bold text-white mb-4">
@@ -148,16 +158,17 @@ const JoinGroup = (props: { data: GroupData }) => {
               <div className="flex">{renderTags()}</div>
             </div>
           </div>
-          {/* <Button
-            loading={joinIng}
-            onClick={handleJoinGroup}
-            className="w-[200px] h-[52px] leading-[52px] rounded-md text-lg font-bold"
-          >
-            加入群聊
-          </Button> */}
         </div>
         <div className="group-info">{groupDetailData?.notice || ""}</div>
-        <div className="prod-list flex justify-center">
+        <div
+          className={cn(
+            "prod-list flex",
+            groupDetailData?.products instanceof Array &&
+              groupDetailData.products.length > 1
+              ? "justify-between"
+              : "justify-center"
+          )}
+        >
           {groupDetailData?.products instanceof Array &&
             groupDetailData.products.length > 0 &&
             groupDetailData.products.map((prod) => {
@@ -172,18 +183,30 @@ const JoinGroup = (props: { data: GroupData }) => {
                     setSelectedProdSn(prod.product_sn);
                   }}
                 >
-                  <div className="font-bold prod-name text-center">--</div>
+                  <div className="font-bold prod-name text-center mb-2">
+                    {groupDetailData?.name}
+                  </div>
 
                   <div className="text-center">
-                    <span className="prod-price font-bold">$</span>
-                    <span className="prod-price font-bold">{prod.price}</span>
-                    <span className="prod-unit font-bold">/${prod.unit}</span>
+                    <span className="prod-price ">$</span>
+                    <span className="prod-price ">
+                      {prod.unit === "月"
+                        ? (Number(prod.price) / 30).toFixed(2)
+                        : (Number(prod.price) / 360).toFixed(2)}
+                    </span>
+                    <span className="prod-unit ">/天</span>
+                  </div>
+
+                  <div className="text-center mt-3 text-gray-400 text-sm">
+                    <span>$</span>
+                    <span>{prod.price}</span>
+                    <span>/{prod.unit}</span>
                   </div>
                 </div>
               );
             })}
         </div>
-        <div className="mt-20">
+        <div className="mt-10">
           <div className="flex justify-center items-center">
             {payMethods.map((item) => {
               return (
@@ -203,7 +226,7 @@ const JoinGroup = (props: { data: GroupData }) => {
               );
             })}
           </div>
-          <div className="flex justify-center items-center mt-4">
+          <div className="flex justify-center items-center mt-2">
             <Button
               loading={joinIng}
               onClick={handleJoinGroup}
@@ -217,8 +240,9 @@ const JoinGroup = (props: { data: GroupData }) => {
       <style jsx>
         {`
           .prod-list {
-            margin-top: 60px;
+            margin: 40px auto 0 auto;
             flex-shrink: 0;
+            width: 500px;
           }
           .prod-name {
             font-size: 20px;
@@ -227,38 +251,49 @@ const JoinGroup = (props: { data: GroupData }) => {
             font-size: 30px;
           }
           .prod-unit {
-            font-size: 18px;
+            font-size: 14px;
           }
           .prod-item {
-            padding-top: 30px;
-            width: 160px;
-            margin-right: 30px;
-            background-color: rgb(43, 45, 49);
-            height: 200px;
+            padding-top: 20px;
+            width: 200px;
+            background-color: black;
+            height: 150px;
             border-radius: 8px;
-            bpx-sizing: border-box;
-            border: 5px solid rgb(43, 45, 49);
+            box-sizing: border-box;
+            border: 5px solid transparent;
+          }
+          .back-btn {
+            position: absolute;
+            height: 32px;
+            line-height: 32px;
+            padding: 0 10px;
+            background-color: rgb(40, 40, 40);
+            left: 16px;
+            top: 16px;
+            border-radius: 4px;
           }
           .prod-item.selected {
             border: 5px solid hsl(var(--primary));
           }
           .join-group-panel {
-            padding: 40px 30px;
             height: 100%;
             box-sizing: border-box;
+            overflow-y: auto;
           }
           .join-group-content {
-            background-color: rgb(59, 61, 68);
             height: 100%;
             border-radius: 12px;
             box-sizing: border-box;
             padding: 30px 60px;
           }
           .group-info {
-            border: 1px solid rgb(66, 68, 103);
-            padding: 20px;
+            height: 80px;
             border-radius: 12px;
-            font-size: 14px;
+            margin: 0 auto;
+            padding: 20px;
+            width: 500px;
+            box-sizing: border-box;
+            background-color: rgb(35, 35, 35);
           }
         `}
       </style>

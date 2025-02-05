@@ -18,12 +18,24 @@ import {
   Textarea,
   Checkbox,
   ScrollArea,
+  DropdownMenu,
+  DropdownMenuItem,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
 } from "@/components";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { useToast, useZForm } from "@/hooks";
 import { useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 import { z } from "zod";
 import AliyunOssUploader from "../aliyun-oss-uploader";
+import CreateHistory from "./create-history";
+import JoinGroupContent from "./join-group-content";
 
 const memberLimitConf = [
   "50",
@@ -59,10 +71,10 @@ const priceTagSchema = z.object({
 const createGroupSchema = z.object({
   id: z.string(),
   name: z.string().min(1, { message: "群名称必填" }),
-  grade: z.string().min(1,{message: '请选择社群等级'}),
+  grade: z.string().min(1, { message: "请选择社群等级" }),
   brief: z.string().min(1, { message: "群简介必填" }).max(500),
-  notice: z.string().min(1 ,{ message: "群公告必填" }).max(500),
-  max_num: z.string().min(1,{message: '请选择社群人数上限'}),
+  notice: z.string().min(1, { message: "群公告必填" }).max(500),
+  max_num: z.string().min(1, { message: "请选择社群人数上限" }),
   avatar: z.string(),
   tags: z.string(),
   price_tag_year: z.string().optional(),
@@ -90,34 +102,33 @@ const CreateGroup = () => {
 
   const createGroupMutation = useMutation({
     mutationFn: (params: CreateGroupForm) => {
-      
-        const goodParams: createGroupRequest = {
-            id: params.id,
-            name: params.name,
-            grade: params.grade,
-            brief: params.brief,
-            avatar: params.avatar,
-            notice: params.notice,
-            max_num: params.max_num,
-            tags: params.tags,
-            price_tag: [
-                {
-                    unit: '月',
-                    price: params.price_tag_month || '0.0'
-                },
-                {
-                    unit: '年',
-                    price: params.price_tag_year || '0.0'
-                }
-            ]
-        }
-        return applyCreateGroupService(goodParams)
+      const goodParams: createGroupRequest = {
+        id: params.id,
+        name: params.name,
+        grade: params.grade,
+        brief: params.brief,
+        avatar: params.avatar,
+        notice: params.notice,
+        max_num: params.max_num,
+        tags: params.tags,
+        price_tag: [
+          {
+            unit: "月",
+            price: params.price_tag_month || "0.0",
+          },
+          {
+            unit: "年",
+            price: params.price_tag_year || "0.0",
+          },
+        ],
+      };
+      return applyCreateGroupService(goodParams);
     },
     onSuccess: (res) => {
-        if(res.status === 1) {
-            toast({description: '提交成功，请等待审核'});
-            createGroup.modal.close()
-        }
+      if (res.status === 1) {
+        toast({ description: "提交成功，请等待审核" });
+        createGroup.modal.close();
+      }
     },
     onError: (err) => {
       toast({
@@ -125,7 +136,6 @@ const CreateGroup = () => {
       });
     },
   });
-
 
   const viewAgreement = useModal({
     content: (
@@ -150,6 +160,14 @@ const CreateGroup = () => {
   const createGroup = useModal({
     content: (
       <div className="p-8 ">
+        <div
+          className="text-right mb-4 text-xs text-gray-400 "
+          onClick={() => {
+            applyRecord.modal.open();
+          }}
+        >
+          申请记录
+        </div>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(createGroupMutation.mutate as any)}>
             <div className="flex">
@@ -233,7 +251,10 @@ const CreateGroup = () => {
                         "border-dialog-border rounded-sm  bg-accent inline-block"
                       }
                     >
-                      <Select onValueChange={field.onChange} value={field.value}>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value}
+                      >
                         <SelectTrigger
                           style={{ marginTop: "0" }}
                           className="flex-1 bg-accent"
@@ -254,7 +275,6 @@ const CreateGroup = () => {
               <FormField
                 control={form.control}
                 name="max_num"
-             
                 render={({ field }) => (
                   <FormItem className="flex flex-1 items-center">
                     <FormLabel className="w-[90px] text-right mr-2">
@@ -265,7 +285,10 @@ const CreateGroup = () => {
                         "border-dialog-border rounded-sm  bg-accent inline-block"
                       }
                     >
-                      <Select onValueChange={field.onChange} value={field.value}>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value}
+                      >
                         <SelectTrigger
                           style={{ marginTop: "0" }}
                           className="flex-1 bg-accent"
@@ -297,7 +320,10 @@ const CreateGroup = () => {
                             "border-dialog-border rounded-sm  bg-accent inline-block"
                           }
                         >
-                          <Select onValueChange={field.onChange} value={field.value}>
+                          <Select
+                            onValueChange={field.onChange}
+                            value={field.value}
+                          >
                             <SelectTrigger
                               style={{ marginTop: "0" }}
                               className="flex-1 bg-accent"
@@ -327,7 +353,10 @@ const CreateGroup = () => {
                             "border-dialog-border rounded-sm mt- bg-accent inline-block"
                           }
                         >
-                          <Select onValueChange={field.onChange} value={field.value}>
+                          <Select
+                            onValueChange={field.onChange}
+                            value={field.value}
+                          >
                             <SelectTrigger
                               style={{ marginTop: "0" }}
                               className="flex-1 bg-accent"
@@ -422,17 +451,21 @@ const CreateGroup = () => {
               </span>
             </div>
             <div className="flex justify-center mt-6">
-              <Button loading={createGroupMutation.isPending} onClick={(e) => {
+              <Button
+                loading={createGroupMutation.isPending}
+                onClick={(e) => {
                   if (!agree) {
                     toast({
                       description: "请先阅读并同意社群服务协议",
                     });
                     e.preventDefault();
-                    e.stopPropagation()
+                    e.stopPropagation();
                     return;
-                }
-
-              }}>提交申请</Button>
+                  }
+                }}
+              >
+                提交申请
+              </Button>
             </div>
           </form>
         </Form>
@@ -445,17 +478,75 @@ const CreateGroup = () => {
     closeIcon: true,
   });
 
-  return (
-    <>
-      <JknIcon
-        name="add"
-        onClick={() => {
-          console.log("create-group-modal");
-          createGroup.modal.open();
+  const joinGroup = useModal({
+    content: (
+      <JoinGroupContent
+        onSuccess={() => {
+          joinGroup.modal.close();
         }}
       />
+    ),
+    footer: null,
+    className: "w-[800px]",
+    onOpen: () => {},
+    title: "创建群组",
+    closeIcon: true,
+  });
+
+  // 申请记录
+  const applyRecord = useModal({
+    className: "w-[720px]",
+    title: "创建记录",
+    closeIcon: true,
+    footer: null,
+    content: <CreateHistory key="创建记录" />,
+  });
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <div>
+            <TooltipProvider delayDuration={0}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span>
+                    <JknIcon
+                      name="add"
+                      onClick={() => {
+                        setOpen(!open);
+                      }}
+                    />
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent>加入/创建社群</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent>
+          <DropdownMenuItem
+            onClick={() => {
+              createGroup.modal.open();
+              setOpen(false);
+            }}
+          >
+            创建社群
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => {
+              joinGroup.modal.open();
+              setOpen(false);
+            }}
+          >
+            加入社群
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
       {createGroup.context}
       {viewAgreement.context}
+      {applyRecord.context}
+      {joinGroup.context}
     </>
   );
 };

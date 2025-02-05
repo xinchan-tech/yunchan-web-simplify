@@ -214,3 +214,29 @@ export const loopUpdatePaymentStatus = async (pay_sn: string) => {
     .then((r) => r.data);
   return resp;
 };
+
+// 查询建群记录
+export interface CreateGroupRecord {
+  id: string;
+  name: string;
+  status: string;
+  account: string;
+  grade: string;
+  tags: string;
+  price: string;
+  unit?: string | null;
+  brief: string;
+  notice: string;
+  reject_reason?: string | null;
+  max_num: string;
+  create_time: string;
+  [key: string]: any;
+}
+export const getCreateGroupHistoryService = async () => {
+  const r = await request
+    .get<PageResult<CreateGroupRecord>>("/chat/apply/index")
+    .then((r) => r.data);
+  return r;
+};
+
+getCreateGroupHistoryService.key = "groupChannels:createHistory";

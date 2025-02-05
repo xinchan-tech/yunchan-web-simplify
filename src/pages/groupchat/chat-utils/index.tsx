@@ -26,7 +26,6 @@ export const setPersonChannelCache = (fromUID: string) => {
   });
 };
 
-
 export const groupToChannelInfo = (
   data: {
     name: string;
@@ -76,21 +75,22 @@ export const sortMessages = (messages: Message[]) => {
     const msg = result[i];
     if (msg.content.cmd === "messageRevoke") {
       if (msg.content.param && msg.content.param.message_id) {
-        let revokeMsgId: any = BigInt(msg.content.param?.message_id);
-        revokeMsgId = revokeMsgId.toString();
+        let revokeMsgId: string = msg.content.param?.message_id;
 
         // const temp = result.splice(i, 1);
         // 目标消息位置
         result.forEach((m, targetMessagePos) => {
           if (m.messageID === revokeMsgId) {
             // revoke标志,到时渲染成 xxx 撤回了一条消息
-           
+
             if (result[targetMessagePos]) {
               result[targetMessagePos].remoteExtra.revoke = true;
               result[targetMessagePos].remoteExtra.extra.revoker = msg.fromUID;
               result[targetMessagePos].remoteExtra.extra.sender = m.fromUID;
-              result[targetMessagePos].remoteExtra.extra.originType = m.contentType
-              result[targetMessagePos].remoteExtra.extra.originText = m.content.text
+              result[targetMessagePos].remoteExtra.extra.originType =
+                m.contentType;
+              result[targetMessagePos].remoteExtra.extra.originText =
+                m.content.text;
               // result.splice(targetMessagePos, 0, temp[0]);
             }
           }
