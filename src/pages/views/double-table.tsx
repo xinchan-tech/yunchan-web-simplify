@@ -74,7 +74,7 @@ const PlateList = (props: PlateListProps) => {
 
   const column = useMemo<JknRcTableProps<PlateDataType>['columns']>(() => [
     { title: '序号', dataIndex: 'index', align: 'center', width: 60, render: (_, __, index) => index + 1 },
-    { title: '行业', dataIndex: 'name', align: 'left' },
+    { title: '行业', dataIndex: 'name', align: 'left', render: (name) => <span className="text-xs inline-block leading-8 my-1">{name}</span> },
     {
       title: '涨跌幅', dataIndex: 'change', sort: true, align: 'right',
       width: 100,

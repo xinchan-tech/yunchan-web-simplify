@@ -23,7 +23,7 @@ const numSpanVariants = cva(
       },
       block: {
         default: "",
-        true: "box-border w-full rounded-[2px] text-center px-2 py-0.5"
+        true: "box-border rounded-[2px] text-center px-1 py-0.5 w-[70px]"
       }
     },
     compoundVariants: [

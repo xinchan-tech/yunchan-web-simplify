@@ -103,7 +103,7 @@ const Menu = () => {
           <div className={cn(pathname === item.path && 'active-icon')}>
             {
               typeof item.icon === 'string' ? (
-                <JknIcon name={item.icon as IconName} className="w-6 h-6" />
+                <JknIcon name={item.icon as IconName} className="w-6 h-6 rounded-none" />
               ) : (
                 item.icon
               )
