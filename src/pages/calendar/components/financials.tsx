@@ -1,11 +1,10 @@
 import { getStockFinancials } from "@/api"
-import { AiAlarm, CapsuleTabs, Checkbox, CollectStar, JknCheckbox, JknDatePicker, JknIcon, JknRcTable, JknRcTableProps, JknTable, type JknTableProps, NumSpan, StockView } from "@/components"
+import { AiAlarm, CapsuleTabs, CollectStar, JknCheckbox, JknDatePicker, JknIcon, JknRcTable, type JknRcTableProps, NumSpan, StockView } from "@/components"
 import { useCheckboxGroup, useTableRowClickToStockTrading } from "@/hooks"
 import { dateToWeek } from "@/utils/date"
 import { stockUtils } from "@/utils/stock"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import Decimal from "decimal.js"
-import { produce } from "immer"
 import { useEffect, useMemo, useState } from "react"
 
 

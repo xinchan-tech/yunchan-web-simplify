@@ -55,6 +55,7 @@ export const stockUtils = {
         cumulativeVolume: 0,
         cumulativeTurnover: 0,
         prevClose: 0,
+        industry: '--',
         extend: opts?.extend
       }
     }
@@ -84,7 +85,7 @@ export const stockUtils = {
 
     if (opts?.extend) {
       stock.totalShare = opts?.extend.total_share
-      stock.industry = opts?.extend.basic_index
+      stock.industry = opts?.extend.basic_index ?? '--'
       stock.thumbs = opts?.extend.thumbs
     }
 

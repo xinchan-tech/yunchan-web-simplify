@@ -78,7 +78,7 @@ const PlateList = (props: PlateListProps) => {
     {
       title: '涨跌幅', dataIndex: 'change', sort: true, align: 'right',
       width: 100,
-      render: (_, row) => <NumSpan className="w-20" block percent symbol value={row.change} isPositive={row.change > 0} align="right" />
+      render: (_, row) => <NumSpan  block percent symbol value={row.change} isPositive={row.change > 0} align="right" />
     },
     {
       title: '成交额', dataIndex: 'amount', sort: true,

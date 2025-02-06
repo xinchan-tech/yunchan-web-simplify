@@ -171,7 +171,7 @@ const SingleTable = (props: SingleTableProps) => {
     {
       title: '涨跌幅', dataIndex: 'percent', align: 'right', width: 120, sort: true,
       render: (_, row) => (
-        <NumSpanSubscribe blink code={row.symbol} field="percent" block className="py-0.5 w-20" decimal={2} value={row.percent} percent isPositive={row.isUp} symbol align="right" />
+        <NumSpanSubscribe blink code={row.symbol} field="percent" block decimal={2} value={row.percent} percent isPositive={row.isUp} symbol align="right" />
       )
     },
     {

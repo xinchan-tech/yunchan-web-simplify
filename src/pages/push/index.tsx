@@ -116,7 +116,7 @@ const PushPage = () => {
         dataIndex: 'percent',
         align: 'right',
         sort: true,
-        render: (percent, row) => <NumSpanSubscribe code={row.symbol} field="percent" blink block className="w-20" decimal={2} value={percent} percent isPositive={stockUtils.isUp(row)} symbol align="right" />
+        render: (percent, row) => <NumSpanSubscribe code={row.symbol} field="percent" blink block decimal={2} value={percent} percent isPositive={stockUtils.isUp(row)} symbol align="right" />
       },
       {
         title: '成交额',

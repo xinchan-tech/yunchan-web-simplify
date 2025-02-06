@@ -443,7 +443,7 @@ const StockRelated = () => {
     {
       title: '涨跌幅%', dataIndex: 'percent', align: 'right', width: '29%', sort: true,
       render: (percent, row) => (
-        <NumSpanSubscribe className="text-xs" code={row.symbol} field="percent" blink block className="w-20" decimal={2} value={percent} percent isPositive={Decimal.create(row.percent).gte(0)} symbol align="right" />
+        <NumSpanSubscribe className="text-xs" code={row.symbol} field="percent" blink block decimal={2} value={percent} percent isPositive={Decimal.create(row.percent).gte(0)} symbol align="right" />
       )
     },
     {

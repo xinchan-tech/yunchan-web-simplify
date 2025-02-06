@@ -52,7 +52,7 @@ const GoldenStockPool = () => {
       title: '涨跌幅', dataIndex: 'percent',
       align: 'right', width: '20%', sort: true,
       render: (percent, row) => (
-        <NumSpanSubscribe code={row.symbol} field="percent" block blink className="w-20" decimal={2} align="right" value={percent} percent isPositive={stockUtils.isUp(row)} symbol />
+        <NumSpanSubscribe code={row.symbol} field="percent" block blink decimal={2} align="right" value={percent} percent isPositive={stockUtils.isUp(row)} symbol />
       )
     },
     {

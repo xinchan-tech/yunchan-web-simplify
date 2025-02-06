@@ -72,7 +72,7 @@ const TopList = () => {
       title: `${type === IncreaseTopStatus.PRE_MARKET ? '盘前' : type === IncreaseTopStatus.AFTER_HOURS ? '盘后' : ''}涨跌幅%`, dataIndex: 'percent', align: 'right', sort: true,
       width: 100,
       render: (percent, row) => (
-        <NumSpanSubscribe code={row.symbol} field="percent" blink block className="w-20" decimal={2} value={percent} percent isPositive={stockUtils.isUp(row)} symbol align="right" />
+        <NumSpanSubscribe code={row.symbol} field="percent" blink block decimal={2} value={percent} percent isPositive={stockUtils.isUp(row)} symbol align="right" />
       )
     },
     {

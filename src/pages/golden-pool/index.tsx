@@ -3,7 +3,6 @@ import { AddCollect, AiAlarm, Button, CapsuleTabs, CollectCapsuleTabs, JknAlert,
 import { useCheckboxGroup, useTableData, useTableRowClickToStockTrading, useToast, useZForm } from "@/hooks"
 import { stockUtils } from "@/utils/stock"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
-import { useMount } from "ahooks"
 import to from "await-to-js"
 import dayjs from "dayjs"
 import Decimal from "decimal.js"
@@ -99,7 +98,7 @@ const GoldenPool = () => {
     {
       title: '涨跌幅', dataIndex: 'percent', align: 'right', width: 120, sort: true,
       render: (_, row) => (
-        <NumSpanSubscribe code={row.symbol} blink field="percent" className="w-24" percent block decimal={2} value={stockUtils.getPercent(row)} isPositive={stockUtils.isUp(row)} symbol align="right" />
+        <NumSpanSubscribe code={row.symbol} blink field="percent" percent block decimal={2} value={stockUtils.getPercent(row)} isPositive={stockUtils.isUp(row)} symbol align="right" />
       )
     },
     {
@@ -115,11 +114,15 @@ const GoldenPool = () => {
       render: (_, row) => <NumSpanSubscribe blink code={row.symbol} field={v => stockUtils.getSubscribeTurnOverRate(row, v)} value={stockUtils.getTurnOverRate(row)} decimal={2} align="right" percent />
     },
     {
-      title: '市盈率', dataIndex: 'pe', align: 'right',
-      render: (_, row) => <div className="w-full text-right">{`${Decimal.create(stockUtils.getPE(row)).toFixed(2) ?? '-'}`}</div>
+      title: '市盈率', dataIndex: 'pe', align: 'right', sort: true,
+      render: (pe) => <div className="w-full text-right">{`${Decimal.create(pe).toFixed(2) ?? '-'}`}</div>
     },
     {
-      title: '行业板块', dataIndex: 'industry', align: 'right',
+      title: '市净率', dataIndex: 'pb', align: 'right', sort: true,
+      render: (pb) => <div className="w-full text-right">{`${Decimal.create(pb).toFixed(2) ?? '-'}`}</div>
+    },
+    {
+      title: '行业板块', dataIndex: 'industry', align: 'right', sort: true,
       render: (_, row) => <div className="w-full text-right">{row.industry}</div>
     },
     {
@@ -221,7 +224,7 @@ const GoldenPoolManager = memo(() => {
     footer: null,
     closeIcon: true,
     className: 'w-[780px]',
-    onOpen: () => {}
+    onOpen: () => { }
   })
 
 

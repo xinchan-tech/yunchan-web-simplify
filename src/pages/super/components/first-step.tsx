@@ -338,7 +338,7 @@ const PlateList = (props: PlateListProps) => {
     {
       title: '涨跌幅', dataIndex: 'change', sort: true,
       width: 90,
-      render: (_, row) => <NumSpan className="w-20" block percent value={row.change} isPositive={row.change > 0} />
+      render: (_, row) => <NumSpan block percent value={row.change} isPositive={row.change > 0} />
     },
     {
       title: '成交额', dataIndex: 'amount', sort: true,
@@ -416,7 +416,7 @@ const PlateStocks = (props: PlateStocksProps) => {
     {
       title: '涨跌幅', dataIndex: 'percent', align: 'right', width: 90, sort: true,
       render: (percent, row) => (
-        <NumSpanSubscribe code={row.symbol} field="percent" className="w-20" percent block decimal={2} value={percent} isPositive={stockUtils.isUp(row)} symbol />
+        <NumSpanSubscribe code={row.symbol} field="percent" percent block decimal={2} value={percent} isPositive={stockUtils.isUp(row)} symbol />
       )
     },
     {

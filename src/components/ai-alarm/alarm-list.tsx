@@ -115,7 +115,7 @@ const GroupAlarm = (props: AlarmItemProps) => {
       },
       {
         title: '涨跌幅', dataIndex: 'percent', align: 'right', sort: true,
-        render: (percent, row) => <NumSpanSubscribe code={row.symbol} field="percent" blink className="w-20" symbol block percent decimal={2} value={percent} isPositive={stockUtils.isUp(row)} />
+        render: (percent, row) => <NumSpanSubscribe code={row.symbol} field="percent" blink  symbol block percent decimal={2} value={percent} isPositive={stockUtils.isUp(row)} />
       },
       {
         title: '成交额', dataIndex: 'turnover', align: 'right', sort: true,
