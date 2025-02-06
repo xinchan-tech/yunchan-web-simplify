@@ -203,7 +203,7 @@ const StockQuoteBar = withTooltip(memo((props: StockQuoteBarProps) => {
   }
 
   const hasSubscribed = useMemo(() => {
-    if(props.interval === StockChartInterval.INTRA_DAY) {
+    if (props.interval === StockChartInterval.INTRA_DAY) {
       return trading === 'intraDay'
     }
 
@@ -432,24 +432,24 @@ const StockRelated = () => {
   const columns = useMemo<JknRcTableProps['columns']>(() => [
     {
       title: '股票', dataIndex: 'symbol', width: '22%', sort: true, align: 'left',
-      render: (symbol) => <span className="text-xs">{symbol}</span>
+      render: (symbol) => <span className="text-xs leading-8 my-1 inline-block">{symbol}</span>
     },
     {
       title: '现价', dataIndex: 'close', align: 'right', width: '24%', sort: true,
       render: (close, row) => (
-        <NumSpanSubscribe code={row.symbol} field="close" blink value={close} isPositive={Decimal.create(row.price).gte(0)} align="right" />
+        <NumSpanSubscribe className="text-xs" code={row.symbol} field="close" blink value={close} isPositive={Decimal.create(row.price).gte(0)} align="right" />
       )
     },
     {
       title: '涨跌幅%', dataIndex: 'percent', align: 'right', width: '29%', sort: true,
       render: (percent, row) => (
-        <NumSpanSubscribe code={row.symbol} field="percent" blink block className="w-20" decimal={2} value={percent} percent isPositive={Decimal.create(row.percent).gte(0)} symbol align="right" />
+        <NumSpanSubscribe className="text-xs" code={row.symbol} field="percent" blink block className="w-20" decimal={2} value={percent} percent isPositive={Decimal.create(row.percent).gte(0)} symbol align="right" />
       )
     },
     {
       title: '总市值', dataIndex: 'marketValue', align: 'right', width: '25%', sort: true,
       render: (marketValue, row) => (
-        <NumSpanSubscribe code={row.symbol} field={v => stockUtils.getSubscribeMarketValue(row, v)} blink align="right" unit decimal={2} value={marketValue} />
+        <NumSpanSubscribe className="text-xs" code={row.symbol} field={v => stockUtils.getSubscribeMarketValue(row, v)} blink align="right" unit decimal={2} value={marketValue} />
       )
     }
 

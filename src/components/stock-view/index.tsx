@@ -26,7 +26,7 @@ const StockView = ({ code, name }: StockViewProps) => {
       </div>
       <div className="flex-1 overflow-hidden ">
         <div className="text-foreground">{code}</div>
-        <div className="w-full text-tertiary text-xs whitespace-nowrap text-ellipsis overflow-hidden">{name}</div>
+        <div className="w-full text-tertiary text-xs whitespace-nowrap text-ellipsis overflow-hidden">{name || '--'}</div>
       </div>
     </div>
   )

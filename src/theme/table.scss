@@ -1,10 +1,12 @@
 @use './theme.scss' as theme;
 
-$table-border-color: hsl(0 0% 4.71%);
-$table-hover-color: hsl(220 4% 14%);
+$dark-table-header-background: #1e1f22;
+$dark-table-border-color: #08080a;
+$dark-table-row-hover: #27282b;
+$dark-table-body-background: #141518;
 
 .rc-table-tbody-virtual {
-  border-left: 1px solid $table-border-color;
+  border-left: 1px solid $dark-table-border-color;
 }
 .rc-table-tbody-virtual * {
   box-sizing: border-box;
@@ -15,14 +17,15 @@ $table-hover-color: hsl(220 4% 14%);
   width: 100%;
 }
 .rc-table-tbody-virtual .rc-table-row-extra .rc-table-cell {
-  background: rgba(200, 200, 255) !important;
+  background: transparent !important;
 }
 .rc-table-tbody-virtual .rc-table-cell {
   flex: 0 0 var(--virtual-width);
   width: var(--virtual-width);
-  padding: 2px;
-  border-right: 1px solid $table-border-color;
-  border-bottom: 1px solid $table-border-color;
+  padding: 2px 4px 2px 2px;
+  box-sizing: border-box;
+  border-right: 1px solid $dark-table-border-color;
+  border-bottom: 1px solid $dark-table-border-color;
   display: flex;
   align-items: center;
   justify-self: unset;
@@ -30,12 +33,16 @@ $table-hover-color: hsl(220 4% 14%);
 .rc-table {
   position: relative;
   box-sizing: border-box;
-  font-size: 12px;
-  line-height: 1.5;
+  font-size: 14px;
+  line-height: 1.4;
   color: hsl(var(--foreground));
 
   .rc-table-row:hover{
-    background: $table-hover-color;
+    background: $dark-table-row-hover;
+  }
+
+  .rc-table-row {
+    background: $dark-table-body-background;
   }
 }
 .rc-table-rtl {
@@ -49,7 +56,10 @@ $table-hover-color: hsl(220 4% 14%);
 .rc-table th {
   padding: 2px 4px;
   font-weight: normal;
-  color: #B4B4B4
+  background: $dark-table-header-background;
+  color: #B4B4B4;
+  font-size: 12px;
+  line-height: 21px;
 }
 .rc-table td {
   padding: 1px 4px;
@@ -62,16 +72,16 @@ $table-hover-color: hsl(220 4% 14%);
   height: 1px;
   white-space: normal;
   word-break: break-word;
-  border: 1px solid $table-border-color;
+  border: 1px solid $dark-table-border-color;
   border-top: 0;
   border-left: 0;
-  transition: box-shadow 0.3s;
+  // transition: box-shadow 0.3s;
 }
 
 .rc-table-rtl.rc-table th,
 .rc-table-rtl.rc-table td {
   border-right: 0;
-  border-left: 1px solid $table-border-color;
+  border-left: 1px solid $dark-table-border-color;
 }
 .rc-table-fixed-column-gapped .rc-table-cell-fix-left-last::after,
 .rc-table-fixed-column-gapped .rc-table-cell-fix-right-first::after {
@@ -88,14 +98,14 @@ $table-hover-color: hsl(220 4% 14%);
   border-right-color: transparent;
 }
 .rc-table-rtl .rc-table-cell-fix-right:last-child {
-  border-right-color: $table-border-color;
+  border-right-color: $dark-table-border-color;
 }
 .rc-table-rtl .rc-table-cell-fix-left:last-child {
   border-left-color: transparent;
 }
-.rc-table-rtl .rc-table-cell-fix-left-first {
-  box-shadow: 1px 0 0 $table-border-color;
-}
+// .rc-table-rtl .rc-table-cell-fix-left-first {
+//   box-shadow: 1px 0 0 $dark-table-border-color;
+// }
 .rc-table-cell-fix-left-first::after,
 .rc-table-cell-fix-left-last::after {
   position: absolute;
@@ -111,10 +121,10 @@ $table-hover-color: hsl(220 4% 14%);
 .rc-table-cell-fix-left-all::after {
   display: none;
 }
-.rc-table-cell-fix-right-first,
-.rc-table-cell-fix-right-last {
-  box-shadow: -1px 0 0 $table-border-color;
-}
+// .rc-table-cell-fix-right-first,
+// .rc-table-cell-fix-right-last {
+//   box-shadow: -1px 0 0 $dark-table-border-color;
+// }
 .rc-table-rtl .rc-table-cell-fix-right-first,
 .rc-table-rtl .rc-table-cell-fix-right-last {
   box-shadow: none;
@@ -167,7 +177,6 @@ $table-hover-color: hsl(220 4% 14%);
 }
 .rc-table thead th {
   text-align: center;
-  background: #1e1f22;
 }
 .rc-table thead .rc-table-cell-scrollbar::after {
   position: absolute;
@@ -183,7 +192,7 @@ $table-hover-color: hsl(220 4% 14%);
   left: auto;
 }
 .rc-table-header {
-  border: 1px solid $table-border-color;
+  border: 1px solid $dark-table-border-color;
   border-right: 0;
   border-bottom: 0;
 }
@@ -191,19 +200,20 @@ $table-hover-color: hsl(220 4% 14%);
   text-align: center;
 }
 .rc-table tbody tr td {
-  background: ;
+  background: transparent;
+  font-size: 14px;
 }
-.rc-table tbody tr th {
-  background: #1e1f22;
-}
+// .rc-table tbody tr th {
+//   background: #1e1f22;
+// }
 .rc-table-content {
-  border: 1px solid $table-border-color;
+  border: 1px solid $dark-table-border-color;
   border-right: 0;
   border-bottom: 0;
   border-radius: 5px 0 0 0;
 }
 .rc-table-body {
-  border: 1px solid $table-border-color;
+  border: 1px solid $dark-table-border-color;
   border-right: 0;
   border-bottom: 0;
   border-top: 0;
@@ -214,7 +224,7 @@ $table-hover-color: hsl(220 4% 14%);
   right: 0;
   bottom: 0;
   z-index: 1;
-  border-right: 1px solid $table-border-color;
+  border-right: 1px solid $dark-table-border-color;
   content: '';
 }
 // .rc-table-expanded-row .rc-table-cell {
@@ -232,7 +242,7 @@ $table-hover-color: hsl(220 4% 14%);
   right: 1px;
   bottom: 0;
   width: 0;
-  border-right: 1px solid $table-border-color;
+  border-right: 1px solid $dark-table-border-color;
   content: '';
 }
 .rc-table-row-expand-icon {
@@ -257,25 +267,25 @@ $table-hover-color: hsl(220 4% 14%);
 }
 .rc-table-title {
   padding: 16px 8px;
-  border: 1px solid $table-border-color;
+  border: 1px solid $dark-table-border-color;
   border-bottom: 0;
 }
 .rc-table-caption {
   padding: 16px 8px;
-  border-right: 1px solid $table-border-color;
-  border-bottom: 1px solid $table-border-color;
+  border-right: 1px solid $dark-table-border-color;
+  border-bottom: 1px solid $dark-table-border-color;
 }
 .rc-table-footer {
   padding: 16px 8px;
-  border: 1px solid $table-border-color;
+  border: 1px solid $dark-table-border-color;
   border-top: 0;
 }
 .rc-table tfoot td {
   background: transparent;
 }
 .rc-table-summary {
-  border-top: 1px solid $table-border-color;
-  border-left: 1px solid $table-border-color;
+  border-top: 1px solid $dark-table-border-color;
+  border-left: 1px solid $dark-table-border-color;
 }
 .rc-table-sticky-holder {
   position: sticky;

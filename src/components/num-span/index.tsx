@@ -23,7 +23,7 @@ const numSpanVariants = cva(
       },
       block: {
         default: "",
-        true: "box-border w-full rounded-[2px] text-center px-2 py-1"
+        true: "box-border w-full rounded-[2px] text-center px-2 py-0.5"
       }
     },
     compoundVariants: [
@@ -124,7 +124,7 @@ export const NumSpan = ({ isPositive, block, percent, value, symbol, className, 
     <span className={cn(
       'inline-flex items-center flex-nowrap space-x-0.5 box-border stock-blink',
       (block || blink) && 'w-full h-full',
-      blink && 'px-1',
+      blink && 'px-0',
       align === 'left' && 'justify-start',
       align === 'center' && 'justify-center',
       align === 'right' && 'justify-end'

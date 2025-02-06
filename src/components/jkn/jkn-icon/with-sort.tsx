@@ -13,9 +13,9 @@ type SortProps = {
   onSort: (field: string, sort: 'asc' | 'desc' | undefined) => void
 }
 
-const SortUp = () => <JknIcon name="ic_btn_up" className="w-2 h-4 align-middle" />
-const SortDown = () => <JknIcon name="ic_btn_down" className="w-2 h-4 align-middle" />
-const SortNone = () => <JknIcon name="ic_btn_nor" className="w-2 h-4 align-middle" />
+const SortUp = () => <JknIcon name="ic_btn_up" className="w-1.5 h-3 align-middle" />
+const SortDown = () => <JknIcon name="ic_btn_down" className="w-1.5 h-3 align-middle" />
+const SortNone = () => <JknIcon name="ic_btn_nor" className="w-1.5 h-3 align-middle" />
 
 export const withSort = <T = any>(Component: ComponentType<T>) => {
   return ({ field, onSort, sort, ...props }: SortProps & T) => {

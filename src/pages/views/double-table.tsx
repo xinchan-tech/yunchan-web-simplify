@@ -1,6 +1,5 @@
 import { getPlateList } from "@/api"
 import { JknRcTable, type JknRcTableProps, NumSpan } from "@/components"
-import { useUpdateEffect } from "ahooks"
 import { useCallback, useEffect, useMemo, useState } from "react"
 
 import { useTableData } from "@/hooks"
@@ -25,13 +24,13 @@ const DoubleTable = (props: DoubleTableProps) => {
     setActivePlate(row.id)
   }, [])
 
-  useUpdateEffect(() => {
+  useEffect(() => {
     setActivePlate(undefined)
-
+    console.log(11)
     if (plate.data?.[0]) {
       setActivePlate(plate.data[0].id)
     }
-  }, [props.type, plate.data])
+  }, [plate.data])
 
 
 

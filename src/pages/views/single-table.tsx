@@ -36,7 +36,7 @@ type TableDataType = {
   // 市净率
   pb?: number
   collect: 1 | 0
-  isUp: boolean
+  isUp?: boolean
 }
 //单表格
 const SingleTable = (props: SingleTableProps) => {
@@ -88,6 +88,7 @@ const SingleTable = (props: SingleTableProps) => {
       const afterData = stockUtils.toStock(item.extend.stock_after, { extend: item.extend })
 
       if (!lastData) continue
+
       r.push({
         symbol: item.symbol,
         name: item.name,
@@ -95,7 +96,7 @@ const SingleTable = (props: SingleTableProps) => {
         percent: stockUtils.getPercent(lastData),
         total: stockUtils.getMarketValue(lastData),
         amount: lastData.turnover,
-        industry: lastData.industry,
+        industry: lastData.industry ?? '-',
         prePercent: stockUtils.getPercent(beforeData) && Decimal.create(stockUtils.getPercent(beforeData)).mul(100).toNumber(),
         afterPercent: stockUtils.getPercent(afterData) && Decimal.create(stockUtils.getPercent(afterData)).mul(100).toNumber(),
         turnoverRate: stockUtils.getTurnOverRate(lastData),
@@ -124,7 +125,7 @@ const SingleTable = (props: SingleTableProps) => {
         turnoverRate: "turnover_rate",
       }
 
-      if (columnKey === 'name') {
+      if (columnKey === 'name' || columnKey === 'industry' || columnKey === 'pe' || columnKey === 'pb') {
         onSort(columnKey, sort)
         return
       }
@@ -133,7 +134,7 @@ const SingleTable = (props: SingleTableProps) => {
         column: sort !== undefined ? columnMap[columnKey as string] : 'total_mv',
         order: sort === undefined ? 'desc' : sort
       })
-    } else { 
+    } else {
       onSort(columnKey, sort)
     }
   }
@@ -162,13 +163,15 @@ const SingleTable = (props: SingleTableProps) => {
     {
       title: '现价', dataIndex: 'price', align: 'right', width: '8%', sort: true,
       render: (_, row) => (
-        <NumSpanSubscribe blink code={row.symbol} field="close" value={row.price} decimal={2} isPositive={row.isUp} align="right" />
+        <>
+          <NumSpanSubscribe blink code={row.symbol} field="close" value={row.price} decimal={2} isPositive={row.isUp} align="right" />
+        </>
       )
     },
     {
       title: '涨跌幅', dataIndex: 'percent', align: 'right', width: 120, sort: true,
       render: (_, row) => (
-        <NumSpanSubscribe blink code={row.symbol} field="percent" block className="py-0.5 w-20" decimal={2} value={Decimal.create(row.percent).toNumber()} percent isPositive={row.isUp} symbol align="right" />
+        <NumSpanSubscribe blink code={row.symbol} field="percent" block className="py-0.5 w-20" decimal={2} value={row.percent} percent isPositive={row.isUp} symbol align="right" />
       )
     },
     {
@@ -184,7 +187,7 @@ const SingleTable = (props: SingleTableProps) => {
       )
     },
     {
-      title: '所属行业', dataIndex: 'industry', width: '8%', align: 'right'
+      title: '所属行业', dataIndex: 'industry', width: '8%', align: 'right', sort: true
     },
     {
       title: '盘前涨跌幅', dataIndex: 'prePercent', width: '8%', align: 'right', sort: true,
@@ -203,11 +206,11 @@ const SingleTable = (props: SingleTableProps) => {
       render: (_, row) => `${Decimal.create(row.turnoverRate).toFixed(2)}%`
     },
     {
-      title: '市盈率', dataIndex: 'pe', width: '8%', align: 'right',
+      title: '市盈率', dataIndex: 'pe', width: '8%', align: 'right', sort: true,
       render: (_, row) => `${Decimal.create(row.pe).toFixed(2)}`
     },
     {
-      title: '市净率', dataIndex: 'pb', width: '8%', align: 'right',
+      title: '市净率', dataIndex: 'pb', width: '8%', align: 'right', sort: true,
       render: (_, row) => `${Decimal.create(row.pb).toFixed(2)}`
     },
     {

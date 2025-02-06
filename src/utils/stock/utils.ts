@@ -3,7 +3,7 @@ import dayjs from 'dayjs'
 import Decimal from 'decimal.js'
 import { type Stock, StockRecord, type StockResultRecord, type StockTrading } from './stock'
 import type { StockSubscribeHandler } from './subscribe'
-import { isNumber } from "radash"
+import { get, isNumber } from "radash"
 
 /**
  * 判断时间数据
@@ -238,6 +238,7 @@ export const stockUtils = {
   getPercent: (stock: Stock, decimal?: number, percent?: boolean): number | undefined => {
     if (!stock.prevClose) return
     let n = Decimal.create(stock.close).minus(stock.prevClose).div(stock.prevClose)
+
     if (percent) {
       n = n.mul(100)
     }
@@ -245,7 +246,7 @@ export const stockUtils = {
       return n.toDP(decimal).toNumber()
     }
 
-    return n.toNumber()
+    return Number.isFinite(n.toNumber()) ? n.toNumber() : undefined
   },
   /**
    * 涨跌额
@@ -262,8 +263,9 @@ export const stockUtils = {
   /**
    * 是否涨
    */
-  isUp: (stock: Stock): boolean => {
-    return stock.close > stock.prevClose
+  isUp: (stock: Stock): boolean | undefined => {
+    const percent = stockUtils.getPercent(stock)
+    return percent !== undefined ? percent > 0 : undefined
   },
   /**
    * 市值

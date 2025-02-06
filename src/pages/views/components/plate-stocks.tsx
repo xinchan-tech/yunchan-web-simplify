@@ -72,7 +72,7 @@ const PlateStocks = (props: PlateStocksProps) => {
       render: (turnover, row) => <NumSpanSubscribe blink code={row.symbol} field="turnover" value={turnover} decimal={2} align="right" unit />
     },
     {
-      title: '换手率', dataIndex: 'turnOverRate', align: 'right', width: '7%',
+      title: '换手率', dataIndex: 'turnOverRate', align: 'right', width: '7%', sort: true,
       render: (turnOverRate) => `${Decimal.create(turnOverRate).mul(100).toFixed(2)}%`
     },
     {
