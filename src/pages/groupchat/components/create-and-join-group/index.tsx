@@ -66,7 +66,7 @@ const CreateGroup = () => {
     footer: null,
     className: "w-[800px]",
     onOpen: () => {},
-    title: "创建群组",
+    title: "加入群组",
     closeIcon: true,
   });
 
