@@ -14,8 +14,6 @@ import {
 } from "@/components/ui/tooltip";
 
 import { useState } from "react";
-
-import CreateHistory from "./create-history";
 import JoinGroupContent from "./join-group-content";
 import CreateGroupForm from "./create-group-form";
 import { CreateGroupRecord } from "@/api";

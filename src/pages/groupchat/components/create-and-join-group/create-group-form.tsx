@@ -77,7 +77,7 @@ const CreateGroupForm = (props: {
 }) => {
   const { toast } = useToast();
   const { initData } = props;
-  console.log(initData, "initData?.noticeinitData?.noticeinitData?.notice");
+
   const form = useZForm(createGroupSchema, {
     id: initData?.id || "",
     name: initData?.name || "",

@@ -5,6 +5,7 @@ import {
   forwardRef,
   useImperativeHandle,
   useEffect,
+  CSSProperties,
 } from "react";
 import { InputBoxResult, useInput } from "./useInput";
 import { useToast } from "@/hooks";
@@ -14,6 +15,8 @@ const ChatWindow = forwardRef(
   (
     props: {
       handleSend: (msgListData: InputBoxResult) => void;
+      className?: string;
+      style?: CSSProperties;
     },
     ref
   ) => {
@@ -32,6 +35,7 @@ const ChatWindow = forwardRef(
           }
         },
         insertImage,
+        dealSend,
       };
     });
 
@@ -121,6 +125,13 @@ const ChatWindow = forwardRef(
       const tgt = document.getElementById("xc-chat-input");
       if (tgt) {
         const msgListData = exportMsgData();
+        if (
+          !msgListData ||
+          (msgListData.msgData.length === 0 &&
+            msgListData.needUploadFile.length === 0)
+        ) {
+          return;
+        }
         typeof props.handleSend === "function" && props.handleSend(msgListData);
 
         tgt.innerHTML = "";
@@ -144,6 +155,7 @@ const ChatWindow = forwardRef(
       <>
         <div
           id="xc-chat-input"
+          style={props.style}
           data-placeholder="按 Ctrl + Enter 换行，按 Enter 发送"
           onKeyDown={(e: React.KeyboardEvent<HTMLDivElement>) => {
             if (e.keyCode !== 13) {
@@ -152,12 +164,9 @@ const ChatWindow = forwardRef(
             }
             if (e.keyCode === 13 && e.ctrlKey) {
               // ctrl+Enter不处理
-
               document.execCommand("insertText", false, "\n");
-
               return;
             }
-
             e.preventDefault();
             dealSend();
           }}

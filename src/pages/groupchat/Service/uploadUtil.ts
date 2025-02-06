@@ -101,10 +101,11 @@ class UploadUtil {
 
   // 上传
   async uploadImg(file, filename: string) {
-    const res = await this.client.upload(file, filename).catch((e) => {
-      debugger;
-      console.error(e);
-    });
+    const res: { url: string } = await this.client
+      .upload(file, filename)
+      .catch((e) => {
+        console.error(e);
+      });
     return {
       url: res.url,
     };

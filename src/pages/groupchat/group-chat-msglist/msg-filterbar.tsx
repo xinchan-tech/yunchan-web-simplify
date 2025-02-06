@@ -11,7 +11,10 @@ import { KeyboardEvent, useEffect, useState } from "react";
 import { cn } from "@/utils/style";
 import { useUser } from "@/store";
 import { useToast } from "@/hooks";
-import { useGroupChatShortStore } from "@/store/group-chat-new";
+import {
+  useGroupChatShortStore,
+  useGroupChatStoreNew,
+} from "@/store/group-chat-new";
 import { editGroupService } from "@/api";
 
 export type FilterKey = "live" | "owner" | "stock" | "mention";
@@ -28,11 +31,15 @@ type AuthFilterItem = FilterBase & {
   messageType: ChatAuthKey;
 };
 
-const MsgFilter = (props: { onFilterChange: (type: FilterKey) => void, onKeywordFilter: (str:string) => void }) => {
+const MsgFilter = (props: {
+  onFilterChange: (type: FilterKey) => void;
+  onKeywordFilter: (str: string) => void;
+}) => {
   const { onFilterChange, onKeywordFilter } = props;
   const { user } = useUser();
   const { toast } = useToast();
   const { groupDetailData } = useGroupChatShortStore();
+  const { selectedChannel } = useGroupChatStoreNew();
   const [filterKeyWord, setFilterKeyWord] = useState("");
   const filterItems: ImFilterItem[] = [
     {
@@ -125,8 +132,8 @@ const MsgFilter = (props: { onFilterChange: (type: FilterKey) => void, onKeyword
   };
 
   const handleSearchKwd = (event: KeyboardEvent<HTMLInputElement>) => {
-    if (event.keyCode === 13 && typeof onKeywordFilter === 'function') {
-      onKeywordFilter(filterKeyWord)
+    if (event.keyCode === 13 && typeof onKeywordFilter === "function") {
+      onKeywordFilter(filterKeyWord);
     }
   };
   useEffect(() => {
@@ -139,6 +146,14 @@ const MsgFilter = (props: { onFilterChange: (type: FilterKey) => void, onKeyword
       }
     }
   }, [groupDetailData]);
+
+  useEffect(() => {
+    if (selectedChannel) {
+      setFilterItem(filterItems[0]);
+      typeof onFilterChange === "function" &&
+        onFilterChange(filterItems[0].messageType);
+    }
+  }, [selectedChannel]);
 
   return (
     <div
@@ -255,8 +270,9 @@ const MsgFilter = (props: { onFilterChange: (type: FilterKey) => void, onKeyword
                     setShowFilter(true);
                   } else {
                     setActiveSearch(false);
-                    setFilterKeyWord('')
-                    typeof onKeywordFilter === 'function' && onKeywordFilter('')
+                    setFilterKeyWord("");
+                    typeof onKeywordFilter === "function" &&
+                      onKeywordFilter("");
                     let timer = setTimeout(() => {
                       clearTimeout(timer);
                       setShowFilter(false);

@@ -33,10 +33,12 @@ import { MessagePerPageLimit } from "./Service/constant";
 import { revokeMessageService } from "@/api";
 import { sortMessages } from "./chat-utils";
 import { Toaster } from "@/components";
-import JoinGroup from "./components/join-group";
 import { ConversationWrap } from "./ConversationWrap";
 import FullScreenLoading from "@/components/loading";
 import APIClient from "./Service/APIClient";
+import TextImgLive from "./text-img-live";
+import { wsManager } from "@/utils/ws";
+import { uid } from "radash";
 export type ReplyFn = (option: {
   message?: Message;
   isQuote?: boolean;
@@ -70,6 +72,7 @@ const GroupChatPage = () => {
   const { user } = useUser();
 
   const { toChannel, selectedChannel } = useGroupChatStoreNew();
+  const [indexTab, setIndexTab] = useState<"chat" | "live">("chat");
   const latestToChannel = useLatest(toChannel);
   const msgListRef = useRef<any>(null);
   const [messageFetching, setMessageFetching] = useState(false);
@@ -468,6 +471,7 @@ const GroupChatPage = () => {
 
   useEffect(() => {
     connectIM(`${wsUrlPrefix}/im-ws`);
+
     return () => {
       WKSDK.shared().connectManager.removeConnectStatusListener(
         connectStatusListener
@@ -641,41 +645,69 @@ const GroupChatPage = () => {
   useEffect(() => {
     window.document.title = "讨论社群";
   }, []);
-  // const InitSyncSubscriberLock = useRef(false);
-  // useEffect(() => {
 
-  //   if (selectedChannel && InitSyncSubscriberLock.current === false) {
-  //     InitSyncSubscriberLock.current = true;
-  //     syncSubscriber(new Channel(selectedChannel.channelID, ChannelTypeGroup));
-  //   }
-  // }, [selectedChannel]);
+  useEffect(() => {
+    if (token) {
+      wsManager.send({
+        event: "login",
+        data: {
+          token: token,
+        },
+        msg_id: uid(20),
+      });
+      const close = wsManager.on("connect", () => {
+        wsManager.send({
+          event: "login",
+          data: {
+            token: token,
+          },
+          msg_id: uid(20),
+        });
+      });
+
+      return close;
+    }
+  }, [token]);
+
+  if (!token) {
+    return (
+      <div
+        style={{ height: "100vh" }}
+        className="w-full flex items-center justify-center"
+      >
+        您已退出登录，请关闭窗口并重新登录
+      </div>
+    );
+  }
 
   return (
     <div className="group-chat-container flex">
       <Toaster></Toaster>
       {messageFetching === true && <FullScreenLoading />}
-      <GroupChatContext.Provider
-        value={{ handleReply, handleRevoke, syncSubscriber }}
-      >
-        <GroupChatLeftBar />
-        <GroupChannel
-          onInitChannel={onInitChannel}
-          onSelectChannel={(
-            channel: Channel,
-            conversation: ConversationWrap
-          ) => {
-            handleChannelSelect(channel);
-            setTotal(conversation.total_user);
-          }}
-        />
+      <GroupChatLeftBar
+        indexTab={indexTab}
+        onTabChange={(val) => {
+          setIndexTab(val);
+        }}
+      />
+      {indexTab === "live" ? (
+        <TextImgLive></TextImgLive>
+      ) : (
+        <GroupChatContext.Provider
+          value={{ handleReply, handleRevoke, syncSubscriber }}
+        >
+          <GroupChannel
+            onInitChannel={onInitChannel}
+            onSelectChannel={(
+              channel: Channel,
+              conversation: ConversationWrap
+            ) => {
+              handleChannelSelect(channel);
+              setTotal(conversation.total_user);
+            }}
+          />
 
-        <div className="group-chat-right">
-          {/* {readyToJoinGroup ? (
-            <JoinGroup data={readyToJoinGroup} />
-          ) : (
-           <></>
-          )} */}
-          <>
+          <div className="group-chat-right">
             <div className="group-chat-header justify-between h-[58px]">
               <div className="group-title items-center pt-2 h-full">
                 <p className="mb-0 mt-0">{groupDetailData?.name}</p>
@@ -704,9 +736,9 @@ const GroupChatPage = () => {
                 <GroupMembers total={total} />
               </div>
             </div>
-          </>
-        </div>
-      </GroupChatContext.Provider>
+          </div>
+        </GroupChatContext.Provider>
+      )}
 
       <style jsx>
         {`

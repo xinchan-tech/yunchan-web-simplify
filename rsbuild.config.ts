@@ -31,6 +31,8 @@ export default defineConfig({
         target: 'http://cn.mgjkn.com/',
         changeOrigin: true,
         pathRewrite: {
+          "^/api": "",
+        },
           '^/api': ''
         }
       },

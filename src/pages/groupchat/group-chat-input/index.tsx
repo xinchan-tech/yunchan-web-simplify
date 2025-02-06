@@ -36,11 +36,7 @@ import { useShallow } from "zustand/react/shallow";
 import { useUser } from "@/store";
 import { useToast } from "@/hooks";
 import ChatWindow from "./chat-window";
-import {
-  InputBoxImage,
-  InputBoxResult,
-  InputBoxText
-} from "./useInput";
+import { InputBoxImage, InputBoxResult, InputBoxText } from "./useInput";
 
 import {
   Tooltip,
@@ -54,29 +50,32 @@ const sendTask = new MicroTaskQueue();
 function useClickaway(callback, ref, excludeRefs) {
   useEffect(() => {
     const handler = (event) => {
-
-      if (!ref.current || excludeRefs.some(excludeRef => excludeRef.current && excludeRef.current.contains(event.target))) {
+      if (
+        !ref.current ||
+        excludeRefs.some(
+          (excludeRef) =>
+            excludeRef.current && excludeRef.current.contains(event.target)
+        )
+      ) {
         return;
       }
- 
+
       if (ref.current && !ref.current.contains(event.target)) {
         callback();
       }
     };
- 
+
     // 监听文档的点击事件
-    document.addEventListener('mousedown', handler);
-    document.addEventListener('touchstart', handler);
- 
+    document.addEventListener("mousedown", handler);
+    document.addEventListener("touchstart", handler);
+
     return () => {
       // 清理函数，以防止内存泄漏
-      document.removeEventListener('mousedown', handler);
-      document.removeEventListener('touchstart', handler);
+      document.removeEventListener("mousedown", handler);
+      document.removeEventListener("touchstart", handler);
     };
   }, [callback, ref, excludeRefs]);
 }
- 
-
 
 const GroupChatInput = forwardRef(
   (
@@ -100,6 +99,7 @@ const GroupChatInput = forwardRef(
       subscribers,
       setMentions,
       mentions,
+      conversationWraps,
     } = useGroupChatShortStore(
       useShallow((state) => ({
         replyMessage: state.replyMessage,
@@ -108,16 +108,20 @@ const GroupChatInput = forwardRef(
         subscribers: state.subscribers,
         setMentions: state.setMentions,
         mentions: state.mentions,
+        conversationWraps: state.conversationWraps,
       }))
     );
 
-  
     const [openEmoji, setOpenEmoji] = useState(false);
     const emojiRefTrigger = useRef();
-    const pickerRef = useRef()
-    useClickaway(() => {
-      setOpenEmoji(false);
-    }, emojiRefTrigger, [pickerRef]);
+    const pickerRef = useRef();
+    useClickaway(
+      () => {
+        setOpenEmoji(false);
+      },
+      emojiRefTrigger,
+      [pickerRef]
+    );
 
     const groupChatIsForbidden = useMemo(() => {
       let result = false;
@@ -189,34 +193,29 @@ const GroupChatInput = forwardRef(
         if (value?.trim() === "") {
           return;
         }
-
-        // let formatValue = formatMentionText(value);
-
         content = new MessageText(value);
-        await MacroTask() 
-        finalSend(content, index)
+        await MacroTask();
+        finalSend(content, index);
       } else if (type === "img") {
-        // const
-   
         const temp = data as InputBoxImage;
         content = new MessageImage();
         if (temp.url) {
           try {
             const res = await genImgFileByUrl(temp.url, temp.file?.type);
             const blob = genBase64ToFile(res);
-            let fileType = 'png';
-            if(temp.file?.type) {
-              fileType = temp.file.type.split('/')[1]
+            let fileType = "png";
+            if (temp.file?.type) {
+              fileType = temp.file.type.split("/")[1];
             }
             let file = new File([blob], `image.${fileType}`, {
-              type: temp.file?.type || 'image/png',
+              type: temp.file?.type || "image/png",
             });
             content.width = temp.width || 60; // 图片宽度
             content.height = temp.height || 60; // 图片高度
             content.file = file;
             return finalSend(content, index);
           } catch (er) {
-            console.log(er)
+            console.log(er);
             content.width = temp.width || 60; // 图片宽度
             content.height = temp.height || 60; // 图片高度
             content.remoteUrl = temp.url;
@@ -228,7 +227,7 @@ const GroupChatInput = forwardRef(
 
     const handleSend = (data: InputBoxResult) => {
       // let value = inputValue;
-      if (!data) {
+      if (!data || !conversationWraps) {
         return;
       }
       let msgQueue: Array<InputBoxText | InputBoxImage> = [];
@@ -280,14 +279,13 @@ const GroupChatInput = forwardRef(
           toast({ description: "图片限制最大5M" });
           return;
         }
- 
+
         const url = URL.createObjectURL(file);
         if (inputRef.current) {
           inputRef.current.insertImage(url, file);
         }
-    
       } else {
-        toast({ description: '暂不支持发送此类文件'})
+        toast({ description: "暂不支持发送此类文件" });
       }
     };
 
@@ -413,7 +411,6 @@ const GroupChatInput = forwardRef(
                 </PopoverTrigger>
                 <PopoverContent side="bottom" className="w-[355px]">
                   <div ref={pickerRef}>
-
                     <Picker
                       theme="dark"
                       previewPosition="none"
@@ -482,7 +479,7 @@ const GroupChatInput = forwardRef(
           {`
             .chat-msg-inputer {
               box-sizing: border-box;
-   
+
               border-top: 1px solid rgb(50, 50, 50);
             }
             .fake-border {

@@ -18,6 +18,7 @@ import MsgFilter, { FilterKey } from "./msg-filterbar";
 import { useUser } from "@/store";
 import { useThrottleFn } from "ahooks";
 import { useShallow } from "zustand/react/shallow";
+import SystemCell from "../Messages/system";
 
 const GroupChatMsgList = forwardRef(
   (
@@ -59,10 +60,9 @@ const GroupChatMsgList = forwardRef(
           text = <TextCell message={m} messageWrap={messageWrap} />;
         } else if (m.content instanceof MessageImage) {
           text = <ImageCell message={m}></ImageCell>;
+        } else if ([1001].includes(m.contentType)) {
+          text = <SystemCell message={m} />;
         }
-        //  else {
-        //   text = <SystemCell message={m} />;
-        // }
 
         return text;
       }
@@ -156,7 +156,6 @@ const GroupChatMsgList = forwardRef(
       (e: any) => {
         const targetScrollTop = e?.target?.scrollTop;
         if (targetScrollTop <= 30) {
-    
           // 下拉
           typeof props.handleScroll === "function" && props.handleScroll(e);
         }

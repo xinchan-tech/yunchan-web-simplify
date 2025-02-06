@@ -35,9 +35,9 @@ const App = () => {
   })
 
   const configQuery = useQuery({
-    queryKey: ['system:config'],
-    queryFn: () => getConfig()
-  })
+    queryKey: ["system:config"],
+    queryFn: () => getConfig(),
+  });
 
   useUpdateEffect(() => {
     if (!query.isLoading) {
@@ -45,7 +45,7 @@ const App = () => {
         ...query.data
       })
     }
-  }, [query.isLoading])
+  }, [query.isLoading]);
 
   useUpdateEffect(() => {
     setConsults(configQuery.data?.consults ?? [])
@@ -91,24 +91,23 @@ const App = () => {
 
   useEffect(() => {
     const handler = () => {
-      if (notLogin.current === 0 && (window.location.pathname !== '/app')) {
-        notLogin.current = 1
+      if (notLogin.current === 0 && window.location.pathname !== "/app") {
+        notLogin.current = 1;
         JknAlert.info({
-          content: '请先登录账号',
+          content: "请先登录账号",
           onAction: async () => {
-            notLogin.current = 0
-            window.location.href = '/'
-          }
-        })
+            notLogin.current = 0;
+            window.location.href = "/";
+          },
+        });
       }
-
-    }
-    appEvent.on('not-login', handler)
+    };
+    appEvent.on("not-login", handler);
 
     return () => {
-      appEvent.off('not-login', handler)
-    }
-  }, [])
+      appEvent.off("not-login", handler);
+    };
+  }, []);
 
 
 
@@ -157,7 +156,6 @@ const App = () => {
             <Footer />
           </div>
         </div>
-
       </div>
 
       <style jsx>
@@ -171,22 +169,22 @@ const App = () => {
             box-sizing: border-box;
             min-width: 1425px;
             min-height: 810px;
-            color: hsl(var(--text))
+            color: hsl(var(--text));
           }
 
-          .sider{
+          .sider {
             width: 54px;
           }
 
-          .main{
+          .main {
             height: calc(100% - 35px);
           }
 
-          .header{
+          .header {
             height: 35px;
           }
 
-          .content{
+          .content {
             height: 100%;
             box-sizing: border-box;
             background: var(--bg-secondary-color);
@@ -196,7 +194,7 @@ const App = () => {
             height: calc(100% - 28px);
           }
 
-          .footer{
+          .footer {
             font-size: 12px;
             height: 28px;
             line-height: 28px;
@@ -206,8 +204,8 @@ const App = () => {
         `}
       </style>
     </div>
-  )
-}
+  );
+};
 
 const AppTitle = () => {
   const { t } = useTranslation()
@@ -240,13 +238,13 @@ const AppTitle = () => {
 
   useEffect(() => {
     const s = router.subscribe((s) => {
-      setPathname(s.location.pathname)
-    })
+      setPathname(s.location.pathname);
+    });
 
     return () => {
-      s()
-    }
-  }, [])
+      s();
+    };
+  }, []);
 
   const title = useMemo(() => {
     const route = routes.find(r => r.path === '/')!.children!.find((r) => pathname === '/' ? r.index : (r.path === pathname))
@@ -265,9 +263,9 @@ const AppTitle = () => {
 
   return (
     <span>
-      {t('app')}-{title}
+      {t("app")}-{title}
     </span>
-  )
-}
+  );
+};
 
-export default App
+export default App;

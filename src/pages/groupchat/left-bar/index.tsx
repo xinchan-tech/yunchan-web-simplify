@@ -1,9 +1,34 @@
 import { JknIcon } from "@/components";
 import ChatAvatar from "../components/chat-avatar";
 import { useUser } from "@/store";
+import { cn } from "@/utils/style";
+import { useChatNoticeStore } from "@/store/group-chat-new";
 
-const GroupChatLeftBar = () => {
+const GroupChatLeftBar = (props: {
+  indexTab: "chat" | "live";
+  onTabChange: (tab: "chat" | "live") => void;
+}) => {
   const { user } = useUser();
+
+  const tabs: Array<{
+    name: string;
+    icon: string;
+    activeIcon: string;
+    value: "chat" | "live";
+  }> = [
+    {
+      name: "消息",
+      icon: "group_chat",
+      activeIcon: "group_chat_primary",
+      value: "chat",
+    },
+    {
+      name: "图文直播",
+      icon: "live",
+      activeIcon: "live_primary",
+      value: "live",
+    },
+  ];
   return (
     <div className="w-[68px] left-bar-cont">
       <div className="left-bar-item flex justify-center">
@@ -17,18 +42,27 @@ const GroupChatLeftBar = () => {
           }}
         />
       </div>
-      <div className="left-bar-item flex justify-center">
-        <div className="w-12 h-12 flex flex-col justify-center items-center activebar">
-          <JknIcon name="group_chat_primary"></JknIcon>
-          <div
-            className="text-xs mt-1 "
-            style={{
-              color: "#6052FF",
-            }}
-          >
-            消息
-          </div>
-        </div>
+      <div className="left-bar-item flex justify-center flex-wrap">
+        {tabs.map((tab) => {
+          return (
+            <div
+              key={tab.value}
+              onClick={() => {
+                typeof props.onTabChange === "function" &&
+                  props.onTabChange(tab.value);
+              }}
+              className={cn(
+                "w-12 h-12 flex flex-col justify-center items-center  mb-2",
+                props.indexTab === tab.value && "activebar"
+              )}
+            >
+              <JknIcon
+                name={props.indexTab === tab.value ? tab.activeIcon : tab.icon}
+              ></JknIcon>
+              <div className="text-xs mt-1 title">{tab.name}</div>
+            </div>
+          );
+        })}
       </div>
       <style jsx>
         {`
@@ -43,6 +77,9 @@ const GroupChatLeftBar = () => {
             .activebar {
               border-radius: 8px;
               background-color: rgb(53, 54, 55);
+            }
+            .activebar .title {
+              color: #6052ff;
             }
             .left-bar-item {
               width: 100%;

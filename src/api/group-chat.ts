@@ -295,3 +295,90 @@ export const getCreateGroupHistoryService = async () => {
 };
 
 getCreateGroupHistoryService.key = "groupChannels:createHistory";
+
+export type opinionsRequestParam = {
+  /**
+   * 关键词
+   */
+  keyword?: string;
+  /**
+   * 每页显示数量
+   */
+  limit?: string;
+  /**
+   * 0：所有的观点，1：我关注的观点，2：我的观点
+   */
+  my?: string;
+  /**
+   * 页码
+   */
+  page?: string;
+  /**
+   * 0观点，1图文直播
+   */
+  type: string;
+  /**
+   * 用户id（教师关联的uid，type=1才有效）
+   */
+  uid?: string;
+  [property: string]: any;
+};
+
+export type opinionItem = {
+  /**
+   * 评论数
+   */
+  comment_count: string;
+  /**
+   * 内容
+   */
+  content: string;
+  /**
+   * 发布时间
+   */
+  create_time: string;
+  /**
+   * 观点id
+   */
+  id: string;
+  is_care: boolean;
+  /**
+   * 是否点赞
+   */
+  is_praise: boolean;
+  /**
+   * 点赞数
+   */
+  praise_count: string;
+  urls: string[];
+  user: User;
+  [property: string]: any;
+};
+
+export const getLiveOpnions = async (params: opinionsRequestParam) => {
+  const r = await request
+    .get<PageResult<opinionItem>>("/opinions", { params })
+    .then((r) => r.data);
+  return r;
+};
+
+export type sendOpinionRequestPrams = {
+  /**
+   * 发布的内容
+   */
+  content?: string;
+  /**
+   * 0观点，1图文直播
+   */
+  type: number;
+  urls?: string[];
+};
+export const sendLiveOpinions = async (params: sendOpinionRequestPrams) => {
+  const r = await request
+    .post("/opinion/save", params, {
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+    })
+    .then((res) => res);
+};

@@ -2,7 +2,6 @@ import { PropsWithChildren, useEffect, useRef, useState } from "react";
 import UploadUtil from "../../Service/uploadUtil";
 import { uid } from "radash";
 import { JknIcon } from "@/components";
-import { set } from "react-hook-form";
 const AliyunOssUploader = (
   props: PropsWithChildren<{ onChange: (value: string) => void; value: string }>
 ) => {

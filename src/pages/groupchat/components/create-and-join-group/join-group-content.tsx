@@ -82,6 +82,11 @@ const JoinGroupContent = (props: { onSuccess: () => void }) => {
             <Input
               className="border-none placeholder:text-tertiary"
               placeholder="请输入内容"
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  setKeywords(e.currentTarget.value);
+                }
+              }}
               size={"sm"}
             />
           </div>
