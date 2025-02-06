@@ -83,7 +83,7 @@ const SettingPage = () => {
               </RadioGroup>
             </SettingItem>
 
-            <SettingItem label="价格闪缩">
+            <SettingItem label="价格闪烁">
               <RadioGroup className="flex space-x-8" value={config.setting.priceBlink} onValueChange={(value) => config.setSetting({ priceBlink: value as typeof config.setting.priceBlink })}>
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="1" id="priceBlink-enable" />

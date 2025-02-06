@@ -47,7 +47,9 @@ $table-hover-color: hsl(220 4% 14%);
 }
 
 .rc-table th {
-  padding: 4px;
+  padding: 2px 4px;
+  font-weight: normal;
+  color: #B4B4B4
 }
 .rc-table td {
   padding: 1px 4px;
@@ -165,7 +167,7 @@ $table-hover-color: hsl(220 4% 14%);
 }
 .rc-table thead th {
   text-align: center;
-  background: $table-hover-color;
+  background: #1e1f22;
 }
 .rc-table thead .rc-table-cell-scrollbar::after {
   position: absolute;
@@ -189,10 +191,10 @@ $table-hover-color: hsl(220 4% 14%);
   text-align: center;
 }
 .rc-table tbody tr td {
-  background: transparent;
+  background: ;
 }
 .rc-table tbody tr th {
-  background: transparent;
+  background: #1e1f22;
 }
 .rc-table-content {
   border: 1px solid $table-border-color;

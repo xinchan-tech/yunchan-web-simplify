@@ -89,7 +89,7 @@ export const MainChart = (props: MainChartProps) => {
     start_at: startTime,
     ticker: state.symbol,
     interval: state.timeIndex,
-    gzencode: true
+    gzencode: false
   }
   const queryKey = [getStockChart.cacheKey, params]
   const query = useQuery({

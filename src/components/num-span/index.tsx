@@ -198,7 +198,7 @@ export const NumSpanSubscribe = ({ value, code, isPositive, field, subscribe = t
         subscribe ? (
           <NumSpan value={innerValue} isPositive={isUp} {...props} />
         ) : (
-          <NumSpan value={value} isPositive={isPositive} {...props}  />
+          <NumSpan value={value && props.percent ? +value * 100 : value} isPositive={isPositive} {...props}  />
         )
       }
     </>
