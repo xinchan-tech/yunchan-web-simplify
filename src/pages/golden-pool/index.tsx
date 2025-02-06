@@ -115,7 +115,7 @@ const GoldenPool = () => {
     },
     {
       title: '市盈率', dataIndex: 'pe', align: 'right', sort: true,
-      render: (pe) => <div className="w-full text-right">{`${Decimal.create(pe).toFixed(2) ?? '-'}`}</div>
+       render: (pe) => <div className="w-full text-right">{`${Decimal.create(pe).lt(0) ? '亏损': Decimal.create(pe).toFixed(2)}`}</div>
     },
     {
       title: '市净率', dataIndex: 'pb', align: 'right', sort: true,

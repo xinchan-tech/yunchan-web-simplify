@@ -7,11 +7,11 @@ import { cn } from "@/utils/style"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import dayjs from "dayjs"
 import { useEffect, useMemo, useState } from "react"
-import { useNavigate } from "react-router"
 
 interface AlarmListProps {
   type: AlarmType
   options?: boolean
+  onUpdateCount?: (count: number) => void
 }
 
 const AlarmList = (props: AlarmListProps) => {
@@ -19,7 +19,7 @@ const AlarmList = (props: AlarmListProps) => {
   return (
     <div className="flex h-full overflow-hidden">
       <div className="flex-1 flex-shrink-0 overflow-hidden">
-        <GroupAlarm type={props.type} options={props.options} onChange={setActiveSymbol} />
+        <GroupAlarm type={props.type} options={props.options} onChange={setActiveSymbol} onUpdateCount={props.onUpdateCount} />
       </div>
       <div className="flex-shrink-0 w-1 h-full bg-accent" />
       <div className="flex-1 flex-shrink-0 overflow-hidden">
@@ -34,6 +34,7 @@ export default AlarmList
 interface AlarmItemProps {
   type: AlarmType
   options?: boolean
+  onUpdateCount?: (count: number) => void
   onChange?: (symbol?: string) => void
 }
 const GroupAlarm = (props: AlarmItemProps) => {
@@ -48,8 +49,9 @@ const GroupAlarm = (props: AlarmItemProps) => {
   useEffect(() => {
     if (query.data) {
       props.onChange?.(query.data.items[0]?.symbol)
+      props.onUpdateCount?.(query.data.total_nums)
     }
-  }, [query.data, props.onChange])
+  }, [query.data, props.onChange, props.onUpdateCount])
 
   useEffect(() => {
     if (!query.data) {
@@ -115,7 +117,7 @@ const GroupAlarm = (props: AlarmItemProps) => {
       },
       {
         title: '涨跌幅', dataIndex: 'percent', align: 'right', sort: true,
-        render: (percent, row) => <NumSpanSubscribe code={row.symbol} field="percent" blink  symbol block percent decimal={2} value={percent} isPositive={stockUtils.isUp(row)} />
+        render: (percent, row) => <NumSpanSubscribe align="right" code={row.symbol} field="percent" blink symbol block percent decimal={2} value={percent} isPositive={stockUtils.isUp(row)} />
       },
       {
         title: '成交额', dataIndex: 'turnover', align: 'right', sort: true,
@@ -159,7 +161,7 @@ const GroupAlarm = (props: AlarmItemProps) => {
                 </div>
               </PopoverContent>
             </Popover>
-            <JknIcon.Checkbox checked={checked.length > 0} className="rounded-none" checkedIcon="checkbox_mult_sel" uncheckedIcon="checkbox_mult_nor" />
+            <JknIcon.Checkbox checked={checked.length > 0} onClick={() => setCheckedAll(checked.length > 0 ? [] : list.map(item => item.symbol))} className="rounded-none" checkedIcon="checkbox_mult_sel" uncheckedIcon="checkbox_mult_nor" />
           </div>
         , dataIndex: 'action', align: 'center', width: 100,
         render: (_: any, row: any) => (
@@ -180,7 +182,9 @@ const GroupAlarm = (props: AlarmItemProps) => {
                   </div>
                   <div className="items-center justify-center flex gap-2 mt-4">
                     <PopoverClose asChild><Button size="mini" variant="outline">取消</Button></PopoverClose>
-                    <PopoverClose asChild>   <Button size="mini" onClick={() => deleteAlarmMutation.mutate({ ids: [row.symbol], type: props.type })}>确定</Button></PopoverClose>
+                    <PopoverClose asChild>
+                      <Button size="mini" onClick={() => deleteAlarmMutation.mutate({ ids: [row.symbol], type: props.type })}>确定</Button>
+                    </PopoverClose>
                   </div>
                 </div>
               </PopoverContent>
@@ -195,7 +199,7 @@ const GroupAlarm = (props: AlarmItemProps) => {
     }
 
     return c
-  }, [props.options, checked, deleteAlarmMutation.mutate, getIsChecked, props.type, setCheckedAll, toggle])
+  }, [props.options, checked, deleteAlarmMutation.mutate, list, getIsChecked, props.type, setCheckedAll, toggle])
 
   return (
     <div className="h-full overflow-hidden">
@@ -269,105 +273,16 @@ const AlarmGroupList = (props: AlarmGroupListProps) => {
     create: string
   }
 
-  const columns = useMemo(() => {
-    const c: JknTableProps<TableDataType>['columns'] = [
-      { header: '序号', accessorKey: 'index', enableSorting: false, cell: ({ row }) => <span className="block py-1">{row.index + 1}</span>, meta: { align: 'center', width: 40 } },
-      {
-        header: '周期', accessorKey: 'cycle', size: 80, enableSorting: false,
-        cell: ({ row }) => <span>{row.getValue('cycle')}分</span>
-      },
-      {
-        header: '报警类型', accessorKey: 'bull', enableSorting: false, meta: { align: 'right' },
-        cell: ({ row }) => (
-          <>
-            <JknIcon name={row.getValue('bull') === '1' ? 'ic_price_up_green' : 'ic_price_down_red'} />
-            <span className={cn(row.getValue('bull') === '1' ? 'text-stock-up' : 'text-stock-down')}>{row.original.alarmType}</span>
-          </>
-        )
-      },
-      {
-        header: props.type === AlarmType.AI ? '底部类型' : '提醒频率', accessorKey: 'bottom', size: 80, enableSorting: false, meta: { align: 'center' },
-        cell: ({ row }) => <span className={cn(row.getValue('bull') === '1' ? 'text-stock-up' : 'text-stock-down')}>{row.original.bottom ?? '-'}</span>
-      },
-      {
-        header: '添加时间', accessorKey: 'create', size: 90, enableSorting: false, meta: { align: 'center' }
-      }
-    ]
+  const { checked, toggle, setCheckedAll, getIsChecked } = useCheckboxGroup([])
 
-    if (props.options) {
-      c.push({
-        header: (row) => (
-          <div className="flex justify-center items-center gap-2">
-            <Popover open={row.table.getSelectedRowModel().rows.length > 0}>
-              <PopoverAnchor>
-                <span>操作</span>
-              </PopoverAnchor>
-              <PopoverContent side="left" align="start" sideOffset={-20} alignOffset={30} className='w-auto px-4'>
-                <div className="text-center py-1 bg-background">
-                  批量操作 {row.table.getSelectedRowModel().rows.length} 项
-                </div>
-                <div className='flex my-4 bg-muted gap-2'>
-                  <span>批量删除</span>
-                  <Button onClick={() => row.table.resetRowSelection()} size="mini" variant="outline">取消</Button>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button size="mini" variant="destructive">删除</Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto px-4">
-                      <div className="text-center py-1 bg-background">
-                        确定删除吗
-                      </div>
-                      <div className="items-center justify-center flex my-4 bg-muted gap-2">
-                        <PopoverClose asChild><Button size="mini" variant="outline">取消</Button></PopoverClose>
-                        <Button size="mini" onClick={() => row.table.options.meta?.emit({ event: 'delete', params: row.table.getSelectedRowModel().rows.map(item => item.original.id) })}>确定</Button>
-                      </div>
-                    </PopoverContent>
-                  </Popover>
-                </div>
-              </PopoverContent>
-            </Popover>
-            <JknIcon.Checkbox
-              className="rounded-none" onClick={row.table.getToggleAllRowsSelectedHandler()} checked={row.table.getSelectedRowModel().rows.length > 0} checkedIcon="checkbox_mult_sel" uncheckedIcon="checkbox_mult_nor"
-            />
-          </div>
-        ), enableSorting: false, accessorKey: 'action', meta: { align: 'center', width: 100 },
-        cell: ({ row, table }) => (
-          <div className="flex justify-center gap-2">
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="icon">
-                  <JknIcon name="del" className="w-4 h-4" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto">
-                <div className="text-center py-1 bg-background">
-                  删除确认
-                </div>
-                <div className="my-4 bg-muted px-12">
-                  <div>
-                    确定删除报警？
-                  </div>
-                  <div className="items-center justify-center flex gap-2 mt-4">
-                    <PopoverClose asChild><Button size="mini" variant="outline">取消</Button></PopoverClose>
-                    <Button size="mini" onClick={() => table.options.meta?.emit({ event: 'deleteOne', params: row.original.id })}>确定</Button>
-                  </div>
-                </div>
-              </PopoverContent>
-            </Popover>
+  useEffect(() => {
+    const r = checked.filter(item => query.data?.items.some(i => i.id === item))
 
-            <JknIcon.Checkbox className="rounded-none" onClick={() => row.toggleSelected()} checked={row.getIsSelected()} checkedIcon="checkbox_mult_sel" uncheckedIcon="checkbox_mult_nor" />
-          </div>
-        )
-      })
-
+    if (r.length !== checked.length) {
+      setCheckedAll(r)
     }
 
-    if (props.type !== AlarmType.AI) {
-      c.splice(1, 1)
-    }
-
-    return c
-  }, [props.options, props.type])
+  }, [query.data, checked, setCheckedAll])
 
   const data = (() => {
     const r: TableDataType[] = []
@@ -387,19 +302,122 @@ const AlarmGroupList = (props: AlarmGroupListProps) => {
     return r
   })()
 
-  const onTableEvent: JknTableProps['onEvent'] = async ({ event, params }) => {
-    if (event === 'deleteOne') {
-      deleteAlarmMutation.mutate({ ids: [params], type: props.type })
-    } else if (event === 'delete') {
-      deleteAlarmMutation.mutate({ ids: params, type: props.type })
+  const columns = useMemo(() => {
+    const c: JknRcTableProps<TableDataType>['columns'] = [
+      { title: '序号', dataIndex: 'index', render: (_, __, index) => <span className="block py-1">{index + 1}</span>, align: 'center', width: 40 },
+      {
+        title: '周期', dataIndex: 'cycle', align: 'center', width: 80,
+        render: (_, row) => <span>{row.cycle}分</span>
+      },
+      {
+        title: '报警类型', dataIndex: 'bull', align: 'right',
+        render: (_, row) => (
+          <>
+            <JknIcon name={row.bull === '1' ? 'ic_price_up_green' : 'ic_price_down_red'} />
+            <span className={cn(row.bull === '1' ? 'text-stock-up' : 'text-stock-down')}>{row.alarmType}</span>
+          </>
+        )
+      },
+      {
+        title: props.type === AlarmType.AI ? '底部类型' : '提醒频率', dataIndex: 'bottom', width: 80, align: 'center',
+        render: (_, row) => <span className={cn(row.bull === '1' ? 'text-stock-up' : 'text-stock-down')}>{row.bottom ?? '-'}</span>
+      },
+      {
+        title: '添加时间', dataIndex: 'create', width: 110, align: 'center',
+      }
+    ]
+
+    if (props.options) {
+      ; (c as any[]).push({
+        title: <div className="flex justify-center items-center gap-2">
+          <Popover open={checked.length > 0}>
+            <PopoverAnchor>
+              <span>操作</span>
+            </PopoverAnchor>
+            <PopoverContent side="left" align="start" sideOffset={-20} alignOffset={30} className='w-auto px-4'>
+              <div className="text-center py-1 bg-background">
+                批量操作 {checked.length} 项
+              </div>
+              <div className='flex my-4 bg-muted gap-2'>
+                <span>批量删除</span>
+                <Button onClick={() => { setCheckedAll([]) }} size="mini" variant="outline">取消</Button>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button size="mini" variant="destructive">删除</Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto px-4">
+                    <div className="text-center py-1 bg-background">
+                      确定删除吗
+                    </div>
+                    <div className="items-center justify-center flex my-4 bg-muted gap-2">
+                      <PopoverClose asChild><Button size="mini" variant="outline">取消</Button></PopoverClose>
+                      <Button size="mini" onClick={() => deleteAlarmMutation.mutate({ ids: [...checked], type: props.type })}>确定</Button>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              </div>
+            </PopoverContent>
+          </Popover>
+          <JknIcon.Checkbox checked={checked.length > 0} onClick={() => setCheckedAll(checked.length > 0 ? [] : data.map(item => item.id))} className="rounded-none" checkedIcon="checkbox_mult_sel" uncheckedIcon="checkbox_mult_nor" />
+        </div>
+        , dataIndex: 'action', align: 'center', width: 100,
+        render: (_: any, row: any) => (
+          <div className="flex justify-center gap-2">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="icon">
+                  <JknIcon name="del" className="w-4 h-4" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto">
+                <div>
+                  <div className="text-center py-1 bg-background">
+                    删除确认
+                  </div>
+                  <div className="my-4 bg-muted px-12">
+                    <div>
+                      确定删除报警？
+                    </div>
+                    <div className="items-center justify-center flex gap-2 mt-4">
+                      <PopoverClose asChild><Button size="mini" variant="outline">取消</Button></PopoverClose>
+                      <PopoverClose asChild>
+                        <Button size="mini" onClick={() => deleteAlarmMutation.mutate({ ids: [row.id], type: props.type })}>确定</Button>
+                      </PopoverClose>
+                    </div>
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
+
+            <JknIcon.Checkbox className="rounded-none" checked={getIsChecked(row.id)} onClick={() => toggle(row.id)} checkedIcon="checkbox_mult_sel" uncheckedIcon="checkbox_mult_nor" />
+          </div>
+        )
+      })
+
     }
-  }
+
+    if (props.type !== AlarmType.AI) {
+      (c as any[]).splice(1, 1)
+    }
+
+    return c
+  }, [props.options, checked, data, deleteAlarmMutation.mutate, props.type, setCheckedAll, getIsChecked, toggle])
+
+
+
+  // const onTableEvent: JknTableProps['onEvent'] = async ({ event, params }) => {
+  //   if (event === 'deleteOne') {
+  //     deleteAlarmMutation.mutate({ ids: [params], type: props.type })
+  //   } else if (event === 'delete') {
+  //     deleteAlarmMutation.mutate({ ids: params, type: props.type })
+  //   }
+  // }
 
 
 
   return (
     <div className="h-full overflow-hidden">
-      <JknTable onEvent={onTableEvent} rowKey="id" data={data} columns={columns} />
+      <JknRcTable rowKey="id" data={data} columns={columns} />
     </div>
   )
 }

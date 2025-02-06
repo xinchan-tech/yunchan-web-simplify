@@ -2,14 +2,14 @@ import { type StockExtend, type UsStockColumn, getChineseStocks, getIndexGapAmpl
 import { AiAlarm, CollectStar, JknCheckbox, JknIcon, JknRcTable, type JknRcTableProps, NumSpan, NumSpanSubscribe, StockView } from "@/components"
 import { useCheckboxGroup, useStockQuoteSubscribe, useTableData, useTableRowClickToStockTrading } from "@/hooks"
 import { stockUtils } from "@/utils/stock"
-import { useQuery } from "@tanstack/react-query"
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query"
 
 import Decimal from "decimal.js"
 import { produce } from "immer"
 import { useCallback, useEffect, useMemo } from "react"
 import { useImmer } from "use-immer"
 
-interface SingleTableProps {
+interface PageTableProps {
   type?: string
 }
 
@@ -39,33 +39,21 @@ type TableDataType = {
   isUp?: boolean
 }
 //单表格
-const SingleTable = (props: SingleTableProps) => {
+const PageTable = (props: PageTableProps) => {
   const [sort, setSort] = useImmer<{ column: UsStockColumn, order: 'asc' | 'desc' }>({ column: 'total_mv', order: 'desc' })
-  const QueryFn = () => {
+  const queryFn = (page: number) => {
     const extend: StockExtend[] = ['basic_index', 'stock_before', 'stock_after', 'total_share', 'collect', 'financials']
-    if (!props.type || ['all', 'ixic', 'spx', 'dji', 'etf'].includes(props.type)) {
-      return getUsStocks({ type: props.type === 'all' ? undefined : props.type, column: sort.column, limit: 50, page: 1, order: sort.order, extend }).then(r => r.items)
-    }
-
-    if (['china'].includes(props.type)) {
-      return getChineseStocks(extend)
-    }
-
-    if (['yesterday_bear', 'yesterday_bull', 'short_amp_up', 'short_amp_d', 'release'].includes(props.type)) {
-      return getIndexRecommends(props.type, extend)
-    }
-
-    if (props.type === 'gap') {
-      return getIndexGapAmplitude(extend)
-    }
-
-    return getUsStocks({ type: props.type, column: 'total_mv', limit: 50, page: 1, order: 'desc', extend }).then(r => r.items)
+    return getUsStocks({ type: props.type === 'all' ? undefined : props.type, column: sort.column, limit: 50, page, order: sort.order, extend })
   }
 
 
-  const query = useQuery({
-    queryKey: ['stock-table-view', props.type, sort],
-    queryFn: () => QueryFn()
+  const query = useInfiniteQuery({
+    queryKey: [getUsStocks.cacheKey, props.type, sort],
+    queryFn: (params) => queryFn(params.pageParam),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) => {
+      return lastPage.last < lastPage.current ? undefined : lastPage.current + 1
+    }
   })
 
   const [list, { setList, onSort, updateList }] = useTableData<TableDataType>([], 'symbol')
@@ -75,12 +63,14 @@ const SingleTable = (props: SingleTableProps) => {
   useEffect(() => {
     const r: TableDataType[] = []
 
-    if (!query.data) {
+    if (!query.data?.pages) {
       setList([])
       return
     }
 
-    for (const item of query.data) {
+    const allPage = query.data.pages.flatMap(o => o.items)
+
+    for (const item of allPage) {
       // const [lastData, beforeData, afterData] = stockUtils.toStock(item)
       const lastData = stockUtils.toStock(item.stock, { extend: item.extend })
 
@@ -149,7 +139,7 @@ const SingleTable = (props: SingleTableProps) => {
     })
   }, [updateList])
 
-  useStockQuoteSubscribe(query.data?.map(o => o.symbol) ?? [])
+  useStockQuoteSubscribe(query.data?.pages.flatMap(o => o.items).map(item => item.symbol) ?? [])
 
   const columns = useMemo<JknRcTableProps<TableDataType>['columns']>(() => ([
     { title: '序号', dataIndex: 'index', align: 'center', width: 60, render: (_, __, index) => index + 1 },
@@ -192,13 +182,13 @@ const SingleTable = (props: SingleTableProps) => {
     {
       title: '盘前涨跌幅', dataIndex: 'prePercent', width: '8%', align: 'right', sort: true,
       render: (_, row) => (
-        <NumSpan symbol decimal={2} percent value={row.prePercent} isPositive={row.isUp} />
+        <NumSpan symbol decimal={2} percent value={row.prePercent} isPositive={row.prePercent !== undefined ? row.prePercent > 0 : undefined} />
       )
     },
     {
       title: '盘后涨跌幅', dataIndex: 'afterPercent', width: '8%', align: 'right', sort: true,
       render: (_, row) => (
-        <NumSpan symbol decimal={2} percent value={row.afterPercent} isPositive={row.isUp} />
+        <NumSpan symbol decimal={2} percent value={row.afterPercent} isPositive={row.afterPercent !== undefined ? row.afterPercent > 0 : undefined} />
       )
     },
     {
@@ -207,11 +197,11 @@ const SingleTable = (props: SingleTableProps) => {
     },
     {
       title: '市盈率', dataIndex: 'pe', width: '8%', align: 'right', sort: true,
-      render: (_, row) => `${Decimal.create(row.pe).lt(0) ? '亏损': Decimal.create(row.pe).toFixed(2)}`
+      render: (_, row) => `${Decimal.create(row.pe).lt(0) ? '亏损' : Decimal.create(row.pe).toFixed(2)}`
     },
     {
       title: '市净率', dataIndex: 'pb', width: '8%', align: 'right', sort: true,
-      render: (_, row) => `${Decimal.create(row.pb).toFixed(2)}`
+      render: (_, row) => `${row.pb ? Decimal.create(row.pb).toFixed(2) : '--'}`
     },
     {
       title: '+股票金池', dataIndex: 'collect', width: 80, align: 'center',
@@ -239,11 +229,9 @@ const SingleTable = (props: SingleTableProps) => {
 
   return (
     <JknRcTable isLoading={query.isLoading} columns={columns} rowKey="symbol" data={list} onSort={onSortChange} onRow={onRowClick}
-      infiniteScroll={{ enabled: true }}
+      infiniteScroll={{ enabled: true, fetchMore: () => !query.isFetchingNextPage && query.fetchNextPage(), hasMore: query.hasNextPage }}
     />
-    // <JknTable.Virtualizer rowHeight={35.5} onEvent={onTableEvent} loading={query.isLoading} manualSorting rowKey="symbol" onSortingChange={onSortChange} columns={columns} data={data}>
-    // </JknTable.Virtualizer>
   )
 }
 
-export default SingleTable
+export default PageTable

@@ -26,7 +26,7 @@ const DoubleTable = (props: DoubleTableProps) => {
 
   useEffect(() => {
     setActivePlate(undefined)
-    console.log(11)
+ 
     if (plate.data?.[0]) {
       setActivePlate(plate.data[0].id)
     }

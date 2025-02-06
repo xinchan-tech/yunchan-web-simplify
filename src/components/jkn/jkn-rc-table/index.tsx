@@ -1,22 +1,28 @@
-import { useDomSize } from "@/hooks"
 import type { TableProps } from "rc-table"
 import Table, { VirtualTable } from "rc-table"
 import type { DefaultRecordType } from "rc-table/lib/interface"
 import { withSort } from "../jkn-icon/with-sort"
-import { memo, useCallback, useMemo, type ReactNode } from "react"
+import { memo, useCallback, useMemo, useRef, type ReactNode } from "react"
 import { useImmer } from "use-immer"
 import { Skeleton } from "@/components/ui/skeleton"
+import { useMount, useUnmount } from "ahooks"
+import { useLatestRef } from "@/hooks"
 
 export interface JknRcTableProps<T = any> extends TableProps<T> {
   headerHeight?: number
   isLoading?: boolean
   virtual?: boolean
   onSort?: (columnKey: keyof T, order: 'asc' | 'desc' | undefined) => void
+  infiniteScroll?: {
+    enabled?: boolean
+    fetchMore?: () => void
+    hasMore?: boolean
+  }
 }
 
 
-const _JknRcTable = <T extends DefaultRecordType = any>({ headerHeight = 35, columns, emptyText, isLoading, virtual, ...props }: JknRcTableProps<T>) => {
-  const [size, dom] = useDomSize<HTMLDivElement>()
+const _JknRcTable = <T extends DefaultRecordType = any>({ headerHeight = 30, columns, emptyText, isLoading, virtual, infiniteScroll, ...props }: JknRcTableProps<T>) => {
+  // const [size, dom] = useDomSize<HTMLDivElement>()
   const [sort, setSort] = useImmer<{ columnKey: keyof T | undefined, order: 'asc' | 'desc' | undefined }>({
     columnKey: undefined,
     order: undefined
@@ -44,11 +50,56 @@ const _JknRcTable = <T extends DefaultRecordType = any>({ headerHeight = 35, col
     })
   }, [columns, sort, onSort])
 
+  const [container, setContainer] = useImmer({ width: 0, height: headerHeight })
+  const dom = useRef<HTMLDivElement>(null)
+  const hasMore = useLatestRef(infiniteScroll?.hasMore)
+  const fetchMore = useLatestRef(infiniteScroll?.fetchMore)
+
+  const observerRef = useRef<IntersectionObserver | null>(null)
+
+  useMount(() => {
+    if(!dom.current) return
+    const { width, height } = dom.current!.getBoundingClientRect()
+    setContainer(draft => {
+      draft.width = width
+      draft.height = height
+    })
+
+    if (infiniteScroll?.enabled) {
+      const table = dom.current!.querySelector('.rc-table-body table')!
+      const moreElement = document.createElement('div')
+      moreElement.className = 'jkn-rc-table-more'
+      table.after(moreElement)
+      
+      const observer = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting && hasMore.current) {
+          fetchMore.current?.()
+        }
+      }, {
+        root: dom.current!.querySelector('.rc-table-body')!,
+        rootMargin: '0px',
+        threshold: 0
+      })
+
+      observer.observe(moreElement)
+
+      observerRef.current = observer
+    }
+  })
+
+  useUnmount(() => {
+    if(!dom.current) return
+    const loadMore = dom.current!.querySelectorAll('.rc-table-body .jkn-rc-table-more')!
+    Array.from(loadMore).forEach(o => o.remove())
+    observerRef.current?.disconnect()
+    observerRef.current = null
+  })
+
   return (
     <div className="jkn-rc-table overflow-hidden h-full w-full" ref={dom} >
       {
         virtual ? (
-          <VirtualTable columns={_columns} scroll={{ y: size?.height ? (size?.height - headerHeight) : 0, x: size?.width ? size?.width - 1 : 0 }}
+          <VirtualTable columns={_columns} scroll={{ y: container.height ? (container.height - headerHeight) : 0 }}
             rowHoverable={false}
             emptyText={
               isLoading ? (
@@ -65,7 +116,7 @@ const _JknRcTable = <T extends DefaultRecordType = any>({ headerHeight = 35, col
             }}
             {...props} />
         ) : (
-          <Table columns={_columns} scroll={{ y: size?.height ? (size?.height - headerHeight) : size?.height }}
+          <Table columns={_columns} scroll={{ y: container.height ? (container.height - headerHeight) : 0 }}
             rowHoverable={false}
             emptyText={
               isLoading ? (

@@ -72,16 +72,16 @@ const PlateStocks = (props: PlateStocksProps) => {
       render: (turnover, row) => <NumSpanSubscribe blink code={row.symbol} field="turnover" value={turnover} decimal={2} align="right" unit />
     },
     {
-      title: '换手率', dataIndex: 'turnOverRate', align: 'right', width: '7%', sort: true,
-      render: (turnOverRate) => `${Decimal.create(turnOverRate).mul(100).toFixed(2)}%`
+      title: '换手率', dataIndex: 'turnoverRate', align: 'right', width: '7%', sort: true,
+      render: (turnoverRate) => `${Decimal.create(turnoverRate).mul(100).toFixed(2)}1%`
     },
     {
-      title: '市盈率', dataIndex: 'pe', align: 'right', width: '7%',
-      render: (_, row) => Decimal.create(stockUtils.getPE(row)).toFixed(2)
+      title: '市盈率', dataIndex: 'pe', align: 'right', width: '7%', sort: true,
+      render: (_, row) => `${Decimal.create(row.pe).lt(0) ? '亏损' : Decimal.create(row.pe).toFixed(2)}`
     },
     {
-      title: '市净率', dataIndex: 'pb', align: 'right', width: '7%',
-      render: (_, row) => Decimal.create(stockUtils.getPB(row)).toFixed(2)
+      title: '市净率', dataIndex: 'pb', align: 'right', width: '7%', sort: true,
+      render: (pb) => Decimal.create(pb).toFixed(2)
     },
     {
       title: '+股票金池', dataIndex: 'collect', align: 'center', width: 80,

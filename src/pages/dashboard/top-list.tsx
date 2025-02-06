@@ -77,7 +77,7 @@ const TopList = () => {
     },
     {
       title: '成交额', dataIndex: 'turnover', align: 'right', sort: true,
-      render: (turnover, row) => <NumSpanSubscribe code={row.symbol} field="turnover" blink align="right" unit decimal={2} value={turnover} />
+      render: (turnover, row) => <NumSpanSubscribe code={row.symbol} field="turnover" blink align="right" unit decimal={2} value={turnover} isPositive={stockUtils.isUp(row)} />
     },
     {
       title: '总市值', dataIndex: 'marketValue', align: 'right', sort: true,
