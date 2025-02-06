@@ -471,7 +471,9 @@ export const kChartUtils: KChartUtils = {
         if (item.index === (index ?? state.activeChartIndex)) {
           return produce(item, draft => {
             draft.timeIndex = timeIndex
-            draft.type = 'line'
+            if(isTimeIndexChart(timeIndex)) {
+              draft.type = 'line'
+            }
 
             Object.values(draft.mainIndicators).forEach(v => {
               v.timeIndex = timeIndex

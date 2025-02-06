@@ -268,6 +268,8 @@ export const renderUtils = {
         return 60 * 1000
       case StockChartInterval.TWO_MIN:
         return 2 * 60 * 1000
+      case StockChartInterval.THREE_MIN:
+        return 3 * 60 * 1000
       case StockChartInterval.FIVE_MIN:
         return 5 * 60 * 1000
       case StockChartInterval.TEN_MIN:

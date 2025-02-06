@@ -28,7 +28,7 @@ export const MainChart = (props: MainChartProps) => {
   const chart = useRef<EChartsType>()
   const canvas = useRef<Canvas>()
   useMount(() => {
-    chart.current = echarts.init(dom.current, {})
+    chart.current = echarts.init(dom.current, null, {devicePixelRatio: 3})
     chart.current.meta = {} as any
     
 
