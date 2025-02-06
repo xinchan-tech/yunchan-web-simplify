@@ -219,6 +219,7 @@ const CreateGroupForm = (props: {
                   </FormLabel>
                   <FormControl>
                     <AliyunOssUploader
+                      value={field.value}
                       onChange={field.onChange}
                     ></AliyunOssUploader>
                   </FormControl>

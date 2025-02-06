@@ -1,13 +1,17 @@
-import { PropsWithChildren, useRef, useState } from "react";
+import { PropsWithChildren, useEffect, useRef, useState } from "react";
 import UploadUtil from "../../Service/uploadUtil";
 import { uid } from "radash";
 import { JknIcon } from "@/components";
+import { set } from "react-hook-form";
 const AliyunOssUploader = (
-  props: PropsWithChildren<{ onChange: (value: string) => void }>
+  props: PropsWithChildren<{ onChange: (value: string) => void; value: string }>
 ) => {
-  const { onChange } = props;
+  const { onChange, value } = props;
   const imgUploadRef = useRef<HTMLInputElement>();
   const [previewUrl, setPreviewUrl] = useState("");
+  useEffect(() => {
+    setPreviewUrl(value);
+  }, [value]);
   const dealFile = (file: any) => {
     if (file.type && file.type.startsWith("image/")) {
       var reader = new FileReader();
@@ -18,7 +22,7 @@ const AliyunOssUploader = (
       .uploadImg(file, fileName)
       .then((res) => {
         if (res && res.url) {
-          setPreviewUrl(res.url);
+          // setPreviewUrl(res.url);
           typeof onChange === "function" && onChange(res.url);
         }
       })

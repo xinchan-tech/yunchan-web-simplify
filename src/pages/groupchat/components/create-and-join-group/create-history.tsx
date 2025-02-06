@@ -15,11 +15,11 @@ const statusData: Record<string, { text: string; color: string }> = {
     color: "yellow",
   },
   "1": {
-    text: "审核通过",
+    text: "已通过",
     color: "green",
   },
   "2": {
-    text: "被驳回",
+    text: "不通过",
     color: "red",
   },
 };
@@ -39,9 +39,9 @@ const CreateHistory = (props: {
       <div>
         <div className="flex p-4 h-[200px] items-center justify-center">
           {curRecord?.status === "2" &&
-            `申请被驳回, 原因: ${curRecord?.reject_reason}`}
-          {curRecord?.status === "1" && `申请已通过`}
-          {curRecord?.status === "0" && `申请正在审核中`}
+            `申请被驳回, 驳回原因: ${curRecord?.reject_reason}`}
+          {curRecord?.status === "1" && `已经创建社群`}
+          {curRecord?.status === "0" && `正在审核中`}
         </div>
         <div className="mt-2 flex justify-center pb-2">
           <Button
@@ -57,7 +57,7 @@ const CreateHistory = (props: {
       </div>
     ),
     footer: false,
-    title: "申请详情",
+    title: "审核详情",
     closeIcon: false,
     className: "w-[300px]",
   });
@@ -135,7 +135,7 @@ const CreateHistory = (props: {
                 }}
                 className="block py-1 cursor-pointer text-primary"
               >
-                重新申请
+                修改
               </span>
             )}
           </>
