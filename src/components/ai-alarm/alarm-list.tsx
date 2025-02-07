@@ -1,5 +1,5 @@
 import { AlarmType, deleteAlarm, getAlarms, getAlarmsGroup } from "@/api"
-import { Button, JknIcon, JknRcTable, type JknRcTableProps, JknTable, type JknTableProps, NumSpanSubscribe, Popover, PopoverAnchor, PopoverClose, PopoverContent, PopoverTrigger, StockView } from "@/components"
+import { Button, JknIcon, JknRcTable, type JknRcTableProps, NumSpanSubscribe, Popover, PopoverAnchor, PopoverClose, PopoverContent, PopoverTrigger, StockView } from "@/components"
 import { useCheckboxGroup, useTableData, useToast } from "@/hooks"
 import { router } from "@/router"
 import { type Stock, stockUtils } from "@/utils/stock"
@@ -67,6 +67,8 @@ const GroupAlarm = (props: AlarmItemProps) => {
       }
     }))
   }, [query.data, setList])
+
+  console.log(list)
 
   const { checked, toggle, setCheckedAll, getIsChecked } = useCheckboxGroup([])
 

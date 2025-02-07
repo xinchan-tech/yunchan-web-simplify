@@ -38,3 +38,4 @@ export const GoldenPoolForm = () => {
     </div>
   )
 }
+

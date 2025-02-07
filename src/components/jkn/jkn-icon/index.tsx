@@ -1,7 +1,8 @@
 import { cn } from "@/utils/style"
-import type { HtmlHTMLAttributes, ReactNode } from "react"
+import { memo, type HtmlHTMLAttributes, type ReactNode } from "react"
 import { JknIconCheckbox } from './icon-checkbox'
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components"
+import { useConfig } from "@/store"
 
 const iconContext = import.meta.webpackContext('@/assets/icon', {
   recursive: true
@@ -64,9 +65,30 @@ const wrapperLabel = (component: ReactNode, label: string | ReactNode) => {
   )
 }
 
+interface ArrowIconProps extends JknIconProps {
+  direction: 'up' | 'down'
+}
+
+const ArrowIcon = memo(({ direction, ...props }: ArrowIconProps) => {
+  const { setting: { upOrDownColor } } = useConfig()
+
+  return (
+    <>
+      {upOrDownColor === 'upGreenAndDownRed' ? (
+        <JknIcon className="w-3 h-3" name={direction === 'up' ? 'ic_price_up_green' : 'ic_price_down_red'} {...props} />
+      ) : (
+        <JknIcon className="w-3 h-3" name={direction === 'up' ? 'ic_price_up_red' : 'ic_price_down_green'} {...props} />
+      )}
+    </>
+  )
+})
+
 type JknIcon = typeof _JknIcon & {
   Checkbox: typeof JknIconCheckbox
+  
+  Arrow: typeof ArrowIcon
 }
 
 export const JknIcon = _JknIcon as JknIcon
 JknIcon.Checkbox = JknIconCheckbox
+JknIcon.Arrow = ArrowIcon

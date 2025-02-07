@@ -87,7 +87,6 @@ const PlateStocks = (props: PlateStocksProps) => {
       title: '+股票金池', dataIndex: 'collect', align: 'center', width: 80,
       render: (_, row) => (
         <CollectStar
-          onUpdate={(checked) => updateStockCollect(row.symbol, checked)}
           checked={row.extend!.collect === 1}
           code={row.symbol} />
       )
@@ -97,13 +96,18 @@ const PlateStocks = (props: PlateStocksProps) => {
       render: (_, row) => <AiAlarm code={row.symbol}><JknIcon className="rounded-none" name="ic_add" /></AiAlarm>
     },
     {
-      title: <CollectStar.Batch checked={checked} onCheckChange={(v) => setCheckedAll(v ? list.map(o => o.symbol) : [])} />,
+      title: <CollectStar.Batch checked={checked} onCheckChange={(v) => setCheckedAll(v ? list.map(o => o.symbol) : [])}
+        onUpdate={() => {
+          plateStocks.refetch()
+          setCheckedAll([])
+        }}
+      />,
       dataIndex: 'checked',
       align: 'center',
       width: 60,
       render: (_, row) => <JknCheckbox checked={getIsChecked(row.symbol)} onCheckedChange={v => onChange(row.symbol, v)} />
     }
-  ], [checked, list, getIsChecked, onChange, setCheckedAll, updateStockCollect])
+  ], [checked, list, getIsChecked, onChange, setCheckedAll, plateStocks.refetch])
 
 
   const onRowClick = useTableRowClickToStockTrading('symbol')

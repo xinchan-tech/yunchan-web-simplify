@@ -117,7 +117,7 @@ const StockFinancials = () => {
     {
       title: '盘前涨跌幅', dataIndex: 'prePercent', align: 'right', width: 90, sort: true,
       render: (_: any, row) => (
-          <NumSpan symbol block decimal={2} percent value={row.prePercent} align="right" isPositive={row.prePercent !== undefined ? row.prePercent > 0 : undefined} />
+        <NumSpan symbol block decimal={2} percent value={row.prePercent} align="right" isPositive={row.prePercent !== undefined ? row.prePercent > 0 : undefined} />
       )
     },
     {
@@ -139,13 +139,18 @@ const StockFinancials = () => {
       render: (_: any, row) => <AiAlarm code={row.code as string} ><JknIcon className="rounded-none" name="ic_add" /></AiAlarm>
     },
     {
-      title: <CollectStar.Batch checked={checked} onCheckChange={(v) => setCheckedAll(v ? data.map(o => o.code) : [])} />,
+      title: <CollectStar.Batch checked={checked} onCheckChange={(v) => setCheckedAll(v ? data.map(o => o.code) : [])}
+        onUpdate={() => {
+          query.refetch()
+          setCheckedAll([])
+        }}
+      />,
       dataIndex: 'checked',
       align: 'center',
       width: 60,
       render: (_, row) => <JknCheckbox checked={getIsChecked(row.code)} onCheckedChange={v => onChange(row.code, v)} />
     }
-  ], [checked, data, getIsChecked, onChange, setCheckedAll])
+  ], [checked, data, getIsChecked, onChange, setCheckedAll, query.refetch])
 
 
   const queryClient = useQueryClient()

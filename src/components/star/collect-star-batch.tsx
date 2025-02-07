@@ -1,10 +1,11 @@
-import { Button, JknCheckbox, Popover, PopoverAnchor, PopoverContent } from ".."
+import { AddCollect, Button, JknCheckbox, Popover, PopoverAnchor, PopoverContent } from ".."
 import { addStockCollect, getStockCollectCates } from "@/api"
 import to from "await-to-js"
 import { useToast } from "@/hooks"
-import type { PropsWithChildren } from "react"
+import { useRef, type PropsWithChildren } from "react"
 import type { CheckboxProps } from "@radix-ui/react-checkbox"
 import { useQuery } from "@tanstack/react-query"
+import { useBoolean } from "ahooks"
 
 interface CollectStarBatchProps {
   checked: string[]
@@ -24,13 +25,13 @@ const CollectStarBatchPopover = (props: PropsWithChildren<{ open: boolean, onChe
   return (
     <Popover open={props.open}>
       <PopoverAnchor asChild>
-        <Button reset className="w-auto h-auto">
+        <div className="inline-flex items-center justify-center h-full">
           <JknCheckbox
-            className="w-[12px] h-[12px]"
+            className="w-[15px] h-[15px]"
             checked={props.open}
             onCheckedChange={props.onCheckChange}
           />
-        </Button>
+        </div>
       </PopoverAnchor>
       <PopoverContent className="w-60" align="start" side="left">
         {
@@ -47,14 +48,17 @@ interface CollectStarBatchContentProps {
 }
 
 const CollectStarBatchContent = (props: CollectStarBatchContentProps) => {
+  const [confirmModalOpen, confirmAction] = useBoolean(false)
+  const selectCollect = useRef<number | undefined>()
   const collects = useQuery({
     queryKey: [getStockCollectCates.cacheKey],
     queryFn: () => getStockCollectCates(),
   })
 
   const { toast } = useToast()
+
   const updateCollectMutation = async (cates: number[]) => {
-    props.onUpdate?.(cates.length > 0)
+    // props.onUpdate?.(cates.length > 0)
 
     const [err] = await to(addStockCollect({
       symbols: props.checked,
@@ -62,13 +66,14 @@ const CollectStarBatchContent = (props: CollectStarBatchContentProps) => {
     }))
 
     if (err) {
-      props.onUpdate?.(false)
+
       toast({
         description: err.message,
       })
       return
     }
-
+    props.onUpdate?.(false)
+    confirmAction.setFalse()
     toast({
       description: '添加成功',
     })
@@ -76,21 +81,39 @@ const CollectStarBatchContent = (props: CollectStarBatchContentProps) => {
     return
   }
 
+  const handleSelectCollect = (cateId: number) => {
+    selectCollect.current = cateId
+    confirmAction.setTrue()
+  }
+
   return (
-    <div className="rounded">
+    <div className="rounded relative">
       <div className="bg-background text-center py-2">批量操作 {props.checked.length} 项</div>
-      <div className="text-center px-4 py-4 space-y-4">
+      <div className="text-center px-4 py-4 space-y-4 min-h-24 max-h-48 overflow-y-auto">
         {
           collects.data?.map((cate) => (
             <div key={cate.id} className="flex space-x-2 items-center justify-between">
               <div>{cate.name}</div>
-              <div onClick={() => updateCollectMutation([+cate.id])} onKeyDown={() => { }}>
+              <div onClick={() => handleSelectCollect(+cate.id)} onKeyDown={() => { }}>
                 <Button size="mini">添加</Button>
               </div>
             </div>
           ))
         }
       </div>
+      {
+        confirmModalOpen ? (
+          <div className="absolute bottom-0 left-0 top-0 right-0 bg-background/60">
+            <div className="text-center flex flex-col justify-center h-full space-y-4">
+              <div>确定操作?</div>
+              <div className="flex justify-center space-x-4">
+                <Button size="mini" onClick={() => selectCollect.current && updateCollectMutation([selectCollect.current])}>确定</Button>
+                <Button size="mini" variant="text" onClick={confirmAction.setFalse}>取消</Button>
+              </div>
+            </div>
+          </div>
+        ) : null
+      }
     </div>
   )
 }

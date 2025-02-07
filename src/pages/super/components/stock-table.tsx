@@ -2,6 +2,7 @@ import type { getStockSelection } from "@/api"
 import { AiAlarm, CollectStar, JknCheckbox, JknIcon, JknRcTable, type JknRcTableProps, NumSpan, NumSpanSubscribe, StockView } from "@/components"
 import { useCheckboxGroup, useTableData, useTableRowClickToStockTrading } from "@/hooks"
 import { stockUtils } from "@/utils/stock"
+import { cn } from "@/utils/style"
 import { produce } from "immer"
 import { nanoid } from "nanoid"
 import { useCallback, useEffect, useMemo } from "react"
@@ -22,6 +23,7 @@ type TableDataType = {
   afterPercent: number
   collect: 1 | 0
   key: string
+  bull: string
 }
 
 interface StockTableProps {
@@ -44,6 +46,7 @@ const StockTable = (props: StockTableProps) => {
       return {
         index: index++,
         key: nanoid(),
+        bull: item.bull,
         stock_cycle: item.stock_cycle,
         indicator_name: item.indicator_name,
         symbol: lastData.symbol,
@@ -63,16 +66,6 @@ const StockTable = (props: StockTableProps) => {
 
   const { checked, onChange, setCheckedAll, getIsChecked } = useCheckboxGroup([])
 
-  const updateStockCollect = useCallback((id: string, checked: boolean) => {
-    updateList(s => {
-      return s.map(produce(item => {
-        if (item.symbol === id) {
-          item.collect = checked ? 1 : 0
-        }
-      }))
-    })
-  }, [updateList])
-
   const columns: JknRcTableProps<TableDataType>['columns'] = useMemo(() => ([
     { title: '序号', dataIndex: 'index', width: 40, align: 'center', render: (_, row) => row.index + 1 },
     {
@@ -84,8 +77,15 @@ const StockTable = (props: StockTableProps) => {
       title: '周期', dataIndex: 'stock_cycle', width: 40, align: 'right', sort: true,
       render: (stock_cycle) => `${stock_cycle}分`
     }, {
-      title: '信号类型', dataIndex: 'indicator_name', width: 60, align: 'center'
-    }, {
+      title: '信号类型', dataIndex: 'indicator_name', width: 120, align: 'center',
+      render: (indicator_name, row) => (
+        <div className={cn('justify-center flex items-center w-full', row.bull === '1' ? 'text-stock-up' : 'text-stock-down')}>
+          <JknIcon.Arrow direction={row.bull === '1' ? 'up' : 'down'} className="w-3 h-3 mb-1" />
+          {indicator_name}
+        </div>
+      )
+    }, 
+    {
       title: '底部类型', dataIndex: 'bottom', width: 60, align: 'center', sort: true,
       render: (bottom) => bottom || '-'
     },
@@ -98,7 +98,7 @@ const StockTable = (props: StockTableProps) => {
     {
       title: '涨跌幅', dataIndex: 'percent', width: 90, align: 'right', sort: true,
       render: (percent, row) => (
-        <NumSpanSubscribe code={row.symbol} field="percent" blink percent block decimal={2} value={percent} isPositive={(row.percent ?? 0) >= 0} symbol />
+        <NumSpanSubscribe code={row.symbol} align="right" field="percent" blink percent block decimal={2} value={percent} isPositive={(row.percent ?? 0) >= 0} symbol />
       )
     },
     {
@@ -140,13 +140,17 @@ const StockTable = (props: StockTableProps) => {
       render: (_, row) => <AiAlarm code={row.symbol} ><JknIcon className="rounded-none" name="ic_add" /></AiAlarm>
     },
     {
-      title: <CollectStar.Batch checked={checked} onCheckChange={(v) => setCheckedAll(v ? list.map(o => o.symbol) : [])} />,
+      title: <CollectStar.Batch checked={checked} onCheckChange={(v) => setCheckedAll(v ? list.map(o => o.symbol) : [])}
+        onUpdate={() => {
+          setCheckedAll([])
+        }}
+      />,
       dataIndex: 'check',
       id: 'select',
       width: 60, align: 'center',
       render: (_, row) => <JknCheckbox checked={getIsChecked(row.symbol)} onCheckedChange={v => onChange(row.symbol, v)} />
     }
-  ]), [checked, list, getIsChecked, onChange, setCheckedAll, updateStockCollect, props.onUpdate])
+  ]), [checked, list, getIsChecked, onChange, setCheckedAll, props.onUpdate])
 
   const onRowClick = useTableRowClickToStockTrading('symbol')
 

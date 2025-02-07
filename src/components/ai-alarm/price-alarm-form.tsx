@@ -14,7 +14,7 @@ const PriceAlarmForm = (props: PriceAlarmFormProps) => {
   const [count, setCount] = useState(0)
 
   return (
-    <div className="h-[800px] overflow-hidden w-[900px]">
+    <div className="h-[800px] overflow-hidden w-[900px] flex flex-col">
       <div className="p-1 border-0 border-b border-solid border-border flex items-center">
         <CapsuleTabs activeKey={active} onChange={setActive}>
           <CapsuleTabs.Tab label="报警设置" value="1" />
@@ -25,7 +25,7 @@ const PriceAlarmForm = (props: PriceAlarmFormProps) => {
           当前运行报警：{count} 条
         </div>
       </div>
-      <div>
+      <div className="flex-1 overflow-hidden">
         {{
           1: <PriceAlarmSetting code={props.code} />,
           2: <AlarmList type={AlarmType.PRICE} onUpdateCount={setCount} />,

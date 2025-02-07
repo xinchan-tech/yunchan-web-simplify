@@ -2,7 +2,7 @@ import { StockPushType, getStockPush } from "@/api"
 import { AiAlarm, CapsuleTabs, CollectStar, JknCheckbox, JknIcon, JknRcTable, type JknRcTableProps, NumSpanSubscribe, StockView } from "@/components"
 import { useCheckboxGroup, useTableData, useTableRowClickToStockTrading } from "@/hooks"
 import { useTime } from "@/store"
-import {  getPrevTradingDays } from "@/utils/date"
+import { getPrevTradingDays } from "@/utils/date"
 import { type Stock, stockUtils } from "@/utils/stock"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import dayjs from "dayjs"
@@ -173,7 +173,12 @@ const PushPage = () => {
         render: (_, row) => <div className="text-center"><AiAlarm code={row.symbol}><JknIcon name="ic_add" className="rounded-none" /></AiAlarm></div>
       },
       {
-        title: <CollectStar.Batch checked={checked} onCheckChange={(v) => setCheckedAll(v ? list.map(o => o.symbol) : [])} />,
+        title: <CollectStar.Batch checked={checked} onCheckChange={(v) => setCheckedAll(v ? list.map(o => o.symbol) : [])}
+          onUpdate={() => {
+            query.refetch()
+            setCheckedAll([])
+          }}
+        />,
         dataIndex: 'checked',
         align: 'center',
         width: 60,

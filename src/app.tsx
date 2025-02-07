@@ -146,7 +146,7 @@ const App = () => {
           </div>
         </div>
         <div className="content overflow-hidden">
-          <div>
+          <div className="bg-muted">
             <Outlet />
             {/* <Suspense fallback={<div />}>
               <RouterProvider router={router} />

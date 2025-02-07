@@ -1,8 +1,8 @@
 import { getStockBaseCodeInfo, getStockBrief, getStockNotice, getStockQuote, getStockRelated, getStockTrades, StockChartInterval } from "@/api"
-import { AiAlarm, Button, CapsuleTabs, Carousel, CarouselContent, CollectStar, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, HoverCard, HoverCardContent, HoverCardTrigger, JknIcon, JknRcTable, type JknRcTableProps, NumSpan, NumSpanSubscribe, PriceAlarm, ScrollArea, Separator, withTooltip } from "@/components"
-import { useStockQuoteSubscribe, useTableData, useTableRowClickToStockTrading } from "@/hooks"
+import { AiAlarm, Button, CapsuleTabs, Carousel, CarouselContent, CollectStar, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, HoverCard, HoverCardContent, HoverCardTrigger, JknIcon, JknRcTable, type JknRcTableProps, NumSpan, NumSpanSubscribe, PriceAlarm, ScrollArea, Separator, SubscribeSpan, withTooltip } from "@/components"
+import { usePropValue, useStockQuoteSubscribe, useTableData, useTableRowClickToStockTrading } from "@/hooks"
 import { useTime } from "@/store"
-import { type StockSubscribeHandler, stockUtils } from "@/utils/stock"
+import { stockUtils } from "@/utils/stock"
 import { cn } from "@/utils/style"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import dayjs from "dayjs"
@@ -109,28 +109,6 @@ const StockBaseInfo = () => {
 
   }, [codeInfo.data, trading])
 
-  // const stockSubscribeHandler = useCallback<StockSubscribeHandler<'quote'>>((data) => {
-  //   if (code !== data.topic) {
-  //     return
-  //   }
-  //   setData((s) => {
-  //     if (!s) return s
-  //     console.log(trading)
-  //     if (trading === 'intraDay') {
-  //       s.close = data.record.close
-  //       s.percent = (data.record.close - data.record.preClose) / data.record.preClose
-  //       s.prevClose = data.record.preClose
-  //       s.time = dayjs(data.record.time).format('YYYY-MM-DD HH:mm:ss')
-  //     } else {
-  //       s.subClose = data.record.close
-  //       s.subPercent = (data.record.close - data.record.preClose) / data.record.preClose
-  //       s.subTime = dayjs(data.record.time).format('YYYY-MM-DD HH:mm:ss')
-  //     }
-  //     console.log(s)
-  //     return { ...s }
-  //   })
-  // }, [trading, code])
-
   useStockQuoteSubscribe([code])
 
   const onStarUpdate = useCallback((check: boolean) => {
@@ -210,6 +188,7 @@ const StockQuoteBar = withTooltip(memo((props: StockQuoteBarProps) => {
     return trading !== 'intraDay'
   }, [props.interval, trading])
 
+
   return (
     <div className={cn('flex items-center justify-between px-2 box-border text-xs my-1 cursor-pointer')} onClick={onClick} onKeyDown={() => { }}>
       <span className={cn('text-base font-bold', props.interval === StockChartInterval.INTRA_DAY && 'text-lg')}>
@@ -223,7 +202,10 @@ const StockQuoteBar = withTooltip(memo((props: StockQuoteBarProps) => {
       </span>
       <span className="text-tertiary">
         {props.tradingLabel}
-        {props?.time?.slice(5, 11).replace('-', '/')}
+        <SubscribeSpan
+          symbol={symbol} value={props.time?.slice(5, 11).replace('-', '/')}
+          formatter={v => dayjs(v.record.time).tz('America/New_York').format('HH/mm')}
+        />
       </span>
     </div>
   )
@@ -249,9 +231,6 @@ const StockQuote = () => {
   })
 
   const [stock, _, __] = codeInfo.data ? stockUtils.toStockRecord(codeInfo.data) : []
-
-
-
 
 
   return (

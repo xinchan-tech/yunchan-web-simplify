@@ -1,13 +1,13 @@
-import { useConfig } from "@/store"
-import { cn } from "@/utils/style"
-import { cva, type VariantProps } from "class-variance-authority"
-import Decimal from "decimal.js"
-import { JknIcon } from ".."
-import { useLatest, useUpdateEffect } from "ahooks"
-import { type HTMLAttributes, useEffect, useRef, useState } from "react"
-import { stockSubscribe, type StockSubscribeHandler } from "@/utils/stock"
-import { get, isFunction } from "radash"
 import { usePropValue } from "@/hooks"
+import { useConfig } from "@/store"
+import { type StockSubscribeHandler, stockSubscribe } from "@/utils/stock"
+import { cn } from "@/utils/style"
+import { useUpdateEffect } from "ahooks"
+import { type VariantProps, cva } from "class-variance-authority"
+import Decimal from "decimal.js"
+import { get, isFunction } from "radash"
+import { type HTMLAttributes, useEffect, useMemo, useRef, useState } from "react"
+import { JknIcon } from ".."
 
 const numSpanVariants = cva(
   '',
@@ -82,16 +82,26 @@ interface NumSpanProps extends React.HTMLAttributes<HTMLSpanElement>, VariantPro
    * 闪烁
    */
   blink?: boolean
+
+  /**
+   * 是否显示颜色
+   */
+  showColor?: boolean
+
+  /**
+   * 0时显示
+   */
+  zeroText?: string
 }
 
 
 
-export const NumSpan = ({ isPositive, block, percent, value, symbol, className, arrow, decimal = 3, unit = false, blink, align = 'left', ...props }: NumSpanProps) => {
-  const { setting: { upOrDownColor, priceBlink } } = useConfig()
+export const NumSpan = ({ isPositive, block, percent, value, symbol, className, arrow, decimal = 3, unit = false, blink, align = 'left', showColor, zeroText, ...props }: NumSpanProps) => {
+  const { setting: { priceBlink } } = useConfig()
   const lastValue = useRef(value)
   const span = useRef<HTMLSpanElement>(null)
   const priceBlinkTimer = useRef<number>()
-  // console.log(lastValue.current, value)
+  
   useUpdateEffect(() => {
     if (blink && priceBlink === '1') {
 
@@ -118,7 +128,10 @@ export const NumSpan = ({ isPositive, block, percent, value, symbol, className, 
   }, [value, blink, priceBlink])
 
   if (!value && value !== 0) return '-'
+
   const num = Decimal.isDecimal(value) ? value : new Decimal(value)
+
+  const formattedValue = unit !== false ? num.toDP(decimal).toShortCN() : percent ? `${num.mul(100).toFixed(decimal)}%` : num.toFixed(decimal)
 
   return (
     <span className={cn(
@@ -130,21 +143,18 @@ export const NumSpan = ({ isPositive, block, percent, value, symbol, className, 
       align === 'right' && 'justify-end'
     )} ref={span}>
       <span className={cn(
-        numSpanVariants({ isPositive, block, className }),
+        numSpanVariants({ isPositive: showColor === false ? undefined : isPositive, block, className }),
       )} {...props}>
         {symbol && num.gte(0) ? '+' : ''}
         {
-          unit !== false ? num.toDecimalPlaces(decimal).toShortCN() : num.toFixed(decimal)
+          zeroText && num.eq(0) ? zeroText : formattedValue
         }
-        {percent && '%'}
       </span>
       {
         arrow ? (
-          upOrDownColor === 'upGreenAndDownRed' ? (
-            <JknIcon className="w-4 h-4" name={isPositive ? 'ic_price_up_green' : 'ic_price_down_red'} />
-          ) : (
-            <JknIcon className="w-4 h-4" name={isPositive ? 'ic_price_up_red' : 'ic_price_down_green'} />
-          )
+          <JknIcon.Arrow
+            direction={isPositive ? 'up' : 'down'}
+          />
         ) : null
       }
     </span>
@@ -159,9 +169,8 @@ interface NumSpanSubscribeProps extends Omit<NumSpanProps, 'value'> {
 }
 
 export const NumSpanSubscribe = ({ value, code, isPositive, field, subscribe = true, ...props }: NumSpanSubscribeProps) => {
-  const [innerValue, setInnerValue] = useState(value && props.percent ? +value * 100 : value)
+  const [innerValue, setInnerValue] = useState(value)
   const [isUp, setIsUp] = usePropValue(isPositive)
-  const isPos = useRef(isPositive)
   const fieldFn = useRef<NumSpanSubscribeProps['field']>(field)
 
   useEffect(() => {
@@ -171,26 +180,20 @@ export const NumSpanSubscribe = ({ value, code, isPositive, field, subscribe = t
   useEffect(() => {
     if (!subscribe) return
     const unSubscribe = stockSubscribe.onQuoteTopic(code, (data) => {
+      const v = isFunction(fieldFn.current) ? fieldFn.current(data.record) : get(data.record, fieldFn.current)
 
-      let v = isFunction(fieldFn.current) ? fieldFn.current(data.record) : get(data.record, fieldFn.current)
-
-      if (props.percent) {
-        v = (v as number) * 100
-      }
       setInnerValue(v as number | string | undefined)
-      if (isPos.current !== undefined) {
-        setIsUp(data.record.percent > 0)
-      }
+      setIsUp(data.record.percent > 0)
     })
 
     return () => {
       unSubscribe()
     }
-  }, [code, props.percent, subscribe, setIsUp])
+  }, [code, subscribe, setIsUp])
 
   useEffect(() => {
-    setInnerValue(value && props.percent ? +value * 100 : value)
-  }, [value, props.percent])
+    setInnerValue(value)
+  }, [value])
 
   return (
     <>
@@ -198,7 +201,7 @@ export const NumSpanSubscribe = ({ value, code, isPositive, field, subscribe = t
         subscribe ? (
           <NumSpan value={innerValue} isPositive={isUp} {...props} />
         ) : (
-          <NumSpan value={value && props.percent ? +value * 100 : value} isPositive={isPositive} {...props}  />
+          <NumSpan value={value && props.percent ? +value * 100 : value} isPositive={isPositive} {...props} />
         )
       }
     </>
@@ -211,41 +214,29 @@ export const NumSpanSubscribe = ({ value, code, isPositive, field, subscribe = t
 interface SubscribeSpanProps extends HTMLAttributes<HTMLSpanElement> {
   value: number | string | undefined
   symbol: string
-  field: keyof Parameters<StockSubscribeHandler<'quote'>>[0]['record'] | ((data: Parameters<StockSubscribeHandler<'quote'>>[0]) => number | string | undefined)
-  positive?: boolean
-  format: (value?: number | string) => string | number | undefined
+  formatter: (data: Parameters<StockSubscribeHandler<'quote'>>[0]) => number | string | undefined
 }
 
 
-export const SubscribeSpan = ({ value, symbol, field, positive, format, ...props }: SubscribeSpanProps) => {
+export const SubscribeSpan = ({ value, symbol, formatter, ...props }: SubscribeSpanProps) => {
   const [innerValue, setInnerValue] = usePropValue(value)
   const spanRef = useRef<HTMLSpanElement>(null)
-  const isPos = useRef(positive)
-  const fieldFn = useRef(field)
-  const formatFn = useRef(format)
+  const formatFn = useRef(formatter)
+  const lastValue = useRef(value)
 
+  useEffect(() => {
+    formatFn.current = formatter
+  }, [formatter])
 
   useEffect(() => {
     const unSubscribe = stockSubscribe.onQuoteTopic(symbol, (data) => {
 
-      let v = isFunction(fieldFn.current) ? fieldFn.current(data) : get(data.record, fieldFn.current) as number | string | undefined
+      const v = formatFn.current(data)
 
-      if (formatFn.current) {
-        v = formatFn.current(v)
-      }
+      if (v === lastValue.current) return
 
-      setInnerValue(v as number | string | undefined)
-      if (isPos.current !== undefined) {
-
-        spanRef.current?.classList.remove('text-stock-up')
-        spanRef.current?.classList.remove('text-stock-down')
-
-        if (data.record.percent > 0) {
-          spanRef.current?.classList.add('text-stock-up')
-        } else {
-          spanRef.current?.classList.add('text-stock-down')
-        }
-      }
+      lastValue.current = v
+      setInnerValue(v)
     })
 
     return () => {

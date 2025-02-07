@@ -207,7 +207,7 @@ const SingleTable = (props: SingleTableProps) => {
     },
     {
       title: '市盈率', dataIndex: 'pe', width: '8%', align: 'right', sort: true,
-      render: (_, row) => `${Decimal.create(row.pe).lt(0) ? '亏损': Decimal.create(row.pe).toFixed(2)}`
+      render: (_, row) => `${Decimal.create(row.pe).lt(0) ? '亏损' : Decimal.create(row.pe).toFixed(2)}`
     },
     {
       title: '市净率', dataIndex: 'pb', width: '8%', align: 'right', sort: true,
@@ -217,7 +217,7 @@ const SingleTable = (props: SingleTableProps) => {
       title: '+股票金池', dataIndex: 'collect', width: 80, align: 'center',
       render: (_, row) => (
         <CollectStar
-          onUpdate={(checked) => updateStockCollect(row.symbol, checked)}
+          // onUpdate={(checked) => updateStockCollect(row.symbol, checked)}
           checked={row.collect === 1}
           code={row.symbol} />
       )
@@ -227,13 +227,19 @@ const SingleTable = (props: SingleTableProps) => {
       render: (_, row) => <AiAlarm code={row.symbol}><JknIcon className="rounded-none" name="ic_add" /></AiAlarm>
     },
     {
-      title: <CollectStar.Batch checked={checked} onCheckChange={(v) => setCheckedAll(v ? list.map(o => o.symbol) : [])} />,
+      title: <CollectStar.Batch
+        checked={checked} onCheckChange={(v) => setCheckedAll(v ? list.map(o => o.symbol) : [])}
+        onUpdate={() => {
+          query.refetch()
+          setCheckedAll([])
+        }}
+      />,
       dataIndex: 'checked',
       align: 'center',
       width: 60,
       render: (_, row) => <JknCheckbox checked={getIsChecked(row.symbol)} onCheckedChange={v => onChange(row.symbol, v)} />
     }
-  ]), [checked, list, getIsChecked, onChange, setCheckedAll, updateStockCollect])
+  ]), [checked, list, getIsChecked, onChange, setCheckedAll, query.refetch])
 
   const onRowClick = useTableRowClickToStockTrading('symbol')
 
