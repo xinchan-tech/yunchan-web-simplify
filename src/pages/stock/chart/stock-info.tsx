@@ -92,7 +92,7 @@ const StockBaseInfo = () => {
   useEffect(() => {
     const [lastData, beforeData, afterData] = codeInfo.data ? stockUtils.toStockRecord(codeInfo.data) : []
 
-    const subData = trading === 'preMarket' ? beforeData : afterData
+    const subData = (trading === 'preMarket' || trading === 'intraDay') ? beforeData : afterData
 
     setData({
       name: lastData?.name ?? '',
@@ -148,7 +148,7 @@ const StockBaseInfo = () => {
         />
 
         {
-          trading === 'preMarket' ? (
+          (trading === 'preMarket' || trading === 'intraDay') ? (
             <StockQuoteBar
               label="点击查看盘前分时走势"
               percent={data?.subPercent}
@@ -210,7 +210,7 @@ const StockQuoteBar = withTooltip(memo((props: StockQuoteBarProps) => {
         <SubscribeSpan
           trading={trading}
           symbol={symbol} value={props.time?.slice(5, 11).replace('-', '/')}
-          formatter={v => dayjs(v.record.time).tz('America/New_York').format('YY/MM')}
+          formatter={v => dayjs(v.record.time * 1000).tz('America/New_York').format('MM/DD')}
         />
       </span>
     </div>
