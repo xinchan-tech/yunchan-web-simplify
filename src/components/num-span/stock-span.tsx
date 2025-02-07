@@ -23,6 +23,7 @@ interface NumberSubscribeSpanProps {
   initValue?: string | number
   initDirection?: boolean
   showColor?: boolean
+  onValueChange?: (direction: 'up' | 'down', changeDirection: 'up' | 'down') => void
 }
 
 const BaseNumberFormatter = (v: number | string | undefined, decimal: number, zeroText?: string) => {
@@ -42,7 +43,7 @@ const BaseNumberFormatter = (v: number | string | undefined, decimal: number, ze
   return (+v).toFixed(decimal)
 }
 
-const useBaseSubscribe = (initValue: string | number | undefined, initDirection: boolean | undefined, formatter: (v?: number | string) => string | number | undefined) => {
+const useBaseSubscribe = (initValue: string | number | undefined, initDirection: boolean | undefined, formatter: (v?: number | string) => string | number | undefined, onValueChange?: NumberSubscribeSpanProps['onValueChange']) => {
   const [direction, setDirection] = usePropValue<'up' | 'down' | undefined>(initDirection !== undefined ? (initDirection ? 'up' : 'down') : undefined)
 
   const onChange = useCallback((data: Parameters<StockSubscribeHandler<"quote">>[0]) => {
@@ -50,6 +51,8 @@ const useBaseSubscribe = (initValue: string | number | undefined, initDirection:
     if (newDirection !== direction) {
       setDirection(newDirection)
     }
+    // TODO: onValueChange
+    // onValueChange?.(newDirection, )
   }, [direction, setDirection])
 
   const value = useMemo(() => formatter(initValue), [initValue, formatter])
@@ -110,6 +113,8 @@ export const PriceSubscribeSpan = memo(({ zeroText, decimal = 2, arrow, showSign
   )
 })
 
+
+
 interface PercentSubscribeSpanProps extends NumberSubscribeSpanProps, Omit<ComponentProps<typeof SubscribeSpan>, 'onChange' | 'formatter' | 'value'> {
   type?: 'percent' | 'amount'
 }
@@ -136,6 +141,7 @@ export const PercentSubscribeSpan = memo(({ zeroText, decimal = 2, showSign = fa
     return numberFormatter(data.record.close - data.record.preClose)
   }, [numberFormatter, type])
 
+
   return (
     <SubscribeSpan
       value={value}
@@ -146,6 +152,18 @@ export const PercentSubscribeSpan = memo(({ zeroText, decimal = 2, showSign = fa
       onChange={onChange}
       {...props}
     />
+  )
+})
+
+
+interface PercentSubscribeBlockProps extends PercentSubscribeSpanProps { }
+
+export const PercentSubscribeBlock = memo((props: PercentSubscribeBlockProps) => {
+  
+  return (
+    <div className="inline-block text-inherit" >
+      <PercentSubscribeSpan {...props} showColor={false} type="percent" />
+    </div>
   )
 })
 
