@@ -214,6 +214,7 @@ const AppTitle = () => {
   const { token } = useToken()
 
   useEffect(() => {
+    const channel = new BroadcastChannel("chat-channel");
     if (token) {
       wsManager.send({
         event: "login",
@@ -232,7 +233,20 @@ const AppTitle = () => {
         })
       })
 
-      return close
+      const closeOpinion = wsManager.on("opinions", () => {
+        channel.postMessage({
+          type: "opinions",
+        });
+      });
+
+      return () => {
+        close();
+        closeOpinion();
+      };
+    } else {
+      channel.postMessage({
+        type: "logout",
+      });
     }
   }, [token])
 

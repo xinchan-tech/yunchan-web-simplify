@@ -17,46 +17,23 @@ import { useToast } from "@/hooks";
 
 function copyImage(message: Message) {
   const tempImg = document.createElement("img");
-	tempImg.src = message.content.remoteUrl;
+  tempImg.src = message.content.remoteUrl;
 
-	// 将 div 添加到 document
-	document.body.appendChild(tempImg);
- 
-	// 选择 div 中的内容
-	const range = document.createRange();
-	range.selectNode(tempImg);
-	window.getSelection().removeAllRanges(); // 清除现有的选择
-	window.getSelection().addRange(range);
- 
-	// 执行复制命令
-	document.execCommand("copy");
- 
-	// 清理选择和临时元素
-	window.getSelection().removeAllRanges();
-	document.body.removeChild(tempImg);
-  // // 创建一个img的dom，用来承载图片
-  // // 创建 img 元素并设置 src 属性
-  // const messagebox = document.getElementById(message.clientMsgNo);
-  // let tempImg;
-  // if (messagebox) {
-  //   tempImg = messagebox.querySelector(`.msgcard-img`);
-  // }
+  // 将 div 添加到 document
+  document.body.appendChild(tempImg);
 
-  // // 将 div 添加到 document
+  // 选择 div 中的内容
+  const range = document.createRange();
+  range.selectNode(tempImg);
+  window.getSelection().removeAllRanges(); // 清除现有的选择
+  window.getSelection().addRange(range);
 
-  // if (tempImg) {
-  //   // 选择 div 中的内容
-  //   const range = document.createRange();
-  //   range.selectNode(tempImg);
-  //   window.getSelection().removeAllRanges(); // 清除现有的选择
-  //   window.getSelection().addRange(range);
+  // 执行复制命令
+  document.execCommand("copy");
 
-  //   // 执行复制命令
-  //   document.execCommand("copy");
-
-  //   // 清理选择和临时元素
-  //   window.getSelection().removeAllRanges();
-  // }
+  // 清理选择和临时元素
+  window.getSelection().removeAllRanges();
+  document.body.removeChild(tempImg);
 }
 
 const MsgCard = (props: { data: Message; children: string | ReactNode }) => {
@@ -66,13 +43,11 @@ const MsgCard = (props: { data: Message; children: string | ReactNode }) => {
   const { toast } = useToast();
   //  获取撤回权限
   const getRevokePremession = (data: Message) => {
-   
     // 自己的都能撤回
     if (data.fromUID === user?.username) {
       return true;
     }
     if (subscribers && subscribers.length > 0) {
-
       const msgUid = data.fromUID;
       const self = subscribers.find((item) => item.uid === user?.username);
       const sender = subscribers.find((item) => item.uid === msgUid);
@@ -82,18 +57,16 @@ const MsgCard = (props: { data: Message; children: string | ReactNode }) => {
       }
       if (self && self.orgData.type !== "0") {
         // 自己是群主都能撤回
-        if(self.orgData.type === '2') {
+        if (self.orgData.type === "2") {
           return true;
-        } else if(self.orgData.type === '1') {
+        } else if (self.orgData.type === "1") {
           // 管理员只能撤回普通群员的
-          if(sender?.orgData.type === '0') {
-            return true
+          if (sender?.orgData.type === "0") {
+            return true;
           }
         }
       }
     }
-
-    
 
     return false;
   };

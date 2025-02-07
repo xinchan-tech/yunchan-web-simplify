@@ -30,7 +30,12 @@ import {
 import data from "@emoji-mart/data";
 import Picker from "@emoji-mart/react";
 import i18n from "@emoji-mart/data/i18n/zh.json";
-import { genBase64ToFile, genImgFileByUrl, MacroTask } from "../chat-utils";
+import {
+  genBase64ToFile,
+  genImgFileByUrl,
+  judgeIsExpireGroupCache,
+  MacroTask,
+} from "../chat-utils";
 import ReplyMessageView from "../components/reply-view";
 import { useShallow } from "zustand/react/shallow";
 import { useUser } from "@/store";
@@ -175,12 +180,9 @@ const GroupChatInput = forwardRef(
 
       if (toChannel && content) {
         WKSDK.shared().chatManager.send(content, toChannel, setting);
-        console.log(content, "send content");
+
         // setInputValue("");
         mentionCache.current = {};
-        if (typeof onMsgSend === "function") {
-          onMsgSend();
-        }
       }
     };
 
@@ -226,7 +228,21 @@ const GroupChatInput = forwardRef(
     };
 
     const handleSend = (data: InputBoxResult) => {
-      // let value = inputValue;
+      if (subscribers instanceof Array && subscribers.length > 0) {
+        const target = subscribers.find((sub) => sub.uid === user?.username);
+        if (target && target.orgData?.forbidden === "1") {
+          toast({
+            description: "您已被加入黑名单，无法发言",
+          });
+          return;
+        }
+      }
+      if (groupDetailData && judgeIsExpireGroupCache(groupDetailData.account)) {
+        toast({
+          description: "群聊已过期，无法发言",
+        });
+        return;
+      }
       if (!data || !conversationWraps) {
         return;
       }
@@ -248,7 +264,9 @@ const GroupChatInput = forwardRef(
       msgQueue.forEach((msg, index) => {
         sendTask.enqueue(() => sendOneMsg(msg.type, msg, index));
       });
-
+      if (typeof onMsgSend === "function") {
+        onMsgSend();
+      }
       sendTask.processQueue();
 
       setMentions([]);

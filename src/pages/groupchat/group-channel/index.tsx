@@ -25,6 +25,7 @@ import ChatAvatar from "../components/chat-avatar";
 import CreateGroup from "../components/create-and-join-group";
 import {
   groupToChannelInfo,
+  judgeIsExpireGroupCache,
   judgeIsUserInSyncChannelCache,
   setPersonChannelCache,
   setUserInSyncChannelCache,
@@ -174,6 +175,10 @@ const GroupChannel = (props: {
         new ConversationWrap(conversation)
       );
     } else if (action === ConversationAction.update) {
+      // 过期了，不更新这个channel
+      if (judgeIsExpireGroupCache(conversation.channel.channelID)) {
+        return;
+      }
       if (conversation.channel.channelID === latestChannel.current?.channelID) {
         // 避免未读消息在选中时还展示
         conversation.unread = 0;

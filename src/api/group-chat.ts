@@ -118,7 +118,8 @@ export interface GroupDetailData {
    * 创建者
    */
   user: User;
-  [property: string]: any;
+  chat_type: "0" | "1" | "2";
+  blacklist: Array<{ uid: string; realname: string }>;
 }
 
 /**

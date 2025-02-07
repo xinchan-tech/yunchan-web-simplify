@@ -169,14 +169,20 @@ const TextImgLive = () => {
 
   useEffect(() => {
     const initParams = generateParams();
-    const close = wsManager.on("opinions", (data) => {
-      console.log(data);
-      pullLatest();
-    });
+    // const close = wsManager.on("opinions", (data) => {
+    //   console.log(data);
+    //   pullLatest();
+    // });
     fetchOpinions(initParams, { reset: true }).finally(() => {
       pulldowning.current = false;
     });
-    return close;
+    // return close;
+    const channel = new BroadcastChannel("chat-channel");
+    channel.onmessage = (event) => {
+      if (event.data.type === "opinions") {
+        pullLatest();
+      }
+    };
   }, []);
 
   // 消息列表滚动到底部
@@ -208,8 +214,6 @@ const TextImgLive = () => {
           scroller.scrollTo(targetID, {
             containerId: "scroll-content-opinion",
             duration: 0,
-            smooth: true,
-            offset: 100,
           });
           jumpOpioionId.current = null;
         }

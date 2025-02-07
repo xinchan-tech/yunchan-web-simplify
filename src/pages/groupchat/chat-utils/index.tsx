@@ -337,3 +337,47 @@ export const setUserInSyncChannelCache = (uid: string, payload: boolean) => {
     JSON.stringify(syncUserChannelIds)
   );
 };
+
+export const judgeIsExpireGroupCache = (uid: string) => {
+  let session = sessionStorage.getItem("expireGroupIds");
+  let expireGroupIds: Record<string, boolean> = {};
+  if (session) {
+    expireGroupIds = JSON.parse(session) as Record<string, boolean>;
+  }
+  if (expireGroupIds[uid] === true) {
+    return true;
+  } else {
+    return false;
+  }
+};
+
+export const setExpireGroupInCache = (uid: string, payload: boolean) => {
+  let expireGroupIds: Record<string, boolean> = {};
+  let session = sessionStorage.getItem("expireGroupIds");
+  if (session) {
+    expireGroupIds = JSON.parse(session) as Record<string, boolean>;
+  }
+  expireGroupIds[uid] = payload;
+  sessionStorage.setItem("expireGroupIds", JSON.stringify(expireGroupIds));
+};
+
+// 判断退群消息
+export const judgeIsExitNoticeMessage = (message: Message) => {
+  const myId = WKSDK.shared().config.uid;
+  let result = false;
+  if (
+    message &&
+    message.content &&
+    message.content.contentObj &&
+    message.content.contentObj.type === "2001"
+  ) {
+    if (
+      message.content.contentObj.extra &&
+      message.content.contentObj.extra.uid === myId
+    ) {
+      result = true;
+    }
+  }
+
+  return result;
+};
