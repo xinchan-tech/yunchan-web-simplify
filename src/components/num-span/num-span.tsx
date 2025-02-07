@@ -232,7 +232,7 @@ interface SubscribeSpanProps extends Omit<HTMLAttributes<HTMLSpanElement>, 'onCh
 }
 
 
-export const SubscribeSpan = memo(({ value, symbol, formatter, trading, subscribe, onChange, ...props }: SubscribeSpanProps) => {
+export const SubscribeSpan = memo(({ value, symbol, formatter, trading, subscribe = true, onChange, ...props }: SubscribeSpanProps) => {
   const [innerValue, setInnerValue] = usePropValue(value)
   const spanRef = useRef<HTMLSpanElement>(null)
   const formatFn = useRef(formatter)
@@ -251,12 +251,13 @@ export const SubscribeSpan = memo(({ value, symbol, formatter, trading, subscrib
     if (!subscribe) return
     const unSubscribe = stockSubscribe.onQuoteTopic(symbol, (data) => {
       if (trading) {
-        const _trading = stockUtils.getTrading(data.record.time)
+        const _trading = stockUtils.getTrading(stockUtils.parseTime(data.record.time.toString()))
         if (_trading !== trading) return
       }
+      
 
       const v = formatFn.current(data)
-
+   
       if (v === lastValue.current) return
 
       lastValue.current = v

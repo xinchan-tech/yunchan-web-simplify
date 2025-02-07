@@ -209,7 +209,7 @@ export const stockUtils = {
    */
   getTrading: (time: Stock['timestamp']): StockTrading => {
     const usTime = dayjs(time).tz('America/New_York')
-
+ 
     if (
       usTime.isSameOrAfter(usTime.hour(4).minute(0).second(0)) &&
       usTime.isBefore(usTime.hour(9).minute(30).second(0))

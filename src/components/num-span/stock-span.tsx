@@ -47,7 +47,7 @@ const useBaseSubscribe = (initValue: string | number | undefined, initDirection:
   const [direction, setDirection] = usePropValue<'up' | 'down' | undefined>(initDirection !== undefined ? (initDirection ? 'up' : 'down') : undefined)
 
   const onChange = useCallback((data: Parameters<StockSubscribeHandler<"quote">>[0]) => {
-    const newDirection = (data.record.preClose - data.record.close) > 0 ? 'up' : 'down'
+    const newDirection = (data.record.close - data.record.preClose) > 0 ? 'up' : 'down'
     if (newDirection !== direction) {
       setDirection(newDirection)
     }
@@ -84,7 +84,7 @@ export const PriceSubscribeSpan = memo(({ zeroText, decimal = 2, arrow, showSign
     direction,
     onChange
   } = useBaseSubscribe(initValue, initDirection, numberFormatter)
-
+  console.log(direction)
   const subscribeFormatter = useCallback<SubscribeSpanProps['formatter']>((data) => {
     return numberFormatter(data.record.close)
   }, [numberFormatter])

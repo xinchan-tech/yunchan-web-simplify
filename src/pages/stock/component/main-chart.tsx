@@ -133,7 +133,7 @@ export const MainChart = (props: MainChartProps) => {
 
   const subscribeHandler: StockSubscribeHandler<'bar'> = useCallback((data) => {
     const stock = stockUtils.toStock(data.rawRecord)
-
+    stock.timestamp = dayjs(stock.timestamp).tz('America/New_York').second(0).millisecond(0).valueOf()
     if (!query.data || query.data.history.length === 0) return
     if (!lastMainHistory.current || lastMainHistory.current.length === 0) return
 
@@ -291,6 +291,7 @@ export const MainChart = (props: MainChartProps) => {
     }
     renderWatermark(_options, state.timeIndex)
     chart.current.setOption(_options, { replaceMerge: ['series', 'grid', 'xAxis', 'yAxis', 'dataZoom', 'graphic'] })
+    console.log(chart.current.getOption());
   }
 
   useUpdateEffect(() => {

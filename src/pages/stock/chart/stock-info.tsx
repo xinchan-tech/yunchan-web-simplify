@@ -76,9 +76,11 @@ type StockBaseInfoData = {
 const StockBaseInfo = () => {
   const code = useSymbolQuery()
   const trading = useTime(s => s.getTrading())
+
   const queryOptions = useMemo(() => ({
     queryKey: [getStockBaseCodeInfo.cacheKey, code, stockBaseCodeInfoExtend],
-    queryFn: () => getStockBaseCodeInfo({ symbol: code, extend: stockBaseCodeInfoExtend })
+    queryFn: () => getStockBaseCodeInfo({ symbol: code, extend: stockBaseCodeInfoExtend }),
+    refetchInterval: 1000 * 60 * 5
   }
   ), [code])
   const queryClient = useQueryClient()
@@ -198,16 +200,17 @@ const StockQuoteBar = withTooltip(memo((props: StockQuoteBarProps) => {
         <SubscribeSpan.Price symbol={symbol} arrow decimal={3} trading={trading} initDirection={Decimal.create(props?.percent).gt(0)} initValue={props.close} zeroText="--" />
       </span>
       <span>
-        <SubscribeSpan.Percent type="amount" symbol={symbol} decimal={3} showSign initDirection={Decimal.create(props?.percent).gt(0)} initValue={(props?.close ?? 0) - (props?.prevClose ?? 0)} zeroText="--" />
+        <SubscribeSpan.Percent type="amount" symbol={symbol} trading={trading} decimal={3} showSign initDirection={Decimal.create(props?.percent).gt(0)} initValue={(props?.close ?? 0) - (props?.prevClose ?? 0)} zeroText="--" />
       </span>
       <span>
-        <SubscribeSpan.Percent symbol={symbol} decimal={2} showSign initDirection={Decimal.create(props?.percent).gt(0)} initValue={props.percent} zeroText="--" />
+        <SubscribeSpan.Percent symbol={symbol} decimal={2} trading={trading} showSign initDirection={Decimal.create(props?.percent).gt(0)} initValue={props.percent} zeroText="--" />
       </span>
       <span className="text-tertiary">
         {props.tradingLabel}
         <SubscribeSpan
+          trading={trading}
           symbol={symbol} value={props.time?.slice(5, 11).replace('-', '/')}
-          formatter={v => dayjs(v.record.time).tz('America/New_York').format('HH/mm')}
+          formatter={v => dayjs(v.record.time).tz('America/New_York').format('YY/MM')}
         />
       </span>
     </div>
