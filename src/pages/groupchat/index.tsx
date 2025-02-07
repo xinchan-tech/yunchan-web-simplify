@@ -21,7 +21,6 @@ import {
   useGroupChatStoreNew,
 } from "@/store/group-chat-new";
 import { useShallow } from "zustand/react/shallow";
-import { useLatest } from "ahooks";
 
 import GroupMembers from "./group-members";
 

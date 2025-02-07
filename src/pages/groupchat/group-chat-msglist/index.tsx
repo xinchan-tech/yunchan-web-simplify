@@ -540,18 +540,16 @@ const GroupChatMsgList = forwardRef((props, ref) => {
       msg.content.mention.uids.includes(myId)
     ) {
       // 已打开的对话不提示@
-      if (latestToChannel.current?.channelID === msg.channel.channelID) {
-        return;
-      }
-      const conversation = WKSDK.shared().conversationManager.findConversation(
-        msg.channel
-      );
-      if (conversation) {
-        conversation.isMentionMe = true;
-        WKSDK.shared().conversationManager.notifyConversationListeners(
-          conversation,
-          ConversationAction.update
-        );
+      if (latestToChannel.current?.channelID !== msg.channel.channelID) {
+        const conversation =
+          WKSDK.shared().conversationManager.findConversation(msg.channel);
+        if (conversation) {
+          conversation.isMentionMe = true;
+          WKSDK.shared().conversationManager.notifyConversationListeners(
+            conversation,
+            ConversationAction.update
+          );
+        }
       }
     }
     // 只更新当前channel的message
