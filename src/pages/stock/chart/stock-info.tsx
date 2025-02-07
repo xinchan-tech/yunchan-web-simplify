@@ -148,7 +148,7 @@ const StockBaseInfo = () => {
         />
 
         {
-          (trading === 'preMarket' || trading === 'intraDay') ? (
+          trading !== 'intraDay' ? (trading === 'preMarket' ? (
             <StockQuoteBar
               label="点击查看盘前分时走势"
               percent={data?.subPercent}
@@ -169,7 +169,7 @@ const StockBaseInfo = () => {
             side="bottom"
             contentClassName="text-xs"
             interval={StockChartInterval.AFTER_HOURS}
-          />
+          />) : null
         }
       </div>
     </>
