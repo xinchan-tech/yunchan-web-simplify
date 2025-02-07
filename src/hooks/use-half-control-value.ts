@@ -7,6 +7,7 @@ export function usePropValue<T>(controlledValue: T | undefined) {
     if (controlledValue !== undefined) {
       setValue(controlledValue);
     }
+
   }, [controlledValue]);
 
  

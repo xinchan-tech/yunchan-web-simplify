@@ -146,18 +146,28 @@ const StockBaseInfo = () => {
         />
 
         {
-          trading !== 'intraDay' ? (
+          trading === 'preMarket' ? (
             <StockQuoteBar
-              label={trading === 'preMarket' ? '点击盘前分时走势' : '点击盘后分时走势'}
+              label="点击查看盘前分时走势"
               percent={data?.subPercent}
               close={data?.subClose}
               prevClose={data?.subPrevClose}
-              tradingLabel={trading === 'preMarket' ? '盘前价' : '盘后价'} time={data?.subTime}
+              tradingLabel="盘前价"
+              time={data?.subTime}
               side="bottom"
               contentClassName="text-xs"
-              interval={trading === 'preMarket' ? StockChartInterval.PRE_MARKET : StockChartInterval.AFTER_HOURS}
+              interval={StockChartInterval.PRE_MARKET}
             />
-          ) : null
+          ) : <StockQuoteBar
+            label="点击查看盘后分时走势"
+            percent={data?.subPercent}
+            close={data?.subClose}
+            prevClose={data?.subPrevClose}
+            tradingLabel="盘后价" time={data?.subTime}
+            side="bottom"
+            contentClassName="text-xs"
+            interval={StockChartInterval.AFTER_HOURS}
+          />
         }
       </div>
     </>
@@ -174,31 +184,24 @@ interface StockQuoteBarProps {
 }
 const StockQuoteBar = withTooltip(memo((props: StockQuoteBarProps) => {
   const symbol = useSymbolQuery()
-  const trading = useTime(s => s.getTrading())
+  // const trading = useTime(s => s.getTrading())
 
   const onClick = () => {
     kChartUtils.setTimeIndex({ timeIndex: props.interval })
   }
 
-  const hasSubscribed = useMemo(() => {
-    if (props.interval === StockChartInterval.INTRA_DAY) {
-      return trading === 'intraDay'
-    }
-
-    return trading !== 'intraDay'
-  }, [props.interval, trading])
-
+  const trading = useMemo(() => stockUtils.intervalToTrading(props.interval), [props.interval])
 
   return (
     <div className={cn('flex items-center justify-between px-2 box-border text-xs my-1 cursor-pointer')} onClick={onClick} onKeyDown={() => { }}>
       <span className={cn('text-base font-bold', props.interval === StockChartInterval.INTRA_DAY && 'text-lg')}>
-        <NumSpanSubscribe subscribe={hasSubscribed} code={symbol} field="close" arrow decimal={3} isPositive={Decimal.create(props?.percent).gte(0)} value={props.close} />
+        <SubscribeSpan.Price symbol={symbol} arrow decimal={3} trading={trading} initDirection={Decimal.create(props?.percent).gt(0)} initValue={props.close} zeroText="--" />
       </span>
       <span>
-        <NumSpanSubscribe subscribe={hasSubscribed} code={symbol} field={v => v.close - v.preClose} decimal={3} symbol isPositive={Decimal.create(props?.percent).gte(0)} value={(props?.close ?? 0) - (props?.prevClose ?? 0)} />
+        <SubscribeSpan.Percent type="amount" symbol={symbol} decimal={3} showSign initDirection={Decimal.create(props?.percent).gt(0)} initValue={(props?.close ?? 0) - (props?.prevClose ?? 0)} zeroText="--" />
       </span>
       <span>
-        <NumSpanSubscribe subscribe={hasSubscribed} code={symbol} field="percent" decimal={2} symbol isPositive={Decimal.create(props?.percent).gte(0)} value={props.percent} percent />
+        <SubscribeSpan.Percent symbol={symbol} decimal={2} showSign initDirection={Decimal.create(props?.percent).gt(0)} initValue={props.percent} zeroText="--" />
       </span>
       <span className="text-tertiary">
         {props.tradingLabel}
@@ -210,11 +213,6 @@ const StockQuoteBar = withTooltip(memo((props: StockQuoteBarProps) => {
     </div>
   )
 }))
-
-
-
-
-
 
 
 const StockQuote = () => {

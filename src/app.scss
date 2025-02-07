@@ -209,3 +209,19 @@ input[type="number"] {
   -moz-appearance: textfield;
   appearance: textfield;
 }
+
+span[data-direction="up"] {
+  color: hsl(var(--stock-up-color));
+}
+
+span[data-direction="down"] {
+  color: hsl(var(--stock-down-color));
+}
+
+span[data-direction-show="false"][data-direction]{
+  color: inherit;
+}
+
+span[data-direction-sign="true"][data-direction="up"]::before {
+  content: "+";
+}
