@@ -14,6 +14,10 @@ import { GroupTag } from "../components/create-and-join-group/group-channel-card
 import ChatAvatar from "../components/chat-avatar";
 import { JknIcon } from "@/components";
 import { useToast } from "@/hooks";
+import {
+  useGroupChatShortStore,
+  useGroupChatStoreNew,
+} from "@/store/group-chat-new";
 import WKSDK, { Channel } from "wukongimjssdk";
 
 const UpdateGroupInfo = (props: { group: Channel }) => {
@@ -53,7 +57,8 @@ const UpdateGroupInfo = (props: { group: Channel }) => {
     }
     return price;
   };
-
+  const { selectedChannel } = useGroupChatStoreNew();
+  const { getGroupDetailData } = useGroupChatShortStore();
   const editTypeRef = useRef("");
 
   const [editValue, setEditValue] = useState("");
@@ -72,6 +77,9 @@ const UpdateGroupInfo = (props: { group: Channel }) => {
         toast({
           description: "修改成功",
         });
+        if (props.group.channelID === selectedChannel?.channelID) {
+          getGroupDetailData(props.group.channelID);
+        }
         notifyChannelUpdate();
       })
       .finally(() => {

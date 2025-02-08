@@ -35,8 +35,7 @@ const MsgHead = (props: { message: Message; type: "left" | "right" }) => {
   const [channelInfo, setChannelInfo] = useState<ChannelInfo | undefined>();
   const fetchingChannel = useRef(false);
   useEffect(() => {
-    if(message) {
-
+    if (message) {
       const temp = WKSDK.shared().channelManager.getChannelInfo(
         new Channel(message.fromUID, ChannelTypePerson)
       );
@@ -44,13 +43,12 @@ const MsgHead = (props: { message: Message; type: "left" | "right" }) => {
         setChannelInfo(temp);
       } else if (fetchingChannel.current === false) {
         fetchingChannel.current = true;
-       
-  
+
         if (judgeIsUserInSyncChannelCache(message.fromUID)) {
           return;
         } else {
-          setUserInSyncChannelCache(message.fromUID,true)
-  
+          setUserInSyncChannelCache(message.fromUID, true);
+
           setPersonChannelCache(message.fromUID).then(() => {
             const temp = WKSDK.shared().channelManager.getChannelInfo(
               new Channel(message.fromUID, ChannelTypePerson)
@@ -59,7 +57,7 @@ const MsgHead = (props: { message: Message; type: "left" | "right" }) => {
               setChannelInfo(temp);
             }
             fetchingChannel.current = false;
-            setUserInSyncChannelCache(message.fromUID,false)
+            setUserInSyncChannelCache(message.fromUID, false);
           });
         }
       }
@@ -89,11 +87,14 @@ const MsgHead = (props: { message: Message; type: "left" | "right" }) => {
         )}
       >
         {channelInfo?.title}
-        {type === "left" && (
+        {/* {type === "left" && (
           <span className="ml-2 text-gray-400">
             {getTimeStringAutoShort2(message.timestamp * 1000, true)}
           </span>
-        )}
+        )} */}
+        <span className="ml-2 text-gray-400">
+          {getTimeStringAutoShort2(message.timestamp * 1000, true)}
+        </span>
       </div>
       <ContextMenu>
         <ContextMenuTrigger asChild>

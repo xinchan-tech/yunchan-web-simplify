@@ -124,6 +124,9 @@ const JoinGroupContent = (props: { onSuccess: () => void }) => {
             ></GroupChannelCard>
           );
         })}
+        {/* <div className="flex justify-center mt-4 text-sm text-gray-600 cursor-pointer">
+          加载更多
+        </div> */}
       </div>
       <style jsx>{`
         .content-box {
