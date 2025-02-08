@@ -56,7 +56,7 @@ const MenuRight = () => {
           return;
         }
         
-        window.open(`${window.location.origin}/chat`, 'whatever', 'hideit,height=800,width=1080,resizable=yes,scrollbars=yes,status=no,location=no');
+        window.open(`${window.location.origin}/chat`, 'whatever', 'hideit,height=750,width=1000,resizable=yes,scrollbars=yes,status=no,location=no');
         
       },
     }

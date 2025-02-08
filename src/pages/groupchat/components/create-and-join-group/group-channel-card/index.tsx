@@ -3,22 +3,65 @@ import ChatAvatar from "../../chat-avatar";
 import { useMemo } from "react";
 import { Button, JknIcon } from "@/components";
 
+export const GroupTag = (props: {
+  tags: string;
+  total?: number | string;
+  showMember?: boolean;
+}) => {
+  const { tags, total, showMember } = props;
+
+  const taglist = useMemo(() => {
+    let result: string[] = [];
+    if (tags) {
+      result = tags.split(/[,，]/);
+    }
+    if (result.length > 0 && result[result.length - 1] === "") {
+      result.pop();
+    }
+    return result;
+  }, [tags]);
+  return (
+    <div className="flex mb-1">
+      {showMember === true && (
+        <div className="group-tag text-xs">
+          <JknIcon
+            name="ic_top_2"
+            className="mr-1"
+            style={{ width: "14px", height: "14px" }}
+          />
+          {total}
+        </div>
+      )}
+
+      {taglist.map((Item, index) => {
+        return (
+          <div key={Item + index} className="group-tag text-xs">
+            {Item}
+          </div>
+        );
+      })}
+      <style jsx>{`
+        .group-tag {
+          height: 18px;
+          display: flex;
+          align-items: center;
+          padding: 0 6px;
+          border-radius: 4px;
+          background-color: rgb(35, 35, 35);
+          margin-right: 6px;
+        }
+      `}</style>
+    </div>
+  );
+};
+
 const GroupChannelCard = (props: {
   data: GroupChannelItem;
   onJoin: () => void;
   joinDisabled?: boolean;
 }) => {
   const { data } = props;
-  const taglist = useMemo(() => {
-    let result: string[] = [];
-    if (data.tags) {
-      result = data.tags.split(/[,，]/);
-    }
-    if (result.length > 0 && result[result.length - 1] === "") {
-      result.pop();
-    }
-    return result;
-  }, [data.tags]);
+
   return (
     <div className="flex justify-between  flex-shrink-0 card-container">
       <div className="flex flex-1">
@@ -34,7 +77,8 @@ const GroupChannelCard = (props: {
         </div>
         <div className="group-info ml-2">
           <div className="mb-1 text-sm">{data.name}</div>
-          <div className="flex mb-1">
+          <GroupTag tags={data.tags} total={data.total_user} showMember />
+          {/* <div className="flex mb-1">
             <div className="group-tag text-xs">
               <JknIcon
                 name="ic_top_2"
@@ -50,7 +94,7 @@ const GroupChannelCard = (props: {
                 </div>
               );
             })}
-          </div>
+          </div> */}
           <div className="group-desc text-xs text-gray-600">
             社群简介：{data.brief}
           </div>
@@ -108,15 +152,6 @@ const GroupChannelCard = (props: {
             text-align: center;
             line-height: 60px;
             background-color: rgba(7, 140, 143);
-          }
-          .group-tag {
-            height: 18px;
-            display: flex;
-            align-items: center;
-            padding: 0 6px;
-            border-radius: 4px;
-            background-color: rgb(35, 35, 35);
-            margin-right: 6px;
           }
         `}
       </style>

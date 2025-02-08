@@ -477,9 +477,12 @@ const GroupChatMsgList = forwardRef((props, ref) => {
           scrollBottom();
           initToBottomRef.current = false;
         } else {
-          // 自己发的
+          // 自己发的信息要滚到最下面
           let lastMsg = messages[messages.length - 1];
-          if (lastMsg.fromUID === WKSDK.shared().config.uid) {
+          if (
+            lastMsg.fromUID === WKSDK.shared().config.uid &&
+            lastMsg.content.cmd !== "messageRevoke"
+          ) {
             scrollBottom();
           } else {
             const distanceToBottom = calcOffset(scrollDomRef) || 0;

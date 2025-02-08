@@ -2,8 +2,16 @@ import { PropsWithChildren, useEffect, useRef, useState } from "react";
 import UploadUtil from "../../Service/uploadUtil";
 import { uid } from "radash";
 import { JknIcon } from "@/components";
+import { cn } from "@/utils/style";
+import FullScreenLoading from "@/components/loading";
 const AliyunOssUploader = (
-  props: PropsWithChildren<{ onChange: (value: string) => void; value: string }>
+  props: PropsWithChildren<{
+    onChange: (value: string) => void;
+    value: string;
+    className?: string;
+    disabled?: boolean;
+    loading?: boolean;
+  }>
 ) => {
   const { onChange, value } = props;
   const imgUploadRef = useRef<HTMLInputElement>();
@@ -41,23 +49,50 @@ const AliyunOssUploader = (
   };
 
   const chooseFile = () => {
+    if (props.disabled === true) {
+      return;
+    }
     imgUploadRef.current && imgUploadRef.current.click();
   };
 
   return (
-    <div onClick={chooseFile}>
-      <input
-        onClick={onFileClick}
-        onChange={onFileChange}
-        type="file"
-        multiple={false}
-        accept="image/*"
-        ref={imgUploadRef}
-        style={{ display: "none" }}
-      />
-      <div className="w-16 h-16 rounded-full border border-solid border-gray-300 overflow-hidden">
+    <div onClick={chooseFile} className="relative">
+      {props.loading === true && (
+        <FullScreenLoading description="修改中" fullScreen={false} />
+      )}
+      {!props.disabled && (
+        <input
+          onClick={onFileClick}
+          onChange={onFileChange}
+          type="file"
+          multiple={false}
+          accept="image/*"
+          ref={imgUploadRef}
+          style={{ display: "none" }}
+        />
+      )}
+
+      <div
+        className={cn(
+          "w-16 h-16 rounded-full border border-solid border-gray-300 overflow-hidden relative",
+          props.className
+        )}
+      >
         {previewUrl ? (
-          <img className="w-16 h-16" src={previewUrl} alt="" />
+          <>
+            <img className="w-full h-full" src={previewUrl} alt="" />
+            {!props.disabled && (
+              <span
+                className="absolute text-xs text-white bottom-1 left-1/2"
+                style={{
+                  transform: "translateX(-50%)",
+                  textShadow: "0 0 4px rgba(0,0,0,0.2)",
+                }}
+              >
+                修改
+              </span>
+            )}
+          </>
         ) : (
           <div className="flex h-full flex-col justify-center items-center">
             <JknIcon name="pick_image" className="w-8 h-8" />

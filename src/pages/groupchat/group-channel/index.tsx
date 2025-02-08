@@ -18,6 +18,7 @@ import { cn } from "@/utils/style";
 import APIClient from "../Service/APIClient";
 import { useLatest } from "ahooks";
 import { useShallow } from "zustand/react/shallow";
+import { useModal } from "@/components";
 
 import { getGroupChannels } from "@/api";
 // import { useQuery } from "@tanstack/react-query";
@@ -30,7 +31,9 @@ import {
   setPersonChannelCache,
   setUserInSyncChannelCache,
 } from "../chat-utils";
-import { Skeleton } from "@/components";
+import { JknIcon, Skeleton } from "@/components";
+import UpdateGroupInfo from "./updateGroupInfo";
+import { useQuery } from "@tanstack/react-query";
 
 export type GroupData = {
   id: string;
@@ -98,31 +101,33 @@ const GroupChannel = (props: {
       });
     }
   };
-
-  const [data, setData] = useState<
-    Awaited<ReturnType<typeof getGroupChannels>>
-  >({});
-  // const [isLoading, setIsLoading] = useState(false);
-
-  const fetchData = () => {
-    // setIsLoading(true);
-
-    getGroupChannels({ type: "1" })
-      .then((res) => {
-        setData(res);
-        if (res.items instanceof Array) {
-          res.items.forEach((channel) => {
-            const cacheData = { name: channel.name, avatar: channel.avatar };
-            WKSDK.shared().channelManager.setChannleInfoForCache(
-              groupToChannelInfo(cacheData, channel.account)
-            );
-          });
-        }
-      })
-      .finally(() => {
-        // setIsLoading(false);
+  const fetchData = async () => {
+    const res = await getGroupChannels({ type: "1" });
+    if (res.items instanceof Array) {
+      res.items.forEach((channel) => {
+        const cacheData = { name: channel.name, avatar: channel.avatar };
+        WKSDK.shared().channelManager.setChannleInfoForCache(
+          groupToChannelInfo(cacheData, channel.account)
+        );
       });
+    }
+    return res;
   };
+  const options = {
+    queryFn: fetchData,
+    queryKey: ["channel:fetchData"],
+  };
+
+  const { data } = useQuery(options);
+  const [editChannel, setEditChannel] = useState<Channel>();
+  // 修改社群
+  const updateGroupInfoModal = useModal({
+    content: <UpdateGroupInfo group={editChannel} />,
+    title: "社群信息",
+    footer: null,
+    className: "w-[700px]",
+    closeIcon: true,
+  });
 
   // 监听连接状态
   const firstInitFlag = useRef(true);
@@ -278,7 +283,6 @@ const GroupChannel = (props: {
   };
 
   useEffect(() => {
-    fetchData();
     WKSDK.shared().connectManager.addConnectStatusListener(
       connectStatusListener
     ); // 监听连接状态
@@ -450,16 +454,30 @@ const GroupChannel = (props: {
                     )}
                   </div>
                   <div className="group-data flex-1">
-                    <div className="group-title flex items-baseline">
-                      <div
-                        title={item.channelInfo?.title || ""}
-                        className="overflow-hidden whitespace-nowrap text-ellipsis max-w-42"
-                      >
-                        {item.channelInfo?.title || ""}
+                    <div className="group-title flex  justify-between">
+                      <div className="flex items-baseline">
+                        <div
+                          title={item.channelInfo?.title || ""}
+                          className="overflow-hidden whitespace-nowrap text-ellipsis max-w-36"
+                        >
+                          {item.channelInfo?.title || ""}
+                        </div>
+                        <span className="text-xs ml-1 text-gray-400">
+                          ({item.total_user})
+                        </span>
                       </div>
-                      <span className="text-xs ml-1 text-gray-400">
-                        ({item.total_user})
-                      </span>
+                      <div
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEditChannel(item.channel);
+                          updateGroupInfoModal.modal.open();
+                        }}
+                      >
+                        <JknIcon
+                          name="settings_shallow"
+                          className="rounded-none"
+                        />
+                      </div>
                     </div>
                     <div className="group-last-msg flex justify-between">
                       <div className="flex-1 overflow-hidden whitespace-nowrap text-ellipsis max-w-24 text-xs">
@@ -521,7 +539,7 @@ const GroupChannel = (props: {
           </>
         )}
       </div>
-
+      {updateGroupInfoModal.context}
       <style jsx>
         {`
           .group-filter {

@@ -18,6 +18,7 @@ export interface UseModalProps {
   className?: string
   footer?: boolean | ReactNode
   onOk?: () => void
+  confirmLoading? : boolean;
 }
 
 export interface UseModalAction {
@@ -26,7 +27,7 @@ export interface UseModalAction {
   title: (title?: string) => string
 }
 
-export const useModal = ({ content, onOpen, title, closeIcon, className, footer, ...props }: UseModalProps) => {
+export const useModal = ({ content, onOpen, title, closeIcon, className, footer, confirmLoading, ...props }: UseModalProps) => {
   const [modalVisible, { toggle: toggleModalVisible }] = useBoolean(false)
   const [innerTitle, setInnerTitle] = usePropValue(title)
   const [visible, { setFalse, setTrue }] = useBoolean(false)
@@ -89,7 +90,7 @@ export const useModal = ({ content, onOpen, title, closeIcon, className, footer,
               footer === undefined ? (
                 <DialogFooter className="m-4">
                   <Button variant="outline" onClick={() => toggleModalVisible()}>取消</Button>
-                  <Button onClick={() => props.onOk?.()}>确认</Button>
+                  <Button loading={confirmLoading} onClick={() => props.onOk?.()}>确认</Button>
                 </DialogFooter>
               ) : (
                 footer

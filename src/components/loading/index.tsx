@@ -8,7 +8,9 @@ const FullScreenLoading = (props: {
       style={{ position: props.fullScreen === false ? "absolute" : "fixed" }}
     >
       <div className="spinner"></div>
-      <div className="text-white mt-3">{props.description || "加载中"}</div>
+      <div className="text-white text-sm mt-3">
+        {props.description || "加载中"}
+      </div>
       <style jsx>{`
          {
           .fullscreen-loader {
@@ -25,11 +27,11 @@ const FullScreenLoading = (props: {
           }
 
           .spinner {
-            border: 8px solid #f3f3f3;
-            border-top: 8px solid #3498db;
+            border: 6px solid #f3f3f3;
+            border-top: 6px solid #3498db;
             border-radius: 50%;
-            width: 40px;
-            height: 40px;
+            width: 30px;
+            height: 30px;
             animation: spin 2s linear infinite;
           }
 

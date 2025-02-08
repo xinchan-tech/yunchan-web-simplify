@@ -23,7 +23,7 @@ type GroupChannelsResult = PageResult<GroupChannelItem>;
 
 export const getGroupChannels = async (params: getGroupChannelsParams) => {
   const r = await request
-    .get<GroupChannelsResult>("/channels", { params: { ...params, limit: 50 } })
+    .get<GroupChannelsResult>("/channels", { params: { ...params, limit: 30 } })
     .then((r) => r.data);
   return r;
 };
@@ -53,6 +53,8 @@ export const getGroupMembersService = async (groupId: string) => {
     .then((r) => r.data);
   return r;
 };
+
+getGroupMembersService.key = "groupChannels:getGroupMembers";
 
 export const getChatNameAndAvatar = async (params: {
   type: string;
@@ -118,6 +120,13 @@ export interface GroupDetailData {
    * 创建者
    */
   user: User;
+  editable: boolean;
+  products: Array<{
+    product_sn: string;
+    price: string;
+    unit: string;
+    title: string;
+  }>;
   chat_type: "0" | "1" | "2";
   blacklist: Array<{ uid: string; realname: string }>;
 }
@@ -137,6 +146,8 @@ export const getGroupDetailService = async (id: string) => {
     .then((r) => r.data);
   return r;
 };
+
+getGroupDetailService.key = "groupChannels:getDetail";
 
 // 加入群
 export const joinGroupService = async (
@@ -250,8 +261,10 @@ export const loginImService = async (params: ImgLoginPayload) => {
 export type EditGroupPayload = {
   chat_type?: "0" | "1" | "2";
   notice?: string;
+  tags?: string;
   name?: string;
   brief?: string;
+  avatar?: string;
   account: string;
 };
 export const editGroupService = async (params: EditGroupPayload) => {
