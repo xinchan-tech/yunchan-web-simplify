@@ -516,6 +516,7 @@ const GroupChatMsgList = forwardRef((props, ref) => {
   useEffect(() => {
     if (selectedChannel) {
       initToBottomRef.current = true;
+      jumpMsgIdRef.current = "";
     }
   }, [selectedChannel]);
 

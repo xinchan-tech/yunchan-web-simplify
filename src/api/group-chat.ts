@@ -23,7 +23,7 @@ type GroupChannelsResult = PageResult<GroupChannelItem>;
 
 export const getGroupChannels = async (params: getGroupChannelsParams) => {
   const r = await request
-    .get<GroupChannelsResult>("/channels", { params })
+    .get<GroupChannelsResult>("/channels", { params: { ...params, limit: 50 } })
     .then((r) => r.data);
   return r;
 };
