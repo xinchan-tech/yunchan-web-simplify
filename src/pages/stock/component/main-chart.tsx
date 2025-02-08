@@ -74,7 +74,6 @@ export const MainChart = (props: MainChartProps) => {
       renderFn.current()
     })
 
-
     sizeObserver.observe(dom.current!)
 
     return () => {
@@ -105,7 +104,7 @@ export const MainChart = (props: MainChartProps) => {
     start_at: startTime,
     ticker: state.symbol,
     interval: state.timeIndex,
-    gzencode: false
+    gzencode: true
   }
   const queryKey = [getStockChart.cacheKey, params]
   const query = useQuery({
@@ -240,7 +239,6 @@ export const MainChart = (props: MainChartProps) => {
         params = getIndicatorQueryParams(id)
         queryKey.push(params)
       }
-
       return {
         queryKey,
         refetchInterval: 60 * 1000,

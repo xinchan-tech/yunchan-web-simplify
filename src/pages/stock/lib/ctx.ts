@@ -1,4 +1,4 @@
-import { StockChartInterval, getStockChart, getStockIndicatorData, getStockTabData } from '@/api'
+import { StockChartInterval, getStockChart, getStockIndicatorData, getStockIndicators, getStockTabData } from '@/api'
 import { useIndicator, useTime } from '@/store'
 import { calcCoiling } from '@/utils/coiling'
 import type echarts from '@/utils/echarts'
@@ -219,6 +219,7 @@ export type Indicator = {
   key: string
   name: string
   visible?: boolean
+  formula?: string
   data?: IndicatorData
 }
 
@@ -726,6 +727,7 @@ export const kChartUtils: KChartUtils = {
       getStockIndicatorData.cacheKey,
       { symbol: indicator.symbol, cycle: indicator.timeIndex, id: indicator.id, db_type: indicator.type }
     ] as any[]
+  
 
     if (!useIndicator.getState().isDefaultIndicatorParams(indicator.id)) {
       queryKey.push(useIndicator.getState().getIndicatorQueryParams(indicator.id))

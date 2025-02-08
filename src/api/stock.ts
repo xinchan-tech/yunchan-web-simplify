@@ -1,4 +1,6 @@
+import { useIndicator } from "@/store"
 import request from '@/utils/request'
+import { aesDecrypt, base64Decode, gzDecode } from '@/utils/string'
 import axios from 'axios'
 import dayjs from 'dayjs'
 import { md5 } from 'js-md5'
@@ -262,15 +264,15 @@ export const getStockChart = async (params: GetStockChartParams) => {
     .then(r => r.data)
 
   if (params.gzencode) {
-    const data = atob(r as unknown as string)
+    // const data = atob(r as unknown as string)
 
-    const dataUint8 = new Uint8Array(data.length)
+    // const dataUint8 = new Uint8Array(data.length)
 
-    for (let i = 0; i < data.length; i++) {
-      dataUint8[i] = data.charCodeAt(i)
-    }
+    // for (let i = 0; i < data.length; i++) {
+    //   dataUint8[i] = data.charCodeAt(i)
+    // }
 
-    r = JSON.parse(pako.inflate(dataUint8, { to: 'string' })) as GetStockChartResult
+    r = JSON.parse(gzDecode(r as unknown as string)) as GetStockChartResult
   }
 
   return r
@@ -1149,33 +1151,35 @@ getStockEconomicDetail.cacheKey = 'stock:economic:detail'
  */
 export const getStockFedCalendar = () => {
   return request
-    .get<{
-      date: string
-      /**
-       * 褐皮书
-       */
-      beige_book: string
-      /**
-       * 点阵图
-       */
-      bitmap: string
-      /**
-       * 发布会
-       */
-      conference: string
-      /**
-       * 决议声明
-       */
-      declare: string
-      /**
-       * 经济预测
-       */
-      prediction: string
-      /**
-       * 纪要
-       */
-      summary: string
-    }[]>('/stock/schedule')
+    .get<
+      {
+        date: string
+        /**
+         * 褐皮书
+         */
+        beige_book: string
+        /**
+         * 点阵图
+         */
+        bitmap: string
+        /**
+         * 发布会
+         */
+        conference: string
+        /**
+         * 决议声明
+         */
+        declare: string
+        /**
+         * 经济预测
+         */
+        prediction: string
+        /**
+         * 纪要
+         */
+        summary: string
+      }[]
+    >('/stock/schedule')
     .then(r => r.data)
 }
 getStockFedCalendar.cacheKey = 'stock:fed:schedule'
@@ -1360,21 +1364,15 @@ export type StockIndicator = {
   type: string
   value: string
   name?: string
-  param?: string | any[][]
+  param?: [string, number, number, number][]
+  items?: StockIndicator[]
 }
 
 type GetStockIndicatorsResult = {
   main: {
     db_type: 'system' | 'user'
     id: string
-    indicators:
-      | {
-          authorized: 1 | 0
-          id: string
-          name: string
-          items: StockIndicator[]
-        }[]
-      | StockIndicator[]
+    indicators:StockIndicator[]
     name: string
   }[]
   secondary: GetStockIndicatorsResult['main']
@@ -1384,7 +1382,61 @@ type GetStockIndicatorsResult = {
  * 指标列表
  */
 export const getStockIndicators = () => {
-  return request.get<GetStockIndicatorsResult>('/stock/indicators').then(r => r.data)
+  return request.get<GetStockIndicatorsResult>('/stock/indicators').then(r => {
+    const indicator: {
+      id: string,
+      name: string,
+      params: {name: string, value: string, default: string, min: string, max: string}[]
+    }[] = []
+
+    r.data.main.forEach(m => {
+      m.indicators.forEach(i => {
+        if(i.formula){
+          i.formula = aesDecrypt(i.formula)
+        }
+        if(i.param){
+          indicator.push({
+            id: i.id,
+            name: i.name!,
+            params: i.param.map(p => {
+              return {
+                name: p[0],
+                value: p[1].toString(),
+                default: p[1].toString(),
+                min: p[3].toString(),
+                max: p[2].toString()
+              }
+            })
+          })
+        }
+      })
+    })
+    r.data.secondary.forEach(m => {
+      m.indicators.forEach(i => {
+        if(i.formula){
+          i.formula = aesDecrypt(i.formula)
+        }
+        if(i.param){
+          indicator.push({
+            id: i.id,
+            name: i.name!,
+            params: i.param.map(p => {
+              return {
+                name: p[0],
+                value: p[1].toString(),
+                default: p[1].toString(),
+                min: p[3].toString(),
+                max: p[2].toString()
+              }
+            })
+          })
+        }
+      })
+    })
+
+    useIndicator.getState().mergeIndicatorParams(indicator)
+    return r.data
+  })
 }
 getStockIndicators.cacheKey = 'stock:indicators'
 

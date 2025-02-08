@@ -44,7 +44,20 @@ interface Window {
       interval: number
     ) => Promise<CoilingData>
   }
+
   CoilingModule: () => Promise<Module>
+
+  PolicyModule: () => Promise<{
+    policy_execute: (
+      fmlData: {
+        formula: string
+        // symbol 股票代码
+        symbal: string
+      },
+      data: StockRawRecord[],
+      interval: number
+    ) => Promise<any>
+  }>
 }
 
 /**

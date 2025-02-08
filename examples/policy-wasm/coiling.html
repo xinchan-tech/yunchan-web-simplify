@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Coiling WebAssembly Test</title>
+</head>
+<body>
+    <h1>指标公式计算测试</h1>
+    <input type="text" name="ticker" placeholder="股票代码">
+    <input type="text" name="interval" placeholder="周期">
+    <!-- <button type="button" id="calc_btn">计算</button> -->
+    <p>
+        <textarea name="formula" id="formula" cols="50" rows="10" spellcheck="false">SHORT:=12;
+LONG:=26;
+MID:=9;
+DIF:EMA(CLOSE,SHORT)-EMA(CLOSE,LONG),COLOR808000;
+DEA:EMA(DIF,MID),COLORRED,LINETHICK2;
+MACD:(DIF-DEA)*2,COLORSTICK;
+        </textarea>
+    </p>
+    <button type="button" id="calc_btn">计算</button>
+    <!-- <script src="coiling.js"></script> -->
+    <script src="jquery-3.7.1.min.js"></script>
+    <script src="policy_webassembly.js"></script>
+    <script>
+
+        // CoilingModule().then(Module => {
+        //     $('#calc_btn').on('click', function () {
+        //         const ticker = $('input[name=ticker]').val();
+        //         const interval = $('input[name=interval]').val();
+
+        //         console.log($('input[name=ticker]').val());
+
+                // $.ajax({
+                //     url: 'https://us.mgjkn.com/stock/chart?ticker=' + ticker + '&interval=' + interval + '&start_at=2003-09-10&_tr=1737517264_316756&gzencode=false',
+                //     dataType: 'json',
+                //     success(res) {
+                //         if (res.status == 1) {
+                //             var candlesticks = res.data.history;
+                //             for (let i = 0; i < candlesticks.length; i++) {
+                //                 candlesticks[i][0] = Math.floor(Date.parse(candlesticks[i][0]) / 1000)
+                //             }
+                //             // console.log(candlesticks.length);
+
+                //             // 调用 WebAssembly 函数 coiling_calculate
+                //             const start = performance.now();
+                //             const result = Module.coiling_calculate(candlesticks, candlesticks.length, interval);
+                //             const end = performance.now();
+
+                //             // 计算耗时
+                //             const timeElapsed = end - start;
+                //             console.log(`C++ 函数调用耗时：${timeElapsed} 毫秒`);
+
+                //             // 输出结果
+                //             console.log(result);
+                //         }
+                //     },
+                //     error() {
+                //         console.log('error');
+                //     }
+                // })
+        //     })
+
+        // });
+
+        PolicyModule().then(Module => {
+            $('#calc_btn').on('click', function(){
+                const ticker = $('input[name=ticker]').val();
+                const interval = $('input[name=interval]').val();
+                $.ajax({
+                    url: 'https://us.mgjkn.com/stock/chart?ticker=' + ticker + '&interval=' + interval + '&start_at=2003-09-10&_tr=1737517264_316756&gzencode=false',
+                    dataType: 'json',
+                    success(res) {
+                        if (res.status == 1) {
+                            var candlesticks = res.data.history;
+                            for (let i = 0; i < candlesticks.length; i++) {
+                                candlesticks[i][0] = Math.floor(Date.parse(candlesticks[i][0]) / 1000)
+                            }
+                            // console.log(candlesticks.length);
+                            var fml = $("#formula").val();
+                            var fmlData = {formula:fml,symbal:ticker}
+                            // 调用 WebAssembly 函数 coiling_calculate
+                            const start = performance.now();
+                            var result = Module.policy_execute(fmlData, candlesticks, interval)
+                            const end = performance.now();
+
+                            // 计算耗时
+                            const timeElapsed = end - start;
+                            console.log(`C++ 函数调用耗时：${timeElapsed} 毫秒`);
+
+                            // 输出结果
+                            console.log(result);
+                        }
+                    },
+                    error() {
+                        console.log('error');
+                    }
+                })
+            })
+        })
+//         const importObject = {
+//   my_namespace: { env: (arg) => console.log(arg) },
+// };
+// WebAssembly.instantiateStreaming(fetch("coiling.wasm"), importObject).then(
+//   (obj) => obj.instance.exports.exported_func(),
+// );
+
+        // fetch('coiling.wasm')
+        // .then(response => response.arrayBuffer())  // 获取 ArrayBuffer
+        // .then(binary => WebAssembly.instantiate(binary))  // 通过 ArrayBuffer 加载 WebAssembly
+        // .then(({ instance }) => {
+        //     // 调用 WebAssembly 模块中的导出函数
+        //     //console.log(instance.exports.add(40, 2));  // 输出 42
+        // })
+        // .catch(console.error);   
+        
+
+     
+    </script>
+</body>
+</html>

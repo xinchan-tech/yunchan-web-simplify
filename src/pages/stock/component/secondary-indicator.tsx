@@ -147,9 +147,10 @@ const indicatorParamsSchema = z.object({
     name: z.string(),
     value: z.string()
   }).refine((v) => {
+  
     if (!v.value) return false
-
-    if (v.min && Decimal.create(v.value).lt(v.min)) return
+    console.log(v, v.min)
+    if (v.min && Decimal.create(v.value).lt(v.min)) return false
 
     if (v.max && Decimal.create(v.value).gt(v.max)) return false
 
