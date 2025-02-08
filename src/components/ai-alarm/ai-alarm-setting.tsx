@@ -120,7 +120,7 @@ const AiAlarmSetting = (props: AiAlarmSetting) => {
 
         </form>
       </FormProvider>
-      <div className="text-center mt-4">
+      <div className="text-center mt-6">
         <Button className="w-24" loading={loading} onClick={onSubmit}>确定</Button>
       </div>
     </div>
@@ -276,17 +276,23 @@ const StockHdlySelect = forwardRef((props: StockHdlySelectProps, _) => {
   const data = useMemo(() => query.data?.stocks.find(item => item.name === '底部叠加'), [query.data])
 
   return (
-    <ToggleGroup activeColor="hsl(var(--stock-up-color))" value={props.value} type="multiple" onValueChange={props.onChange}>
-      {
-        data?.children?.map(item => (
-          <ToggleGroupItem disabled={!item.authorized} className="w-20 relative" key={item.id} value={item.id}>
-            {
-              !item.authorized && <JknIcon name="ic_lock" className="absolute right-0 top-0 w-3 h-3" />
-            }
-            {item.name}
-          </ToggleGroupItem>
-        ))
-      }
-    </ToggleGroup>
+    <div className="flex items-center">
+      <div className="ml-3 mr-6">
+        <JknIcon.Arrow direction="up" className="h-5 w-5" />
+        <span className="text-stock-up text-sm">底部信号</span>
+      </div>
+      <ToggleGroup activeColor="hsl(var(--stock-up-color))" value={props.value} type="multiple" onValueChange={props.onChange}>
+        {
+          data?.children?.map(item => (
+            <ToggleGroupItem disabled={!item.authorized} className="w-20 relative" key={item.id} value={item.id}>
+              {
+                !item.authorized && <JknIcon name="ic_lock" className="absolute right-0 top-0 w-3 h-3" />
+              }
+              {item.name}
+            </ToggleGroupItem>
+          ))
+        }
+      </ToggleGroup>
+    </div>
   )
 })

@@ -71,7 +71,9 @@ export const AiAlarmNotice = () => {
   }, [query.data])
 
   useEffect(() => {
+
     if (query.isFetched && aiAlarmAutoNotice && query.data?.items?.length) {
+   
       if(lastData.current.length === 0){
         lastData.current = query.data.items
         setTrue()

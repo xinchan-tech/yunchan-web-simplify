@@ -84,7 +84,6 @@ export const PriceSubscribeSpan = memo(({ zeroText, decimal = 2, arrow, showSign
     direction,
     onChange
   } = useBaseSubscribe(initValue, initDirection, numberFormatter)
-  console.log(direction)
   const subscribeFormatter = useCallback<SubscribeSpanProps['formatter']>((data) => {
     return numberFormatter(data.record.close)
   }, [numberFormatter])

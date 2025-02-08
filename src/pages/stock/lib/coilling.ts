@@ -463,13 +463,58 @@ export const calcBottomSignal = (
       color: 'rgb(255, 0, 102)'
     }
   ])
-  const hdlyData = hdly(candlesticks)
-    .map((item, index) => [index, 0, item, 18, 0, ''])
-    .filter(v => v[2] > 0)
+
+  const hdlyLabel: {index: number, yAxis: number, label: string}[] = []
+  const hdlyData: [number, number, number, number, number, string][] = []
+  // const hdlyData = hdly(candlesticks)
+  //   .map((item, index) => [index, 0, item, 18, 0, ''])
+  //   .filter(v => v[2] > 0)
+  let maxPos = -1
+  let maxVol = 0
+  hdly(candlesticks).forEach((vol: number, index) => {
+    if (vol > 0) {
+      hdlyData.push([index, 0, vol, 18, 0, ''])
+
+      if(vol >= maxVol){
+        maxVol = vol
+        maxPos = index
+      }
+    }else{
+      if (maxPos !== -1) {
+        let str = '历史大底'
+        if (maxVol < 30) {
+          str = '小底'
+        } else if (maxVol < 60) {
+          str = '中底'
+        } else if (maxVol < 90) {
+          str = '大底'
+        } else if (maxVol < 150) {
+          str = '超大底'
+        }
+        hdlyLabel.push({index: maxPos, yAxis: maxVol + 8, label: str})
+        maxPos = -1
+        maxVol = 0
+      }
+    }
+  })
 
   const monthLineData = monthLine(candlesticks)
   const horizonData = horizon(candlesticks)
   const topLine = candlesticks.map((_, index) => [index, 100])
+
+  // const label = []
+
+  // var hdlyValue = allChanData.safeAt(pos)?.hdlyVol;
+  // if (hdlyValue != null) {
+  //   if (hdlyValue < 30) {
+  //     str = "小底";
+  //   } else if (hdlyValue < 60) {
+  //     str = "中底";
+  //   } else if (hdlyValue < 90) {
+  //     str = "大底";
+  //   } else if (hdlyValue < 150) {
+  //     str = "超大底";
+  //   }
 
   return {
     result: [
@@ -509,6 +554,15 @@ export const calcBottomSignal = (
         },
         name: '顶部线',
         data: topLine
+      },
+      {
+        draw: 'HDLY_LABEL',
+        style: {
+          color: '#fff',
+          linethick: 1
+        },
+        name: '标签',
+        data: hdlyLabel
       }
     ]
   }

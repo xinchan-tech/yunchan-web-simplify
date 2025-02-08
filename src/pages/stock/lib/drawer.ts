@@ -70,6 +70,10 @@ type DrawerFuncOptions<T = any> = {
      * 序列
      */
     seriesId?: string
+    /**
+     * bgColor
+     */
+    bgColor?: string
   }
   /**
    *
@@ -249,7 +253,7 @@ export type DrawerTextShape = [XAxis, YAxis, string, DrawerColor]
  * @example ['2030-01-01', 111380, 'text', '#00943c']
  *
  */
-export const drawText: DrawerFunc<DrawerTextShape[]> = (options, _, { xAxisIndex, yAxisIndex, data, name }) => {
+export const drawText: DrawerFunc<DrawerTextShape[]> = (options, _, { xAxisIndex, yAxisIndex, data, name, extra }) => {
   const line: CustomSeriesOption = {
     xAxisIndex: xAxisIndex,
     yAxisIndex: yAxisIndex,
@@ -729,4 +733,78 @@ export const drawNumber = (
   }
 
   Array.isArray(options.series) && options.series.push(custom)
+}
+
+type DrawHdlyLabelShape = {
+  index: XAxis
+  yAxis: YAxis
+  label: string
+}
+
+/**
+ * 绘制海底捞月标签
+ */
+export const drawHdlyLabel: DrawerFunc<DrawHdlyLabelShape[]> = (
+  options,
+  _,
+  { xAxisIndex, yAxisIndex, data, name }
+) => {
+  const series: CustomSeriesOption = {
+    xAxisIndex: xAxisIndex,
+    yAxisIndex: yAxisIndex,
+    encode: {
+      x: [0],
+      y: [1]
+    },
+    type: 'custom',
+    renderItem: (_, api) => {
+      const x = api.value(0) as number
+      const y = api.value(1) as number
+      const label = api.value(2) as string
+      const singleLabelWidth = 12
+      const height = 22
+      const width = singleLabelWidth * label.length + 8
+
+      const start = api.coord([x, y])
+   
+      return {
+        type: 'group',
+        children: [
+          {
+            type: 'rect',
+            shape: {
+              x: start[0] - width / 2,
+              y: start[1] - height / 2,
+              width,
+              height,
+              r: 4
+            },
+            z2: 10,
+            style: {
+              fill: '#ff0066'
+            }
+          },
+          {
+            type: 'text',
+            position: [start[0], start[1]],
+            z2: 10,
+            style: {
+              text: label,
+              // text: x.toString(),
+              fill: '#fff',
+              font: 'bold 12px SimHei',
+              textAlign: 'center',
+              textVerticalAlign: 'middle'
+            }
+          }
+        ]
+      }
+    },
+    name,
+    data: data.map(item => [item.index, item.yAxis, item.label])
+  }
+
+  Array.isArray(options.series) && options.series.push(series)
+
+  return options
 }

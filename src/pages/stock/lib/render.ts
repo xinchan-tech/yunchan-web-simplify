@@ -11,6 +11,7 @@ import {
   type DrawerRectShape,
   type DrawerTextShape,
   drawGradient,
+  drawHdlyLabel,
   drawHLine,
   drawLine,
   drawNumber,
@@ -1223,7 +1224,17 @@ export const renderSecondaryLocalIndicators = (options: ECOption, indicators: In
               color: d.style?.color
             }
           })
-        } else if (d.draw === 'HORIZONTALLINE') {
+        } else if(d.draw === 'HDLY_LABEL'){
+          drawHdlyLabel(options, {} as any, {
+            xAxisIndex: index + 2,
+            yAxisIndex: index + 3,
+            data: d.data,
+            extra: {
+              color: d.style?.color
+            }
+          })
+        }
+        else if (d.draw === 'HORIZONTALLINE') {
           drawHLine(options, {} as any, {
             extra: {
               color: d.style?.color,

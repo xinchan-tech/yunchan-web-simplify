@@ -16,17 +16,19 @@ import { renderUtils } from "../lib/utils"
 import { IndicatorTooltip } from "./indicator-tooltip"
 import { SecondaryIndicator } from "./secondary-indicator"
 import { TimeIndexMenu } from "./time-index"
-import type { Canvas } from 'fabric'
-import { initGraphicTool } from "../lib/graphic"
+// import type { Canvas } from 'fabric'
+// import { initGraphicTool } from "../lib/graphic"
 
 interface MainChartProps {
   index: number
 }
 
 export const MainChart = (props: MainChartProps) => {
-  const [size, dom] = useDomSize<HTMLDivElement>()
+  // const [size, dom] = useDomSize<HTMLDivElement>()
+  const dom = useRef<HTMLDivElement>(null)
   const chart = useRef<EChartsType>()
-  const canvas = useRef<Canvas>()
+  const renderFn = useRef<() => void>(() => {})
+  // const canvas = useRef<Canvas>()
   useMount(() => {
     chart.current = echarts.init(dom.current, null, {devicePixelRatio: 3})
     chart.current.meta = {} as any
@@ -65,6 +67,20 @@ export const MainChart = (props: MainChartProps) => {
     // }, { passive: true })
 
   })
+
+  useEffect(() => {
+    const sizeObserver = new ResizeObserver(() => {
+      chart.current?.resize()
+      renderFn.current()
+    })
+
+
+    sizeObserver.observe(dom.current!)
+
+    return () => {
+      sizeObserver.disconnect()
+    }
+  }, [])
 
   useUnmount(() => {
     chart.current?.meta?.event.all.clear()
@@ -245,13 +261,12 @@ export const MainChart = (props: MainChartProps) => {
   }, [secondaryIndicatorQueries, props.index])
 
 
-  useUpdateEffect(() => {
-    chart.current?.resize()
-    render()
-  }, [size])
+  // useUpdateEffect(() => {
+  //   chart.current?.resize()
+  //   render()
+  // }, [size])
 
   useEffect(() => {
-
     kChartUtils.setMainData({ index: props.index, data: query.data?.history, dateConvert: true, timeIndex: state.timeIndex })
   }, [query.data, props.index, state.timeIndex])
 
@@ -294,10 +309,10 @@ export const MainChart = (props: MainChartProps) => {
     // console.log(chart.current.getOption());
   }
 
+  renderFn.current = render  
+
   useUpdateEffect(() => {
     render()
-
-
   }, [state, startTime])
 
   const onChangeSecondaryIndicators = useCallback(async (params: { value: string, index: number, type: string, name: string }) => {
