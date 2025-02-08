@@ -1,16 +1,22 @@
-import { getStockEconomicDetail } from "@/api"
-import { JknIcon, JknTable, type JknTableProps } from "@/components"
+import { getStockEconomicDetail, getStockFedCalendar } from "@/api"
+import { JknIcon, JknRcTable, type JknRcTableProps } from "@/components"
 import echarts, { type ECOption } from "@/utils/echarts"
 import { useQuery } from "@tanstack/react-query"
 import { useMount, useUnmount } from "ahooks"
 import dayjs from "dayjs"
 import Decimal from "decimal.js"
+import { uid } from "radash"
 import { useRef, useEffect, useMemo } from "react"
 
 export const FedInterestRateDecision = () => {
   const query = useQuery({
     queryKey: [getStockEconomicDetail.cacheKey, 'Fed Interest Rate Decision'],
     queryFn: () => getStockEconomicDetail('Fed Interest Rate Decision'),
+  })
+
+  const fedCalendar = useQuery({
+    queryKey: [getStockFedCalendar.cacheKey, 'Fed Interest Rate Decision'],
+    queryFn: () => getStockFedCalendar()
   })
 
   const chartRef = useRef<HTMLDivElement>(null)
@@ -102,7 +108,9 @@ export const FedInterestRateDecision = () => {
       min = Math.min(min, +data.actual, +data.estimate)
 
     }
-
+    category.reverse()
+    d1.reverse()
+    d2.reverse()
     chart.current?.setOption({
       xAxis: { data: category },
       series: [{ data: d1, symbol: false }, { data: d2, symbol: false }]
@@ -110,22 +118,22 @@ export const FedInterestRateDecision = () => {
 
   }, [query.data])
 
-  const columns = useMemo<JknTableProps<any>['columns']>(() => [
-    { header: () => <span className="text-stock-up" >月份</span>, accessorKey: 'date', enableSorting: false, meta: { align: 'center' }, cell: () => <span className="text-white">--</span> },
-    { header: () => <span className="text-stock-up" >决议声明</span>, accessorKey: 'actual', enableSorting: false, meta: { align: 'center' }, cell: () => <span className="text-white">--</span> },
-    { header: () => <span className="text-stock-up" >发布会</span>, accessorKey: 'estimate', enableSorting: false, meta: { align: 'center' }, cell: () => <span className="text-white">--</span> },
-    { header: () => <span className="text-stock-up" >点阵图</span>, accessorKey: 'previous', enableSorting: false, meta: { align: 'center' }, cell: () => <span className="text-white">--</span> },
-    { header: () => <span className="text-stock-up" >经济预测</span>, accessorKey: 'impact', enableSorting: false, meta: { align: 'center' }, cell: () => <span className="text-white">--</span> },
-    { header: () => <span className="text-stock-up" >纪要</span>, accessorKey: 't1', enableSorting: false, meta: { align: 'center' }, cell: () => <span className="text-white">--</span> },
-    { header: () => <span className="text-stock-up" >褐皮书</span>, accessorKey: 't2', enableSorting: false, meta: { align: 'center' }, cell: () => <span className="text-white">--</span> },
+
+
+  const columns = useMemo<JknRcTableProps<any>['columns']>(() => [
+    { title: <span className="text-stock-up">月份</span>, dataIndex: 'date', align: 'center', render: (v) => <span className="text-white inline-block leading-8">{v}</span> },
+    { title: <span className="text-stock-up">决议声明</span>, dataIndex: 'declare', align: 'center', render: (v) => <span className="text-white">{v}</span> },
+    { title: <span className="text-stock-up">发布会</span>, dataIndex: 'conference', align: 'center', render: (v) => <span className="text-white">{v}</span> },
+    { title: <span className="text-stock-up">点阵图</span>, dataIndex: 'bitmap', align: 'center', render: (v) => <span className="text-white">{v}</span> },
+    { title: <span className="text-stock-up">经济预测</span>, dataIndex: 'prediction', align: 'center', render: (v) => <span className="text-white">{v}</span> },
+    { title: <span className="text-stock-up">纪要</span>, dataIndex: 'summary', align: 'center', render: (v) => <span className="text-white">{v}</span> },
+    { title: <span className="text-stock-up">褐皮书</span>, dataIndex: 'beige_book', align: 'center', render: (v) => <span className="text-white">{v}</span> },
   ], [])
 
-  const data = useMemo(() => [
-    { id: 1, date: '--', actual: '--', estimate: '--', previous: '--', impact: '--', t1: '--', t2: '--' },
-    { id: 2, date: '--', actual: '--', estimate: '--', previous: '--', impact: '--', t1: '--', t2: '--' },
-    { id: 3, date: '--', actual: '--', estimate: '--', previous: '--', impact: '--', t1: '--', t2: '--' },
-    { id: 4, date: '--', actual: '--', estimate: '--', previous: '--', impact: '--', t1: '--', t2: '--' },
-  ], [])
+  const data = useMemo(() => fedCalendar.data?.map(item => ({
+    id: uid(8),
+    ...item
+  })) ?? [], [fedCalendar.data])
 
   return (
     <div className="w-[900px] box-border px-8 py-4 mx-auto h-full overflow-y-auto">
@@ -133,7 +141,7 @@ export const FedInterestRateDecision = () => {
       <p className="text-center text-lg">美联储利率决议</p>
       <p className="text-center text-sm bg-background py-2">
         <span>最新值：<span className="text-stock-up">--亿美元</span></span>&emsp;&emsp;&emsp;
-        <span >预测值：<span className="text-stock-up">--亿美元</span></span>
+        <span>预测值：<span className="text-stock-up">--亿美元</span></span>
       </p>
       <div className="h-[400px] w-full" ref={chartRef} />
       <div className="text-stock-up">
@@ -163,7 +171,7 @@ export const FedInterestRateDecision = () => {
 
         <div className="mb-12">
           <p className="text-center text-lg text-white">美联储日程</p>
-          <JknTable columns={columns} data={data} rowKey="id" />
+          <JknRcTable scroll={{ y: 'auto' }} columns={columns} data={data} rowKey="id" />
         </div>
 
         <div className="flex items-center">

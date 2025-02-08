@@ -233,6 +233,14 @@ const StockQuote = () => {
 
   const [stock, _, __] = codeInfo.data ? stockUtils.toStockRecord(codeInfo.data) : []
 
+  const bubble = useMemo(() => {
+    const bubble = {
+      value: codeInfo.data?.extend?.bubble?.bubble_val ?? 0,
+      text: codeInfo.data?.extend?.bubble?.bubble_status ?? ''
+    }
+
+    return bubble
+  }, [codeInfo.data])
 
   return (
     <div>
@@ -294,6 +302,16 @@ const StockQuote = () => {
           </span>
         </div>
       </div>
+      {
+        +bubble.value !== 0 ? (
+          <div className="flex h-12">
+            <div className="w-1/2 flex items-center justify-center border-0 border-r border-b border-solid border-border text-stock-green h-full">估值泡沫</div>
+            <div className="w-1/2 flex items-center justify-center border-0 border-b border-solid border-border text-stock-green h-full">
+              <span className={cn(Decimal.create(bubble.value).gt(1) ? 'text-stock-down': 'text-stock-up')}>{Decimal.create(bubble.value).toFixed(2)}({bubble.text})</span>
+            </div>
+          </div>
+        ) : null
+      }
     </div >
   )
 }
@@ -305,8 +323,6 @@ const StockNews = () => {
     queryKey: [getStockNotice.cacheKey, code],
     queryFn: () => getStockNotice(code)
   })
-
-
 
   return (
     <>

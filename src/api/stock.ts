@@ -1,5 +1,5 @@
 import request from '@/utils/request'
-import axios from "axios"
+import axios from 'axios'
 import dayjs from 'dayjs'
 import { md5 } from 'js-md5'
 import { sha256 } from 'js-sha256'
@@ -312,7 +312,7 @@ export const getStockChartV2 = async (params: GetStockChartV2Params) => {
   const paramsStr = `${paramsKeySort.reduce((acc, key) => `${acc}${key}=${params[key]}&`, '').slice(0, -1)}&app_key=${'LMOl&8skLax%ls1Haapd'}`
 
   const sign = md5(sha256(paramsStr))
-  
+
   const r = await axios
     .get<StockRawRecord[]>('/apiv2/chart/kline', {
       params,
@@ -1143,6 +1143,42 @@ export const getStockEconomicDetail = (key: string) => {
   return request.get<GetStockEconomicDetailResult>('/stock/economic/info', { params: { key } }).then(r => r.data)
 }
 getStockEconomicDetail.cacheKey = 'stock:economic:detail'
+
+/**
+ * 美联储日程
+ */
+export const getStockFedCalendar = () => {
+  return request
+    .get<{
+      date: string
+      /**
+       * 褐皮书
+       */
+      beige_book: string
+      /**
+       * 点阵图
+       */
+      bitmap: string
+      /**
+       * 发布会
+       */
+      conference: string
+      /**
+       * 决议声明
+       */
+      declare: string
+      /**
+       * 经济预测
+       */
+      prediction: string
+      /**
+       * 纪要
+       */
+      summary: string
+    }[]>('/stock/schedule')
+    .then(r => r.data)
+}
+getStockFedCalendar.cacheKey = 'stock:fed:schedule'
 
 type GetStockHolidayResult = {
   id: string

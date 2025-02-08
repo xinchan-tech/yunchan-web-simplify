@@ -1,5 +1,5 @@
 import { StockPushType, getStockPush } from "@/api"
-import { AiAlarm, CapsuleTabs, CollectStar, JknCheckbox, JknIcon, JknRcTable, type JknRcTableProps, NumSpanSubscribe, StockView, SubscribeSpan } from "@/components"
+import { AiAlarm, CapsuleTabs, CollectStar, JknCheckbox, JknIcon, JknRcTable, type JknRcTableProps, StockView, SubscribeSpan } from "@/components"
 import { useCheckboxGroup, useStockQuoteSubscribe, useTableData, useTableRowClickToStockTrading } from "@/hooks"
 import { useTime } from "@/store"
 import { getPrevTradingDays } from "@/utils/date"
@@ -39,6 +39,10 @@ const getLastTime = () => {
   const usTime = useTime.getState().usTime
   const localTime = useTime.getState().localStamp
   const localDate = dayjs(new Date().valueOf() - localTime + usTime).tz('America/New_York')
+
+  if (localDate.isBefore(localDate.hour(9).minute(30).second(0))) {
+    return getPrevTradingDays(localDate, 2)[0]
+  }
   return getPrevTradingDays(localDate, 1)[0]
 }
 
@@ -118,7 +122,7 @@ const PushPage = () => {
         dataIndex: 'percent',
         align: 'right',
         sort: true,
-        render: (percent, row) => <SubscribeSpan.PercentBlockBlink symbol={row.symbol} decimal={2} initValue={percent} initDirection={stockUtils.isUp(row)}  />
+        render: (percent, row) => <SubscribeSpan.PercentBlockBlink symbol={row.symbol} decimal={2} initValue={percent} initDirection={stockUtils.isUp(row)} />
       },
       {
         title: '成交额',
@@ -159,8 +163,9 @@ const PushPage = () => {
         title: '更新时间',
         dataIndex: 'update_time',
         align: 'center',
+        width: 80,
         sort: true,
-        render: v => v ? `${dayjs(+v * 1000).tz('America/New_York').format('MM-DD W HH:mm')}` : '-'
+        render: (v, row) => v === row.create_time ? '--' : v ? `${dayjs(+v * 1000).tz('America/New_York').format('HH:mm')}` : '-'
       },
       {
         title: '+股票金池',
@@ -215,9 +220,14 @@ const PushPage = () => {
     <div className="flex flex-col h-full">
       <div className="border border-solid border-border py-1 px-2">
         <CapsuleTabs activeKey={activeType} onChange={v => setActiveType(v as StockPushType)}>
-          <CapsuleTabs.Tab value={StockPushType.STOCK_KING} label="今日股王" />
-          <CapsuleTabs.Tab value={StockPushType.COILING} label="缠论推送" />
-          <CapsuleTabs.Tab value={StockPushType.MA} label="MA趋势评级" />
+          <CapsuleTabs.Tab value={StockPushType.STOCK_KING} label={
+            <span className="flex items-center">
+              今日股王
+              <JknIcon name="ic_tip1" className="w-3 h-3 ml-1" label="盘中实时更新" />
+            </span>
+          } />
+          {/* <CapsuleTabs.Tab value={StockPushType.COILING} label="缠论推送" />
+          <CapsuleTabs.Tab value={StockPushType.MA} label="MA趋势评级" /> */}
         </CapsuleTabs>
       </div>
       <div className="border-0 border-b border-solid border-border py-1 px-2">

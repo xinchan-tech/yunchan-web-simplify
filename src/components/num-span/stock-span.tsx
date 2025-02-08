@@ -36,6 +36,9 @@ const BaseNumberFormatter = (v: number | string | undefined, decimal: number, ze
       return zeroText
     }
   } else if (!v) {
+    if(v === 0){
+      return v.toFixed(decimal)
+    }
     return v
   }
 
@@ -164,14 +167,17 @@ export const PercentSubscribeSpan = memo(({ zeroText, decimal = 2, showSign = fa
 
 interface PercentSubscribeBlockProps extends PercentSubscribeSpanProps { }
 
-export const PercentSubscribeBlock = memo(({ zeroText, decimal = 2, showSign = false, initValue, initDirection, showColor, type = 'percent', onValueChange, ...props }: PercentSubscribeBlockProps) => {
+export const PercentSubscribeBlock = memo(({ zeroText, decimal = 2, showSign = false, initValue, initDirection, showColor, type = 'percent', nanText, onValueChange, ...props }: PercentSubscribeBlockProps) => {
   const numberFormatter = useCallback((v?: number | string) => {
     if (type === 'percent') {
+      if ((Number.isNaN(v) || !Number.isFinite(v)) && nanText) {
+        return nanText
+      }
       const r = BaseNumberFormatter(+(v || 0) * 100, decimal, zeroText)
       return r === zeroText ? r : `${r}%`
     }
     return BaseNumberFormatter(v, decimal, zeroText)
-  }, [decimal, zeroText, type])
+  }, [decimal, zeroText, type, nanText])
 
   const {
     value,
@@ -187,7 +193,7 @@ export const PercentSubscribeBlock = memo(({ zeroText, decimal = 2, showSign = f
   }, [numberFormatter, type])
 
   return (
-    <div className="inline-block text-center w-[70px] whitespace-nowrap leading-6 rounded-[2px] box-border" data-direction-bg={direction}>
+    <div className="inline-block text-center w-[70px] whitespace-nowrap leading-6 rounded-[2px] box-border" data-direction-bg={direction} data-direction-nan={value === nanText}>
       <SubscribeSpan
         value={value}
         data-direction-show={false}

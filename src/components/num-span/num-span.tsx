@@ -96,7 +96,7 @@ interface NumSpanProps extends React.HTMLAttributes<HTMLSpanElement>, VariantPro
 
 
 /**
- * @deprecated
+ * @deprecated 颜色不再由组件控制
  * @returns 
  */
 export const NumSpan = ({ isPositive, block, percent, value, symbol, className, arrow, decimal = 3, unit = false, blink, align = 'left', showColor, zeroText, ...props }: NumSpanProps) => {
@@ -261,7 +261,6 @@ export const SubscribeSpan = memo(({ value, symbol, formatter, trading, subscrib
         const _trading = stockUtils.getTrading(stockUtils.parseTime(data.record.time.toString()))
         if (_trading !== trading) return
       }
-
 
       const v = formatFn.current(data)
 

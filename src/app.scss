@@ -226,6 +226,10 @@ div[data-direction-bg="down"] {
   background: hsl(var(--stock-down-color));
 }
 
+div[data-direction-nan="true"] {
+  background: transparent;
+}
+
 span[data-direction-show="false"][data-direction]{
   color: inherit;
 }

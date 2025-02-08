@@ -1,9 +1,9 @@
 import { getStockFinancials } from "@/api"
-import { AiAlarm, CapsuleTabs, CollectStar, JknCheckbox, JknDatePicker, JknIcon, JknRcTable, type JknRcTableProps, NumSpan, StockView } from "@/components"
+import { AiAlarm, CapsuleTabs, CollectStar, JknCheckbox, JknDatePicker, JknIcon, JknRcTable, type JknRcTableProps, NumSpan, StockView, SubscribeSpan } from "@/components"
 import { useCheckboxGroup, useTableRowClickToStockTrading } from "@/hooks"
-import { dateToWeek } from "@/utils/date"
 import { stockUtils } from "@/utils/stock"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
+import dayjs from "dayjs"
 import Decimal from "decimal.js"
 import { useEffect, useMemo, useState } from "react"
 
@@ -66,12 +66,12 @@ const StockFinancials = () => {
         id,
         date: `${date} ${time}`,
         price: lastStock?.close,
-        percent: lastStock?.percent && (lastStock.percent * 100),
+        percent: lastStock?.percent && (lastStock.percent),
         turnover: lastStock?.turnover,
         total: lastStock?.marketValue,
         industry: lastStock?.industry,
-        prePercent: beforeStock?.percent && (beforeStock.percent * 100),
-        afterPercent: afterStock?.percent && (afterStock.percent * 100),
+        prePercent: beforeStock?.percent,
+        afterPercent: afterStock?.percent,
         collect: lastStock?.extend?.collect,
         isUp: stockUtils.isUp(lastStock)
       })
@@ -94,13 +94,13 @@ const StockFinancials = () => {
     {
       title: '现价', size: 80, dataIndex: 'price', align: 'right', width: 120, sort: true,
       render: (_: any, row) => (
-        <NumSpan value={row.price} decimal={3} isPositive={row.isUp} />
+        <SubscribeSpan.Price symbol="" subscribe={false} initValue={row.price} decimal={3} initDirection={row.isUp} zeroText="--" />
       )
     },
     {
       title: '涨跌幅', dataIndex: 'percent', align: 'right', width: 90, sort: true,
       render: (_: any, row) => (
-        <NumSpan percent block decimal={2} align="right" value={row.percent} isPositive={row.isUp} symbol />
+        <SubscribeSpan.PercentBlock symbol="" subscribe={false} decimal={2} initValue={row.percent} initDirection={row.isUp} nanText="--" />
       )
     },
     {
@@ -117,13 +117,13 @@ const StockFinancials = () => {
     {
       title: '盘前涨跌幅', dataIndex: 'prePercent', align: 'right', width: 90, sort: true,
       render: (_: any, row) => (
-        <NumSpan symbol block decimal={2} percent value={row.prePercent} align="right" isPositive={row.prePercent !== undefined ? row.prePercent > 0 : undefined} />
+        <SubscribeSpan.PercentBlock symbol="" subscribe={false} decimal={2} initValue={row.prePercent} initDirection={row.prePercent ? row.prePercent > 0 : false} nanText="--" />
       )
     },
     {
       title: '盘后涨跌幅', dataIndex: 'afterPercent', align: 'right', width: 90, sort: true,
       render: (_: any, row) => (
-        <NumSpan symbol block decimal={2} percent value={row.afterPercent} align="right" isPositive={row.afterPercent !== undefined ? row.afterPercent >= 0 : undefined} />
+        <SubscribeSpan.PercentBlock symbol="" subscribe={false} decimal={2} initValue={row.afterPercent} initDirection={row.afterPercent ? row.afterPercent > 0 : false} nanText="--" />
       )
     },
     {
@@ -186,7 +186,7 @@ const StockFinancials = () => {
         <CapsuleTabs type="text" activeKey={active} onChange={setActive}>
           {
             dates.map((date) => (
-              <CapsuleTabs.Tab key={date} label={`${date} ${dateToWeek(date)}`} value={date} />
+              <CapsuleTabs.Tab key={date} label={dayjs(date).format('M月D日 W')} value={date} />
             ))
           }
           <JknDatePicker onChange={(date) => date && setActive(date)}>
