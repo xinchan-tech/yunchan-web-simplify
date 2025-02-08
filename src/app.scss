@@ -218,6 +218,14 @@ span[data-direction="down"] {
   color: hsl(var(--stock-down-color));
 }
 
+div[data-direction-bg="up"] {
+  background: hsl(var(--stock-up-color));
+}
+
+div[data-direction-bg="down"] {
+  background: hsl(var(--stock-down-color));
+}
+
 span[data-direction-show="false"][data-direction]{
   color: inherit;
 }

@@ -9,6 +9,7 @@ import { AlarmType } from "@/api"
 const AlarmPage = () => {
   const [alarmType, setAlarmType] = useState<AlarmType>(AlarmType.AI)
   const [viewType, setViewKey] = useState('list')
+  const [count, setCount] = useState(0)
   const aiForm = useModal({
     content: <AiAlarmForm />,
     title: 'AI报警设置',
@@ -56,15 +57,18 @@ const AlarmPage = () => {
 
       </div>
       <div className="flex-1 overflow-hidden flex flex-col">
-        <div className="border-0 border-b border-solid border-border py-1">
+        <div className="border-0 border-b border-solid border-border py-1 flex items-center">
           <CapsuleTabs type="text" activeKey={viewType} onChange={setViewKey}>
             <CapsuleTabs.Tab label="报警列表" value="list" />
             <CapsuleTabs.Tab label="已触发报警" value="log" />
           </CapsuleTabs>
+          <div className="text-xs ml-auto">
+            当前运行报警：{count} 条
+          </div>
         </div>
         <div className="flex-1 overflow-hidden">
           {{
-            list: <AlarmList type={alarmType} options />,
+            list: <AlarmList type={alarmType} options  onUpdateCount={setCount} />,
             log: <AlarmLog type={alarmType} />
           }[viewType]}
         </div>

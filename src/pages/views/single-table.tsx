@@ -1,12 +1,11 @@
 import { type StockExtend, type UsStockColumn, getChineseStocks, getIndexGapAmplitude, getIndexRecommends, getUsStocks } from "@/api"
-import { AiAlarm, CollectStar, JknCheckbox, JknIcon, JknRcTable, type JknRcTableProps, NumSpan, NumSpanSubscribe, StockView } from "@/components"
+import { AiAlarm, CollectStar, JknCheckbox, JknIcon, JknRcTable, type JknRcTableProps, StockView, SubscribeSpan } from "@/components"
 import { useCheckboxGroup, useStockQuoteSubscribe, useTableData, useTableRowClickToStockTrading } from "@/hooks"
 import { stockUtils } from "@/utils/stock"
 import { useQuery } from "@tanstack/react-query"
 
 import Decimal from "decimal.js"
-import { produce } from "immer"
-import { useCallback, useEffect, useMemo } from "react"
+import { useEffect, useMemo } from "react"
 import { useImmer } from "use-immer"
 
 interface SingleTableProps {
@@ -26,9 +25,9 @@ type TableDataType = {
   // 所属行业
   industry?: string
   // 盘前涨跌幅
-  prePercent?: number
+  prePercent: number
   // 盘后涨跌幅
-  afterPercent?: number
+  afterPercent: number
   // 换手率
   turnoverRate?: number
   // 市盈率
@@ -37,6 +36,7 @@ type TableDataType = {
   pb?: number
   collect: 1 | 0
   isUp?: boolean
+  totalShare?: number
 }
 //单表格
 const SingleTable = (props: SingleTableProps) => {
@@ -68,7 +68,7 @@ const SingleTable = (props: SingleTableProps) => {
     queryFn: () => QueryFn()
   })
 
-  const [list, { setList, onSort, updateList }] = useTableData<TableDataType>([], 'symbol')
+  const [list, { setList, onSort }] = useTableData<TableDataType>([], 'symbol')
 
   const { checked, onChange, setCheckedAll, getIsChecked } = useCheckboxGroup([])
 
@@ -97,13 +97,14 @@ const SingleTable = (props: SingleTableProps) => {
         total: stockUtils.getMarketValue(lastData),
         amount: lastData.turnover,
         industry: lastData.industry ?? '-',
-        prePercent: stockUtils.getPercent(beforeData) && Decimal.create(stockUtils.getPercent(beforeData)).mul(100).toNumber(),
-        afterPercent: stockUtils.getPercent(afterData) && Decimal.create(stockUtils.getPercent(afterData)).mul(100).toNumber(),
+        prePercent: stockUtils.getPercentUnsafe(beforeData),
+        afterPercent: stockUtils.getPercentUnsafe(afterData),
         turnoverRate: stockUtils.getTurnOverRate(lastData),
         pe: stockUtils.getPE(lastData),
         pb: stockUtils.getPB(lastData),
         collect: lastData.extend?.collect ?? 0,
-        isUp: stockUtils.isUp(lastData)
+        isUp: stockUtils.isUp(lastData),
+        totalShare: lastData.totalShare
       })
 
     }
@@ -139,15 +140,6 @@ const SingleTable = (props: SingleTableProps) => {
     }
   }
 
-  const updateStockCollect = useCallback((id: string, checked: boolean) => {
-    updateList(s => {
-      return s.map(produce(item => {
-        if (item.symbol === id) {
-          item.collect = checked ? 1 : 0
-        }
-      }))
-    })
-  }, [updateList])
 
   useStockQuoteSubscribe(query.data?.map(o => o.symbol) ?? [])
 
@@ -163,27 +155,25 @@ const SingleTable = (props: SingleTableProps) => {
     {
       title: '现价', dataIndex: 'price', align: 'right', width: '8%', sort: true,
       render: (_, row) => (
-        <>
-          <NumSpanSubscribe blink code={row.symbol} field="close" value={row.price} decimal={2} isPositive={row.isUp} align="right" />
-        </>
+        <SubscribeSpan.PriceBlink trading="intraDay" symbol={row.symbol} initValue={row.price} decimal={2} initDirection={row.isUp} />
       )
     },
     {
       title: '涨跌幅', dataIndex: 'percent', align: 'right', width: 120, sort: true,
       render: (_, row) => (
-        <NumSpanSubscribe blink code={row.symbol} field="percent" block decimal={2} value={row.percent} percent isPositive={row.isUp} symbol align="right" />
+        <SubscribeSpan.PercentBlockBlink trading="intraDay" symbol={row.symbol} decimal={2} initValue={row.percent} initDirection={row.isUp} zeroText="0.00%" />
       )
     },
     {
       title: '成交额', dataIndex: 'amount', align: 'right', width: '8%', sort: true,
       render: (_, row) => (
-        <NumSpanSubscribe blink code={row.symbol} field="turnover" value={row.amount} decimal={2} align="right" unit />
+        <SubscribeSpan.TurnoverBlink trading="intraDay" symbol={row.symbol} decimal={2} initValue={row.amount} showColor={false} />
       )
     },
     {
       title: '总市值', dataIndex: 'total', align: 'right', width: '8%', sort: true,
       render: (_, row) => (
-        <NumSpanSubscribe blink code={row.symbol} field={v => stockUtils.getSubscribeMarketValue({ totalShare: row.total }, v)} value={row.total} decimal={2} align="right" unit />
+        <SubscribeSpan.MarketValueBlink trading="intraDay" symbol={row.symbol} initValue={row.total} decimal={2} totalShare={row.totalShare ?? 0} />
       )
     },
     {
@@ -192,13 +182,13 @@ const SingleTable = (props: SingleTableProps) => {
     {
       title: '盘前涨跌幅', dataIndex: 'prePercent', width: '8%', align: 'right', sort: true,
       render: (_, row) => (
-        <NumSpan symbol decimal={2} percent value={row.prePercent} isPositive={row.isUp} />
+        <SubscribeSpan.Percent trading="preMarket" symbol={row.symbol} decimal={2}  initValue={row.prePercent} initDirection={row.prePercent > 0} nanText="--" />
       )
     },
     {
       title: '盘后涨跌幅', dataIndex: 'afterPercent', width: '8%', align: 'right', sort: true,
       render: (_, row) => (
-        <NumSpan symbol decimal={2} percent value={row.afterPercent} isPositive={row.isUp} />
+        <SubscribeSpan.Percent trading="afterHours" symbol={row.symbol} decimal={2}  initValue={row.afterPercent} initDirection={row.prePercent > 0} nanText="--" />
       )
     },
     {
@@ -211,13 +201,12 @@ const SingleTable = (props: SingleTableProps) => {
     },
     {
       title: '市净率', dataIndex: 'pb', width: '8%', align: 'right', sort: true,
-      render: (_, row) => `${Decimal.create(row.pb).toFixed(2)}`
+      render: (_, row) => `${row.pb ? Decimal.create(row.pb).toFixed(2) : '--'}`
     },
     {
       title: '+股票金池', dataIndex: 'collect', width: 80, align: 'center',
       render: (_, row) => (
         <CollectStar
-          // onUpdate={(checked) => updateStockCollect(row.symbol, checked)}
           checked={row.collect === 1}
           code={row.symbol} />
       )
@@ -228,7 +217,8 @@ const SingleTable = (props: SingleTableProps) => {
     },
     {
       title: <CollectStar.Batch
-        checked={checked} onCheckChange={(v) => setCheckedAll(v ? list.map(o => o.symbol) : [])}
+        checked={checked}
+        onCheckChange={(v) => setCheckedAll(v ? list.map(o => o.symbol) : [])}
         onUpdate={() => {
           query.refetch()
           setCheckedAll([])

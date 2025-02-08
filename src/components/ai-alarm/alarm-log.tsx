@@ -29,7 +29,7 @@ const AlarmLog = (props: AlarmLogProps) => {
     const r: JknTableProps['columns'] = [
       {
         header: '序号', accessorKey: 'index', meta: { align: 'center', width: 40 }, enableSorting: false,
-        cell: ({ row }) => row.index + 1
+        cell: ({ row }) => row.id
       },
       {
         header: '名称代码', accessorKey: 'symbol', meta: { align: 'left', width: 'auto' },

@@ -1,7 +1,7 @@
 import { getPlateStocks } from "@/api"
-import { AiAlarm, CollectStar, JknCheckbox, JknIcon, JknRcTable, type JknRcTableProps, NumSpanSubscribe, StockView } from "@/components"
-import { useCheckboxGroup, useStockBarSubscribe, useStockQuoteSubscribe, useTableData, useTableRowClickToStockTrading } from "@/hooks"
-import { type Stock, stockUtils } from "@/utils/stock"
+import { AiAlarm, CollectStar, JknCheckbox, JknIcon, JknRcTable, type JknRcTableProps, StockView, SubscribeSpan } from "@/components"
+import { useCheckboxGroup, useStockQuoteSubscribe, useTableData, useTableRowClickToStockTrading } from "@/hooks"
+import { stockUtils } from "@/utils/stock"
 import { useQuery } from "@tanstack/react-query"
 import Decimal from "decimal.js"
 import { useCallback, useEffect, useMemo } from "react"
@@ -52,24 +52,28 @@ const PlateStocks = (props: PlateStocksProps) => {
       )
     },
     {
-      title: '现价', dataIndex: 'close', align: 'right', width: '10%', sort: true,
-      render: (close, row) => (
-        <NumSpanSubscribe blink code={row.symbol} field="close" value={close} decimal={2} isPositive={stockUtils.isUp(row)} align="right" />
+      title: '现价', dataIndex: 'price', align: 'right', width: '8%', sort: true,
+      render: (_, row) => (
+        <SubscribeSpan.PriceBlink trading="intraDay" symbol={row.symbol} initValue={row.close} decimal={2} initDirection={stockUtils.isUp(row)} />
       )
     },
     {
-      title: '涨跌幅', dataIndex: 'percent', align: 'right', width: 100, sort: true,
-      render: (percent, row) => (
-        <NumSpanSubscribe blink code={row.symbol} field="percent" block className="py-0.5 w-20" decimal={2} value={percent} isPositive={stockUtils.isUp(row)} percent align="right" />
+      title: '涨跌幅', dataIndex: 'percent', align: 'right', width: 120, sort: true,
+      render: (_, row) => (
+        <SubscribeSpan.PercentBlockBlink trading="intraDay" symbol={row.symbol} decimal={2} initValue={row.percent} initDirection={stockUtils.isUp(row)} zeroText="0.00%" />
       )
     },
     {
-      title: '总市值', dataIndex: 'marketValue', align: 'right', width: '10%', sort: true,
-      render: (marketValue, row) => <NumSpanSubscribe blink code={row.symbol} field={v => stockUtils.getSubscribeMarketValue(row, v)} value={marketValue} decimal={2} align="right" unit />
+      title: '成交额', dataIndex: 'amount', align: 'right', width: '8%', sort: true,
+      render: (_, row) => (
+        <SubscribeSpan.TurnoverBlink trading="intraDay" symbol={row.symbol} decimal={2} initValue={row.turnover} showColor={false} />
+      )
     },
     {
-      title: '成交额', dataIndex: 'turnover', align: 'right', width: '10%', sort: true,
-      render: (turnover, row) => <NumSpanSubscribe blink code={row.symbol} field="turnover" value={turnover} decimal={2} align="right" unit />
+      title: '总市值', dataIndex: 'total', align: 'right', width: '8%', sort: true,
+      render: (_, row) => (
+        <SubscribeSpan.MarketValueBlink trading="intraDay" symbol={row.symbol} initValue={row.marketValue} decimal={2} totalShare={row.totalShare ?? 0} />
+      )
     },
     {
       title: '换手率', dataIndex: 'turnoverRate', align: 'right', width: '7%', sort: true,

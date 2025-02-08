@@ -5,8 +5,8 @@ import { cn } from "@/utils/style"
 import { useUpdateEffect } from "ahooks"
 import { type VariantProps, cva } from "class-variance-authority"
 import Decimal from "decimal.js"
-import { get, isFunction } from "radash"
-import { type HTMLAttributes, memo, useEffect, useMemo, useRef, useState } from "react"
+import { get, isFunction, isNumber } from "radash"
+import { type HTMLAttributes, memo, useEffect, useRef, useState } from "react"
 import { JknIcon } from ".."
 
 const numSpanVariants = cva(
@@ -95,7 +95,10 @@ interface NumSpanProps extends React.HTMLAttributes<HTMLSpanElement>, VariantPro
 }
 
 
-
+/**
+ * @deprecated
+ * @returns 
+ */
 export const NumSpan = ({ isPositive, block, percent, value, symbol, className, arrow, decimal = 3, unit = false, blink, align = 'left', showColor, zeroText, ...props }: NumSpanProps) => {
   const { setting: { priceBlink } } = useConfig()
   const lastValue = useRef(value)
@@ -168,6 +171,10 @@ interface NumSpanSubscribeProps extends Omit<NumSpanProps, 'value'> {
   subscribe?: boolean
 }
 
+/**
+ * @deprecated
+ * @returns 
+ */
 export const NumSpanSubscribe = ({ value, code, isPositive, field, subscribe = true, showColor, ...props }: NumSpanSubscribeProps) => {
   const [innerValue, setInnerValue] = useState(value)
   const [isUp, setIsUp] = usePropValue(isPositive)
@@ -228,7 +235,7 @@ interface SubscribeSpanProps extends Omit<HTMLAttributes<HTMLSpanElement>, 'onCh
    * 是否订阅
    */
   subscribe?: boolean
-  onChange?: (data: Parameters<StockSubscribeHandler<'quote'>>[0]) => void
+  onChange?: (data: Parameters<StockSubscribeHandler<'quote'>>[0], extra: { changeDirection?: 'up' | 'down', lastValue?: string | number, newValue?: number | string }) => void
 }
 
 
@@ -254,15 +261,21 @@ export const SubscribeSpan = memo(({ value, symbol, formatter, trading, subscrib
         const _trading = stockUtils.getTrading(stockUtils.parseTime(data.record.time.toString()))
         if (_trading !== trading) return
       }
-      
+
 
       const v = formatFn.current(data)
-   
+
       if (v === lastValue.current) return
 
+      let changeDirection: 'up' | 'down' | undefined = undefined
+
+      if(isNumber(v) && isNumber(lastValue.current)) {
+        changeDirection = v > lastValue.current ? 'up' : 'down'
+      }
+      const _lastValue = lastValue.current
       lastValue.current = v
       setInnerValue(v)
-      changeFn.current?.(data)
+      changeFn.current?.(data, { changeDirection, lastValue: _lastValue, newValue: v })
     })
 
     return () => {

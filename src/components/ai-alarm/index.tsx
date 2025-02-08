@@ -1,13 +1,12 @@
-import { useEffect, type PropsWithChildren } from "react"
-import { Button } from "../ui/button"
-import AiAlarmSetting from "./ai-alarm-setting"
-import { Dialog, DialogClose, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog"
 import { Cross2Icon } from "@radix-ui/react-icons"
-import AiAlarmForm from "./ai-alarm-form"
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden"
+import { useBoolean } from "ahooks"
+import { type PropsWithChildren, useEffect } from "react"
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "../ui/dialog"
+import AiAlarmForm from "./ai-alarm-form"
+import AiAlarmSetting from "./ai-alarm-setting"
 import PriceAlarmForm from "./price-alarm-form"
 import { PriceAlarmSetting } from "./price-alarm-setting"
-import { useBoolean } from "ahooks"
 
 interface AiAlarmProps {
   code?: string

@@ -68,8 +68,6 @@ const GroupAlarm = (props: AlarmItemProps) => {
     }))
   }, [query.data, setList])
 
-  console.log(list)
-
   const { checked, toggle, setCheckedAll, getIsChecked } = useCheckboxGroup([])
 
   const queryClient = useQueryClient()
@@ -103,6 +101,7 @@ const GroupAlarm = (props: AlarmItemProps) => {
 
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: options.queryKey })
+      setCheckedAll([])
     }
   })
 

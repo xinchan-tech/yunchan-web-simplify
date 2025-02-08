@@ -250,6 +250,22 @@ export const stockUtils = {
     return Number.isFinite(n.toNumber()) ? n.toNumber() : undefined
   },
   /**
+   * 涨幅 能返回infinity和NaN
+   */
+  getPercentUnsafe: (stock: Stock, decimal?: number, percent?: boolean): number => {
+    let n = Decimal.create(stock.close).minus(stock.prevClose).div(stock.prevClose)
+
+    if (percent) {
+      n = n.mul(100)
+    }
+    if (decimal !== undefined) {
+      return n.toDP(decimal).toNumber()
+    }
+
+    return n.toNumber()
+  },
+
+  /**
    * 涨跌额
    */
   getPercentAmount: (stock: Stock, decimal?: number): number => {

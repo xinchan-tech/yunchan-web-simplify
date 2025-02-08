@@ -1,6 +1,6 @@
 import { StockPushType, getStockPush } from "@/api"
-import { AiAlarm, CapsuleTabs, CollectStar, JknCheckbox, JknIcon, JknRcTable, type JknRcTableProps, NumSpanSubscribe, StockView } from "@/components"
-import { useCheckboxGroup, useTableData, useTableRowClickToStockTrading } from "@/hooks"
+import { AiAlarm, CapsuleTabs, CollectStar, JknCheckbox, JknIcon, JknRcTable, type JknRcTableProps, NumSpanSubscribe, StockView, SubscribeSpan } from "@/components"
+import { useCheckboxGroup, useStockQuoteSubscribe, useTableData, useTableRowClickToStockTrading } from "@/hooks"
 import { useTime } from "@/store"
 import { getPrevTradingDays } from "@/utils/date"
 import { type Stock, stockUtils } from "@/utils/stock"
@@ -94,6 +94,8 @@ const PushPage = () => {
     })
   }
 
+  useStockQuoteSubscribe(query.data?.map(v => v.symbol) ?? [])
+
   const columns = (() => {
     const common: JknRcTableProps<TableDataType>['columns'] = [
       { title: '序号', dataIndex: 'index', width: 60, render: (_, __, i) => i + 1 },
@@ -109,28 +111,28 @@ const PushPage = () => {
         dataIndex: 'close',
         align: 'right',
         sort: true,
-        render: (v, row) => <NumSpanSubscribe code={row.symbol} field="close" blink value={v} isPositive={stockUtils.isUp(row)} align="right" />
+        render: (v, row) => <SubscribeSpan.PriceBlink symbol={row.symbol} initValue={v} initDirection={stockUtils.isUp(row)} />
       },
       {
         title: '涨跌幅%',
         dataIndex: 'percent',
         align: 'right',
         sort: true,
-        render: (percent, row) => <NumSpanSubscribe code={row.symbol} field="percent" blink block decimal={2} value={percent} percent isPositive={stockUtils.isUp(row)} symbol align="right" />
+        render: (percent, row) => <SubscribeSpan.PercentBlockBlink symbol={row.symbol} decimal={2} initValue={percent} initDirection={stockUtils.isUp(row)}  />
       },
       {
         title: '成交额',
         dataIndex: 'turnover',
         align: 'right',
         sort: true,
-        render: (turnover, row) => <NumSpanSubscribe code={row.symbol} field="turnover" blink align="right" unit decimal={2} value={turnover} />
+        render: (turnover, row) => <SubscribeSpan.TurnoverBlink symbol={row.symbol} showColor={false} decimal={2} initValue={turnover} initDirection />
       },
       {
         title: '总市值',
         dataIndex: 'marketValue',
         align: 'right',
         sort: true,
-        render: (marketValue, row) => <NumSpanSubscribe code={row.symbol} field={v => stockUtils.getSubscribeMarketValue(row, v)} blink align="right" unit decimal={2} value={marketValue} />
+        render: (marketValue, row) => <SubscribeSpan.MarketValueBlink symbol={row.symbol} showColor={false} decimal={2} initValue={marketValue} totalShare={row.totalShare ?? 0} />
       },
       {
         title: `${activeType === StockPushType.STOCK_KING ? '股王' : '推荐'}指数`,
