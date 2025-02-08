@@ -88,7 +88,7 @@ const GroupChatMsgList = forwardRef((props, ref) => {
         text = <TextCell message={m} messageWrap={messageWrap} />;
       } else if (m.content instanceof MessageImage) {
         text = <ImageCell message={m}></ImageCell>;
-      } else if ([1001].includes(m.contentType)) {
+      } else if ([1001, 1005].includes(m.contentType)) {
         text = <SystemCell message={m} />;
       } else if (judgeIsExitNoticeMessage(m)) {
         text = (

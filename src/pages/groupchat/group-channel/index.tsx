@@ -102,6 +102,9 @@ const GroupChannel = (props: {
     }
   };
   const fetchData = async () => {
+    if (data?.items && data?.items.length > 0) {
+      return;
+    }
     const res = await getGroupChannels({ type: "1" });
     if (res.items instanceof Array) {
       res.items.forEach((channel) => {
@@ -122,7 +125,7 @@ const GroupChannel = (props: {
   const [editChannel, setEditChannel] = useState<Channel>();
   // 修改社群
   const updateGroupInfoModal = useModal({
-    content: <UpdateGroupInfo group={editChannel} />,
+    content: <>{editChannel && <UpdateGroupInfo group={editChannel} />}</>,
     title: "社群信息",
     footer: null,
     className: "w-[700px]",
@@ -472,6 +475,7 @@ const GroupChannel = (props: {
                           setEditChannel(item.channel);
                           updateGroupInfoModal.modal.open();
                         }}
+                        className="oper-icons"
                       >
                         <JknIcon
                           name="settings_shallow"
@@ -561,6 +565,15 @@ const GroupChannel = (props: {
             top: 0;
             right: 0;
             transform: translate(50%, -50%);
+          }
+          .group-title {
+            height: 26px;
+          }
+          .group-title .oper-icons {
+            display: none;
+          }
+          .group-title:hover .oper-icons {
+            display: block;
           }
           .group-avatar {
             width: 48px;

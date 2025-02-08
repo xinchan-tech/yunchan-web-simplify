@@ -168,7 +168,7 @@ const UpdateGroupInfo = (props: { group: Channel }) => {
   };
 
   return (
-    <div className="relative p-4 h-[560px]">
+    <div className="relative p-4 h-[590px]">
       {editModal.context}
       {queryDetail.isFetching === true && <FullScreenLoading />}
       <div className="top-area mb-4">
@@ -255,7 +255,9 @@ const UpdateGroupInfo = (props: { group: Channel }) => {
                     }}
                     className="w-6 h-6"
                   />
-                  <span className="ml-2 text-sm">{member.realname}</span>
+                  <div className="ml-2 text-sm max-w-[150px]">
+                    {member.realname}
+                  </div>
                 </div>
               );
             })}
