@@ -111,6 +111,11 @@ const GroupChannelCard = (props: {
             onClick={() => {
               typeof props.onJoin === "function" && props.onJoin();
             }}
+            style={{
+              backgroundColor: props.joinDisabled
+                ? "rgb(35,35,35)"
+                : "rgb(49,86,245)",
+            }}
             disabled={props.joinDisabled}
           >
             {props.joinDisabled === true ? "已加入" : "加入"}

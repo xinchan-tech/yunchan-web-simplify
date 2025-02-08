@@ -28,16 +28,16 @@ const JoinGroupContent = (props: { onSuccess: () => void }) => {
   const category: GroupCategory[] = [
     {
       label: "热门",
-      value: "2",
-    },
-    {
-      label: "推荐",
       value: "1",
     },
-    {
-      label: "高端",
-      value: "3",
-    },
+    // {
+    //   label: "推荐",
+    //   value: "2",
+    // },
+    // {
+    //   label: "高端",
+    //   value: "3",
+    // },
   ];
 
   const option = {
