@@ -5,6 +5,7 @@ import { throttle } from "radash"
 import { type CSSProperties, useCallback, useEffect, useRef, useState } from "react"
 import { type Indicator, chartEvent, kChartUtils, useKChartStore } from "../lib"
 import { useShallow } from "zustand/react/shallow"
+import Decimal from "decimal.js"
 
 interface IndicatorTooltipProps {
   type: 'main' | 'secondary'
@@ -33,10 +34,10 @@ export const IndicatorTooltip = (props: IndicatorTooltipProps) => {
 
   useEffect(() => {
     if (props.indicator.data) {
-      const indicators = props.indicator.data.filter(item => !!(item as any).name).map(item => {
-        const { name, style: { color } } = item as any
+      const indicators = props.indicator.data.filter(item => !!item.name).map(item => {
+        const { name, color } = item
         return {
-          name,
+          name: name!,
           color
         }
       })
@@ -114,16 +115,16 @@ export const IndicatorTooltip = (props: IndicatorTooltipProps) => {
   }, [props.indicator.id, mainIndicators, props.mainIndex])
 
   return (
-    <div className={cn('text-xs flex items-center text-transparent hover:text-secondary', props.className, !visible && 'opacity-60')} style={props.style}>
+    <div className={cn('text-xs flex text-transparent hover:text-secondary', props.className, !visible && 'opacity-60')} style={props.style}>
       {
-        props.type === 'main' && <span className="text-secondary">{props.indicator.name}:&emsp;</span>
+        props.type === 'main' && <span className="text-secondary flex-shrink-0">{props.indicator.name}:&emsp;</span>
       }
       <span className="pointer-events-none">
         {
           data.length > 0 && visible && (
             data.map(item => (
-              <span className="text-secondary" key={item.name} style={{ color: item.color }}>
-                {item.name}: {item.value}&emsp;
+              <span className="text-secondary whitespace-nowrap" key={item.name} style={{ color: item.color }}>
+                {item.name}: {item.value ? Decimal.create(item.value).toFixed(2): item.value}&emsp;
               </span>
             ))
           )
@@ -131,7 +132,7 @@ export const IndicatorTooltip = (props: IndicatorTooltipProps) => {
       </span>
       {
         props.type === 'main' && (
-          <span>
+          <span className="flex-shrink-0">
             {
               visible ? <EyeClosedIcon onClick={() => _onChangeIndicatorVisible(false)} className="cursor-pointer" /> : <EyeOpenIcon onClick={() => _onChangeIndicatorVisible(true)} className="cursor-pointer" />
             }

@@ -38,11 +38,7 @@ interface Window {
   AppleID: any
 
   Module: {
-    coiling_calculate: (
-      data: StockRawRecord[],
-      len: number,
-      interval: number
-    ) => Promise<CoilingData>
+    coiling_calculate: (data: StockRawRecord[], len: number, interval: number) => Promise<CoilingData>
   }
 
   CoilingModule: () => Promise<Module>
@@ -56,7 +52,7 @@ interface Window {
       },
       data: StockRawRecord[],
       interval: number
-    ) => Promise<any>
+    ) => Promise<{ data: any[]; status: number}>
   }>
 }
 

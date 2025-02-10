@@ -1,16 +1,17 @@
-import { StockChartInterval, getStockChart, getStockIndicatorData } from "@/api"
+import { StockChartInterval, getStockChart } from "@/api"
 import { StockSelect } from "@/components"
-import { useDomSize, useStockBarSubscribe } from "@/hooks"
+import { useStockBarSubscribe } from "@/hooks"
 import { useIndicator, useTime } from "@/store"
+import { calcIndicator } from "@/utils/coiling"
 import echarts from "@/utils/echarts"
 import { type StockSubscribeHandler, stockUtils } from "@/utils/stock"
 import { cn, colorUtil } from "@/utils/style"
-import { useQueries, useQuery } from "@tanstack/react-query"
+import { useQuery } from "@tanstack/react-query"
 import { useMount, useUnmount, useUpdateEffect } from "ahooks"
 import dayjs from "dayjs"
 import type { EChartsType } from 'echarts/core'
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { chartEvent, kChartUtils, useKChartStore } from "../lib"
+import { type Indicator, chartEvent, kChartUtils, useKChartStore } from "../lib"
 import { initOptions, renderChart, renderGrid, renderMainChart, renderMainCoiling, renderMainIndicators, renderMarkLine, renderOverlay, renderOverlayMark, renderSecondary, renderSecondaryLocalIndicators, renderWatermark, renderZoom } from "../lib/render"
 import { renderUtils } from "../lib/utils"
 import { IndicatorTooltip } from "./indicator-tooltip"
@@ -27,12 +28,12 @@ export const MainChart = (props: MainChartProps) => {
   // const [size, dom] = useDomSize<HTMLDivElement>()
   const dom = useRef<HTMLDivElement>(null)
   const chart = useRef<EChartsType>()
-  const renderFn = useRef<() => void>(() => {})
+  const renderFn = useRef<() => void>(() => { })
   // const canvas = useRef<Canvas>()
   useMount(() => {
-    chart.current = echarts.init(dom.current, null, {devicePixelRatio: 3})
+    chart.current = echarts.init(dom.current, null, { devicePixelRatio: 3 })
     chart.current.meta = {} as any
-    
+
 
     chart.current.meta.event = chartEvent.event
 
@@ -195,78 +196,73 @@ export const MainChart = (props: MainChartProps) => {
 
   useStockBarSubscribe([subscribeSymbol], subscribeHandler)
 
-  const { isDefaultIndicatorParams, getIndicatorQueryParams } = useIndicator()
+  // const { isDefaultIndicatorParams, getIndicatorQueryParams } = useIndicator()
 
-  const mainQueryIndicatorQueries = useQueries({
-    queries: Reflect.ownKeys(state.mainIndicators).map(v => v.toString()).map((item) => {
-      const queryKey = [getStockIndicatorData.cacheKey, { symbol: state.symbol, cycle: state.timeIndex, id: item, db_type: state.mainIndicators[item].type }] as any[]
-      let params: NormalizedRecord<number> | undefined
-      if (!isDefaultIndicatorParams(item)) {
-        params = getIndicatorQueryParams(item)
-        queryKey.push(params)
-      }
+  // const mainQueryIndicatorQueries = useQueries({
+  //   queries: Reflect.ownKeys(state.mainIndicators).map(v => v.toString()).map((item) => {
+  //     const queryKey = [getStockIndicatorData.cacheKey, { symbol: state.symbol, cycle: state.timeIndex, id: item, db_type: state.mainIndicators[item].type }] as any[]
+  //     let params: NormalizedRecord<number> | undefined
+  //     if (!isDefaultIndicatorParams(item)) {
+  //       params = getIndicatorQueryParams(item)
+  //       queryKey.push(params)
+  //     }
 
-      return {
-        queryKey,
-        refetchInterval: 60 * 1000,
-        queryFn: async () => {
-          const r = await getStockIndicatorData({
-            symbol: state.symbol, cycle: state.timeIndex, id: item, db_type: state.mainIndicators[item].type, start_at: startTime,
-            param: JSON.stringify(params)
-          })
+  //     return {
+  //       queryKey,
+  //       refetchInterval: 60 * 1000,
+  //       queryFn: async () => {
+  //         const r = await getStockIndicatorData({
+  //           symbol: state.symbol, cycle: state.timeIndex, id: item, db_type: state.mainIndicators[item].type, start_at: startTime,
+  //           param: JSON.stringify(params)
+  //         })
 
-          return { id: item, data: r.result }
-        },
-        placeholderData: () => ({ id: item, data: undefined })
-      }
+  //         return { id: item, data: r.result }
+  //       },
+  //       placeholderData: () => ({ id: item, data: undefined })
+  //     }
+  //   })
+  // })
+
+  // useEffect(() => {
+  //   mainQueryIndicatorQueries.forEach((query) => {
+  //     if (!query.data) return
+
+  //     kChartUtils.setIndicatorData({ index: props.index, indicatorId: query.data.id, data: query.data.data })
+  //   })
+  // }, [mainQueryIndicatorQueries, props.index])
+
+
+
+
+  const calcIndicatorData = useCallback(() => {
+    const symbol = useKChartStore.getState().state[props.index].symbol
+    const indicators = [...useKChartStore.getState().state[props.index].secondaryIndicators, ...Object.values(useKChartStore.getState().state[props.index].mainIndicators)]
+
+    indicators.forEach((item) => {
+      const candlesticks = query.data?.history ?? []
+      if (!candlesticks.length) return
+     
+      if (!item.formula) return
+    
+      calcIndicator({ formula: item.formula ?? '', symbal: symbol, indicatorId: item.id }, candlesticks, state.timeIndex).then(r => {
+        kChartUtils.setIndicatorData({ index: props.index, indicatorId: item.id, data: r.data })
+      })
     })
-  })
-
-  useEffect(() => {
-    mainQueryIndicatorQueries.forEach((query) => {
-      if (!query.data) return
-
-      kChartUtils.setIndicatorData({ index: props.index, indicatorId: query.data.id, data: query.data.data })
-    })
-  }, [mainQueryIndicatorQueries, props.index])
-
-  const secondaryIndicatorQueries = useQueries({
-    queries: Array.from(new Set(state.secondaryIndicators.filter(v => !renderUtils.isLocalIndicator(v.id)).map(v => `${v.id}_${v.type}`))).map((item) => {
-      const [id, type] = item.split('_')
-      const queryKey = [getStockIndicatorData.cacheKey, { symbol: state.symbol, cycle: state.timeIndex, id: id, db_type: type }] as any[]
-      let params: NormalizedRecord<number> | undefined
-      if (!isDefaultIndicatorParams(id)) {
-        params = getIndicatorQueryParams(id)
-        queryKey.push(params)
-      }
-      return {
-        queryKey,
-        refetchInterval: 60 * 1000,
-        queryFn: () => getStockIndicatorData({
-          symbol: state.symbol, cycle: state.timeIndex, id: id, db_type: type, start_at: startTime, param: JSON.stringify(params)
-        }).then(r => ({ id: id, data: r.result })),
-        placeholderData: () => ({ id: id, data: undefined })
-      }
-    })
-  })
-
-  useEffect(() => {
-    secondaryIndicatorQueries.forEach((query) => {
-
-      if (!query.data) return
-      kChartUtils.setIndicatorData({ index: props.index, indicatorId: query.data.id, data: query.data.data })
-    })
-  }, [secondaryIndicatorQueries, props.index])
-
-
-  // useUpdateEffect(() => {
-  //   chart.current?.resize()
-  //   render()
-  // }, [size])
+  }, [query.data, props.index, state.timeIndex])
 
   useEffect(() => {
     kChartUtils.setMainData({ index: props.index, data: query.data?.history, dateConvert: true, timeIndex: state.timeIndex })
-  }, [query.data, props.index, state.timeIndex])
+    
+    calcIndicatorData()
+  }, [query.data, props.index, state.timeIndex, calcIndicatorData])
+
+  useEffect(() => {
+    const unsubscribe = useIndicator.subscribe(() => {
+      calcIndicatorData()
+    })
+    
+    return () => unsubscribe()
+  }, [calcIndicatorData])
 
   const render = () => {
     if (!chart.current) return
@@ -307,18 +303,22 @@ export const MainChart = (props: MainChartProps) => {
     // console.log(chart.current.getOption());
   }
 
-  renderFn.current = render  
+  renderFn.current = render
 
   useUpdateEffect(() => {
     render()
   }, [state, startTime])
 
-  const onChangeSecondaryIndicators = useCallback(async (params: { value: string, index: number, type: string, name: string }) => {
-
-    kChartUtils.setSecondaryIndicator({
-      index: props.index,
-      indicatorIndex: params.index,
-      indicator: { id: params.value, type: params.type, timeIndex: state.timeIndex, symbol: state.symbol, key: state.secondaryIndicators[params.index].key, name: params.name }
+  const onChangeSecondaryIndicators = useCallback(async (params: { value: string, index: number, type: string, name: string, formula?: string }) => {
+    const indicator: Indicator = { id: params.value, type: params.type, timeIndex: state.timeIndex, symbol: state.symbol, key: state.secondaryIndicators[params.index].key, name: params.name, formula: params.formula }
+    const candlesticks = useKChartStore.getState().state[props.index].mainData.history
+    calcIndicator({ formula: params.formula ?? '', symbal: state.symbol, indicatorId: params.value }, candlesticks, state.timeIndex).then(r => {
+      indicator.data = r.data
+      kChartUtils.setSecondaryIndicator({
+        index: props.index,
+        indicatorIndex: params.index,
+        indicator: indicator
+      })
     })
   }, [props.index, state.symbol, state.timeIndex, state.secondaryIndicators])
 

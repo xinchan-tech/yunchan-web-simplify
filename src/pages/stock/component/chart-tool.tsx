@@ -10,6 +10,7 @@ import { SearchList } from "./search-list"
 import { nanoid } from "nanoid"
 import { useDomSize } from "@/hooks"
 import { useShallow } from "zustand/react/shallow"
+import { calcIndicator } from "@/utils/coiling"
 
 const CHART_TOOL = ['主图指标', '线型切换', '多图模式', '股票PK', '叠加标记', '画线工具']
 
@@ -62,8 +63,18 @@ const MainIndicatorSelect = ({ indicators }: { indicators?: Awaited<ReturnType<t
   const timeIndex = useKChartStore(s => s.state[s.activeChartIndex].timeIndex)
   const symbol = useKChartStore(s => s.state[s.activeChartIndex].symbol)
   const mainIndicators = useKChartStore(s => s.state[s.activeChartIndex].mainIndicators)
+  
+  const currentIndex = useKChartStore(s => s.activeChartIndex)
+
   const onChangeMainIndicator = (_: any, data: any[], name: string) => {
-    kChartUtils.setMainIndicators({ indicators: data.map(v => ({ id: v.value, type: v.extra.db_type, timeIndex, symbol, key: nanoid(), name: name })) })
+    const indicators = data.map(v => ({ id: v.value, type: v.extra.db_type, timeIndex, symbol, key: nanoid(), name: name, formula: v.extra.formula }))
+    const candlesticks = useKChartStore.getState().state[useKChartStore.getState().activeChartIndex].mainData.history
+    kChartUtils.setMainIndicators({ indicators })
+    data.forEach(v => {
+      calcIndicator({ formula: v.extra.formula, symbal: symbol, indicatorId: v.value }, candlesticks, timeIndex).then(data => {
+        kChartUtils.setIndicatorData({ index: currentIndex, indicatorId: v.value, data: data.data })
+      })
+    })
   }
 
   return (

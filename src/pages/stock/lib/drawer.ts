@@ -267,6 +267,8 @@ export const drawText: DrawerFunc<DrawerTextShape[]> = (options, _, { xAxisIndex
 
       return {
         type: 'text',
+        emphasisDisabled: true,
+        silent: true,
         style: {
           text,
           fill: color,
@@ -719,6 +721,8 @@ export const drawNumber = (
 
       return {
         type: 'text',
+        silent: true,
+        emphasisDisabled: true,
         style: {
           text,
           fill: color ?? '#00943c',

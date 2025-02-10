@@ -950,14 +950,14 @@ export const renderMainIndicators = (options: ECOption, indicators: Indicator[])
         return
       }
 
-      if (d.style?.style_type === 'NODRAW') {
+      if (d.style_type === 'NODRAW') {
         return
       }
 
       if (!d.draw) {
         drawLine(options, {} as any, {
           extra: {
-            color: d.style?.color || '#ffffff'
+            color: d.color || '#ffffff'
           },
           name: `main_${indicator.id}_${d.name}`,
           xAxisIndex: 0,
@@ -965,24 +965,24 @@ export const renderMainIndicators = (options: ECOption, indicators: Indicator[])
           data: (d.data as number[]).map((s, i) => [i, s])
         })
       } else if (d.draw === 'STICKLINE') {
-        const data: DrawerRectShape[] = Object.keys(d.data).map(key => [
+        const data: DrawerRectShape[] = Object.keys(d.draw_data).map(key => [
           +key,
-          ...(d.data as NormalizedRecord<number[]>)[key],
-          d.style.color
+          ...(d.draw_data as NormalizedRecord<number[]>)[key],
+          d.color
         ]) as any[]
         stickLineData.push(...data)
       } else if (d.draw === 'DRAWTEXT') {
-        const data: DrawerTextShape[] = Object.keys(d.data).map(key => [
+        const data: DrawerTextShape[] = Object.keys(d.draw_data).map(key => [
           +key,
-          ...(d.data as NormalizedRecord<number[]>)[key],
-          d.style.color
+          ...(d.draw_data as NormalizedRecord<number[]>)[key],
+          d.color
         ]) as any[]
         textData.push(...data)
       } else if (d.draw === 'DRAWNUMBER') {
-        const data = Object.entries(d.data as NormalizedRecord<number[]>).map(([key, value]) => [
+        const data = Object.entries(d.draw_data as NormalizedRecord<number[]>).map(([key, value]) => [
           +key,
           ...value,
-          d.style.color
+          d.color
         ])
 
         drawNumber(options, {
@@ -1121,14 +1121,14 @@ export const renderSecondary = (options: ECOption, indicators: Indicator[]) => {
         return
       }
 
-      if (d.style?.style_type === 'NODRAW') {
+      if (d.style_type === 'NODRAW') {
         return
       }
 
       if (!d.draw) {
         drawLine(options, {} as any, {
           extra: {
-            color: d.style?.color || '#ffffff'
+            color: d.color || '#ffffff'
           },
           xAxisIndex: index + 2,
           yAxisIndex: index + 3,
@@ -1136,33 +1136,32 @@ export const renderSecondary = (options: ECOption, indicators: Indicator[]) => {
           data: (d.data as number[]).map((s, i) => [i, s])
         })
       } else if (d.draw === 'STICKLINE') {
-        const data: DrawerRectShape[] = Object.keys(d.data).map(key => [
+        const data: DrawerRectShape[] = Object.keys(d.draw_data).map(key => [
           +key,
-          ...(d.data as NormalizedRecord<number[]>)[key].map((s, i) => (i === 2 ? s * 10 : s)),
-          d.style.color
+          ...(d.draw_data as NormalizedRecord<number[]>)[key].map((s, i) => (i === 2 ? s * 10 : s)),
+          d.color
         ]) as any[]
         stickLineData.push(...data)
       } else if (d.draw === 'DRAWTEXT') {
-        const data: DrawerTextShape[] = Object.keys(d.data).map(key => [
+        const data: DrawerTextShape[] = Object.keys(d.draw_data).map(key => [
           +key,
-          ...(d.data as NormalizedRecord<number[]>)[key],
-          d.style.color
+          ...(d.draw_data as NormalizedRecord<number[]>)[key],
+          d.color
         ]) as any[]
         textData.push(...data)
       } else if (d.draw === 'DRAWGRADIENT') {
-        const _data = d.data as NormalizedRecord<number[][]>
-        const data = Object.keys(d.data).map(key => {
+        const data = Object.keys(d.draw_data).map((key: string) => {
           const start = Number.parseInt(key)
           const points: { x: number; y: number }[] = []
           const p2: { x: number; y: number }[] = []
-          _data[key][0].forEach((item: number, i: number) => {
-            points.push({ x: i + start, y: item })
+          d.draw_data[start][0].split(',').forEach((item: string, i: number) => {
+            points.push({ x: i + start, y: +item })
           })
-          _data[key][1].forEach((item: number, i: number) => {
-            p2.unshift({ x: i + start, y: item })
+          d.draw_data[start][1].split(',').forEach((item: string, i: number) => {
+            p2.unshift({ x: i + start, y: +item })
           })
 
-          return [points[0].x, [...points, ...p2], [_data[key][2], _data[key][3]]]
+          return [points[0].x, [...points, ...p2], [d.draw_data[start][2], d.draw_data[start][3]]]
         })
 
         drawGradient(options, {} as any, {
@@ -1172,8 +1171,7 @@ export const renderSecondary = (options: ECOption, indicators: Indicator[]) => {
           data: data as any
         })
       } else if (d.draw === 'DRAWNUMBER') {
-        const data = Object.entries(d.data as NormalizedRecord<number[]>).forEach(([key, value]) => [key, ...value])
-
+        const data = Object.entries(d.draw_data as NormalizedRecord<number[]>).forEach(([key, value]) => [key, ...value])
         drawNumber(options, {
           xAxisIndex: index + 2,
           yAxisIndex: index + 3,

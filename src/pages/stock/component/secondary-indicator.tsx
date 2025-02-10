@@ -23,7 +23,7 @@ interface SecondaryIndicatorProps {
   /**
    * 附图的指标
    */
-  onIndicatorChange: (params: { value: string, index: number, type: string, name: string }) => void
+  onIndicatorChange: (params: { value: string, index: number, type: string, name: string, formula?: string }) => void
 }
 
 export const SecondaryIndicator = memo((props: SecondaryIndicatorProps) => {
@@ -36,10 +36,9 @@ export const SecondaryIndicator = memo((props: SecondaryIndicatorProps) => {
   const currentSecondaryIndicator = useKChartStore(s => s.state[props.mainIndex].secondaryIndicators[props.index])
 
   const _onChange = (v: string) => {
-
     const indicator = findIndicator(v)
 
-    props.onIndicatorChange({ value: v, index: props.index, type: (indicator as any)?.db_type,  name: indicator?.name ?? '' })
+    props.onIndicatorChange({ value: v, index: props.index, type: (indicator as any)?.db_type,  name: indicator?.name ?? '' ,formula: indicator?.formula })
   }
 
   const findIndicator = (id: string) => {
@@ -125,7 +124,6 @@ export const SecondaryIndicator = memo((props: SecondaryIndicatorProps) => {
                             </Label>
                           </div>
                         ))}
-
                       </RadioGroup>
                     </ScrollArea>
                   </div>

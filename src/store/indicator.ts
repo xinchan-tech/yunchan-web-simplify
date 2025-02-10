@@ -12,7 +12,6 @@ type IndicatorParams = {
     min?: string
   }[]
 }
-// TODO：从后端获取
 const defaultIndicatorParams: IndicatorParams[] = [
   // {
   //   id: '241',

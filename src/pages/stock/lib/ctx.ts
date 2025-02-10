@@ -10,6 +10,7 @@ import { nanoid } from 'nanoid'
 import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
 import { renderUtils } from './utils'
+import { mapValues } from "radash"
 
 export type ViewMode =
   | 'single'
@@ -226,19 +227,30 @@ export type Indicator = {
 /**
  * 指标数据
  */
-export type IndicatorData =
-  | string[]
-  | {
-      name: string
-      draw?: string
-      data: string[] | NormalizedRecord<any>
-      style: {
-        color?: string
-        linethick: number
-        style_type?: string
-      }
-    }[]
-  | undefined
+export type IndicatorData = (IndicatorDataLine | IndicatorDataDrawGradient | IndicatorDataDrawStickLine | IndicatorDataDrawText | IndicatorDataDrawNumber)[] | undefined
+type DrawFunc = '' | 'STICKLINE' | 'DRAWTEXT' | 'DRAWGRADIENT' | 'DRAWNUMBER'
+type IndicatorDataBase<T extends DrawFunc> = {
+  draw: T
+  color: string
+  linethick: number
+  name?: string
+  style_type?: string
+}
+type IndicatorDataLine = IndicatorDataBase<''> & {
+  data: number[]
+}
+type IndicatorDataDrawStickLine = IndicatorDataBase<'STICKLINE'> & {
+  draw_data: Record<number, [number, number, number, number]>
+}
+type IndicatorDataDrawText = IndicatorDataBase<'DRAWTEXT'> & {
+  draw_data: Record<number, [number, string, number, number]>
+}
+type IndicatorDataDrawGradient = IndicatorDataBase<'DRAWGRADIENT'> & {
+  draw_data: Record<number, [string, string, string, string, number]>
+}
+type IndicatorDataDrawNumber = IndicatorDataBase<'DRAWNUMBER'> & {
+  draw_data: Record<number, [number, number, number, number]>
+}
 
 /**
  * 坐标轴
@@ -434,7 +446,10 @@ export const useKChartStore = create<KChartContext>()(
                 ...item,
                 data: undefined
               })),
-              mainIndicators: r.mainIndicators,
+              mainIndicators: mapValues(r.mainIndicators, (value) => ({
+                ...value,
+                data: undefined
+              })) as any,
               mainCoiling: r.mainCoiling,
               mainData: {
                 history: [],
@@ -472,7 +487,7 @@ export const kChartUtils: KChartUtils = {
         if (item.index === (index ?? state.activeChartIndex)) {
           return produce(item, draft => {
             draft.timeIndex = timeIndex
-            if(isTimeIndexChart(timeIndex)) {
+            if (isTimeIndexChart(timeIndex)) {
               draft.type = 'line'
             }
 
@@ -495,7 +510,7 @@ export const kChartUtils: KChartUtils = {
     const state = useKChartStore.getState().state[index ?? useKChartStore.getState().activeChartIndex]
     if (type && state.type === type) return
 
-    if(isTimeIndexChart(state.timeIndex) && type === 'k-line') return
+    if (isTimeIndexChart(state.timeIndex) && type === 'k-line') return
 
     useKChartStore.setState(state => ({
       state: state.state.map(item => {
@@ -663,7 +678,7 @@ export const kChartUtils: KChartUtils = {
     if (data?.length && timeIndex !== undefined) {
       coilingData = await calcCoiling(data, timeIndex)
     }
- 
+
     useKChartStore.setState(s => ({
       state: produce(s.state, draft => {
         const item = draft.find(item => item.index === (index ?? s.activeChartIndex))
@@ -727,24 +742,16 @@ export const kChartUtils: KChartUtils = {
       getStockIndicatorData.cacheKey,
       { symbol: indicator.symbol, cycle: indicator.timeIndex, id: indicator.id, db_type: indicator.type }
     ] as any[]
-  
 
     if (!useIndicator.getState().isDefaultIndicatorParams(indicator.id)) {
       queryKey.push(useIndicator.getState().getIndicatorQueryParams(indicator.id))
     }
 
-    const queryData = queryClient.getQueryData(queryKey) as { id: string; data: any[] }
-
     useKChartStore.setState(state => ({
       state: state.state.map(item => {
         if (item.index === (index ?? state.activeChartIndex)) {
           return produce(item, draft => {
-            if (queryData) {
-              draft.secondaryIndicators[indicatorIndex] = { ...indicator, data: queryData.data }
-              queryClient.invalidateQueries({ queryKey })
-            } else {
-              draft.secondaryIndicators[indicatorIndex] = indicator
-            }
+            draft.secondaryIndicators[indicatorIndex] = indicator
           })
         }
         return item

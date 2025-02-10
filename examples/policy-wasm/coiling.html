@@ -81,6 +81,7 @@ MACD:(DIF-DEA)*2,COLORSTICK;
                             var fmlData = {formula:fml,symbal:ticker}
                             // 调用 WebAssembly 函数 coiling_calculate
                             const start = performance.now();
+                            console.log(fmlData, candlesticks, interval)
                             var result = Module.policy_execute(fmlData, candlesticks, interval)
                             const end = performance.now();
 
