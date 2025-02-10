@@ -161,7 +161,7 @@ const PageTable = (props: PageTableProps) => {
     {
       title: '总市值', dataIndex: 'total', align: 'right', width: '8%', sort: true,
       render: (_, row) => (
-        <SubscribeSpan.MarketValueBlink trading="intraDay" symbol={row.symbol} initValue={row.total} decimal={2} totalShare={row.totalShare ?? 0} />
+        <SubscribeSpan.MarketValueBlink trading="intraDay" symbol={row.symbol} initValue={row.total} decimal={2} totalShare={row.totalShare ?? 0} showColor={false} />
       )
     },
     {

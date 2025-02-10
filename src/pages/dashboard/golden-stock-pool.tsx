@@ -1,5 +1,5 @@
 import { getStockCollects } from "@/api"
-import { Button, CollectCapsuleTabs, JknRcTable, NumSpanSubscribe, StockView, SubscribeSpan } from "@/components"
+import { Button, CollectCapsuleTabs, JknRcTable, StockView, SubscribeSpan } from "@/components"
 import { useStockQuoteSubscribe, useTableData, useTableRowClickToStockTrading } from "@/hooks"
 import { useToken } from "@/store"
 import { appEvent } from "@/utils/event"
@@ -63,7 +63,7 @@ const GoldenStockPool = () => {
     {
       title: '总市值', dataIndex: 'marketValue',
       align: 'right', width: '19%', sort: true,
-      render: (marketValue, row) => <SubscribeSpan.MarketValueBlink symbol={row.symbol} decimal={2} initValue={marketValue} totalShare={row.totalShare ?? 0} />
+      render: (marketValue, row) => <SubscribeSpan.MarketValueBlink symbol={row.symbol} decimal={2} initValue={marketValue} totalShare={row.totalShare ?? 0} showColor={false} />
     }
   ]
 

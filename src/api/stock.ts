@@ -325,6 +325,17 @@ export const getStockChartV2 = async (params: GetStockChartV2Params) => {
 }
 getStockChartV2.cacheKey = 'stock:kline:v2'
 
+export const getStockChartQuote = async (symbol: string, period: 'pre' | 'intraday' | 'post'| '5d' , time_format = 'int' ) => {
+  const params = { symbol, period, time_format }
+  const paramsKeySort = Object.keys(params).sort() as (keyof typeof params)[]
+  const paramsStr = `${paramsKeySort.reduce((acc, key) => `${acc}${key}=${params[key]}&`, '').slice(0, -1)}&app_key=${'LMOl&8skLax%ls1Haapd'}`
+  const sign = md5(sha256(paramsStr))
+  
+  const r = await request.get<StockRawRecord>('/stock/quote', { params: { symbol, period, time_format }, headers: { sign } }).then(r => r.data)
+  return r
+}
+getStockChartQuote.cacheKey = 'stock:chart:quote'
+
 type GetHotSectorsParams = {
   type: 'day' | 'month' | 'week'
   /**

@@ -1,4 +1,4 @@
-import { StockChartInterval, getStockChartV2 } from "@/api"
+import { StockChartInterval, getStockChartQuote, getStockChartV2 } from "@/api"
 import { StockSelect } from "@/components"
 import { useStockBarSubscribe } from "@/hooks"
 import { useIndicator, useTime } from "@/store"
@@ -6,12 +6,12 @@ import { calcIndicator } from "@/utils/coiling"
 import echarts from "@/utils/echarts"
 import { type StockSubscribeHandler, stockUtils } from "@/utils/stock"
 import { cn, colorUtil } from "@/utils/style"
-import { useInfiniteQuery, type UseInfiniteQueryResult } from "@tanstack/react-query"
+import { useInfiniteQuery, useQuery, type UseInfiniteQueryResult } from "@tanstack/react-query"
 import { useMount, useUnmount, useUpdateEffect } from "ahooks"
 import dayjs from "dayjs"
 import type { EChartsType } from 'echarts/core'
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { type Indicator, chartEvent, kChartUtils, useKChartStore } from "../lib"
+import { type Indicator, chartEvent, isTimeIndexChart, kChartUtils, useKChartStore } from "../lib"
 import { initOptions, renderChart, renderGrid, renderMainChart, renderMainCoiling, renderMainIndicators, renderMarkLine, renderOverlay, renderOverlayMark, renderSecondary, renderSecondaryLocalIndicators, renderWatermark, renderZoom } from "../lib/render"
 import { renderUtils } from "../lib/utils"
 import { IndicatorTooltip } from "./indicator-tooltip"
@@ -103,12 +103,6 @@ export const MainChart = (props: MainChartProps) => {
     interval: state.timeIndex,
     gzencode: true
   }
-  // const queryKey = [getStockChart.cacheKey, params]
-  // const query = useQuery({
-  //   queryKey,
-  //   queryFn: () => getStockChart(params),
-  //   refetchInterval: 60 * 1000,
-  // })
 
   const candlesticks = useInfiniteQuery({
     queryKey: [getStockChartV2.cacheKey, params],
@@ -133,16 +127,22 @@ export const MainChart = (props: MainChartProps) => {
     },
     select: (data) => {
       return data.pages.reduce((acc, page) => acc.concat(page.data.list), [] as any[])
-    }
+    },
+    enabled: !isTimeIndexChart(state.timeIndex)
+  })
+
+  const quoteParams = {
+    symbol: state.symbol,
+    period: state.timeIndex === StockChartInterval.PRE_MARKET ? 'pre' : state.timeIndex === StockChartInterval.AFTER_HOURS ? 'post' : state.timeIndex === StockChartInterval.FIVE_DAY ? '5d' : 'intraday',
+    time_format: 'int'
+  }
+  const quote = useQuery({
+    queryKey: [getStockChartQuote.cacheKey,quoteParams],
+    queryFn: () => getStockChartQuote(quoteParams.symbol, quoteParams.period as any),
+    enabled: isTimeIndexChart(state.timeIndex)
   })
 
   fetchFn.current = candlesticks
-
-
-
-
-
-  // renderUtils.getPeriodByPage({ page: 1, interval: state.timeIndex })
 
   const subscribeSymbol = useMemo(() => {
     if (state.timeIndex <= 1) {
@@ -175,7 +175,7 @@ export const MainChart = (props: MainChartProps) => {
   const subscribeHandler: StockSubscribeHandler<'bar'> = useCallback((data) => {
     const stock = stockUtils.toStock(data.rawRecord)
     stock.timestamp = dayjs(stock.timestamp).tz('America/New_York').second(0).millisecond(0).valueOf()
-    // if (!candlesticks.data || candlesticks.data.pages.length === 0) return
+   
     if (!lastMainHistory.current || lastMainHistory.current.length === 0) return
 
     const lastData = stockUtils.toStock(lastMainHistory.current[lastMainHistory.current.length - 1])
@@ -262,9 +262,6 @@ export const MainChart = (props: MainChartProps) => {
     // 优化卡顿，不要删除
     chart.current.meta.mainData = state.mainData.history
 
-    // const [start, end] = chart.current.getOption() ? renderUtils.getZoom(chart.current.getOption()) : [90, 100]
-
-
     const _options = renderChart(chart.current)
     renderGrid(_options, state, [chart.current.getWidth(), chart.current.getHeight()], chart.current)
    
@@ -296,7 +293,7 @@ export const MainChart = (props: MainChartProps) => {
 
   useUpdateEffect(() => {
     render()
-  }, [state, startTime])
+  }, [state.mainData])
 
   const onChangeSecondaryIndicators = useCallback(async (params: { value: string, index: number, type: string, name: string, formula?: string }) => {
     const indicator: Indicator = { id: params.value, type: params.type, timeIndex: state.timeIndex, symbol: state.symbol, key: state.secondaryIndicators[params.index].key, name: params.name, formula: params.formula }

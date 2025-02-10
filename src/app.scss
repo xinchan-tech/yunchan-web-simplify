@@ -132,6 +132,17 @@ body {
   }
 }
 
+.rc-table-cell {
+  animation-duration: 0.3s;
+  &[data-blink="up"] {
+    animation-name: stock-blink-up;
+  }
+
+  &[data-blink="down"] {
+    animation-name: stock-blink-down;
+  }
+}
+
 .stock-blink-gradient {
   animation-duration: 0.3s;
   &[data-blink="up"] {

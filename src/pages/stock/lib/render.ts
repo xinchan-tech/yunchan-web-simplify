@@ -1259,8 +1259,8 @@ export const renderSecondaryLocalIndicators = (options: ECOption, indicators: In
         xAxisIndex: index + 2,
         yAxisIndex: index + 3,
         data: [
-          ...X0.map((x, i) => [i, 0, x * 1000, 20, 0, x > 0 ? 'magenta' : 'cyan'] as any),
-          ...Z.map((z, i) => [i, 0, z * 1000, 20, 0, z > 0 ? 'magenta' : 'cyan'] as any)
+          ...X0.map((x, i) => [i, 0, x * 1000, 1.5, 0, x > 0 ? 'magenta' : 'cyan'] as any),
+          ...Z.map((z, i) => [i, 0, z * 1000, 1.5, 0, z > 0 ? 'magenta' : 'cyan'] as any)
         ]
       })
       drawLine(options, {} as any, {
