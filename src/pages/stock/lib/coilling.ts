@@ -154,7 +154,7 @@ export const calcCoilingPivotsExpands = (expands: CoilingData['expands'] | undef
   const labels = ['A0', 'A1', 'A²', 'A³', 'A⁴', 'A⁵', 'A⁶', 'A⁷', 'A⁸']
 
   return expands.map(p => {
-    const mark = `${p.direction === 1 ? '↑' : '↓'}_${labels[p.level]}_1_`
+    const mark = p.level === 2 ? '__1_' : `${p.direction === 1 ? '↑' : '↓'}_${labels[p.level]}_1_`
     const segmentNum = p.end - p.start
 
     let bgColor = 'transparent'
@@ -464,7 +464,7 @@ export const calcBottomSignal = (
     }
   ])
 
-  const hdlyLabel: {index: number, yAxis: number, label: string}[] = []
+  const hdlyLabel: { index: number; yAxis: number; label: string }[] = []
   const hdlyData: [number, number, number, number, number, string][] = []
   // const hdlyData = hdly(candlesticks)
   //   .map((item, index) => [index, 0, item, 18, 0, ''])
@@ -475,11 +475,11 @@ export const calcBottomSignal = (
     if (vol > 0) {
       hdlyData.push([index, 0, vol, 2, 0, ''])
 
-      if(vol >= maxVol){
+      if (vol >= maxVol) {
         maxVol = vol
         maxPos = index
       }
-    }else{
+    } else {
       if (maxPos !== -1) {
         let str = '历史大底'
         if (maxVol < 30) {
@@ -491,7 +491,7 @@ export const calcBottomSignal = (
         } else if (maxVol < 150) {
           str = '超大底'
         }
-        hdlyLabel.push({index: maxPos, yAxis: maxVol + 8, label: str})
+        hdlyLabel.push({ index: maxPos, yAxis: maxVol + 8, label: str })
         maxPos = -1
         maxVol = 0
       }

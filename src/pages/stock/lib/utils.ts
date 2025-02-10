@@ -252,9 +252,9 @@ export const renderUtils = {
   /**
    * 获取zoom刻度坐标
    */
-  getScaledZoom: (chart: EChartsType, index = 0): [number, number] => {
+  getScaledZoom: (chart: EChartsType, index = 0): [number, number] | undefined => {
     // @ts-ignore
-    return chart.getModel().getComponent('xAxis', index).axis.scale.getExtent()
+    return chart.getModel().getComponent('xAxis', index)?.axis.scale.getExtent()
   },
 
   /**

@@ -129,7 +129,7 @@ export const MainChart = (props: MainChartProps) => {
       return undefined
     },
     getPreviousPageParam: (firstPage, _, firstParams) => {
-      return firstPage && firstPage.data.list.length > 0 ? firstParams + 1 : undefined
+      return firstPage?.data?.list && firstPage.data.list.length > 0 ? firstParams + 1 : undefined
     },
     select: (data) => {
       return data.pages.reduce((acc, page) => acc.concat(page.data.list), [] as any[])
@@ -262,15 +262,19 @@ export const MainChart = (props: MainChartProps) => {
     // 优化卡顿，不要删除
     chart.current.meta.mainData = state.mainData.history
 
-    const [start, end] = chart.current.getOption() ? renderUtils.getZoom(chart.current.getOption()) : [90, 100]
+    // const [start, end] = chart.current.getOption() ? renderUtils.getZoom(chart.current.getOption()) : [90, 100]
+
 
     const _options = renderChart(chart.current)
     renderGrid(_options, state, [chart.current.getWidth(), chart.current.getHeight()], chart.current)
+   
     if (state.mainData.history.length > 0) {
-
+      const scale = renderUtils.getScaledZoom(chart.current, 0)
+      const oldMainData = (chart.current.getOption()?.series as any[])?.find((item: any) => item.name === 'kChart')?.data
+      const addCount = oldMainData ? state.mainData.history.length - oldMainData.length : state.mainData.history.length
       renderMainChart(_options, state)
       renderMarkLine(_options, state)
-      renderZoom(_options, state, [start, end])
+      renderZoom(_options, addCount, scale)
       /**
        * 画主图指标
        */

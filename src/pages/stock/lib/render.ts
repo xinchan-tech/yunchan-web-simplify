@@ -137,7 +137,7 @@ export const createOptions = (chart: EChartsType): ECOption => ({
       axisLabel: {
         show: false,
         interval: (index: number) => {
-          const scale = renderUtils.getScaledZoom(chart, 0)
+          const scale = renderUtils.getScaledZoom(chart, 0)!
 
           const offset = Math.round((scale[1] - scale[0]) / X_AXIS_TICK)
 
@@ -189,7 +189,7 @@ export const createOptions = (chart: EChartsType): ECOption => ({
         showMaxLabel: false,
         showMinLabel: false,
         color: v => {
-          const scale = renderUtils.getScaledZoom(chart, 0)
+          const scale = renderUtils.getScaledZoom(chart, 0)!
 
           const data = chart.meta!.mainData?.slice(scale[0], scale[1])
 
@@ -224,7 +224,7 @@ export const createOptions = (chart: EChartsType): ECOption => ({
         label: {
           padding: [0, 0, 0, 0],
           formatter: (params: any) => {
-            const scale = renderUtils.getScaledZoom(chart, 0)
+            const scale = renderUtils.getScaledZoom(chart, 0)!
             const data = chart.meta!.mainData?.slice(scale[0], scale[1])
 
             if (!data) return params.value
@@ -278,7 +278,7 @@ export const createOptions = (chart: EChartsType): ECOption => ({
           return v
         },
         color: v => {
-          const scale = renderUtils.getScaledZoom(chart, 0)
+          const scale = renderUtils.getScaledZoom(chart, 0)!
 
           const data = chart.meta!.mainData?.slice(scale[0], scale[1])
 
@@ -295,11 +295,9 @@ export const createOptions = (chart: EChartsType): ECOption => ({
   ],
   dataZoom: [
     {
-      minSpan: 1,
+      minSpan: 4,
       type: 'inside',
       xAxisIndex: [0, 1, 2, 3, 4, 5, 6],
-      start: 90,
-      end: 100,
       filterMode: 'weakFilter'
     },
     {
@@ -309,8 +307,6 @@ export const createOptions = (chart: EChartsType): ECOption => ({
       xAxisIndex: [0, 1, 2, 3, 4, 5, 6],
       type: 'slider',
       bottom: 0,
-      start: 90,
-      end: 100,
       zoomLock: true,
       fillerColor: 'rgba(255, 255, 255, 0.2)',
       selectedDataBackground: {
@@ -478,7 +474,7 @@ export const renderGrid = (options: ECOption, state: ChartState, size: [number, 
           if (!v) return ''
           // @ts-ignore
           const xData = options.xAxis[0].data as any[]
-          const scale = renderUtils.getScaledZoom(chart, 0)
+          const scale = renderUtils.getScaledZoom(chart, 0)!
           const startDay = xData[scale[0]]
           //获取时间跨度
           const time = dayjs(+xData[scale[1]]).diff(+startDay, 'day')
@@ -744,7 +740,8 @@ export const renderMarkLine: ChartRender = (options, state) => {
       padding: [2, 4],
       backgroundColor: lineColor,
       formatter: (params: { data: { yAxis: number } }) => {
-        return params.data.yAxis.toFixed(3)
+
+        return params.data.yAxis ? Decimal.create(params.data.yAxis).toFixed(2): ''
       }
     },
     silent: true,
@@ -884,6 +881,7 @@ export const renderMainCoiling = (options: ECOption, state: ChartState, chart: E
       const cma2 = calculateMA(65, state.mainData.history)
       const cma3 = calculateMA(120, state.mainData.history)
       const cma4 = calculateMA(250, state.mainData.history)
+      console.log(cma3, state.mainData)
       drawLine(options, {} as any, {
         yAxisIndex: 1,
         xAxisIndex: 0,
@@ -1301,7 +1299,7 @@ const renderSecondaryAxis = (options: ECOption, _: any, index: number, chart: EC
       axisLabel: {
         show: false,
         interval: (index: number) => {
-          const scale = renderUtils.getScaledZoom(chart, 0)
+          const scale = renderUtils.getScaledZoom(chart, 0)!
 
           const offset = Math.round((scale[1] - scale[0]) / X_AXIS_TICK)
 
@@ -1370,22 +1368,33 @@ export const renderWatermark = (options: ECOption, timeIndex: ChartState['timeIn
 /**
  * 配置缩放
  */
-export const renderZoom = (options: ECOption, state:ChartState, zoom: [number, number]) => {
-  const MaxKLineCount = 1000
-  const _zoom = [...zoom]
-  const showCount = state.mainData.history.length * (zoom[1] - zoom[0]) / 100
-  if(showCount > MaxKLineCount){
-    _zoom[0] = 100 - MaxKLineCount / state.mainData.history.length * 100
+export const renderZoom = (options: ECOption, addCount: number, zoom?: [number, number]) => {
+  if(!zoom){
+    return
   }
 
-  const maxSpan = Math.min(MaxKLineCount / state.mainData.history.length * 100, 100)
+  const MaxKLineCount = 1000
+  const _zoom = [...zoom]
 
-  
+  if(_zoom[0] === Number.POSITIVE_INFINITY){
+    _zoom[0] = Math.round(addCount * 0.5)
+  }
+  if(_zoom[1] === Number.NEGATIVE_INFINITY){
+    _zoom[1] = addCount
+  }
+
+  const showCount = zoom[1] - zoom[0]
+  if(showCount > MaxKLineCount){
+    _zoom[0] = zoom[1] - MaxKLineCount
+  }
+
   if (Array.isArray(options.dataZoom)) {
     for (const z of options.dataZoom) {
-      z.start = _zoom[0]
-      z.end = _zoom[1]
-      z.maxSpan = maxSpan
+      z.startValue = _zoom[0] + addCount
+      z.endValue = _zoom[1] + addCount
+      z.start = undefined
+      z.end = undefined
+      z.maxValueSpan = MaxKLineCount
     }
   }
 }
