@@ -6,6 +6,7 @@ import type { KChartContext } from './ctx'
 import type { EChartsType } from 'echarts/core'
 import { getTradingPeriod } from '@/utils/date'
 import { stockUtils } from '@/utils/stock'
+import { useTime } from "@/store"
 
 export const renderUtils = {
   getXAxisIndex: (options: ECOption, index: number) => {
@@ -370,5 +371,26 @@ export const renderUtils = {
       return data[left]
     }
     return data[left - 1]
+  },
+
+   /**
+   * k线分页逻辑，每次取500个周期线
+   * k线只去取盘中的数据
+   * 盘中时间： 9:30 - 15:59
+   */
+   getPeriodByPage: (params: { interval: StockChartInterval; page: number; initDate?: string }) => {
+    const { interval, page, initDate } = params
+    const usDate = initDate ? dayjs(initDate) : dayjs(useTime.getState().getCurrentUsTime()).tz('America/New_York')
+
+    const intervalScale = renderUtils.getIntervalScale(interval)
+
+    const startDate = usDate.add(-page * 1000 * intervalScale, 'millisecond')
+    let endDate = usDate
+
+    if (page > 1) {
+      endDate = usDate.add(-(page - 1) * 1000 * intervalScale, 'millisecond')
+    }
+
+    return [startDate.format('YYYY-MM-DD HH:mm:ss'), endDate.format('YYYY-MM-DD HH:mm:ss')]
   }
 }

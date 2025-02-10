@@ -1,4 +1,4 @@
-import { StockChartInterval, type StockExtendResultMap, type StockRawRecord } from '@/api'
+import { StockChartInterval, StockPeriod, type StockExtendResultMap, type StockRawRecord } from '@/api'
 import dayjs from 'dayjs'
 import Decimal from 'decimal.js'
 import { type Stock, StockRecord, type StockResultRecord, type StockTrading } from './stock'
@@ -337,6 +337,57 @@ export const stockUtils = {
     if (!marketValue) return
 
     return data.turnover / marketValue
+  },
+
+  intervalToPeriod(interval: StockChartInterval): StockPeriod {
+    switch (interval) {
+      case -1:
+        return StockPeriod.PRE_MARKET
+      case 0:
+        return StockPeriod.INTRA_DAY
+      case -2:
+        return StockPeriod.AFTER_HOURS
+      case 7200:
+        return StockPeriod.FIVE_DAY
+      case 1:
+        return StockPeriod.ONE_MIN
+      case 2:
+        return StockPeriod.TWO_MIN
+      case 3:
+        return StockPeriod.THREE_MIN
+      case 5:
+        return StockPeriod.FIVE_MIN
+      case 10:
+        return StockPeriod.TEN_MIN
+      case 15:
+        return StockPeriod.FIFTEEN_MIN
+      case 30:
+        return StockPeriod.THIRTY_MIN
+      case 45:
+        return StockPeriod.FORTY_FIVE_MIN
+      case 60:
+        return StockPeriod.ONE_HOUR
+      case 120:
+        return StockPeriod.TWO_HOUR
+      case 180:
+        return StockPeriod.THREE_HOUR
+      case 240:
+        return StockPeriod.FOUR_HOUR
+      case 1440:
+        return StockPeriod.DAY
+      case 10080:
+        return StockPeriod.WEEK
+      case 43200:
+        return StockPeriod.MONTH
+      case 129600:
+        return StockPeriod.QUARTER
+      case 259200:
+        return StockPeriod.HALF_YEAR
+      case 518400:
+        return StockPeriod.YEAR
+      default:
+        return StockPeriod.DAY
+    }
   },
 
   parseTime

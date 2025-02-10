@@ -1,4 +1,4 @@
-import { useIndicator } from "@/store"
+import { useIndicator } from '@/store'
 import request from '@/utils/request'
 import { aesDecrypt, base64Decode, gzDecode } from '@/utils/string'
 import axios from 'axios'
@@ -316,7 +316,7 @@ export const getStockChartV2 = async (params: GetStockChartV2Params) => {
   const sign = md5(sha256(paramsStr))
 
   const r = await axios
-    .get<StockRawRecord[]>('/apiv2/chart/kline', {
+    .get<{ data: { list: StockRawRecord[] } }>('/apiv2/chart/kline', {
       params,
       headers: { sign }
     })
@@ -1372,7 +1372,7 @@ type GetStockIndicatorsResult = {
   main: {
     db_type: 'system' | 'user'
     id: string
-    indicators:StockIndicator[]
+    indicators: StockIndicator[]
     name: string
   }[]
   secondary: GetStockIndicatorsResult['main']
@@ -1384,17 +1384,17 @@ type GetStockIndicatorsResult = {
 export const getStockIndicators = () => {
   return request.get<GetStockIndicatorsResult>('/stock/indicators').then(r => {
     const indicator: {
-      id: string,
-      name: string,
-      params: {name: string, value: string, default: string, min: string, max: string}[]
+      id: string
+      name: string
+      params: { name: string; value: string; default: string; min: string; max: string }[]
     }[] = []
 
     r.data.main.forEach(m => {
       m.indicators.forEach(i => {
-        if(i.formula){
+        if (i.formula) {
           i.formula = aesDecrypt(i.formula)
         }
-        if(i.param){
+        if (i.param) {
           indicator.push({
             id: i.id,
             name: i.name!,
@@ -1413,10 +1413,10 @@ export const getStockIndicators = () => {
     })
     r.data.secondary.forEach(m => {
       m.indicators.forEach(i => {
-        if(i.formula){
+        if (i.formula) {
           i.formula = aesDecrypt(i.formula)
         }
-        if(i.param){
+        if (i.param) {
           indicator.push({
             id: i.id,
             name: i.name!,

@@ -1,4 +1,4 @@
-import { StockChartInterval, getStockChart } from "@/api"
+import { StockChartInterval, getStockChartV2 } from "@/api"
 import { StockSelect } from "@/components"
 import { useStockBarSubscribe } from "@/hooks"
 import { useIndicator, useTime } from "@/store"
@@ -6,7 +6,7 @@ import { calcIndicator } from "@/utils/coiling"
 import echarts from "@/utils/echarts"
 import { type StockSubscribeHandler, stockUtils } from "@/utils/stock"
 import { cn, colorUtil } from "@/utils/style"
-import { useQuery } from "@tanstack/react-query"
+import { useInfiniteQuery, type UseInfiniteQueryResult } from "@tanstack/react-query"
 import { useMount, useUnmount, useUpdateEffect } from "ahooks"
 import dayjs from "dayjs"
 import type { EChartsType } from 'echarts/core'
@@ -17,8 +17,6 @@ import { renderUtils } from "../lib/utils"
 import { IndicatorTooltip } from "./indicator-tooltip"
 import { SecondaryIndicator } from "./secondary-indicator"
 import { TimeIndexMenu } from "./time-index"
-// import type { Canvas } from 'fabric'
-// import { initGraphicTool } from "../lib/graphic"
 
 interface MainChartProps {
   index: number
@@ -29,7 +27,7 @@ export const MainChart = (props: MainChartProps) => {
   const dom = useRef<HTMLDivElement>(null)
   const chart = useRef<EChartsType>()
   const renderFn = useRef<() => void>(() => { })
-  // const canvas = useRef<Canvas>()
+  const fetchFn = useRef<UseInfiniteQueryResult<any[], Error>>()
   useMount(() => {
     chart.current = echarts.init(dom.current, null, { devicePixelRatio: 3 })
     chart.current.meta = {} as any
@@ -49,6 +47,20 @@ export const MainChart = (props: MainChartProps) => {
         chartEvent.event.emit('data', [])
       }
     })
+
+    chart.current.on('dataZoom', (params: any) => {
+      let start = 100
+      if (params.batch) {
+        start = params.batch[0].start
+      } else {
+        start = params.start
+      }
+
+      if (start < 10 && !fetchFn.current?.isFetching) {
+        candlesticks.fetchPreviousPage()
+      }
+    })
+
 
     chart.current.setOption({
       ...initOptions()
@@ -73,13 +85,11 @@ export const MainChart = (props: MainChartProps) => {
     chart.current?.dispose()
   })
 
-  // const { state: ctxState, setMainData, setIndicatorData, setSecondaryIndicator, removeOverlayStock, setActiveChart, setSymbol, activeChartIndex } = useKChartContext()
   const { usTime } = useTime()
   const state = useKChartStore(s => s.state[props.index])
 
   const stateLen = useKChartStore(s => s.state.length)
   const activeChartIndex = useKChartStore(s => s.activeChartIndex)
-  // const state = ctxState[props.index]
   const startTime = renderUtils.getStartTime(usTime, state.timeIndex)
   const lastMainHistory = useRef(state.mainData.history)
 
@@ -93,12 +103,46 @@ export const MainChart = (props: MainChartProps) => {
     interval: state.timeIndex,
     gzencode: true
   }
-  const queryKey = [getStockChart.cacheKey, params]
-  const query = useQuery({
-    queryKey,
-    queryFn: () => getStockChart(params),
+  // const queryKey = [getStockChart.cacheKey, params]
+  // const query = useQuery({
+  //   queryKey,
+  //   queryFn: () => getStockChart(params),
+  //   refetchInterval: 60 * 1000,
+  // })
+
+  const candlesticks = useInfiniteQuery({
+    queryKey: [getStockChartV2.cacheKey, params],
+    queryFn: ({ pageParam = 1 }) => {
+      const [start, end] = renderUtils.getPeriodByPage({ page: pageParam, interval: state.timeIndex })
+      const params = {
+        start_at: start,
+        end_at: end,
+        symbol: state.symbol,
+        period: stockUtils.intervalToPeriod(state.timeIndex),
+        time_format: 'int'
+      }
+      return getStockChartV2(params)
+    },
     refetchInterval: 60 * 1000,
+    initialPageParam: 1,
+    getNextPageParam: () => {
+      return undefined
+    },
+    getPreviousPageParam: (firstPage, _, firstParams) => {
+      return firstPage && firstPage.data.list.length > 0 ? firstParams + 1 : undefined
+    },
+    select: (data) => {
+      return data.pages.reduce((acc, page) => acc.concat(page.data.list), [] as any[])
+    }
   })
+
+  fetchFn.current = candlesticks
+
+
+
+
+
+  // renderUtils.getPeriodByPage({ page: 1, interval: state.timeIndex })
 
   const subscribeSymbol = useMemo(() => {
     if (state.timeIndex <= 1) {
@@ -131,7 +175,7 @@ export const MainChart = (props: MainChartProps) => {
   const subscribeHandler: StockSubscribeHandler<'bar'> = useCallback((data) => {
     const stock = stockUtils.toStock(data.rawRecord)
     stock.timestamp = dayjs(stock.timestamp).tz('America/New_York').second(0).millisecond(0).valueOf()
-    if (!query.data || query.data.history.length === 0) return
+    // if (!candlesticks.data || candlesticks.data.pages.length === 0) return
     if (!lastMainHistory.current || lastMainHistory.current.length === 0) return
 
     const lastData = stockUtils.toStock(lastMainHistory.current[lastMainHistory.current.length - 1])
@@ -173,7 +217,7 @@ export const MainChart = (props: MainChartProps) => {
         dateConvert: false, timeIndex: state.timeIndex
       })
     }
-  }, [state.timeIndex, props.index, query.data, trading])
+  }, [state.timeIndex, props.index, trading])
 
   useStockBarSubscribe([subscribeSymbol], subscribeHandler)
 
@@ -182,28 +226,27 @@ export const MainChart = (props: MainChartProps) => {
     const indicators = [...useKChartStore.getState().state[props.index].secondaryIndicators, ...Object.values(useKChartStore.getState().state[props.index].mainIndicators)]
 
     indicators.forEach((item) => {
-      const candlesticks = query.data?.history ?? []
-      if (!candlesticks.length) return
-     
+      if (!candlesticks.data?.length) return
+
       if (!item.formula) return
-    
-      calcIndicator({ formula: item.formula ?? '', symbal: symbol, indicatorId: item.id }, candlesticks, state.timeIndex).then(r => {
+
+      calcIndicator({ formula: item.formula ?? '', symbal: symbol, indicatorId: item.id }, candlesticks.data, state.timeIndex).then(r => {
         kChartUtils.setIndicatorData({ index: props.index, indicatorId: item.id, data: r.data })
       })
     })
-  }, [query.data, props.index, state.timeIndex])
+  }, [candlesticks.data, props.index, state.timeIndex])
 
   useEffect(() => {
-    kChartUtils.setMainData({ index: props.index, data: query.data?.history, dateConvert: true, timeIndex: state.timeIndex })
-    
+    kChartUtils.setMainData({ index: props.index, data: candlesticks.data, dateConvert: true, timeIndex: state.timeIndex })
+
     calcIndicatorData()
-  }, [query.data, props.index, state.timeIndex, calcIndicatorData])
+  }, [candlesticks.data, props.index, state.timeIndex, calcIndicatorData])
 
   useEffect(() => {
     const unsubscribe = useIndicator.subscribe(() => {
       calcIndicatorData()
     })
-    
+
     return () => unsubscribe()
   }, [calcIndicatorData])
 
@@ -253,7 +296,7 @@ export const MainChart = (props: MainChartProps) => {
 
   const onChangeSecondaryIndicators = useCallback(async (params: { value: string, index: number, type: string, name: string, formula?: string }) => {
     const indicator: Indicator = { id: params.value, type: params.type, timeIndex: state.timeIndex, symbol: state.symbol, key: state.secondaryIndicators[params.index].key, name: params.name, formula: params.formula }
-    const candlesticks = useKChartStore.getState().state[props.index].mainData.history
+    const candlesticks = lastMainHistory.current
     calcIndicator({ formula: params.formula ?? '', symbal: state.symbol, indicatorId: params.value }, candlesticks, state.timeIndex).then(r => {
       indicator.data = r.data
       kChartUtils.setSecondaryIndicator({
