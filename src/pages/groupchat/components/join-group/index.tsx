@@ -4,12 +4,13 @@ import ChatAvatar from "../chat-avatar";
 import { Button } from "@/components";
 import { useGroupChatShortStore } from "@/store/group-chat-new";
 import { cn } from "@/utils/style";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useShallow } from "zustand/react/shallow";
 import WKSDK from "wukongimjssdk";
 import { useToast } from "@/hooks";
 import FullScreenLoading from "@/components/loading";
 import { Checkbox } from "@/components";
+import { setExpireGroupInCache } from "../../chat-utils";
 
 const JoinGroup = (props: {
   data: GroupData;
@@ -60,6 +61,13 @@ const JoinGroup = (props: {
       );
     });
   };
+
+  const timerRef = useRef<number>();
+  useEffect(() => {
+    return () => {
+      clearInterval(timerRef.current);
+    };
+  }, []);
   const { groupDetailData, setReadyToJoinGroup } = useGroupChatShortStore(
     useShallow((state) => ({
       groupDetailData: state.groupDetailData,
@@ -70,13 +78,14 @@ const JoinGroup = (props: {
   const [joinIng, setJoinIng] = useState(false);
 
   const loopCheckStatus = (sn: string) => {
-    let timer = setInterval(() => {
+    timerRef.current = setInterval(() => {
       loopUpdatePaymentStatus(sn).then((res) => {
         if (res.pay_status === 1) {
-          clearInterval(timer);
+          clearInterval(timerRef.current);
           setReadyToJoinGroup(null);
           WKSDK.shared().config.provider.syncConversationsCallback();
           toast({ description: "加群成功" });
+          setExpireGroupInCache(data.account, false);
           setJoinIng(false);
           typeof props.onSuccess === "function" && props.onSuccess();
         }
@@ -101,6 +110,7 @@ const JoinGroup = (props: {
           setReadyToJoinGroup(null);
           WKSDK.shared().config.provider.syncConversationsCallback();
           toast({ description: "加群成功" });
+          setExpireGroupInCache(data.account, false);
           typeof props.onSuccess === "function" && props.onSuccess();
           setJoinIng(false);
         } else if (resp.pay_sn && resp.config) {

@@ -38,6 +38,7 @@ import SystemCell from "../Messages/system";
 // import { useScrollToBottomOnArrowClick } from "../hooks";
 import { MessagePerPageLimit } from "../Service/constant";
 import FullScreenLoading from "@/components/loading";
+import cacheManager, { syncManager } from "../messageCache";
 
 let scrollStart: () => void;
 let scrollEnd: () => void;
@@ -81,34 +82,30 @@ const GroupChatMsgList = forwardRef((props, ref) => {
   );
   const messagesRef = useRef<Message[]>([]);
   const getMessage = (m: Message) => {
-    if (m instanceof Message) {
-      let text: string | ReactNode = "";
-      const messageWrap = new MessageWrap(m);
-      if (m.content instanceof MessageText) {
-        text = <TextCell message={m} messageWrap={messageWrap} />;
-      } else if (m.content instanceof MessageImage) {
-        text = <ImageCell message={m}></ImageCell>;
-      } else if ([1001, 1005].includes(m.contentType)) {
-        text = <SystemCell message={m} />;
-      } else if (judgeIsExitNoticeMessage(m)) {
-        text = (
-          <div
-            style={{
-              margin: "20px auto",
-              color: "rgb(90, 90, 90)",
-              fontSize: "12px",
-              textAlign: "center",
-            }}
-          >
-            {m.content.contentObj?.content}
-          </div>
-        );
-      }
-
-      return text;
+    let text: string | ReactNode = "";
+    const messageWrap = new MessageWrap(m);
+    if (m.content instanceof MessageText) {
+      text = <TextCell message={m} messageWrap={messageWrap} />;
+    } else if (m.content instanceof MessageImage) {
+      text = <ImageCell message={m}></ImageCell>;
+    } else if ([1001, 1005].includes(m.contentType)) {
+      text = <SystemCell message={m} />;
+    } else if (judgeIsExitNoticeMessage(m)) {
+      text = (
+        <div
+          style={{
+            margin: "20px auto",
+            color: "rgb(90, 90, 90)",
+            fontSize: "12px",
+            textAlign: "center",
+          }}
+        >
+          {m.content.contentObj?.content}
+        </div>
+      );
     }
 
-    return "未知消息";
+    return text;
   };
   const [filterType, setFilterType] = useState<FilterKey>("live");
   const [filterKeyWord, setFilterKeyWord] = useState("");
@@ -587,6 +584,12 @@ const GroupChatMsgList = forwardRef((props, ref) => {
       }
       if (!m.messageSeq && !seqCache[newMsgId]) {
         m.messageSeq = ack.messageSeq;
+
+        // 缓存到indexDB
+        // cacheManager.cacheMessage(m).then(() => {
+        //   syncManager.syncMessages(m.channel.channelID, [m]);
+        // });
+
         seqCache[newMsgId] = true;
       }
 

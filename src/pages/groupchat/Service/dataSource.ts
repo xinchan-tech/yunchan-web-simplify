@@ -12,7 +12,7 @@ import {
 } from "wukongimjssdk";
 
 import { MediaMessageUploadTask } from "./task";
-import APIClient from "./APIClient";
+import APIClient, { EXIT } from "./APIClient";
 import {
   syncRecentConversation,
   getGroupMembersService,
@@ -22,8 +22,31 @@ import { Convert } from "./convert";
 import request from "@/utils/request";
 import UploadUtil from "./uploadUtil";
 import { userToChannelInfo } from "../chat-utils";
+import cacheManager, { LocalCacheManager } from "../messageCache";
 
+LocalCacheManager.page = 1;
 
+const getMessageFromCache = async (channel: Channel, opts: SyncOptions) => {
+  const cacheParams = {
+    limit: opts.limit,
+    mode: opts.pullMode,
+    start: opts.startMessageSeq,
+    end: opts.endMessageSeq,
+  };
+  let resultMessages = await cacheManager.getMessages(
+    channel.channelID,
+    LocalCacheManager.page,
+    cacheParams
+  );
+  if (resultMessages instanceof Array && resultMessages.length > 0) {
+    let res = resultMessages.map((msg) => {
+      return Convert.toMessage(msg);
+    });
+    return res;
+  } else {
+    return [];
+  }
+};
 
 export function initDataSource() {
   // 同步自己业务端的频道消息列表
@@ -32,8 +55,20 @@ export function initDataSource() {
     channel: Channel,
     opts: SyncOptions
   ) => {
-    const resultMessages = await APIClient.shared.syncMessages(channel, opts);
-    return resultMessages;
+    // 以前的消息用缓存
+
+    if (opts.startMessageSeq !== 0 || opts.endMessageSeq !== 0) {
+      return await getMessageFromCache(channel, opts);
+    }
+    // 拉最新消息时用接口
+    try {
+      let resultMessages2 = await APIClient.shared.syncMessages(channel, opts);
+      return resultMessages2;
+    } catch (e) {
+      opts.endMessageSeq = -1;
+      opts.startMessageSeq = -1;
+      return await getMessageFromCache(channel, opts);
+    }
   };
 
   // 同步自己业务端的最近会话列表

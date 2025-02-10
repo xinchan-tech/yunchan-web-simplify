@@ -76,6 +76,7 @@ const GroupChatPage = () => {
     getGroupDetailData,
     groupDetailData,
     setMentions,
+    setConversationWraps,
   } = useGroupChatShortStore(
     useShallow((state) => {
       return {
@@ -288,11 +289,23 @@ const GroupChatPage = () => {
   // 撤回
   const handleRevoke: (message: Message) => void = async (message: Message) => {
     await revokeMessageService({ msg_id: message.messageID });
-    // const newConversations =
-    //   await WKSDK.shared().config.provider.syncConversationsCallback();
-    // const newWarps = newConversations.map((item) => new ConversationWrap(item));
+    const newConversations =
+      await WKSDK.shared().config.provider.syncConversationsCallback();
+    const newWarps = newConversations.map((item) => new ConversationWrap(item));
 
-    // setConversationWraps(newWarps);
+    setConversationWraps(newWarps);
+
+    // let conversation = WKSDK.shared().conversationManager.findConversation(
+    //   message.channel
+    // );
+
+    // if (conversation) {
+
+    //   WKSDK.shared().conversationManager.notifyConversationListeners(
+    //     conversation,
+    //     ConversationAction.update
+    //   );
+    // }
   };
 
   const [total, setTotal] = useState<string | number>(0);

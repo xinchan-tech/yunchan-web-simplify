@@ -28,6 +28,7 @@ import {
   groupToChannelInfo,
   judgeIsExpireGroupCache,
   judgeIsUserInSyncChannelCache,
+  setExpireGroupInCache,
   setPersonChannelCache,
   setUserInSyncChannelCache,
 } from "../chat-utils";
@@ -236,6 +237,7 @@ const GroupChannel = (props: {
     if (!conversationWrap.lastMessage) {
       return;
     }
+
     let mention: ReactNode | string = "";
     let head: ReactNode | string;
     let content: ReactNode | string;
@@ -256,13 +258,14 @@ const GroupChannel = (props: {
       } else {
         // 没有就缓存下
         const uid = conversationWrap.lastMessage.fromUID;
-        if (judgeIsUserInSyncChannelCache(uid) === true) {
-          return;
+        if (judgeIsUserInSyncChannelCache(uid) !== true) {
+          setUserInSyncChannelCache(uid, true);
+          setPersonChannelCache(conversationWrap.lastMessage.fromUID).then(
+            () => {
+              setUserInSyncChannelCache(uid, false);
+            }
+          );
         }
-        setUserInSyncChannelCache(uid, true);
-        setPersonChannelCache(conversationWrap.lastMessage.fromUID).then(() => {
-          setUserInSyncChannelCache(uid, false);
-        });
       }
 
       content = conversationWrap.lastMessage.content.conversationDigest || "";
@@ -396,6 +399,9 @@ const GroupChannel = (props: {
         if (joinedChannel) {
           joinedChannel.total_user = item.total_user;
           filteConversations.push(joinedChannel);
+          if (joinedChannel.timestamp === 0) {
+            setExpireGroupInCache(joinedChannel.channel.channelID, true);
+          }
         }
         //  else {
         //   filteGroup.push(item);

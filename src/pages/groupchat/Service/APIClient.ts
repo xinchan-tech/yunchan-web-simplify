@@ -10,46 +10,52 @@ import {
 import { Convert } from "./convert";
 
 import request from "@/utils/request";
+import cacheManager from "../messageCache";
 
 export class CMDType {
   static CMDTypeClearUnread = "clearUnread";
 }
 
+export const EXIT = "EXIT";
+
 export default class APIClient {
-  isFetchingMessage:boolean
-  lastMessageFetchChannel:string
+  isFetchingMessage: boolean;
+  lastMessageFetchChannel: string;
   private constructor() {
     this.isFetchingMessage = false;
-    this.lastMessageFetchChannel = ''
+    this.lastMessageFetchChannel = "";
   }
   public static shared = new APIClient();
-
-  
 
   // 同步频道的消息
   // 仅仅做演示，所以直接调用的WuKongIM的接口，实际项目中，建议调用自己的后台接口，
   // 然后后台接口再调用WuKongIM的接口，这样自己的后台可以返回一些自己的业务数据填充到Message.remoteExtra中
   syncMessages = async (channel: Channel, opts: SyncOptions) => {
     let resultMessages = new Array<Message>();
-
-    const resp = await request.post("/message/sync", {
-      login_uid: WKSDK.shared().config.uid,
-      channel_id: channel.channelID,
-      channel_type: channel.channelType,
-      start_message_seq: opts.startMessageSeq,
-      end_message_seq: opts.endMessageSeq,
-      pull_mode: opts.pullMode,
-      limit: opts.limit || 20,
-    });
-
-    const messageList = resp && resp.data && resp.data["messages"];
-    if (messageList) {
-      messageList.forEach((msg: any) => {
-        const message = Convert.toMessage(msg);
-        resultMessages.push(message);
+    try {
+      const resp = await request.post("/message/sync", {
+        login_uid: WKSDK.shared().config.uid,
+        channel_id: channel.channelID,
+        channel_type: channel.channelType,
+        start_message_seq: opts.startMessageSeq,
+        end_message_seq: opts.endMessageSeq,
+        pull_mode: opts.pullMode,
+        limit: opts.limit || 20,
       });
+
+      const messageList = resp && resp.data && resp.data["messages"];
+      if (messageList) {
+        messageList.forEach((msg: any) => {
+          const message = Convert.toMessage(msg);
+          resultMessages.push(message);
+          // 存入indexDB
+          cacheManager.cacheMessage(msg);
+        });
+      }
+      return resultMessages;
+    } catch (er) {
+      throw new Error("退群了");
     }
-    return resultMessages;
   };
 
   // 同步会话列表
@@ -84,7 +90,6 @@ export default class APIClient {
       })
       .catch((err) => {
         console.log(err);
-    
       });
   };
 }
