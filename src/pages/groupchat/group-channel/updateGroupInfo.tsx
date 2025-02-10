@@ -20,7 +20,7 @@ import {
 } from "@/store/group-chat-new";
 import WKSDK, { Channel } from "wukongimjssdk";
 
-const UpdateGroupInfo = (props: { group: Channel }) => {
+const UpdateGroupInfo = (props: { group: Channel; total?: number }) => {
   const options = {
     queryFn: () => {
       return getGroupDetailService(props.group.channelID);
@@ -32,7 +32,7 @@ const UpdateGroupInfo = (props: { group: Channel }) => {
 
   const groipMemberOptions = {
     queryFn: () => {
-      return getGroupMembersService(props.group.channelID);
+      return getGroupMembersService(props.group.channelID, props.total);
     },
     queryKey: [getGroupMembersService.key],
   };

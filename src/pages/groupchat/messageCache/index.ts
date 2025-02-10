@@ -26,7 +26,7 @@ class LocalCacheManager {
         const db = request.result;
         if (!db.objectStoreNames.contains(this.STORE_MESSAGES)) {
           const store = db.createObjectStore(this.STORE_MESSAGES, {
-            keyPath: "client_msg_no",
+            keyPath: "message_idstr",
           });
           store.createIndex("channel_id", "channel_id");
           store.createIndex("message_seq", "message_seq");
@@ -104,12 +104,12 @@ class LocalCacheManager {
       const groupIndex = store.index("channel_id");
       const seqIndex = store.index("message_seq");
       // 暂时只有往前面查
-
+      let count = 0;
       const groupRange = IDBKeyRange.only(groupId);
 
       const seqResults: any[] = [];
       const groupResults: any[] = [];
-
+      const isExpire = options.start === -1 && options.end === -1;
       const groupRequest = groupIndex.openCursor(groupRange);
       groupRequest.onsuccess = () => {
         const cursor = groupRequest.result;
@@ -118,42 +118,50 @@ class LocalCacheManager {
           cursor.continue();
         } else {
           let seqRequest;
-          let count = 0;
-          // -1 是被移除群的情况
-          if (options.start !== -1 && options.end !== -1) {
+
+          console.log("groupResults:", groupResults);
+          if (isExpire) {
+            seqRequest = seqIndex.openCursor(null, "prev");
+          } else {
             const end = options.end || options.start - options.limit + 1;
             const right = Math.max(end, options.start);
             const left = Math.min(end, options.start);
             const seqRange = IDBKeyRange.bound(left, right);
             seqRequest = seqIndex.openCursor(seqRange);
-          } else {
-            seqRequest = seqIndex.openCursor(null, "prev");
           }
 
           seqRequest.onsuccess = function () {
             const seqCursor = seqRequest.result;
-
-            if (seqCursor) {
-              if (options.start !== -1 && options.end !== -1) {
-                seqResults.push(seqCursor.value);
-                seqCursor.continue();
-              } else if (count < options.limit) {
-                const inGroupIndex = groupResults.findIndex(
-                  (item) => item.clientMsgNo === seqCursor.value.clientMsgNo
-                );
-                if (inGroupIndex >= 0) {
-                  seqResults.push(seqCursor.value);
+            if (isExpire) {
+              if (seqCursor && count < options.limit) {
+                const isInGroup =
+                  groupResults.findIndex(
+                    (item) => item.channel_id === seqCursor.value.channel_id
+                  ) >= 0;
+                if (isInGroup) {
+                  seqResults.unshift(seqCursor.value);
                   count++;
-                  seqCursor.continue();
                 }
+                seqCursor.continue();
+              } else {
+                resolve(seqResults);
               }
             } else {
-              if (options.start !== -1 && options.end !== -1) {
+              if (seqCursor) {
+                const isInGroup =
+                  groupResults.findIndex(
+                    (item) => item.channel_id === seqCursor.value.channel_id
+                  ) >= 0;
+                if (isInGroup) {
+                  seqResults.push(seqCursor.value);
+                }
+                seqCursor.continue();
+              } else {
                 // 合并并筛选数据
                 const finalResults = seqResults.filter((item) => {
-                  return groupResults.some(
-                    (result) => result.clientMsgNo === item.clientMsgNo
-                  );
+                  return groupResults.some((result) => {
+                    return result.clientMsgNo === item.clientMsgNo;
+                  });
                 });
                 console.log("最终查询结果:", finalResults);
                 resolve(finalResults);

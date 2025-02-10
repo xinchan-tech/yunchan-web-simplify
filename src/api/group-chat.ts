@@ -54,9 +54,16 @@ export type GroupMemberResult = PageResult<{
   realname: string;
   avatar: string;
 }>;
-export const getGroupMembersService = async (groupId: string) => {
+export const getGroupMembersService = async (
+  groupId: string,
+  limit?: number
+) => {
   const r = await request
-    .get<GroupMemberResult>(`/channel/${groupId}/users`)
+    .get<GroupMemberResult>(`/channel/${groupId}/users`, {
+      params: {
+        limit: limit || 20,
+      },
+    })
     .then((r) => r.data);
   return r;
 };

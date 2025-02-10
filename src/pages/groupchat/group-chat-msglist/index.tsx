@@ -314,20 +314,15 @@ const GroupChatMsgList = forwardRef((props, ref) => {
     const opts: any = {
       pullMode: PullMode.Down,
       endMessageSeq: 0,
-      startMessageSeq: firstMessageSeq - 1,
+      startMessageSeq: firstMessageSeq,
+      remoteJump: true,
     };
     if (initMessageSeq && initMessageSeq > 0) {
-      if (initMessageSeq > lastRemoteMessageSeq) {
-        opts.startMessageSeq = lastRemoteMessageSeq;
-        opts.endMessageSeq = 0;
-        opts.limit = initMessageSeq - lastRemoteMessageSeq + 5;
-        opts.pullMode = PullMode.Up;
-      } else if (initMessageSeq < firstMessageSeq) {
-        opts.startMessageSeq = firstMessageSeq;
-        opts.endMessageSeq = 0;
-        opts.limit = firstMessageSeq - initMessageSeq + 5;
-        opts.pullMode = PullMode.Down;
-      }
+      opts.startMessageSeq = firstMessageSeq;
+      opts.endMessageSeq = initMessageSeq - 5; // 加多几条
+      opts.limit = Math.abs(firstMessageSeq - initMessageSeq) + 5;
+      opts.pullMode = PullMode.Down;
+
       if (selectedChannel) {
         pulldowning.current = true;
         setMessageFetching(true);

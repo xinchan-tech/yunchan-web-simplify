@@ -123,10 +123,19 @@ const GroupChannel = (props: {
   };
 
   const { data } = useQuery(options);
-  const [editChannel, setEditChannel] = useState<Channel>();
+  const [editChannel, setEditChannel] = useState<ConversationWrap>();
   // 修改社群
   const updateGroupInfoModal = useModal({
-    content: <>{editChannel && <UpdateGroupInfo group={editChannel} />}</>,
+    content: (
+      <>
+        {editChannel && (
+          <UpdateGroupInfo
+            group={editChannel.channel}
+            total={editChannel.total_user}
+          />
+        )}
+      </>
+    ),
     title: "社群信息",
     footer: null,
     className: "w-[700px]",
@@ -478,7 +487,7 @@ const GroupChannel = (props: {
                       <div
                         onClick={(e) => {
                           e.stopPropagation();
-                          setEditChannel(item.channel);
+                          setEditChannel(item);
                           updateGroupInfoModal.modal.open();
                         }}
                         className="oper-icons"

@@ -9,6 +9,7 @@ import {
   Message,
   MessageTask,
   Subscriber,
+  PullMode,
 } from "wukongimjssdk";
 
 import { MediaMessageUploadTask } from "./task";
@@ -53,22 +54,40 @@ export function initDataSource() {
   // WKSDK.shared().config.deviceFlag = 0;
   WKSDK.shared().config.provider.syncMessagesCallback = async (
     channel: Channel,
-    opts: SyncOptions
+    opts: {
+      startMessageSeq: number;
+      endMessageSeq: number;
+      limit: number;
+      pullMode: PullMode;
+      remoteJump?: boolean;
+    }
   ) => {
-    // 以前的消息用缓存
+    let result = [];
 
-    if (opts.startMessageSeq !== 0 || opts.endMessageSeq !== 0) {
-      return await getMessageFromCache(channel, opts);
+    result = await getMessageFromCache(channel, opts);
+    // 跨页定位时，要判断缓存返回的list长度是否和入参的差值相同
+    let isNavigate = false;
+    if (opts.startMessageSeq > 0 && opts.endMessageSeq > 0) {
+      const distance = Math.abs(opts.startMessageSeq - opts.endMessageSeq);
+      if (result.length !== distance) {
+        isNavigate = true;
+      }
     }
-    // 拉最新消息时用接口
-    try {
-      let resultMessages2 = await APIClient.shared.syncMessages(channel, opts);
-      return resultMessages2;
-    } catch (e) {
-      opts.endMessageSeq = -1;
-      opts.startMessageSeq = -1;
-      return await getMessageFromCache(channel, opts);
+    if (isNavigate === true) {
+      result = await APIClient.shared.syncMessages(channel, opts);
+      return result;
     }
+    if (result.length === 0) {
+      try {
+        result = await APIClient.shared.syncMessages(channel, opts);
+        return result;
+      } catch (e) {
+        opts.endMessageSeq = -1;
+        opts.startMessageSeq = -1;
+        return await getMessageFromCache(channel, opts);
+      }
+    }
+    return result;
   };
 
   // 同步自己业务端的最近会话列表
@@ -140,7 +159,7 @@ export function initDataSource() {
   // 如果是群频道，可以实现这个方法，调用 WKSDK.shared().channelManager.syncSubscribes(channel) 方法将会触发此回调
   WKSDK.shared().config.provider.syncSubscribersCallback = async (
     channel: Channel,
-    version: number
+    limit?: number
   ): Promise<Array<Subscriber>> => {
     let resp: GroupMemberResult;
     let members: Subscriber[] = [];
@@ -150,7 +169,7 @@ export function initDataSource() {
       // } else {
 
       // }
-      resp = await getGroupMembersService(channel.channelID);
+      resp = await getGroupMembersService(channel.channelID, limit || 100);
       if (resp.items instanceof Array && resp.items.length > 0) {
         resp.items.forEach((man) => {
           let member = new Subscriber();
