@@ -26,7 +26,7 @@ export enum LineType {
  * x轴一个Tick默认是8
  * 指标宽度默认是10
  */
-const TICK_WIDTH_PERCENT = 1.6
+const TICK_WIDTH_PERCENT = 1.8
 
 type DrawerFuncOptions<T = any> = {
   /**
