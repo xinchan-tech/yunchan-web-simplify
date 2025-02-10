@@ -304,7 +304,7 @@ export const createOptions = (chart: EChartsType): ECOption => ({
     },
     {
       filterMode: 'weakFilter',
-      minSpan: 2,
+      minSpan: 4,
       show: true,
       xAxisIndex: [0, 1, 2, 3, 4, 5, 6],
       type: 'slider',
@@ -1138,7 +1138,7 @@ export const renderSecondary = (options: ECOption, indicators: Indicator[]) => {
       } else if (d.draw === 'STICKLINE') {
         const data: DrawerRectShape[] = Object.keys(d.draw_data).map(key => [
           +key,
-          ...(d.draw_data as NormalizedRecord<number[]>)[key].map((s, i) => (i === 2 ? s * 10 : s)),
+          ...(d.draw_data as NormalizedRecord<number[]>)[key],
           d.color
         ]) as any[]
         stickLineData.push(...data)
@@ -1370,63 +1370,22 @@ export const renderWatermark = (options: ECOption, timeIndex: ChartState['timeIn
 /**
  * 配置缩放
  */
-export const renderZoom = (options: ECOption, zoom: [number, number]) => {
+export const renderZoom = (options: ECOption, state:ChartState, zoom: [number, number]) => {
+  const MaxKLineCount = 1000
+  const _zoom = [...zoom]
+  const showCount = state.mainData.history.length * (zoom[1] - zoom[0]) / 100
+  if(showCount > MaxKLineCount){
+    _zoom[0] = 100 - MaxKLineCount / state.mainData.history.length * 100
+  }
+
+  const maxSpan = Math.min(MaxKLineCount / state.mainData.history.length * 100, 100)
+
+  
   if (Array.isArray(options.dataZoom)) {
     for (const z of options.dataZoom) {
-      z.start = zoom[0]
-      z.end = zoom[1]
+      z.start = _zoom[0]
+      z.end = _zoom[1]
+      z.maxSpan = maxSpan
     }
   }
 }
-
-// /**
-//  * 显示坐标轴的线，因为坐标轴要根据dataZoom最左边的点来显示
-//  */
-// export const renderAxisLine = (state: ChartState, start: number, end: number) => {
-//   const rightAxisLine: LineSeriesOption = {
-//     type: 'line',
-//     name: 'right-axis-line',
-//     xAxisIndex: 0,
-//     data: [],
-//     yAxisIndex: 1,
-//     encode: {
-//       x: [0],
-//       y: [2]
-//     },
-//     symbol: 'none',
-//     lineStyle: {
-//       color: 'transparent',
-//       width: 1
-//     }
-//   }
-
-//   if (state.yAxis.right === 'price') {
-//     rightAxisLine.data = state.mainData.history
-//   } else {
-//     rightAxisLine.data = state.mainData.history.map((h, i) => {
-//       /**
-//        * 1.01，x轴100%是state.mainData.length * 1.01，100%的时候要向左偏移0.01
-//        * 所以对应data的100%其实是100/1.01 = 98.02%
-//        * 所以差值是100 - 98.02 = 1.98
-//        */
-//       const _start = start + 0.95 > 100 ? 100 : start + 0.95
-//       const _end = end + 0.95 > 100 ? 100 : end + 0.95
-
-//       const startIndex = Math.round((_start / 100) * (state.mainData.history.length - 1))
-//       const endIndex = Math.round((_end / 100) * (state.mainData.history.length - 1))
-//       if (i < startIndex) {
-//         return 0
-//       }
-//       if (i > endIndex) {
-//         return (
-//           ((state.mainData.history[endIndex][2] - state.mainData.history[startIndex][2]) /
-//             state.mainData.history[startIndex][2]) *
-//           100
-//         )
-//       }
-//       return ((h[2] - state.mainData.history[startIndex][2]) / state.mainData.history[startIndex][2]) * 100
-//     })
-//   }
-
-//   return rightAxisLine
-// }

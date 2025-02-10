@@ -473,7 +473,7 @@ export const calcBottomSignal = (
   let maxVol = 0
   hdly(candlesticks).forEach((vol: number, index) => {
     if (vol > 0) {
-      hdlyData.push([index, 0, vol, 18, 0, ''])
+      hdlyData.push([index, 0, vol, 2, 0, ''])
 
       if(vol >= maxVol){
         maxVol = vol

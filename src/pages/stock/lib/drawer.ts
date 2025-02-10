@@ -26,7 +26,7 @@ export enum LineType {
  * x轴一个Tick默认是8
  * 指标宽度默认是10
  */
-const TICK_WIDTH_PERCENT = 11
+const TICK_WIDTH_PERCENT = 1.6
 
 type DrawerFuncOptions<T = any> = {
   /**
@@ -102,9 +102,12 @@ export const drawLine: DrawerFunc<[XAxis, number | null][]> = (
     type: 'line',
     showSymbol: false,
     symbol: 'none',
-    connectNulls: true,
     z: extra?.z ?? 0,
     id: extra?.seriesId,
+    silent: true,
+    emphasis: {
+      disabled: true
+    },
     color: extra?.color,
     lineStyle: {
       type: extra?.type ?? 'solid'
@@ -319,7 +322,7 @@ export const drawRect: DrawerFunc<DrawerRectShape[]> = (options, _, { xAxisIndex
     type: 'custom',
     renderItem: (params, api) => {
       if (!params.context.tickWidth) {
-        params.context.tickWidth = (api.size!([TICK_WIDTH_PERCENT, 0]) as number[])[0]
+        params.context.tickWidth = (api.size!([1, 0]) as number[])[0]
       }
       const startX = api.value(0) as number
       const startY = api.value(1) as number
@@ -447,12 +450,15 @@ export const drawGradient: DrawerFunc<[XAxis, GradientData[], string[]][]> = (
 
       return {
         type: 'group',
+        emphasisDisabled: true,
+        silent: true,
         children: polygons.map(polygon => ({
           type: 'polygon',
           shape: {
             points: [...polygon.points]
           },
           emphasisDisabled: true,
+          silent: true,
           style: {
             fill: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
               {

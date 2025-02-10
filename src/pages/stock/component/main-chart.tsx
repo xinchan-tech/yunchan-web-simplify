@@ -53,20 +53,6 @@ export const MainChart = (props: MainChartProps) => {
     chart.current.setOption({
       ...initOptions()
     }, { lazyUpdate: true })
-
-    // initGraphicTool(chart.current)
-
-    // dom.current?.addEventListener('click', (e) => {
-
-    //   const r = createLine({ start: [e.zrX, e.zrY], chart: chart.current as EChartsType })
-    //   console.log(e, r)
-    //   chart.current?.setOption({
-    //     graphic: [
-    //       r
-    //     ]
-    //   })
-    // }, { passive: true })
-
   })
 
   useEffect(() => {
@@ -113,11 +99,6 @@ export const MainChart = (props: MainChartProps) => {
     queryFn: () => getStockChart(params),
     refetchInterval: 60 * 1000,
   })
-
-  // const queryV2 = useQuery({
-  //   queryKey: [getStockChartV2.cacheKey],
-  //   queryFn: () => getStockChartV2({ symbol: state.symbol, period: StockPeriod.DAY, start_at: dayjs().add(-10, 'd').format('YYYY-MM-DD HH:mm:ss'), end_at: dayjs().format('YYYY-MM-DD HH:mm:ss'), time_format: 'int' })
-  // })
 
   const subscribeSymbol = useMemo(() => {
     if (state.timeIndex <= 1) {
@@ -196,44 +177,6 @@ export const MainChart = (props: MainChartProps) => {
 
   useStockBarSubscribe([subscribeSymbol], subscribeHandler)
 
-  // const { isDefaultIndicatorParams, getIndicatorQueryParams } = useIndicator()
-
-  // const mainQueryIndicatorQueries = useQueries({
-  //   queries: Reflect.ownKeys(state.mainIndicators).map(v => v.toString()).map((item) => {
-  //     const queryKey = [getStockIndicatorData.cacheKey, { symbol: state.symbol, cycle: state.timeIndex, id: item, db_type: state.mainIndicators[item].type }] as any[]
-  //     let params: NormalizedRecord<number> | undefined
-  //     if (!isDefaultIndicatorParams(item)) {
-  //       params = getIndicatorQueryParams(item)
-  //       queryKey.push(params)
-  //     }
-
-  //     return {
-  //       queryKey,
-  //       refetchInterval: 60 * 1000,
-  //       queryFn: async () => {
-  //         const r = await getStockIndicatorData({
-  //           symbol: state.symbol, cycle: state.timeIndex, id: item, db_type: state.mainIndicators[item].type, start_at: startTime,
-  //           param: JSON.stringify(params)
-  //         })
-
-  //         return { id: item, data: r.result }
-  //       },
-  //       placeholderData: () => ({ id: item, data: undefined })
-  //     }
-  //   })
-  // })
-
-  // useEffect(() => {
-  //   mainQueryIndicatorQueries.forEach((query) => {
-  //     if (!query.data) return
-
-  //     kChartUtils.setIndicatorData({ index: props.index, indicatorId: query.data.id, data: query.data.data })
-  //   })
-  // }, [mainQueryIndicatorQueries, props.index])
-
-
-
-
   const calcIndicatorData = useCallback(() => {
     const symbol = useKChartStore.getState().state[props.index].symbol
     const indicators = [...useKChartStore.getState().state[props.index].secondaryIndicators, ...Object.values(useKChartStore.getState().state[props.index].mainIndicators)]
@@ -284,7 +227,7 @@ export const MainChart = (props: MainChartProps) => {
 
       renderMainChart(_options, state)
       renderMarkLine(_options, state)
-      renderZoom(_options, [start, end])
+      renderZoom(_options, state, [start, end])
       /**
        * 画主图指标
        */
@@ -300,7 +243,6 @@ export const MainChart = (props: MainChartProps) => {
     }
     renderWatermark(_options, state.timeIndex)
     chart.current.setOption(_options, { replaceMerge: ['series', 'grid', 'xAxis', 'yAxis', 'dataZoom', 'graphic'] })
-    // console.log(chart.current.getOption());
   }
 
   renderFn.current = render
@@ -332,17 +274,6 @@ export const MainChart = (props: MainChartProps) => {
   const closeOverlayStock = (symbol: string) => {
     kChartUtils.removeOverlayStock({ index: props.index, symbol: symbol })
   }
-
-  // const mouse = useMouse(containerRef)
-
-  // useEffect(() => {
-  //   if(!chartEvent) return
-
-  //   if(mouse.elementX > 0 && mouse.elementX < mouse.elementW && mouse.elementY > 0 && mouse.elementY < mouse.elementH) return
-
-  //   chartEvent.event.emit('data', undefined)
-  // }, [mouse])
-
 
   return (
     <div className={
