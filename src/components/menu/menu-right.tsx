@@ -35,14 +35,14 @@ const MenuRight = () => {
       path: '/stock/trading'
     },
     {
-      icon: "right_menu_4",
-      title: "财务估值",
-      path: "/stock/finance",
-    },
-    {
       icon: 'left_menu_6',
       title: '特色推送',
       path: '/push'
+    },
+    {
+      icon: "right_menu_4",
+      title: "财务估值",
+      path: "/stock/finance",
     },
     {
       icon: "right_menu_5",
@@ -52,12 +52,12 @@ const MenuRight = () => {
         if (!token) {
           toast({
             title: "请先登录",
-          });
-          return;
+          })
+          return
         }
-        
-        window.open(`${window.location.origin}/chat`, 'whatever', 'hideit,height=750,width=1000,resizable=yes,scrollbars=yes,status=no,location=no');
-        
+
+        window.open(`${window.location.origin}/chat`, 'whatever', 'hideit,height=750,width=1000,resizable=yes,scrollbars=yes,status=no,location=no')
+
       },
     }
   ]
