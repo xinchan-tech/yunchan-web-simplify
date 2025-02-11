@@ -381,3 +381,28 @@ export const judgeIsExitNoticeMessage = (message: Message) => {
 
   return result;
 };
+
+export const judgeHasReadGroupNotice = (groupId: string) => {
+  debugger;
+  let agreedGroupIds: Record<string, boolean> = {};
+  let stroage = localStorage.getItem("agreedGroupIds");
+
+  if (stroage) {
+    agreedGroupIds = JSON.parse(stroage) as Record<string, boolean>;
+  }
+  if (agreedGroupIds[groupId] === true) {
+    return true;
+  } else {
+    return false;
+  }
+};
+
+export const setAgreedGroupInCache = (uid: string, payload: boolean) => {
+  let agreedGroupIds: Record<string, boolean> = {};
+  let stroage = localStorage.getItem("agreedGroupIds");
+  if (stroage) {
+    agreedGroupIds = JSON.parse(stroage) as Record<string, boolean>;
+  }
+  agreedGroupIds[uid] = payload;
+  localStorage.setItem("agreedGroupIds", JSON.stringify(agreedGroupIds));
+};

@@ -191,7 +191,7 @@ const ChatWindow = forwardRef(
           <Button
             size="mini"
             onClick={() => {
-              testExitGroup("HK718133");
+              dealSend();
             }}
           >
             发送

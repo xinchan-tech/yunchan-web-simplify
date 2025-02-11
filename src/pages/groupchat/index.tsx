@@ -26,11 +26,13 @@ import GroupMembers from "./group-members";
 
 import { revokeMessageService } from "@/api";
 
-import { Toaster } from "@/components";
+import { Button, Toaster } from "@/components";
 import { ConversationWrap } from "./ConversationWrap";
 
 import APIClient from "./Service/APIClient";
 import TextImgLive from "./text-img-live";
+import { judgeHasReadGroupNotice, setAgreedGroupInCache } from "./chat-utils";
+import { useUpdate } from "ahooks";
 
 export type ReplyFn = (option: {
   message?: Message;
@@ -60,7 +62,7 @@ let cmdListener!: (message: Message) => void;
 const GroupChatPage = () => {
   const { token } = useToken();
   const { user } = useUser();
-
+  const update = useUpdate();
   const [indexTab, setIndexTab] = useState<"chat" | "live">("chat");
   const { selectedChannel } = useGroupChatStoreNew();
 
@@ -323,6 +325,13 @@ const GroupChatPage = () => {
       </div>
     );
   }
+  const [notAgreeNotice, setnotAgreeNotice] = useState<boolean>(false);
+  useEffect(() => {
+    if (groupDetailData) {
+      const payload = !judgeHasReadGroupNotice(groupDetailData?.account);
+      setnotAgreeNotice(payload);
+    }
+  }, [groupDetailData]);
 
   return (
     <div className="group-chat-container flex">
@@ -351,7 +360,30 @@ const GroupChatPage = () => {
             }}
           />
 
-          <div className="group-chat-right">
+          <div className="group-chat-right relative">
+            {notAgreeNotice === true && (
+              <div className="flex flex-wrap content-center agree-notice-content absolute left-0 top-0 bottom-0 right-0 w-full h-full">
+                <div className="flex mt-10 justify-center w-full">
+                  请先阅读群公告
+                </div>
+                <div className="p-4 w-full mt-5 mr-10 ml-10 rounded-lg bg-slate-900 text-gray-400 h-[200px] overflow-y-auto">
+                  {groupDetailData?.notice || ""}
+                </div>
+
+                <div className="flex mt-4 justify-center w-full">
+                  <Button
+                    onClick={() => {
+                      if (groupDetailData) {
+                        setAgreedGroupInCache(groupDetailData.account, true);
+                        setnotAgreeNotice(false);
+                      }
+                    }}
+                  >
+                    我已阅读
+                  </Button>
+                </div>
+              </div>
+            )}
             <div className="group-chat-header justify-between h-[58px]">
               <div className="group-title items-center pt-2 h-full">
                 <p className="mb-0 mt-0">{groupDetailData?.name}</p>
@@ -382,6 +414,11 @@ const GroupChatPage = () => {
 
       <style jsx>
         {`
+          .agree-notice-content {
+            backdrop-filter: blur(10px);
+            background: rgba(0, 0, 0, 0.3); /* 半透明背景 */
+            z-index: 9999;
+          }
           .group-chat-container {
             height: 100vh;
             min-width: 1080px;
