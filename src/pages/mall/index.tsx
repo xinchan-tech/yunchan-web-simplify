@@ -1,11 +1,46 @@
-import { checkMallProductOrderStatus, createMallProductOrder, getMallProducts } from "@/api"
-import { Button, JknIcon, Label, RadioGroup, RadioGroupItem, ToggleGroup, ToggleGroupItem } from "@/components"
-import { JknIconCheckbox } from "@/components/jkn/jkn-icon/icon-checkbox"
-import { useToast } from "@/hooks"
-import { useQuery } from "@tanstack/react-query"
-import { useBoolean, useUpdateEffect } from "ahooks"
-import to from "await-to-js"
-import { type CSSProperties, useEffect, useMemo, useRef, useState } from "react"
+import { checkMallProductOrderStatus, createMallProductOrder, getMallProducts } from '@/api'
+import {
+  Button,
+  JknIcon,
+  Label,
+  RadioGroup,
+  RadioGroupItem,
+  ToggleGroup,
+  ToggleGroupItem,
+  useFormModal
+} from '@/components'
+import { useToast, useZForm } from '@/hooks'
+import { useQuery } from '@tanstack/react-query'
+import { type CSSProperties, useRef, useState } from 'react'
+import { z } from 'zod'
+import { BasicPage } from './basic-page'
+import { GroupPage } from './group-page'
+import { IntroPage } from './intro-page'
+import { useFormContext } from 'react-hook-form'
+import { cn } from '@/utils/style'
+import { useBoolean } from 'ahooks'
+import to from 'await-to-js'
+
+const subscribeTypes = [
+  { name: '按年订阅', type: 'model_year' },
+  { name: '按月订阅', type: 'model_month' }
+]
+
+const versions = [
+  { name: '旗舰达人', value: 'basic' },
+  { name: '量化精英', value: 'plus' },
+  { name: '聊天社群', value: 'group' },
+  { name: '增值包', value: 'increment' }
+]
+
+type Version = 'basic' | 'plus' | 'group' | 'increment'
+
+const productForm = z.object({
+  productId: z.string(),
+  name: z.string(),
+  price: z.string(),
+  model: z.string()
+})
 
 const MallPage = () => {
   const products = useQuery({
@@ -13,61 +48,122 @@ const MallPage = () => {
     queryFn: getMallProducts
   })
 
-  const [activeType, setActiveType] = useState<string>(products.data?.categorys[0].id ?? '')
-  const [version, setVersion] = useState<'general' | 'professional'>('general')
+  const [version, setVersion] = useState<Version>('group')
   const [subscribeType, setSubscribeType] = useState<string>('model_month')
-  const [subscribeTypes, setSubscribeTypes] = useState<{ name: string; type: string }[]>([])
+  const form = useZForm(productForm, {
+    productId: '',
+    name: '',
+    price: '',
+    model: ''
+  })
+
+  const cashier = useFormModal({
+    form,
+    title: '购买商品',
+    content: <CashierPage types={products.data?.payment ?? []} />,
+    closeIcon: true,
+    closeOnMaskClick: false,
+    footer: null,
+    onOpen: (values: z.infer<typeof productForm>) => {
+      Object.entries(values).forEach(([key, value]) => {
+        form.setValue(key as any, value)
+      })
+    },
+    onOk: async () => {}
+  })
+
+  return (
+    <div className="flex flex-col items-center h-full overflow-auto w-full pb-10 box-border">
+      <ToggleGroup
+        type="single"
+        variant="outline"
+        value={version}
+        onValueChange={(v: typeof version) => setVersion(v)}
+        className="my-12 gap-0"
+      >
+        {versions.map((v, index) => (
+          <ToggleGroupItem
+            key={v.value}
+            className={cn(
+              'w-32 rounded-none',
+              index === 0 && 'rounded-l-3xl',
+              index === versions.length - 1 && 'rounded-r-3xl'
+            )}
+            value={v.value}
+            title={v.name}
+          >
+            {v.name}
+          </ToggleGroupItem>
+        ))}
+      </ToggleGroup>
+      <div className="text-center text-4xl font-bold">美股会员服务-投资的方案</div>
+      <div className="my-8">
+        <RadioGroup className="flex space-x-8" value={subscribeType} onValueChange={value => setSubscribeType(value)}>
+          {subscribeTypes.map(st => (
+            <div className="flex items-center space-x-2" key={st.type}>
+              <RadioGroupItem
+                value={st.type}
+                id={`mall-product-${st.type}`}
+                style={{ '--foreground': 'var(--primary)' } as CSSProperties}
+              />
+              <Label htmlFor={`mall-product-${st.type}`}>{st.name}</Label>
+            </div>
+          ))}
+        </RadioGroup>
+      </div>
+      <div>
+        {{
+          basic: (
+            <BasicPage
+              title="旗舰达人"
+              basic={products.data?.basic ?? []}
+              type={subscribeType}
+              onSubmit={v => cashier.open(v)}
+            />
+          ),
+          plus: (
+            <BasicPage
+              title="量化精英"
+              basic={products.data?.plus ?? []}
+              type={subscribeType}
+              onSubmit={v => cashier.open(v)}
+            />
+          ),
+          group: <GroupPage title="聊天社群" type={subscribeType} onSubmit={v => cashier.open(v)} />,
+          increment: <div>increment</div>
+        }[version] ?? null}
+      </div>
+      {['basic', 'plus'].includes(version) ? (
+        <div className="mt-8">
+          <IntroPage intro={products.data?.intro ?? []} />
+        </div>
+      ) : null}
+      {cashier.context}
+    </div>
+  )
+}
+
+//收银台
+const CashierPage = ({ types }: { types: string[] }) => {
+  const form = useFormContext()
+  const name = form.getValues('name')
+  const price = form.getValues('price')
+  const model = form.getValues('model')
+  const productId = form.getValues('productId')
+  const [type, setType] = useState(types[0])
   const [loading, { setTrue, setFalse }] = useBoolean(false)
   const checkTimer = useRef<number>()
 
-  useUpdateEffect(() => {
-    setActiveType(s => {
-      if (!s) {
-        return products.data?.categorys[0].id ?? ''
-      }
-
-      const _s = products.data?.categorys.find(category => category.id === s)
-
-      if (!_s) {
-        return products.data?.categorys[0].id ?? ''
-      }
-
-      return s
-    })
-
-  }, [products.data])
-
-
-  // 套餐
-  const packages = useMemo(() => {
-    return products.data?.categorys.find(category => category.id === activeType)?.items?.[version] ?? []
-  }, [activeType, products.data, version])
-
-  useEffect(() => {
-    const ts: Record<string, string> = {}
-
-    packages.forEach(p => {
-      p.products.forEach(product => {
-        ts[product.model] = product.name
-      })
-    })
-
-    if (Object.keys(ts).length) {
-      setSubscribeTypes(Object.entries(ts).map(([type, name]) => ({ name, type })))
-    }
-
-  }, [packages])
-
   const { toast } = useToast()
 
-  const onBuy = async (productId: string) => {
+  const onBuy = async () => {
     setTrue()
 
     const params: Parameters<typeof createMallProductOrder>[0] = {
-      model: subscribeType,
+      model: model,
       number: 1,
       product_id: productId,
-      platform: 'paypal'
+      platform: type
     }
 
     const [err, res] = await to(createMallProductOrder(params))
@@ -99,124 +195,52 @@ const MallPage = () => {
 
     checkTimer.current = window.setTimeout(() => {
       checkStatus(paySn)
-    }, 2000)
+    }, 1000)
   }
 
   return (
-    <div className="flex flex-col items-center h-full overflow-hidden">
-      {/* <div className="flex-shrink-0 w-full bg-muted py-1 border-0 border-b border-solid border-border">
-        <CapsuleTabs activeKey={activeType} onChange={setActiveType} >
-          {
-            products.data?.categorys.map((category) => (
-              <CapsuleTabs.Tab key={category.id} value={category.id} label={category.name} />
-            ))
-          }
-        </CapsuleTabs>
-      </div> */}
-      <div className="flex flex-col items-center flex-1 overflow-auto">
-        <ToggleGroup type="single" value={version} onValueChange={(v: typeof version) => setVersion(v)} className="my-12 gap-0">
-          <ToggleGroupItem className="w-32 rounded-none rounded-l-3xl" title="大众版" value="general" >大众软件</ToggleGroupItem>
-          <ToggleGroupItem className="w-32 rounded-none rounded-r-3xl" title="专业版 PRO" value="professional" >专业版 PRO</ToggleGroupItem>
-        </ToggleGroup>
-        <div className="text-center text-4xl font-bold">
-          美股会员服务-投资的方案
-        </div>
-        <div className="my-8">
-          <RadioGroup className="flex space-x-8" value={subscribeType} onValueChange={(value) => setSubscribeType(value)}>
-            {
-              subscribeTypes.map(st => (
-                <div className="flex items-center space-x-2" key={st.type}>
-                  <RadioGroupItem value={st.type} id={`mall-product-${st.type}`} style={{ '--foreground': 'var(--primary)' } as CSSProperties} />
-                  <Label htmlFor={`mall-product-${st.type}`}>
-                    {st.name}
-                  </Label>
-                </div>
-              ))
-            }
-          </RadioGroup>
-        </div>
-        <div className="flex">
-          {
-            packages?.map(p => {
-              return (
-                <div className="w-60 text-center box-border px-4" key={p.id} >
-                  <div className="text-lg font-bold">{p.name}</div>
-                  <div className="my-2 font-bold">
-                    <span className="text-4xl">{p.model_month}</span><span className="text-tertiary">&nbsp;/&nbsp;月</span>
-                  </div>
-                  <div>
-                    {
-                      subscribeType !== 'model_month' ? (
-                        <span>
-                          {p.products.find(product => product.model === subscribeType)?.price}/{p.products.find(product => product.model === subscribeType)?.unit}
-                        </span>
-                      ) : null
-                    }
-                  </div>
-                  <div className="text-xs">
-                    {p.describe}
-                  </div>
-                  <div className="text-left space-y-2 text-xs mt-8 pl-2">
-                    {
-                      p.publicize.map(publicize => (
-                        <div key={publicize.id} className="flex items-center space-x-2">
-                          <JknIconCheckbox className="w-3 h-3" checked={publicize.auth !== 'no'} checkedIcon="ic_have" uncheckedIcon="ic_not" />
-                          <span >{publicize.title}</span>
-                        </div>
-                      ))
-                    }
-                  </div>
-                  <div className="mt-2">
-                    <Button className="w-full mt-4" onClick={() => onBuy(p.id)}>点击购买</Button>
-                  </div>
-                </div>
-              )
-            })
-          }
-        </div>
-        <div className="mt-12 text-secondary">
-          <div className="flex items-center my-2 ">
-            <div className="w-64 text-lg">方案比较</div>
-            {
-              packages.map(p => <div key={p.id} className="w-32 text-sm text-center">{p.name}</div>)
-            }
-          </div>
-          <div className="space-y-6">
-            {
-              products.data?.product_publicizes.map(publicize => (
-                <div key={publicize.id} className="space-y-4">
-                  <div className="w-full">{publicize.title}</div>
-                  {
-                    publicize.items.map(item => (
-                      <div key={item.id} className="flex items-center">
-                        <div className="w-64 box-border pl-4">{item.title}</div>
-                        {
-                          (version === 'general' ? item.product_nums_g : item.product_nums_p).map((product_num, index) => (
-                            // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
-                            <div key={index} className="w-32 text-center">
-                              <JknIconCheckbox className="w-3 h-3" checked={product_num !== 'no'} checkedIcon="ic_have" uncheckedIcon="ic_not" />
-                            </div>
-                          ))
-                        }
-
-                      </div>
-                    ))
-                  }
-                </div>
-              ))
-            }
-          </div>
+    <div className="text-sm pb-10">
+      <div className="px-4 border-0 border-b border-solid border-border pb-2">
+        <div className="my-2">商品名称: {name}</div>
+        <div className="flex justify-between">
+          <span>
+            商品价格: ${price}/{model === 'model_year' ? '年' : model === 'model_month' ? '月' : '未知'}
+          </span>
+          <span>付款方式: {model === 'model_year' ? '包年订阅' : model === 'model_month' ? '包月订阅' : '未知'}</span>
         </div>
       </div>
-      {
-        loading && (<div className="fixed left-0 right-0 bottom-0 top-0 bg-background/45 flex items-center justify-center">
+      <div className="text-center">
+        <p className="text-center">请选择支付方式</p>
+        <div className="min-h-48 px-8">
+          <RadioGroup value={type} onValueChange={setType} className="flex items-center space-x-8">
+            {types.map(t => (
+              <div className="flex items-center space-x-2" key={t}>
+                <RadioGroupItem key={t} value={t} id={`mall-payment-${t}`} />
+                <Label htmlFor={`mall-payment-${t}`}>
+                  <JknIcon
+                    className="w-32 h-10 rounded-none"
+                    name={t === 'paypal' ? 'ic_paypal_pay' : t === 'stripe' ? 'ic_stripe_pay' : (t as any)}
+                  />
+                </Label>
+              </div>
+            ))}
+          </RadioGroup>
+        </div>
+        {type ? (
+          <Button type="button" onClick={() => onBuy()}>
+            跳转 {type} 支付
+          </Button>
+        ) : null}
+      </div>
+
+      {loading && (
+        <div className="fixed left-0 right-0 bottom-0 top-0 bg-background/45 flex items-center justify-center">
           <div className="w-60 bg-background/95 p-12 flex flex-col items-center">
             <JknIcon className="w-48 h-48" name="load" />
             <div className="text-center mt-4">加载中</div>
           </div>
         </div>
-        )
-      }
+      )}
     </div>
   )
 }

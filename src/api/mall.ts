@@ -1,53 +1,33 @@
 import request from '@/utils/request'
 
 type GetMallProductsResult = {
-  categorys: {
+  basic: {
+    apple_iap_month: string
+    apple_iap_year: string
+    cover: string
+    discount: string
+    give_num: string
+    grade: string
     id: string
+    is_hot: string
+    model_month: string
+    model_year: string
     name: string
-    items: {
-      [key: string]: {
-        id: string
-        product_cate_id: string
-        name: string
-        model_month: string
-        model_quarter: string
-        model_year: string
-        model_half_year: string
-        discount: string
-        professional: string
-        is_hot: string
-        give_num: string
-        cover: string
-        describe: string
-        publicize: { id: string; title: string; auth: string; product_id: string }[]
-        products: {
-          id: string
-          product_sn: string
-          platform_product: string
-          platform_type: string
-          price: string
-          day: string
-          product_id: string
-          model: string
-          name: string
-          unit: string
-        }[]
-      }[]
-    }
+    professional: string
+    publicize: [number, string][]
   }[]
-  product_publicizes: {
+  plus: GetMallProductsResult['basic']
+  intro: {
     id: string
     title: string
     items: [
       {
-        id: string
-        product_nums_g: string[]
-        product_nums_p: string[]
-        product_publicize_id: string
+        auths: string[]
         title: string
       }
     ]
-  }[]
+  }[],
+  payment: string[]
 }
 
 export const getMallProducts = () => {

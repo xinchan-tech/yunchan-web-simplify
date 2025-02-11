@@ -1,14 +1,15 @@
-import { cn } from "@/utils/style"
-import { Cross2Icon } from "@radix-ui/react-icons"
+import { cn } from '@/utils/style'
+import { Cross2Icon } from '@radix-ui/react-icons'
 import { useBoolean, useUpdateEffect } from 'ahooks'
-import to from "await-to-js"
-import type { ReactNode } from "react"
-import { FormProvider, type UseFormReturn } from "react-hook-form"
-import type { z } from "zod"
-import { Button } from "../ui/button"
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "../ui/dialog"
-import { useConfig } from "@/store"
-import { usePropValue } from "@/hooks"
+import to from 'await-to-js'
+import { useCallback, type ReactNode } from 'react'
+import { FormProvider, type UseFormReturn } from 'react-hook-form'
+import type { z } from 'zod'
+import { Button } from '../ui/button'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog'
+import { useConfig } from '@/store'
+import { usePropValue } from '@/hooks'
+import type { DialogContentProps } from "@radix-ui/react-dialog"
 
 export interface UseModalProps {
   content: ReactNode
@@ -18,7 +19,8 @@ export interface UseModalProps {
   className?: string
   footer?: boolean | ReactNode
   onOk?: () => void
-  confirmLoading? : boolean;
+  confirmLoading?: boolean
+  closeOnMaskClick?: boolean
 }
 
 export interface UseModalAction {
@@ -27,7 +29,16 @@ export interface UseModalAction {
   title: (title?: string) => string
 }
 
-export const useModal = ({ content, onOpen, title, closeIcon, className, footer, confirmLoading, ...props }: UseModalProps) => {
+export const useModal = ({
+  content,
+  onOpen,
+  title,
+  closeIcon,
+  className,
+  footer,
+  confirmLoading,
+  ...props
+}: UseModalProps) => {
   const [modalVisible, { toggle: toggleModalVisible }] = useBoolean(false)
   const [innerTitle, setInnerTitle] = usePropValue(title)
   const [visible, { setFalse, setTrue }] = useBoolean(false)
@@ -44,61 +55,59 @@ export const useModal = ({ content, onOpen, title, closeIcon, className, footer,
         setFalse()
       }, 200)
     }
-
   }, [modalVisible])
+
+  const onPointerDownOutside = useCallback<NonNullable<DialogContentProps['onPointerDownOutside']>>((e) => {
+    if(props.closeOnMaskClick === false){
+      e.stopPropagation()
+      e.preventDefault()
+    }
+  }, [props.closeOnMaskClick])
 
   const render = () => {
     if (!visible) return null
     return (
       <Dialog open={modalVisible} onOpenChange={_onOpenChange}>
-        <DialogContent className={cn('w-[680px]', className)}>
+        <DialogContent className={cn('w-[680px]', className)} onPointerDownOutside={onPointerDownOutside}>
           <DialogHeader>
             <DialogTitle asChild>
               <div>
-                {
-                  innerTitle && (
-                    <div className="title text-center h-10" style={{}}>
-                      {
-                        closeIcon && (
-                          <span
-                            className={
-                              cn(
-                                'bg-[#F36059] box-border rounded-full cursor-pointer  hover:opacity-90 absolute -z-0 w-4 h-4 top-3 flex items-center justify-center',
-                                platform === 'mac' ? 'left-2' : 'right-2'
-                              )
-                            }
-                            onClick={toggleModalVisible}
-                            onKeyDown={() => { }}
-                          >
-                            <Cross2Icon className="scale-75" />
-                          </span>
-                        )
-                      }
-                      <span className="leading-[40px]">{innerTitle}</span>
-                    </div>
-                  )
-                }
+                {innerTitle && (
+                  <div className="title text-center h-10" style={{}}>
+                    {closeIcon && (
+                      <span
+                        className={cn(
+                          'bg-[#F36059] box-border rounded-full cursor-pointer  hover:opacity-90 absolute -z-0 w-4 h-4 top-3 flex items-center justify-center',
+                          platform === 'mac' ? 'left-2' : 'right-2'
+                        )}
+                        onClick={toggleModalVisible}
+                        onKeyDown={() => {}}
+                      >
+                        <Cross2Icon className="scale-75" />
+                      </span>
+                    )}
+                    <span className="leading-[40px]">{innerTitle}</span>
+                  </div>
+                )}
               </div>
             </DialogTitle>
             <DialogDescription className="text-center" />
           </DialogHeader>
-          {
-            content
-          }
-          {
-            footer === null ? null : (
-              footer === undefined ? (
-                <DialogFooter className="m-4">
-                  <Button variant="outline" onClick={() => toggleModalVisible()}>取消</Button>
-                  <Button loading={confirmLoading} onClick={() => props.onOk?.()}>确认</Button>
-                </DialogFooter>
-              ) : (
-                footer
-              )
-            )
-          }
+          {content}
+          {footer === null ? null : footer === undefined ? (
+            <DialogFooter className="m-4">
+              <Button variant="outline" onClick={() => toggleModalVisible()}>
+                取消
+              </Button>
+              <Button loading={confirmLoading} onClick={() => props.onOk?.()}>
+                确认
+              </Button>
+            </DialogFooter>
+          ) : (
+            footer
+          )}
         </DialogContent>
-      </Dialog >
+      </Dialog>
     )
   }
 
@@ -132,7 +141,13 @@ export interface UseFormModalProps<T extends z.ZodTypeAny> extends Omit<UseModal
   form: UseFormReturn<z.infer<T>>
 }
 
-export const useFormModal = <T extends z.ZodTypeAny>({ content, onOk, onOpen, form, ...props }: UseFormModalProps<T>) => {
+export const useFormModal = <T extends z.ZodTypeAny>({
+  content,
+  onOk,
+  onOpen,
+  form,
+  ...props
+}: UseFormModalProps<T>) => {
   const _onFinish = async (values: z.infer<T>) => {
     const [err] = await to(new Promise(r => r(onOk(values))))
 
@@ -143,11 +158,7 @@ export const useFormModal = <T extends z.ZodTypeAny>({ content, onOk, onOpen, fo
 
   const _content = (
     <FormProvider {...form}>
-      <form className="space-y-8">
-        {
-          content
-        }
-      </form>
+      <form className="space-y-8">{content}</form>
     </FormProvider>
   )
 
@@ -162,7 +173,10 @@ export const useFormModal = <T extends z.ZodTypeAny>({ content, onOk, onOpen, fo
   }
 
   const { modal, context } = useModal({
-    content: _content, onOpen: _onOpen, onOk: _onOk, ...props
+    content: _content,
+    onOpen: _onOpen,
+    onOk: _onOk,
+    ...props
   })
 
   return {
