@@ -300,7 +300,7 @@ type GetStockChartV2Params = {
    * 结束时间
    * @example 2021-01-01 00:00:00
    */
-  end_at: string
+  end_at?: string
   /**
    * 时间格式
    * @example int 时间戳
@@ -331,7 +331,7 @@ export const getStockChartQuote = async (symbol: string, period: 'pre' | 'intrad
   const paramsStr = `${paramsKeySort.reduce((acc, key) => `${acc}${key}=${params[key]}&`, '').slice(0, -1)}&app_key=${'LMOl&8skLax%ls1Haapd'}`
   const sign = md5(sha256(paramsStr))
   
-  const r = await request.get<StockRawRecord>('/stock/quote', { params: { symbol, period, time_format }, headers: { sign } }).then(r => r.data)
+  const r = await request.get<StockRawRecord[]>('/stock/quote', { params: { symbol, period, time_format }, headers: { sign } }).then(r => r.data)
   return r
 }
 getStockChartQuote.cacheKey = 'stock:chart:quote'

@@ -471,42 +471,40 @@ export const renderGrid = (options: ECOption, state: ChartState, size: [number, 
         alignMinLabel: 'left',
         color: '#fff',
         formatter: (v: any) => {
+          
           if (!v) return ''
           // @ts-ignore
           const xData = options.xAxis[0].data as any[]
           const scale = renderUtils.getScaledZoom(chart, 0)!
-          const startDay = xData[scale[0]]
+          const startDay = xData[scale[0]] * 1000
           //获取时间跨度
-          const time = dayjs(+xData[scale[1]]).diff(+startDay, 'day')
+          const time = dayjs(+xData[scale[1]] * 1000).diff(+startDay, 'day')
 
           if (time < 1) {
-            return dayjs(+v).format('HH:mm')
+            return dayjs(+v * 1000).format('HH:mm')
           }
 
-          if (time < 365) {
-            return dayjs(+v).format('MM-DD')
+          if (time < 300) {
+            return dayjs(+v * 1000).format('MM-DD')
           }
 
           if (time < 365 * 5) {
-            return dayjs(+v).format('YY-MM')
+            return dayjs(+v * 1000).format('YY-MM')
           }
 
-          return dayjs(+v).format('YYYY')
+          return dayjs(+v * 1000).format('YYYY')
+        },
+        interval: (index: number) => {
+          const scale = renderUtils.getScaledZoom(chart, 0)!
+
+          const offset = Math.round((scale[1] - scale[0]) / X_AXIS_TICK)
+
+          if (offset <= X_AXIS_TICK) {
+            return index % 4 === 0
+          }
+
+          return (index - scale[0]) % offset === 0
         }
-        // interval: (index: number) => {
-        //   if (isTimeIndexChart(state.timeIndex) && state.timeIndex !== StockChartInterval.FIVE_DAY) {
-        //     return index % 15 === 0
-        //   }
-        //   const scale = renderUtils.getScaledZoom(chart, 0)
-
-        //   const offset = Math.round((scale[1] - scale[0]) / X_AXIS_TICK)
-
-        //   if (offset <= X_AXIS_TICK) {
-        //     return index % 4 === 0
-        //   }
-
-        //   return (index - scale[0]) % offset === 0
-        // }
       },
       axisPointer: {
         label: {
@@ -881,7 +879,7 @@ export const renderMainCoiling = (options: ECOption, state: ChartState, chart: E
       const cma2 = calculateMA(65, state.mainData.history)
       const cma3 = calculateMA(120, state.mainData.history)
       const cma4 = calculateMA(250, state.mainData.history)
-      console.log(cma3, state.mainData)
+ 
       drawLine(options, {} as any, {
         yAxisIndex: 1,
         xAxisIndex: 0,

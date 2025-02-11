@@ -1,12 +1,12 @@
 import { StockChartInterval, type StockRawRecord } from '@/api'
+import { useTime } from "@/store"
+import { getTradingPeriod } from '@/utils/date'
 import type { ECOption } from '@/utils/echarts'
+import { stockUtils } from '@/utils/stock'
 import dayjs, { type Dayjs } from 'dayjs'
+import type { EChartsType } from 'echarts/core'
 import type { ECBasicOption } from 'echarts/types/dist/shared'
 import type { KChartContext } from './ctx'
-import type { EChartsType } from 'echarts/core'
-import { getTradingPeriod } from '@/utils/date'
-import { stockUtils } from '@/utils/stock'
-import { useTime } from "@/store"
 
 export const renderUtils = {
   getXAxisIndex: (options: ECOption, index: number) => {
@@ -319,13 +319,13 @@ export const renderUtils = {
     }
 
     const extLen = Math.max(Math.round(data.length * 0.01), 4)
-
-    const startTime = data[data.length - 1][0]
+    // console.log(data[data.length - 1][0]* 1000)
+    const startTime = data[data.length - 1][0] * 1000
 
     const scale = renderUtils.getIntervalScale(interval)
     const xAxisData = Array.from({ length: extLen }, (_, i) => {
       const time = dayjs(+startTime).add((i + 1) * scale, 'millisecond')
-      return time.valueOf()
+      return time.valueOf().toString().slice(0, -3)
     })
 
     return [...data.map(o => o[0]), ...xAxisData]
@@ -373,24 +373,5 @@ export const renderUtils = {
     return data[left - 1]
   },
 
-   /**
-   * k线分页逻辑，每次取500个周期线
-   * k线只去取盘中的数据
-   * 盘中时间： 9:30 - 15:59
-   */
-   getPeriodByPage: (params: { interval: StockChartInterval; page: number; initDate?: string }) => {
-    const { interval, page, initDate } = params
-    const usDate = initDate ? dayjs(initDate) : dayjs(useTime.getState().getCurrentUsTime()).tz('America/New_York')
-
-    const intervalScale = renderUtils.getIntervalScale(interval)
-
-    const startDate = usDate.add(-page * 1000 * intervalScale, 'millisecond')
-    let endDate = usDate
-
-    if (page > 1) {
-      endDate = usDate.add(-(page - 1) * 1000 * intervalScale, 'millisecond')
-    }
-
-    return [startDate.format('YYYY-MM-DD HH:mm:ss'), endDate.format('YYYY-MM-DD HH:mm:ss')]
-  }
+   
 }
