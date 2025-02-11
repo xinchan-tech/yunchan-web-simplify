@@ -32,7 +32,7 @@ import {
 } from "../chat-utils";
 import MsgFilter, { FilterKey } from "./msg-filterbar";
 import { useUser } from "@/store";
-import { useLatest, useThrottleFn } from "ahooks";
+import { useLatest, useThrottleFn, useUpdate } from "ahooks";
 import { useShallow } from "zustand/react/shallow";
 import SystemCell from "../Messages/system";
 // import { useScrollToBottomOnArrowClick } from "../hooks";
@@ -47,6 +47,7 @@ let messageStatusListener!: MessageStatusListener;
 
 const GroupChatMsgList = forwardRef((props, ref) => {
   const { bottomHeight, selectedChannel, toChannel } = useGroupChatStoreNew();
+
   const {} = useGroupChatStoreNew();
   const latestToChannel = useLatest(toChannel);
   const { user } = useUser();
@@ -223,7 +224,7 @@ const GroupChatMsgList = forwardRef((props, ref) => {
           }
         );
         setMessageFetching(false);
-        if (msgs.length < limit) {
+        if (msgs.length === 0) {
           pulldownFinished.current = true;
         }
         if (msgs && msgs.length > 0) {
@@ -643,8 +644,8 @@ const GroupChatMsgList = forwardRef((props, ref) => {
             您有{unreadCount}条未读消息
           </div>
         )}
-        {(goodMessages || []).map((msg: Message, idx: number) => {
-          const key = msg.clientMsgNo + idx;
+        {(goodMessages || []).map((msg: Message) => {
+          const key = msg.clientMsgNo + msg.channel.channelID;
 
           return (
             <div

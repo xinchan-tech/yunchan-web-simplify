@@ -149,6 +149,8 @@ export const useGroupChatShortStore = create<GroupChatShortStore>(
 type ChatWindowStore = {
   reEditData: { timestap: number; text: string };
   setReEditData: (data: { timestap: number; text: string }) => void;
+  forceUpdateAvatarId: number;
+  updateForceUpdateAvatarId: () => void;
 };
 export const useChatNoticeStore = create<ChatWindowStore>((set, get) => {
   return {
@@ -156,6 +158,13 @@ export const useChatNoticeStore = create<ChatWindowStore>((set, get) => {
     setReEditData: (data: { timestap: number; text: string }) => {
       set({
         reEditData: data,
+      });
+    },
+    forceUpdateAvatarId: 1,
+    updateForceUpdateAvatarId: () => {
+      const now = new Date().getTime();
+      set({
+        forceUpdateAvatarId: now,
       });
     },
   };

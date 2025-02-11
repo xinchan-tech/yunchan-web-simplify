@@ -80,7 +80,7 @@ const JoinGroup = (props: {
   const loopCheckStatus = (sn: string) => {
     timerRef.current = setInterval(() => {
       loopUpdatePaymentStatus(sn).then((res) => {
-        if (res.pay_status === 1) {
+        if (Number(res.pay_status) === 1) {
           clearInterval(timerRef.current);
           setReadyToJoinGroup(null);
           WKSDK.shared().config.provider.syncConversationsCallback();

@@ -409,4 +409,10 @@ export const sendLiveOpinions = async (params: sendOpinionRequestPrams) => {
       },
     })
     .then((res) => res);
+  return r;
+};
+
+export const testExitGroup = async (channelId: string) => {
+  const r = await request.post(`/channel/${channelId}/out`).then((r) => r);
+  return r;
 };

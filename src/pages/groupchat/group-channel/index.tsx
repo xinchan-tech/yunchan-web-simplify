@@ -13,6 +13,7 @@ import { ReactNode, useEffect, useRef, useState } from "react";
 import {
   useGroupChatStoreNew,
   useGroupChatShortStore,
+  useChatNoticeStore,
 } from "@/store/group-chat-new";
 import { cn } from "@/utils/style";
 import APIClient from "../Service/APIClient";
@@ -67,7 +68,8 @@ const GroupChannel = (props: {
       getGroupDetailData: state.getGroupDetailData,
     }))
   );
-  const update = useUpdate();
+  const { updateForceUpdateAvatarId } = useChatNoticeStore();
+  // const update = useUpdate();
   const latestConversation = useLatest(conversationWraps);
   const { onSelectChannel } = props;
   const { setSelectedChannel, selectedChannel, setToChannel } =
@@ -273,7 +275,7 @@ const GroupChannel = (props: {
           setPersonChannelCache(conversationWrap.lastMessage.fromUID).then(
             () => {
               setUserInSyncChannelCache(uid, false);
-              update();
+              updateForceUpdateAvatarId();
             }
           );
         }

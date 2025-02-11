@@ -74,7 +74,6 @@ const MsgCard = (props: { data: Message; children: string | ReactNode }) => {
   const { handleReply, handleRevoke } = useContext(GroupChatContext);
   return (
     <div
-      key={data.clientMsgNo}
       className={cn(
         "flex msg-card items-start",
         data.send && "justify-end",

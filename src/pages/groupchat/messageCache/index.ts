@@ -120,10 +120,14 @@ class LocalCacheManager {
       request.onsuccess = () => {
         const cursor = request.result;
         if (cursor) {
-          if (isExpire && count < options.limit) {
-            results.push(cursor.value);
-            count++;
-            cursor.continue();
+          if (isExpire) {
+            if (count < options.limit) {
+              results.unshift(cursor.value);
+              count++;
+              cursor.continue();
+            } else {
+              resolve(results);
+            }
           } else {
             results.push(cursor.value);
             cursor.continue();

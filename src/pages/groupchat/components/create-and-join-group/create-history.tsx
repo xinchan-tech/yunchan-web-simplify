@@ -84,7 +84,7 @@ const CreateHistory = (props: {
       accessorKey: "price",
       enableSorting: false,
       cell: ({ row }) => (
-        <span className="block py-1">{row.original.price || "0"}</span>
+        <span className="block py-1">${row.original.price || "0"}</span>
       ),
       meta: { align: "center" },
     },

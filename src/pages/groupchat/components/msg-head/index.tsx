@@ -4,23 +4,29 @@ import WKSDK, {
   Channel,
   ChannelTypePerson,
   MessageStatus,
-  ChannelInfo,
 } from "wukongimjssdk";
 import ChatAvatar from "../chat-avatar";
 import { ContextMenu, ContextMenuTrigger } from "@/components";
 import { useMemberSetting } from "../../hooks";
-import { useGroupChatShortStore } from "@/store/group-chat-new";
-import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  useGroupChatShortStore,
+  useChatNoticeStore,
+} from "@/store/group-chat-new";
+import { useEffect, useMemo, useState } from "react";
 import {
   getTimeStringAutoShort2,
   judgeIsUserInSyncChannelCache,
   setPersonChannelCache,
   setUserInSyncChannelCache,
 } from "../../chat-utils";
+
 const MsgHead = (props: { message: Message; type: "left" | "right" }) => {
   const { message, type } = props;
   const subscribers = useGroupChatShortStore((state) => state.subscribers);
+
   const { renderContextMenu } = useMemberSetting();
+  const { updateForceUpdateAvatarId, forceUpdateAvatarId } =
+    useChatNoticeStore();
   // 群成员
   const member = useMemo(() => {
     let result = null;
@@ -32,18 +38,42 @@ const MsgHead = (props: { message: Message; type: "left" | "right" }) => {
     }
     return result;
   }, [subscribers, message]);
-  const [channelInfo, setChannelInfo] = useState<ChannelInfo | undefined>();
-  const fetchingChannel = useRef(false);
+  const [channelInfo, setChannelInfo] = useState<{
+    name: string;
+    avatar: string;
+    uid: string;
+  }>({
+    name: "",
+    avatar: "",
+    uid: "",
+  });
+
+  useEffect(() => {
+    if (forceUpdateAvatarId > 1) {
+      const temp = WKSDK.shared().channelManager.getChannelInfo(
+        new Channel(message.fromUID, ChannelTypePerson)
+      );
+      if (temp) {
+        setChannelInfo({
+          name: temp.title,
+          avatar: temp.logo,
+          uid: temp.channel.channelID,
+        });
+      }
+    }
+  }, [forceUpdateAvatarId]);
   useEffect(() => {
     if (message) {
       const temp = WKSDK.shared().channelManager.getChannelInfo(
         new Channel(message.fromUID, ChannelTypePerson)
       );
       if (temp) {
-        setChannelInfo(temp);
-      } else if (fetchingChannel.current === false) {
-        fetchingChannel.current = true;
-
+        setChannelInfo({
+          name: temp.title,
+          avatar: temp.logo,
+          uid: temp.channel.channelID,
+        });
+      } else {
         if (judgeIsUserInSyncChannelCache(message.fromUID)) {
           return;
         } else {
@@ -54,9 +84,14 @@ const MsgHead = (props: { message: Message; type: "left" | "right" }) => {
               new Channel(message.fromUID, ChannelTypePerson)
             );
             if (temp) {
-              setChannelInfo(temp);
+              setChannelInfo({
+                name: temp.title,
+                avatar: temp.logo,
+                uid: temp.channel.channelID,
+              });
+              updateForceUpdateAvatarId();
             }
-            fetchingChannel.current = false;
+
             setUserInSyncChannelCache(message.fromUID, false);
           });
         }
@@ -86,7 +121,7 @@ const MsgHead = (props: { message: Message; type: "left" | "right" }) => {
           type === "left" ? "left-name" : "right-name"
         )}
       >
-        {channelInfo?.title}
+        {channelInfo.name}
         {/* {type === "left" && (
           <span className="ml-2 text-gray-400">
             {getTimeStringAutoShort2(message.timestamp * 1000, true)}
@@ -99,14 +134,7 @@ const MsgHead = (props: { message: Message; type: "left" | "right" }) => {
       <ContextMenu>
         <ContextMenuTrigger asChild>
           <div>
-            <ChatAvatar
-              data={{
-                name: channelInfo?.title || "",
-                avatar: channelInfo?.logo || "",
-                uid: channelInfo?.channel.channelID || "",
-              }}
-              radius="8px"
-            />
+            <ChatAvatar data={channelInfo || {}} radius="8px" />
           </div>
         </ContextMenuTrigger>
         {member && renderContextMenu(member)}

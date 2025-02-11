@@ -77,7 +77,7 @@ export function initDataSource() {
       return result;
     }
     // 缓存没数据或者缓存数据和limit对不上，就用远程接口再查
-    if (result.length === 0 || result.length !== opts.limit) {
+    if (result.length === 0) {
       try {
         result = await APIClient.shared.syncMessages(channel, opts);
         return result;

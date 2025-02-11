@@ -1,9 +1,11 @@
 import { cn } from "@/utils/style";
-import { useGroupChatShortStore } from "@/store/group-chat-new";
-import { useShallow } from "zustand/react/shallow";
+
 import { useEffect } from "react";
 
 function userIdToColor(userId: string) {
+  if (!userId) {
+    return "";
+  }
   // 步骤1：生成哈希值（基于djb2算法优化）
   let hash = 5381;
   for (let i = 0; i < userId.length; i++) {
@@ -32,23 +34,12 @@ const ChatAvatar = (props: {
 }) => {
   const { data, className, radius = "50%", size } = props;
 
-  const { avatarColorMap, setAvatarColorMap } = useGroupChatShortStore(
-    useShallow((state) => ({
-      avatarColorMap: state.avatarColorMap,
-      setAvatarColorMap: state.setAvatarColorMap,
-    }))
-  );
-
-  useEffect(() => {
-    if (data && data.uid) {
-      if (!avatarColorMap.has(data.uid)) {
-        avatarColorMap.set(data.uid, userIdToColor(data.uid));
-
-        setAvatarColorMap(avatarColorMap);
-      }
+  const renderName = () => {
+    if (data && typeof data.name === "string" && data.name.length > 0) {
+      return data.name[0].toUpperCase();
     }
-  }, [data]);
-
+    return "";
+  };
   return (
     <div
       className={cn(
@@ -57,7 +48,7 @@ const ChatAvatar = (props: {
         className
       )}
     >
-      {data.avatar ? (
+      {data?.avatar ? (
         <img src={data.avatar} style={{ borderRadius: radius }} />
       ) : (
         <div
@@ -67,10 +58,10 @@ const ChatAvatar = (props: {
           )}
           style={{
             borderRadius: radius,
-            backgroundColor: avatarColorMap.get(data.uid),
+            backgroundColor: data && userIdToColor(data.uid),
           }}
         >
-          {data?.name && data?.name.length > 0 && data.name[0].toUpperCase()}
+          {renderName()}
         </div>
       )}
 

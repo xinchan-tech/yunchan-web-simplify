@@ -48,11 +48,14 @@ export default defineConfig({
       '/im-ws': {
         target: 'ws://im.mgjkn.com:5200',
         ws: true,
-        pathRewrite: {
-          '^/im-ws': ''
-        }
-      }
-    }
+      },
+      "/im-ws": {
+        target: "ws://im.mgjkn.com:5200",
+        // target: "ws://test.im.mgjkn.com:5200",
+        ws: true,
+        pathRewrite: { "^/im-ws": "" },
+      },
+    },
   },
   tools: {
     rspack(_, { appendPlugins }) {

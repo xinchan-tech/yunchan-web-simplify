@@ -10,6 +10,8 @@ import {
 import { InputBoxResult, useInput } from "./useInput";
 import { useToast } from "@/hooks";
 import { useChatNoticeStore } from "@/store/group-chat-new";
+import { Button } from "@/components";
+import { testExitGroup } from "@/api";
 
 const ChatWindow = forwardRef(
   (
@@ -174,7 +176,7 @@ const ChatWindow = forwardRef(
             e.preventDefault();
           }}
           onDrop={handleDrop}
-          className="h-full w-full chat-window"
+          className=" w-full chat-window"
           dangerouslySetInnerHTML={{ __html: htmlValue }}
           contentEditable
           onPaste={handlePaste}
@@ -185,13 +187,23 @@ const ChatWindow = forwardRef(
             }
           }}
         ></div>
+        <div className="flex justify-end pr-2">
+          <Button
+            size="mini"
+            onClick={() => {
+              testExitGroup("HK718133");
+            }}
+          >
+            发送
+          </Button>
+        </div>
         <style jsx>
           {`
             .chat-window {
               padding: 6px 10px;
               overflow-y: auto;
               box-sizing: border-box;
-
+              height: calc(100% - 30px);
               img {
                 max-width: 200px !important;
                 max-height: 200px !important;
