@@ -126,7 +126,7 @@ export const useStockCandlesticks = (index: number) => {
 
     const [_, r] = await to(getStockChartV2(params))
 
-    const re = [...(r?.data.list ?? []), ...candlesticks.current]
+    const re = [...(r?.data.list ?? [])]
 
     candlesticks.current = re
     isLoading.current = false

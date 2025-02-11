@@ -271,6 +271,7 @@ export const drawText: DrawerFunc<DrawerTextShape[]> = (options, _, { xAxisIndex
       return {
         type: 'text',
         emphasisDisabled: true,
+        
         silent: true,
         style: {
           text,
