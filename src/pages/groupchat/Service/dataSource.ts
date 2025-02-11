@@ -36,7 +36,6 @@ const getMessageFromCache = async (channel: Channel, opts: SyncOptions) => {
   };
   let resultMessages = await cacheManager.getMessages(
     channel.channelID,
-    LocalCacheManager.page,
     cacheParams
   );
   if (resultMessages instanceof Array && resultMessages.length > 0) {
@@ -77,7 +76,8 @@ export function initDataSource() {
       result = await APIClient.shared.syncMessages(channel, opts);
       return result;
     }
-    if (result.length === 0) {
+    // 缓存没数据或者缓存数据和limit对不上，就用远程接口再查
+    if (result.length === 0 || result.length !== opts.limit) {
       try {
         result = await APIClient.shared.syncMessages(channel, opts);
         return result;

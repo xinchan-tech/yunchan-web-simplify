@@ -19,7 +19,7 @@ import APIClient from "../Service/APIClient";
 import { useLatest } from "ahooks";
 import { useShallow } from "zustand/react/shallow";
 import { useModal } from "@/components";
-
+import { useUpdate } from "ahooks";
 import { getGroupChannels } from "@/api";
 // import { useQuery } from "@tanstack/react-query";
 import ChatAvatar from "../components/chat-avatar";
@@ -67,6 +67,7 @@ const GroupChannel = (props: {
       getGroupDetailData: state.getGroupDetailData,
     }))
   );
+  const update = useUpdate();
   const latestConversation = useLatest(conversationWraps);
   const { onSelectChannel } = props;
   const { setSelectedChannel, selectedChannel, setToChannel } =
@@ -272,6 +273,7 @@ const GroupChannel = (props: {
           setPersonChannelCache(conversationWrap.lastMessage.fromUID).then(
             () => {
               setUserInSyncChannelCache(uid, false);
+              update();
             }
           );
         }

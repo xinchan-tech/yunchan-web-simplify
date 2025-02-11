@@ -28,8 +28,8 @@ class LocalCacheManager {
           const store = db.createObjectStore(this.STORE_MESSAGES, {
             keyPath: "message_idstr",
           });
-          store.createIndex("channel_id", "channel_id");
-          store.createIndex("message_seq", "message_seq");
+          store.createIndex("channel_seq", ["channel_id", "message_seq"]);
+          // store.createIndex("message_seq", "message_seq");
         }
         if (!db.objectStoreNames.contains(this.STORE_GROUPS)) {
           db.createObjectStore(this.STORE_GROUPS, { keyPath: "channelID" });
@@ -51,7 +51,7 @@ class LocalCacheManager {
     return new Promise((resolve, reject) => {
       const tx = this.db!.transaction([this.STORE_MESSAGES], "readwrite");
       const store = tx.objectStore(this.STORE_MESSAGES);
-
+      message.channel_seq = `${message.channel_id}_${message.message_seq}`;
       store.put(message);
 
       tx.oncomplete = () => {
@@ -80,7 +80,7 @@ class LocalCacheManager {
 
   public async getMessages(
     groupId: string,
-    page: number,
+
     options: qeuryFromDBParam
   ): Promise<any[]> {
     // if (page === 1 && this.liveMessagesCache.has(groupId)) {
@@ -88,12 +88,12 @@ class LocalCacheManager {
     //   count = -count;
     //   return this.liveMessagesCache.get(groupId)!.slice(count);
     // }
-    return this.queryFromDB(groupId, page, options);
+    return this.queryFromDB(groupId, options);
   }
 
   private async queryFromDB(
     groupId: string,
-    page: number,
+
     options: qeuryFromDBParam
   ): Promise<any[]> {
     if (!this.db) throw new Error("Database not initialized");
@@ -101,80 +101,39 @@ class LocalCacheManager {
     return new Promise((resolve, reject) => {
       const tx = this.db!.transaction([this.STORE_MESSAGES], "readonly");
       const store = tx.objectStore(this.STORE_MESSAGES);
-      const groupIndex = store.index("channel_id");
-      const seqIndex = store.index("message_seq");
+      const index = store.index("channel_seq");
+      const end = options.end || options.start - options.limit + 1;
+      const right = Math.max(end, options.start);
+      const left = Math.min(end, options.start);
       // 暂时只有往前面查
       let count = 0;
-      const groupRange = IDBKeyRange.only(groupId);
-
-      const seqResults: any[] = [];
-      const groupResults: any[] = [];
+      let range = IDBKeyRange.bound([groupId, left], [groupId, right]);
       const isExpire = options.start === -1 && options.end === -1;
-      const groupRequest = groupIndex.openCursor(groupRange);
-      groupRequest.onsuccess = () => {
-        const cursor = groupRequest.result;
+
+      const results: any[] = [];
+
+      let request = index.openCursor(range);
+      if (isExpire === true) {
+        const newRange = IDBKeyRange.bound([groupId, 0], [groupId, Infinity]);
+        request = index.openCursor(newRange, "prev");
+      }
+      request.onsuccess = () => {
+        const cursor = request.result;
         if (cursor) {
-          groupResults.push(cursor.value);
-          cursor.continue();
-        } else {
-          let seqRequest;
-
-          console.log("groupResults:", groupResults);
-          if (isExpire) {
-            seqRequest = seqIndex.openCursor(null, "prev");
+          if (isExpire && count < options.limit) {
+            results.push(cursor.value);
+            count++;
+            cursor.continue();
           } else {
-            const end = options.end || options.start - options.limit + 1;
-            const right = Math.max(end, options.start);
-            const left = Math.min(end, options.start);
-            const seqRange = IDBKeyRange.bound(left, right);
-            seqRequest = seqIndex.openCursor(seqRange);
+            results.push(cursor.value);
+            cursor.continue();
           }
-
-          seqRequest.onsuccess = function () {
-            const seqCursor = seqRequest.result;
-            if (isExpire) {
-              if (seqCursor && count < options.limit) {
-                const isInGroup =
-                  groupResults.findIndex(
-                    (item) => item.channel_id === seqCursor.value.channel_id
-                  ) >= 0;
-                if (isInGroup) {
-                  seqResults.unshift(seqCursor.value);
-                  count++;
-                }
-                seqCursor.continue();
-              } else {
-                resolve(seqResults);
-              }
-            } else {
-              if (seqCursor) {
-                const isInGroup =
-                  groupResults.findIndex(
-                    (item) => item.channel_id === seqCursor.value.channel_id
-                  ) >= 0;
-                if (isInGroup) {
-                  seqResults.push(seqCursor.value);
-                }
-                seqCursor.continue();
-              } else {
-                // 合并并筛选数据
-                const finalResults = seqResults.filter((item) => {
-                  return groupResults.some((result) => {
-                    return result.clientMsgNo === item.clientMsgNo;
-                  });
-                });
-                console.log("最终查询结果:", finalResults);
-                resolve(finalResults);
-              }
-            }
-          };
-          seqRequest.onerror = function () {
-            console.error("使用 seq 索引查询出错:", groupRequest.error);
-          };
+        } else {
+          resolve(results);
         }
       };
 
-      groupRequest.onerror = () => reject(groupRequest.error);
+      request.onerror = () => reject(request.error);
     });
   }
 }

@@ -50,7 +50,7 @@ const JoinGroupContent = (props: { onSuccess: () => void }) => {
   };
   const [openJoinMask, setOpenJoinMask] = useState(false);
 
-  const { data } = useQuery(option);
+  const { data, isFetching } = useQuery(option);
 
   const judgeIsJoined = (account: string) => {
     let res = false;
@@ -75,7 +75,9 @@ const JoinGroupContent = (props: { onSuccess: () => void }) => {
           />
         </div>
       )}
-      {groupDetailFetching === true && <FullScreenLoading fullScreen={false} />}
+      {(isFetching === true || groupDetailFetching === true) && (
+        <FullScreenLoading fullScreen={false} />
+      )}
       <div className="top-area">
         <div className="flex justify-center">
           <div className=" border-dialog-border rounded-sm  bg-accent top-area-search  w-[600px]">
@@ -113,7 +115,7 @@ const JoinGroupContent = (props: { onSuccess: () => void }) => {
           return (
             <GroupChannelCard
               key={channel.account}
-              joinDisabled={judgeIsJoined(channel.account)}
+              joinDisabled={channel.in_channel !== 0}
               data={channel}
               onJoin={() => {
                 getGroupDetailData(channel.account).then(() => {
