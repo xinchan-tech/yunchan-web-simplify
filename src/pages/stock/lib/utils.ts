@@ -313,9 +313,9 @@ export const renderUtils = {
     if (
       [StockChartInterval.PRE_MARKET, StockChartInterval.INTRA_DAY, StockChartInterval.AFTER_HOURS].includes(interval)
     ) {
-      return getTradingPeriod(stockUtils.intervalToTrading(interval)!, dayjs(+data[0][0])).map(item =>
-        dayjs(item).valueOf()
-      )
+      const r = getTradingPeriod(stockUtils.intervalToTrading(interval)!, dayjs(stockUtils.parseTime(data[0][0])).tz('America/New_York'), 'timestamp').map(item =>{
+        return (item as number).toString().slice(0, -3)
+      })
     }
 
     const extLen = Math.max(Math.round(data.length * 0.01), 4)

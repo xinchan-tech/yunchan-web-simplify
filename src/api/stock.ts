@@ -331,7 +331,8 @@ export const getStockChartQuote = async (symbol: string, period: 'pre' | 'intrad
   const paramsStr = `${paramsKeySort.reduce((acc, key) => `${acc}${key}=${params[key]}&`, '').slice(0, -1)}&app_key=${'LMOl&8skLax%ls1Haapd'}`
   const sign = md5(sha256(paramsStr))
   
-  const r = await request.get<StockRawRecord[]>('/stock/quote', { params: { symbol, period, time_format }, headers: { sign } }).then(r => r.data)
+  const r = await await axios
+  .get<{list: StockRawRecord[]}>('/apiv2/chart/quote', { params: { symbol: symbol, period, time_format }, headers: { sign } }).then(r => (r.data as any).data as {list: StockRawRecord[]})
   return r
 }
 getStockChartQuote.cacheKey = 'stock:chart:quote'

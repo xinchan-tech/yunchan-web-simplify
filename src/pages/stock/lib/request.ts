@@ -6,6 +6,7 @@ import dayjs from 'dayjs'
 import { useCallback, useRef, useState } from 'react'
 import { isTimeIndexChart, useKChartStore } from './ctx'
 import { queryClient } from '@/utils/query-client'
+import { useTime } from "@/store"
 
 /**
  * k线分页逻辑
@@ -60,8 +61,8 @@ export const useStockCandlesticks = (index: number) => {
               : 'intraday'
       const [_, r] = await to(getStockChartQuote(symbol.current, period))
       isLoading.current = false
-      candlesticks.current = r ?? []
-      return r
+      candlesticks.current = r?.list ?? []
+      return r?.list ?? []
     }
 
     const params = {
@@ -109,7 +110,7 @@ export const useStockCandlesticks = (index: number) => {
               : 'intraday'
       const [_, r] = await to(getStockChartQuote(symbol.current, period))
       isLoading.current = false
-      candlesticks.current = r ?? []
+      candlesticks.current = r?.list ?? []
       return r
     }
 

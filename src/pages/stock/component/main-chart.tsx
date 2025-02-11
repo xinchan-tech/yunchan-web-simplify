@@ -158,8 +158,8 @@ export const MainChart = (props: MainChartProps) => {
 
       const lastData = stockUtils.toStock(lastMainHistory.current[lastMainHistory.current.length - 1])
       const s = stockUtils.toShortRawRecord(stock)
-
-      s[0] = dayjs(s[0]).valueOf().toString()
+     
+      s[0] = stock.timestamp.toString().slice(0, -3)
 
       if (
         [StockChartInterval.PRE_MARKET, StockChartInterval.INTRA_DAY, StockChartInterval.AFTER_HOURS].includes(
@@ -186,8 +186,8 @@ export const MainChart = (props: MainChartProps) => {
           return
         }
       }
-
-      if (!renderUtils.isSameTimeByInterval(dayjs(lastData.timestamp), dayjs(+s[0]), state.timeIndex)) {
+      
+      if (!renderUtils.isSameTimeByInterval(dayjs(lastData.timestamp), dayjs(+s[0] * 1000), state.timeIndex)) {
         kChartUtils.setMainData({
           index: props.index,
           data: [...(lastMainHistory.current as any), s],
@@ -236,6 +236,7 @@ export const MainChart = (props: MainChartProps) => {
 
   useEffect(() => {
     const timeIndex = useKChartStore.getState().state[props.index].timeIndex
+   
     kChartUtils.setMainData({
       index: props.index,
       data: candlesticks,
@@ -292,6 +293,7 @@ export const MainChart = (props: MainChartProps) => {
     }
     renderWatermark(_options, state.timeIndex)
     chart.current.setOption(_options, { replaceMerge: ['series', 'grid', 'xAxis', 'yAxis', 'dataZoom', 'graphic'] })
+    console.log('render', chart.current.getOption())
   }
 
   renderFn.current = render

@@ -69,10 +69,10 @@ export const initOptions = (): ECOption => {
         if (!data) return ''
         const stock = stockUtils.toStock(data)
 
-        let time = dayjs(stock.timestamp).format('MM-DD HH:mm w')
+        let time = dayjs(stock.timestamp).tz('America/New_York').format('MM-DD HH:mm w')
 
         if (time.slice(6, 11) === '00:00') {
-          time = dayjs(stock.timestamp).format('YYYY-MM-DD w')
+          time = dayjs(stock.timestamp).tz('America/New_York').format('YYYY-MM-DD w')
         }
 
         const isUp = stockUtils.isUp(stock)
@@ -471,7 +471,6 @@ export const renderGrid = (options: ECOption, state: ChartState, size: [number, 
         alignMinLabel: 'left',
         color: '#fff',
         formatter: (v: any) => {
-          
           if (!v) return ''
           // @ts-ignore
           const xData = options.xAxis[0].data as any[]
@@ -479,20 +478,20 @@ export const renderGrid = (options: ECOption, state: ChartState, size: [number, 
           const startDay = xData[scale[0]] * 1000
           //获取时间跨度
           const time = dayjs(+xData[scale[1]] * 1000).diff(+startDay, 'day')
-
+          const d = dayjs(+v * 1000).tz('America/New_York')
           if (time < 1) {
-            return dayjs(+v * 1000).format('HH:mm')
+            return d.format('HH:mm')
           }
 
           if (time < 300) {
-            return dayjs(+v * 1000).format('MM-DD')
+            return d.format('MM-DD')
           }
 
           if (time < 365 * 5) {
-            return dayjs(+v * 1000).format('YY-MM')
+            return d.format('YY-MM')
           }
 
-          return dayjs(+v * 1000).format('YYYY')
+          return d.format('YYYY')
         },
         interval: (index: number) => {
           const scale = renderUtils.getScaledZoom(chart, 0)!
@@ -512,16 +511,15 @@ export const renderGrid = (options: ECOption, state: ChartState, size: [number, 
           backgroundColor: '#353535',
           formatter: params => {
             if (params.axisDimension === 'x') {
-              let time = dayjs(+params.value).format('MM-DD HH:mm w')
+              const time = dayjs(+params.value * 1000).tz('America/New_York')
               if (isTimeIndexChart(state.timeIndex) && state.timeIndex !== StockChartInterval.FIVE_DAY) {
-                time = dayjs(+params.value).format('YYYY-MM-DD HH:mm')
-              } else {
-                if (time.slice(6, 11) === '00:00') {
-                  time = dayjs(+params.value).format('YYYY-MM-DD w')
-                }
+                return time.format('YYYY-MM-DD HH:mm')
+              }
+              if (time.minute() === 0) {
+                return time.format('YYYY-MM-DD w')
               }
 
-              return time
+              return time.format('MM-DD HH:mm w')
             }
 
             return Decimal.create(params.value as string).toFixed(3)
@@ -738,8 +736,7 @@ export const renderMarkLine: ChartRender = (options, state) => {
       padding: [2, 4],
       backgroundColor: lineColor,
       formatter: (params: { data: { yAxis: number } }) => {
-
-        return params.data.yAxis ? Decimal.create(params.data.yAxis).toFixed(2): ''
+        return params.data.yAxis ? Decimal.create(params.data.yAxis).toFixed(2) : ''
       }
     },
     silent: true,
@@ -879,7 +876,7 @@ export const renderMainCoiling = (options: ECOption, state: ChartState, chart: E
       const cma2 = calculateMA(65, state.mainData.history)
       const cma3 = calculateMA(120, state.mainData.history)
       const cma4 = calculateMA(250, state.mainData.history)
- 
+
       drawLine(options, {} as any, {
         yAxisIndex: 1,
         xAxisIndex: 0,
@@ -1167,7 +1164,10 @@ export const renderSecondary = (options: ECOption, indicators: Indicator[]) => {
           data: data as any
         })
       } else if (d.draw === 'DRAWNUMBER') {
-        const data = Object.entries(d.draw_data as NormalizedRecord<number[]>).forEach(([key, value]) => [key, ...value])
+        const data = Object.entries(d.draw_data as NormalizedRecord<number[]>).forEach(([key, value]) => [
+          key,
+          ...value
+        ])
         drawNumber(options, {
           xAxisIndex: index + 2,
           yAxisIndex: index + 3,
@@ -1218,7 +1218,7 @@ export const renderSecondaryLocalIndicators = (options: ECOption, indicators: In
               color: d.style?.color
             }
           })
-        } else if(d.draw === 'HDLY_LABEL'){
+        } else if (d.draw === 'HDLY_LABEL') {
           drawHdlyLabel(options, {} as any, {
             xAxisIndex: index + 2,
             yAxisIndex: index + 3,
@@ -1227,8 +1227,7 @@ export const renderSecondaryLocalIndicators = (options: ECOption, indicators: In
               color: d.style?.color
             }
           })
-        }
-        else if (d.draw === 'HORIZONTALLINE') {
+        } else if (d.draw === 'HORIZONTALLINE') {
           drawHLine(options, {} as any, {
             extra: {
               color: d.style?.color,
@@ -1331,7 +1330,7 @@ export const renderWatermark = (options: ECOption, timeIndex: ChartState['timeIn
     return
   }
 
-  if (timeIndex === StockChartInterval.FIVE_DAY){
+  if (timeIndex === StockChartInterval.FIVE_DAY) {
     options.graphic = []
     return
   }
@@ -1367,22 +1366,22 @@ export const renderWatermark = (options: ECOption, timeIndex: ChartState['timeIn
  * 配置缩放
  */
 export const renderZoom = (options: ECOption, addCount: number, zoom?: [number, number]) => {
-  if(!zoom){
+  if (!zoom) {
     return
   }
 
   const MaxKLineCount = 1000
   const _zoom = [...zoom]
 
-  if(_zoom[0] === Number.POSITIVE_INFINITY){
+  if (_zoom[0] === Number.POSITIVE_INFINITY) {
     _zoom[0] = Math.round(addCount * 0.5)
   }
-  if(_zoom[1] === Number.NEGATIVE_INFINITY){
+  if (_zoom[1] === Number.NEGATIVE_INFINITY) {
     _zoom[1] = addCount
   }
 
   const showCount = zoom[1] - zoom[0]
-  if(showCount > MaxKLineCount){
+  if (showCount > MaxKLineCount) {
     _zoom[0] = zoom[1] - MaxKLineCount
   }
 

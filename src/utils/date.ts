@@ -72,7 +72,7 @@ export const getTrading = (time: string): StockTrading => {
  * @param trading Trading 股票交易周期
  * @param date    日期
  */
-export const getTradingPeriod = (trading: StockTrading, date?: string | Dayjs) => {
+export const getTradingPeriod = (trading: StockTrading, date?: string | Dayjs, format?: 'str' | 'timestamp') => {
   let startTime = [9, 30]
   let endTime = [16, 0]
 
@@ -92,9 +92,11 @@ export const getTradingPeriod = (trading: StockTrading, date?: string | Dayjs) =
   const day = date ? (dayjs.isDayjs(date) ? date : dayjs(date)) : dayjs(useTime.getState().getCurrentUsTime())
   const start = day.set('hour', startTime[0]).set('minute', startTime[1]).set('second', 0)
   const end = day.set('hour', endTime[0]).set('minute', endTime[1]).set('second', 0)
-  return Array.from({ length: end.diff(start, 'minute') }, (_, i) => {
-    return start.add(i, 'minute').format('YYYY-MM-DD HH:mm:ss')
+  const r = Array.from({ length: end.diff(start, 'minute') }, (_, i) => {
+    return format === 'timestamp' ? start.add(i, 'minute').valueOf() : start.add(i, 'minute').format('YYYY-MM-DD HH:mm:ss')
   })
+
+  return r
 }
 
 /**
