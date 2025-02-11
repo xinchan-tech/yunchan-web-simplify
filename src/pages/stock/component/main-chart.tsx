@@ -323,6 +323,9 @@ export const MainChart = (props: MainChartProps) => {
           indicatorIndex: params.index,
           indicator: indicator
         })
+        setTimeout(() => {
+          renderFn.current()
+        })
       })
     },
     [props.index, state.symbol, state.timeIndex, state.secondaryIndicators]

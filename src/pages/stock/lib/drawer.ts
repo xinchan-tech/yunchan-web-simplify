@@ -256,7 +256,7 @@ export type DrawerTextShape = [XAxis, YAxis, string, DrawerColor]
  * @example ['2030-01-01', 111380, 'text', '#00943c']
  *
  */
-export const drawText: DrawerFunc<DrawerTextShape[]> = (options, _, { xAxisIndex, yAxisIndex, data, name, extra }) => {
+export const drawText: DrawerFunc<DrawerTextShape[]> = (options, _, { xAxisIndex, yAxisIndex, data, name }) => {
   const line: CustomSeriesOption = {
     xAxisIndex: xAxisIndex,
     yAxisIndex: yAxisIndex,
