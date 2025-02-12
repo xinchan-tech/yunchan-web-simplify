@@ -284,4 +284,3 @@ export const SubscribeSpan = memo(({ value, symbol, formatter, trading, subscrib
 
   return <span ref={spanRef} {...props}>{innerValue}</span>
 })
-

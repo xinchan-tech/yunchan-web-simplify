@@ -1,16 +1,14 @@
-import { getStockFinancialsStatistics } from "@/api"
-import { JknIcon, JknRcTable, NumSpan, StockSelect } from "@/components"
-import { useQueryParams } from "@/hooks"
-import { useStockList } from "@/store"
-import type { StockRecord } from "@/utils/stock"
-import { useQuery } from "@tanstack/react-query"
-import Decimal from "decimal.js"
-import { financeTableColumns } from "./finance-table-columns"
+import { getStockFinancialsStatistics } from '@/api'
+import { JknIcon, JknRcTable, StockSelect, SubscribeSpan } from '@/components'
+import { useQueryParams } from '@/hooks'
+import { useStockList } from '@/store'
+import { type StockWithExt, stockUtils } from '@/utils/stock'
+import { useQuery } from '@tanstack/react-query'
+import { financeTableColumns } from './finance-table-columns'
 
 interface FinanceStatisticsProps {
-  stock?: StockRecord
+  stock?: StockWithExt
 }
-
 
 export const FinanceStatistics = (props: FinanceStatisticsProps) => {
   const [queryParams, setQueryParams] = useQueryParams<{ symbol: string }>()
@@ -27,7 +25,7 @@ export const FinanceStatistics = (props: FinanceStatisticsProps) => {
   const stockIcon = listMap[symbol]
 
   // const columns = useMemo(() => {
-  //  return 
+  //  return
   // }, [])
 
   return (
@@ -37,9 +35,34 @@ export const FinanceStatistics = (props: FinanceStatisticsProps) => {
           <JknIcon stock={stockIcon?.[0]} className="w-8 h-8" />
           <span>{stockIcon?.[1]}</span>
         </div>
-        <NumSpan value={props.stock?.close} isPositive={props.stock?.isUp} decimal={3} />
-        <NumSpan value={props.stock?.percentAmount} isPositive={props.stock?.isUp} decimal={3} symbol />
-        <NumSpan value={Decimal.create(props.stock?.percent).mul(100)} isPositive={props.stock?.isUp} decimal={2} symbol percent />
+        {!props.stock ? (
+          '--'
+        ) : (
+          <>
+            <SubscribeSpan.Price
+              trading="intraDay"
+              symbol={props.stock.symbol}
+              initValue={props.stock.close}
+              initDirection={stockUtils.isUp(props.stock)}
+              decimal={3}
+            />
+            <SubscribeSpan.Percent
+              type="amount"
+              trading="intraDay"
+              symbol={props.stock.symbol}
+              initValue={props.stock.close - props.stock.prevClose}
+              initDirection={stockUtils.isUp(props.stock)}
+              decimal={3}
+            />
+            <SubscribeSpan.Percent
+              trading="intraDay"
+              symbol={props.stock.symbol}
+              initValue={stockUtils.getPercent(props.stock)}
+              initDirection={stockUtils.isUp(props.stock)}
+              decimal={3}
+            />
+          </>
+        )}
 
         <span className="!ml-auto text-tertiary text-xs flex items-center space-x-4">
           <span>更新时间：{stockStatistics.data?.latest_date}</span>
@@ -47,7 +70,12 @@ export const FinanceStatistics = (props: FinanceStatisticsProps) => {
         </span>
       </div>
       <div className="mt-8 flex-1 overflow-hidden">
-        <JknRcTable  isLoading={stockStatistics.isLoading} rowKey={(row) => `${row.symbol}_${row.report_date}`} columns={financeTableColumns} data={stockStatistics.data?.items ?? []} />
+        <JknRcTable
+          isLoading={stockStatistics.isLoading}
+          rowKey={row => `${row.symbol}_${row.report_date}`}
+          columns={financeTableColumns}
+          data={stockStatistics.data?.items ?? []}
+        />
       </div>
       <style jsx>{`
         .finance-statistics-table :global(.jkn-rc-table .rc-table-body .rc-table-cell) {

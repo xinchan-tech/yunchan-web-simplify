@@ -1,4 +1,4 @@
-import { StockChartInterval, getLargeCapIndexes, getStockChart } from "@/api"
+import { StockChartInterval, getLargeCapIndexes, getStockChartQuote } from "@/api"
 import { CapsuleTabs, NumSpanSubscribe } from "@/components"
 import { useStockQuoteSubscribe } from "@/hooks"
 import { useConfig, useTime } from "@/store"
@@ -175,14 +175,12 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
 
 
   const queryData = useQuery({
-    queryKey: [getStockChart.cacheKey, code, type],
-    queryFn: () => getStockChart({ ticker: code!, interval: interval }),
+    queryKey: [getStockChartQuote.cacheKey, code, type],
+    queryFn: () => getStockChartQuote(code!, type!),
     enabled: !!code && type !== undefined,
     refetchInterval: 60 * 1000,
     placeholderData: () => ({
-      history: [],
-      coiling_data: {} as any,
-      md5: ''
+      list: []
     })
   })
 
@@ -202,12 +200,12 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
     let prevClose = 0
     let lastPercent = 0
     let lastPrice = 0
-    for (const s of data.history) {
-      const t = stockUtils.toSimpleStockRecord(s)
+    for (const s of data.list) {
+      const t = stockUtils.toStockWithExt(s)
       prevClose = t.prevClose!
       lastPercent = t.percent!
       lastPrice = t.close!
-      dataset.push([t.time!, t.close!, t.percent!])
+      dataset.push([dayjs(t.timestamp).tz('America/New_York').format('YYYY-MM-DD HH:mm:ss'), t.close!, t.percent!])
     }
 
     const xAxisData = getTradingPeriod(intervalToTradingMap[interval] ?? 'intraDay', dataset[0] ? dataset[0][0] : '')

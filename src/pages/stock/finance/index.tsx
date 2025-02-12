@@ -19,7 +19,7 @@ export const Finance = () => {
     queryKey: [getStockBaseCodeInfo.cacheKey, symbol, stockBaseCodeInfoExtend],
     queryFn: () => getStockBaseCodeInfo({ symbol, extend: stockBaseCodeInfoExtend }),
     enabled: !!symbol,
-    select: data => stockUtils.toSimpleStockRecord(data.stock)
+    select: data => stockUtils.toStockWithExt(data.stock, {extend: data.extend})
   })
 
   const [activeTab, setActiveTab] = useState('core')

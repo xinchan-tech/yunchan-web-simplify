@@ -298,3 +298,5 @@ export type Stock = {
   // 市值
   totalShare?: number
 }
+
+export type StockWithExt = Stock & { percent?: number; marketValue?: number; pe?: number; pb?: number; turnoverRate?: number }

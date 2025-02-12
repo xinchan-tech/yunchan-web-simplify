@@ -1,12 +1,12 @@
 import { useIndicator } from '@/store'
 import request from '@/utils/request'
-import { aesDecrypt, base64Decode, gzDecode } from '@/utils/string'
+import { aesDecrypt, gzDecode } from '@/utils/string'
 import axios from 'axios'
 import dayjs from 'dayjs'
 import { md5 } from 'js-md5'
 import { sha256 } from 'js-sha256'
 import { customAlphabet } from 'nanoid'
-import pako from 'pako'
+import { isString } from "radash"
 
 type StockTime = string
 type StockOpen = number
@@ -325,14 +325,17 @@ export const getStockChartV2 = async (params: GetStockChartV2Params) => {
 }
 getStockChartV2.cacheKey = 'stock:kline:v2'
 
-export const getStockChartQuote = async (symbol: string, period: 'pre' | 'intraday' | 'post'| '5d' , time_format = 'int' ) => {
-  const params = { symbol, period, time_format }
+export const getStockChartQuote = async (symbol: string, period: 'pre' | 'intraday' | 'post'| '5d' | number , time_format = 'int' ) => {
+  const _period = isString(period) ? period : period === StockChartInterval.PRE_MARKET ? 'pre' : period === StockChartInterval.INTRA_DAY ? 'intraday' : period === StockChartInterval.AFTER_HOURS ? 'post' : '5d'
+  const params = { symbol, _period, time_format }
   const paramsKeySort = Object.keys(params).sort() as (keyof typeof params)[]
   const paramsStr = `${paramsKeySort.reduce((acc, key) => `${acc}${key}=${params[key]}&`, '').slice(0, -1)}&app_key=${'LMOl&8skLax%ls1Haapd'}`
   const sign = md5(sha256(paramsStr))
+
+
   
   const r = await await axios
-  .get<{list: StockRawRecord[]}>('/apiv2/chart/quote', { params: { symbol: symbol, period, time_format }, headers: { sign } }).then(r => (r.data as any).data as {list: StockRawRecord[]})
+  .get<{list: StockRawRecord[]}>('/apiv2/chart/quote', { params: { symbol: symbol, period: _period, time_format }, headers: { sign } }).then(r => (r.data as any).data as {list: StockRawRecord[]})
   return r
 }
 getStockChartQuote.cacheKey = 'stock:chart:quote'

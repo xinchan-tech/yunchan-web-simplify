@@ -1,23 +1,35 @@
-import { getStockFinanceTotal } from "@/api"
-import { Button, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, JknIcon, NumSpan, Progress, StockSelect, ToggleGroup, ToggleGroupItem } from "@/components"
-import { useChart, useQueryParams } from "@/hooks"
-import { useStockList } from "@/store"
-import type {  StockRecord } from "@/utils/stock"
-import { useQuery } from "@tanstack/react-query"
-import { useMount } from "ahooks"
-import dayjs from "dayjs"
-import Decimal from "decimal.js"
-import { mapValues } from "radash"
-import { useCallback, useEffect, useMemo, useState } from "react"
-import { useSymbolQuery } from "../lib"
-import type { ECOption } from "@/utils/echarts"
-import echarts from "@/utils/echarts"
-import theme from "@/theme/variables.module.scss"
+import { getStockFinanceTotal } from '@/api'
+import {
+  Button,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  JknIcon,
+  Progress,
+  StockSelect,
+  SubscribeSpan,
+  ToggleGroup,
+  ToggleGroupItem
+} from '@/components'
+import { useChart, useQueryParams } from '@/hooks'
+import { useStockList } from '@/store'
+import theme from '@/theme/variables.module.scss'
+import type { ECOption } from '@/utils/echarts'
+import echarts from '@/utils/echarts'
+import { type StockWithExt, stockUtils } from '@/utils/stock'
+import { useQuery } from '@tanstack/react-query'
+import { useMount } from 'ahooks'
+import dayjs from 'dayjs'
+import Decimal from 'decimal.js'
+import { mapValues } from 'radash'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useSymbolQuery } from '../lib'
 
 type FinanceData = Awaited<ReturnType<typeof getStockFinanceTotal>>
 
 interface FinanceCoreProps {
-  stock?: StockRecord
+  stock?: StockWithExt
 }
 
 export const FinanceCore = (props: FinanceCoreProps) => {
@@ -40,12 +52,12 @@ export const FinanceCore = (props: FinanceCoreProps) => {
     if (!stockFinance) return undefined
 
     if (period === 'quarter') {
-      return mapValues(stockFinance.quarter_items, (v) => {
+      return mapValues(stockFinance.quarter_items, v => {
         return Decimal.create(v[v.length - 1].value)
       })
     }
 
-    return mapValues(stockFinance.year_items, (v) => {
+    return mapValues(stockFinance.year_items, v => {
       return Decimal.create(v[v.length - 1].value)
     })
   }, [stockFinance, period])
@@ -54,7 +66,8 @@ export const FinanceCore = (props: FinanceCoreProps) => {
     if (!stockFinance) return []
     const r: FinanceChartProps['data'] = []
 
-    const source = period === 'quarter' ? stockFinance.quarter_items : stockFinance.year_items as typeof stockFinance.quarter_items
+    const source =
+      period === 'quarter' ? stockFinance.quarter_items : (stockFinance.year_items as typeof stockFinance.quarter_items)
 
     if (chartType === 'revenue') {
       const barChart: ArrayItem<typeof r> = {
@@ -71,7 +84,7 @@ export const FinanceCore = (props: FinanceCoreProps) => {
         color: '#f6a138',
         yIndex: 1
       }
-      source.revenues.forEach((v) => {
+      source.revenues.forEach(v => {
         const x = `${v.fiscal_year.slice(2)} ${v.fiscal_period ?? ''}`
         barChart.data.push([x, v.value])
         rateChart.data.push([x, v.rate])
@@ -93,7 +106,7 @@ export const FinanceCore = (props: FinanceCoreProps) => {
         color: '#f6a138',
         yIndex: 1
       }
-      source.net_income_loss.forEach((v) => {
+      source.net_income_loss.forEach(v => {
         const x = `${v.fiscal_year.slice(2)} ${v.fiscal_period ?? ''}`
         barChart.data.push([x, v.value])
         rateChart.data.push([x, v.rate])
@@ -115,7 +128,7 @@ export const FinanceCore = (props: FinanceCoreProps) => {
         color: '#f6a138',
         yIndex: 1
       }
-      source.net_cash_flow_free.forEach((v) => {
+      source.net_cash_flow_free.forEach(v => {
         const x = `${v.fiscal_year.slice(2)} ${v.fiscal_period ?? ''}`
         barChart.data.push([x, v.value])
         rateChart.data.push([x, v.rate * 100])
@@ -144,15 +157,15 @@ export const FinanceCore = (props: FinanceCoreProps) => {
         color: '#f6a138',
         yIndex: 1
       }
-      source.liabilities.forEach((v) => {
+      source.liabilities.forEach(v => {
         const x = `${v.fiscal_year.slice(2)} ${v.fiscal_period ?? ''}`
         liabilitiesChart.data.push([x, v.value])
       })
-      source.equity.forEach((v) => {
+      source.equity.forEach(v => {
         const x = `${v.fiscal_year.slice(2)} ${v.fiscal_period ?? ''}`
         equityChart.data.push([x, v.value])
       })
-      source.liabilities_rate.forEach((v) => {
+      source.liabilities_rate.forEach(v => {
         const x = `${v.fiscal_year.slice(2)} ${v.fiscal_period ?? ''}`
         rateChart.data.push([x, v.value * 100])
       })
@@ -161,7 +174,6 @@ export const FinanceCore = (props: FinanceCoreProps) => {
     }
 
     return r
-
   }, [stockFinance, period, chartType])
 
   return (
@@ -171,20 +183,48 @@ export const FinanceCore = (props: FinanceCoreProps) => {
           <JknIcon stock={stockIcon?.[0]} className="w-8 h-8" />
           <span>{stockIcon?.[1]}</span>
         </div>
-        <NumSpan value={props.stock?.close} isPositive={props.stock?.isUp} decimal={3} />
-        <NumSpan value={props.stock?.percentAmount} isPositive={props.stock?.isUp} decimal={3} symbol />
-        <NumSpan value={Decimal.create(props.stock?.percent).mul(100)} isPositive={props.stock?.isUp} decimal={2} symbol percent />
+        {!props.stock ? (
+          '--'
+        ) : (
+          <>
+            <SubscribeSpan.Price
+              trading="intraDay"
+              symbol={props.stock.symbol}
+              initValue={props.stock.close}
+              initDirection={stockUtils.isUp(props.stock)}
+              decimal={3}
+            />
+            <SubscribeSpan.Percent
+              type="amount"
+              trading="intraDay"
+              symbol={props.stock.symbol}
+              initValue={props.stock.close - props.stock.prevClose}
+              initDirection={stockUtils.isUp(props.stock)}
+              decimal={3}
+            />
+            <SubscribeSpan.Percent
+              trading="intraDay"
+              symbol={props.stock.symbol}
+              initValue={stockUtils.getPercent(props.stock)}
+              initDirection={stockUtils.isUp(props.stock)}
+              decimal={3}
+            />
+          </>
+        )}
 
         <span className="!ml-auto text-tertiary text-xs flex items-center space-x-4">
           <span>更新时间: {dayjs(stockFinance?.totals.updated_at).format('YYYY-MM-DD')}</span>
-          <StockSelect placeholder="搜索股票" onChange={v => setQueryParams({symbol: v})} />
+          <StockSelect placeholder="搜索股票" onChange={v => setQueryParams({ symbol: v })} />
         </span>
       </div>
 
       <div className="my-4">
         <div className="flex items-center space-x-4">
           <ToggleGroup
-            value={chartType} onValueChange={v => setChartType(v as any)} type="single" className="justify-around w-full"
+            value={chartType}
+            onValueChange={v => setChartType(v as any)}
+            type="single"
+            className="justify-around w-full"
             activeColor="hsl(var(--accent))"
           >
             <ToggleGroupItem value={'revenue'} className="h-16" variant="outline">
@@ -196,19 +236,25 @@ export const FinanceCore = (props: FinanceCoreProps) => {
             <ToggleGroupItem value={'incomeLoss'} className="h-16" variant="outline">
               <div className="w-32">
                 <div className="text-sm">净利润</div>
-                <div className="text-lg text-stock-green font-bold">{stockFinanceTotal?.net_income_loss.toShortCN(2)}</div>
+                <div className="text-lg text-stock-green font-bold">
+                  {stockFinanceTotal?.net_income_loss.toShortCN(2)}
+                </div>
               </div>
             </ToggleGroupItem>
             <ToggleGroupItem value={'cashFlowFree'} className="h-16" variant="outline">
               <div className="w-32">
                 <div className="text-sm">现金流</div>
-                <div className="text-lg text-stock-green font-bold">{stockFinanceTotal?.net_cash_flow_free.toShortCN(2)}</div>
+                <div className="text-lg text-stock-green font-bold">
+                  {stockFinanceTotal?.net_cash_flow_free.toShortCN(2)}
+                </div>
               </div>
             </ToggleGroupItem>
             <ToggleGroupItem value={'rate'} className="h-16" variant="outline">
               <div className="w-32">
                 <div className="text-sm">负债率</div>
-                <div className="text-lg text-stock-green font-bold">{stockFinanceTotal?.liabilities_rate.mul(100).toFixed(2)}%</div>
+                <div className="text-lg text-stock-green font-bold">
+                  {stockFinanceTotal?.liabilities_rate.mul(100).toFixed(2)}%
+                </div>
               </div>
             </ToggleGroupItem>
           </ToggleGroup>
@@ -241,166 +287,170 @@ export const FinanceCore = (props: FinanceCoreProps) => {
           <FinanceTarget data={stockFinance?.targets} />
         </div>
       </div>
-
-
     </div>
   )
-
 }
 
 interface FinanceChartProps {
   data: {
-    type: 'line' | 'bar',
-    showLabel?: boolean,
-    color?: string,
-    name: string,
-    yIndex?: number,
+    type: 'line' | 'bar'
+    showLabel?: boolean
+    color?: string
+    name: string
+    yIndex?: number
     data: [string, number][]
   }[]
 }
 
 const FinanceChart = (props: FinanceChartProps) => {
   const [chart, dom] = useChart()
-  const options = useMemo<ECOption>(() => ({
-    grid: {
-      top: 40,
-      left: 90,
-      right: 70,
-      bottom: 60
-    },
-    axisPointer: {
-      link: [{ yAxisIndex: 'all' }],
-    },
-    xAxis: {
-      type: 'category',
-      data: [],
-      axisLine: {
-        show: false
+  const options = useMemo<ECOption>(
+    () => ({
+      grid: {
+        top: 40,
+        left: 90,
+        right: 70,
+        bottom: 60
       },
-      axisTick: {
-        show: false
-      }
-    },
-    yAxis: [
-      {
-        type: 'value',
-        scale: true,
-        axisLine: {
-          show: true,
-          lineStyle: {
-            color: '#6e7079'
-          }
-        },
-        axisPointer: {
-          show: true,
-          label: {
-            formatter: (v) => {
-              return Decimal.create(v.value as string).toShortCN(2)
-            }
-          }
-        },
-        splitLine: {
-          lineStyle: {
-            color: '#6e7079'
-          }
-        },
-        axisLabel: {
-          formatter: (v: number) => Decimal.create(v).toShortCN(2)
-        }
-      },
-      {
-        type: 'value',
-        axisLabel: {
-          formatter: (v: number) => `${Decimal.create(v).mul(100).toFixed(3)}%`
-        },
-        axisPointer: {
-          show: true,
-          label: {
-            formatter: (v) => {
-              return `${Decimal.create(v.value as string).mul(100).toFixed(2)}%`
-            }
-          }
-        },
-        scale: true,
-        axisLine: {
-          show: true
-        },
-        splitLine: {
-          show: false
-        },
-        position: 'right',
-
-      }
-    ],
-    dataZoom: [
-      {
-        fillerColor: 'weakFilter',
-        minSpan: 2,
-        show: true,
-        xAxisIndex: [0],
-        type: 'slider',
-        bottom: 0,
-        start: 80,
-        end: 100,
-        backgroundColor: 'transparent',
-        dataBackground: {
-          lineStyle: {
-            color: 'rgb(31, 32, 33)'
-          }
-        },
-        borderColor: 'rgb(31, 32, 33)',
-      }
-    ],
-    series: [{
-      type: 'bar',
-      data: []
-    }]
-  }), [])
-
-  const renderChart = useCallback((data: FinanceChartProps['data']) => {
-    if (!chart.current || !data) return
-    const series = data.map(({ type, showLabel, color, data, name, yIndex }) => {
-      return {
-        type,
-        name,
-        symbol: 'none',
-        yAxisIndex: yIndex ?? 0,
-        data: data,
-        barWidth: 20,
-        encode: {
-          x: 0,
-          y: 1
-        },
-        label: {
-          show: showLabel,
-          position: 'top',
-          formatter: (params: any) => {
-            return Decimal.create(params.value[1]).toShortCN(2)
-          },
-          color: color
-        },
-        itemStyle: {
-          color
-        }
-      }
-    })
-
-    chart.current.setOption({
-      legend: {
-        data: data.map(d => d.name),
-        textStyle: {
-          color: '#fff'
-        }
+      axisPointer: {
+        link: [{ yAxisIndex: 'all' }]
       },
       xAxis: {
         type: 'category',
-        data: data[0]?.data.map(d => d[0])
+        data: [],
+        axisLine: {
+          show: false
+        },
+        axisTick: {
+          show: false
+        }
       },
-      series: series
-    })
+      yAxis: [
+        {
+          type: 'value',
+          scale: true,
+          axisLine: {
+            show: true,
+            lineStyle: {
+              color: '#6e7079'
+            }
+          },
+          axisPointer: {
+            show: true,
+            label: {
+              formatter: v => {
+                return Decimal.create(v.value as string).toShortCN(2)
+              }
+            }
+          },
+          splitLine: {
+            lineStyle: {
+              color: '#6e7079'
+            }
+          },
+          axisLabel: {
+            formatter: (v: number) => Decimal.create(v).toShortCN(2)
+          }
+        },
+        {
+          type: 'value',
+          axisLabel: {
+            formatter: (v: number) => `${Decimal.create(v).mul(100).toFixed(3)}%`
+          },
+          axisPointer: {
+            show: true,
+            label: {
+              formatter: v => {
+                return `${Decimal.create(v.value as string)
+                  .mul(100)
+                  .toFixed(2)}%`
+              }
+            }
+          },
+          scale: true,
+          axisLine: {
+            show: true
+          },
+          splitLine: {
+            show: false
+          },
+          position: 'right'
+        }
+      ],
+      dataZoom: [
+        {
+          fillerColor: 'weakFilter',
+          minSpan: 2,
+          show: true,
+          xAxisIndex: [0],
+          type: 'slider',
+          bottom: 0,
+          start: 80,
+          end: 100,
+          backgroundColor: 'transparent',
+          dataBackground: {
+            lineStyle: {
+              color: 'rgb(31, 32, 33)'
+            }
+          },
+          borderColor: 'rgb(31, 32, 33)'
+        }
+      ],
+      series: [
+        {
+          type: 'bar',
+          data: []
+        }
+      ]
+    }),
+    []
+  )
 
+  const renderChart = useCallback(
+    (data: FinanceChartProps['data']) => {
+      if (!chart.current || !data) return
+      const series = data.map(({ type, showLabel, color, data, name, yIndex }) => {
+        return {
+          type,
+          name,
+          symbol: 'none',
+          yAxisIndex: yIndex ?? 0,
+          data: data,
+          barWidth: 20,
+          encode: {
+            x: 0,
+            y: 1
+          },
+          label: {
+            show: showLabel,
+            position: 'top',
+            formatter: (params: any) => {
+              return Decimal.create(params.value[1]).toShortCN(2)
+            },
+            color: color
+          },
+          itemStyle: {
+            color
+          }
+        }
+      })
 
-  }, [chart])
+      chart.current.setOption({
+        legend: {
+          data: data.map(d => d.name),
+          textStyle: {
+            color: '#fff'
+          }
+        },
+        xAxis: {
+          type: 'category',
+          data: data[0]?.data.map(d => d[0])
+        },
+        series: series
+      })
+    },
+    [chart]
+  )
 
   useMount(() => {
     chart.current?.setOption(options)
@@ -412,10 +462,7 @@ const FinanceChart = (props: FinanceChartProps) => {
     renderChart(props.data)
   }, [props.data, renderChart, chart, options])
 
-
-  return (
-    <div ref={dom} className="w-full h-full" />
-  )
+  return <div ref={dom} className="w-full h-full" />
 }
 
 interface FinanceRatingProps {
@@ -427,7 +474,9 @@ const FinanceRating = ({ data }: FinanceRatingProps) => {
     <div>
       <div className="text-center">
         <span className="text-lg font-bold">分析师评级</span>&nbsp;&nbsp;
-        <span className="text-tertiary text-xs">更新时间：{data?.updated_at ? dayjs(data?.updated_at).format('YYYY-MM-DD') : '--'}</span>
+        <span className="text-tertiary text-xs">
+          更新时间：{data?.updated_at ? dayjs(data?.updated_at).format('YYYY-MM-DD') : '--'}
+        </span>
       </div>
       <div className="flex items-center space-x-4 justify-center my-12">
         <div className="w-[120px] h-[120px] flex items-center justify-center rounded-full bg-stock-green/30 font-bold text-2xl text-stock-green">
@@ -461,84 +510,95 @@ interface FinanceTargetProps {
 
 const FinanceTarget = ({ data }: FinanceTargetProps) => {
   const [chart, dom] = useChart()
-  const options = useMemo<ECOption>(() => ({
-    animation: false,
-    grid: {
-      top: 40,
-      left: 90,
-      right: '10%',
-      bottom: 20
-    },
-    graphic: {
-      elements: [{
-        type: 'text',
-        style: {
-          text: '过去12个月',
-          fontSize: 12,
-          fill: `hsl(${theme.gray})`,
-          textAlign: 'center'
+  const options = useMemo<ECOption>(
+    () => ({
+      animation: false,
+      grid: {
+        top: 40,
+        left: 90,
+        right: '10%',
+        bottom: 20
+      },
+      graphic: {
+        elements: [
+          {
+            type: 'text',
+            style: {
+              text: '过去12个月',
+              fontSize: 12,
+              fill: `hsl(${theme.gray})`,
+              textAlign: 'center'
+            },
+            left: '30%',
+            bottom: 0
+          },
+          {
+            type: 'text',
+            style: {
+              text: '未来12个月',
+              fontSize: 12,
+              fill: `hsl(${theme.gray})`,
+              textAlign: 'center'
+            },
+            left: '65%',
+            bottom: 0
+          }
+        ]
+      },
+      xAxis: {
+        type: 'category',
+        data: [],
+        axisLine: {
+          show: false
         },
-        left: '30%',
-        bottom: 0
-      }, {
-        type: 'text',
-        style: {
-          text: '未来12个月',
-          fontSize: 12,
-          fill: `hsl(${theme.gray})`,
-          textAlign: 'center'
+        axisTick: {
+          show: false
         },
-        left: '65%',
-        bottom: 0
-      }]
-    },
-    xAxis: {
-      type: 'category',
-      data: [],
-      axisLine: {
-        show: false
+        axisLabel: {
+          show: false
+        },
+        max: v => v.max * 2
       },
-      axisTick: {
-        show: false
-      },
-      axisLabel: {
-        show: false
-      },
-      max: (v) => v.max * 2
-    },
-    yAxis: {
-      type: 'value',
-      scale: true,
-      splitNumber: 3,
-      axisLine: {
-        show: true,
-        lineStyle: {
-          color: '#0a0a0a'
+      yAxis: {
+        type: 'value',
+        scale: true,
+        splitNumber: 3,
+        axisLine: {
+          show: true,
+          lineStyle: {
+            color: '#0a0a0a'
+          }
+        },
+        splitLine: {
+          lineStyle: {
+            color: '#0a0a0a'
+          }
+        },
+        axisLabel: {
+          color: '#6e7079'
         }
       },
-      splitLine: {
-        lineStyle: {
-          color: '#0a0a0a'
+      series: [
+        {
+          type: 'line',
+          data: [],
+          areaStyle: {
+            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+              {
+                offset: 0,
+                color: 'rgba(56, 97, 246, 0.3)'
+              },
+              {
+                offset: 1,
+                color: 'rgba(56, 97, 246, 0)'
+              }
+            ])
+          }
         }
-      },
-      axisLabel: {
-        color: '#6e7079'
-      }
-    },
-    series: [{
-      type: 'line',
-      data: [],
-      areaStyle: {
-        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{
-          offset: 0,
-          color: 'rgba(56, 97, 246, 0.3)'
-        }, {
-          offset: 1,
-          color: 'rgba(56, 97, 246, 0)'
-        }])
-      }
-    }]
-  }), [])
+      ]
+    }),
+    []
+  )
 
   useEffect(() => {
     if (!chart.current || !data) return
@@ -552,162 +612,167 @@ const FinanceTarget = ({ data }: FinanceTargetProps) => {
       }
     })
     chart.current.setOption({
-      series: [{
-        data: data.list.map(d => d.close),
-        markLine: {
-          symbol: ['none', 'none'],
-          silent: true,
-          data: [
-            [
-              {
-                xAxis: 'max',
-                yAxis: lastData.close,
-              },
-              {
-                xAxis: 'max',
-                yAxis: lastData.close,
-                label: {
-                  show: true,
-                  color: '#fff',
-                  formatter: () => {
-                    return `现价\n${lastData.close}`
+      series: [
+        {
+          data: data.list.map(d => d.close),
+          markLine: {
+            symbol: ['none', 'none'],
+            silent: true,
+            data: [
+              [
+                {
+                  xAxis: 'max',
+                  yAxis: lastData.close
+                },
+                {
+                  xAxis: 'max',
+                  yAxis: lastData.close,
+                  label: {
+                    show: true,
+                    color: '#fff',
+                    formatter: () => {
+                      return `现价\n${lastData.close}`
+                    }
+                  }
+                }
+              ],
+              [
+                {
+                  xAxis: 'max',
+                  yAxis: lastData.close
+                },
+                {
+                  x: '88%',
+                  yAxis: +data.target.high,
+                  lineStyle: {
+                    color: `hsl(${theme.colorStockGreen})`
                   },
-
-                }
-              },
-            ],
-            [
-              {
-                xAxis: 'max',
-                yAxis: lastData.close,
-              },
-              {
-                x: '88%',
-                yAxis: +data.target.high,
-                lineStyle: {
-                  color: `hsl(${theme.colorStockGreen})`
-                },
-                label: {
-                  show: true,
-                  color: '#fff',
-                  borderRadius: 4,
-                  padding: [2, 4],
-                  backgroundColor: `hsl(${theme.colorStockGreen})`,
-                  formatter: () => {
-                    return `最高\n${Decimal.create(data.target.high).toFixed(3)}`
+                  label: {
+                    show: true,
+                    color: '#fff',
+                    borderRadius: 4,
+                    padding: [2, 4],
+                    backgroundColor: `hsl(${theme.colorStockGreen})`,
+                    formatter: () => {
+                      return `最高\n${Decimal.create(data.target.high).toFixed(3)}`
+                    }
                   }
                 }
-              },
-            ],
-            [
-              {
-                xAxis: 'max',
-                yAxis: lastData.close,
-              },
-              {
-                x: '88%',
-                yAxis: +data.target.low,
-                lineStyle: {
-                  color: `hsl(${theme.colorStockRed})`
+              ],
+              [
+                {
+                  xAxis: 'max',
+                  yAxis: lastData.close
                 },
-                label: {
-                  show: true,
-                  align: 'left',
-                  verticalAlign: 'bottom',
-                  color: '#fff',
-                  borderRadius: 4,
-                  padding: [2, 4],
-                  backgroundColor: `hsl(${theme.colorStockRed})`,
-                  formatter: () => {
-                    return `最低\n${Decimal.create(data.target.low).toFixed(3)}`
+                {
+                  x: '88%',
+                  yAxis: +data.target.low,
+                  lineStyle: {
+                    color: `hsl(${theme.colorStockRed})`
+                  },
+                  label: {
+                    show: true,
+                    align: 'left',
+                    verticalAlign: 'bottom',
+                    color: '#fff',
+                    borderRadius: 4,
+                    padding: [2, 4],
+                    backgroundColor: `hsl(${theme.colorStockRed})`,
+                    formatter: () => {
+                      return `最低\n${Decimal.create(data.target.low).toFixed(3)}`
+                    }
                   }
                 }
-              },
-            ],
-            [
-              {
-                xAxis: 'max',
-                yAxis: lastData.close,
-              },
-              {
-                x: '88%',
-                yAxis: +data.target.median,
-                lineStyle: {
-                  color: `hsl(${theme.gray})`
+              ],
+              [
+                {
+                  xAxis: 'max',
+                  yAxis: lastData.close
                 },
-                label: {
-                  show: true,
-                  color: '#fff',
-                  borderRadius: 4,
-                  padding: [2, 4],
-                  backgroundColor: `hsl(${theme.gray})`,
-                  formatter: () => {
-                    return `平均\n${Decimal.create(data.target.median).toFixed(3)}`
+                {
+                  x: '88%',
+                  yAxis: +data.target.median,
+                  lineStyle: {
+                    color: `hsl(${theme.gray})`
+                  },
+                  label: {
+                    show: true,
+                    color: '#fff',
+                    borderRadius: 4,
+                    padding: [2, 4],
+                    backgroundColor: `hsl(${theme.gray})`,
+                    formatter: () => {
+                      return `平均\n${Decimal.create(data.target.median).toFixed(3)}`
+                    }
                   }
                 }
-              },
+              ]
             ]
-          ]
-        }
-      }, {
-        type: 'custom',
-        yAxisIndex: 0,
-        xAxisIndex: 0,
-        encode: {
-          x: [0],
-          y: [1]
-        },
-        renderItem: (params: any, api: any) => {
-          if (params.context.rendered) return
-          params.context.rendered = true
-          const startPoint = api.coord([lastData.datetime, +lastData.close])
-
-          const rightTop = api.coord([0, data.target.high])
-          const rightTopPoint = [chartWidth * 0.88, rightTop[1]]
-
-          const rightBottom = api.coord([0, data.target.median])
-          const rightBottomPoint = [chartWidth * 0.88, rightBottom[1]]
-
-          const points = [startPoint, rightTopPoint, rightBottomPoint]
-
-          const startPoint2 = api.coord([lastData.datetime, +lastData.close])
-
-          const rightTop2 = api.coord([0, data.target.median])
-          const rightTopPoint2 = [chartWidth * 0.88, rightTop2[1]]
-
-          const rightBottom2 = api.coord([0, data.target.low])
-          const rightBottomPoint2 = [chartWidth * 0.88, rightBottom2[1]]
-
-          const points2 = [startPoint2, rightTopPoint2, rightBottomPoint2]
-
-          return {
-            type: 'group',
-            emphasisDisabled: true,
-            children: [{
-              type: 'polyline',
-              emphasisDisabled: true,
-              shape: {
-                points
-              },
-              style: {
-                fill: `hsl(${theme.colorStockGreen} / 0.3)`,
-                lineWidth: 2
-              }
-            }, {
-              type: 'polyline',
-              emphasisDisabled: true,
-              shape: {
-                points: points2
-              },
-              style: {
-                fill: `hsl(${theme.colorStockRed} / 0.3)`,
-                lineWidth: 2
-              }
-            }]
           }
         },
-        data: data.list.map(d => [d.datetime, d.close])
-      }]
+        {
+          type: 'custom',
+          yAxisIndex: 0,
+          xAxisIndex: 0,
+          encode: {
+            x: [0],
+            y: [1]
+          },
+          renderItem: (params: any, api: any) => {
+            if (params.context.rendered) return
+            params.context.rendered = true
+            const startPoint = api.coord([lastData.datetime, +lastData.close])
+
+            const rightTop = api.coord([0, data.target.high])
+            const rightTopPoint = [chartWidth * 0.88, rightTop[1]]
+
+            const rightBottom = api.coord([0, data.target.median])
+            const rightBottomPoint = [chartWidth * 0.88, rightBottom[1]]
+
+            const points = [startPoint, rightTopPoint, rightBottomPoint]
+
+            const startPoint2 = api.coord([lastData.datetime, +lastData.close])
+
+            const rightTop2 = api.coord([0, data.target.median])
+            const rightTopPoint2 = [chartWidth * 0.88, rightTop2[1]]
+
+            const rightBottom2 = api.coord([0, data.target.low])
+            const rightBottomPoint2 = [chartWidth * 0.88, rightBottom2[1]]
+
+            const points2 = [startPoint2, rightTopPoint2, rightBottomPoint2]
+
+            return {
+              type: 'group',
+              emphasisDisabled: true,
+              children: [
+                {
+                  type: 'polyline',
+                  emphasisDisabled: true,
+                  shape: {
+                    points
+                  },
+                  style: {
+                    fill: `hsl(${theme.colorStockGreen} / 0.3)`,
+                    lineWidth: 2
+                  }
+                },
+                {
+                  type: 'polyline',
+                  emphasisDisabled: true,
+                  shape: {
+                    points: points2
+                  },
+                  style: {
+                    fill: `hsl(${theme.colorStockRed} / 0.3)`,
+                    lineWidth: 2
+                  }
+                }
+              ]
+            }
+          },
+          data: data.list.map(d => [d.datetime, d.close])
+        }
+      ]
     })
   }, [data, chart, options])
 
@@ -715,11 +780,11 @@ const FinanceTarget = ({ data }: FinanceTargetProps) => {
     <div>
       <div className="text-center">
         <span className="text-lg font-bold">目标价值预测</span>&nbsp;&nbsp;
-        <span className="text-tertiary text-xs">更新时间：{data?.target.updated_at ? dayjs(data.target.updated_at).format('YYYY-MM-DD') : '--'}</span>
+        <span className="text-tertiary text-xs">
+          更新时间：{data?.target.updated_at ? dayjs(data.target.updated_at).format('YYYY-MM-DD') : '--'}
+        </span>
       </div>
-      <div className="h-[320px] w-[480px]" ref={dom}>
-
-      </div>
+      <div className="h-[320px] w-[480px]" ref={dom} />
     </div>
   )
 }

@@ -154,7 +154,7 @@ export const calcCoilingPivotsExpands = (expands: CoilingData['expands'] | undef
   const labels = ['A0', 'A1', 'A²', 'A³', 'A⁴', 'A⁵', 'A⁶', 'A⁷', 'A⁸']
 
   return expands.map(p => {
-    const mark = p.level === 2 ? '__1_' : `${p.direction === 1 ? '↑' : '↓'}_${labels[p.level]}_1_`
+    const mark = p.level > 2 ? '__1_' : `${p.direction === 1 ? '↑' : '↓'}_${labels[p.level]}_1_`
     const segmentNum = p.end - p.start
 
     let bgColor = 'transparent'

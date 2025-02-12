@@ -1,9 +1,9 @@
 import { getStockValuation } from "@/api"
-import { Button, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, JknIcon, JknTable, type JknTableProps, NumSpan, StockSelect, ToggleGroup, ToggleGroupItem } from "@/components"
+import { Button, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, JknIcon, JknTable, type JknTableProps, NumSpan, StockSelect, SubscribeSpan, ToggleGroup, ToggleGroupItem } from "@/components"
 import { useChart, useQueryParams } from "@/hooks"
 import { useStockList } from "@/store"
 import type { ECOption } from "@/utils/echarts"
-import type { StockRecord } from "@/utils/stock"
+import { stockUtils, type StockRecord, type StockWithExt } from "@/utils/stock"
 import { useQuery } from "@tanstack/react-query"
 import dayjs from "dayjs"
 import Decimal from "decimal.js"
@@ -29,7 +29,7 @@ const convertDate = (date: string): [string, string] => {
 }
 
 interface FinanceValuationProps {
-  stock?: StockRecord
+   stock?: StockWithExt
 }
 
 
@@ -58,9 +58,34 @@ export const FinanceValuation = (props: FinanceValuationProps) => {
           <JknIcon stock={stockIcon?.[0]} className="w-8 h-8" />
           <span>{stockIcon?.[1]}</span>
         </div>
-        <NumSpan value={props.stock?.close} isPositive={props.stock?.isUp} decimal={3} />
-        <NumSpan value={props.stock?.percentAmount} isPositive={props.stock?.isUp} decimal={3} symbol />
-        <NumSpan value={Decimal.create(props.stock?.percent).mul(100)} isPositive={props.stock?.isUp} decimal={2} symbol percent />
+        {!props.stock ? (
+          '--'
+        ) : (
+          <>
+            <SubscribeSpan.Price
+              trading="intraDay"
+              symbol={props.stock.symbol}
+              initValue={props.stock.close}
+              initDirection={stockUtils.isUp(props.stock)}
+              decimal={3}
+            />
+            <SubscribeSpan.Percent
+              type="amount"
+              trading="intraDay"
+              symbol={props.stock.symbol}
+              initValue={props.stock.close - props.stock.prevClose}
+              initDirection={stockUtils.isUp(props.stock)}
+              decimal={3}
+            />
+            <SubscribeSpan.Percent
+              trading="intraDay"
+              symbol={props.stock.symbol}
+              initValue={stockUtils.getPercent(props.stock)}
+              initDirection={stockUtils.isUp(props.stock)}
+              decimal={3}
+            />
+          </>
+        )}
         <span className="text-base">
           <span>泡沫系数：</span>
           <span className="text-stock-red">{valuation ? valuation.foam : '---'}</span>

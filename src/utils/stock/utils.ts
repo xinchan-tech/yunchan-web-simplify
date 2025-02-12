@@ -1,9 +1,9 @@
-import { StockChartInterval, StockPeriod, type StockExtendResultMap, type StockRawRecord } from '@/api'
+import { StockChartInterval, type StockExtendResultMap, StockPeriod, type StockRawRecord } from '@/api'
 import dayjs from 'dayjs'
 import Decimal from 'decimal.js'
-import { type Stock, StockRecord, type StockResultRecord, type StockTrading } from './stock'
+import {  isNumber } from 'radash'
+import { type Stock, StockRecord, type StockResultRecord, type StockTrading, StockWithExt } from './stock'
 import type { StockSubscribeHandler } from './subscribe'
-import { get, isNumber } from "radash"
 
 /**
  * 判断时间数据
@@ -12,7 +12,7 @@ import { get, isNumber } from "radash"
  */
 const parseTime = (time?: string) => {
   if (!time) return -1
-  if(isNumber(time) || time.replace('-', '').length === time.length){
+  if (isNumber(time) || time.replace('-', '').length === time.length) {
     if (time.toString().length === 10) {
       return dayjs(+time * 1000).valueOf()
     }
@@ -25,23 +25,36 @@ const parseTime = (time?: string) => {
   return dayjs(time).valueOf()
 }
 
-
 export const stockUtils = {
+  /**
+   * @deprecated
+   * @returns
+   */
   toStockRecord(data: StockResultRecord) {
     return StockRecord.create(data)
   },
 
+  /**
+   * @deprecated
+   * @returns
+   */
   toSimpleStockRecord(data: StockRawRecord, symbol?: string, name?: string) {
     return StockRecord.of(symbol ?? '', name ?? '', data)
   },
 
+  /**
+   * @deprecated
+   * @returns
+   */
   cloneFrom(data: StockRecord) {
     return StockRecord.of(data.symbol, data.name, data.rawRecord, data.extend)
   },
 
-  toStock(data: StockRawRecord | null, opts?: { extend?: StockExtendResultMap; name?: string; symbol?: string }): Stock {
-
-    if(!data || data.length === 0) {
+  toStock(
+    data: StockRawRecord | null,
+    opts?: { extend?: StockExtendResultMap; name?: string; symbol?: string }
+  ): Stock {
+    if (!data || data.length === 0) {
       return {
         name: opts?.name ?? '',
         symbol: opts?.symbol ?? '',
@@ -69,7 +82,7 @@ export const stockUtils = {
       high: Decimal.create(data[3]).toNumber(),
       low: Decimal.create(data[4]).toNumber(),
       volume: Decimal.create(data[5]).toNumber(),
-      turnover: data[6] ? Decimal.create(data[6]).mul(10000).toNumber()  : Decimal.create(data[6]).toNumber(),
+      turnover: data[6] ? Decimal.create(data[6]).mul(10000).toNumber() : Decimal.create(data[6]).toNumber(),
       extend: opts?.extend
     } as Stock
 
@@ -95,7 +108,7 @@ export const stockUtils = {
   toStockWithExt(
     data: StockRawRecord,
     opts?: { extend?: StockExtendResultMap; name?: string; symbol?: string }
-  ): Stock & { percent?: number; marketValue?: number; pe?: number; pb?: number; turnoverRate?: number } {
+  ): StockWithExt {
     const stock = stockUtils.toStock(data, opts) as Stock & {
       percent?: number
       marketValue?: number
@@ -209,7 +222,7 @@ export const stockUtils = {
    */
   getTrading: (time: Stock['timestamp']): StockTrading => {
     const usTime = dayjs(time).tz('America/New_York')
- 
+
     if (
       usTime.isSameOrAfter(usTime.hour(4).minute(0).second(0)) &&
       usTime.isBefore(usTime.hour(9).minute(30).second(0))
@@ -392,4 +405,3 @@ export const stockUtils = {
 
   parseTime
 }
-
