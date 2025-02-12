@@ -18,6 +18,7 @@ import {
   drawPivots,
   drawPolyline,
   drawRect,
+  drawScatter,
   drawText,
   drawTradePoints,
   LineType
@@ -942,7 +943,7 @@ export const renderMainIndicators = (options: ECOption, indicators: Indicator[])
       return
     }
 
-    indicator.data.forEach(d => {
+    indicator.data.forEach((d, index) => {
       if (typeof d === 'string') {
         return
       }
@@ -951,16 +952,30 @@ export const renderMainIndicators = (options: ECOption, indicators: Indicator[])
         return
       }
 
+      const seriesName = `main_${indicator.id}_${d.name}_${index}`
+
       if (!d.draw) {
-        drawLine(options, {} as any, {
-          extra: {
-            color: d.color || '#ffffff'
-          },
-          name: `main_${indicator.id}_${d.name}`,
-          xAxisIndex: 0,
-          yAxisIndex: 1,
-          data: (d.data as number[]).map((s, i) => [i, s])
-        })
+        if (d.style_type === 'POINTDOT') {
+          drawScatter(options, {} as any, {
+            name: seriesName,
+            xAxisIndex: 0,
+            extra: {
+              color: d.color 
+            },
+            yAxisIndex: 1,
+            data: d.data.map((s, i) => ({x: i, y: s})).filter(s => !!s.y),
+          })
+        } else {
+          drawLine(options, {} as any, {
+            extra: {
+              color: d.color || '#ffffff'
+            },
+            name: seriesName,
+            xAxisIndex: 0,
+            yAxisIndex: 1,
+            data: (d.data as number[]).map((s, i) => [i, s])
+          })
+        }
       } else if (d.draw === 'STICKLINE') {
         const data: DrawerRectShape[] = Object.keys(d.draw_data).map(key => [
           +key,
@@ -1095,7 +1110,6 @@ export const renderSecondary = (options: ECOption, indicators: Indicator[]) => {
       }
 
       if (!d.draw) {
-        console.log(d.style_type)
         drawLine(options, {} as any, {
           extra: {
             color: d.color || '#ffffff',

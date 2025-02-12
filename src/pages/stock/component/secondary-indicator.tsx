@@ -1,13 +1,32 @@
-import { getStockIndicators } from "@/api"
-import { Button, Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage, Input, JknIcon, Label, Popover, PopoverContent, PopoverTrigger, RadioGroup, RadioGroupItem, ScrollArea, useModal } from "@/components"
-import { useToast, useZForm } from "@/hooks"
-import { useIndicator } from "@/store"
-import { useQuery } from "@tanstack/react-query"
-import Decimal from "decimal.js"
-import { memo, useEffect, useState } from "react"
-import { useFieldArray } from "react-hook-form"
-import { z } from "zod"
-import { useKChartStore } from "../lib"
+import { getStockIndicators } from '@/api'
+import {
+  Button,
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+  Input,
+  JknIcon,
+  Label,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+  RadioGroup,
+  RadioGroupItem,
+  ScrollArea,
+  useModal
+} from '@/components'
+import { useToast, useZForm } from '@/hooks'
+import { useIndicator } from '@/store'
+import { useQuery } from '@tanstack/react-query'
+import Decimal from 'decimal.js'
+import { memo, useEffect, useState } from 'react'
+import { useFieldArray } from 'react-hook-form'
+import { z } from 'zod'
+import { useKChartStore } from '../lib'
 
 interface SecondaryIndicatorProps {
   /**
@@ -23,7 +42,14 @@ interface SecondaryIndicatorProps {
   /**
    * 附图的指标
    */
-  onIndicatorChange: (params: { value: string, index: number, type: string, name: string, formula?: string }) => void
+  onIndicatorChange: (params: {
+    value: string
+    index: number
+    type: string
+    name: string
+    formula?: string
+    calcType: string
+  }) => void
 }
 
 export const SecondaryIndicator = memo((props: SecondaryIndicatorProps) => {
@@ -38,7 +64,14 @@ export const SecondaryIndicator = memo((props: SecondaryIndicatorProps) => {
   const _onChange = (v: string) => {
     const indicator = findIndicator(v)
 
-    props.onIndicatorChange({ value: v, index: props.index, type: (indicator as any)?.db_type,  name: indicator?.name ?? '' ,formula: indicator?.formula })
+    props.onIndicatorChange({
+      value: v,
+      index: props.index,
+      type: (indicator as any)?.db_type,
+      name: indicator?.name ?? '',
+      formula: indicator?.formula,
+      calcType: indicator?.value ?? ''
+    })
   }
 
   const findIndicator = (id: string) => {
@@ -78,18 +111,13 @@ export const SecondaryIndicator = memo((props: SecondaryIndicatorProps) => {
     closeIcon: true
   })
 
-
-
   const onOpenIndicatorParams = () => {
     indicatorParamsForm.modal.open()
   }
 
-
   return (
     <div>
-      {
-        indicatorParamsForm.context
-      }
+      {indicatorParamsForm.context}
       <Popover>
         <PopoverTrigger asChild>
           <div className="px-2 py-1 rounded-sm hover:text-secondary cursor-pointer hover:border-dialog-border left-2 top-0 border border-solid border-border text-sm text-tertiary">
@@ -101,59 +129,76 @@ export const SecondaryIndicator = memo((props: SecondaryIndicatorProps) => {
           <div className="text-sm">
             <div className="flex items-center pr-2">
               <div className="flex-1">
-                <Input placeholder="搜索指标" className="border-none placeholder:text-tertiary" value={searchKey} onChange={(e) => setSearchKey(e.target.value)} />
+                <Input
+                  placeholder="搜索指标"
+                  className="border-none placeholder:text-tertiary"
+                  value={searchKey}
+                  onChange={e => setSearchKey(e.target.value)}
+                />
               </div>
               <JknIcon onClick={onOpenIndicatorParams} name="ic_settings" className="w-4 h-4 cursor-pointer" />
             </div>
             <div className="flex">
-              {
-                list?.map((item) => (
-                  <div key={item.id} className="flex flex-col w-48">
-                    <div className="border-0 border-b border-t border-solid border-border text-center py-1 bg-background">{item.name}</div>
-                    <ScrollArea className="h-[300px]">
-                      <RadioGroup value={currentSecondaryIndicator.id} onValueChange={_onChange}>
-                        {item.indicators.map((ele) => (
-                          <div
-                            className="hover:bg-primary cursor-pointer px-2 flex items-center w-full"
-                            key={ele.id}
-                            onKeyDown={() => { }}
-                          >
-                            <RadioGroupItem className="border-white/70" value={ele.id} id={`stock-secondary-indicator-${props.mainIndex}-${props.index}-${ele.id}`} />
-                            <Label className="ml-2 flex-1 py-3" htmlFor={`stock-secondary-indicator-${props.mainIndex}-${props.index}-${ele.id}`}>
-                              {ele.name}
-                            </Label>
-                          </div>
-                        ))}
-                      </RadioGroup>
-                    </ScrollArea>
+              {list?.map(item => (
+                <div key={item.id} className="flex flex-col w-48">
+                  <div className="border-0 border-b border-t border-solid border-border text-center py-1 bg-background">
+                    {item.name}
                   </div>
-                ))
-              }
+                  <ScrollArea className="h-[300px]">
+                    <RadioGroup value={currentSecondaryIndicator.id} onValueChange={_onChange}>
+                      {item.indicators.map(ele => (
+                        <div
+                          className="hover:bg-primary cursor-pointer px-2 flex items-center w-full"
+                          key={ele.id}
+                          onKeyDown={() => {}}
+                        >
+                          <RadioGroupItem
+                            className="border-white/70"
+                            value={ele.id}
+                            id={`stock-secondary-indicator-${props.mainIndex}-${props.index}-${ele.id}`}
+                          />
+                          <Label
+                            className="ml-2 flex-1 py-3"
+                            htmlFor={`stock-secondary-indicator-${props.mainIndex}-${props.index}-${ele.id}`}
+                          >
+                            {ele.name}
+                          </Label>
+                        </div>
+                      ))}
+                    </RadioGroup>
+                  </ScrollArea>
+                </div>
+              ))}
             </div>
           </div>
         </PopoverContent>
       </Popover>
     </div>
   )
-}
-)
+})
 const indicatorParamsSchema = z.object({
-  params: z.array(z.object({
-    min: z.string().optional(),
-    max: z.string().optional(),
-    default: z.string(),
-    name: z.string(),
-    value: z.string()
-  }).refine((v) => {
-  
-    if (!v.value) return false
-    console.log(v, v.min)
-    if (v.min && Decimal.create(v.value).lt(v.min)) return false
+  params: z.array(
+    z
+      .object({
+        min: z.string().optional(),
+        max: z.string().optional(),
+        default: z.string(),
+        name: z.string(),
+        value: z.string()
+      })
+      .refine(
+        v => {
+          if (!v.value) return false
+          console.log(v, v.min)
+          if (v.min && Decimal.create(v.value).lt(v.min)) return false
 
-    if (v.max && Decimal.create(v.value).gt(v.max)) return false
+          if (v.max && Decimal.create(v.value).gt(v.max)) return false
 
-    return true
-  }, { message: '参数值不在范围内' }))
+          return true
+        },
+        { message: '参数值不在范围内' }
+      )
+  )
 })
 
 const IndicatorParamsForm = () => {
@@ -174,7 +219,10 @@ const IndicatorParamsForm = () => {
 
   const onResetDefault = () => {
     const params = indicatorParams.find(item => item.id === indicator)?.params ?? []
-    form.setValue('params', params.map(item => ({ ...item, value: item.default })))
+    form.setValue(
+      'params',
+      params.map(item => ({ ...item, value: item.default }))
+    )
   }
 
   const { toast } = useToast()
@@ -197,64 +245,74 @@ const IndicatorParamsForm = () => {
     })
 
     toast({ description: '保存成功' })
-
   }
 
   return (
     <div className="flex text-sm">
       <div className="h-[50vh] overflow-y-auto">
-        {
-          indicatorParams.map((item) => (
-            <div key={item.id} className="data-[state=active]:bg-accent hover:!bg-primary py-2 w-60 px-2 box-border" data-state={indicator === item.id ? 'active' : ''} onClick={() => setIndicator(item.id)} onKeyDown={() => { }}>
-              {item.name}
-            </div>
-          ))
-        }
+        {indicatorParams.map(item => (
+          <div
+            key={item.id}
+            className="data-[state=active]:bg-accent hover:!bg-primary py-2 w-60 px-2 box-border"
+            data-state={indicator === item.id ? 'active' : ''}
+            onClick={() => setIndicator(item.id)}
+            onKeyDown={() => {}}
+          >
+            {item.name}
+          </div>
+        ))}
       </div>
       <div className="w-96 h-[50vh] overflow-y-auto box-border p-4">
-        <div className="mb-4">
-          参数列表
-        </div>
-        <Form  {...form}>
+        <div className="mb-4">参数列表</div>
+        <Form {...form}>
           <form className="space-y-4">
-            {
-              arrayFields.fields.map((field, index) => {
-                return (
-                  <FormField
-                    key={field.id}
-                    control={form.control}
-                    rules={{ min: 1 }}
-                    name={`params.${index}.value`}
-                    render={({ field }) => {
-                      const name = arrayFields.fields[index].name
-                      const param = indicatorParams.find(item => item.id === indicator)?.params.find(item => item.name === name)
-                      return (
-                        (
-                          <FormItem>
-                            <FormLabel className="font-normal">
-                              参数名：&nbsp;&nbsp;{name} <span className="text-xs text-tertiary">(默认:{param?.default}, 最小:{param?.min}, 最大:{param?.max})</span>
-                            </FormLabel>
-                            <div className="flex items-center">
-                              <span className="w-20">参数值：</span>
-                              <FormControl>
-                                <Input className="border-border" size="sm" {...field} />
-                              </FormControl>
-                            </div>
-                            <FormDescription />
-                            <FormMessage />
-                          </FormItem>
-                        )
-                      )
-                    }}
-                  />
-                )
-              })
-            }
+            {arrayFields.fields.map((field, index) => {
+              return (
+                <FormField
+                  key={field.id}
+                  control={form.control}
+                  rules={{ min: 1 }}
+                  name={`params.${index}.value`}
+                  render={({ field }) => {
+                    const name = arrayFields.fields[index].name
+                    const param = indicatorParams
+                      .find(item => item.id === indicator)
+                      ?.params.find(item => item.name === name)
+                    return (
+                      <FormItem>
+                        <FormLabel className="font-normal">
+                          参数名：&nbsp;&nbsp;{name}{' '}
+                          <span className="text-xs text-tertiary">
+                            (默认:{param?.default}, 最小:{param?.min}, 最大:{param?.max})
+                          </span>
+                        </FormLabel>
+                        <div className="flex items-center">
+                          <span className="w-20">参数值：</span>
+                          <FormControl>
+                            <Input className="border-border" size="sm" {...field} />
+                          </FormControl>
+                        </div>
+                        <FormDescription />
+                        <FormMessage />
+                      </FormItem>
+                    )
+                  }}
+                />
+              )
+            })}
           </form>
-          <div className="hover:text-primary cursor-pointer mt-2 text-xs text-tertiary" onClick={onResetDefault} onKeyDown={() => { }}>恢复默认值</div>
+          <div
+            className="hover:text-primary cursor-pointer mt-2 text-xs text-tertiary"
+            onClick={onResetDefault}
+            onKeyDown={() => {}}
+          >
+            恢复默认值
+          </div>
         </Form>
         <div className=" text-center mt-4">
-          <Button size="sm" className="w-24" onClick={submitParams}>保存</Button>
+          <Button size="sm" className="w-24" onClick={submitParams}>
+            保存
+          </Button>
         </div>
       </div>
     </div>

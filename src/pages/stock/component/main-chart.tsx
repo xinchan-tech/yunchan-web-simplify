@@ -1,4 +1,4 @@
-import { StockChartInterval } from '@/api'
+import { getStockIndicatorData, StockChartInterval } from '@/api'
 import { StockSelect } from '@/components'
 import { useStockBarSubscribe } from '@/hooks'
 import { useIndicator, useTime } from '@/store'
@@ -33,6 +33,7 @@ import { SecondaryIndicator } from './secondary-indicator'
 import { TimeIndexMenu } from './time-index'
 import { ChartContextMenu } from './chart-context-menu'
 import { chartEvent } from '../lib/event'
+import { queryClient } from '@/utils/query-client'
 
 interface MainChartProps {
   index: number
@@ -217,6 +218,21 @@ export const MainChart = (props: MainChartProps) => {
         if (!candlesticks.length) return Promise.resolve({ data: [], indicatorId: item.id })
 
         if (!item.formula) return Promise.resolve({ data: [], indicatorId: item.id })
+        if (renderUtils.isRemoteIndicator(item)) {
+          const indicator = useIndicator.getState().getIndicatorQueryParams(item.id)
+          const params = {
+            symbol: symbol,
+            id: item.id,
+            cycle: timeIndex,
+            start_at: dayjs(+candlesticks[0][0]! * 1000).tz('America/New_York').format('YYYY-MM-DD HH:mm:ss'),
+            param: indicator as any,
+            db_type: item.type
+          }
+          return queryClient.ensureQueryData({
+            queryKey: [getStockIndicatorData.cacheKey, params],
+            queryFn: () => getStockIndicatorData(params).then(r => ({ data: r.result, indicatorId: item.id }))
+          })
+        }
 
         return calcIndicator(
           { formula: item.formula ?? '', symbal: symbol, indicatorId: item.id },
@@ -317,7 +333,14 @@ export const MainChart = (props: MainChartProps) => {
   }, [])
 
   const onChangeSecondaryIndicators = useCallback(
-    async (params: { value: string; index: number; type: string; name: string; formula?: string }) => {
+    async (params: {
+      value: string
+      index: number
+      type: string
+      name: string
+      formula?: string
+      calcType: string
+    }) => {
       const indicator: Indicator = {
         id: params.value,
         type: params.type,
@@ -325,8 +348,10 @@ export const MainChart = (props: MainChartProps) => {
         symbol: state.symbol,
         key: state.secondaryIndicators[params.index].key,
         name: params.name,
-        formula: params.formula
+        formula: params.formula,
+        calcType: params.calcType
       }
+
       const candlesticks = lastMainHistory.current
       kChartUtils.setSecondaryIndicator({
         index: props.index,
@@ -338,6 +363,30 @@ export const MainChart = (props: MainChartProps) => {
           renderFn.current()
         })
         return
+      }
+
+      if (renderUtils.isRemoteIndicator(indicator)) {
+        const indicatorParams = useIndicator.getState().getIndicatorQueryParams(indicator.id)
+        const params = {
+          symbol: state.symbol,
+          id: indicator.id,
+          cycle: state.timeIndex,
+          start_at: dayjs(+candlesticks[0][0]! * 1000).tz('America/New_York').format('YYYY-MM-DD HH:mm:ss'),
+          param: indicatorParams as any,
+          db_type: indicator.type
+        }
+        return queryClient.ensureQueryData({
+          queryKey: [getStockIndicatorData.cacheKey, params],
+          queryFn: () => getStockIndicatorData(params).then(r => ({ 
+            data: r.result.map(item => ({
+              ...item,
+              color: item.style?.color,
+              linethick: item.style?.linethick,
+              style_type: item.style?.style_type,
+            })), 
+            indicatorId: indicator.id 
+          }))
+        })
       }
 
       calcIndicator(

@@ -12,7 +12,9 @@ import {
   BarChart,
   type BarSeriesOption,
   PieChart,
-  type PieSeriesOption
+  type PieSeriesOption,
+  ScatterChart,
+  type ScatterSeriesOption,
 } from 'echarts/charts'
 
 import {
@@ -68,7 +70,8 @@ echarts.use([
   CustomChart,
   BarChart,
   PieChart,
-  MarkPointComponent
+  MarkPointComponent,
+  ScatterChart
 ])
 
 export type ECOption = echarts.ComposeOption<
@@ -89,6 +92,7 @@ export type ECOption = echarts.ComposeOption<
   | BarSeriesOption
   | PieSeriesOption
   | MarkPointComponentOption
+  | ScatterSeriesOption
 >
 
 

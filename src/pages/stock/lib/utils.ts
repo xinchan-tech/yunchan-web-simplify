@@ -1,4 +1,4 @@
-import { StockChartInterval, type StockRawRecord } from '@/api'
+import { getStockIndicatorData, getStockIndicators, StockChartInterval, type StockRawRecord } from '@/api'
 import { useTime } from "@/store"
 import { getTradingPeriod } from '@/utils/date'
 import type { ECOption } from '@/utils/echarts'
@@ -6,7 +6,8 @@ import { stockUtils } from '@/utils/stock'
 import dayjs, { type Dayjs } from 'dayjs'
 import type { EChartsType } from 'echarts/core'
 import type { ECBasicOption } from 'echarts/types/dist/shared'
-import type { KChartContext } from './ctx'
+import type { Indicator, KChartContext } from './ctx'
+import { queryClient } from "@/utils/query-client"
 
 export const renderUtils = {
   getXAxisIndex: (options: ECOption, index: number) => {
@@ -183,6 +184,14 @@ export const renderUtils = {
    */
   isLocalIndicator: (indicatorId: string) => {
     return indicatorId === '9' || indicatorId === '10'
+  },
+
+  /**
+   * 是否是远程计算的指标
+   */
+  isRemoteIndicator: (indicator: Indicator) => {
+
+    return indicator.calcType === 'svr_policy'
   },
 
   /**

@@ -65,7 +65,7 @@ const MainIndicatorSelect = ({ indicators }: { indicators?: Awaited<ReturnType<t
   const currentIndex = useKChartStore(s => s.activeChartIndex)
 
   const onChangeMainIndicator =async (_: any, data: any[], name: string) => {
-    const indicators = data.map(v => ({ id: v.value, type: v.extra.db_type, timeIndex, symbol, key: nanoid(), name: name, formula: v.extra.formula }))
+    const indicators = data.map(v => ({ id: v.value, type: v.extra.db_type, timeIndex, symbol, key: nanoid(), name: name, formula: v.extra.formula, calcType: v.extra.calcType }))
     const candlesticks = useKChartStore.getState().state[useKChartStore.getState().activeChartIndex].mainData.history
     kChartUtils.setMainIndicators({ indicators })
     const r = await data.map(v => {

@@ -1,5 +1,5 @@
 import type { ECOption } from '@/utils/echarts'
-import type { CustomSeriesOption, LineSeriesOption } from 'echarts/charts'
+import type { CustomSeriesOption, LineSeriesOption, ScatterSeriesOption } from 'echarts/charts'
 import type { KChartContext } from './ctx'
 import echarts from '@/utils/echarts'
 import { colorUtil } from '@/utils/style'
@@ -271,7 +271,7 @@ export const drawText: DrawerFunc<DrawerTextShape[]> = (options, _, { xAxisIndex
       return {
         type: 'text',
         emphasisDisabled: true,
-        
+
         silent: true,
         style: {
           text,
@@ -755,11 +755,7 @@ type DrawHdlyLabelShape = {
 /**
  * 绘制海底捞月标签
  */
-export const drawHdlyLabel: DrawerFunc<DrawHdlyLabelShape[]> = (
-  options,
-  _,
-  { xAxisIndex, yAxisIndex, data, name }
-) => {
+export const drawHdlyLabel: DrawerFunc<DrawHdlyLabelShape[]> = (options, _, { xAxisIndex, yAxisIndex, data, name }) => {
   const series: CustomSeriesOption = {
     xAxisIndex: xAxisIndex,
     yAxisIndex: yAxisIndex,
@@ -777,7 +773,7 @@ export const drawHdlyLabel: DrawerFunc<DrawHdlyLabelShape[]> = (
       const width = singleLabelWidth * label.length + 8
 
       const start = api.coord([x, y])
-   
+
       return {
         type: 'group',
         children: [
@@ -816,6 +812,40 @@ export const drawHdlyLabel: DrawerFunc<DrawHdlyLabelShape[]> = (
   }
 
   Array.isArray(options.series) && options.series.push(series)
+  return options
+}
 
+type DrawScatterShape = {
+  x: XAxis
+  y: YAxis
+}
+
+/**
+ * 画散点图
+ */
+export const drawScatter: DrawerFunc<DrawScatterShape[]> = (
+  options,
+  _,
+  { xAxisIndex, yAxisIndex, data, extra, name }
+) => {
+  const scatter: ScatterSeriesOption = {
+    type: 'scatter',
+    xAxisIndex: xAxisIndex,
+    yAxisIndex: yAxisIndex,
+    silent: true,
+    symbolSize: 3,
+    name,
+    data: data.map(item => ({
+      value: [item.x, item.y],
+      itemStyle: {
+        color: extra?.color
+      },
+      emphasis: {
+        disabled: true
+      }
+    }))
+  }
+  console.log(data)
+  Array.isArray(options.series) && options.series.push(scatter)
   return options
 }

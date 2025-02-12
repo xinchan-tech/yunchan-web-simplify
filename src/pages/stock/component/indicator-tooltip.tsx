@@ -36,7 +36,7 @@ export const IndicatorTooltip = (props: IndicatorTooltipProps) => {
 
   useEffect(() => {
     if (props.indicator.data) {
-      console.log('props.indicator.data', props.indicator.data)
+
       const indicators = props.indicator.data
         .filter(item => !!item.name)
         .map(item => {

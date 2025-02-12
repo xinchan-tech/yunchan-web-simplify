@@ -1,12 +1,18 @@
-import { StockChartInterval, type StockRawRecord, getStockChart, getStockChartV2, getStockIndicatorData, getStockTabData } from '@/api'
-import { useIndicator, useTime } from '@/store'
+import {
+  StockChartInterval,
+  type StockRawRecord,
+  getStockChart,
+  getStockChartV2,
+  getStockIndicatorData,
+  getStockTabData
+} from '@/api'
+import { useIndicator } from '@/store'
 import { calcCoiling } from '@/utils/coiling'
 import type echarts from '@/utils/echarts'
 import { queryClient } from '@/utils/query-client'
-import { stockUtils } from "@/utils/stock"
+import { stockUtils } from '@/utils/stock'
 import dayjs from 'dayjs'
 import { produce } from 'immer'
-import mitt from 'mitt'
 import { nanoid } from 'nanoid'
 import { mapValues } from 'radash'
 import { create } from 'zustand'
@@ -230,6 +236,10 @@ export type Indicator = {
   visible?: boolean
   formula?: string
   data?: IndicatorData
+  /**
+   * 计算类型： =svr_policy 是从后端获取
+   */
+  calcType: string
 }
 
 /**
@@ -383,7 +393,8 @@ export const createDefaultChartState = (opts: { symbol?: string; index: number }
             timeIndex: StockChartInterval.DAY,
             symbol: opts.symbol ?? 'QQQ',
             key: nanoid(),
-            name: '底部信号'
+            name: '底部信号',
+            calcType: 'trade_point'
           },
           {
             id: '10',
@@ -391,7 +402,8 @@ export const createDefaultChartState = (opts: { symbol?: string; index: number }
             timeIndex: StockChartInterval.DAY,
             symbol: opts.symbol ?? 'QQQ',
             key: nanoid(),
-            name: '买卖点位'
+            name: '买卖点位',
+            calcType: 'trade_hdly'
           }
         ],
     mainIndicators: {},
@@ -426,7 +438,6 @@ export const isTimeIndexChart = (timeIndex: StockChartInterval) =>
     StockChartInterval.INTRA_DAY,
     StockChartInterval.FIVE_DAY
   ].includes(timeIndex)
-
 
 export const useKChartStore = create<KChartContext>()(
   persist(
@@ -622,12 +633,15 @@ export const kChartUtils: KChartUtils = {
   addOverlayStock: ({ index, symbol }) => {
     const chart = useKChartStore.getState().state[index ?? useKChartStore.getState().activeChartIndex]
     if (chart.overlayStock.some(item => item.symbol === symbol)) return
-    const startTime = useKChartStore.getState().state[index ?? useKChartStore.getState().activeChartIndex].mainData.history[0]?.[0]
+    const startTime =
+      useKChartStore.getState().state[index ?? useKChartStore.getState().activeChartIndex].mainData.history[0]?.[0]
     const interval = useKChartStore.getState().state[index ?? useKChartStore.getState().activeChartIndex].timeIndex
     const params = {
-      start_at: dayjs(+startTime! * 1000).tz('America/New_York').format('YYYY-MM-DD HH:mm:ss'),
+      start_at: dayjs(+startTime! * 1000)
+        .tz('America/New_York')
+        .format('YYYY-MM-DD HH:mm:ss'),
       symbol: symbol,
-      period:  stockUtils.intervalToPeriod(interval),
+      period: stockUtils.intervalToPeriod(interval),
       time_format: 'int'
     }
 

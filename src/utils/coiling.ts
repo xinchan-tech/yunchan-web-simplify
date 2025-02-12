@@ -45,6 +45,7 @@ export const calcIndicator = async (
   data: StockRawRecord[],
   interval: number
 ) => {
+  
   const module = await getPolicyModule()
 
   const rawData = data.map((item: StockRawRecord) => {
@@ -69,6 +70,7 @@ export const calcIndicator = async (
 
     return item
   })
+  
   console.log(result)
   return result
 }

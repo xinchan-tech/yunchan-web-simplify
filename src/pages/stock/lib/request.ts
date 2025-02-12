@@ -1,12 +1,11 @@
 import { StockChartInterval, type StockRawRecord, getStockChartQuote, getStockChartV2 } from '@/api'
+import { queryClient } from '@/utils/query-client'
 import { stockUtils } from '@/utils/stock'
 import { useMount, useUnmount, useUpdateEffect } from 'ahooks'
 import to from 'await-to-js'
 import dayjs from 'dayjs'
 import { useCallback, useRef, useState } from 'react'
 import { isTimeIndexChart, useKChartStore } from './ctx'
-import { queryClient } from '@/utils/query-client'
-import { useTime } from "@/store"
 
 /**
  * k线分页逻辑
@@ -24,7 +23,7 @@ const getPeriodByPage = (params: { interval: StockChartInterval; startDate: numb
   } else if (interval <= StockChartInterval.FOUR_HOUR) {
     resultDate = usDate.add(-30, 'd').format('YYYY-MM-DD HH:mm:ss')
   }else if (interval === StockChartInterval.DAY) {
-    resultDate = usDate.add(-30, 'd').format('YYYY-MM-DD HH:mm:ss')
+    resultDate = usDate.add(-180, 'd').format('YYYY-MM-DD HH:mm:ss')
   } else if (interval === StockChartInterval.WEEK) {
     resultDate = usDate.add(-3, 'm').format('YYYY-MM-DD HH:mm:ss')
   } else if (interval === StockChartInterval.MONTH) {
