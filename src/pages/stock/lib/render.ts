@@ -1095,9 +1095,11 @@ export const renderSecondary = (options: ECOption, indicators: Indicator[]) => {
       }
 
       if (!d.draw) {
+        console.log(d.style_type)
         drawLine(options, {} as any, {
           extra: {
-            color: d.color || '#ffffff'
+            color: d.color || '#ffffff',
+            type: d.style_type === 'DOTLINE' ? 'dashed' : undefined
           },
           xAxisIndex: index + 2,
           yAxisIndex: index + 3,
@@ -1123,8 +1125,6 @@ export const renderSecondary = (options: ECOption, indicators: Indicator[]) => {
           ...(d.draw_data as NormalizedRecord<number[]>)[key],
           d.color
         ]) as any[]
-        // textData.push(...data)
-
         drawText(options, {} as any, {
           xAxisIndex: index + 2,
           yAxisIndex: index + 3,
