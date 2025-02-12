@@ -1,6 +1,6 @@
 import { getStockFinancials } from "@/api"
 import { AiAlarm, CapsuleTabs, CollectStar, JknCheckbox, JknDatePicker, JknIcon, JknRcTable, type JknRcTableProps, NumSpan, StockView, SubscribeSpan } from "@/components"
-import { useCheckboxGroup, useTableRowClickToStockTrading } from "@/hooks"
+import { useCheckboxGroup, useTableData, useTableRowClickToStockTrading } from "@/hooks"
 import { stockUtils } from "@/utils/stock"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import dayjs from "dayjs"
@@ -47,15 +47,19 @@ const StockFinancials = () => {
     }
   }, [query.data?.dates, active])
 
+  const [data, {onSort, setList}] = useTableData<TableDataType>([])
 
 
-  const data = (() => {
+
+  useEffect(() => {
     const r: TableDataType[] = []
+    
+    if(!query.data?.items) {
+      setList([])
+      return
+    }
 
-    const { data } = query
-
-    if (!data) return r
-    for (const { id, time, date, ...stock } of data.items) {
+    for (const { id, time, date, ...stock } of query.data.items) {
       const lastStock = stockUtils.toStockWithExt(stock.stock, { extend: stock.extend, name: stock.name, symbol: stock.symbol })
       const beforeStock = stockUtils.toStockWithExt(stock.extend?.stock_before, { extend: stock.extend, name: stock.name, symbol: stock.symbol })
       const afterStock = stockUtils.toStockWithExt(stock.extend?.stock_after, { extend: stock.extend, name: stock.name, symbol: stock.symbol })
@@ -77,8 +81,8 @@ const StockFinancials = () => {
       })
     }
 
-    return r
-  })()
+    setList(r)
+  }, [query.data?.items, setList])
 
   const columns: JknRcTableProps<TableDataType>['columns'] = useMemo(() => [
     { title: '序号', dataIndex: 'rank', render: (_: any, __, index) => index + 1, align: 'center', width: 80 },
@@ -177,7 +181,7 @@ const StockFinancials = () => {
   //   }
   // }
 
-  const onRowClick = useTableRowClickToStockTrading('code')
+  const onRowClick = useTableRowClickToStockTrading('id')
 
 
   return (
@@ -200,7 +204,7 @@ const StockFinancials = () => {
         </CapsuleTabs>
       </div>
       <div className="flex-1 overflow-hidden">
-        <JknRcTable isLoading={query.isLoading} onRow={onRowClick} rowKey="id" columns={columns} data={data} />
+        <JknRcTable onSort={onSort} isLoading={query.isLoading} onRow={onRowClick} rowKey="id" columns={columns} data={data} />
       </div>
     </div>
   )

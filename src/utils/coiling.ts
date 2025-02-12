@@ -3,6 +3,25 @@ import { stockUtils } from './stock'
 import { useIndicator } from '@/store'
 import { isEmpty, listify } from 'radash'
 
+let coilingModule: Awaited<ReturnType<typeof window.CoilingModule>>
+let policyModule: Awaited<ReturnType<typeof window.PolicyModule>>
+
+const getCoilingModule = async () => {
+  if (!coilingModule) {
+    coilingModule = await window.CoilingModule()
+  }
+
+  return coilingModule
+}
+
+const getPolicyModule = async () => {
+  if (!policyModule) {
+    policyModule = await window.PolicyModule()
+  }
+
+  return policyModule
+}
+
 /**
  * 计算缠论数据
  * @param data
@@ -10,7 +29,7 @@ import { isEmpty, listify } from 'radash'
  * @example @/example/coiling-wasm/coiling.html
  */
 export const calcCoiling = async (data: StockRawRecord[], interval: number) => {
-  return window.CoilingModule().then(module => {
+  return getCoilingModule().then(module => {
     const _data = data.map((item: StockRawRecord) => {
       return [Math.floor(stockUtils.parseTime(item[0]) / 1000), ...item.slice(1)] as unknown as StockRawRecord
     }, true)
@@ -26,7 +45,7 @@ export const calcIndicator = async (
   data: StockRawRecord[],
   interval: number
 ) => {
-  const module = await window.PolicyModule()
+  const module = await getPolicyModule()
 
   const rawData = data.map((item: StockRawRecord) => {
     return [Math.floor(stockUtils.parseTime(item[0]) / 1000), ...item.slice(1)] as unknown as StockRawRecord

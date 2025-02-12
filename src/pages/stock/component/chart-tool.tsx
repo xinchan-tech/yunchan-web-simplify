@@ -11,6 +11,7 @@ import { nanoid } from "nanoid"
 import { useDomSize } from "@/hooks"
 import { useShallow } from "zustand/react/shallow"
 import { calcIndicator } from "@/utils/coiling"
+import { chartEvent } from "../lib/event"
 
 const CHART_TOOL = ['主图指标', '线型切换', '多图模式', '股票PK', '叠加标记', '画线工具']
 
@@ -23,9 +24,6 @@ export const ChartToolSelect = () => {
     queryKey: [getStockIndicators.cacheKey],
     queryFn: () => getStockIndicators()
   })
-
-
-
 
   const onOverlayClick = (symbol: string) => {
     kChartUtils.addOverlayStock({ symbol })
@@ -66,15 +64,23 @@ const MainIndicatorSelect = ({ indicators }: { indicators?: Awaited<ReturnType<t
   
   const currentIndex = useKChartStore(s => s.activeChartIndex)
 
-  const onChangeMainIndicator = (_: any, data: any[], name: string) => {
+  const onChangeMainIndicator =async (_: any, data: any[], name: string) => {
     const indicators = data.map(v => ({ id: v.value, type: v.extra.db_type, timeIndex, symbol, key: nanoid(), name: name, formula: v.extra.formula }))
     const candlesticks = useKChartStore.getState().state[useKChartStore.getState().activeChartIndex].mainData.history
     kChartUtils.setMainIndicators({ indicators })
-    data.forEach(v => {
-      calcIndicator({ formula: v.extra.formula, symbal: symbol, indicatorId: v.value }, candlesticks, timeIndex).then(data => {
-        kChartUtils.setIndicatorData({ index: currentIndex, indicatorId: v.value, data: data.data })
-      })
+    const r = await data.map(v => {
+      return calcIndicator({ formula: v.extra.formula, symbal: symbol, indicatorId: v.value }, candlesticks, timeIndex).then(data => ({
+        indicatorId: v.value,
+        data: data.data
+      }))
     })
+
+    await Promise.all(r).then(data => {
+      kChartUtils.setIndicatorsData({index: currentIndex, data})
+    })
+
+    chartEvent.event.emit('indicatorChange', { index: currentIndex })
+    
   }
 
   return (

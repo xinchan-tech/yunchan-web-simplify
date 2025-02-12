@@ -427,13 +427,6 @@ export const isTimeIndexChart = (timeIndex: StockChartInterval) =>
     StockChartInterval.FIVE_DAY
   ].includes(timeIndex)
 
-export const chartEvent = {
-  event: mitt(),
-  create() {
-    this.event = mitt()
-    return this.event
-  }
-}
 
 export const useKChartStore = create<KChartContext>()(
   persist(

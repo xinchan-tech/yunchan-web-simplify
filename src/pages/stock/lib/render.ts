@@ -6,7 +6,7 @@ import { colorUtil } from '@/utils/style'
 import dayjs from 'dayjs'
 import Decimal from 'decimal.js'
 import type { CandlestickSeriesOption, LineSeriesOption } from 'echarts/charts'
-import { CoilingIndicatorId, type Indicator, type KChartContext, chartEvent, isTimeIndexChart } from './ctx'
+import { CoilingIndicatorId, type Indicator, type KChartContext, isTimeIndexChart } from './ctx'
 import {
   type DrawerRectShape,
   type DrawerTextShape,
@@ -34,6 +34,7 @@ import { renderUtils } from './utils'
 import type { GraphicComponentOption } from 'echarts/components'
 import type { XAXisOption, YAXisOption } from 'echarts/types/dist/shared'
 import type { EChartsType } from 'echarts/core'
+import { chartEvent } from './event'
 
 const MAIN_CHART_NAME = 'kChart'
 const MAIN_CHART_NAME_VIRTUAL = 'kChart-virtual'
@@ -230,7 +231,7 @@ export const createOptions = (chart: EChartsType): ECOption => ({
             if (!data) return params.value
 
             const start = data[0]
-     
+
             if (chart.meta?.yAxis?.right === 'percent') {
               const percent = ((params.value - start[2]) / start[2]) * 100
 
@@ -265,11 +266,11 @@ export const createOptions = (chart: EChartsType): ECOption => ({
             const scale = echartUtils.getAxisScale(chart, 0)
 
             const data = chart.meta!.mainData?.[scale[0]]
-         
+
             if (!data) return '-'
 
             const start = data[2]
-    
+
             if (!start) return v
 
             return `${(((v - start) / start) * 100).toFixed(2)}%`
@@ -412,7 +413,6 @@ type ChartRender = (
 export const renderChart = (chart: EChartsType): ECOption => {
   const _initOptions = initOptions()
   const _options = createOptions(chart)
-  
 
   Object.assign(_options, _initOptions)
 
@@ -1039,7 +1039,7 @@ export const renderOverlay = (options: ECOption, data?: ChartState['overlayStock
       Array.isArray(options.series) && options.series.push(series)
     }
   })
-  
+
   return options
 }
 
@@ -1084,8 +1084,6 @@ export const renderSecondary = (options: ECOption, indicators: Indicator[]) => {
       return
     }
     if (renderUtils.isLocalIndicator(indicator.id)) return
-    const stickLineData: DrawerRectShape[] = []
-    const textData: DrawerTextShape[] = []
 
     indicator.data.forEach(d => {
       if (typeof d === 'string') {
@@ -1112,14 +1110,27 @@ export const renderSecondary = (options: ECOption, indicators: Indicator[]) => {
           ...(d.draw_data as NormalizedRecord<number[]>)[key],
           d.color
         ]) as any[]
-        stickLineData.push(...data)
+
+        drawRect(options, {} as any, {
+          xAxisIndex: index + 2,
+          yAxisIndex: index + 3,
+          name: `secondary_${indicator.id}_${d.name}_${index}`,
+          data: data
+        })
       } else if (d.draw === 'DRAWTEXT') {
         const data: DrawerTextShape[] = Object.keys(d.draw_data).map(key => [
           +key,
           ...(d.draw_data as NormalizedRecord<number[]>)[key],
           d.color
         ]) as any[]
-        textData.push(...data)
+        // textData.push(...data)
+
+        drawText(options, {} as any, {
+          xAxisIndex: index + 2,
+          yAxisIndex: index + 3,
+          name: `secondary_${indicator.id}_${d.name}_${index}`,
+          data: data
+        })
       } else if (d.draw === 'DRAWGRADIENT') {
         const data = Object.keys(d.draw_data).map((key: string) => {
           const start = Number.parseInt(key)
@@ -1155,21 +1166,21 @@ export const renderSecondary = (options: ECOption, indicators: Indicator[]) => {
       }
     })
 
-    if (stickLineData.length > 0) {
-      drawRect(options, {} as any, {
-        xAxisIndex: index + 2,
-        yAxisIndex: index + 3,
-        data: stickLineData
-      })
-    }
+    // if (stickLineData.length > 0) {
+    //   drawRect(options, {} as any, {
+    //     xAxisIndex: index + 2,
+    //     yAxisIndex: index + 3,
+    //     data: stickLineData
+    //   })
+    // }
 
-    if (textData.length > 0) {
-      drawText(options, {} as any, {
-        xAxisIndex: index + 2,
-        yAxisIndex: index + 3,
-        data: textData
-      })
-    }
+    // if (textData.length > 0) {
+    //   drawText(options, {} as any, {
+    //     xAxisIndex: index + 2,
+    //     yAxisIndex: index + 3,
+    //     data: textData
+    //   })
+    // }
   })
 
   return options

@@ -10,6 +10,7 @@ interface AlarmLogProps {
 
 
 type TableDataType = {
+  index: number
   id: string
   symbol: string
   cycle: string
@@ -29,7 +30,7 @@ const AlarmLog = (props: AlarmLogProps) => {
     const r: JknTableProps['columns'] = [
       {
         header: '序号', accessorKey: 'index', meta: { align: 'center', width: 40 }, enableSorting: false,
-        cell: ({ row }) => row.id
+        cell: ({ row }) => row.index
       },
       {
         header: '名称代码', accessorKey: 'symbol', meta: { align: 'left', width: 'auto' },
@@ -71,11 +72,12 @@ const AlarmLog = (props: AlarmLogProps) => {
 
   const data = (() => {
     const r: TableDataType[] = []
-    for (const { condition: { indicators, frequency, price, category_hdly_name, trigger, bull }, id, alarm_time, symbol, stock_cycle } of query.data?.items || []) {
+    query.data?.items?.forEach(( { condition: { indicators, frequency, price, category_hdly_name, trigger, bull }, id, alarm_time, symbol, stock_cycle }, index) => {
       const _bull = props.type === AlarmType.AI ? bull : trigger === 2 ? '1' : '2'
       const alarmType = props.type === AlarmType.AI ? indicators : ((_bull === '1' ? '涨到' : '跌到') + price)
       const bottom = props.type === AlarmType.AI ? category_hdly_name : frequency === 0 ? '仅提醒一次' : '持续提醒'
       r.push({
+        index: index + 1,
         id,
         cycle: stock_cycle ?? '-',
         alarmType: alarmType ?? '',
@@ -84,7 +86,7 @@ const AlarmLog = (props: AlarmLogProps) => {
         symbol,
         create: alarm_time
       })
-    }
+    })
     return r
   })()
 

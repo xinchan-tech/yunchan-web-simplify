@@ -10,7 +10,7 @@ import { useMount, useUnmount, useUpdateEffect } from 'ahooks'
 import dayjs from 'dayjs'
 import type { EChartsType } from 'echarts/core'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { type Indicator, chartEvent, kChartUtils, useKChartStore } from '../lib'
+import { type Indicator, kChartUtils, useKChartStore } from '../lib'
 import {
   initOptions,
   renderChart,
@@ -28,10 +28,11 @@ import {
 } from '../lib/render'
 import { useStockCandlesticks } from '../lib/request'
 import { renderUtils } from '../lib/utils'
-import { IndicatorTooltip } from './indicator-tooltip'
+import { IndicatorTooltip, IndicatorTooltipGroup } from './indicator-tooltip'
 import { SecondaryIndicator } from './secondary-indicator'
 import { TimeIndexMenu } from './time-index'
-import { ChartContextMenu } from "./chart-context-menu"
+import { ChartContextMenu } from './chart-context-menu'
+import { chartEvent } from '../lib/event'
 
 interface MainChartProps {
   index: number
@@ -43,15 +44,10 @@ export const MainChart = (props: MainChartProps) => {
   const chart = useRef<EChartsType>()
   const renderFn = useRef<() => void>(() => {})
   const fetchFn = useRef<() => void>()
+
   useMount(() => {
     chart.current = echarts.init(dom.current, null, { devicePixelRatio: 3 })
     chart.current.meta = {} as any
-
-    chart.current.meta.event = chartEvent.event
-
-    chartEvent.event.on('tooltip', (params: any) => {
-      chartEvent.event.emit('data', params)
-    })
 
     chart.current.on('globalout', e => {
       // 检测鼠标是否在图表内
@@ -61,7 +57,7 @@ export const MainChart = (props: MainChartProps) => {
         !toElement?.className.includes('main-indicator-tooltip') ||
         !toElement?.className.includes('secondary-indicator-tool')
       ) {
-        chartEvent.event.emit('data', [])
+        chartEvent.event.emit('tooltip', [])
       }
     })
 
@@ -94,13 +90,18 @@ export const MainChart = (props: MainChartProps) => {
 
     sizeObserver.observe(dom.current!)
 
+    chartEvent.event.on('indicatorChange', (params: { index: number }) => {
+      if (params.index === props.index) {
+        renderFn.current()
+      }
+    })
+
     return () => {
       sizeObserver.disconnect()
     }
-  }, [])
+  }, [props.index])
 
   useUnmount(() => {
-    chart.current?.meta?.event.all.clear()
     chart.current?.dispose()
   })
 
@@ -232,16 +233,15 @@ export const MainChart = (props: MainChartProps) => {
     const timeIndex = useKChartStore.getState().state[props.index].timeIndex
 
     calcIndicatorData().then(r => {
+      kChartUtils.setIndicatorsData({
+        index: props.index,
+        data: r
+      })
       kChartUtils.setMainData({
         index: props.index,
         data: candlesticks,
         dateConvert: true,
         timeIndex: timeIndex
-      })
-
-      kChartUtils.setIndicatorsData({
-        index: props.index,
-        data: r
       })
     })
   }, [candlesticks, props.index, calcIndicatorData])
@@ -258,8 +258,6 @@ export const MainChart = (props: MainChartProps) => {
           renderFn.current()
         })
       })
-
-     
     })
 
     return () => unsubscribe()
@@ -312,10 +310,11 @@ export const MainChart = (props: MainChartProps) => {
     render()
   }, [state.mainData, state.type, state.overlayMark, state.overlayStock, state.yAxis, state.mainCoiling])
 
+  useUpdateEffect(() => {}, [state.mainData])
+
   useUpdateEffect(() => {
     render()
   }, [])
-  
 
   const onChangeSecondaryIndicators = useCallback(
     async (params: { value: string; index: number; type: string; name: string; formula?: string }) => {
@@ -329,13 +328,12 @@ export const MainChart = (props: MainChartProps) => {
         formula: params.formula
       }
       const candlesticks = lastMainHistory.current
-
+      kChartUtils.setSecondaryIndicator({
+        index: props.index,
+        indicatorIndex: params.index,
+        indicator: indicator
+      })
       if (renderUtils.isLocalIndicator(params.value)) {
-        kChartUtils.setSecondaryIndicator({
-          index: props.index,
-          indicatorIndex: params.index,
-          indicator: indicator
-        })
         setTimeout(() => {
           renderFn.current()
         })
@@ -347,11 +345,10 @@ export const MainChart = (props: MainChartProps) => {
         candlesticks,
         state.timeIndex
       ).then(r => {
-        indicator.data = r.data
-        kChartUtils.setSecondaryIndicator({
+        kChartUtils.setIndicatorData({
           index: props.index,
-          indicatorIndex: params.index,
-          indicator: indicator
+          indicatorId: params.value,
+          data: r.data
         })
         setTimeout(() => {
           renderFn.current()
@@ -450,11 +447,7 @@ export const MainChart = (props: MainChartProps) => {
         ) : null}
 
         {Object.keys(state.mainIndicators).length > 0 ? (
-          <div className="absolute top-4 left-2 space-y-2 main-indicator-tooltip">
-            {Object.entries(state.mainIndicators).map(([key, item]) => (
-              <IndicatorTooltip mainIndex={props.index} key={key} type="main" indicator={item} />
-            ))}
-          </div>
+          <IndicatorTooltipGroup mainIndex={props.index} indicators={state.mainIndicators} />
         ) : null}
       </div>
     </ChartContextMenu>

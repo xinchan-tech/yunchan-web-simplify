@@ -1,14 +1,28 @@
-import { type StockExtend, getPlateList, getPlateStocks, getStockCollectCates, getStockCollects } from "@/api"
-import { Checkbox, JknIcon, JknRcTable, type JknRcTableProps, JknTable, type JknTableProps, NumSpan, NumSpanSubscribe, ScrollArea, StockView, ToggleGroup, ToggleGroupItem } from "@/components"
-import { type Stock, stockUtils } from "@/utils/stock"
-import { cn } from "@/utils/style"
+import { type StockExtend, getPlateList, getPlateStocks, getStockCollectCates, getStockCollects } from '@/api'
+import {
+  Checkbox,
+  JknIcon,
+  JknRcTable,
+  type JknRcTableProps,
+  JknTable,
+  type JknTableProps,
+  NumSpan,
+  NumSpanSubscribe,
+  ScrollArea,
+  StockView,
+  SubscribeSpan,
+  ToggleGroup,
+  ToggleGroupItem
+} from '@/components'
+import { type Stock, stockUtils } from '@/utils/stock'
+import { cn } from '@/utils/style'
 import { useQuery } from '@tanstack/react-query'
-import type { Row } from "@tanstack/react-table"
-import { useMount, useUnmount, useUpdateEffect } from "ahooks"
-import Decimal from "decimal.js"
-import { useContext, useEffect, useMemo, useRef, useState } from "react"
-import { SuperStockContext } from "../ctx"
-import { useCheckboxGroup, useTableData, useTableRowClickToStockTrading } from "@/hooks"
+import type { Row } from '@tanstack/react-table'
+import { useMount, useUnmount, useUpdateEffect } from 'ahooks'
+import Decimal from 'decimal.js'
+import { useContext, useEffect, useMemo, useRef, useState } from 'react'
+import { SuperStockContext } from '../ctx'
+import { useCheckboxGroup, useTableData, useTableRowClickToStockTrading } from '@/hooks'
 
 const baseExtends: StockExtend[] = ['total_share', 'basic_index', 'day_basic', 'alarm_ai', 'alarm_all', 'financials']
 
@@ -26,29 +40,53 @@ const FirstStep = () => {
       </div>
       <div className="h-full overflow-hidden flex-1 ">
         <div className="flex w-full">
-          <div className={cn(
-            'w-1/4 text-center py-4 text-sm border border-solid border-background -ml-[1px]',
-            type === 'golden' && 'text-primary'
-          )} onClick={() => onClickType('golden')} onKeyDown={() => { }}>股票金池</div>
-          <div className={cn(
-            'w-1/4 text-center py-4 text-sm border border-solid border-background -ml-[1px]',
-            type === 'spec' && 'text-primary'
-          )} onClick={() => onClickType('spec')} onKeyDown={() => { }}>特色榜单</div>
-          <div className={cn(
-            'w-1/4 text-center py-4 text-sm border border-solid border-background -ml-[1px]',
-            type === 'industry' && 'text-primary'
-          )} onClick={() => onClickType('industry')} onKeyDown={() => { }}>行业板块</div>
-          <div className={cn(
-            'w-1/4 text-center py-4 text-sm border border-solid border-background -ml-[1px]',
-            type === 'concept' && 'text-primary'
-          )} onClick={() => onClickType('concept')} onKeyDown={() => { }}>概念板块</div>
+          <div
+            className={cn(
+              'w-1/4 text-center py-4 text-sm border border-solid border-background -ml-[1px]',
+              type === 'golden' && 'text-primary'
+            )}
+            onClick={() => onClickType('golden')}
+            onKeyDown={() => {}}
+          >
+            股票金池
+          </div>
+          <div
+            className={cn(
+              'w-1/4 text-center py-4 text-sm border border-solid border-background -ml-[1px]',
+              type === 'spec' && 'text-primary'
+            )}
+            onClick={() => onClickType('spec')}
+            onKeyDown={() => {}}
+          >
+            特色榜单
+          </div>
+          <div
+            className={cn(
+              'w-1/4 text-center py-4 text-sm border border-solid border-background -ml-[1px]',
+              type === 'industry' && 'text-primary'
+            )}
+            onClick={() => onClickType('industry')}
+            onKeyDown={() => {}}
+          >
+            行业板块
+          </div>
+          <div
+            className={cn(
+              'w-1/4 text-center py-4 text-sm border border-solid border-background -ml-[1px]',
+              type === 'concept' && 'text-primary'
+            )}
+            onClick={() => onClickType('concept')}
+            onKeyDown={() => {}}
+          >
+            概念板块
+          </div>
         </div>
         {
           {
             golden: <GoldenPoolTabContent />,
             spec: <RecommendIndex />,
             industry: <Plate type={1} />,
-            concept: <Plate type={2} />,
+            concept: <Plate type={2} />
           }[type]
         }
       </div>
@@ -80,7 +118,12 @@ const GoldenPool = (props: GoldenPoolProps) => {
     queryFn: () => getStockCollectCates()
   })
   useMount(() => {
-    ctx.register('collect', 1, () => [...selection.current], () => selection.current.length > 0)
+    ctx.register(
+      'collect',
+      1,
+      () => [...selection.current],
+      () => selection.current.length > 0
+    )
   })
 
   useUnmount(() => {
@@ -92,22 +135,24 @@ const GoldenPool = (props: GoldenPoolProps) => {
     selection.current = checked
   }, [checked])
 
-  const columns: JknRcTableProps<{ name: string, id: string }>['columns'] = [
+  const columns: JknRcTableProps<{ name: string; id: string }>['columns'] = [
     {
       title: <JknIcon name="checkbox_mult_nor_dis" className="w-4 h-4" />,
       dataIndex: 'select',
-      align: 'center', width: 40,
+      align: 'center',
+      width: 40,
       render: (_, row) => (
-        <div className="flex items-center justify-center w-full"><Checkbox checked={getIsChecked(row.id)} onCheckedChange={() => toggle(row.id)} /></div>
-      ),
+        <div className="flex items-center justify-center w-full">
+          <Checkbox checked={getIsChecked(row.id)} onCheckedChange={() => toggle(row.id)} />
+        </div>
+      )
     },
     {
       title: '序号',
       dataIndex: 'index',
-      align: 'center', width: 40,
-      render: (_, __, index) => (
-        <div className="text-center">{index + 1}</div>
-      )
+      align: 'center',
+      width: 40,
+      render: (_, __, index) => <div className="text-center">{index + 1}</div>
     },
     {
       title: '金池名称',
@@ -117,15 +162,19 @@ const GoldenPool = (props: GoldenPoolProps) => {
 
   return (
     <div className="h-[calc(100%-52px)] w-[30%]">
-      <JknRcTable rowKey="id" onRow={(r) => ({
-        onClick: () => {
-          toggle(r.id)
-          props.onChange?.(+r.id)
-        }
-      })} data={collects.data ?? []} columns={columns} />
+      <JknRcTable
+        rowKey="id"
+        onRow={r => ({
+          onClick: () => {
+            toggle(r.id)
+            props.onChange?.(+r.id)
+          }
+        })}
+        data={collects.data ?? []}
+        columns={columns}
+      />
     </div>
   )
-
 }
 
 interface GoldenPoolListProps {
@@ -141,18 +190,18 @@ const GoldenPoolList = (props: GoldenPoolListProps) => {
   const [list, { setList, onSort }] = useTableData<Stock>([], 'symbol')
 
   useEffect(() => {
-    setList(query.data?.items.map(o => {
-      const s = stockUtils.toStock(o.stock, { extend: o.extend, name: o.name, symbol: o.symbol })
+    setList(
+      query.data?.items.map(o => {
+        const s = stockUtils.toStock(o.stock, { extend: o.extend, name: o.name, symbol: o.symbol })
 
-      return {
-        ...s,
-        percent: stockUtils.getPercent(s),
-        marketValue: stockUtils.getMarketValue(s),
-      }
-
-    }) ?? [])
+        return {
+          ...s,
+          percent: stockUtils.getPercent(s),
+          marketValue: stockUtils.getMarketValue(s)
+        }
+      }) ?? []
+    )
   }, [query.data, setList])
-
 
   const columns: JknRcTableProps<ArrayItem<typeof list>>['columns'] = [
     {
@@ -160,17 +209,13 @@ const GoldenPoolList = (props: GoldenPoolListProps) => {
       dataIndex: 'index',
       align: 'center',
       width: 60,
-      render: (_, __, index) => (
-        <div className="text-center">{index + 1}</div>
-      )
+      render: (_, __, index) => <div className="text-center">{index + 1}</div>
     },
     {
       title: '金池名称',
       dataIndex: 'name',
       sort: true,
-      render: (name, row) => (
-        <StockView name={name} code={row.symbol} />
-      )
+      render: (name, row) => <StockView name={name} code={row.symbol} />
     },
     {
       title: '现价',
@@ -179,7 +224,13 @@ const GoldenPoolList = (props: GoldenPoolListProps) => {
       align: 'right',
       width: 90,
       render: (close, row) => (
-        <NumSpanSubscribe code={row.symbol} field="close" value={close ?? 0} decimal={3} isPositive={stockUtils.isUp(row)} />
+        <NumSpanSubscribe
+          code={row.symbol}
+          field="close"
+          value={close ?? 0}
+          decimal={3}
+          isPositive={stockUtils.isUp(row)}
+        />
       )
     },
     {
@@ -189,7 +240,16 @@ const GoldenPoolList = (props: GoldenPoolListProps) => {
       align: 'right',
       width: 90,
       render: (percent, row) => (
-        <NumSpanSubscribe code={row.symbol} field="percent" percent block decimal={2} value={percent} isPositive={stockUtils.isUp(row)} symbol />
+        <NumSpanSubscribe
+          code={row.symbol}
+          field="percent"
+          percent
+          block
+          decimal={2}
+          value={percent}
+          isPositive={stockUtils.isUp(row)}
+          symbol
+        />
       )
     },
     {
@@ -198,7 +258,9 @@ const GoldenPoolList = (props: GoldenPoolListProps) => {
       align: 'right',
       sort: true,
       width: 90,
-      render: (turnover, row) => <NumSpanSubscribe code={row.symbol} field="turnover" blink align="right" unit decimal={2} value={turnover} />
+      render: (turnover, row) => (
+        <NumSpanSubscribe code={row.symbol} field="turnover" blink align="right" unit decimal={2} value={turnover} />
+      )
     },
     {
       title: '总市值',
@@ -206,7 +268,17 @@ const GoldenPoolList = (props: GoldenPoolListProps) => {
       sort: true,
       align: 'right',
       width: 90,
-      render: (marketValue, row) => <NumSpanSubscribe code={row.symbol} field={v => stockUtils.getSubscribeMarketValue(row, v)} blink align="right" unit decimal={2} value={marketValue} />
+      render: (marketValue, row) => (
+        <NumSpanSubscribe
+          code={row.symbol}
+          field={v => stockUtils.getSubscribeMarketValue(row, v)}
+          blink
+          align="right"
+          unit
+          decimal={2}
+          value={marketValue}
+        />
+      )
     }
   ]
 
@@ -214,19 +286,33 @@ const GoldenPoolList = (props: GoldenPoolListProps) => {
 
   return (
     <div className="h-[calc(100%-52px)] w-[70%]">
-      <JknRcTable rowKey="symbol" isLoading={query.isLoading} columns={columns} data={list} onSort={onSort} onRow={onRowClick} />
+      <JknRcTable
+        rowKey="symbol"
+        isLoading={query.isLoading}
+        columns={columns}
+        data={list}
+        onSort={onSort}
+        onRow={onRowClick}
+      />
     </div>
   )
 }
 
-
 const RecommendIndex = () => {
   const ctx = useContext(SuperStockContext)
-  const data = ((ctx.data?.stock_range?.children?.t_recommend.from_datas) ?? []) as unknown as { name: string; value: string }[]
+  const data = (ctx.data?.stock_range?.children?.t_recommend.from_datas ?? []) as unknown as {
+    name: string
+    value: string
+  }[]
   const selection = useRef<string[]>([])
 
   useMount(() => {
-    ctx.register('recommend', 1, () => [...selection.current], () => selection.current.length > 0)
+    ctx.register(
+      'recommend',
+      1,
+      () => [...selection.current],
+      () => selection.current.length > 0
+    )
   })
 
   useUnmount(() => {
@@ -234,16 +320,21 @@ const RecommendIndex = () => {
     selection.current = []
   })
 
-
   return (
-    <ToggleGroup onValueChange={(value) => { selection.current = value }} type="multiple" className="grid grid-cols-3 gap-4 p-4">
-      {data?.map((child) => (
+    <ToggleGroup
+      onValueChange={value => {
+        selection.current = value
+      }}
+      type="multiple"
+      className="grid grid-cols-3 gap-4 p-4"
+    >
+      {data?.map(child =>
         child.name !== '' ? (
           <ToggleGroupItem className="w-full h-full" key={child.value} value={child.value}>
             {child.name}
           </ToggleGroupItem>
         ) : null
-      ))}
+      )}
     </ToggleGroup>
   )
 }
@@ -255,11 +346,10 @@ const Plate = (props: { type: 1 | 2 }) => {
   const plate = useQuery({
     queryKey: [getPlateList.cacheKey, props.type],
     queryFn: () => getPlateList(props.type),
-    placeholderData: [],
+    placeholderData: []
   })
 
   useUpdateEffect(() => {
-
     setActivePlate(undefined)
     if (plate.data && plate.data.length > 0) {
       setActivePlate(plate.data[0].id)
@@ -282,7 +372,6 @@ const Plate = (props: { type: 1 | 2 }) => {
   )
 }
 
-
 type PlateDataType = {
   amount: number
   change: number
@@ -302,7 +391,12 @@ const PlateList = (props: PlateListProps) => {
   const selection = useRef<string[]>([])
 
   useMount(() => {
-    ctx.register('sectors', 1, () => [...selection.current], () => selection.current.length > 0)
+    ctx.register(
+      'sectors',
+      1,
+      () => [...selection.current],
+      () => selection.current.length > 0
+    )
   })
 
   useUnmount(() => {
@@ -320,39 +414,70 @@ const PlateList = (props: PlateListProps) => {
     setList(props.data)
   }, [props.data])
 
-  const columns = useMemo<JknRcTableProps<PlateDataType>['columns']>(() => [
-    {
-      title: <JknIcon name="checkbox_mult_nor_dis" className="w-4 h-4" />,
-      dataIndex: 'select',
-      id: 'select',
-      align: 'center', width: 30,
-      render: (_, row) => (
-        <div className="flex items-center justify-center w-full"><Checkbox checked={getIsChecked(row.id)} onCheckedChange={() => toggle(row.id)} /></div>
-      )
-    },
-    { title: '序号', align: 'left', dataIndex: 'index', width: 40, render: (_, __, index) => index + 1 },
-    {
-      title: '行业', align: 'left', dataIndex: 'name',
-      render: (_, row) => <div className="w-full overflow-hidden text-ellipsis whitespace-nowrap">{row.name}</div>
-    },
-    {
-      title: '涨跌幅', dataIndex: 'change', sort: true,
-      width: 90,
-      render: (_, row) => <NumSpan block percent value={row.change} isPositive={row.change > 0} />
-    },
-    {
-      title: '成交额', dataIndex: 'amount', sort: true,
-      align: 'right', width: 120,
-      render: (_, row) => Decimal.create(row.amount).toShortCN(3)
-    }
-  ], [getIsChecked, toggle])
-  return (
-    <JknRcTable rowKey="id" onRow={(r) => ({
-      onClick: () => {
-        toggle(r.id)
-        props.onRowClick?.(r)
+  const columns = useMemo<JknRcTableProps<PlateDataType>['columns']>(
+    () => [
+      {
+        title: <JknIcon name="checkbox_mult_nor_dis" className="w-4 h-4" />,
+        dataIndex: 'select',
+        id: 'select',
+        align: 'center',
+        width: 30,
+        render: (_, row) => (
+          <div className="flex items-center justify-center w-full">
+            <JknIcon.Checkbox
+              checked={getIsChecked(row.id)}
+              className="rounded-none"
+              checkedIcon="checkbox_mult_sel"
+              uncheckedIcon="checkbox_mult_nor"
+            />
+          </div>
+        )
+      },
+      { title: '序号', align: 'left', dataIndex: 'index', width: 40, render: (_, __, index) => index + 1 },
+      {
+        title: '行业',
+        align: 'left',
+        dataIndex: 'name',
+        render: (_, row) => <div className="w-full overflow-hidden text-ellipsis whitespace-nowrap">{row.name}</div>
+      },
+      {
+        title: '涨跌幅',
+        dataIndex: 'change',
+        sort: true,
+        width: 90,
+        render: (_, row) => (
+          <SubscribeSpan.PercentBlock
+            subscribe={false}
+            symbol=""
+            initValue={row.change}
+            initDirection={row.change > 0}
+          />
+        )
+      },
+      {
+        title: '成交额',
+        dataIndex: 'amount',
+        sort: true,
+        align: 'right',
+        width: 120,
+        render: (_, row) => Decimal.create(row.amount).toShortCN(3)
       }
-    })} data={list} columns={columns} onSort={onSort} />
+    ],
+    [getIsChecked]
+  )
+  return (
+    <JknRcTable
+      rowKey="id"
+      onRow={r => ({
+        onClick: () => {
+          toggle(r.id)
+          props.onRowClick?.(r)
+        }
+      })}
+      data={list}
+      columns={columns}
+      onSort={onSort}
+    />
   )
 }
 
@@ -388,46 +513,93 @@ const PlateStocks = (props: PlateStocksProps) => {
   const [list, { setList, onSort }] = useTableData<Stock>([], 'symbol')
 
   useEffect(() => {
-    setList(plateStocks.data?.map(o => {
-      const s = stockUtils.toStock(o.stock, { extend: o.extend, name: o.name, symbol: o.symbol })
+    setList(
+      plateStocks.data?.map(o => {
+        const s = stockUtils.toStock(o.stock, { extend: o.extend, name: o.name, symbol: o.symbol })
 
-      return {
-        ...s,
-        percent: stockUtils.getPercent(s),
-        marketValue: stockUtils.getMarketValue(s),
-      }
-    }) ?? [])
+        return {
+          ...s,
+          percent: stockUtils.getPercent(s),
+          marketValue: stockUtils.getMarketValue(s)
+        }
+      }) ?? []
+    )
   }, [plateStocks.data, setList])
 
-  const columns = useMemo<JknRcTableProps<ArrayItem<typeof list>>['columns']>(() => [
-    { title: '序号', dataIndex: 'index', align: 'center', width: 60, render: (_, __, index) => index + 1 },
-    {
-      title: '名称代码', dataIndex: 'name', align: 'left', sort: true,
-      render: (name, row) => (
-        <StockView name={name} code={row.symbol} />
-      )
-    },
-    {
-      title: '现价', dataIndex: 'close', align: 'right', sort: true,
-      render: (close, row) => (
-        <NumSpanSubscribe code={row.symbol} field="close" value={close} decimal={3} isPositive={stockUtils.isUp(row)} align="right" />
-      )
-    },
-    {
-      title: '涨跌幅', dataIndex: 'percent', align: 'right', width: 90, sort: true,
-      render: (percent, row) => (
-        <NumSpanSubscribe code={row.symbol} field="percent" percent block decimal={2} value={percent} isPositive={stockUtils.isUp(row)} symbol />
-      )
-    },
-    {
-      title: '成交额', dataIndex: 'turnover', align: 'right', sort: true,
-      render: (turnover, row) => <NumSpanSubscribe code={row.symbol} field="turnover" blink align="right" unit decimal={2} value={turnover} />
-    },
-    {
-      title: '总市值', dataIndex: 'marketValue', align: 'right', sort: true,
-      render: (marketValue, row) => <NumSpanSubscribe code={row.symbol} field={v => stockUtils.getSubscribeMarketValue(row, v)} blink align="right" unit decimal={2} value={marketValue} />
-    }
-  ], [])
+  const columns = useMemo<JknRcTableProps<ArrayItem<typeof list>>['columns']>(
+    () => [
+      { title: '序号', dataIndex: 'index', align: 'center', width: 60, render: (_, __, index) => index + 1 },
+      {
+        title: '名称代码',
+        dataIndex: 'name',
+        align: 'left',
+        sort: true,
+        render: (name, row) => <StockView name={name} code={row.symbol} />
+      },
+      {
+        title: '现价',
+        dataIndex: 'close',
+        align: 'right',
+        sort: true,
+        render: (close, row) => (
+          <NumSpanSubscribe
+            code={row.symbol}
+            field="close"
+            value={close}
+            decimal={3}
+            isPositive={stockUtils.isUp(row)}
+            align="right"
+          />
+        )
+      },
+      {
+        title: '涨跌幅',
+        dataIndex: 'percent',
+        align: 'right',
+        width: 90,
+        sort: true,
+        render: (percent, row) => (
+          <NumSpanSubscribe
+            code={row.symbol}
+            field="percent"
+            percent
+            block
+            decimal={2}
+            value={percent}
+            isPositive={stockUtils.isUp(row)}
+            symbol
+          />
+        )
+      },
+      {
+        title: '成交额',
+        dataIndex: 'turnover',
+        align: 'right',
+        sort: true,
+        render: (turnover, row) => (
+          <NumSpanSubscribe code={row.symbol} field="turnover" blink align="right" unit decimal={2} value={turnover} />
+        )
+      },
+      {
+        title: '总市值',
+        dataIndex: 'marketValue',
+        align: 'right',
+        sort: true,
+        render: (marketValue, row) => (
+          <NumSpanSubscribe
+            code={row.symbol}
+            field={v => stockUtils.getSubscribeMarketValue(row, v)}
+            blink
+            align="right"
+            unit
+            decimal={2}
+            value={marketValue}
+          />
+        )
+      }
+    ],
+    []
+  )
 
   const onRowClick = useTableRowClickToStockTrading('symbol')
 
@@ -440,7 +612,6 @@ const PlateStocks = (props: PlateStocksProps) => {
       columns={columns}
       data={list}
     />
-
   )
 }
 

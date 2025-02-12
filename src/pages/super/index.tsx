@@ -90,6 +90,14 @@ const SuperStock = () => {
       })
       return
     }
+
+    if(!r || r.length === 0){
+      toast({
+        description: '未找到符合条件的股票'
+      })
+      return
+    }
+
     setData(r)
     sessionStorage.setItem('stock-picker-has', '1')
     sessionStorage.setItem('stock-picker-list', JSON.stringify(r))

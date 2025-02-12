@@ -13,7 +13,9 @@ export const MainIndicator = (props: MainIndicatorProps) => {
   const _setMainSystem = useCallback((system: string) => {
     kChartUtils.setMainSystem({ system })
     if(system){
-
+      
+    }else{
+      kChartUtils.setMainCoiling({coiling: []})
     }
   }, [])
 
