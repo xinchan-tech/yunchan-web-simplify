@@ -183,6 +183,10 @@ const TextImgLive = () => {
         pullLatest();
       }
     };
+
+    return () => {
+      channel.close();
+    };
   }, []);
 
   // 消息列表滚动到底部

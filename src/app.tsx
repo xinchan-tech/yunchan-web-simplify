@@ -14,6 +14,8 @@ import { useToast } from "@/hooks"
 import { wsManager } from "@/utils/ws"
 import { HeaderMall } from "./components/header/mall"
 
+export const CHAT_STOCK_JUMP = 'chat_stock_jump'
+
 const App = () => {
   const setConsults = useConfig(s => s.setConsults)
   const setHasSelected = useConfig(s => s.setHasSelected)
@@ -25,6 +27,8 @@ const App = () => {
   const setUser = useUser(s => s.setUser)
   const notLogin = useRef(0)
   const queryClient = useQueryClient()
+
+
 
   const query = useQuery({
     queryKey: [getUser.cacheKey],
@@ -81,6 +85,9 @@ const App = () => {
   }, [toast])
 
   useMount(() => {
+    if (!config.hasSelected) {
+      config.setHasSelected();
+      config.setLanguage(navigator.language === "zh-CN" ? "zh_CN" : "en");
     if (!hasSelected) {
       setHasSelected()
       setLanguage(navigator.language === 'zh-CN' ? 'zh_CN' : 'en')
@@ -89,7 +96,20 @@ const App = () => {
     i18n.changeLanguage(language)
   })
 
+const navigate =useNavigate()
   useEffect(() => {
+    const channel = new BroadcastChannel("chat-channel");
+   
+    channel.onmessage=  (event) => {
+  
+      if (event.data.type === CHAT_STOCK_JUMP) {
+       
+        if(event.data.payload) {
+
+          navigate(`/app/stock/trading?symbol=${event.data.payload}`);
+        }
+      }
+    }
     const handler = () => {
       if (notLogin.current === 0 && window.location.pathname !== "/app") {
         notLogin.current = 1;
@@ -105,6 +125,7 @@ const App = () => {
     appEvent.on("not-login", handler);
 
     return () => {
+      channel.close()
       appEvent.off("not-login", handler);
     };
   }, []);
@@ -242,13 +263,17 @@ const AppTitle = () => {
       return () => {
         close();
         closeOpinion();
+        channel.close()
       };
     } else {
       channel.postMessage({
         type: "logout",
       });
+
+      return  channel.close;
     }
-  }, [token])
+    
+  }, [token]);
 
   useEffect(() => {
     const s = router.subscribe((s) => {

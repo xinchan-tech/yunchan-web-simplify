@@ -1,8 +1,10 @@
 import MsgCard from "../../components/msg-card";
 
 import WKSDK, { Channel, ChannelTypePerson, Message } from "wukongimjssdk";
-import { MessageWrap, PartType, Part } from "../../Service/Model";
+import { MessageWrap } from "../../Service/Model";
 import { useChatNoticeStore } from "@/store/group-chat-new";
+import { CHAT_STOCK_JUMP, NAVIGATE_STOCK } from "@/app";
+import { appEvent } from "@/utils/event";
 
 export const RevokeText = (props: {
   data: {
@@ -49,24 +51,43 @@ export const RevokeText = (props: {
     </div>
   );
 };
-
-const HighlightDollarWords = (text: string) => {
-  // 定义一个正则表达式，用于匹配以 $ 开头且后面跟着大写字母的字符串
-  const regex = /\$[A-Z]+/g;
+const jumpToStock = (symbol: string) => {
+  const channel = new BroadcastChannel("chat-channel");
+  channel.postMessage({
+    type: CHAT_STOCK_JUMP,
+    payload: symbol,
+  });
+};
+interface HighlightDollarWordsProps {
+  text: string;
+}
+const HighlightDollarWords: React.FC<HighlightDollarWordsProps> = ({
+  text,
+}) => {
+  // 定义正则表达式，用于匹配以 $ 开头且后面跟着大写字母的字符串
+  const regex: RegExp = /\$[A-Z]+/g;
   // 用于存储分割后的字符串部分
-  const parts = [];
-  let lastIndex = 0;
+  const parts: (string | React.ReactElement)[] = [];
+  let lastIndex: number = 0;
   // 使用正则表达式的 exec 方法查找匹配项
-  let match;
+  let match: RegExpExecArray | null;
   while ((match = regex.exec(text)) !== null) {
     // 将匹配项之前的字符串部分添加到 parts 数组中
     if (match.index > lastIndex) {
       parts.push(text.slice(lastIndex, match.index));
     }
     // 将匹配项添加到 parts 数组中，并添加高亮样式
+    const str = match[0];
     parts.push(
-      <span className="cursor-pointer text-primary" key={match.index}>
-        {match[0]}
+      <span
+        className="text-primary cursor-pointer"
+        key={match.index}
+        onClick={() => {
+          const symbol = str.replace("$", "");
+          jumpToStock(symbol);
+        }}
+      >
+        {str}
       </span>
     );
     // 更新 lastIndex 为匹配项的结束位置
@@ -155,7 +176,11 @@ const TextCell = (props: { message: Message; messageWrap?: MessageWrap }) => {
     if (messageWrap?.content.text) {
       const goodText = messageWrap.content.text.split("\n");
       goodText.forEach((str: string, idx: number) => {
-        text.push(<span key={str + idx}>{HighlightDollarWords(str)}</span>);
+        text.push(
+          <span key={str + idx}>
+            <HighlightDollarWords text={str} />
+          </span>
+        );
         if (idx !== goodText.length - 1) {
           text.push(<br key={str + idx + "br"}></br>);
         }

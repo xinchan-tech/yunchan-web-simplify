@@ -186,7 +186,7 @@ const GroupChatPage = () => {
       WKSDK.shared().connectManager.removeConnectStatusListener(
         connectStatusListener
       );
-
+      channel.close();
       WKSDK.shared().chatManager.removeCMDListener(cmdListener);
       WKSDK.shared().disconnect();
     };
