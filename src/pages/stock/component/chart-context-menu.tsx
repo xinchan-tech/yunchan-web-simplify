@@ -7,7 +7,7 @@ import { kChartUtils, useKChartStore } from "../lib"
 interface ChartContextMenuProps {
   index: number
   onChangeSecondaryCount: (count: number) => void
-  onChangeYAxis: (type: Parameters<typeof kChartUtils.setYAxis>[0]['yAxis']) => void
+  onChangeYAxis?: (type: Parameters<typeof kChartUtils.setYAxis>[0]['yAxis']) => void
 }
 
 export const ChartContextMenu = (props: PropsWithChildren<ChartContextMenuProps>) => {
@@ -23,9 +23,9 @@ export const ChartContextMenu = (props: PropsWithChildren<ChartContextMenuProps>
 
   const _setYAxis = (type: Parameters<typeof kChartUtils.setYAxis>[0]['yAxis']) => () => {
     kChartUtils.setYAxis({ index: props.index, yAxis: type })
-    setTimeout(() => {
-      props.onChangeYAxis(type)
-    })
+    // setTimeout(() => {
+    //   props.onChangeYAxis(type)
+    // })
   }
 
   return (

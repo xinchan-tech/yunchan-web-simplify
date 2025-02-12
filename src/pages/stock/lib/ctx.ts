@@ -1,8 +1,9 @@
-import { StockChartInterval, getStockChart, getStockIndicatorData, getStockIndicators, getStockTabData } from '@/api'
+import { StockChartInterval, type StockRawRecord, getStockChart, getStockChartV2, getStockIndicatorData, getStockTabData } from '@/api'
 import { useIndicator, useTime } from '@/store'
 import { calcCoiling } from '@/utils/coiling'
 import type echarts from '@/utils/echarts'
 import { queryClient } from '@/utils/query-client'
+import { stockUtils } from "@/utils/stock"
 import dayjs from 'dayjs'
 import { produce } from 'immer'
 import mitt from 'mitt'
@@ -327,7 +328,7 @@ type MainChartState = {
    */
   overlayStock: {
     symbol: string
-    data: Awaited<ReturnType<typeof getStockChart>>
+    data: StockRawRecord[]
   }[]
   /**
    * 叠加标记
@@ -628,18 +629,19 @@ export const kChartUtils: KChartUtils = {
   addOverlayStock: ({ index, symbol }) => {
     const chart = useKChartStore.getState().state[index ?? useKChartStore.getState().activeChartIndex]
     if (chart.overlayStock.some(item => item.symbol === symbol)) return
-    const startTime = renderUtils.getStartTime(useTime.getState().getCurrentUsTime(), chart.timeIndex)
+    const startTime = useKChartStore.getState().state[index ?? useKChartStore.getState().activeChartIndex].mainData.history[0]?.[0]
+    const interval = useKChartStore.getState().state[index ?? useKChartStore.getState().activeChartIndex].timeIndex
     const params = {
-      start_at: startTime,
-      ticker: symbol,
-      interval: chart.timeIndex,
-      gzencode: true
+      start_at: dayjs(+startTime! * 1000).tz('America/New_York').format('YYYY-MM-DD HH:mm:ss'),
+      symbol: symbol,
+      period:  stockUtils.intervalToPeriod(interval),
+      time_format: 'int'
     }
 
     queryClient
       .ensureQueryData({
         queryKey: [getStockChart.cacheKey, { symbol }],
-        queryFn: () => getStockChart(params)
+        queryFn: () => getStockChartV2(params)
       })
       .then(data => {
         useKChartStore.setState(state => ({
@@ -648,7 +650,7 @@ export const kChartUtils: KChartUtils = {
               return produce(item, draft => {
                 draft.overlayStock.push({
                   symbol,
-                  data
+                  data: data.data.list
                 })
               })
             }

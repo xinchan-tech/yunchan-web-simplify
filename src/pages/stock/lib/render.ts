@@ -1023,7 +1023,7 @@ export const renderOverlay = (options: ECOption, data?: ChartState['overlayStock
       smooth: true,
       symbol: 'none',
       type: 'line',
-      data: stock.data.history.map(o => [dayjs(o[0]).valueOf().toString(), ...o.slice(1)]),
+      data: stock.data.map(o => [o[0]?.toString(), ...o.slice(1)]),
       color: colorUtil.colorPalette[index],
       encode: {
         x: [0],
@@ -1039,33 +1039,7 @@ export const renderOverlay = (options: ECOption, data?: ChartState['overlayStock
       Array.isArray(options.series) && options.series.push(series)
     }
   })
-
-  // /**
-  //  * 添加legend
-  //  */
-  // if (!options.legend) {
-  //   options.legend = {
-  //     show: false,
-  //     data: data.map(stock => stock.symbol),
-  //     icon: 'rect',
-  //     itemWidth: 10,
-  //     itemHeight: 10,
-  //     borderColor: '#fff',
-  //     borderWidth: 1,
-  //     emphasis: {
-  //       selectorLabel: {
-  //         color: 'red'
-  //       }
-  //     },
-  //     itemStyle: {
-  //       borderRadius: 0
-  //     },
-  //     textStyle: {
-  //       color: '#fff'
-  //     }
-  //   }
-  // }
-
+  
   return options
 }
 

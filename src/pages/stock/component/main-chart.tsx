@@ -114,12 +114,6 @@ export const MainChart = (props: MainChartProps) => {
     lastMainHistory.current = state.mainData.history
   }, [state.mainData.history])
 
-  // const params = {
-  //   start_at: startTime,
-  //   ticker: state.symbol,
-  //   interval: state.timeIndex,
-  //   gzencode: true
-  // }
   const { candlesticks, fetchPrevCandlesticks } = useStockCandlesticks(props.index)
 
   fetchFn.current = fetchPrevCandlesticks
@@ -259,7 +253,13 @@ export const MainChart = (props: MainChartProps) => {
           index: props.index,
           data: r
         })
+
+        setTimeout(() => {
+          renderFn.current()
+        })
       })
+
+     
     })
 
     return () => unsubscribe()
@@ -303,14 +303,19 @@ export const MainChart = (props: MainChartProps) => {
     }
     renderWatermark(_options, state.timeIndex)
     chart.current.setOption(_options, true)
-    // console.log('render', chart.current.getOption())
+    console.log('render', chart.current.getOption())
   }
 
   renderFn.current = render
 
   useUpdateEffect(() => {
     render()
-  }, [state.mainData])
+  }, [state.mainData, state.type, state.overlayMark, state.overlayStock, state.yAxis, state.mainCoiling])
+
+  useUpdateEffect(() => {
+    render()
+  }, [])
+  
 
   const onChangeSecondaryIndicators = useCallback(
     async (params: { value: string; index: number; type: string; name: string; formula?: string }) => {
@@ -371,7 +376,7 @@ export const MainChart = (props: MainChartProps) => {
   }, [])
 
   return (
-    <ChartContextMenu index={props.index} onChangeSecondaryCount={onChangeSecondaryCount} onChangeYAxis={onChangeSecondaryCount}>
+    <ChartContextMenu index={props.index} onChangeSecondaryCount={onChangeSecondaryCount}>
       <div
         className={cn(
           'w-full h-full relative border border-transparent border-solid box-border',
