@@ -86,7 +86,17 @@ const App = () => {
       })
     }
 
-    appEvent.on('toast', handler)
+    i18n.changeLanguage(config.language);
+  });
+  const navigate =useNavigate()
+  useEffect(() => {
+    const channel = new BroadcastChannel("chat-channel");
+   
+    channel.onmessage =  (event) => {
+  
+      if (event.data.type === CHAT_STOCK_JUMP) {
+       
+        if(event.data.payload) {
 
     return () => {
       appEvent.off('toast', handler)
@@ -271,6 +281,14 @@ const AppTitle = () => {
         close()
         closeOpinion()
         channel.close()
+      };
+    } else {
+      channel.postMessage({
+        type: "logout",
+      });
+
+      return () => {
+        channel.close();
       }
     }
       channel.postMessage({
