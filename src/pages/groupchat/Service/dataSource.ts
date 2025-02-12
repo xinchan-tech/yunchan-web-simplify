@@ -22,7 +22,7 @@ import {
 import { Convert } from "./convert";
 import request from "@/utils/request";
 import UploadUtil from "./uploadUtil";
-import { userToChannelInfo } from "../chat-utils";
+import { judgeIsExpireGroupCache, userToChannelInfo } from "../chat-utils";
 import cacheManager, { LocalCacheManager } from "../messageCache";
 
 LocalCacheManager.page = 1;
@@ -48,6 +48,8 @@ const getMessageFromCache = async (channel: Channel, opts: SyncOptions) => {
   }
 };
 
+let expireFirstPageFlag = true;
+
 export function initDataSource() {
   // 同步自己业务端的频道消息列表
   // WKSDK.shared().config.deviceFlag = 0;
@@ -62,31 +64,43 @@ export function initDataSource() {
     }
   ) => {
     let result = [];
+    const isExpire = judgeIsExpireGroupCache(channel.channelID);
+    if (isExpire) {
+      // 过期群就一直拿缓存的
 
-    result = await getMessageFromCache(channel, opts);
-    // 跨页定位时，要判断缓存返回的list长度是否和入参的差值相同
-    let isNavigate = false;
-    if (opts.startMessageSeq > 0 && opts.endMessageSeq > 0) {
-      const distance = Math.abs(opts.startMessageSeq - opts.endMessageSeq);
-      if (result.length !== distance) {
-        isNavigate = true;
-      }
-    }
-    if (isNavigate === true) {
-      result = await APIClient.shared.syncMessages(channel, opts);
-      return result;
-    }
-    // 缓存没数据或者缓存数据和limit对不上，就用远程接口再查
-    if (result.length === 0) {
-      try {
+      result = await getMessageFromCache(channel, opts);
+    } else {
+      // 获取最新消息时，查远程的
+      if (opts.endMessageSeq === 0 && opts.startMessageSeq === 0) {
         result = await APIClient.shared.syncMessages(channel, opts);
-        return result;
-      } catch (e) {
-        opts.endMessageSeq = -1;
-        opts.startMessageSeq = -1;
-        return await getMessageFromCache(channel, opts);
+      } else {
+        // 没过期群的先查缓存的，再查远程的
+        result = await getMessageFromCache(channel, opts);
+        // 跨页定位时，要判断缓存返回的list长度是否和入参的差值相同
+        let isNavigate = false;
+        if (opts.startMessageSeq > 0 && opts.endMessageSeq > 0) {
+          const distance = Math.abs(opts.startMessageSeq - opts.endMessageSeq);
+          if (result.length !== distance) {
+            isNavigate = true;
+          }
+        }
+        if (isNavigate === true) {
+          result = await APIClient.shared.syncMessages(channel, opts);
+          return result;
+        }
+        // 缓存没数据或者缓存数据和limit对不上，就用远程接口再查
+        if (result.length === 0) {
+          try {
+            result = await APIClient.shared.syncMessages(channel, opts);
+
+            return result;
+          } catch (e) {
+            // 过期了
+          }
+        }
       }
     }
+
     return result;
   };
 

@@ -38,7 +38,6 @@ import SystemCell from "../Messages/system";
 // import { useScrollToBottomOnArrowClick } from "../hooks";
 import { MessagePerPageLimit } from "../Service/constant";
 import FullScreenLoading from "@/components/loading";
-import cacheManager, { syncManager } from "../messageCache";
 
 let scrollStart: () => void;
 let scrollEnd: () => void;

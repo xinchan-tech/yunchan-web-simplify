@@ -108,19 +108,20 @@ class LocalCacheManager {
       // 暂时只有往前面查
       let count = 0;
       let range = IDBKeyRange.bound([groupId, left], [groupId, right]);
-      const isExpire = options.start === -1 && options.end === -1;
+      // 查最近的 limit数量的信息
+      const isLatest = options.start === 0 && options.end === 0;
 
       const results: any[] = [];
 
       let request = index.openCursor(range);
-      if (isExpire === true) {
+      if (isLatest === true) {
         const newRange = IDBKeyRange.bound([groupId, 0], [groupId, Infinity]);
         request = index.openCursor(newRange, "prev");
       }
       request.onsuccess = () => {
         const cursor = request.result;
         if (cursor) {
-          if (isExpire) {
+          if (isLatest) {
             if (count < options.limit) {
               results.unshift(cursor.value);
               count++;
