@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.23.0](https://github.com/xinchan-gx/yunchan-web/compare/1.22.0...1.23.0) (2025-02-12)
+
+### ✨ Features | 新功能
+
+* 更新商城页面版本和订阅类型，移除聊天社群选项 ([4592e4d](https://github.com/xinchan-gx/yunchan-web/commit/4592e4d58177629757d9cb0286b4010ce245424b))
+* 扩展股票类型，优化股票数据处理逻辑 ([97b7461](https://github.com/xinchan-gx/yunchan-web/commit/97b74619aa8da3c7d716c521d4827372fdad8032))
+* 添加图表事件管理，优化指标数据处理和财务数据展示逻辑 ([46c3a8c](https://github.com/xinchan-gx/yunchan-web/commit/46c3a8c33521e040f8dac81440cddde18aeb7b1c))
+* 添加指标数据批量设置功能并优化图表渲染逻辑 ([1d6d6d9](https://github.com/xinchan-gx/yunchan-web/commit/1d6d6d9b27ae383393e072ad4a20ccb84ae8770b))
+* 优化数据展示逻辑，调整图表数据切片长度，增强组件属性支持 ([bc12dc8](https://github.com/xinchan-gx/yunchan-web/commit/bc12dc835f125dcab871aa3dc08457ed709328aa))
+
+### 🐛 Bug Fixes | Bug 修复
+
+* 修复股票图表数据请求逻辑并优化文本绘制设置 ([ccec402](https://github.com/xinchan-gx/yunchan-web/commit/ccec402ed6ed94e45113f85573c2b5645f5c10c2))
+* 优化股票图表数据请求和时间格式处理 ([d8a619f](https://github.com/xinchan-gx/yunchan-web/commit/d8a619fd815d3c129f0809a8ac36ca64fbd5f964))
+* 优化图表上下文菜单和主图表的状态管理，移除冗余代码 ([4abe6bc](https://github.com/xinchan-gx/yunchan-web/commit/4abe6bc6e744e046dcae12acd9c38861144c85ef))
+
 ## [1.22.0](https://github.com/xinchan-gx/yunchan-web/compare/1.4.0...1.22.0) (2025-02-11)
 
 ### ✨ Features | 新功能
