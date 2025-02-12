@@ -75,10 +75,13 @@ class UploadUtil {
         // 调用后端接口获取新的 STS Token
         const result = await request.get("/upload/getOssToken");
         this.tokenRes = result.data;
+
+        cos.options.stsToken = this.tokenRes.credentials?.securityToken;
         return {
-          accessKeyId: result.data.accessKeyId,
-          accessKeySecret: result.data.accessKeySecret,
-          stsToken: result.data.securityToken,
+          accessKeyId: this.tokenRes.credentials?.accessKeyId,
+          accessKeySecret: this.tokenRes.credentials?.accessKeySecret,
+          stsToken: this.tokenRes.credentials?.securityToken,
+          securityToken: this.tokenRes.credentials?.securityToken,
         };
       },
       refreshSTSTokenInterval: wait,
@@ -89,8 +92,10 @@ class UploadUtil {
     try {
       this.clientUpload = (file: File, filename: string) => {
         return new Promise((resolve, reject) => {
-          console.log(file)
-          //cos上传函数
+          if (window.showToken === true) {
+            console.log(cos.options.stsToken, "cos.options.stsToken");
+          }
+
           cos
             .put("image/" + filename, file)
             .then((res) => {

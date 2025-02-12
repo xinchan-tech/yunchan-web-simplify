@@ -52,7 +52,7 @@ const priceConf = [
   "79.9",
   "89.9",
   "99.9",
-  "999.9",
+  "990",
 ];
 
 const createGroupSchema = z.object({

@@ -50,6 +50,36 @@ export const RevokeText = (props: {
   );
 };
 
+const HighlightDollarWords = (text: string) => {
+  // 定义一个正则表达式，用于匹配以 $ 开头且后面跟着大写字母的字符串
+  const regex = /\$[A-Z]+/g;
+  // 用于存储分割后的字符串部分
+  const parts = [];
+  let lastIndex = 0;
+  // 使用正则表达式的 exec 方法查找匹配项
+  let match;
+  while ((match = regex.exec(text)) !== null) {
+    // 将匹配项之前的字符串部分添加到 parts 数组中
+    if (match.index > lastIndex) {
+      parts.push(text.slice(lastIndex, match.index));
+    }
+    // 将匹配项添加到 parts 数组中，并添加高亮样式
+    parts.push(
+      <span className="cursor-pointer text-primary" key={match.index}>
+        {match[0]}
+      </span>
+    );
+    // 更新 lastIndex 为匹配项的结束位置
+    lastIndex = regex.lastIndex;
+  }
+  // 将最后一个匹配项之后的字符串部分添加到 parts 数组中
+  if (lastIndex < text.length) {
+    parts.push(text.slice(lastIndex));
+  }
+  // 返回渲染后的 JSX 元素
+  return <div>{parts}</div>;
+};
+
 const TextCell = (props: { message: Message; messageWrap?: MessageWrap }) => {
   const { message, messageWrap } = props;
 
@@ -124,8 +154,8 @@ const TextCell = (props: { message: Message; messageWrap?: MessageWrap }) => {
     let text = new Array<JSX.Element>();
     if (messageWrap?.content.text) {
       const goodText = messageWrap.content.text.split("\n");
-      goodText.forEach((str, idx) => {
-        text.push(<span key={str + idx}>{str}</span>);
+      goodText.forEach((str: string, idx: number) => {
+        text.push(<span key={str + idx}>{HighlightDollarWords(str)}</span>);
         if (idx !== goodText.length - 1) {
           text.push(<br key={str + idx + "br"}></br>);
         }
