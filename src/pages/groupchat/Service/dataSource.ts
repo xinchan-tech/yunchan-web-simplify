@@ -64,6 +64,7 @@ export function initDataSource() {
     }
   ) => {
     let result = [];
+
     const isExpire = judgeIsExpireGroupCache(channel.channelID);
     if (isExpire) {
       // 过期群就一直拿缓存的

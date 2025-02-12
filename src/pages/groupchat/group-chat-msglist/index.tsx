@@ -318,7 +318,7 @@ const GroupChatMsgList = forwardRef((props, ref) => {
       remoteJump: true,
     };
     if (initMessageSeq && initMessageSeq > 0) {
-      opts.startMessageSeq = firstMessageSeq;
+      opts.startMessageSeq = firstMessageSeq - 1;
       opts.endMessageSeq = initMessageSeq - 5; // 加多几条
       opts.limit = Math.abs(firstMessageSeq - initMessageSeq) + 5;
       opts.pullMode = PullMode.Down;
@@ -374,6 +374,7 @@ const GroupChatMsgList = forwardRef((props, ref) => {
 
         if (targetMessage) {
           // 等待dom更新后修改滚动位置
+          jumpMsgIdRef.current = "";
           locatedMessageIdRef.current = targetMessage.clientMsgNo;
 
           jumpScrolling.current = true;
