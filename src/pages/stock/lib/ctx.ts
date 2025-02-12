@@ -7,7 +7,7 @@ import dayjs from 'dayjs'
 import { produce } from 'immer'
 import mitt from 'mitt'
 import { nanoid } from 'nanoid'
-import { mapValues } from "radash"
+import { mapValues } from 'radash'
 import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
 import { renderUtils } from './utils'
@@ -173,6 +173,13 @@ type KChartUtils = {
   setIndicatorData: (params: { index: number; indicatorId: string; data: any }) => void
 
   /**
+   * 批量设置指标数据
+   * @param params
+   * @returns
+   */
+  setIndicatorsData: (params: { index: number; data: { indicatorId: string; data: any }[] }) => void
+
+  /**
    * 修改视图模式
    */
   setViewMode: (params: { index?: number; viewMode: ViewMode }) => void
@@ -227,7 +234,15 @@ export type Indicator = {
 /**
  * 指标数据
  */
-export type IndicatorData = (IndicatorDataLine | IndicatorDataDrawGradient | IndicatorDataDrawStickLine | IndicatorDataDrawText | IndicatorDataDrawNumber)[] | undefined
+export type IndicatorData =
+  | (
+      | IndicatorDataLine
+      | IndicatorDataDrawGradient
+      | IndicatorDataDrawStickLine
+      | IndicatorDataDrawText
+      | IndicatorDataDrawNumber
+    )[]
+  | undefined
 type DrawFunc = '' | 'STICKLINE' | 'DRAWTEXT' | 'DRAWGRADIENT' | 'DRAWNUMBER'
 type IndicatorDataBase<T extends DrawFunc> = {
   draw: T
@@ -446,7 +461,7 @@ export const useKChartStore = create<KChartContext>()(
                 ...item,
                 data: undefined
               })),
-              mainIndicators: mapValues(r.mainIndicators, (value) => ({
+              mainIndicators: mapValues(r.mainIndicators, value => ({
                 ...value,
                 data: undefined
               })) as any,
@@ -678,7 +693,7 @@ export const kChartUtils: KChartUtils = {
     if (data?.length && timeIndex !== undefined) {
       coilingData = await calcCoiling(data, timeIndex)
     }
-    
+
     useKChartStore.setState(s => ({
       state: produce(s.state, draft => {
         const item = draft.find(item => item.index === (index ?? s.activeChartIndex))
@@ -687,31 +702,18 @@ export const kChartUtils: KChartUtils = {
             history: history as any,
             coilingData
           }
+
+          // //清除指标数据，重新计算
+          // Object.values(item.mainIndicators).forEach(v => {
+          //   v.data = undefined
+          // })
+          // //清除附图指标数据，重新计算
+          // item.secondaryIndicators.forEach(v => {
+          //   v.data = undefined
+          // })
         }
       })
     }))
-    // useKChartStore.setState(state => ({
-    //   state: state.state.map(item => {
-    //     if (item.index === (index ?? state.activeChartIndex)) {
-    //       const newD = produce(item, draft => {
-    //         draft.mainData = data
-    //           ? dateConvert
-    //             ? ({
-    //               ...data,
-    //               history: data.history.map(v => [dayjs(v[0]).valueOf().toString(), ...v.slice(1)])
-    //             } as any)
-    //             : data
-    //           : {
-    //             history: [],
-    //             coiling_data: undefined,
-    //             md5: ''
-    //           }
-    //       })
-    //       return newD
-    //     }
-    //     return item
-    //   })
-    // }))
   },
   setIndicatorData: ({ index, indicatorId, data }) => {
     useKChartStore.setState(state => ({
@@ -736,6 +738,32 @@ export const kChartUtils: KChartUtils = {
         return item
       })
     }))
+  },
+  setIndicatorsData: ({ index, data }) => {
+    useKChartStore.setState(state => {
+      const _state = produce(state.state, draft => {
+        const s = draft[index ?? state.activeChartIndex]
+
+        data.forEach(({ indicatorId, data }) => {
+          const indicators = []
+          if (s.mainIndicators[indicatorId]) {
+            indicators.push(s.mainIndicators[indicatorId])
+          }
+
+          indicators.push(...s.secondaryIndicators.filter(i => i.id === indicatorId))
+
+          if (indicators.length === 0) return
+
+          indicators.forEach(indicator => {
+            indicator.data = data
+          })
+        })
+      })
+
+      return {
+        state: _state
+      }
+    })
   },
   setSecondaryIndicator: ({ index, indicatorIndex, indicator }) => {
     const queryKey = [

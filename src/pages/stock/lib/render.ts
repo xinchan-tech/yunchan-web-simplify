@@ -230,7 +230,7 @@ export const createOptions = (chart: EChartsType): ECOption => ({
             if (!data) return params.value
 
             const start = data[0]
-
+     
             if (chart.meta?.yAxis?.right === 'percent') {
               const percent = ((params.value - start[2]) / start[2]) * 100
 
@@ -265,14 +265,14 @@ export const createOptions = (chart: EChartsType): ECOption => ({
             const scale = echartUtils.getAxisScale(chart, 0)
 
             const data = chart.meta!.mainData?.[scale[0]]
-
+         
             if (!data) return '-'
 
-            const start = data[0]
+            const start = data[2]
+    
+            if (!start) return v
 
-            if (!start || start.length < 2) return TEXT_COLOR
-
-            return `${(((v - start[2]) / start[2]) * 100).toFixed(2)}%`
+            return `${(((v - start) / start) * 100).toFixed(2)}%`
           }
 
           return v
@@ -410,7 +410,11 @@ type ChartRender = (
  * 渲染图表
  */
 export const renderChart = (chart: EChartsType): ECOption => {
+  const _initOptions = initOptions()
   const _options = createOptions(chart)
+  
+
+  Object.assign(_options, _initOptions)
 
   return _options
 }
@@ -1370,7 +1374,7 @@ export const renderZoom = (options: ECOption, addCount: number, zoom?: [number, 
     return
   }
 
-  const MaxKLineCount = 1000
+  const MaxKLineCount = 500
   const _zoom = [...zoom]
 
   if (_zoom[0] === Number.POSITIVE_INFINITY) {

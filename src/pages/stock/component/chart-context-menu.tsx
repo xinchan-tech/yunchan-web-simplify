@@ -6,6 +6,8 @@ import { kChartUtils, useKChartStore } from "../lib"
 
 interface ChartContextMenuProps {
   index: number
+  onChangeSecondaryCount: (count: number) => void
+  onChangeYAxis: (type: Parameters<typeof kChartUtils.setYAxis>[0]['yAxis']) => void
 }
 
 export const ChartContextMenu = (props: PropsWithChildren<ChartContextMenuProps>) => {
@@ -14,9 +16,17 @@ export const ChartContextMenu = (props: PropsWithChildren<ChartContextMenuProps>
 
   const onChangeSecondaryIndicators = (count: number) => () => {
     kChartUtils.setSecondaryIndicatorsCount({ count, index: props.index, indicator: { id: '9', type: 'system', timeIndex, symbol, key: nanoid(), name: '买卖点位' } })
+    setTimeout(() => {
+      props.onChangeSecondaryCount(count)
+    })
   }
 
-  const _setYAxis = (type: Parameters<typeof kChartUtils.setYAxis>[0]['yAxis']) => () => kChartUtils.setYAxis({ index: props.index, yAxis: type })
+  const _setYAxis = (type: Parameters<typeof kChartUtils.setYAxis>[0]['yAxis']) => () => {
+    kChartUtils.setYAxis({ index: props.index, yAxis: type })
+    setTimeout(() => {
+      props.onChangeYAxis(type)
+    })
+  }
 
   return (
     <ContextMenu>

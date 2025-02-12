@@ -43,44 +43,56 @@ export const calcIndicator = async (
   result.data = result.data.map(item => {
  
     if (item.draw === 'DRAWTEXT') {
-      if (item.draw_data.length <= 0) {
-        return item
-      }
-
-      const [condition, text] = item.draw_data[0]
-
-      const r: any = {}
-
-      Object.entries(item.draw_data).forEach(([key, value]) => {
-        if (key === '0' && condition === 0) {
-          return
-        }
-
-        const typedValue = value as [number, number]
-        r[key] = [typedValue[0], text]
-      })
-   
-      item.draw_data = r
+      item.draw_data = drawTextConvert(item.draw_data)
+    }else if(item.draw === 'STICKLINE'){
+      item.draw_data = drawStickLineConvert(item.draw_data)
     }
 
     return item
   })
   console.log(result)
   return result
+}
 
-  // return window.PolicyModule().then(module => {
-  //   const _data = data.map((item: StockRawRecord) => {
-  //     return [Math.floor(stockUtils.parseTime(item[0]) / 1000), ...item.slice(1)] as unknown as StockRawRecord
-  //   }, true)
-  //   const indicator = useIndicator.getState().getIndicatorQueryParams(fml.indicatorId)
-  //   if (!isEmpty(indicator)) {
-  //     fml.formula = listify(indicator, (k, v) => `${k}:=${v};`).join('') + fml.formula
-  //   }
 
-  //   const r =  module.policy_execute(fml, _data, interval)
+const drawTextConvert = (drawData: any) => {
+  if (drawData.length <= 0) {
+    return drawData
+  }
 
-  // }).then(r => {
-  //   console.log('id', fml.indicatorId, '\nfml', fml, '\ncandlesticks', data, '\ninterval', interval, '\nresult', r)
-  //   return r
-  // })
+  const [condition, text] = drawData[0]
+
+  const r: any = {}
+
+  Object.entries(drawData).forEach(([key, value]) => {
+    if (key === '0' && condition === 0) {
+      return
+    }
+
+    const typedValue = value as [number, number]
+    r[key] = [typedValue[0], text]
+  })
+
+  return r
+}
+
+const drawStickLineConvert = (drawData: any) => {
+  if (drawData.length <= 0) {
+    return drawData
+  }
+
+  const [condition, width, empty] = drawData[0]
+
+  const r: any = {}
+
+  Object.entries(drawData).forEach(([key, value]) => {
+    if (key === '0' && condition === 0) {
+      return
+    }
+
+    const typedValue = value as [number, number]
+    r[key] = [typedValue[0], typedValue[1], width, empty]
+  })
+
+  return r
 }

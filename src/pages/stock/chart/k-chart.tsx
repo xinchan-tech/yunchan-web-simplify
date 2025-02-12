@@ -64,9 +64,7 @@ export const KChart = (props: KChartProps) => {
         {
           Array.from({ length: chartCount }).map((_, index) => (
             // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
-            <ChartContextMenu key={index} index={index}>
-              <MainChart index={index} />
-            </ChartContextMenu>
+              <MainChart key={index} index={index} />
           ))
         }
       </div>
