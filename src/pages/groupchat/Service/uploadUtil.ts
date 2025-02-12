@@ -14,7 +14,7 @@ class UploadUtil {
     };
     endpoint: string;
   };
-  client: any;
+  clientUpload: (file: File, name: string) => Promise<any>;
   store: any;
   constructor(/* fileType = "image" */) {
     this.tokenRes = {
@@ -27,7 +27,7 @@ class UploadUtil {
       },
       endpoint: "",
     };
-    this.client = {};
+    this.clientUpload = async () => {};
     this.store = null;
   }
 
@@ -55,7 +55,10 @@ class UploadUtil {
 
   //腾讯云
   cos() {
-    // OSS配置正常是tokenRes返回，但是这里写死数据
+    const wait =
+      new Date(this.tokenRes.credentials.expiration).getTime() -
+      new Date().getTime() -
+      60 * 100;
     const cos = new OSS({
       // yourregion填写Bucket所在地域。以华东1（杭州）为例，Region填写为oss-cn-hangzhou。
       region: 'oss-cn-shenzhen',
@@ -71,41 +74,46 @@ class UploadUtil {
       refreshSTSToken: async () => {
         // 调用后端接口获取新的 STS Token
         const result = await request.get("/upload/getOssToken");
-
+        this.tokenRes = result.data;
         return {
           accessKeyId: result.data.accessKeyId,
           accessKeySecret: result.data.accessKeySecret,
           stsToken: result.data.securityToken,
         };
       },
-      refreshSTSTokenInterval: 300000
+      refreshSTSTokenInterval: wait,
     });
     this.store = cos;
     // 更改图片权限
     // cos.putBucketACL(this.tokenRes.bucket, 'public-read')
     try {
-      this.client.upload = (file, filename: string) => {
+      this.clientUpload = (file: File, filename: string) => {
         return new Promise((resolve, reject) => {
           console.log(file)
           //cos上传函数
-          cos.put('image/' + filename, file).then(res => {
-            console.log('res', res)
-            resolve(res)
-          })
-        })
-      }
+          cos
+            .put("image/" + filename, file)
+            .then((res) => {
+              console.log("res", res);
+              resolve(res);
+            })
+            .catch((er) => {
+              reject(er);
+            });
+        });
+      };
     } catch (error) {
       console.log(error)
     }
   }
 
   // 上传
-  async uploadImg(file, filename: string) {
-    const res: { url: string } = await this.client
-      .upload(file, filename)
-      .catch((e) => {
+  async uploadImg(file: File, filename: string) {
+    const res: { url: string } = await this.clientUpload(file, filename).catch(
+      (e) => {
         console.error(e);
-      });
+      }
+    );
     return {
       url: res.url,
     };

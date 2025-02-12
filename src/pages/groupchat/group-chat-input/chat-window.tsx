@@ -37,6 +37,7 @@ const ChatWindow = forwardRef(
           }
         },
         insertImage,
+        insertContent,
         dealSend,
       };
     });

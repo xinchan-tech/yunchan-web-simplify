@@ -383,7 +383,6 @@ export const judgeIsExitNoticeMessage = (message: Message) => {
 };
 
 export const judgeHasReadGroupNotice = (groupId: string) => {
-  debugger;
   let agreedGroupIds: Record<string, boolean> = {};
   let stroage = localStorage.getItem("agreedGroupIds");
 

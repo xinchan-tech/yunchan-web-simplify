@@ -20,7 +20,11 @@ import {
 } from "@/store/group-chat-new";
 import WKSDK, { Channel } from "wukongimjssdk";
 
-const UpdateGroupInfo = (props: { group: Channel; total?: number }) => {
+const UpdateGroupInfo = (props: {
+  group: Channel;
+  total?: number;
+  onSuccess?: () => void;
+}) => {
   const options = {
     queryFn: () => {
       return getGroupDetailService(props.group.channelID);
@@ -80,6 +84,7 @@ const UpdateGroupInfo = (props: { group: Channel; total?: number }) => {
         if (props.group.channelID === selectedChannel?.channelID) {
           getGroupDetailData(props.group.channelID);
         }
+        typeof props.onSuccess === "function" && props.onSuccess();
         notifyChannelUpdate();
       })
       .finally(() => {
@@ -259,7 +264,7 @@ const UpdateGroupInfo = (props: { group: Channel; total?: number }) => {
                     data={{
                       name: member.realname,
                       avatar: member.avatar,
-                      uid: member.uid,
+                      uid: member.username,
                     }}
                     className="w-6 h-6"
                   />

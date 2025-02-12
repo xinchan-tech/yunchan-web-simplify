@@ -108,7 +108,7 @@ const GroupChatPage = () => {
     console.log("收到CMD：", msg);
     const cmdContent = msg.content as CMDContent;
     if (msgListRef.current) {
-      const temp = msgListRef.current.getMessagesRef();
+      const temp = [...msgListRef.current.getMessagesRef()];
       temp.push(msg);
       setMessages(temp);
     }
@@ -291,11 +291,11 @@ const GroupChatPage = () => {
   // 撤回
   const handleRevoke: (message: Message) => void = async (message: Message) => {
     await revokeMessageService({ msg_id: message.messageID });
-    const newConversations =
-      await WKSDK.shared().config.provider.syncConversationsCallback();
-    const newWarps = newConversations.map((item) => new ConversationWrap(item));
+    // const newConversations =
+    //   await WKSDK.shared().config.provider.syncConversationsCallback();
+    // const newWarps = newConversations.map((item) => new ConversationWrap(item));
 
-    setConversationWraps(newWarps);
+    // setConversationWraps(newWarps);
 
     // let conversation = WKSDK.shared().conversationManager.findConversation(
     //   message.channel

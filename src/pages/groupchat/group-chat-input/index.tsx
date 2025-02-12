@@ -477,6 +477,16 @@ const GroupChatInput = forwardRef(
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
+
+            <span
+              className="text-lg ml-2 mb-[2px] cursor-pointer"
+              style={{ color: "#989898" }}
+              onClick={() => {
+                inputRef.current && inputRef.current.insertContent("$");
+              }}
+            >
+              $
+            </span>
           </div>
           <div
             style={{

@@ -1,5 +1,4 @@
-import request from "@/utils/request";
-import axios, { Canceler } from "axios";
+import { Canceler } from "axios";
 import { MediaMessageContent } from "wukongimjssdk";
 import { MessageTask, TaskStatus } from "wukongimjssdk";
 import UploadUtil from "./uploadUtil";
@@ -38,11 +37,11 @@ export class MediaMessageUploadTask extends MessageTask {
     if (mediaContent.file) {
       // const fileName = mediaContent.file.name;
       let fileName = this.getUUID();
-      let fileType = 'png';
-      if(mediaContent.file.type) {
-        fileType = mediaContent.file.type.split('/')[1]
+      let fileType = "png";
+      if (mediaContent.file.type) {
+        fileType = mediaContent.file.type.split("/")[1];
       }
-      fileName = `${fileName}.${fileType}`
+      fileName = `${fileName}.${fileType}`;
       const resp = await UploadUtil.shared
         .uploadImg(mediaContent.file, fileName)
         .catch((error) => {

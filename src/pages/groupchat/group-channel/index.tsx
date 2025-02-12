@@ -125,7 +125,7 @@ const GroupChannel = (props: {
     queryKey: ["channel:fetchData"],
   };
 
-  const { data } = useQuery(options);
+  const { data, refetch } = useQuery(options);
   const [editChannel, setEditChannel] = useState<ConversationWrap>();
   // 修改社群
   const updateGroupInfoModal = useModal({
@@ -134,6 +134,9 @@ const GroupChannel = (props: {
         {editChannel && (
           <UpdateGroupInfo
             group={editChannel.channel}
+            onSuccess={() => {
+              refetch();
+            }}
             total={editChannel.total_user}
           />
         )}
