@@ -198,8 +198,8 @@ export const PercentSubscribeSpan = memo(
       <SubscribeSpan
         value={value}
         data-direction={direction}
-        data-direction-show={showColor || value !== nanText}
-        data-direction-sign={showSign}
+        data-direction-show={showColor && value !== nanText}
+        data-direction-sign={showSign && value !== nanText}
         formatter={subscribeFormatter}
         onChange={onChange}
         {...props}

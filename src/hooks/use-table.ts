@@ -17,6 +17,7 @@ const convertToNumber = (data: any) => {
 }
 
 const compareString = (a: string, b: string, order: 'asc' | 'desc') => {
+
   if (order === 'asc') {
     return a.localeCompare(b)
   }
@@ -26,28 +27,12 @@ const compareString = (a: string, b: string, order: 'asc' | 'desc') => {
   return 0
 }
 
-const setDataOnIdle = <T extends any[] = any[]>(data: T, setFn: (data: T) => void, count: number) => {
-  const splitLength = 40
-
-  const split = data.slice(0, splitLength * count) as T
-
-  setFn(split)
-
-  if (split.length >= data.length) {
-    return
-  }
-
-  requestAnimationFrame(() => {
-    setDataOnIdle(data, setFn, count + 1)
-  })
-}
-
 const sortData = <T extends Record<string, any>>(s: T[], columnKey: keyof T, order: 'asc' | 'desc') => {
   const _s = [...s]
   _s.sort((a, b) => {
     const _a = convertToNumber(a[columnKey])
     const _b = convertToNumber(b[columnKey])
-
+  
     if (Number.isNaN(_a) || Number.isNaN(_b)) {
       return compareString(a[columnKey], b[columnKey], order!)
     }
@@ -68,16 +53,6 @@ export const useTableData = <T extends Record<string, any>>(data: T[], _?: Order
   const [list, setList] = useState<T[]>(data)
   const initList = useRef<T[]>([])
   const lastOrder = useRef<{ field?: keyof T; order?: 'asc' | 'desc' }>({ field: undefined, order: undefined })
-
-  // const _orderKey = useRef(orderKey)
-
-  // const getOrderKey = useCallback((item: T) => {
-  //   if (isFunction(_orderKey.current)) {
-  //     return _orderKey.current(item)
-  //   }
-
-  //   return item[_orderKey.current]
-  // }, [])
 
   const _setList = useCallback(
     (data: T[]) => {

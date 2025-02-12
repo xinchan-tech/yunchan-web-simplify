@@ -283,7 +283,7 @@ const StockChart = (props: StockChartProps) => {
     charts.current.setOption(options)
     charts.current.setOption({
       xAxis: {
-        data: props.data.length < 20 ? xAxisData.slice(0, 20) : xAxisData.slice(0, props.data.length)
+        data: xAxisData.slice(0, 40)
       },
       series: [{
         data: props.data
@@ -295,7 +295,7 @@ const StockChart = (props: StockChartProps) => {
   useUpdateEffect(() => {
     charts.current?.setOption({
       xAxis: {
-        data: props.data.length < 20 ? xAxisData.slice(0, 20) : xAxisData.slice(0, props.data.length)
+        data: xAxisData.slice(0, 40)
       },
       series: [{
         data: props.data

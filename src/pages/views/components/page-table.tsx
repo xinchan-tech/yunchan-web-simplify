@@ -170,13 +170,13 @@ const PageTable = (props: PageTableProps) => {
     {
       title: '盘前涨跌幅', dataIndex: 'prePercent', width: '8%', align: 'right', sort: true,
       render: (_, row) => (
-        <SubscribeSpan.Percent trading="preMarket" symbol={row.symbol} decimal={2}  initValue={row.prePercent} initDirection={row.prePercent > 0} nanText="--" />
+        <SubscribeSpan.Percent showSign trading="preMarket" symbol={row.symbol} decimal={2}  initValue={row.prePercent} initDirection={row.prePercent > 0} nanText="--" />
       )
     },
     {
       title: '盘后涨跌幅', dataIndex: 'afterPercent', width: '8%', align: 'right', sort: true,
       render: (_, row) => (
-        <SubscribeSpan.Percent trading="afterHours" symbol={row.symbol} decimal={2}  initValue={row.afterPercent} initDirection={row.prePercent > 0} nanText="--" />
+        <SubscribeSpan.Percent showSign trading="afterHours" symbol={row.symbol} decimal={2}  initValue={row.afterPercent} initDirection={row.afterPercent > 0} nanText="--" />
       )
     },
     {
@@ -206,6 +206,7 @@ const PageTable = (props: PageTableProps) => {
     {
       title: <CollectStar.Batch
         checked={checked}
+        allCheckLength={list.length}
         onCheckChange={(v) => setCheckedAll(v ? list.map(o => o.symbol) : [])}
         onUpdate={() => {
           query.refetch()

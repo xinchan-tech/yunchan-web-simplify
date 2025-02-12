@@ -1,5 +1,5 @@
 import { getStockFinancials } from "@/api"
-import { AiAlarm, CapsuleTabs, CollectStar, JknCheckbox, JknDatePicker, JknIcon, JknRcTable, type JknRcTableProps, NumSpan, StockView, SubscribeSpan } from "@/components"
+import { AiAlarm, CapsuleTabs, CollectStar, JknCheckbox, JknDatePicker, JknIcon, JknRcTable, type JknRcTableProps, StockView, SubscribeSpan } from "@/components"
 import { useCheckboxGroup, useTableData, useTableRowClickToStockTrading } from "@/hooks"
 import { stockUtils } from "@/utils/stock"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
@@ -68,7 +68,7 @@ const StockFinancials = () => {
         name: lastStock.name,
         code: lastStock.symbol,
         id,
-        date: `${date} ${time}`,
+        date: `a${date} ${time}`,
         price: lastStock?.close,
         percent: lastStock?.percent && (lastStock.percent),
         turnover: lastStock?.turnover,
@@ -93,7 +93,7 @@ const StockFinancials = () => {
       )
     }, {
       title: '财报发布', dataIndex: 'date', align: 'right', width: '12%', sort: true,
-      render: (_: any, row) => `${row.date}`
+      render: (_: any, row) => `${row.date.slice(1)}`
     },
     {
       title: '现价', size: 80, dataIndex: 'price', align: 'right', width: 120, sort: true,
@@ -155,31 +155,6 @@ const StockFinancials = () => {
       render: (_, row) => <JknCheckbox checked={getIsChecked(row.code)} onCheckedChange={v => onChange(row.code, v)} />
     }
   ], [checked, data, getIsChecked, onChange, setCheckedAll, query.refetch])
-
-
-  const queryClient = useQueryClient()
-
-  // const onTableEvent: JknTableProps<TableDataType>['onEvent'] = (e) => {
-  //   if (e.event === 'updateCollect') {
-  //     queryClient.setQueryData([getStockFinancials.cacheKey, active], (s: typeof query.data) => ({
-  //       ...s,
-  //       items: s?.items.map(produce(draft => {
-  //         if (draft.id === e.params.symbol) {
-  //           draft.extend.collect = e.params.active ? 1 : 0
-  //         }
-  //       }))
-  //     }))
-  //   } else if (e.event === 'updateCollectAll') {
-  //     queryClient.setQueryData([getStockFinancials.cacheKey, active], (s: typeof query.data) => ({
-  //       ...s,
-  //       items: s?.items.map(produce(draft => {
-  //         if (e.params.symbols.includes(draft.id)) {
-  //           draft.extend.collect = e.params.active ? 1 : 0
-  //         }
-  //       }))
-  //     }))
-  //   }
-  // }
 
   const onRowClick = useTableRowClickToStockTrading('id')
 
