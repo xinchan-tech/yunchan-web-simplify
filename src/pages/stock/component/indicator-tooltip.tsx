@@ -3,11 +3,11 @@ import { EyeClosedIcon, EyeOpenIcon, TrashIcon } from '@radix-ui/react-icons'
 import { useBoolean } from 'ahooks'
 import Decimal from 'decimal.js'
 import { ChevronDownIcon, ChevronUpIcon } from 'lucide-react'
-import { throttle } from 'radash'
+import { isNumber, throttle } from 'radash'
 import { type CSSProperties, memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useShallow } from 'zustand/react/shallow'
 import { type Indicator, kChartUtils, useKChartStore } from '../lib'
-import { chartEvent } from "../lib/event"
+import { chartEvent } from '../lib/event'
 
 interface IndicatorTooltipProps {
   type: 'main' | 'secondary'
@@ -36,7 +36,6 @@ export const IndicatorTooltip = (props: IndicatorTooltipProps) => {
 
   useEffect(() => {
     if (props.indicator.data) {
-
       const indicators = props.indicator.data
         .filter(item => !!item.name)
         .map(item => {
@@ -73,6 +72,8 @@ export const IndicatorTooltip = (props: IndicatorTooltipProps) => {
 
         if (id !== indicatorRef.current.indicatorId) return
 
+        if (!isNumber(item.value)) return
+
         const indicator = indicatorRef.current.indicators.find(indicator => indicator.name === name)
 
         if (!indicator) return
@@ -100,6 +101,9 @@ export const IndicatorTooltip = (props: IndicatorTooltipProps) => {
     }
 
     visible ? setTrue() : setFalse()
+    setTimeout(() => {
+      chartEvent.event.emit('indicatorChange', { index: props.mainIndex })
+    })
   }
 
   /**
@@ -116,6 +120,9 @@ export const IndicatorTooltip = (props: IndicatorTooltipProps) => {
     })
 
     kChartUtils.setMainIndicators({ index: props.mainIndex, indicators: r })
+    setTimeout(() => {
+      chartEvent.event.emit('indicatorChange', { index: props.mainIndex })
+    })
   }, [props.indicator.id, mainIndicators, props.mainIndex])
 
   return (

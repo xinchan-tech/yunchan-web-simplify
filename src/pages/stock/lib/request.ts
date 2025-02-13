@@ -18,11 +18,13 @@ const getPeriodByPage = (params: { interval: StockChartInterval; startDate: numb
   let resultDate: string = usDate.format('YYYY-MM-DD HH:mm:ss')
   const endDate = usDate.format('YYYY-MM-DD HH:mm:ss')
 
-  if (interval <= StockChartInterval.FORTY_FIVE_MIN) {
+  if (interval <= StockChartInterval.THIRTY_MIN) {
+    resultDate = usDate.add(-3, 'd').format('YYYY-MM-DD HH:mm:ss')
+  } else if (interval <= StockChartInterval.FORTY_FIVE_MIN) {
     resultDate = usDate.add(-7, 'd').format('YYYY-MM-DD HH:mm:ss')
   } else if (interval <= StockChartInterval.FOUR_HOUR) {
     resultDate = usDate.add(-30, 'd').format('YYYY-MM-DD HH:mm:ss')
-  }else if (interval === StockChartInterval.DAY) {
+  } else if (interval === StockChartInterval.DAY) {
     resultDate = usDate.add(-180, 'd').format('YYYY-MM-DD HH:mm:ss')
   } else if (interval === StockChartInterval.WEEK) {
     resultDate = usDate.add(-3, 'm').format('YYYY-MM-DD HH:mm:ss')
@@ -177,8 +179,6 @@ export const useStockCandlesticks = (index: number) => {
         setResult(r ?? [])
       })
   }, [_symbol, _interval])
-
-  
 
   return {
     candlesticks: result,

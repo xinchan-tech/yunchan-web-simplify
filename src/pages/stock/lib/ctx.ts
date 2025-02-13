@@ -252,9 +252,10 @@ export type IndicatorData =
       | IndicatorDataDrawStickLine
       | IndicatorDataDrawText
       | IndicatorDataDrawNumber
+      | IndicatorDataDrawRectRel
     )[]
   | undefined
-type DrawFunc = '' | 'STICKLINE' | 'DRAWTEXT' | 'DRAWGRADIENT' | 'DRAWNUMBER'
+type DrawFunc = '' | 'STICKLINE' | 'DRAWTEXT' | 'DRAWGRADIENT' | 'DRAWNUMBER' | 'DRAWRECTREL'
 type IndicatorDataBase<T extends DrawFunc> = {
   draw: T
   color: string
@@ -262,6 +263,8 @@ type IndicatorDataBase<T extends DrawFunc> = {
   name?: string
   style_type?: string
 }
+
+
 type IndicatorDataLine = IndicatorDataBase<''> & {
   data: number[]
 }
@@ -276,6 +279,18 @@ type IndicatorDataDrawGradient = IndicatorDataBase<'DRAWGRADIENT'> & {
 }
 type IndicatorDataDrawNumber = IndicatorDataBase<'DRAWNUMBER'> & {
   draw_data: Record<number, [number, number, number, number]>
+}
+/**
+ * 一个固定位置的矩形
+ * 值类型为 [leftTopX, leftTopY, rightBottomX, rightBottomY, color]
+ * leftTopX: 矩形左上角x轴坐标
+ * leftTopY: 矩形左上角y轴坐标
+ * rightBottomX: 矩形右下角x轴坐标
+ * rightBottomY: 矩形右下角y轴坐标
+ * color: 颜色
+ */
+type IndicatorDataDrawRectRel = IndicatorDataBase<'DRAWRECTREL'> & {
+  draw_data: Record<number, [number, number, number, number, string]>
 }
 
 /**

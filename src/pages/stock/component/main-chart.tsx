@@ -91,14 +91,18 @@ export const MainChart = (props: MainChartProps) => {
 
     sizeObserver.observe(dom.current!)
 
-    chartEvent.event.on('indicatorChange', (params: { index: number }) => {
+    const indicatorHandle = (params: { index: number }) => {
       if (params.index === props.index) {
         renderFn.current()
+        console.log('on indicatorChange')
       }
-    })
+    }
+
+    chartEvent.event.on('indicatorChange', indicatorHandle)
 
     return () => {
       sizeObserver.disconnect()
+      chartEvent.event.off('indicatorChange', indicatorHandle)
     }
   }, [props.index])
 
@@ -224,7 +228,9 @@ export const MainChart = (props: MainChartProps) => {
             symbol: symbol,
             id: item.id,
             cycle: timeIndex,
-            start_at: dayjs(+candlesticks[0][0]! * 1000).tz('America/New_York').format('YYYY-MM-DD HH:mm:ss'),
+            start_at: dayjs(+candlesticks[0][0]! * 1000)
+              .tz('America/New_York')
+              .format('YYYY-MM-DD HH:mm:ss'),
             param: indicator as any,
             db_type: item.type
           }
@@ -326,11 +332,11 @@ export const MainChart = (props: MainChartProps) => {
     render()
   }, [state.mainData, state.type, state.overlayMark, state.overlayStock, state.yAxis, state.mainCoiling])
 
-  useUpdateEffect(() => {}, [state.mainData])
+  // useUpdateEffect(() => {}, [state.mainData])
 
-  useUpdateEffect(() => {
-    render()
-  }, [])
+  // useUpdateEffect(() => {
+  //   render()
+  // }, [])
 
   const onChangeSecondaryIndicators = useCallback(
     async (params: {
@@ -371,21 +377,24 @@ export const MainChart = (props: MainChartProps) => {
           symbol: state.symbol,
           id: indicator.id,
           cycle: state.timeIndex,
-          start_at: dayjs(+candlesticks[0][0]! * 1000).tz('America/New_York').format('YYYY-MM-DD HH:mm:ss'),
+          start_at: dayjs(+candlesticks[0][0]! * 1000)
+            .tz('America/New_York')
+            .format('YYYY-MM-DD HH:mm:ss'),
           param: indicatorParams as any,
           db_type: indicator.type
         }
         return queryClient.ensureQueryData({
           queryKey: [getStockIndicatorData.cacheKey, params],
-          queryFn: () => getStockIndicatorData(params).then(r => ({ 
-            data: r.result.map(item => ({
-              ...item,
-              color: item.style?.color,
-              linethick: item.style?.linethick,
-              style_type: item.style?.style_type,
-            })), 
-            indicatorId: indicator.id 
-          }))
+          queryFn: () =>
+            getStockIndicatorData(params).then(r => ({
+              data: r.result.map(item => ({
+                ...item,
+                color: item.style?.color,
+                linethick: item.style?.linethick,
+                style_type: item.style?.style_type
+              })),
+              indicatorId: indicator.id
+            }))
         })
       }
 

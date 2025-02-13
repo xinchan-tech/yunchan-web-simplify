@@ -100,7 +100,7 @@ interface FinanceComparisonChartProps {
 
 export const FinanceComparisonChart = ({ data }: FinanceComparisonChartProps) => {
   const [chart, dom] = useChart()
-  console.log(data)
+  // console.log(data)
   useEffect(() => {
     if (!chart || !data) return
     chart.current?.clear()

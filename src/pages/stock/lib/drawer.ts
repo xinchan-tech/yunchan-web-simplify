@@ -5,6 +5,7 @@ import echarts from '@/utils/echarts'
 import { colorUtil } from '@/utils/style'
 import { renderUtils } from './utils'
 import type { EChartsType } from 'echarts/core'
+import type { GraphicComponentOption } from 'echarts/components'
 
 type XAxis = number
 type YAxis = number
@@ -277,7 +278,7 @@ export const drawText: DrawerFunc<DrawerTextShape[]> = (options, _, { xAxisIndex
           text,
           fill: color,
           fontSize: 12,
-          textAlign: 'left',
+          textAlign: 'middle',
           textVerticalAlign: 'top'
         },
         z: 100,
@@ -348,7 +349,7 @@ export const drawRect: DrawerFunc<DrawerRectShape[]> = (options, _, { xAxisIndex
           width: width,
           height: -((y2 - startY) / Math.abs(y2 - startY)) * height
         },
-        z: 10,
+        z: 30,
         emphasisDisabled: true,
         style: {
           fill: empty === 0 ? color : 'transparent',
@@ -511,6 +512,7 @@ export const drawPivots: DrawerFunc<DrawPivotsShape[]> = (options, _, { xAxisInd
       x: [0, 2],
       y: [1, 3]
     },
+    z: 1,
     type: 'custom',
     renderItem: (_, api) => {
       const startPoint = [api.value(0), api.value(1)] as [XAxis, YAxis]
@@ -545,7 +547,6 @@ export const drawPivots: DrawerFunc<DrawPivotsShape[]> = (options, _, { xAxisInd
               width: width + offset * 2,
               height: height - offset * 2
             },
-            z: 1,
             emphasisDisabled: true,
             style: {
               // 抄客户端的逻辑
@@ -845,7 +846,56 @@ export const drawScatter: DrawerFunc<DrawScatterShape[]> = (
       }
     }))
   }
-  console.log(data)
+  // console.log(data)
   Array.isArray(options.series) && options.series.push(scatter)
+  return options
+}
+
+/**
+ * 画一个固定位置的矩形
+ * 传的坐标是以一个width = 1000, height = 1000的画布为基准
+ * 需要转换坐标系
+ */
+type DrawRectRelShape = {
+  leftTop: { x: number; y: number }
+  rightBottom: { x: number; y: number }
+  color: string
+}
+export const drawRectRel: DrawerFunc<DrawRectRelShape[]> = (options, _, { xAxisIndex, data, name }) => {
+  const grid = renderUtils.getGridIndex(options, Math.max(xAxisIndex - 2, 0))
+  const gridHeight = grid?.height ?? 0
+  const gridWidth = grid?.width ?? 0
+  const gridLeftTop = { x: grid?.left ?? 0, y: grid?.top ?? 0 }
+  // const gridRightBottom = { x: gridLeftTop.x + gridWidth, y: gridLeftTop.y + gridHeight }
+
+  const rects: GraphicComponentOption[] = []
+
+  data.forEach((d, index) => {
+    const transformLeftTopX = (d.leftTop.x / 1000) * gridWidth + gridLeftTop.x
+    const transformLeftTopY = (d.leftTop.y / 1000) * gridHeight + gridLeftTop.y
+    const rectWidth = ((d.rightBottom.x - d.leftTop.x) / 1000) * gridWidth
+    const rectHeight = ((d.rightBottom.y - d.leftTop.y) / 1000) * gridHeight
+
+    const rect: GraphicComponentOption = {
+      type: 'rect',
+      silent: true,
+      name: `graphic-rect-${name}-${index}`,
+      z: 10,
+      shape: {
+        x: transformLeftTopX,
+        y: transformLeftTopY,
+        width: rectWidth,
+        height: rectHeight
+      },
+      style: {
+        fill: colorUtil.rgbaToString(colorUtil.hexToRGBA(d.color))
+      }
+    }
+
+    rects.push(rect)
+  })
+
+  renderUtils.addGraphic(options, rects)
+
   return options
 }

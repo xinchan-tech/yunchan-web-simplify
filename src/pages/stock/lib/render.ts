@@ -1,28 +1,14 @@
 import { StockChartInterval, type StockRawRecord, type getStockChart } from '@/api'
 import { useConfig } from '@/store'
-import { echartUtils, type ECOption } from '@/utils/echarts'
+import { type ECOption, echartUtils } from '@/utils/echarts'
 import { stockUtils } from '@/utils/stock'
 import { colorUtil } from '@/utils/style'
 import dayjs from 'dayjs'
 import Decimal from 'decimal.js'
 import type { CandlestickSeriesOption, LineSeriesOption } from 'echarts/charts'
-import { CoilingIndicatorId, type Indicator, type KChartContext, isTimeIndexChart } from './ctx'
-import {
-  type DrawerRectShape,
-  type DrawerTextShape,
-  drawGradient,
-  drawHdlyLabel,
-  drawHLine,
-  drawLine,
-  drawNumber,
-  drawPivots,
-  drawPolyline,
-  drawRect,
-  drawScatter,
-  drawText,
-  drawTradePoints,
-  LineType
-} from './drawer'
+import type { GraphicComponentOption } from 'echarts/components'
+import type { EChartsType } from 'echarts/core'
+import type { XAXisOption, YAXisOption } from 'echarts/types/dist/shared'
 import {
   calcBottomSignal,
   calcCoilingPivots,
@@ -31,11 +17,26 @@ import {
   calculateMA,
   calculateTradingPoint
 } from './coilling'
-import { renderUtils } from './utils'
-import type { GraphicComponentOption } from 'echarts/components'
-import type { XAXisOption, YAXisOption } from 'echarts/types/dist/shared'
-import type { EChartsType } from 'echarts/core'
+import { CoilingIndicatorId, type Indicator, type KChartContext, isTimeIndexChart } from './ctx'
+import {
+  type DrawerRectShape,
+  type DrawerTextShape,
+  LineType,
+  drawHLine,
+  drawHdlyLabel,
+  drawLine,
+  drawNumber,
+  drawPivots,
+  drawPolyline,
+  drawRect,
+  drawRectRel,
+  drawScatter,
+  drawText,
+  drawTradePoints
+} from './drawer'
 import { chartEvent } from './event'
+import { renderUtils } from './utils'
+import { dateUtils } from "@/utils/date"
 
 const MAIN_CHART_NAME = 'kChart'
 const MAIN_CHART_NAME_VIRTUAL = 'kChart-virtual'
@@ -589,7 +590,10 @@ export const renderMainChart: ChartRender = (options, state) => {
       borderColor: upColor,
       borderColor0: downColor
     }
-
+    mainSeries.emphasis = {
+      disabled: true
+    }
+    mainSeries.z = 1
     mainSeries.data = data.map(item => {
       const percent = stockUtils.toStockWithExt(item).percent ?? 0
 
@@ -620,6 +624,7 @@ export const renderMainChart: ChartRender = (options, state) => {
     }
     const rgbColor = colorUtil.hexToRGB(color)
     const _mainSeries = mainSeries as LineSeriesOption
+    _mainSeries.z = 1
     _mainSeries.type = 'line'
     _mainSeries.showSymbol = false
     _mainSeries.encode = {
@@ -660,7 +665,7 @@ export const renderMainChart: ChartRender = (options, state) => {
 
   virtualLine.name = MAIN_CHART_NAME_VIRTUAL
   virtualLine.type = 'line'
-  virtualLine.yAxisIndex = 0
+  virtualLine.yAxisIndex = 1
 
   virtualLine.encode = {
     x: [0],
@@ -931,98 +936,116 @@ export const renderMainCoiling = (options: ECOption, state: ChartState, chart: E
   })
 }
 
+const renderIndicator = (
+  options: ECOption,
+  indicator: Indicator,
+  params: { xAxisIndex: number; yAxisIndex: number; type: 'main' | 'secondary' }
+) => {
+  if (!indicator.data || indicator.visible === false) return
+
+  if (renderUtils.isLocalIndicator(indicator.id)) return
+
+  indicator.data.forEach((d, index) => {
+    if (typeof d === 'string') {
+      return
+    }
+
+    if (d.style_type === 'NODRAW') {
+      return
+    }
+
+    const seriesName = `${params.type}_${indicator.id}_${d.name}_${index}`
+
+    if (!d.draw) {
+      if (d.style_type === 'POINTDOT') {
+        drawScatter(options, {} as any, {
+          name: seriesName,
+          xAxisIndex: params.xAxisIndex,
+          extra: {
+            color: d.color
+          },
+          yAxisIndex: params.yAxisIndex,
+          data: d.data.map((s, i) => ({ x: i, y: s })).filter(s => !!s.y)
+        })
+      } else {
+        drawLine(options, {} as any, {
+          extra: {
+            color: d.color || '#ffffff'
+          },
+          name: seriesName,
+          xAxisIndex: params.xAxisIndex,
+          yAxisIndex: params.yAxisIndex,
+          data: (d.data as number[]).map((s, i) => [i, s])
+        })
+      }
+    } else if (d.draw === 'STICKLINE') {
+      const data: DrawerRectShape[] = Object.keys(d.draw_data).map(key => [
+        +key,
+        ...(d.draw_data as NormalizedRecord<number[]>)[key],
+        d.color
+      ]) as any[]
+      drawRect(options, {} as any, {
+        xAxisIndex: params.xAxisIndex,
+        yAxisIndex: params.yAxisIndex,
+        name: seriesName,
+        data: data
+      })
+    } else if (d.draw === 'DRAWTEXT') {
+      const data: DrawerTextShape[] = Object.keys(d.draw_data).map(key => [
+        +key,
+        ...(d.draw_data as NormalizedRecord<number[]>)[key],
+        d.color
+      ]) as any[]
+      drawText(options, {} as any, {
+        xAxisIndex: params.xAxisIndex,
+        yAxisIndex: params.yAxisIndex,
+        name: seriesName,
+        data: data
+      })
+    } else if (d.draw === 'DRAWNUMBER') {
+      const data = Object.entries(d.draw_data as NormalizedRecord<number[]>).map(([key, value]) => [
+        +key,
+        ...value,
+        d.color
+      ])
+
+      drawNumber(options, {
+        xAxisIndex: params.xAxisIndex,
+        yAxisIndex: params.yAxisIndex,
+        name: seriesName,
+        data: data as any
+      })
+    } else if (d.draw === 'DRAWRECTREL') {
+      const data = Object.entries(d.draw_data).map(([_, value]) => ({
+        leftTop: {x: value[0], y: value[1]},
+        rightBottom: {x: value[2], y: value[3]},
+        color: value[4]
+      }))
+
+      drawRectRel(options, {} as any, {
+        xAxisIndex: params.xAxisIndex,
+        yAxisIndex: params.yAxisIndex,
+        name: seriesName,
+        data: data
+      })
+    }
+  })
+}
+
 /**
  * 渲染主图指标
  */
 export const renderMainIndicators = (options: ECOption, indicators: Indicator[]) => {
   /** 合并绘制 */
-  const stickLineData: DrawerRectShape[] = []
-  const textData: DrawerTextShape[] = []
+  // const stickLineData: DrawerRectShape[] = []
+  // const textData: DrawerTextShape[] = []
   indicators.forEach(indicator => {
-    if (!indicator.data || indicator.visible === false) {
-      return
-    }
-
-    indicator.data.forEach((d, index) => {
-      if (typeof d === 'string') {
-        return
-      }
-
-      if (d.style_type === 'NODRAW') {
-        return
-      }
-
-      const seriesName = `main_${indicator.id}_${d.name}_${index}`
-
-      if (!d.draw) {
-        if (d.style_type === 'POINTDOT') {
-          drawScatter(options, {} as any, {
-            name: seriesName,
-            xAxisIndex: 0,
-            extra: {
-              color: d.color 
-            },
-            yAxisIndex: 1,
-            data: d.data.map((s, i) => ({x: i, y: s})).filter(s => !!s.y),
-          })
-        } else {
-          drawLine(options, {} as any, {
-            extra: {
-              color: d.color || '#ffffff'
-            },
-            name: seriesName,
-            xAxisIndex: 0,
-            yAxisIndex: 1,
-            data: (d.data as number[]).map((s, i) => [i, s])
-          })
-        }
-      } else if (d.draw === 'STICKLINE') {
-        const data: DrawerRectShape[] = Object.keys(d.draw_data).map(key => [
-          +key,
-          ...(d.draw_data as NormalizedRecord<number[]>)[key],
-          d.color
-        ]) as any[]
-        stickLineData.push(...data)
-      } else if (d.draw === 'DRAWTEXT') {
-        const data: DrawerTextShape[] = Object.keys(d.draw_data).map(key => [
-          +key,
-          ...(d.draw_data as NormalizedRecord<number[]>)[key],
-          d.color
-        ]) as any[]
-        textData.push(...data)
-      } else if (d.draw === 'DRAWNUMBER') {
-        const data = Object.entries(d.draw_data as NormalizedRecord<number[]>).map(([key, value]) => [
-          +key,
-          ...value,
-          d.color
-        ])
-
-        drawNumber(options, {
-          xAxisIndex: 0,
-          yAxisIndex: 1,
-          data: data as any
-        })
-      }
+    renderIndicator(options, indicator, {
+      xAxisIndex: 0,
+      yAxisIndex: 1,
+      type: 'main'
     })
   })
-
-  if (stickLineData.length > 0) {
-    drawRect(options, {} as any, {
-      xAxisIndex: 0,
-      yAxisIndex: 1,
-      name: 'main_stick_line',
-      data: stickLineData
-    })
-  }
-
-  if (textData.length > 0) {
-    drawText(options, {} as any, {
-      xAxisIndex: 0,
-      yAxisIndex: 1,
-      name: 'main_text',
-      data: textData
-    })
-  }
 }
 
 /**
@@ -1073,8 +1096,10 @@ export const renderOverlayMark = (options: ECOption, state: ChartState) => {
 
   const data = mark.data
     .map((item: any) => {
-      const x = dayjs(item.date).hour(0).minute(0).second(0).valueOf().toString()
-      const y = (series.data as any[])?.find(s => s[0] === x)?.[2] as number | undefined
+      const x = dateUtils.toUsDay(item.date).hour(0).minute(0).second(0).valueOf().toString().slice(0, -3)
+      const y = (series.data as any[])?.find((s) => {
+        return s.value[0] === x
+      })?.value[3] as number | undefined
 
       return [x, y, item.event_zh]
     })
@@ -1093,108 +1118,14 @@ export const renderOverlayMark = (options: ECOption, state: ChartState) => {
  */
 export const renderSecondary = (options: ECOption, indicators: Indicator[]) => {
   /** 合并绘制 */
-
   indicators.forEach((indicator, index) => {
-    if (!indicator.data) {
-      return
-    }
     if (renderUtils.isLocalIndicator(indicator.id)) return
 
-    indicator.data.forEach(d => {
-      if (typeof d === 'string') {
-        return
-      }
-
-      if (d.style_type === 'NODRAW') {
-        return
-      }
-
-      if (!d.draw) {
-        drawLine(options, {} as any, {
-          extra: {
-            color: d.color || '#ffffff',
-            type: d.style_type === 'DOTLINE' ? 'dashed' : undefined
-          },
-          xAxisIndex: index + 2,
-          yAxisIndex: index + 3,
-          name: `secondary_${indicator.id}_${d.name}_${index}`,
-          data: (d.data as number[]).map((s, i) => [i, s])
-        })
-      } else if (d.draw === 'STICKLINE') {
-        const data: DrawerRectShape[] = Object.keys(d.draw_data).map(key => [
-          +key,
-          ...(d.draw_data as NormalizedRecord<number[]>)[key],
-          d.color
-        ]) as any[]
-
-        drawRect(options, {} as any, {
-          xAxisIndex: index + 2,
-          yAxisIndex: index + 3,
-          name: `secondary_${indicator.id}_${d.name}_${index}`,
-          data: data
-        })
-      } else if (d.draw === 'DRAWTEXT') {
-        const data: DrawerTextShape[] = Object.keys(d.draw_data).map(key => [
-          +key,
-          ...(d.draw_data as NormalizedRecord<number[]>)[key],
-          d.color
-        ]) as any[]
-        drawText(options, {} as any, {
-          xAxisIndex: index + 2,
-          yAxisIndex: index + 3,
-          name: `secondary_${indicator.id}_${d.name}_${index}`,
-          data: data
-        })
-      } else if (d.draw === 'DRAWGRADIENT') {
-        const data = Object.keys(d.draw_data).map((key: string) => {
-          const start = Number.parseInt(key)
-          const points: { x: number; y: number }[] = []
-          const p2: { x: number; y: number }[] = []
-          d.draw_data[start][0].split(',').forEach((item: string, i: number) => {
-            points.push({ x: i + start, y: +item })
-          })
-          d.draw_data[start][1].split(',').forEach((item: string, i: number) => {
-            p2.unshift({ x: i + start, y: +item })
-          })
-
-          return [points[0].x, [...points, ...p2], [d.draw_data[start][2], d.draw_data[start][3]]]
-        })
-
-        drawGradient(options, {} as any, {
-          xAxisIndex: index + 2,
-          name: `secondary_${indicator.id}_${d.name}_${index}`,
-          yAxisIndex: index + 3,
-          data: data as any
-        })
-      } else if (d.draw === 'DRAWNUMBER') {
-        const data = Object.entries(d.draw_data as NormalizedRecord<number[]>).forEach(([key, value]) => [
-          key,
-          ...value
-        ])
-        drawNumber(options, {
-          xAxisIndex: index + 2,
-          yAxisIndex: index + 3,
-          name: `secondary_${indicator.id}_${d.name}_${index}`,
-          data: data as any
-        })
-      }
+    renderIndicator(options, indicator, {
+      xAxisIndex: index + 2,
+      yAxisIndex: index + 3,
+      type: 'secondary'
     })
-
-    // if (stickLineData.length > 0) {
-    //   drawRect(options, {} as any, {
-    //     xAxisIndex: index + 2,
-    //     yAxisIndex: index + 3,
-    //     data: stickLineData
-    //   })
-    // }
-
-    // if (textData.length > 0) {
-    //   drawText(options, {} as any, {
-    //     xAxisIndex: index + 2,
-    //     yAxisIndex: index + 3,
-    //     data: textData
-    //   })
-    // }
   })
 
   return options
@@ -1328,15 +1259,6 @@ const renderSecondaryAxis = (options: ECOption, _: any, index: number, chart: EC
  * 只有在盘前盘中盘后显示
  */
 export const renderWatermark = (options: ECOption, timeIndex: ChartState['timeIndex']) => {
-  if (!isTimeIndexChart(timeIndex)) {
-    options.graphic = []
-    return
-  }
-
-  if (timeIndex === StockChartInterval.FIVE_DAY) {
-    options.graphic = []
-    return
-  }
 
   const watermark: GraphicComponentOption = {
     type: 'text',
@@ -1356,13 +1278,7 @@ export const renderWatermark = (options: ECOption, timeIndex: ChartState['timeIn
     }
   }
 
-  if (!options.graphic) {
-    options.graphic = [watermark]
-  } else if (Array.isArray(options.graphic)) {
-    options.graphic.push(watermark)
-  } else {
-    options.graphic = [options.graphic, watermark]
-  }
+  renderUtils.addGraphic(options, watermark)
 }
 
 /**
@@ -1395,6 +1311,7 @@ export const renderZoom = (options: ECOption, addCount: number, zoom?: [number, 
       z.start = undefined
       z.end = undefined
       z.maxValueSpan = MaxKLineCount
+      z.minValueSpan = 30
     }
   }
 }

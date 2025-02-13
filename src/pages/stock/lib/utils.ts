@@ -1,13 +1,12 @@
-import { getStockIndicatorData, getStockIndicators, StockChartInterval, type StockRawRecord } from '@/api'
-import { useTime } from "@/store"
+import { StockChartInterval, type StockRawRecord } from '@/api'
 import { getTradingPeriod } from '@/utils/date'
 import type { ECOption } from '@/utils/echarts'
 import { stockUtils } from '@/utils/stock'
 import dayjs, { type Dayjs } from 'dayjs'
+import type { GraphicComponentOption } from "echarts/components"
 import type { EChartsType } from 'echarts/core'
 import type { ECBasicOption } from 'echarts/types/dist/shared'
 import type { Indicator, KChartContext } from './ctx'
-import { queryClient } from "@/utils/query-client"
 
 export const renderUtils = {
   getXAxisIndex: (options: ECOption, index: number) => {
@@ -37,7 +36,19 @@ export const renderUtils = {
       }
     }
   },
+  addGraphic: (options: ECOption, graphic: GraphicComponentOption | GraphicComponentOption[]) => {
+    if (!options.graphic) {
+      options.graphic = []
+    }else if(!Array.isArray(options.graphic)){
+      options.graphic = [options.graphic]
+    }
 
+    if(Array.isArray(graphic)){
+      options.graphic.push(...graphic)
+    }else{
+      options.graphic.push(graphic)
+    }
+  },
   getGridSize: (chart: EChartsType) => {
     const grid = chart.getOption().grid
   },

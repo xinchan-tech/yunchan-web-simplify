@@ -93,7 +93,9 @@ export const getTradingPeriod = (trading: StockTrading, date?: string | Dayjs, f
   const start = day.set('hour', startTime[0]).set('minute', startTime[1]).set('second', 0)
   const end = day.set('hour', endTime[0]).set('minute', endTime[1]).set('second', 0)
   const r = Array.from({ length: end.diff(start, 'minute') }, (_, i) => {
-    return format === 'timestamp' ? start.add(i, 'minute').valueOf() : start.add(i, 'minute').format('YYYY-MM-DD HH:mm:ss')
+    return format === 'timestamp'
+      ? start.add(i, 'minute').valueOf()
+      : start.add(i, 'minute').format('YYYY-MM-DD HH:mm:ss')
   })
 
   return r
@@ -211,4 +213,27 @@ export const getPrevTradingDays = (date?: string | Dayjs, count = 1) => {
   }
 
   return r
+}
+
+export const dateUtils = {
+  toUsDay: (date: any): Dayjs => {
+    let d: Dayjs | undefined = undefined
+    if (dayjs.isDayjs(date)) {
+      d = date
+    } else if (typeof date === 'string') {
+      return dayjs(date).local().tz('America/New_York', true)
+    } else if (typeof date === 'number') {
+      if (date.toString().length === 10) {
+        d = dayjs(date * 1000)
+      } else {
+        d = dayjs(date)
+      }
+    }
+
+    if (!d) {
+      throw new Error('Invalid date')
+    }
+
+    return d.tz('America/New_York')
+  }
 }
