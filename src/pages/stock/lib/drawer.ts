@@ -11,7 +11,7 @@ type XAxis = number
 type YAxis = number
 type Width = number
 type empty = 0 | 1
-type DrawerColor = number
+type DrawerColor = string
 /**
  * 线型
  * 0: 实线
@@ -241,7 +241,7 @@ export const drawPolyline: DrawerFunc<[XAxis, YAxis, XAxis, YAxis, LineType][]> 
   return options
 }
 
-export type DrawerTextShape = [XAxis, YAxis, string, DrawerColor]
+export type DrawerTextShape = [XAxis, YAxis, string, DrawerColor, number, number]
 
 /**
  * 文本
@@ -721,7 +721,7 @@ export const drawNumber = (
       const y = api.value(1) as number
       const text = api.value(2) as string
       const yOffset = api.value(4) as number
-      const _yOffset = yOffset + (yOffset >= 0 ? -40 : 10)
+      const _yOffset = -yOffset 
       const xOffset = api.value(3) as number
       const color = api.value(5) as string
 
@@ -735,7 +735,8 @@ export const drawNumber = (
           text,
           fill: color ?? '#00943c',
           fontSize: 16,
-          textAlign: 'left'
+          textAlign: 'center',
+          textVerticalAlign: 'middle'
         },
         position: [point[0] + xOffset, point[1] + _yOffset]
       }

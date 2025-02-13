@@ -239,7 +239,7 @@ interface SubscribeSpanProps extends Omit<HTMLAttributes<HTMLSpanElement>, 'onCh
 }
 
 
-export const SubscribeSpan = memo(({ value, symbol, formatter, trading, subscribe = true, onChange, className, ...props }: SubscribeSpanProps) => {
+export const SubscribeSpan = memo(({ value, symbol, formatter, trading = 'intraDay', subscribe = true, onChange, className, ...props }: SubscribeSpanProps) => {
   const [innerValue, setInnerValue] = usePropValue(value)
   const spanRef = useRef<HTMLSpanElement>(null)
   const formatFn = useRef(formatter)

@@ -45,7 +45,6 @@ export const calcIndicator = async (
   data: StockRawRecord[],
   interval: number
 ) => {
-  
   const module = await getPolicyModule()
 
   const rawData = data.map((item: StockRawRecord) => {
@@ -61,37 +60,38 @@ export const calcIndicator = async (
   const result = await module.policy_execute(fml, rawData, interval)
 
   result.data = result.data.map(item => {
- 
     if (item.draw === 'DRAWTEXT') {
       item.draw_data = drawTextConvert(item.draw_data)
-    }else if(item.draw === 'STICKLINE'){
+    } else if (item.draw === 'STICKLINE') {
       item.draw_data = drawStickLineConvert(item.draw_data)
     }
 
     return item
   })
-  
+
   console.log(result)
   return result
 }
-
 
 const drawTextConvert = (drawData: any) => {
   if (drawData.length <= 0) {
     return drawData
   }
 
-  const [condition, text] = drawData[0]
-
+  const [condition,x, text, offsetX, offsetY] = drawData[0]
+  console.log(drawData)
   const r: any = {}
 
   Object.entries(drawData).forEach(([key, value]) => {
-    if (key === '0' && condition === 0) {
+    if (key === '0') {
+      if (condition === 0) {
+        return
+      }
+      r[key] = [x, text, offsetX, offsetY]
       return
     }
 
-    const typedValue = value as [number, number]
-    r[key] = [typedValue[0], text]
+    r[key] = [(value as any)[0], text, offsetX, offsetY]
   })
 
   return r
@@ -102,12 +102,16 @@ const drawStickLineConvert = (drawData: any) => {
     return drawData
   }
 
-  const [condition, width, empty] = drawData[0]
+  const [condition, y1, y2, width, empty] = drawData[0]
 
   const r: any = {}
 
   Object.entries(drawData).forEach(([key, value]) => {
-    if (key === '0' && condition === 0) {
+    if (key === '0') {
+      if (condition === 0) {
+        return
+      }
+      r[key] = [y1, y2, width, empty]
       return
     }
 

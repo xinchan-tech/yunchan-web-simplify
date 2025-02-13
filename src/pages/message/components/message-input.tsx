@@ -1,5 +1,4 @@
 import { JknIcon, FormField, Textarea, FormControl, FormItem, Button, } from "@/components"
-import { uploadUtils } from "@/utils/oss"
 import { FormProvider, useForm } from "react-hook-form"
 
 interface MessageInputProps {
@@ -14,6 +13,7 @@ export const MessageInput = (props: MessageInputProps) => {
     if(!values.message) return
 
     props.onSend(values.message)
+    form.setValue('message', '')
   }
 
 

@@ -21,7 +21,15 @@ getNoticeTypes.cacheKey = 'notice:types'
  * 通知消息列表
  */
 export const getNoticeList = (noticeId: string) => {
-  return request.get<void>('/notices', { params: { notice_cate_id: noticeId } }).then(r => r.data)
+  return request.get<PageResult<{
+    id: string
+    img: string
+    is_read: string
+    scheme: string
+    create_time: string
+    content: string
+    title: string
+  }>>('/notices', { params: { notice_cate_id: noticeId } }).then(r => r.data)
 }
 getNoticeList.cacheKey = 'notice:list'
 
@@ -64,6 +72,7 @@ type GetChatRecordsResult = {
 export const getChatRecords = (params: { uid: string; limit: number; page: 1 }) => {
   return request.get<{items: GetChatRecordsResult[]}>('/chats', { params }).then(r => r.data)
 }
+getChatRecords.cacheKey = 'chat:records'
 
 
 /**

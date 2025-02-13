@@ -37,6 +37,7 @@ import {
 import { chartEvent } from './event'
 import { renderUtils } from './utils'
 import { dateUtils } from "@/utils/date"
+import { listify } from "radash"
 
 const MAIN_CHART_NAME = 'kChart'
 const MAIN_CHART_NAME_VIRTUAL = 'kChart-virtual'
@@ -517,7 +518,7 @@ export const renderGrid = (options: ECOption, state: ChartState, size: [number, 
           backgroundColor: '#353535',
           formatter: params => {
             if (params.axisDimension === 'x') {
-              const time = dayjs(+params.value * 1000).tz('America/New_York')
+              const time = dateUtils.toUsDay(+params.value)
               if (isTimeIndexChart(state.timeIndex) && state.timeIndex !== StockChartInterval.FIVE_DAY) {
                 return time.format('YYYY-MM-DD HH:mm')
               }
@@ -991,11 +992,14 @@ const renderIndicator = (
         data: data
       })
     } else if (d.draw === 'DRAWTEXT') {
-      const data: DrawerTextShape[] = Object.keys(d.draw_data).map(key => [
+      const data: DrawerTextShape[] = listify(d.draw_data, (key, value) => [
         +key,
-        ...(d.draw_data as NormalizedRecord<number[]>)[key],
-        d.color
-      ]) as any[]
+        value[0],
+        value[1],
+        d.color,
+        value[2],
+        value[3]
+      ])
       drawText(options, {} as any, {
         xAxisIndex: params.xAxisIndex,
         yAxisIndex: params.yAxisIndex,

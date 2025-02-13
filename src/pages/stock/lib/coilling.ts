@@ -471,8 +471,8 @@ export const calcBottomSignal = (
   //   .filter(v => v[2] > 0)
   let maxPos = -1
   let maxVol = 0
-  hdly(candlesticks).forEach((vol: number, index) => {
-    if (vol > 0) {
+  hdly(candlesticks).forEach((vol: number, index, arr) => {
+    if (vol > 0 && arr.length - 1 !== index) {
       hdlyData.push([index, 0, vol, 2, 0, ''])
 
       if (vol >= maxVol) {
@@ -497,6 +497,8 @@ export const calcBottomSignal = (
       }
     }
   })
+
+  console.log(hdlyLabel)
 
   const monthLineData = monthLine(candlesticks)
   const horizonData = horizon(candlesticks)
