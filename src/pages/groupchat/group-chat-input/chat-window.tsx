@@ -11,6 +11,7 @@ import { InputBoxResult, useInput } from "./useInput";
 import { useToast } from "@/hooks";
 import { useChatNoticeStore } from "@/store/group-chat-new";
 import { Button } from "@/components";
+import xss from "xss";
 
 const ChatWindow = forwardRef(
   (
@@ -148,8 +149,8 @@ const ChatWindow = forwardRef(
         const tgt = document.getElementById("xc-chat-input");
         if (tgt) {
           // tgt.innerHTML = reEditData.text;
-
-          setHtmlValue(reEditData.text);
+          const cleanText = xss(reEditData.text);
+          setHtmlValue(cleanText);
         }
       }
     }, [reEditData]);
@@ -188,7 +189,8 @@ const ChatWindow = forwardRef(
           onChange={(e) => {
             const tgt = document.getElementById("xc-chat-input");
             if (tgt) {
-              setHtmlValue(tgt.innerHTML);
+              const cleanText = xss(tgt.innerHTML);
+              setHtmlValue(cleanText);
             }
           }}
         ></div>
