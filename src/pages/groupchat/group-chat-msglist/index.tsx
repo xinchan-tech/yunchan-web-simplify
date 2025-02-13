@@ -393,7 +393,7 @@ const GroupChatMsgList = forwardRef((props, ref) => {
     const dom = document.getElementById(locatedMessageIdRef.current);
     if (dom) {
       // 要差个300px  不然又触发pullDown
-      scrollTo(dom.offsetTop - 300);
+      scrollTo(dom.offsetTop - 100);
     }
   };
 

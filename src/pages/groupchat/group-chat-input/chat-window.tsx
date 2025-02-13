@@ -11,7 +11,6 @@ import { InputBoxResult, useInput } from "./useInput";
 import { useToast } from "@/hooks";
 import { useChatNoticeStore } from "@/store/group-chat-new";
 import { Button } from "@/components";
-import { testExitGroup } from "@/api";
 
 const ChatWindow = forwardRef(
   (
@@ -19,6 +18,7 @@ const ChatWindow = forwardRef(
       handleSend: (msgListData: InputBoxResult) => void;
       className?: string;
       style?: CSSProperties;
+      showSendButton?: boolean;
     },
     ref
   ) => {
@@ -26,7 +26,7 @@ const ChatWindow = forwardRef(
     const { insertImage, exportMsgData, insertContent } = useInput({
       editorKey: "xc-chat-input",
     });
-    const { reEditData, setReEditData } = useChatNoticeStore();
+    const { reEditData } = useChatNoticeStore();
     const { toast } = useToast();
     useImperativeHandle(ref, () => {
       return {
@@ -147,7 +147,7 @@ const ChatWindow = forwardRef(
       if (reEditData?.text !== "") {
         const tgt = document.getElementById("xc-chat-input");
         if (tgt) {
-          tgt.innerHTML = reEditData.text;
+          // tgt.innerHTML = reEditData.text;
 
           setHtmlValue(reEditData.text);
         }
@@ -158,7 +158,6 @@ const ChatWindow = forwardRef(
       <>
         <div
           id="xc-chat-input"
-          style={props.style}
           data-placeholder="按 Ctrl + Enter 换行，按 Enter 发送"
           onKeyDown={(e: React.KeyboardEvent<HTMLDivElement>) => {
             if (e.keyCode !== 13) {
@@ -172,6 +171,11 @@ const ChatWindow = forwardRef(
             }
             e.preventDefault();
             dealSend();
+          }}
+          style={{
+            height:
+              props.showSendButton === true ? "calc(100% - 30px)" : "100%",
+            ...props.style,
           }}
           onDragOver={(e) => {
             e.preventDefault();
@@ -188,23 +192,26 @@ const ChatWindow = forwardRef(
             }
           }}
         ></div>
-        <div className="flex justify-end pr-2">
-          <Button
-            size="mini"
-            onClick={() => {
-              dealSend();
-            }}
-          >
-            发送
-          </Button>
-        </div>
+        {props.showSendButton === true && (
+          <div className="flex justify-end pr-2">
+            <Button
+              size="mini"
+              onClick={() => {
+                dealSend();
+              }}
+            >
+              发送
+            </Button>
+          </div>
+        )}
+
         <style jsx>
           {`
             .chat-window {
               padding: 6px 10px;
               overflow-y: auto;
               box-sizing: border-box;
-              height: calc(100% - 30px);
+
               img {
                 max-width: 200px !important;
                 max-height: 200px !important;

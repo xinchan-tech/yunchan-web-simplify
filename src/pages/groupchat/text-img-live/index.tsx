@@ -16,7 +16,7 @@ import ChatWindow from "../group-chat-input/chat-window";
 import UploadUtil from "../Service/uploadUtil";
 import { InputBoxImage, InputBoxResult } from "../group-chat-input/useInput";
 import { uid } from "radash";
-import { wsManager } from "@/utils/ws";
+import Viewer from "react-viewer";
 
 function formatTimestamp(timestamp: number) {
   const date = new Date(timestamp);
@@ -238,6 +238,8 @@ const TextImgLive = () => {
     }
   };
   const inputRef = useRef<any>();
+  const [showPreview, setShowPreview] = useState(false);
+  const [imageURL, setImageURL] = useState("");
 
   const handleSend = (data: InputBoxResult) => {
     if (!data) {
@@ -257,7 +259,7 @@ const TextImgLive = () => {
       });
     }
 
-    const promises = [];
+    const promises: Promise<{ url: string }>[] = [];
 
     UploadQueue.forEach((data) => {
       promises.push(uploadImg(data));
@@ -298,14 +300,12 @@ const TextImgLive = () => {
   };
 
   const uploadImg = (data: InputBoxImage) => {
-    if (data) {
-      let fileName = uid(32);
-      if (data.file.type) {
-        const fileType = data.file.type.split("/")[1];
-        fileName = `${fileName}.${fileType}`;
-      }
-      return UploadUtil.shared.uploadImg(data.file, fileName);
+    let fileName = uid(32);
+    if (data.file.type) {
+      const fileType = data.file.type.split("/")[1];
+      fileName = `${fileName}.${fileType}`;
     }
+    return UploadUtil.shared.uploadImg(data.file, fileName);
   };
 
   const dealFile = (file: any) => {
@@ -380,6 +380,10 @@ const TextImgLive = () => {
                           className="mr-3 max-w-[160px] max-h-[160px]"
                           src={url}
                           key={url + index}
+                          onClick={() => {
+                            setImageURL(url);
+                            setShowPreview(true);
+                          }}
                         />
                       );
                     })}
@@ -447,6 +451,27 @@ const TextImgLive = () => {
             </Button>
           </div>
         </div>
+      )}
+      {showPreview && (
+        <Viewer
+          noImgDetails={true}
+          visible
+          downloadable={true}
+          rotatable={false}
+          changeable={false}
+          showTotal={false}
+          onClose={() => {
+            setShowPreview(false);
+          }}
+          customToolbar={(defaultConfigs) => {
+            return defaultConfigs.filter((conf) => {
+              return ![3, 4, 5, 6, 7, 9, 10].includes(
+                conf.actionType as number
+              );
+            });
+          }}
+          images={[{ src: imageURL, alt: "", downloadUrl: imageURL }]}
+        />
       )}
       <style jsx>{`
          {

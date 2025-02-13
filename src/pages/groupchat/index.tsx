@@ -421,7 +421,7 @@ const GroupChatPage = () => {
           }
           .group-chat-container {
             height: 100vh;
-            min-width: 1080px;
+            min-width: 1000px;
           }
           .group-chat-container div {
             box-sizing: border-box;

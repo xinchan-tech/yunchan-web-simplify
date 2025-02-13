@@ -91,7 +91,7 @@ const ImageCell = (props: { message: Message }) => {
         <img
           alt=""
           src={imageURL}
-          className='msgcard-img'
+          className="msgcard-img"
           style={{
             borderRadius: "5px",
             width: scaleSize.width,
@@ -109,19 +109,15 @@ const ImageCell = (props: { message: Message }) => {
             rotatable={false}
             changeable={false}
             showTotal={false}
-            onMaskClick={() => {
-              setShowPreview(false);
-            }}
             onClose={() => {
               setShowPreview(false);
             }}
             customToolbar={(defaultConfigs) => {
-      
-              return defaultConfigs.filter(
-                (conf) => {
-                  return ![3, 4, 5, 6, 7, 9, 10].includes(conf.actionType as number)
-                }
-              );
+              return defaultConfigs.filter((conf) => {
+                return ![3, 4, 5, 6, 7, 9, 10].includes(
+                  conf.actionType as number
+                );
+              });
             }}
             images={[{ src: imageURL, alt: "", downloadUrl: imageURL }]}
           />
@@ -132,11 +128,11 @@ const ImageCell = (props: { message: Message }) => {
 
   return (
     <>
-      {message?.remoteExtra?.revoke === true
-        ? <RevokeText data={
-          message?.remoteExtra?.extra
-        } />
-        : getImageElement()}
+      {message?.remoteExtra?.revoke === true ? (
+        <RevokeText data={message?.remoteExtra?.extra} />
+      ) : (
+        getImageElement()
+      )}
     </>
   );
 };

@@ -243,7 +243,7 @@ const GroupChatInput = forwardRef(
         });
         return;
       }
-      if (!data || !conversationWraps) {
+      if (!data || !conversationWraps || !groupDetailData) {
         return;
       }
       let msgQueue: Array<InputBoxText | InputBoxImage> = [];
@@ -499,7 +499,11 @@ const GroupChatInput = forwardRef(
               </div>
             ) : (
               // -----------
-              <ChatWindow handleSend={handleSend} ref={inputRef} />
+              <ChatWindow
+                handleSend={handleSend}
+                ref={inputRef}
+                showSendButton
+              />
             )}
           </div>
         </div>
