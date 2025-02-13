@@ -1,18 +1,28 @@
-import { AiAlarmNotice, Footer, HeaderService, HeaderUser, JknAlert, Menu, MenuRight, StockSelect, Toaster } from './components'
+import {
+  AiAlarmNotice,
+  Footer,
+  HeaderService,
+  HeaderUser,
+  JknAlert,
+  Menu,
+  MenuRight,
+  StockSelect,
+  Toaster
+} from './components'
 import Logo from './assets/icon/icon_jkn@2x.png'
-import { Outlet } from "react-router"
-import { router, routes } from "./router"
-import { useMount, useUpdateEffect } from "ahooks"
-import { useConfig, useToken, useUser } from "./store"
-import { useTranslation } from "react-i18next"
-import { useEffect, useMemo, useRef, useState } from "react"
-import { getConfig, getStockCollectCates, getUser } from "@/api"
-import { useQuery, useQueryClient } from "@tanstack/react-query"
-import { appEvent } from "@/utils/event"
-import { uid } from "radash"
-import { useToast } from "@/hooks"
-import { wsManager } from "@/utils/ws"
-import { HeaderMall } from "./components/header/mall"
+import { Outlet, useNavigate } from 'react-router'
+import { router, routes } from './router'
+import { useMount, useUpdateEffect } from 'ahooks'
+import { useConfig, useToken, useUser } from './store'
+import { useTranslation } from 'react-i18next'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { getConfig, getStockCollectCates, getUser } from '@/api'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { appEvent } from '@/utils/event'
+import { uid } from 'radash'
+import { useToast } from '@/hooks'
+import { wsManager } from '@/utils/ws'
+import { HeaderMall } from './components/header/mall'
 
 export const CHAT_STOCK_JUMP = 'chat_stock_jump'
 
@@ -28,20 +38,19 @@ const App = () => {
   const notLogin = useRef(0)
   const queryClient = useQueryClient()
 
-
-
   const query = useQuery({
     queryKey: [getUser.cacheKey],
-    queryFn: () => getUser({
-      extends: ['authorized']
-    }),
+    queryFn: () =>
+      getUser({
+        extends: ['authorized']
+      }),
     enabled: !!token
   })
 
   const configQuery = useQuery({
-    queryKey: ["system:config"],
-    queryFn: () => getConfig(),
-  });
+    queryKey: ['system:config'],
+    queryFn: () => getConfig()
+  })
 
   useUpdateEffect(() => {
     if (!query.isLoading) {
@@ -49,7 +58,7 @@ const App = () => {
         ...query.data
       })
     }
-  }, [query.isLoading]);
+  }, [query.isLoading])
 
   useUpdateEffect(() => {
     setConsults(configQuery.data?.consults ?? [])
@@ -85,9 +94,10 @@ const App = () => {
   }, [toast])
 
   useMount(() => {
-    if (!config.hasSelected) {
-      config.setHasSelected();
-      config.setLanguage(navigator.language === "zh-CN" ? "zh_CN" : "en");
+    if (!hasSelected) {
+      setHasSelected()
+      setLanguage(navigator.language === 'zh-CN' ? 'zh_CN' : 'en')
+    }
     if (!hasSelected) {
       setHasSelected()
       setLanguage(navigator.language === 'zh-CN' ? 'zh_CN' : 'en')
@@ -96,50 +106,47 @@ const App = () => {
     i18n.changeLanguage(language)
   })
 
-const navigate =useNavigate()
+  const navigate = useNavigate()
   useEffect(() => {
-    const channel = new BroadcastChannel("chat-channel");
-   
-    channel.onmessage=  (event) => {
-  
-      if (event.data.type === CHAT_STOCK_JUMP) {
-       
-        if(event.data.payload) {
+    const channel = new BroadcastChannel('chat-channel')
 
-          navigate(`/app/stock/trading?symbol=${event.data.payload}`);
+    channel.onmessage = event => {
+      if (event.data.type === CHAT_STOCK_JUMP) {
+        if (event.data.payload) {
+          navigate(`/app/stock/trading?symbol=${event.data.payload}`)
         }
       }
     }
     const handler = () => {
-      if (notLogin.current === 0 && window.location.pathname !== "/app") {
-        notLogin.current = 1;
+      if (notLogin.current === 0 && window.location.pathname !== '/app') {
+        notLogin.current = 1
         JknAlert.info({
-          content: "请先登录账号",
+          content: '请先登录账号',
           onAction: async () => {
-            notLogin.current = 0;
-            window.location.href = "/";
-          },
-        });
+            notLogin.current = 0
+            window.location.href = '/'
+          }
+        })
       }
-    };
-    appEvent.on("not-login", handler);
+    }
+    appEvent.on('not-login', handler)
 
     return () => {
       channel.close()
-      appEvent.off("not-login", handler);
-    };
-  }, []);
-
-
-
-
+      appEvent.off('not-login', handler)
+    }
+  }, [navigate])
 
   return (
     <div className="container-layout dark">
       <Toaster />
       <div className="header relative z-10 px-4">
         <div className="search float-left flex items-center h-full">
-          <StockSelect size="mini" placeholder={t('search.stocks')} onChange={v => router.navigate(`/stock/trading?symbol=${v}`)} />
+          <StockSelect
+            size="mini"
+            placeholder={t('search.stocks')}
+            onChange={v => router.navigate(`/stock/trading?symbol=${v}`)}
+          />
         </div>
 
         <div className="absolute top-0 left-0 h-full w-full text-center flex justify-center items-center -z-10">
@@ -225,8 +232,8 @@ const navigate =useNavigate()
         `}
       </style>
     </div>
-  );
-};
+  )
+}
 
 const AppTitle = () => {
   const { t } = useTranslation()
@@ -235,58 +242,58 @@ const AppTitle = () => {
   const { token } = useToken()
 
   useEffect(() => {
-    const channel = new BroadcastChannel("chat-channel");
+    const channel = new BroadcastChannel('chat-channel')
     if (token) {
       wsManager.send({
-        event: "login",
+        event: 'login',
         data: {
-          "token": token
+          'token': token
         },
         msg_id: uid(20)
       })
       const close = wsManager.on('connect', () => {
         wsManager.send({
-          event: "login",
+          event: 'login',
           data: {
-            "token": token
+            'token': token
           },
           msg_id: uid(20)
         })
       })
 
-      const closeOpinion = wsManager.on("opinions", () => {
+      const closeOpinion = wsManager.on('opinions', () => {
         channel.postMessage({
-          type: "opinions",
-        });
-      });
+          type: 'opinions'
+        })
+      })
 
       return () => {
-        close();
-        closeOpinion();
+        close()
+        closeOpinion()
         channel.close()
-      };
-    } else {
-      channel.postMessage({
-        type: "logout",
-      });
-
-      return  channel.close;
+      }
     }
-    
-  }, [token]);
+      channel.postMessage({
+        type: 'logout'
+      })
+
+      return channel.close
+  }, [token])
 
   useEffect(() => {
-    const s = router.subscribe((s) => {
-      setPathname(s.location.pathname);
-    });
+    const s = router.subscribe(s => {
+      setPathname(s.location.pathname)
+    })
 
     return () => {
-      s();
-    };
-  }, []);
+      s()
+    }
+  }, [])
 
   const title = useMemo(() => {
-    const route = routes.find(r => r.path === '/')!.children!.find((r) => pathname === '/' ? r.index : (r.path === pathname))
+    const route = routes
+      .find(r => r.path === '/')!
+      .children!.find(r => (pathname === '/' ? r.index : r.path === pathname))
 
     if (pathname.startsWith('/stock')) {
       if (pathname.includes('trading')) {
@@ -302,9 +309,9 @@ const AppTitle = () => {
 
   return (
     <span>
-      {t("app")}-{title}
+      {t('app')}-{title}
     </span>
-  );
-};
+  )
+}
 
-export default App;
+export default App

@@ -31,6 +31,7 @@ type WsEvent =
   | 'ack'
   | 'default'
   | 'alarm_v2'
+  | 'opinions'
 
 type DefaultEventResult = {
   cluster_name: string
