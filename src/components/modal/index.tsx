@@ -9,24 +9,25 @@ import { Button } from '../ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog'
 import { useConfig } from '@/store'
 import { usePropValue } from '@/hooks'
-import type { DialogContentProps } from "@radix-ui/react-dialog"
-
-export interface UseModalProps {
-  content: ReactNode
-  title?: string
-  closeIcon?: boolean
-  onOpen?: (...arg: any[]) => void
-  className?: string
-  footer?: boolean | ReactNode
-  onOk?: () => void
-  confirmLoading?: boolean
-  closeOnMaskClick?: boolean
-}
+import type { DialogContentProps } from '@radix-ui/react-dialog'
+import { isFunction } from '@tanstack/react-table'
 
 export interface UseModalAction {
   open: (...arg: unknown[]) => void
   close: () => void
   title: (title?: string) => string
+}
+
+export interface UseModalProps {
+  content: ReactNode | ((action: UseModalAction & Pick<UseModalProps, 'onOk'>) => ReactNode)
+  title?: string
+  closeIcon?: boolean
+  onOpen?: (...arg: any[]) => void
+  className?: string
+  footer?: boolean | ReactNode
+  onOk?: (...arg: any[]) => void
+  confirmLoading?: boolean
+  closeOnMaskClick?: boolean
 }
 
 export const useModal = ({
@@ -57,12 +58,34 @@ export const useModal = ({
     }
   }, [modalVisible])
 
-  const onPointerDownOutside = useCallback<NonNullable<DialogContentProps['onPointerDownOutside']>>((e) => {
-    if(props.closeOnMaskClick === false){
-      e.stopPropagation()
-      e.preventDefault()
+  const onPointerDownOutside = useCallback<NonNullable<DialogContentProps['onPointerDownOutside']>>(
+    e => {
+      if (props.closeOnMaskClick === false) {
+        e.stopPropagation()
+        e.preventDefault()
+      }
+    },
+    [props.closeOnMaskClick]
+  )
+
+  const modal: UseModalAction = {
+    open: (...arg: unknown[]) => {
+      toggleModalVisible()
+      setTrue()
+      onOpen?.(...arg)
+    },
+    close: () => {
+      toggleModalVisible()
+    },
+    title: (title?: string) => {
+      if (title) {
+        setInnerTitle(title)
+        return title
+      }
+
+      return ''
     }
-  }, [props.closeOnMaskClick])
+  }
 
   const render = () => {
     if (!visible) return null
@@ -93,7 +116,7 @@ export const useModal = ({
             </DialogTitle>
             <DialogDescription className="text-center" />
           </DialogHeader>
-          {content}
+          {isFunction(content) ? content({...modal, onOk: props.onOk}) : content}
           {footer === null ? null : footer === undefined ? (
             <DialogFooter className="m-4">
               <Button variant="outline" onClick={() => toggleModalVisible()}>
@@ -111,32 +134,14 @@ export const useModal = ({
     )
   }
 
-  const modal: UseModalAction = {
-    open: (...arg: unknown[]) => {
-      toggleModalVisible()
-      setTrue()
-      onOpen?.(...arg)
-    },
-    close: () => {
-      toggleModalVisible()
-    },
-    title: (title?: string) => {
-      if (title) {
-        setInnerTitle(title)
-        return title
-      }
-
-      return ''
-    }
-  }
-
   return {
     modal,
     context: render()
   }
 }
 
-export interface UseFormModalProps<T extends z.ZodTypeAny> extends Omit<UseModalProps, 'onOk'> {
+export interface UseFormModalProps<T extends z.ZodTypeAny> extends Omit<UseModalProps, 'onOk' | 'content'> {
+  content: ReactNode
   onOk: (values: z.infer<T>) => void
   form: UseFormReturn<z.infer<T>>
 }
@@ -156,12 +161,6 @@ export const useFormModal = <T extends z.ZodTypeAny>({
     }
   }
 
-  const _content = (
-    <FormProvider {...form}>
-      <form className="space-y-8">{content}</form>
-    </FormProvider>
-  )
-
   const _onOpen = (...arg: unknown[]) => {
     form.reset()
     onOpen?.(...arg)
@@ -171,6 +170,12 @@ export const useFormModal = <T extends z.ZodTypeAny>({
     await form.trigger()
     form.handleSubmit(_onFinish)()
   }
+
+  const _content = (
+    <FormProvider {...form}>
+      <form className="space-y-8">{content}</form>
+    </FormProvider>
+  )
 
   const { modal, context } = useModal({
     content: _content,

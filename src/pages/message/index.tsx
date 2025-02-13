@@ -7,9 +7,9 @@ import { cn } from '@/utils/style'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import dayjs from 'dayjs'
 import { produce } from 'immer'
+import { uid } from 'radash'
 import { type ComponentRef, useEffect, useMemo, useRef, useState } from 'react'
 import { MessageInput } from './components/message-input'
-import { uid } from 'radash'
 const formatTime = (date: string) => {
   const day = dayjs(+date * 1000)
   if (day.isSame(dayjs(), 'day')) {
@@ -56,7 +56,7 @@ const MessageCenter = () => {
 
       return { previousValue }
     },
-    onError: (err, _, context: any) => {
+    onError: (__, _, context: any) => {
       queryClient.setQueryData(chatsQueryKey, context.previousValue)
     },
     onSettled: () => {
@@ -142,11 +142,6 @@ type MessageType = Awaited<ReturnType<typeof getChatRecords>>['items']
 
 const ChatMessageContent = (props: MessageContentProps) => {
   const user = useUser(s => s.user)
-  // const notices = useQuery({
-  //   queryKey: [getNoticeList.cacheKey, props.msgKey],
-  //   queryFn: () => getNoticeList(props.msgKey!),
-  //   enabled: props.type === 'notice' && !!props.msgKey
-  // })
 
   const chats = useQuery({
     queryKey: [getChatRecords.cacheKey, props.msgKey],
@@ -199,16 +194,16 @@ const ChatMessageContent = (props: MessageContentProps) => {
   const queryClient = useQueryClient()
 
   const sendMessage = useMutation({
-    mutationFn: (msg: string) => {
-      return ws.send(props.msgKey!, msg)
+    mutationFn: (params: { msg: string; type: '0' | '1' }) => {
+      return ws.send(props.msgKey!, params.msg, params.type)
     },
-    onMutate: async msg => {
-      queryClient.cancelQueries({ queryKey: [getChatContacts.cacheKey, props.msgKey] })
+    onMutate: async params => {
+      queryClient.cancelQueries({ queryKey: [getChatRecords.cacheKey, props.msgKey] })
 
-      const previousValue = queryClient.getQueryData([getChatContacts.cacheKey, props.msgKey])
+      const previousValue = queryClient.getQueryData([getChatRecords.cacheKey, props.msgKey])
 
       queryClient.setQueryData<typeof chats.data>(
-        [getChatContacts.cacheKey, props.msgKey],
+        [getChatRecords.cacheKey, props.msgKey],
         produce(draft => {
           draft?.items.push({
             from_user: {
@@ -218,8 +213,8 @@ const ChatMessageContent = (props: MessageContentProps) => {
             },
             id: uid(16),
             group_id: props.msgKey!,
-            type: '0',
-            message: msg,
+            type: params.type,
+            message: params.msg,
             is_read: '0',
             create_time: (Date.now() / 1000).toString()
           })
@@ -229,7 +224,7 @@ const ChatMessageContent = (props: MessageContentProps) => {
       return { previousValue }
     },
     onError: (__, _, context: any) => {
-      queryClient.setQueryData([getChatContacts.cacheKey], context.previousValue)
+      queryClient.setQueryData([getChatRecords.cacheKey, props.msgKey], context.previousValue)
     }
   })
 
@@ -259,17 +254,25 @@ const ChatMessageContent = (props: MessageContentProps) => {
               {group.map(msg => (
                 <div key={msg.id} className="flex items-center w-full">
                   {msg.from_user.id === user?.id ? (
-                    <div className="ml-auto flex items-center text-black">
-                      <div className="bg-[#1e8bf1] rounded py-2 px-2 relative max-w-1/2 message-content">
-                        {msg.message}
+                    <div className="ml-auto flex items-start text-black max-w-[60%]">
+                      <div className="bg-[#1e8bf1] rounded py-2 px-2 relative  message-content box-border">
+                        {msg.type === '1' ? (
+                          <img src={msg.message} alt={msg.message} className="w-full h-full" />
+                        ) : (
+                          <span>{msg.message}</span>
+                        )}
                       </div>
                       <JknAvatar className="ml-3" src={msg.from_user.avatar ?? undefined} />
                     </div>
                   ) : (
-                    <div className="mr-auto flex items-center text-black">
+                    <div className="mr-auto flex items-start text-black max-w-[60%]">
                       <JknAvatar className="mr-3" src={msg.from_user.avatar ?? undefined} />
-                      <div className="bg-stock-green rounded py-2 px-2 relative max-w-1/2 message-content-right">
-                        {msg.message}
+                      <div className="bg-stock-green rounded py-2 px-2 relative message-content-right box-border">
+                        {msg.type === '1' ? (
+                          <img src={msg.message} alt={msg.message} className="w-full h-full" />
+                        ) : (
+                          <span>{msg.message}</span>
+                        )}
                       </div>
                     </div>
                   )}
@@ -279,7 +282,7 @@ const ChatMessageContent = (props: MessageContentProps) => {
           ))}
         </div>
       </ScrollArea>
-      {props.msgKey ? <MessageInput onSend={msg => sendMessage.mutate(msg)} /> : null}
+      {props.msgKey ? <MessageInput onSend={(msg, type) => sendMessage.mutate({ msg, type: type as any })} /> : null}
       <style jsx>
         {`
         .message-content::after {
@@ -290,8 +293,7 @@ const ChatMessageContent = (props: MessageContentProps) => {
           border-bottom: 6px solid transparent;
           border-left: 6px solid #1e8bf1;
           border-top: 6px solid transparent;
-          top: 50%;
-          transform: translateY(-50%);
+          top: 14px;
           right: -5px;
         }
 
@@ -303,8 +305,7 @@ const ChatMessageContent = (props: MessageContentProps) => {
           border-bottom: 6px solid transparent;
           border-right: 6px solid hsl(var(--color-stock-green));
           border-top: 6px solid transparent;
-          top: 50%;
-          transform: translateY(-50%);
+          top: 14px;
           left: -5px;
         }
       `}
