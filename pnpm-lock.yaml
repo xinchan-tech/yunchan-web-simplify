@@ -306,9 +306,6 @@ importers:
       '@types/ali-oss':
         specifier: ^6.16.11
         version: 6.16.11
-      '@types/crypto-js':
-        specifier: ^4.2.2
-        version: 4.2.2
       '@types/d3':
         specifier: ^7.4.3
         version: 7.4.3

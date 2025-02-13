@@ -80,34 +80,10 @@ const App = () => {
   const { toast } = useToast()
 
   useEffect(() => {
-    const handler = (params: { message: string }) => {
-      toast({
-        description: params.message
-      })
-    }
-
-    i18n.changeLanguage(config.language);
-  });
-  const navigate =useNavigate()
-  useEffect(() => {
-    const channel = new BroadcastChannel("chat-channel");
-   
-    channel.onmessage =  (event) => {
-  
-      if (event.data.type === CHAT_STOCK_JUMP) {
-       
-        if(event.data.payload) {
-
-    return () => {
-      appEvent.off('toast', handler)
-    }
-  }, [toast])
+    i18n.changeLanguage(language)
+  }, [language, i18n.changeLanguage])
 
   useMount(() => {
-    if (!hasSelected) {
-      setHasSelected()
-      setLanguage(navigator.language === 'zh-CN' ? 'zh_CN' : 'en')
-    }
     if (!hasSelected) {
       setHasSelected()
       setLanguage(navigator.language === 'zh-CN' ? 'zh_CN' : 'en')
@@ -115,6 +91,19 @@ const App = () => {
 
     i18n.changeLanguage(language)
   })
+
+  useEffect(() => {
+    const handler = (params: { message: string }) => {
+      toast({
+        description: params.message
+      })
+    }
+
+    appEvent.on('toast', handler)
+    return () => {
+      appEvent.off('toast', handler)
+    }
+  }, [toast])
 
   const navigate = useNavigate()
   useEffect(() => {
@@ -124,7 +113,7 @@ const App = () => {
       if (event.data.type === CHAT_STOCK_JUMP) {
         if (event.data.payload) {
           navigate(`/app/stock/trading?symbol=${event.data.payload}`)
-          navigate(`/stock/trading?symbol=${event.data.payload}`);
+          navigate(`/stock/trading?symbol=${event.data.payload}`)
         }
       }
     }
@@ -282,21 +271,15 @@ const AppTitle = () => {
         close()
         closeOpinion()
         channel.close()
-      };
-    } else {
-      channel.postMessage({
-        type: "logout",
-      });
-
-      return () => {
-        channel.close();
       }
     }
-      channel.postMessage({
-        type: 'logout'
-      })
+    channel.postMessage({
+      type: 'logout'
+    })
 
-      return channel.close
+    return () => {
+      channel.close()
+    }
   }, [token])
 
   useEffect(() => {
