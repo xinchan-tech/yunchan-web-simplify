@@ -124,6 +124,7 @@ const App = () => {
       if (event.data.type === CHAT_STOCK_JUMP) {
         if (event.data.payload) {
           navigate(`/app/stock/trading?symbol=${event.data.payload}`)
+          navigate(`/stock/trading?symbol=${event.data.payload}`);
         }
       }
     }
