@@ -92,7 +92,7 @@ const MessageCenter = () => {
                 )}
                 <span className="ml-auto text-sm">{formatTime(item.create_time)}</span>
               </div>
-              <div className="mt-1 w-full text-ellipsis overflow-hidden whitespace-nowrap" style={{whiteSpace: 'nowrap'}}>{item.message}</div>
+              <div className="mt-1 w-full text-ellipsis overflow-hidden whitespace-nowrap">{item.message}</div>
             </div>
           </div>
         ))}
@@ -120,7 +120,9 @@ const MessageCenter = () => {
                 )}
                 <span className="ml-auto text-sm">{item.create_time ? formatTime(item.create_time) : '--'}</span>
               </div>
-              <div className="mt-1 w-full text-ellipsis overflow-hidden">{item.describe || '--'}</div>
+              <div className="mt-1 w-full text-ellipsis overflow-hidden  whitespace-nowrap">
+                {item.describe || '--'}
+              </div>
             </div>
           </div>
         ))}

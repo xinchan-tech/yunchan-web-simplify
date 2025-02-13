@@ -1263,7 +1263,6 @@ const renderSecondaryAxis = (options: ECOption, _: any, index: number, chart: EC
  * 只有在盘前盘中盘后显示
  */
 export const renderWatermark = (options: ECOption, timeIndex: ChartState['timeIndex']) => {
-
   const watermark: GraphicComponentOption = {
     type: 'text',
     left: 'center',
@@ -1275,7 +1274,7 @@ export const renderWatermark = (options: ECOption, timeIndex: ChartState['timeIn
           ? '盘前交易'
           : timeIndex === StockChartInterval.AFTER_HOURS
             ? '盘后交易'
-            : '盘中交易',
+            : timeIndex === StockChartInterval.INTRA_DAY ? '盘中交易' : '',
       fill: 'rgba(255, 255, 255, 0.05)',
       font: 'bold 96px sans-serif',
       align: 'center'
