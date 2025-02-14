@@ -1,5 +1,5 @@
 import { getCollectHot } from "@/api"
-import { CapsuleTabs, JknRcTable, type JknRcTableProps, NumSpanSubscribe, StockView } from "@/components"
+import { CapsuleTabs, JknRcTable, type JknRcTableProps, NumSpanSubscribe, StockView, SubscribeSpan } from "@/components"
 import { useStockQuoteSubscribe, useTableData, useTableRowClickToStockTrading } from "@/hooks"
 import { stockUtils } from "@/utils/stock"
 import { useQuery } from "@tanstack/react-query"
@@ -32,25 +32,25 @@ const TopList = () => {
     },
     {
       title: '现价', dataIndex: 'close', align: 'right', width: '17%', sort: true,
-      render: (close, row) => <NumSpanSubscribe code={row.symbol} field="close" blink value={close} isPositive={stockUtils.isUp(row)} align="right" />
+      render: (close, row) => <SubscribeSpan.PriceBlink symbol={row.symbol} initValue={close} initDirection={stockUtils.isUp(row)} />
     },
     {
       title: '涨跌幅', dataIndex: 'percent',
       align: 'right', width: '20%', sort: true,
       render: (percent, row) => (
-        <NumSpanSubscribe code={row.symbol} field="percent" block blink decimal={2} align="right" value={percent} percent isPositive={stockUtils.isUp(row)} symbol />
+        <SubscribeSpan.PercentBlockBlink showSign symbol={row.symbol} decimal={2} initValue={percent} initDirection={stockUtils.isUp(row)} />
       )
     },
     {
       title: '成交额', dataIndex: 'turnover',
       align: 'right', width: '20%', sort: true,
-      render: (turnover, row) => <NumSpanSubscribe code={row.symbol} field="turnover" blink align="right" unit decimal={2} value={turnover} isPositive={stockUtils.isUp(row)} />
+      render: (turnover, row) => <SubscribeSpan.TurnoverBlink symbol={row.symbol} decimal={2} initValue={turnover} initDirection={stockUtils.isUp(row)} />
     },
     {
       title: '总市值', dataIndex: 'marketValue',
       align: 'right', width: '19%', sort: true,
-      render: (marketValue, row) => <NumSpanSubscribe code={row.symbol} field={v => stockUtils.getSubscribeMarketValue(row, v)} blink align="right" unit decimal={2} value={marketValue} />
-    },
+      render: (marketValue, row) => <SubscribeSpan.MarketValueBlink symbol={row.symbol} decimal={2} initValue={marketValue} totalShare={row.totalShare ?? 0} showColor={false} />
+    }
   ]
 
   const onRowClick = useTableRowClickToStockTrading('symbol')

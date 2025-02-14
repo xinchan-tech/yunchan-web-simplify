@@ -224,12 +224,11 @@ const GoldenPoolList = (props: GoldenPoolListProps) => {
       align: 'right',
       width: 90,
       render: (close, row) => (
-        <NumSpanSubscribe
-          code={row.symbol}
-          field="close"
-          value={close ?? 0}
+        <SubscribeSpan.PriceBlink
+          symbol={row.symbol}
+          initValue={close ?? 0}
           decimal={3}
-          isPositive={stockUtils.isUp(row)}
+          initDirection={stockUtils.isUp(row)}
         />
       )
     },
@@ -240,15 +239,11 @@ const GoldenPoolList = (props: GoldenPoolListProps) => {
       align: 'right',
       width: 90,
       render: (percent, row) => (
-        <NumSpanSubscribe
-          code={row.symbol}
-          field="percent"
-          percent
-          block
+        <SubscribeSpan.PercentBlockBlink
+          symbol={row.symbol}
           decimal={2}
-          value={percent}
-          isPositive={stockUtils.isUp(row)}
-          symbol
+          initValue={percent}
+          initDirection={stockUtils.isUp(row)}
         />
       )
     },
@@ -259,7 +254,7 @@ const GoldenPoolList = (props: GoldenPoolListProps) => {
       sort: true,
       width: 90,
       render: (turnover, row) => (
-        <NumSpanSubscribe code={row.symbol} field="turnover" blink align="right" unit decimal={2} value={turnover} />
+        <SubscribeSpan.TurnoverBlink showColor={false} symbol={row.symbol} decimal={2} initValue={turnover} />
       )
     },
     {
@@ -269,14 +264,12 @@ const GoldenPoolList = (props: GoldenPoolListProps) => {
       align: 'right',
       width: 90,
       render: (marketValue, row) => (
-        <NumSpanSubscribe
-          code={row.symbol}
-          field={v => stockUtils.getSubscribeMarketValue(row, v)}
-          blink
-          align="right"
-          unit
+        <SubscribeSpan.MarketValueBlink
+          symbol={row.symbol}
+          showColor={false}
           decimal={2}
-          value={marketValue}
+          initValue={marketValue}
+          totalShare={row.totalShare ?? 0}
         />
       )
     }
@@ -445,11 +438,12 @@ const PlateList = (props: PlateListProps) => {
         dataIndex: 'change',
         sort: true,
         width: 90,
+        align: 'center',
         render: (_, row) => (
           <SubscribeSpan.PercentBlock
             subscribe={false}
             symbol=""
-            initValue={row.change}
+            initValue={row.change / 100}
             initDirection={row.change > 0}
           />
         )
@@ -542,13 +536,11 @@ const PlateStocks = (props: PlateStocksProps) => {
         align: 'right',
         sort: true,
         render: (close, row) => (
-          <NumSpanSubscribe
-            code={row.symbol}
-            field="close"
-            value={close}
+          <SubscribeSpan.PriceBlink
+            symbol={row.symbol}
+            initValue={close}
             decimal={3}
-            isPositive={stockUtils.isUp(row)}
-            align="right"
+            initDirection={stockUtils.isUp(row)}
           />
         )
       },
@@ -559,15 +551,12 @@ const PlateStocks = (props: PlateStocksProps) => {
         width: 90,
         sort: true,
         render: (percent, row) => (
-          <NumSpanSubscribe
-            code={row.symbol}
-            field="percent"
-            percent
-            block
+          <SubscribeSpan.PercentBlockBlink
+            symbol={row.symbol}
+            showSign
             decimal={2}
-            value={percent}
-            isPositive={stockUtils.isUp(row)}
-            symbol
+            initValue={percent}
+            initDirection={stockUtils.isUp(row)}
           />
         )
       },
@@ -577,7 +566,7 @@ const PlateStocks = (props: PlateStocksProps) => {
         align: 'right',
         sort: true,
         render: (turnover, row) => (
-          <NumSpanSubscribe code={row.symbol} field="turnover" blink align="right" unit decimal={2} value={turnover} />
+          <SubscribeSpan.TurnoverBlink showColor={false} symbol={row.symbol} decimal={2} initValue={turnover} />
         )
       },
       {
@@ -586,14 +575,12 @@ const PlateStocks = (props: PlateStocksProps) => {
         align: 'right',
         sort: true,
         render: (marketValue, row) => (
-          <NumSpanSubscribe
-            code={row.symbol}
-            field={v => stockUtils.getSubscribeMarketValue(row, v)}
-            blink
-            align="right"
-            unit
+          <SubscribeSpan.MarketValueBlink
+            showColor={false}
+            totalShare={row.totalShare ?? 0}
+            symbol={row.symbol}
             decimal={2}
-            value={marketValue}
+            initValue={marketValue}
           />
         )
       }

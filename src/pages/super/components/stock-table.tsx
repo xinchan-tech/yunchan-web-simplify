@@ -212,9 +212,10 @@ const StockTable = (props: StockTableProps) => {
           <SubscribeSpan.PercentBlink
             trading="preMarket"
             symbol={row.symbol}
+            showSign
             decimal={2}
             initValue={prePercent}
-            initDirection={(row.percent ?? 0) >= 0}
+            initDirection={(prePercent ?? 0) > 0}
             nanText="--"
           />
         )
@@ -228,10 +229,11 @@ const StockTable = (props: StockTableProps) => {
         render: (afterPercent, row) => (
           <SubscribeSpan.PercentBlink
             trading="afterHours"
+            showSign
             symbol={row.symbol}
             decimal={2}
             initValue={afterPercent}
-            initDirection={(row.percent ?? 0) >= 0}
+            initDirection={(afterPercent ?? 0) > 0}
             nanText="--"
           />
         )

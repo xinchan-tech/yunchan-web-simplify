@@ -264,7 +264,6 @@ type IndicatorDataBase<T extends DrawFunc> = {
   style_type?: string
 }
 
-
 type IndicatorDataLine = IndicatorDataBase<''> & {
   data: number[]
 }
@@ -274,8 +273,19 @@ type IndicatorDataDrawStickLine = IndicatorDataBase<'STICKLINE'> & {
 type IndicatorDataDrawText = IndicatorDataBase<'DRAWTEXT'> & {
   draw_data: Record<number, [number, string, number, number]>
 }
+/**
+ * 一个渐变的多边形
+ * 值类型为 [startX, endX, minY, maxY, [number, number][], color1, color2]
+ * startX: 多边形起始x轴坐标
+ * endX: 多边形结束x轴坐标
+ * minY: 多边形最小y轴坐标
+ * maxY: 多边形最大y轴坐标
+ * [number, number][]: 多边形的点，每个点是一个数组，第一个元素是x轴坐标，第二个元素是y轴坐标
+ * color1: 颜色1
+ * color2: 颜色2
+ */
 type IndicatorDataDrawGradient = IndicatorDataBase<'DRAWGRADIENT'> & {
-  draw_data: Record<number, [string, string, string, string, number]>
+  draw_data: [number, number, number, number, [number, number][], string, string][]
 }
 type IndicatorDataDrawNumber = IndicatorDataBase<'DRAWNUMBER'> & {
   draw_data: Record<number, [number, number, number, number]>

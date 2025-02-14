@@ -497,9 +497,7 @@ export const calcBottomSignal = (
       }
     }
   })
-
-  console.log(hdlyLabel)
-
+  
   const monthLineData = monthLine(candlesticks)
   const horizonData = horizon(candlesticks)
   const topLine = candlesticks.map((_, index) => [index, 100])

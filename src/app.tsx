@@ -38,27 +38,28 @@ const App = () => {
   const notLogin = useRef(0)
   const queryClient = useQueryClient()
 
-  const query = useQuery({
-    queryKey: [getUser.cacheKey],
-    queryFn: () =>
-      getUser({
-        extends: ['authorized']
-      }),
-    enabled: !!token
-  })
-
   const configQuery = useQuery({
     queryKey: ['system:config'],
     queryFn: () => getConfig()
   })
 
-  useUpdateEffect(() => {
-    if (!query.isLoading) {
-      setUser({
-        ...query.data
-      })
+  useEffect(() => {
+    if (token) {
+      queryClient
+        .fetchQuery({
+          queryKey: [getUser.cacheKey],
+          queryFn: () =>
+            getUser({
+              extends: ['authorized']
+            })
+        })
+        .then(res => {
+          setUser({
+            ...res
+          })
+        })
     }
-  }, [query.isLoading])
+  }, [token, queryClient.fetchQuery, setUser])
 
   useUpdateEffect(() => {
     setConsults(configQuery.data?.consults ?? [])

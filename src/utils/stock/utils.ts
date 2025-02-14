@@ -2,8 +2,9 @@ import { StockChartInterval, type StockExtendResultMap, StockPeriod, type StockR
 import dayjs from 'dayjs'
 import Decimal from 'decimal.js'
 import {  isNumber } from 'radash'
-import { type Stock, StockRecord, type StockResultRecord, type StockTrading, StockWithExt } from './stock'
+import { type Stock, StockRecord, type StockResultRecord, type StockTrading, type StockWithExt } from './stock'
 import type { StockSubscribeHandler } from './subscribe'
+import { dateUtils } from "../date"
 
 /**
  * 判断时间数据
@@ -221,7 +222,7 @@ export const stockUtils = {
    * 4:00 PM - 8:00 PM 美国东部时间
    */
   getTrading: (time: Stock['timestamp']): StockTrading => {
-    const usTime = dayjs(time).tz('America/New_York')
+    const usTime = dateUtils.toUsDay(time)
 
     if (
       usTime.isSameOrAfter(usTime.hour(4).minute(0).second(0)) &&

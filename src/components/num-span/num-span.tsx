@@ -1,48 +1,43 @@
-import { usePropValue } from "@/hooks"
-import { useConfig } from "@/store"
-import { type StockSubscribeHandler, type StockTrading, stockSubscribe, stockUtils } from "@/utils/stock"
-import { cn } from "@/utils/style"
-import { useUpdateEffect } from "ahooks"
-import { type VariantProps, cva } from "class-variance-authority"
-import Decimal from "decimal.js"
-import { get, isFunction, isNumber } from "radash"
-import { type HTMLAttributes, memo, useEffect, useRef, useState } from "react"
-import { JknIcon } from ".."
+import { usePropValue } from '@/hooks'
+import { useConfig } from '@/store'
+import { type StockSubscribeHandler, type StockTrading, stockSubscribe, stockUtils } from '@/utils/stock'
+import { cn } from '@/utils/style'
+import { useUpdateEffect } from 'ahooks'
+import { type VariantProps, cva } from 'class-variance-authority'
+import Decimal from 'decimal.js'
+import { get, isFunction, isNumber } from 'radash'
+import { type HTMLAttributes, memo, useEffect, useRef, useState } from 'react'
+import { JknIcon } from '..'
 
-const numSpanVariants = cva(
-  '',
-  {
-    variants: {
-      isPositive: {
-        default:
-          'text-foreground',
-        false:
-          'text-stock-down',
-        true:
-          'text-stock-up'
-      },
-      block: {
-        default: "",
-        true: "box-border rounded-[2px] text-center px-1 py-0.5 w-[70px]"
-      }
+const numSpanVariants = cva('', {
+  variants: {
+    isPositive: {
+      default: 'text-foreground',
+      false: 'text-stock-down',
+      true: 'text-stock-up'
     },
-    compoundVariants: [
-      {
-        isPositive: true,
-        block: true,
-        className: "text-foreground bg-stock-up"
-      },
-      {
-        isPositive: false,
-        block: true,
-        className: "text-foreground bg-stock-down"
-      }
-    ],
-    defaultVariants: {
-      isPositive: "default",
-      block: "default",
+    block: {
+      default: '',
+      true: 'box-border rounded-[2px] text-center px-1 py-0.5 w-[70px]'
+    }
+  },
+  compoundVariants: [
+    {
+      isPositive: true,
+      block: true,
+      className: 'text-foreground bg-stock-up'
     },
-  })
+    {
+      isPositive: false,
+      block: true,
+      className: 'text-foreground bg-stock-down'
+    }
+  ],
+  defaultVariants: {
+    isPositive: 'default',
+    block: 'default'
+  }
+})
 
 interface NumSpanProps extends React.HTMLAttributes<HTMLSpanElement>, VariantProps<typeof numSpanVariants> {
   /**
@@ -94,22 +89,36 @@ interface NumSpanProps extends React.HTMLAttributes<HTMLSpanElement>, VariantPro
   zeroText?: string
 }
 
-
 /**
  * @deprecated 颜色不再由组件控制
- * @returns 
+ * @returns
  */
-export const NumSpan = ({ isPositive, block, percent, value, symbol, className, arrow, decimal = 3, unit = false, blink, align = 'left', showColor, zeroText, ...props }: NumSpanProps) => {
-  const { setting: { priceBlink } } = useConfig()
+export const NumSpan = ({
+  isPositive,
+  block,
+  percent,
+  value,
+  symbol,
+  className,
+  arrow,
+  decimal = 3,
+  unit = false,
+  blink,
+  align = 'left',
+  showColor,
+  zeroText,
+  ...props
+}: NumSpanProps) => {
+  const {
+    setting: { priceBlink }
+  } = useConfig()
   const lastValue = useRef(value)
   const span = useRef<HTMLSpanElement>(null)
   const priceBlinkTimer = useRef<number>()
 
   useUpdateEffect(() => {
     if (blink && priceBlink === '1') {
-
       if (!priceBlinkTimer.current) {
-
         if (lastValue.current === undefined || !value) return
 
         if (lastValue.current === value) return
@@ -134,48 +143,59 @@ export const NumSpan = ({ isPositive, block, percent, value, symbol, className, 
 
   const num = Decimal.isDecimal(value) ? value : new Decimal(value)
 
-  const formattedValue = unit !== false ? num.toDP(decimal).toShortCN() : percent ? `${num.mul(100).toFixed(decimal)}%` : num.toFixed(decimal)
+  const formattedValue =
+    unit !== false
+      ? num.toDP(decimal).toShortCN()
+      : percent
+        ? `${num.mul(100).toFixed(decimal)}%`
+        : num.toFixed(decimal)
 
   return (
-    <span className={cn(
-      'inline-flex items-center flex-nowrap space-x-0.5 box-border stock-blink',
-      (block || blink) && 'w-full h-full',
-      blink && 'px-0',
-      align === 'left' && 'justify-start',
-      align === 'center' && 'justify-center',
-      align === 'right' && 'justify-end'
-    )} ref={span}>
-      <span className={cn(
-        numSpanVariants({ isPositive: showColor === false ? undefined : isPositive, block, className }),
-      )} {...props}>
+    <span
+      className={cn(
+        'inline-flex items-center flex-nowrap space-x-0.5 box-border stock-blink',
+        (block || blink) && 'w-full h-full',
+        blink && 'px-0',
+        align === 'left' && 'justify-start',
+        align === 'center' && 'justify-center',
+        align === 'right' && 'justify-end'
+      )}
+      ref={span}
+    >
+      <span
+        className={cn(numSpanVariants({ isPositive: showColor === false ? undefined : isPositive, block, className }))}
+        {...props}
+      >
         {symbol && num.gte(0) ? '+' : ''}
-        {
-          zeroText && num.eq(0) ? zeroText : formattedValue
-        }
+        {zeroText && num.eq(0) ? zeroText : formattedValue}
       </span>
-      {
-        arrow ? (
-          <JknIcon.Arrow
-            direction={isPositive ? 'up' : 'down'}
-          />
-        ) : null
-      }
+      {arrow ? <JknIcon.Arrow direction={isPositive ? 'up' : 'down'} /> : null}
     </span>
   )
 }
 
 interface NumSpanSubscribeProps extends Omit<NumSpanProps, 'value'> {
   code: string
-  field: keyof Parameters<StockSubscribeHandler<'quote'>>[0]['record'] | ((data: Parameters<StockSubscribeHandler<'quote'>>[0]['record']) => number | string | undefined)
+  field:
+    | keyof Parameters<StockSubscribeHandler<'quote'>>[0]['record']
+    | ((data: Parameters<StockSubscribeHandler<'quote'>>[0]['record']) => number | string | undefined)
   value?: number | string
   subscribe?: boolean
 }
 
 /**
  * @deprecated
- * @returns 
+ * @returns
  */
-export const NumSpanSubscribe = ({ value, code, isPositive, field, subscribe = true, showColor, ...props }: NumSpanSubscribeProps) => {
+export const NumSpanSubscribe = ({
+  value,
+  code,
+  isPositive,
+  field,
+  subscribe = true,
+  showColor,
+  ...props
+}: NumSpanSubscribeProps) => {
   const [innerValue, setInnerValue] = useState(value)
   const [isUp, setIsUp] = usePropValue(isPositive)
   const fieldFn = useRef<NumSpanSubscribeProps['field']>(field)
@@ -186,7 +206,7 @@ export const NumSpanSubscribe = ({ value, code, isPositive, field, subscribe = t
 
   useEffect(() => {
     if (!subscribe) return
-    const unSubscribe = stockSubscribe.onQuoteTopic(code, (data) => {
+    const unSubscribe = stockSubscribe.onQuoteTopic(code, data => {
       const v = isFunction(fieldFn.current) ? fieldFn.current(data.record) : get(data.record, fieldFn.current)
 
       setInnerValue(v as number | string | undefined)
@@ -209,13 +229,11 @@ export const NumSpanSubscribe = ({ value, code, isPositive, field, subscribe = t
 
   return (
     <>
-      {
-        subscribe ? (
-          <NumSpan value={innerValue} isPositive={isUp} showColor={_showColor} {...props} />
-        ) : (
-          <NumSpan value={value} isPositive={isPositive} showColor={_showColor} {...props} />
-        )
-      }
+      {subscribe ? (
+        <NumSpan value={innerValue} isPositive={isUp} showColor={_showColor} {...props} />
+      ) : (
+        <NumSpan value={value} isPositive={isPositive} showColor={_showColor} {...props} />
+      )}
     </>
   )
 }
@@ -230,57 +248,78 @@ interface SubscribeSpanProps extends Omit<HTMLAttributes<HTMLSpanElement>, 'onCh
   /**
    * 周期
    */
-  trading?: StockTrading
+  trading?: StockTrading | StockTrading[]
   /**
    * 是否订阅
    */
   subscribe?: boolean
-  onChange?: (data: Parameters<StockSubscribeHandler<'quote'>>[0], extra: { changeDirection?: 'up' | 'down', lastValue?: string | number, newValue?: number | string }) => void
+  onChange?: (
+    data: Parameters<StockSubscribeHandler<'quote'>>[0],
+    extra: { changeDirection?: 'up' | 'down'; lastValue?: string | number; newValue?: number | string }
+  ) => void
 }
 
+export const SubscribeSpan = memo(
+  ({
+    value,
+    symbol,
+    formatter,
+    trading = 'intraDay',
+    subscribe = true,
+    onChange,
+    className,
+    ...props
+  }: SubscribeSpanProps) => {
+    const [innerValue, setInnerValue] = usePropValue(value)
+    const spanRef = useRef<HTMLSpanElement>(null)
+    const formatFn = useRef(formatter)
+    const changeFn = useRef(onChange)
+    const lastValue = useRef(value)
 
-export const SubscribeSpan = memo(({ value, symbol, formatter, trading = 'intraDay', subscribe = true, onChange, className, ...props }: SubscribeSpanProps) => {
-  const [innerValue, setInnerValue] = usePropValue(value)
-  const spanRef = useRef<HTMLSpanElement>(null)
-  const formatFn = useRef(formatter)
-  const changeFn = useRef(onChange)
-  const lastValue = useRef(value)
+    useEffect(() => {
+      formatFn.current = formatter
+    }, [formatter])
 
-  useEffect(() => {
-    formatFn.current = formatter
-  }, [formatter])
+    useEffect(() => {
+      changeFn.current = onChange
+    }, [onChange])
 
-  useEffect(() => {
-    changeFn.current = onChange
-  }, [onChange])
+    useEffect(() => {
+      if (!subscribe) return
+      const unSubscribe = stockSubscribe.onQuoteTopic(symbol, data => {
+        if (trading) {
+          const _trading = stockUtils.getTrading(stockUtils.parseTime(data.record.time.toString()))
+          if (Array.isArray(trading)) {
+            if (!trading.includes(_trading)) return
+          } else {
+            if (trading !== _trading) return
+          }
+        }
 
-  useEffect(() => {
-    if (!subscribe) return
-    const unSubscribe = stockSubscribe.onQuoteTopic(symbol, (data) => {
-      if (trading) {
-        const _trading = stockUtils.getTrading(stockUtils.parseTime(data.record.time.toString()))
-        if (_trading !== trading) return
+        const v = formatFn.current(data)
+
+        if (v === lastValue.current) return
+
+        let changeDirection: 'up' | 'down' | undefined = undefined
+
+        if (isNumber(v) && isNumber(lastValue.current)) {
+          changeDirection = v > lastValue.current ? 'up' : 'down'
+        }
+        const _lastValue = lastValue.current
+        lastValue.current = v
+        setInnerValue(v)
+        changeFn.current?.(data, { changeDirection, lastValue: _lastValue, newValue: v })
+      })
+
+      return () => {
+        unSubscribe()
       }
+    }, [symbol, setInnerValue, trading, subscribe])
 
-      const v = formatFn.current(data)
-
-      if (v === lastValue.current) return
-
-      let changeDirection: 'up' | 'down' | undefined = undefined
-
-      if(isNumber(v) && isNumber(lastValue.current)) {
-        changeDirection = v > lastValue.current ? 'up' : 'down'
-      }
-      const _lastValue = lastValue.current
-      lastValue.current = v
-      setInnerValue(v)
-      changeFn.current?.(data, { changeDirection, lastValue: _lastValue, newValue: v })
-    })
-
-    return () => {
-      unSubscribe()
-    }
-  }, [symbol, setInnerValue, trading, subscribe])
-
-  return <span ref={spanRef} className={cn('subscribe-span', className)} {...props}>{innerValue}</span>
-})
+    return (
+      <span ref={spanRef} className={cn('subscribe-span', className)} {...props}>
+        {innerValue}
+      </span>
+    )
+  }
+)

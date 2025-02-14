@@ -1,17 +1,27 @@
-import { type StockExtend, type StockRawRecord, getStockCollects } from "@/api"
-import { AddCollect, CollectCapsuleTabs, JknIcon, NumSpanSubscribe } from "@/components"
-import { useStockQuoteSubscribe, useTableData } from "@/hooks"
-import { useConfig, useTime } from "@/store"
-import { getTradingPeriod } from "@/utils/date"
-import echarts, { type ECOption } from "@/utils/echarts"
-import { type Stock, type StockSubscribeHandler, stockUtils } from "@/utils/stock"
-import { colorUtil } from "@/utils/style"
-import { useQuery } from "@tanstack/react-query"
-import { useMount, useUnmount, useUpdateEffect } from "ahooks"
-import { memo, type PropsWithChildren, useCallback, useEffect, useRef, useState } from "react"
-import { withSort } from "../jkn/jkn-icon/with-sort"
+import { type StockExtend, type StockRawRecord, getStockCollects } from '@/api'
+import { AddCollect, CollectCapsuleTabs, JknIcon, NumSpanSubscribe, SubscribeSpan } from '@/components'
+import { useStockQuoteSubscribe, useTableData } from '@/hooks'
+import { useConfig, useTime } from '@/store'
+import { getTradingPeriod } from '@/utils/date'
+import echarts, { type ECOption } from '@/utils/echarts'
+import { type Stock, type StockSubscribeHandler, stockUtils } from '@/utils/stock'
+import { colorUtil } from '@/utils/style'
+import { useQuery } from '@tanstack/react-query'
+import { useMount, useUnmount, useUpdateEffect } from 'ahooks'
+import { memo, type PropsWithChildren, useCallback, useEffect, useRef, useState } from 'react'
+import { withSort } from '../jkn/jkn-icon/with-sort'
 
-const extend: StockExtend[] = ['basic_index', 'day_basic', 'alarm_ai', 'alarm_all', 'total_share', 'financials', 'thumbs', 'stock_before', 'stock_after']
+const extend: StockExtend[] = [
+  'basic_index',
+  'day_basic',
+  'alarm_ai',
+  'alarm_all',
+  'total_share',
+  'financials',
+  'thumbs',
+  'stock_before',
+  'stock_after'
+]
 
 type TableDataType = {
   name: string
@@ -38,11 +48,12 @@ export const CollectList = memo((props: CollectListProps) => {
   const stocks = useQuery({
     queryKey: [getStockCollects.cacheKey, collect],
     refetchInterval: 60 * 1000,
-    queryFn: () => getStockCollects({
-      cate_id: +collect,
-      extend,
-      limit: 300
-    })
+    queryFn: () =>
+      getStockCollects({
+        cate_id: +collect,
+        extend,
+        limit: 300
+      })
   })
 
   useEffect(() => {
@@ -53,9 +64,25 @@ export const CollectList = memo((props: CollectListProps) => {
 
     const _stockList: TableDataType[] = stocks.data.items.map(stock => {
       // const [lastStock, beforeStock, afterStock] = stockUtils.toStockRecord(stock)
-      const lastStock = stockUtils.toStock(stock.stock, { extend: stock.extend, symbol: stock.symbol, name: stock.name })
-      const beforeStock = stock.extend?.stock_before ? stockUtils.toStock(stock.extend?.stock_before as StockRawRecord, { extend: stock.extend, symbol: stock.symbol, name: stock.name }) : null
-      const afterStock = stock.extend?.stock_after ? stockUtils.toStock(stock.extend?.stock_after as StockRawRecord, { extend: stock.extend, symbol: stock.symbol, name: stock.name }) : null
+      const lastStock = stockUtils.toStock(stock.stock, {
+        extend: stock.extend,
+        symbol: stock.symbol,
+        name: stock.name
+      })
+      const beforeStock = stock.extend?.stock_before
+        ? stockUtils.toStock(stock.extend?.stock_before as StockRawRecord, {
+            extend: stock.extend,
+            symbol: stock.symbol,
+            name: stock.name
+          })
+        : null
+      const afterStock = stock.extend?.stock_after
+        ? stockUtils.toStock(stock.extend?.stock_after as StockRawRecord, {
+            extend: stock.extend,
+            symbol: stock.symbol,
+            name: stock.name
+          })
+        : null
 
       const thumbs = lastStock?.thumbs ?? []
 
@@ -68,17 +95,16 @@ export const CollectList = memo((props: CollectListProps) => {
         price: lastStock?.close,
         percent: subStock ? stockUtils.getPercent(lastStock) : undefined,
         subPrice: subStock?.close,
-        subPercent: subStock ? stockUtils.getPercent(subStock) : undefined,
+        subPercent: subStock ? stockUtils.getPercent(subStock) : undefined
       }
     })
 
     setList(_stockList)
   }, [stocks.data, trading, setList])
 
-
   useStockQuoteSubscribe(stocks.data?.items.map(v => v.symbol) ?? [])
 
-  const [sort, setSort] = useState<{ field: string, sort: 'asc' | 'desc' | undefined }>({ field: '', sort: undefined })
+  const [sort, setSort] = useState<{ field: string; sort: 'asc' | 'desc' | undefined }>({ field: '', sort: undefined })
 
   const _onSort = (field: string, sort: 'asc' | 'desc' | undefined) => {
     onSort(field as any, sort)
@@ -97,27 +123,32 @@ export const CollectList = memo((props: CollectListProps) => {
         <div className="flex-1 overflow-hidden flex flex-col">
           <div className="border-0 border-b border-solid border-border flex text-xs py-1 px-1 ">
             <span className="flex-1">
-              <SortSpan onSort={_onSort} field="code" sort={sort.field === 'code' ? sort.sort : undefined}>名称</SortSpan>
+              <SortSpan onSort={_onSort} field="code" sort={sort.field === 'code' ? sort.sort : undefined}>
+                名称
+              </SortSpan>
             </span>
             <span className="w-20 flex-shrink-0 text-right box-border pr-1">
-              <SortSpan onSort={_onSort} field="price" sort={sort.field === 'price' ? sort.sort : undefined}>现价</SortSpan>
+              <SortSpan onSort={_onSort} field="price" sort={sort.field === 'price' ? sort.sort : undefined}>
+                现价
+              </SortSpan>
             </span>
             <span className="w-16 flex-shrink-0 text-right">
-              <SortSpan onSort={_onSort} field="percent" sort={sort.field === 'percent' ? sort.sort : undefined}>涨跌幅%</SortSpan>
+              <SortSpan onSort={_onSort} field="percent" sort={sort.field === 'percent' ? sort.sort : undefined}>
+                涨跌幅%
+              </SortSpan>
             </span>
           </div>
           <div className="flex-1 overflow-y-auto w-full">
-            {
-              stockList.map(stock => (
-                <StockListItem key={stock.code} stock={stock} onCollectChange={props.onCollectChange}>
-                  {
-                    props.visible === 'full' ? (
-                      <StockChart data={stock.thumbs.filter(v => +v > 0) ?? []} type={(stock.percent ?? 0) >= 0 ? 'up' : 'down'} />
-                    ) : null
-                  }
-                </StockListItem>
-              ))
-            }
+            {stockList.map(stock => (
+              <StockListItem key={stock.code} stock={stock} onCollectChange={props.onCollectChange}>
+                {props.visible === 'full' ? (
+                  <StockChart
+                    data={stock.thumbs.filter(v => +v > 0) ?? []}
+                    type={(stock.percent ?? 0) >= 0 ? 'up' : 'down'}
+                  />
+                ) : null}
+              </StockListItem>
+            ))}
           </div>
         </div>
       </div>
@@ -138,29 +169,30 @@ const StockListItem = ({ stock, onCollectChange, children }: PropsWithChildren<S
   const priceBlinkTimer = useRef<number>()
   // const [value, setValue] = usePropValue(stock.price)
 
-  const updateHandler = useCallback<StockSubscribeHandler<'quote'>>((data) => {
-    if (data.topic === stock.code) {
-      if (priceBlink === '1') {
+  const updateHandler = useCallback<StockSubscribeHandler<'quote'>>(
+    data => {
+      if (data.topic === stock.code) {
+        if (priceBlink === '1') {
+          if (!priceBlinkTimer.current) {
+            if (lastValue.current === undefined || !data.record.close) return
+            const randomDelay = Math.random() * 500
 
-        if (!priceBlinkTimer.current) {
+            priceBlinkTimer.current = window.setTimeout(() => {
+              const blinkState = lastValue.current! < data.record.close! ? 'down' : 'up'
+              lastValue.current = data.record.close
+              span.current?.setAttribute('data-blink', blinkState)
 
-          if (lastValue.current === undefined || !data.record.close) return
-          const randomDelay = Math.random() * 500
-
-          priceBlinkTimer.current = window.setTimeout(() => {
-            const blinkState = lastValue.current! < data.record.close! ? 'down' : 'up'
-            lastValue.current = data.record.close
-            span.current?.setAttribute('data-blink', blinkState)
-
-            setTimeout(() => {
-              span.current?.removeAttribute('data-blink')
-              priceBlinkTimer.current = undefined
-            }, 500)
-          }, randomDelay)
+              setTimeout(() => {
+                span.current?.removeAttribute('data-blink')
+                priceBlinkTimer.current = undefined
+              }, 500)
+            }, randomDelay)
+          }
         }
       }
-    }
-  }, [stock.code, priceBlink])
+    },
+    [stock.code, priceBlink]
+  )
 
   useStockQuoteSubscribe([stock.code], updateHandler)
 
@@ -169,51 +201,58 @@ const StockListItem = ({ stock, onCollectChange, children }: PropsWithChildren<S
       key={stock.code}
       className="flex py-3 hover:bg-accent px-1 stock-blink-gradient w-full box-border"
       onClick={() => onCollectChange?.(stock.code)}
-      onKeyDown={() => { }}
+      onKeyDown={() => {}}
       ref={span}
     >
       <div className="flex-1 overflow-hidden">
         <div className="relative w-full overflow-hidden">
           <span className="text-sm">{stock.code}</span>
-          <div className="text-xs text-tertiary w-full overflow-hidden text-ellipsis whitespace-nowrap">{stock.name}</div>
-          {
-            stock.thumbs.length > 0 ? (
-              <div className="absolute left-12 bottom-0 top-0">
-                {
-                  children
-                }
-              </div>
-            ) : null
-          }
+          <div className="text-xs text-tertiary w-full overflow-hidden text-ellipsis whitespace-nowrap">
+            {stock.name}
+          </div>
+          {stock.thumbs.length > 0 ? <div className="absolute left-12 bottom-0 top-0">{children}</div> : null}
         </div>
       </div>
       <div className="w-38 text-xs">
         <div className="flex w-full items-center">
           <div className="w-20 flex-shrink-0 text-right box-border pr-1">
-            {
-              stock.price ? <NumSpanSubscribe code={stock.code} field="close" subscribe={trading === 'intraDay'} value={stock.price} isPositive={(stock.percent ?? 0) >= 0} /> : '--'
-            }
+            {stock.price ? (
+              <SubscribeSpan.Price
+                symbol={stock.code}
+                initValue={stock.price}
+                initDirection={(stock.percent ?? 0) > 0}
+              />
+            ) : (
+              '--'
+            )}
           </div>
-          <div className="w-16 flex-shrink-0 text-right">
-            {
-              stock.price ? <NumSpanSubscribe code={stock.code} field="percent" subscribe={trading === 'intraDay'} className="py-0.5 w-16" block value={stock.percent} percent decimal={2} isPositive={(stock.percent ?? 0) >= 0} /> : '--'
-            }
+          <div className="w-18 flex-shrink-0 text-right">
+            {stock.price ? (
+              <SubscribeSpan.PercentBlock
+                symbol={stock.code}
+                showSign
+                initValue={stock.percent}
+                decimal={2}
+                initDirection={(stock.percent ?? 0) > 0}
+              />
+            ) : (
+              '--'
+            )}
           </div>
         </div>
-        {
-          trading !== 'intraDay' ? (
-            <div className="text-right text-secondary mt-0.5 scale-90">
-              {
-                stock.subPrice ? (
-                  <span>
-                    <NumSpanSubscribe code={stock.code} field="close" value={stock.subPrice} decimal={3} />&nbsp;&nbsp;
-                    <NumSpanSubscribe code={stock.code} field="percent" value={stock.subPercent} decimal={2} percent />
-                  </span>
-                ) : '--'
-              }
-            </div>
-          ) : null
-        }
+        {trading !== 'intraDay' ? (
+          <div className="text-right text-secondary mt-0.5 scale-90">
+            {stock.subPrice ? (
+              <span>
+                <SubscribeSpan.Price symbol={stock.code} initValue={stock.subPrice} decimal={3} showColor={false} />
+                &nbsp;&nbsp;
+                <SubscribeSpan.Percent showSign symbol={stock.code} initValue={stock.subPercent} decimal={2} showColor={false} />
+              </span>
+            ) : (
+              '--'
+            )}
+          </div>
+        ) : null}
       </div>
     </div>
   )
@@ -234,35 +273,43 @@ const StockChart = (props: StockChartProps) => {
     const color = colorUtil.hexToRGB(getStockColor(props.type === 'up', 'hex'))!
 
     charts.current?.setOption({
-      series: [{
-        color: colorUtil.rgbaToString({ ...color, a: 1 }),
-        areaStyle: {
-          color: {
-            type: 'linear',
-            x: 0,
-            y: 0,
-            x2: 0,
-            y2: 1,
-            colorStops: [{
-              offset: 0, color: colorUtil.rgbaToString({ ...color, a: .35 }) // 0% 处的颜色
-            }, {
-              offset: .7, color: colorUtil.rgbaToString({ ...color, a: .2 }) // 100% 处的颜色
-            }, {
-              offset: 1, color: 'transparent' // 100% 处的颜色
-            }]
+      series: [
+        {
+          color: colorUtil.rgbaToString({ ...color, a: 1 }),
+          areaStyle: {
+            color: {
+              type: 'linear',
+              x: 0,
+              y: 0,
+              x2: 0,
+              y2: 1,
+              colorStops: [
+                {
+                  offset: 0,
+                  color: colorUtil.rgbaToString({ ...color, a: 0.35 }) // 0% 处的颜色
+                },
+                {
+                  offset: 0.7,
+                  color: colorUtil.rgbaToString({ ...color, a: 0.2 }) // 100% 处的颜色
+                },
+                {
+                  offset: 1,
+                  color: 'transparent' // 100% 处的颜色
+                }
+              ]
+            }
           }
         }
-      }]
+      ]
     })
   }
-
 
   const options: ECOption = {
     grid: {
       top: 0,
       left: 0,
       right: 0,
-      bottom: 0,
+      bottom: 0
     },
     xAxis: {
       type: 'category',
@@ -273,9 +320,13 @@ const StockChart = (props: StockChartProps) => {
       scale: true,
       show: false
     },
-    series: [{
-      type: 'line', data: [], symbol: 'none'
-    }]
+    series: [
+      {
+        type: 'line',
+        data: [],
+        symbol: 'none'
+      }
+    ]
   }
 
   useMount(() => {
@@ -285,9 +336,11 @@ const StockChart = (props: StockChartProps) => {
       xAxis: {
         data: xAxisData.slice(0, 40)
       },
-      series: [{
-        data: props.data
-      }]
+      series: [
+        {
+          data: props.data
+        }
+      ]
     })
     setChartAreaStyle()
   })
@@ -297,9 +350,11 @@ const StockChart = (props: StockChartProps) => {
       xAxis: {
         data: xAxisData.slice(0, 40)
       },
-      series: [{
-        data: props.data
-      }]
+      series: [
+        {
+          data: props.data
+        }
+      ]
     })
     setChartAreaStyle()
   }, [props.data])
@@ -308,7 +363,5 @@ const StockChart = (props: StockChartProps) => {
     charts.current?.clear()
     charts.current?.dispose()
   })
-  return (
-    <div className="h-full w-[120px]" ref={dom} />
-  )
+  return <div className="h-full w-[120px]" ref={dom} />
 }

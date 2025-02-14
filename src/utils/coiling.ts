@@ -64,6 +64,8 @@ export const calcIndicator = async (
       item.draw_data = drawTextConvert(item.draw_data)
     } else if (item.draw === 'STICKLINE') {
       item.draw_data = drawStickLineConvert(item.draw_data)
+    } else if (item.draw === 'DRAWGRADIENT') {
+      item.draw_data = drawGradientConvert(item.draw_data)
     }
 
     return item
@@ -78,8 +80,7 @@ const drawTextConvert = (drawData: any) => {
     return drawData
   }
 
-  const [condition,x, text, offsetX, offsetY] = drawData[0]
-  console.log(drawData)
+  const [condition, x, text, offsetX, offsetY] = drawData[0]
   const r: any = {}
 
   Object.entries(drawData).forEach(([key, value]) => {
@@ -120,4 +121,44 @@ const drawStickLineConvert = (drawData: any) => {
   })
 
   return r
+}
+
+const drawGradientConvert = (drawData: ([number] | [number, string, string, string, string, number])[]) => {
+  if (drawData.length <= 0) {
+    return drawData
+  }
+
+  const gradients: [number, number, number, number, [number, number][], string, string][] = []
+
+  Object.entries(drawData).forEach(([_, value]) => {
+    if (value.length < 2) {
+      return
+    }
+    const points: [number, number][] = []
+    const [x, y1, y2, color1, color2] = value as [number, string, string, string, string, number]
+    let maxY = Number.NEGATIVE_INFINITY
+    let minY = Number.POSITIVE_INFINITY
+    let len = 0
+
+    y1.split(',').forEach((y, i) => {
+      const _y = Number.parseInt(y)
+      points.push([x + i, _y])
+      maxY = Math.max(maxY, _y)
+      minY = Math.min(minY, _y)
+      len++
+    })
+
+    const y2Points = y2.split(',').map((y, i) => {
+      const _y = Number.parseInt(y)
+      maxY = Math.max(maxY, _y)
+      minY = Math.min(minY, _y)
+      return [x + i, _y]
+    }) as [number, number][]
+    y2Points.reverse()
+    points.push(...y2Points)
+
+    gradients.push([x, x + len, minY, maxY, points, color1, color2])
+  })
+
+  return gradients
 }

@@ -22,6 +22,7 @@ import {
   type DrawerRectShape,
   type DrawerTextShape,
   LineType,
+  drawGradient,
   drawHLine,
   drawHdlyLabel,
   drawLine,
@@ -36,8 +37,8 @@ import {
 } from './drawer'
 import { chartEvent } from './event'
 import { renderUtils } from './utils'
-import { dateUtils } from "@/utils/date"
-import { listify } from "radash"
+import { dateUtils } from '@/utils/date'
+import { listify } from 'radash'
 
 const MAIN_CHART_NAME = 'kChart'
 const MAIN_CHART_NAME_VIRTUAL = 'kChart-virtual'
@@ -1021,8 +1022,8 @@ const renderIndicator = (
       })
     } else if (d.draw === 'DRAWRECTREL') {
       const data = Object.entries(d.draw_data).map(([_, value]) => ({
-        leftTop: {x: value[0], y: value[1]},
-        rightBottom: {x: value[2], y: value[3]},
+        leftTop: { x: value[0], y: value[1] },
+        rightBottom: { x: value[2], y: value[3] },
         color: value[4]
       }))
 
@@ -1031,6 +1032,19 @@ const renderIndicator = (
         yAxisIndex: params.yAxisIndex,
         name: seriesName,
         data: data
+      })
+    } else if (d.draw === 'DRAWGRADIENT') {
+      // const data = Object.entries(d.draw_data).map(([_, value]) => ({
+      //   leftTop: { x: value[0], y: value[1] },
+      //   rightBottom: { x: value[2], y: value[3] },
+      //   color: value[4]
+      // }))
+
+      drawGradient(options, {} as any, {
+        xAxisIndex: params.xAxisIndex,
+        yAxisIndex: params.yAxisIndex,
+        name: seriesName,
+        data: d.draw_data
       })
     }
   })
@@ -1101,7 +1115,7 @@ export const renderOverlayMark = (options: ECOption, state: ChartState) => {
   const data = mark.data
     .map((item: any) => {
       const x = dateUtils.toUsDay(item.date).hour(0).minute(0).second(0).valueOf().toString().slice(0, -3)
-      const y = (series.data as any[])?.find((s) => {
+      const y = (series.data as any[])?.find(s => {
         return s.value[0] === x
       })?.value[3] as number | undefined
 
@@ -1274,7 +1288,9 @@ export const renderWatermark = (options: ECOption, timeIndex: ChartState['timeIn
           ? '盘前交易'
           : timeIndex === StockChartInterval.AFTER_HOURS
             ? '盘后交易'
-            : timeIndex === StockChartInterval.INTRA_DAY ? '盘中交易' : '',
+            : timeIndex === StockChartInterval.INTRA_DAY
+              ? '盘中交易'
+              : '',
       fill: 'rgba(255, 255, 255, 0.05)',
       font: 'bold 96px sans-serif',
       align: 'center'

@@ -93,7 +93,7 @@ export const PriceSubscribeSpan = memo(
     decimal = 2,
     arrow,
     showSign = false,
-    showColor,
+    showColor = true,
     initValue,
     initDirection,
     onValueChange,
@@ -162,7 +162,7 @@ export const PercentSubscribeSpan = memo(
     showSign = false,
     initValue,
     initDirection,
-    showColor,
+    showColor = true,
     type = 'percent',
     nanText,
     onValueChange,
@@ -198,7 +198,7 @@ export const PercentSubscribeSpan = memo(
       <SubscribeSpan
         value={value}
         data-direction={direction}
-        data-direction-show={showColor && value !== nanText}
+        data-direction-show={(showColor && value !== nanText) ? 'true' : 'false'}
         data-direction-sign={showSign && value !== nanText}
         formatter={subscribeFormatter}
         onChange={onChange}
@@ -217,7 +217,7 @@ export const PercentSubscribeBlock = memo(
     showSign = false,
     initValue,
     initDirection,
-    showColor,
+    showColor = true,
     type = 'percent',
     nanText,
     onValueChange,
@@ -259,6 +259,7 @@ export const PercentSubscribeBlock = memo(
           value={value}
           data-direction-show={false}
           formatter={subscribeFormatter}
+          data-direction-sign={showSign && value !== nanText}
           onChange={onChange}
           {...props}
         />
@@ -280,7 +281,7 @@ export const TurnoverSubscribeSpan = memo(
     decimal = 2,
     initValue,
     initDirection,
-    showColor,
+    showColor = true,
     onValueChange,
     ...props
   }: TurnoverSubscribeSpanProps) => {

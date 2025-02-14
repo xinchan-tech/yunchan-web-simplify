@@ -1,10 +1,10 @@
-import { AiAlarm, CapsuleTabs, JknIcon, PriceAlarm, useModal } from "@/components"
-import { useState } from "react"
-import AlarmList from "../../components/ai-alarm/alarm-list"
-import AiAlarmForm from "../../components/ai-alarm/ai-alarm-form"
-import PriceAlarmForm from "../../components/ai-alarm/price-alarm-form"
-import AlarmLog from "../../components/ai-alarm/alarm-log"
-import { AlarmType } from "@/api"
+import { AiAlarm, CapsuleTabs, JknIcon, PriceAlarm, useModal } from '@/components'
+import { useState } from 'react'
+import AlarmList from '../../components/ai-alarm/alarm-list'
+import AiAlarmForm from '../../components/ai-alarm/ai-alarm-form'
+import PriceAlarmForm from '../../components/ai-alarm/price-alarm-form'
+import AlarmLog from '../../components/ai-alarm/alarm-log'
+import { AlarmType } from '@/api'
 
 const AlarmPage = () => {
   const [alarmType, setAlarmType] = useState<AlarmType>(AlarmType.AI)
@@ -23,9 +23,8 @@ const AlarmPage = () => {
     title: '股价报警设置',
     closeIcon: true,
     footer: false,
-    className: 'w-[900px]',
+    className: 'w-[900px]'
   })
-
 
   return (
     <div className="h-full bg-muted flex flex-col">
@@ -36,25 +35,22 @@ const AlarmPage = () => {
           <CapsuleTabs.Tab label="画线报警" value={AlarmType.LINE.toString()} />
         </CapsuleTabs>
         <div className="ml-auto">
-          {
-            alarmType === AlarmType.AI ? (
-              <AiAlarm >
-                <div className="flex items-center cursor-pointer ml-auto text-xs text-secondary space-x-1">
-                  <JknIcon name="add" className="w-3 h-3" />
-                  <span>添加报警</span>
-                </div>
-              </AiAlarm>
-            ) : (
-              <PriceAlarm>
-                <div className="flex items-center cursor-pointer ml-auto text-xs text-secondary space-x-1">
-                  <JknIcon name="add" className="w-3 h-3" />
-                  <span>添加报警</span>
-                </div>
-              </PriceAlarm>
-            )
-          }
+          {alarmType === AlarmType.AI ? (
+            <AiAlarm>
+              <div className="flex items-center cursor-pointer ml-auto text-xs text-secondary space-x-1">
+                <JknIcon name="add" className="w-3 h-3" />
+                <span>添加报警</span>
+              </div>
+            </AiAlarm>
+          ) : (
+            <PriceAlarm>
+              <div className="flex items-center cursor-pointer ml-auto text-xs text-secondary space-x-1">
+                <JknIcon name="add" className="w-3 h-3" />
+                <span>添加报警</span>
+              </div>
+            </PriceAlarm>
+          )}
         </div>
-
       </div>
       <div className="flex-1 overflow-hidden flex flex-col">
         <div className="border-0 border-b border-solid border-border py-1 flex items-center">
@@ -62,28 +58,21 @@ const AlarmPage = () => {
             <CapsuleTabs.Tab label="报警列表" value="list" />
             <CapsuleTabs.Tab label="已触发报警" value="log" />
           </CapsuleTabs>
-          <div className="text-xs ml-auto">
-            当前运行报警：{count} 条
-          </div>
+          {viewType === 'list' ? <div className="text-xs ml-auto">当前运行报警：{count} 条</div> : null}
         </div>
         <div className="flex-1 overflow-hidden">
-          {{
-            list: <AlarmList type={alarmType} options  onUpdateCount={setCount} />,
-            log: <AlarmLog type={alarmType} />
-          }[viewType]}
+          {
+            {
+              list: <AlarmList type={alarmType} options onUpdateCount={setCount} />,
+              log: <AlarmLog type={alarmType} />
+            }[viewType]
+          }
         </div>
       </div>
-      {
-        aiForm.context
-      }
-      {
-        priceForm.context
-      }
+      {aiForm.context}
+      {priceForm.context}
     </div>
   )
 }
-
-
-
 
 export default AlarmPage

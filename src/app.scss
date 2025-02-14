@@ -231,6 +231,10 @@ span[data-direction="down"] {
 
 div[data-direction-bg="up"] {
   background: hsl(var(--stock-up-color));
+
+  span[data-direction-sign="true"]::before{
+    content: "+";
+  }
 }
 
 div[data-direction-bg="down"] {
@@ -248,3 +252,4 @@ span[data-direction-show="false"][data-direction]{
 span[data-direction-sign="true"][data-direction="up"]::before {
   content: "+";
 }
+

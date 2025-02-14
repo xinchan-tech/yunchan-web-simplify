@@ -6,7 +6,7 @@ import { useQuery } from "@tanstack/react-query"
 import dayjs from "dayjs"
 
 const Shout = () => {
-  const { user } = useUser()
+  const user = useUser(s => s.user)
   const orders = useQuery({
     queryKey: [getShoutOrders.cacheKey],
     queryFn: () => getShoutOrders({

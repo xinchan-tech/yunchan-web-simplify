@@ -52,7 +52,7 @@ const GoldenStockPool = () => {
       title: '涨跌幅', dataIndex: 'percent',
       align: 'right', width: '20%', sort: true,
       render: (percent, row) => (
-        <SubscribeSpan.PercentBlockBlink symbol={row.symbol} decimal={2} initValue={percent} initDirection={stockUtils.isUp(row)} />
+        <SubscribeSpan.PercentBlockBlink showSign symbol={row.symbol} decimal={2} initValue={percent} initDirection={stockUtils.isUp(row)} />
       )
     },
     {

@@ -54,7 +54,7 @@ const FooterTime = () => {
   // 优化render
   const updateUsTimeToStore = (newTime: number) => {
     const trading = getTrading()
-    const localTrading = stockUtils.getTrading(dayjs(newTime).tz('America/New_York').valueOf())
+    const localTrading = stockUtils.getTrading(newTime)
  
     if (trading !== localTrading) {
       setUsTime(newTime)

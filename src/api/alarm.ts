@@ -164,7 +164,7 @@ type GetAlarmLogsResult = PageResult<{
   alarm_time: string
   condition: {
     category_name?: string
-    category_hdly_name?: string
+    hdly?: string
     indicators?: string
     own_ids?: string[]
     rise?: number[]

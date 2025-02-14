@@ -1,24 +1,20 @@
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useImmer } from 'use-immer'
-import { useTranslation } from "react-i18next"
-import { getHotSectors, getPlateList, getUsStocks } from "@/api"
-import TreeMap from "./components/tree-map"
-import Decimal from "decimal.js"
-import { CapsuleTabs, Skeleton } from "@/components"
-import { useQuery } from "@tanstack/react-query"
-import { stockUtils, type StockSubscribeHandler } from "@/utils/stock"
-import { useStockQuoteSubscribe } from "@/hooks"
+import { useTranslation } from 'react-i18next'
+import { getHotSectors, getPlateList, getUsStocks } from '@/api'
+import TreeMap from './components/tree-map'
+import Decimal from 'decimal.js'
+import { CapsuleTabs, Skeleton } from '@/components'
+import { useQuery } from '@tanstack/react-query'
+import { stockUtils, type StockSubscribeHandler } from '@/utils/stock'
+import { useStockQuoteSubscribe } from '@/hooks'
 
 type StockTreeType = 'industry' | 'concept' | 'bull' | 'etf' | 'industry-heatmap' | 'etf-heatmap'
 type StockTreeDate = 'day' | 'week' | 'month'
 
-const colors = [
-  '#ac2532', '#782029', '#3a1a1f', '#30333c', '#112e21', '#0e532f', '#07753c'
-]
+const colors = ['#ac2532', '#782029', '#3a1a1f', '#30333c', '#112e21', '#0e532f', '#07753c']
 
-const steps = [
-  '-3', '-2', '-1', '0', '1', '2', '3'
-]
+const steps = ['-3', '-2', '-1', '0', '1', '2', '3']
 
 const getColorByStep = (step: string | number) => {
   const n = new Decimal(step).times(100)
@@ -40,12 +36,13 @@ const StockTree = () => {
 
   const query = useQuery({
     queryKey: [getHotSectors.cacheKey, type, date],
-    queryFn: () => getHotSectors({
-      type: date,
-      sector: type as 'industry' | 'concept',
-      top: 15,
-      stock: ['1']
-    }),
+    queryFn: () =>
+      getHotSectors({
+        type: date,
+        sector: type as 'industry' | 'concept',
+        top: 15,
+        stock: ['1']
+      }),
     refetchInterval: 30 * 1000,
     enabled: ['industry', 'concept'].includes(type)
   })
@@ -58,7 +55,7 @@ const StockTree = () => {
       return
     }
     const root = []
-    const dataset: Record<string, { value: number, originValue: number }> = {}
+    const dataset: Record<string, { value: number; originValue: number }> = {}
 
     const colors = filter.map(v => getColorByStep(v / 100))
     let max = Number.MIN_SAFE_INTEGER
@@ -66,7 +63,6 @@ const StockTree = () => {
 
     for (const node of query.data) {
       const n = { name: node.sector_name, data: node.change, children: [], value: 0, originValue: 0 }
-
 
       for (const t of node.tops) {
         const stock = stockUtils.toStock(t.stock)
@@ -76,7 +72,14 @@ const StockTree = () => {
         if (!colors.includes(_color)) continue
 
         // Math.abs((Math.log(stock.volume) ** 5)) + 0.1
-        const child = { name: t.symbol, value: Decimal.create(stock.volume).log().pow(5).abs().plus(0.1).toNumber(), data: percent, color: _color, originValue: stock.volume, plateId: t.plate_id }
+        const child = {
+          name: t.symbol,
+          value: Decimal.create(stock.volume).log().pow(5).abs().plus(0.1).toNumber(),
+          data: percent,
+          color: _color,
+          originValue: stock.volume,
+          plateId: t.plate_id
+        }
 
         n.children.push(child as never)
         max = Math.max(max, stock.volume)
@@ -91,8 +94,6 @@ const StockTree = () => {
     setTreeData(root)
   }, [query.data, filter])
 
-
-
   const subscribeStocks = useMemo(() => {
     if (!query.data) return []
     const stocks = new Set<string>()
@@ -104,21 +105,29 @@ const StockTree = () => {
     return Array.from(stocks)
   }, [query.data])
 
-  const subscribeHandler: StockSubscribeHandler<'quote'> = useCallback((data) => {
-    if (!subscribeStocks.includes(data.topic)) return
+  const subscribeHandler: StockSubscribeHandler<'quote'> = useCallback(
+    data => {
+      if (stockUtils.getTrading(data.record.time) !== 'intraDay') return
+       if (!subscribeStocks.includes(data.topic)) return
 
-    setTreeData(s => {
-      for (const node of s) {
-        for (const child of node.children) {
-          if (child.name === data.topic) {
-            child.data = Decimal.create(data.record.percent).mul(100).toDP(3).toNumber()
-            return [...s]
+      setTreeData(s => {
+        for (const node of s) {
+          for (const child of node.children) {
+            if (child.name === data.topic) {
+              child.data = Decimal.create(data.record.percent).mul(100).toDP(3).toNumber()
+              const _color = getColorByStep(child.data / 100)
+              if (child.color !== _color) {
+                child.color = _color
+              }
+              return [...s]
+            }
           }
         }
-      }
-      return [...s]
-    })
-  }, [subscribeStocks])
+        return [...s]
+      })
+    },
+    [subscribeStocks]
+  )
 
   useStockQuoteSubscribe(subscribeStocks, subscribeHandler)
 
@@ -138,7 +147,12 @@ const StockTree = () => {
     for (const plate of queryPlate.data) {
       const _color = getColorByStep(plate.change / 100)
       if (!_colors.includes(_color)) continue
-      const n = { name: plate.name, value: plate.amount ? Math.abs((Math.log(plate.amount) ** 5)) + 0.1 : 0, data: plate.change, color: getColorByStep(plate.change / 100) }
+      const n = {
+        name: plate.name,
+        value: plate.amount ? Math.abs(Math.log(plate.amount) ** 5) + 0.1 : 0,
+        data: plate.change,
+        color: getColorByStep(plate.change / 100)
+      }
 
       r.push(n)
     }
@@ -146,20 +160,19 @@ const StockTree = () => {
     return r
   }, [queryPlate.data, filter])
 
-
   const queryStock = useQuery({
     queryKey: [getUsStocks.cacheKey, type],
-    queryFn: () => getUsStocks({
-      type: type === 'bull' ? 'EXCLUDE_ETF' : 'ETF',
-      column: 'amount',
-      limit: 50,
-      page: 1,
-      order: 'desc',
-      extend: ['basic_index', 'stock_before', 'stock_after', 'total_share', 'collect', 'financials']
-    }),
+    queryFn: () =>
+      getUsStocks({
+        type: type === 'bull' ? 'EXCLUDE_ETF' : 'ETF',
+        column: 'amount',
+        limit: 50,
+        page: 1,
+        order: 'desc',
+        extend: ['basic_index', 'stock_before', 'stock_after', 'total_share', 'collect', 'financials']
+      }),
     enabled: type === 'bull' || type === 'etf'
   })
-
 
   const dataStock = useMemo(() => {
     const r: any[] = []
@@ -174,18 +187,22 @@ const StockTree = () => {
       const percent = stockUtils.getPercent(stockRecord, 2, true)!
       const _color = getColorByStep(percent / 100)
       if (!colors.includes(_color)) continue
-      const child = { name: stock.symbol, value: Math.abs((Math.log(stockRecord.volume) ** 5)) + 0.1, data: percent, color: _color }
+      const child = {
+        name: stock.symbol,
+        value: Math.abs(Math.log(stockRecord.volume) ** 5) + 0.1,
+        data: percent,
+        color: _color
+      }
       dataset[child.name] = child
       r.push(child as never)
     }
     return r
   }, [queryStock.data, filter])
 
-
   return (
     <div className="h-full flex flex-col">
       <div className="p-1 border-style-primary h-[34px] box-border flex items-center">
-        <CapsuleTabs activeKey={type} onChange={(v) => setType(v as unknown as StockTreeType)}>
+        <CapsuleTabs activeKey={type} onChange={v => setType(v as unknown as StockTreeType)}>
           <CapsuleTabs.Tab value="industry" label={t('stockTree.industry')} />
           <CapsuleTabs.Tab value="concept" label={t('stockTree.concept')} />
           <CapsuleTabs.Tab value="bull" label={t('stockTree.bull')} />
@@ -196,70 +213,61 @@ const StockTree = () => {
         <div className="ml-auto">
           <SimpleCheck value={filter} onChange={setFilter} />
         </div>
-
       </div>
       <div className="flex-1 overflow-hidden">
-        {
-          ['industry', 'concept'].includes(type) ? (
-            <div className="h-full flex flex-col">
-              <CapsuleTabs type="text" activeKey={date} onChange={(v) => setDate(v as unknown as StockTreeDate)}>
-                <CapsuleTabs.Tab value="day" label={t('stockTree.today')} />
-                <CapsuleTabs.Tab value="week" label={t('stockTree.week')} />
-                <CapsuleTabs.Tab value="month" label={t('stockTree.month')} />
-              </CapsuleTabs>
-              <div className="flex-1 p-1 overflow-hidden">
-                {
-                  !query.isLoading ? (
-                    <TreeMap data={treeData} />
-                  ) : (
-                    <div className="space-y-2">
-                      <Skeleton className="h-4" />
-                      <Skeleton className="h-4" />
-                      <Skeleton className="h-4" />
-                      <Skeleton className="h-4" />
-                      <Skeleton className="h-4" />
-                      <Skeleton className="h-4" />
-                    </div>
-                  )
-                }
+        {['industry', 'concept'].includes(type) ? (
+          <div className="h-full flex flex-col">
+            <CapsuleTabs type="text" activeKey={date} onChange={v => setDate(v as unknown as StockTreeDate)}>
+              <CapsuleTabs.Tab value="day" label={t('stockTree.today')} />
+              <CapsuleTabs.Tab value="week" label={t('stockTree.week')} />
+              <CapsuleTabs.Tab value="month" label={t('stockTree.month')} />
+            </CapsuleTabs>
+            <div className="flex-1 p-1 overflow-hidden">
+              {!query.isLoading ? (
+                <TreeMap data={treeData} />
+              ) : (
+                <div className="space-y-2">
+                  <Skeleton className="h-4" />
+                  <Skeleton className="h-4" />
+                  <Skeleton className="h-4" />
+                  <Skeleton className="h-4" />
+                  <Skeleton className="h-4" />
+                  <Skeleton className="h-4" />
+                </div>
+              )}
+            </div>
+          </div>
+        ) : ['industry-heatmap', 'etf-heatmap'].includes(type) ? (
+          <div className="h-full overflow-hidden">
+            {!queryPlate.isLoading ? (
+              <TreeMap data={dataPlate} />
+            ) : (
+              <div className="space-y-2">
+                <Skeleton className="h-4" />
+                <Skeleton className="h-4" />
+                <Skeleton className="h-4" />
+                <Skeleton className="h-4" />
+                <Skeleton className="h-4" />
+                <Skeleton className="h-4" />
               </div>
-            </div>
-          ) : ['industry-heatmap', 'etf-heatmap'].includes(type) ? (
-            <div className="h-full overflow-hidden">
-              {
-                !queryPlate.isLoading ? (
-                  <TreeMap data={dataPlate} />
-                ) : (
-                  <div className="space-y-2">
-                    <Skeleton className="h-4" />
-                    <Skeleton className="h-4" />
-                    <Skeleton className="h-4" />
-                    <Skeleton className="h-4" />
-                    <Skeleton className="h-4" />
-                    <Skeleton className="h-4" />
-                  </div>
-                )
-              }
-            </div>
-          ) : ['bull', 'etf'].includes(type) ? (
-            <div className="h-full overflow-hidden">
-              {
-                !queryStock.isLoading ? (
-                  <TreeMap data={dataStock} />
-                ) : (
-                  <div className="space-y-2">
-                    <Skeleton className="h-4" />
-                    <Skeleton className="h-4" />
-                    <Skeleton className="h-4" />
-                    <Skeleton className="h-4" />
-                    <Skeleton className="h-4" />
-                    <Skeleton className="h-4" />
-                  </div>
-                )
-              }
-            </div>
-          ) : null
-        }
+            )}
+          </div>
+        ) : ['bull', 'etf'].includes(type) ? (
+          <div className="h-full overflow-hidden">
+            {!queryStock.isLoading ? (
+              <TreeMap data={dataStock} />
+            ) : (
+              <div className="space-y-2">
+                <Skeleton className="h-4" />
+                <Skeleton className="h-4" />
+                <Skeleton className="h-4" />
+                <Skeleton className="h-4" />
+                <Skeleton className="h-4" />
+                <Skeleton className="h-4" />
+              </div>
+            )}
+          </div>
+        ) : null}
       </div>
     </div>
   )
@@ -269,7 +277,6 @@ interface StockTreeProps {
   value: number[]
   onChange?: (v: number[]) => void
 }
-
 
 const SimpleCheck = ({ value, onChange }: StockTreeProps) => {
   const onClick = (v: number) => {
@@ -285,13 +292,18 @@ const SimpleCheck = ({ value, onChange }: StockTreeProps) => {
 
   return (
     <div className="check-group flex items-center space-x-2 text-center text-xs leading-5">
-      {
-        steps.map((step, index) => (
-          <div key={step} style={{
+      {steps.map((step, index) => (
+        <div
+          key={step}
+          style={{
             background: value.includes(+step) ? colors[index] : '#1e1e1e'
-          }} onClick={() => onClick(+step)} onKeyDown={() => { }}>{step}%</div>
-        ))
-      }
+          }}
+          onClick={() => onClick(+step)}
+          onKeyDown={() => {}}
+        >
+          {step}%
+        </div>
+      ))}
       <style jsx>{`
           .check-group > div {!
             background: #1e1e1e;

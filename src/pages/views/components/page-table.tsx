@@ -1,12 +1,21 @@
-import { type StockExtend, type UsStockColumn, getUsStocks } from "@/api"
-import { AiAlarm, CollectStar, JknCheckbox, JknIcon, JknRcTable, type JknRcTableProps, StockView, SubscribeSpan } from "@/components"
-import { useCheckboxGroup, useStockQuoteSubscribe, useTableData, useTableRowClickToStockTrading } from "@/hooks"
-import { stockUtils } from "@/utils/stock"
-import { useInfiniteQuery } from "@tanstack/react-query"
+import { type StockExtend, type UsStockColumn, getUsStocks } from '@/api'
+import {
+  AiAlarm,
+  CollectStar,
+  JknCheckbox,
+  JknIcon,
+  JknRcTable,
+  type JknRcTableProps,
+  StockView,
+  SubscribeSpan
+} from '@/components'
+import { useCheckboxGroup, useStockQuoteSubscribe, useTableData, useTableRowClickToStockTrading } from '@/hooks'
+import { stockUtils } from '@/utils/stock'
+import { useInfiniteQuery } from '@tanstack/react-query'
 
-import Decimal from "decimal.js"
-import { useEffect, useMemo } from "react"
-import { useImmer } from "use-immer"
+import Decimal from 'decimal.js'
+import { useEffect, useMemo } from 'react'
+import { useImmer } from 'use-immer'
 
 interface PageTableProps {
   type?: string
@@ -40,18 +49,27 @@ type TableDataType = {
 }
 //单表格
 const PageTable = (props: PageTableProps) => {
-  const [sort, setSort] = useImmer<{ column: UsStockColumn, order: 'asc' | 'desc' }>({ column: 'total_mv', order: 'desc' })
+  const [sort, setSort] = useImmer<{ column: UsStockColumn; order: 'asc' | 'desc' }>({
+    column: 'total_mv',
+    order: 'desc'
+  })
   const queryFn = (page: number) => {
     const extend: StockExtend[] = ['basic_index', 'stock_before', 'stock_after', 'total_share', 'collect', 'financials']
-    return getUsStocks({ type: props.type === 'all' ? undefined : props.type, column: sort.column, limit: 50, page, order: sort.order, extend })
+    return getUsStocks({
+      type: props.type === 'all' ? undefined : props.type,
+      column: sort.column,
+      limit: 50,
+      page,
+      order: sort.order,
+      extend
+    })
   }
-
 
   const query = useInfiniteQuery({
     queryKey: [getUsStocks.cacheKey, props.type, sort],
-    queryFn: (params) => queryFn(params.pageParam),
+    queryFn: params => queryFn(params.pageParam),
     initialPageParam: 1,
-    getNextPageParam: (lastPage) => {
+    getNextPageParam: lastPage => {
       return lastPage.last < lastPage.current ? undefined : lastPage.current + 1
     }
   })
@@ -99,7 +117,6 @@ const PageTable = (props: PageTableProps) => {
     }
 
     setList(r)
-
   }, [query.data, setList])
 
   const onSortChange: JknRcTableProps<TableDataType>['onSort'] = (columnKey, sort) => {
@@ -108,11 +125,11 @@ const PageTable = (props: PageTableProps) => {
         code: 'symbol',
         price: 'close',
         amount: 'amount',
-        percent: "increase",
-        total: "total_mv",
-        prePercent: "stock_before",
-        afterPercent: "stock_after",
-        turnoverRate: "turnover_rate",
+        percent: 'increase',
+        total: 'total_mv',
+        prePercent: 'stock_before',
+        afterPercent: 'stock_after',
+        turnoverRate: 'turnover_rate'
       }
 
       if (columnKey === 'name' || columnKey === 'industry' || columnKey === 'pe' || columnKey === 'pb') {
@@ -131,100 +148,207 @@ const PageTable = (props: PageTableProps) => {
 
   useStockQuoteSubscribe(query.data?.pages.flatMap(o => o.items).map(item => item.symbol) ?? [])
 
-  const columns = useMemo<JknRcTableProps<TableDataType>['columns']>(() => ([
-    { title: '序号', dataIndex: 'index', align: 'center', width: 60, render: (_, __, index) => index + 1 },
-    {
-      title: '名称代码', dataIndex: 'name', align: 'left',
-      width: '12%', sort: true,
-      render: (_, row) => (
-        <StockView name={row.name} code={row.symbol as string} />
-      )
-    },
-    {
-      title: '现价', dataIndex: 'price', align: 'right', width: '8%', sort: true,
-      render: (_, row) => (
-        <SubscribeSpan.PriceBlink trading="intraDay" symbol={row.symbol} initValue={row.price} decimal={2} initDirection={row.isUp} />
-      )
-    },
-    {
-      title: '涨跌幅', dataIndex: 'percent', align: 'right', width: 120, sort: true,
-      render: (_, row) => (
-        <SubscribeSpan.PercentBlockBlink trading="intraDay" symbol={row.symbol} decimal={2} initValue={row.percent} initDirection={row.isUp} zeroText="0.00%" />
-      )
-    },
-    {
-      title: '成交额', dataIndex: 'amount', align: 'right', width: '8%', sort: true,
-      render: (_, row) => (
-        <SubscribeSpan.TurnoverBlink trading="intraDay" symbol={row.symbol} decimal={2} initValue={row.amount} showColor={false} />
-      )
-    },
-    {
-      title: '总市值', dataIndex: 'total', align: 'right', width: '8%', sort: true,
-      render: (_, row) => (
-        <SubscribeSpan.MarketValueBlink trading="intraDay" symbol={row.symbol} initValue={row.total} decimal={2} totalShare={row.totalShare ?? 0} showColor={false} />
-      )
-    },
-    {
-      title: '所属行业', dataIndex: 'industry', width: '8%', align: 'right', sort: true
-    },
-    {
-      title: '盘前涨跌幅', dataIndex: 'prePercent', width: '8%', align: 'right', sort: true,
-      render: (_, row) => (
-        <SubscribeSpan.Percent showSign trading="preMarket" symbol={row.symbol} decimal={2}  initValue={row.prePercent} initDirection={row.prePercent > 0} nanText="--" />
-      )
-    },
-    {
-      title: '盘后涨跌幅', dataIndex: 'afterPercent', width: '8%', align: 'right', sort: true,
-      render: (_, row) => (
-        <SubscribeSpan.Percent showSign trading="afterHours" symbol={row.symbol} decimal={2}  initValue={row.afterPercent} initDirection={row.afterPercent > 0} nanText="--" />
-      )
-    },
-    {
-      title: '换手率', dataIndex: 'turnoverRate', width: '8%', align: 'right', sort: true,
-      render: (_, row) => `${Decimal.create(row.turnoverRate).mul(100).toFixed(2)}%`
-    },
-    {
-      title: '市盈率', dataIndex: 'pe', width: '8%', align: 'right', sort: true,
-      render: (_, row) => `${Decimal.create(row.pe).lt(0) ? '亏损' : Decimal.create(row.pe).toFixed(2)}`
-    },
-    {
-      title: '市净率', dataIndex: 'pb', width: '8%', align: 'right', sort: true,
-      render: (_, row) => `${row.pb ? Decimal.create(row.pb).toFixed(2) : '--'}`
-    },
-    {
-      title: '+股票金池', dataIndex: 'collect', width: 80, align: 'center',
-      render: (_, row) => (
-        <CollectStar
-          checked={row.collect === 1}
-          code={row.symbol} />
-      )
-    },
-    {
-      title: '+AI报警', dataIndex: 't9', width: 80, align: 'center',
-      render: (_, row) => <AiAlarm code={row.symbol}><JknIcon className="rounded-none" name="ic_add" /></AiAlarm>
-    },
-    {
-      title: <CollectStar.Batch
-        checked={checked}
-        allCheckLength={list.length}
-        onCheckChange={(v) => setCheckedAll(v ? list.map(o => o.symbol) : [])}
-        onUpdate={() => {
-          query.refetch()
-          setCheckedAll([])
-        }}
-      />,
-      dataIndex: 'checked',
-      align: 'center',
-      width: 60,
-      render: (_, row) => <JknCheckbox checked={getIsChecked(row.symbol)} onCheckedChange={v => onChange(row.symbol, v)} />
-    }
-  ]), [checked, list, getIsChecked, onChange, setCheckedAll, query.refetch])
+  const columns = useMemo<JknRcTableProps<TableDataType>['columns']>(
+    () => [
+      { title: '序号', dataIndex: 'index', align: 'center', width: 60, render: (_, __, index) => index + 1 },
+      {
+        title: '名称代码',
+        dataIndex: 'name',
+        align: 'left',
+        width: '12%',
+        sort: true,
+        render: (_, row) => <StockView name={row.name} code={row.symbol as string} />
+      },
+      {
+        title: '现价',
+        dataIndex: 'price',
+        align: 'right',
+        width: '8%',
+        sort: true,
+        render: (_, row) => (
+          <SubscribeSpan.PriceBlink
+            trading="intraDay"
+            symbol={row.symbol}
+            initValue={row.price}
+            decimal={2}
+            initDirection={row.isUp}
+          />
+        )
+      },
+      {
+        title: '涨跌幅',
+        dataIndex: 'percent',
+        align: 'right',
+        width: 120,
+        sort: true,
+        render: (_, row) => (
+          <SubscribeSpan.PercentBlockBlink
+            showSign
+            trading="intraDay"
+            symbol={row.symbol}
+            decimal={2}
+            initValue={row.percent}
+            initDirection={row.isUp}
+            zeroText="0.00%"
+          />
+        )
+      },
+      {
+        title: '成交额',
+        dataIndex: 'amount',
+        align: 'right',
+        width: '8%',
+        sort: true,
+        render: (_, row) => (
+          <SubscribeSpan.TurnoverBlink
+            trading="intraDay"
+            symbol={row.symbol}
+            decimal={2}
+            initValue={row.amount}
+            showColor={false}
+          />
+        )
+      },
+      {
+        title: '总市值',
+        dataIndex: 'total',
+        align: 'right',
+        width: '8%',
+        sort: true,
+        render: (_, row) => (
+          <SubscribeSpan.MarketValueBlink
+            trading="intraDay"
+            symbol={row.symbol}
+            initValue={row.total}
+            decimal={2}
+            totalShare={row.totalShare ?? 0}
+            showColor={false}
+          />
+        )
+      },
+      {
+        title: '所属行业',
+        dataIndex: 'industry',
+        width: '8%',
+        align: 'right',
+        sort: true
+      },
+      {
+        title: '盘前涨跌幅',
+        dataIndex: 'prePercent',
+        width: '8%',
+        align: 'right',
+        sort: true,
+        render: (_, row) => (
+          <SubscribeSpan.Percent
+            showSign
+            trading="preMarket"
+            symbol={row.symbol}
+            decimal={2}
+            initValue={row.prePercent}
+            initDirection={row.prePercent > 0}
+            nanText="--"
+          />
+        )
+      },
+      {
+        title: '盘后涨跌幅',
+        dataIndex: 'afterPercent',
+        width: '8%',
+        align: 'right',
+        sort: true,
+        render: (_, row) => (
+          <SubscribeSpan.Percent
+            showSign
+            trading="afterHours"
+            symbol={row.symbol}
+            decimal={2}
+            initValue={row.afterPercent}
+            initDirection={row.afterPercent > 0}
+            nanText="--"
+          />
+        )
+      },
+      {
+        title: '换手率',
+        dataIndex: 'turnoverRate',
+        width: '8%',
+        align: 'right',
+        sort: true,
+        render: (_, row) => `${Decimal.create(row.turnoverRate).mul(100).toFixed(2)}%`
+      },
+      {
+        title: '市盈率',
+        dataIndex: 'pe',
+        width: '8%',
+        align: 'right',
+        sort: true,
+        render: (_, row) => `${Decimal.create(row.pe).lt(0) ? '亏损' : Decimal.create(row.pe).toFixed(2)}`
+      },
+      {
+        title: '市净率',
+        dataIndex: 'pb',
+        width: '8%',
+        align: 'right',
+        sort: true,
+        render: (_, row) => `${row.pb ? Decimal.create(row.pb).toFixed(2) : '--'}`
+      },
+      {
+        title: '+股票金池',
+        dataIndex: 'collect',
+        width: 80,
+        align: 'center',
+        render: (_, row) => <CollectStar checked={row.collect === 1} code={row.symbol} />
+      },
+      {
+        title: '+AI报警',
+        dataIndex: 't9',
+        width: 80,
+        align: 'center',
+        render: (_, row) => (
+          <AiAlarm code={row.symbol}>
+            <JknIcon className="rounded-none" name="ic_add" />
+          </AiAlarm>
+        )
+      },
+      {
+        title: (
+          <CollectStar.Batch
+            checked={checked}
+            allCheckLength={list.length}
+            onCheckChange={v => setCheckedAll(v ? list.map(o => o.symbol) : [])}
+            onUpdate={() => {
+              query.refetch()
+              setCheckedAll([])
+            }}
+          />
+        ),
+        dataIndex: 'checked',
+        align: 'center',
+        width: 60,
+        render: (_, row) => (
+          <JknCheckbox checked={getIsChecked(row.symbol)} onCheckedChange={v => onChange(row.symbol, v)} />
+        )
+      }
+    ],
+    [checked, list, getIsChecked, onChange, setCheckedAll, query.refetch]
+  )
 
   const onRowClick = useTableRowClickToStockTrading('symbol')
 
   return (
-    <JknRcTable isLoading={query.isLoading} columns={columns} rowKey="symbol" data={list} onSort={onSortChange} onRow={onRowClick}
-      infiniteScroll={{ enabled: true, fetchMore: () => !query.isFetchingNextPage && query.fetchNextPage(), hasMore: query.hasNextPage }}
+    <JknRcTable
+      isLoading={query.isLoading}
+      columns={columns}
+      rowKey="symbol"
+      data={list}
+      onSort={onSortChange}
+      onRow={onRowClick}
+      infiniteScroll={{
+        enabled: true,
+        fetchMore: () => !query.isFetchingNextPage && query.fetchNextPage(),
+        hasMore: query.hasNextPage
+      }}
     />
   )
 }

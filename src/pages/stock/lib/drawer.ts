@@ -1,11 +1,11 @@
 import type { ECOption } from '@/utils/echarts'
-import type { CustomSeriesOption, LineSeriesOption, ScatterSeriesOption } from 'echarts/charts'
-import type { KChartContext } from './ctx'
 import echarts from '@/utils/echarts'
 import { colorUtil } from '@/utils/style'
-import { renderUtils } from './utils'
-import type { EChartsType } from 'echarts/core'
+import type { CustomSeriesOption, LineSeriesOption, ScatterSeriesOption } from 'echarts/charts'
 import type { GraphicComponentOption } from 'echarts/components'
+import type { EChartsType } from 'echarts/core'
+import type { KChartContext } from './ctx'
+import { renderUtils } from './utils'
 
 type XAxis = number
 type YAxis = number
@@ -367,117 +367,74 @@ export const drawRect: DrawerFunc<DrawerRectShape[]> = (options, _, { xAxisIndex
   return options
 }
 
-type GradientData = {
-  x: XAxis
-  y: XAxis
-}
-
+type GradientData = [number, number, number, number, [number, number][], string, string]
 /**
  * 填充渐变
  */
-export const drawGradient: DrawerFunc<[XAxis, GradientData[], string[]][]> = (
-  options,
-  _,
-  { xAxisIndex, yAxisIndex, data, name }
-) => {
+export const drawGradient: DrawerFunc<GradientData[]> = (options, _, { xAxisIndex, yAxisIndex, data, name }) => {
   const grid = renderUtils.getGridIndex(options, 0)
   const left = grid?.left ?? 1
 
   const maxRight = left + (grid?.width ?? 0)
 
-  const points = data
-    .filter(item => !!item[0])
-    .map((item, index) => {
-      const start = item[0]
-      const ps = item[1]
-
-      const mid = ps[Math.round(ps.length / 2)]
-
-      return [start, mid.x, index]
-    })
-
-  /**
-   * 性能未知，待测试
-   * 方法一
-   */
   const series: CustomSeriesOption = {
     type: 'custom',
     xAxisIndex: xAxisIndex,
     yAxisIndex: yAxisIndex,
     encode: {
       x: [0, 1],
-      y: [2]
+      y: [2, 3]
     },
-    renderItem: (params, api) => {
-      if (params.context.rendered) return
-      params.context.rendered = true
+    renderItem: (_, api) => {
+      // if (params.context.rendered) return
+      // params.context.rendered = true
 
-      const polygons: { color: string[]; points: number[][] }[] = []
+      // const polygons: { color: string[]; points: number[][] }[] = []
+      // const rawPoints = api.ordinalRawValue(4) as unknown as [number, number][]
+      const rawPoints = api.value(4) as string
+      const color1 = api.value(5) as string
+      const color2 = api.value(6) as string
 
-      points.forEach(p => {
-        const item: [XAxis, GradientData[], string[]] = data[p[2]]
+      // console.log(
+      const points = rawPoints.split(',').map(p => {
+        let [x, y] = api.coord(p.split('-').map(Number))
 
-        const colors = (item[2] as unknown as string[]).map(colorUtil.hexToRGBA)
-        const c = ['transparent', 'transparent']
-        colors.forEach((color, index) => {
-          if (color) {
-            c[index] = `rgba(${color.r}, ${color.g}, ${color.b}, ${color.a})`
-          }
-        })
-
-        const _points: number[][] = []
-
-        item[1].forEach(p => {
-          const po = api.coord([p.x, p.y])
-
-          if (po[0] > maxRight) {
-            po[0] = maxRight
-          }
-
-          if (po[0] < 0) {
-            return
-          }
-          _points.push(po)
-        })
-
-        if (_points.length <= 0) {
-          return
+        if (x > maxRight) {
+          x = maxRight
+        }
+        if (x < left) {
+          x = left
         }
 
-        polygons.push({
-          color: c,
-          points: _points
-        })
+        return [x, y]
       })
 
       return {
-        type: 'group',
+        type: 'polygon',
+        shape: {
+          points: points
+        },
         emphasisDisabled: true,
         silent: true,
-        children: polygons.map(polygon => ({
-          type: 'polygon',
-          shape: {
-            points: [...polygon.points]
-          },
-          emphasisDisabled: true,
-          silent: true,
-          style: {
-            fill: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-              {
-                offset: 0,
-                color: polygon.color[0]
-              },
-              {
-                offset: 1,
-                color: polygon.color[1]
-              }
-            ])
-          }
-        }))
+        style: {
+          fill: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+            {
+              offset: 0,
+              color: color1
+            },
+            {
+              offset: 1,
+              color: color2
+            }
+          ])
+        }
       }
     },
     name,
-    data: points
+    data: data.map(item => {
+      const pointStr = item[4].map(p => p.join('-')).join(',') as any
+      return [item[0], item[1], item[2], item[3], pointStr, item[5], item[6]]
+    })
   }
 
   Array.isArray(options.series) && options.series.push(series)
@@ -721,7 +678,7 @@ export const drawNumber = (
       const y = api.value(1) as number
       const text = api.value(2) as string
       const yOffset = api.value(4) as number
-      const _yOffset = -yOffset 
+      const _yOffset = -yOffset
       const xOffset = api.value(3) as number
       const color = api.value(5) as string
 

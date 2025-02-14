@@ -71,7 +71,7 @@ const PlateStocks = (props: PlateStocksProps) => {
             trading="intraDay"
             symbol={row.symbol}
             initValue={row.close}
-            decimal={2}
+            decimal={3}
             initDirection={stockUtils.isUp(row)}
           />
         )
@@ -85,27 +85,12 @@ const PlateStocks = (props: PlateStocksProps) => {
         render: (_, row) => (
           <SubscribeSpan.PercentBlockBlink
             trading="intraDay"
+            showSign
             symbol={row.symbol}
             decimal={2}
             initValue={row.percent}
             initDirection={stockUtils.isUp(row)}
             zeroText="0.00%"
-          />
-        )
-      },
-      {
-        title: '成交额',
-        dataIndex: 'amount',
-        align: 'right',
-        width: '8%',
-        sort: true,
-        render: (_, row) => (
-          <SubscribeSpan.TurnoverBlink
-            trading="intraDay"
-            symbol={row.symbol}
-            decimal={2}
-            initValue={row.turnover}
-            showColor={false}
           />
         )
       },
@@ -126,12 +111,28 @@ const PlateStocks = (props: PlateStocksProps) => {
         )
       },
       {
+        title: '成交额',
+        dataIndex: 'amount',
+        align: 'right',
+        width: '8%',
+        sort: true,
+        render: (_, row) => (
+          <SubscribeSpan.TurnoverBlink
+            trading="intraDay"
+            symbol={row.symbol}
+            decimal={2}
+            initValue={row.turnover}
+            showColor={false}
+          />
+        )
+      },
+      {
         title: '换手率',
         dataIndex: 'turnoverRate',
         align: 'right',
         width: '7%',
         sort: true,
-        render: turnoverRate => `${Decimal.create(turnoverRate).mul(100).toFixed(2)}1%`
+        render: turnoverRate => `${Decimal.create(turnoverRate).mul(100).toFixed(3)}%`
       },
       {
         title: '市盈率',
