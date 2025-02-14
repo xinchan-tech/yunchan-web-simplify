@@ -19,12 +19,12 @@ import { cn } from "@/utils/style";
 import APIClient from "../Service/APIClient";
 import { useLatest } from "ahooks";
 import { useShallow } from "zustand/react/shallow";
-import { useModal } from "@/components";
-import { useUpdate } from "ahooks";
+import { Button, Input, useModal } from "@/components";
+
 import { getGroupChannels } from "@/api";
 // import { useQuery } from "@tanstack/react-query";
 import ChatAvatar from "../components/chat-avatar";
-import CreateGroup from "../components/create-and-join-group";
+
 import {
   groupToChannelInfo,
   judgeIsExpireGroupCache,
@@ -137,7 +137,7 @@ const GroupChannel = (props: {
             onSuccess={() => {
               refetch();
             }}
-            total={editChannel.total_user}
+            total={Number(editChannel.total_user)}
           />
         )}
       </>
@@ -428,6 +428,44 @@ const GroupChannel = (props: {
     setGoodConversations(filteConversations);
   }, [data, conversationWraps]);
 
+  const [inviteCode, setInviteCode] = useState("");
+
+  const inviteToGroupModal = useModal({
+    content: (
+      <div className="flex items-center justify-center pl-2 pr-2 flex-col pt-5 pb-5">
+        <div
+          className={"border-dialog-border rounded-sm  bg-accent inline-block"}
+        >
+          <Input
+            className="border-none placeholder:text-tertiary flex-1"
+            value={inviteCode}
+            onChange={(e) => {
+              setInviteCode(e.target.value);
+            }}
+            style={{ marginTop: "0" }}
+            placeholder="请输入邀请码"
+          />
+        </div>
+        <Button
+          className="mt-5"
+          onClick={() => {
+            handleInviteToGroup();
+          }}
+        >
+          确定
+        </Button>
+      </div>
+    ),
+    footer: false,
+    title: "输入邀请码加群",
+    className: "w-[400px]",
+    closeIcon: false,
+  });
+
+  const handleInviteToGroup = () => {
+    inviteToGroupModal.modal.close();
+  };
+
   return (
     <div className="w-[270px] h-full">
       <div className="group-filter h-[58px] flex items-center justify-between pl-4 pr-4">
@@ -564,8 +602,27 @@ const GroupChannel = (props: {
             })} */}
           </>
         )}
+
+        {
+          // 没有群的时候提供一个输入邀请码的按钮加群,按钮垂直居中展示
+          conversationWraps && goodConversations.length === 0 && (
+            <div className="flex items-center justify-center h-full w-full flex-col bg-[#313339] text-white text-center text-sm font-bold cursor-pointer">
+              暂无群组，点击下方按钮加入群组
+              <Button
+                className="mt-4"
+                onClick={() => {
+                  setInviteCode("");
+                  inviteToGroupModal.modal.open();
+                }}
+              >
+                输入邀请码加群
+              </Button>
+            </div>
+          )
+        }
       </div>
       {updateGroupInfoModal.context}
+      {inviteToGroupModal.context}
       <style jsx>
         {`
           .group-filter {

@@ -61,7 +61,7 @@ const jumpToStock = (symbol: string) => {
 interface HighlightDollarWordsProps {
   text: string;
 }
-const HighlightDollarWords: React.FC<HighlightDollarWordsProps> = ({
+export const HighlightDollarWords: React.FC<HighlightDollarWordsProps> = ({
   text,
 }) => {
   // 定义正则表达式，用于匹配以 $ 开头且后面跟着大写字母的字符串

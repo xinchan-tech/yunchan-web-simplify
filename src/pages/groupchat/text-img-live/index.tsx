@@ -17,6 +17,7 @@ import UploadUtil from "../Service/uploadUtil";
 import { InputBoxImage, InputBoxResult } from "../group-chat-input/useInput";
 import { uid } from "radash";
 import Viewer from "react-viewer";
+import { HighlightDollarWords } from "../Messages/text";
 
 function formatTimestamp(timestamp: number) {
   const date = new Date(timestamp);
@@ -370,7 +371,7 @@ const TextImgLive = () => {
                 </div>
               </div>
               <div className="opinion-content ml-10">
-                {item.content}
+                <HighlightDollarWords text={item.content} />
 
                 {item.urls instanceof Array && item.urls.length > 0 && (
                   <div className="flex mt-2">

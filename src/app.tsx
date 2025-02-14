@@ -23,6 +23,7 @@ import { uid } from 'radash'
 import { useToast } from '@/hooks'
 import { wsManager } from '@/utils/ws'
 import { HeaderMall } from './components/header/mall'
+import { parsePermission, UserPermission } from "./utils/util"
 
 export const CHAT_STOCK_JUMP = 'chat_stock_jump'
 
@@ -54,6 +55,14 @@ const App = () => {
             })
         })
         .then(res => {
+   let permission: UserPermission;
+      if(query.data && query.data.permission) {
+        permission = parsePermission(query.data.permission);
+        user.setUser({
+          ...query.data,
+          permission
+        });
+      }
           setUser({
             ...res
           })

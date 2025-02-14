@@ -1,32 +1,35 @@
+import request from "@/utils/request";
+import { UserPermission } from "@/utils/util";
 import request from '@/utils/request'
 import qs from 'qs'
 
 type LoginParams = {
-  mobile: string
-  password: string
-}
+  mobile: string;
+  password: string;
+};
 
 type LoginResult = {
-  token: string
+  token: string;
   user: {
-    id: string
-    user_type: string
-    username: string
-    mobile: string
-    realname: string
-    email: string | null
-    money: string
-    avatar: string
+    id: string;
+    user_type: string;
+    username: string;
+    mobile: string;
+    realname: string;
+    email: string | null;
+    money: string;
+    avatar: string;
     teacher: {
-      name: string
-      grade_ids: string
-      brief: string
-    }
-    sale: string | null
-    kefu: string | null
-    user_grade: string[]
-  }
-}
+      name: string;
+      grade_ids: string;
+      brief: string;
+    };
+    permission: UserPermission;
+    sale: string | null;
+    kefu: string | null;
+    user_grade: string[];
+  };
+};
 
 export const login = (params: LoginParams) => {
   return request
@@ -34,27 +37,27 @@ export const login = (params: LoginParams) => {
     .then(r => r.data)
 }
 
-export const logout = (platform?: 'window' | 'macos' | 'android' | 'linux') => {
-  const form = new FormData()
-  form.append('platform', platform || 'window')
-  return request.post('/user/logOut', form).then(r => r.data)
-}
+export const logout = (platform?: "window" | "macos" | "android" | "linux") => {
+  const form = new FormData();
+  form.append("platform", platform || "window");
+  return request.post("/user/logOut", form).then((r) => r.data);
+};
 
 type GetConfigResult = {
   servers: {
-    host: string
-    name: string
-    ws: string
-  }[]
+    host: string;
+    name: string;
+    ws: string;
+  }[];
   consults: {
-    name: string
-    contact: string[]
-  }[]
-}
+    name: string;
+    contact: string[];
+  }[];
+};
 
 export const getConfig = () => {
-  return request.get<GetConfigResult>('/init/get').then(r => r.data)
-}
+  return request.get<GetConfigResult>("/init/get").then((r) => r.data);
+};
 
 type getUsTimeResult = {
   /**

@@ -1,96 +1,101 @@
-import request from '@/utils/request'
+import request from "@/utils/request";
+import { UserPermission } from "@/utils/util";
 
 export type UserResult = {
   /**
    * 已授权的指标列表
    */
-  authorized: Authorized[]
+  authorized: Authorized[];
   /**
    * 头像
    */
-  avatar: string
+  avatar: string;
   /**
    * 邮箱
    */
-  email: null
-  grade: null
-  id: string
-  is_kefu: boolean
+  email: null;
+  grade: null;
+  id: string;
+  is_kefu: boolean;
   /**
    * 手机号
    */
-  mobile: string
+  mobile: string;
   /**
    * 账户
    */
-  money: string
+  money: string;
   /**
    * 真实姓名
    */
-  realname: string
+  realname: string;
   /**
    * 教师信息
    */
-  teacher: Teacher
+  teacher: Teacher;
   /**
    * 未授权的指标列表
    */
-  unauthorized: Unauthorized[]
-  user_type: string
+  unauthorized: Unauthorized[];
+  user_type: string;
   /**
    * 用户名
    */
-  username: string
-}
+  username: string;
+
+  permission: string;
+};
 
 export type Authorized = {
   /**
    * 封面图
    */
-  cover?: string
+  cover?: string;
   /**
    * 过期时间
    */
-  expire_time?: string
+  expire_time?: string;
   /**
    * 套餐id
    */
-  id?: string
+  id?: string;
   /**
    * 套餐名称
    */
-  name?: string
-}
+  name?: string;
+};
 
 /**
  * 教师信息
  */
 export type Teacher = {
-  brief: string
-  grade_ids: string
-  name: string
-}
+  brief: string;
+  grade_ids: string;
+  name: string;
+};
 
 export type Unauthorized = {
-  cover: string
-  expire_time: string
-  id: string
-  name: string
-}
+  cover: string;
+  expire_time: string;
+  id: string;
+  name: string;
+};
 
 type GetUserParams = {
-  extends: ('teacher' | 'authorized' | 'kefu')[]
-}
+  extends: ("teacher" | "authorized" | "kefu")[];
+};
 
 export const getUser = (params: GetUserParams) => {
-  return request.get<UserResult>('/user', { params: params }).then(r => r.data)
-}
-getUser.cacheKey = 'user:info'
+  return request
+    .get<UserResult>("/user", { params: params })
+    .then((r) => r.data);
+};
+getUser.cacheKey = "user:info";
 
 type UpdateUserParams = {
-  avatar?: string
-  nickname?: string
-}
+  avatar?: string;
+  nickname?: string;
+};
 
 export const updateUser = (params: UpdateUserParams) => {
   return request

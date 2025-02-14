@@ -25,8 +25,9 @@ const MenuRight = () => {
     }
   }, [])
 
-  const { token } = useToken()
-  const { toast } = useToast()
+  const { user } = useUser();
+  const { token } = useToken();
+  const { toast } = useToast();
 
   const menus: MenuItem[] = [
     {
@@ -47,7 +48,7 @@ const MenuRight = () => {
     {
       icon: "right_menu_5",
       title: "讨论社群",
-      path: "/chat",
+      path: "/mall",
       handler: () => {
         if (!token) {
           toast({
@@ -56,8 +57,15 @@ const MenuRight = () => {
           return
         }
 
-        window.open(`${window.location.origin}/chat`, 'whatever', 'hideit,height=750,width=1000,resizable=yes,scrollbars=yes,status=no,location=no')
-
+        if (user && user.permission && user.permission.chat === true) {
+          window.open(
+            `${window.location.origin}/chat`,
+            "whatever",
+            "hideit,height=750,width=1000,resizable=yes,scrollbars=yes,status=no,location=no"
+          );
+        } else {
+          router.navigate("/mall");
+        }
       },
     }
   ]
