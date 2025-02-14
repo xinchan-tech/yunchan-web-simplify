@@ -45,7 +45,7 @@ const MenuRight = () => {
       path: '/stock/finance'
     },
     {
-      icon: 'right_menu_5',
+      icon: 'group_chat',
       title: '讨论社群',
       path: '/mall',
       handler: () => {

@@ -327,11 +327,11 @@ const GroupChatPage = () => {
   }
   const [notAgreeNotice, setnotAgreeNotice] = useState<boolean>(false);
   useEffect(() => {
-    if (groupDetailData) {
-      const payload = !judgeHasReadGroupNotice(groupDetailData?.account);
+    if (selectedChannel) {
+      const payload = !judgeHasReadGroupNotice(selectedChannel.channelID);
       setnotAgreeNotice(payload);
     }
-  }, [groupDetailData]);
+  }, [selectedChannel]);
 
   return (
     <div className="group-chat-container flex">

@@ -2,7 +2,6 @@ import { JknIcon } from "@/components";
 import ChatAvatar from "../components/chat-avatar";
 import { useUser } from "@/store";
 import { cn } from "@/utils/style";
-import { useChatNoticeStore } from "@/store/group-chat-new";
 
 const GroupChatLeftBar = (props: {
   indexTab: "chat" | "live";
@@ -13,19 +12,19 @@ const GroupChatLeftBar = (props: {
   const tabs: Array<{
     name: string;
     icon: string;
-    activeIcon: string;
+
     value: "chat" | "live";
   }> = [
     {
       name: "消息",
       icon: "group_chat",
-      activeIcon: "group_chat_primary",
+
       value: "chat",
     },
     {
       name: "图文直播",
-      icon: "live",
-      activeIcon: "live_primary",
+      icon: "right_menu_5",
+
       value: "live",
     },
   ];
@@ -57,7 +56,11 @@ const GroupChatLeftBar = (props: {
               )}
             >
               <JknIcon
-                name={props.indexTab === tab.value ? tab.activeIcon : tab.icon}
+                className={cn(
+                  props.indexTab === tab.value && "active-icon",
+                  "rounded-none"
+                )}
+                name={tab.icon}
               ></JknIcon>
               <div className="text-xs mt-1 title">{tab.name}</div>
             </div>
@@ -77,7 +80,12 @@ const GroupChatLeftBar = (props: {
             .activebar {
               border-radius: 8px;
               background-color: rgb(53, 54, 55);
+              img {
+                filter: invert(50%) sepia(96%) saturate(6798%)
+                  hue-rotate(227deg) brightness(99%) contrast(94%);
+              }
             }
+
             .activebar .title {
               color: #6052ff;
             }

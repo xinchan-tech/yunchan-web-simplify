@@ -36,6 +36,7 @@ import {
 import { JknIcon, Skeleton } from "@/components";
 import UpdateGroupInfo from "./updateGroupInfo";
 import { useQuery } from "@tanstack/react-query";
+import CreateGroup from "../components/create-and-join-group";
 
 export type GroupData = {
   id: string;
@@ -470,7 +471,7 @@ const GroupChannel = (props: {
     <div className="w-[270px] h-full">
       <div className="group-filter h-[58px] flex items-center justify-between pl-4 pr-4">
         <span>我的群聊</span>
-        {/* <CreateGroup /> */}
+        <CreateGroup />
       </div>
       <div className="group-list">
         {!conversationWraps &&
