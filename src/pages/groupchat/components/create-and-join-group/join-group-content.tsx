@@ -22,8 +22,7 @@ const JoinGroupContent = (props: { onSuccess: () => void }) => {
   const [currentCategory, setCurrentCategory] =
     useState<GroupCategoryValue>("1");
   const [keywords, setKeywords] = useState("");
-  const { getGroupDetailData, groupDetailFetching, conversationWraps } =
-    useGroupChatShortStore();
+  const { conversationWraps } = useGroupChatShortStore();
   const [curGroupData, setCurGroupData] = useState<GroupData | null>(null);
   const category: GroupCategory[] = [
     {
@@ -75,9 +74,7 @@ const JoinGroupContent = (props: { onSuccess: () => void }) => {
           />
         </div>
       )}
-      {(isFetching === true || groupDetailFetching === true) && (
-        <FullScreenLoading fullScreen={false} />
-      )}
+      {isFetching === true && <FullScreenLoading fullScreen={false} />}
       <div className="top-area">
         <div className="flex justify-center">
           <div className=" border-dialog-border rounded-sm  bg-accent top-area-search  w-[600px]">
@@ -118,10 +115,8 @@ const JoinGroupContent = (props: { onSuccess: () => void }) => {
               joinDisabled={channel.in_channel !== 0}
               data={channel}
               onJoin={() => {
-                getGroupDetailData(channel.account).then(() => {
-                  setCurGroupData(channel);
-                  setOpenJoinMask(true);
-                });
+                setCurGroupData(channel);
+                setOpenJoinMask(true);
               }}
             ></GroupChannelCard>
           );
