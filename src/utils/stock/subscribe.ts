@@ -51,10 +51,14 @@ const quoteActionResultParser = (data: any) => {
 export type StockSubscribeHandler<T extends SubscribeActionType> = T extends 'bar' ? (data: ReturnType<typeof barActionResultParser>) => void : (data: ReturnType<typeof quoteActionResultParser>) => void
 
 export type SubscribeActionType = 'bar' | 'quote'
-// export type UnsubscribeAction = 'bar_remove_symbols' | 'quote_remove_symbols'
 
 
-type BufferItem = {action: string, data: ReturnType<typeof barActionResultParser> | ReturnType<typeof quoteActionResultParser>, dirty: boolean}
+type BufferItem = {action: string, data: ReturnType<typeof barActionResultParser> | ReturnType<typeof quoteActionResultParser>}
+
+/**
+ * quote 时间窗口buffer结构
+ */
+type QuoteBuffer = Record<string, ReturnType<typeof quoteActionResultParser>>
 
 class StockSubscribe {
   private subscribed = mitt<Record<string, any>>()
@@ -69,6 +73,7 @@ class StockSubscribe {
   private ws: Ws
   private cid: string
   private bufferMax: number
+  private quoteBuffer: QuoteBuffer
   constructor(url: string) {
     this.url = url
     this.subscribeTopic = {}
@@ -76,16 +81,23 @@ class StockSubscribe {
     this.buffer = []
     this.bufferHandleLength = 500
     this.bufferMax = 20000
+    this.quoteBuffer = {}
     this.ws = new Ws(`${this.url}&cid=${this.cid}`, {
       beat: false,
       onMessage: ev => {
         const data = JSON.parse(ev.data)
         if (data.ev) {
-          const parserData = data.b ? barActionResultParser(data): quoteActionResultParser(data)
-          this.buffer.push({action: parserData.topic, data: parserData, dirty: false})
-          if(this.buffer.length > this.bufferMax){
-            this.buffer.shift()
+          if(data.b){
+            const parserData = barActionResultParser(data) 
+            this.buffer.push({action: parserData.topic, data: parserData})
+            if(this.buffer.length > this.bufferMax){
+              this.buffer.shift()
+            }
+          }else{
+            const parserData = quoteActionResultParser(data)
+            this.quoteBuffer[parserData.topic] = parserData
           }
+         
         }
       }
     })
@@ -184,21 +196,31 @@ class StockSubscribe {
     })
   }
 
+  /**
+   * quote以时间窗口的方式推送
+   * 每300ms推送一次
+   */
   private startBufferHandle(){
-
     let count = this.bufferHandleLength
+    const quoteBuffer = Object.entries(this.quoteBuffer)
+    this.quoteBuffer = {}
+    quoteBuffer.forEach(([topic, data]) => {
+      this.subscribed.emit(`${topic}:quote`, data)
+      this.subscribed.emit(topic, data)
+    })
+    
     while(count > 0 && this.buffer.length > 0){
       const item = this.buffer.shift()!
      
       this.subscribed.emit(item.data.action, item.data)
-      if(item.data.topic.indexOf('@') === -1){
+      // if(item.data.topic.indexOf('@') === -1){
 
-        this.subscribed.emit(`${item.data.topic}:quote`, item.data)
-      }
+      //   this.subscribed.emit(`${item.data.topic}:quote`, item.data)
+      // }
       // this.bufferMap.delete(item.data.action)
       count--
     }
-
+  
     setTimeout(() => {
       this.startBufferHandle()
     }, 300)
