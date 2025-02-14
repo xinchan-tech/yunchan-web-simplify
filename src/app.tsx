@@ -1,3 +1,14 @@
+import { getConfig, getStockCollectCates, getUser } from '@/api'
+import { useToast } from '@/hooks'
+import { appEvent } from '@/utils/event'
+import { wsManager } from '@/utils/ws'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMount, useUpdateEffect } from 'ahooks'
+import { uid } from 'radash'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import { Outlet, useNavigate } from 'react-router'
+import Logo from './assets/icon/icon_jkn@2x.png'
 import {
   AiAlarmNotice,
   Footer,
@@ -9,21 +20,10 @@ import {
   StockSelect,
   Toaster
 } from './components'
-import Logo from './assets/icon/icon_jkn@2x.png'
-import { Outlet, useNavigate } from 'react-router'
-import { router, routes } from './router'
-import { useMount, useUpdateEffect } from 'ahooks'
-import { useConfig, useToken, useUser } from './store'
-import { useTranslation } from 'react-i18next'
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { getConfig, getStockCollectCates, getUser } from '@/api'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { appEvent } from '@/utils/event'
-import { uid } from 'radash'
-import { useToast } from '@/hooks'
-import { wsManager } from '@/utils/ws'
 import { HeaderMall } from './components/header/mall'
-import { parsePermission, UserPermission } from "./utils/util"
+import { router, routes } from './router'
+import { useConfig, useToken, useUser } from './store'
+import { parsePermission } from './utils/util'
 
 export const CHAT_STOCK_JUMP = 'chat_stock_jump'
 
@@ -55,16 +55,9 @@ const App = () => {
             })
         })
         .then(res => {
-   let permission: UserPermission;
-      if(query.data && query.data.permission) {
-        permission = parsePermission(query.data.permission);
-        user.setUser({
-          ...query.data,
-          permission
-        });
-      }
           setUser({
-            ...res
+            ...res,
+            permission: parsePermission(res.permission)
           })
         })
     }

@@ -1,5 +1,4 @@
-import request from "@/utils/request";
-import { UserPermission } from "@/utils/util";
+import request from "@/utils/request"
 
 export type UserResult = {
   /**
