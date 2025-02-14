@@ -9,7 +9,7 @@ import { cn, colorUtil } from '@/utils/style'
 import { useMount, useUnmount, useUpdateEffect } from 'ahooks'
 import dayjs from 'dayjs'
 import type { EChartsType } from 'echarts/core'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { type Indicator, kChartUtils, useKChartStore } from '../lib'
 import {
   initOptions,
@@ -77,7 +77,8 @@ export const MainChart = (props: MainChartProps) => {
 
     chart.current.setOption(
       {
-        ...initOptions()
+        ...initOptions(),
+        hoverLayerThreshold: Number.MAX_SAFE_INTEGER
       },
       { lazyUpdate: true }
     )
@@ -216,7 +217,7 @@ export const MainChart = (props: MainChartProps) => {
       ...useKChartStore.getState().state[props.index].secondaryIndicators,
       ...Object.values(useKChartStore.getState().state[props.index].mainIndicators)
     ]
-
+    const candlesticks = state.mainData.history
     const res = await Promise.all(
       indicators.map(item => {
         if (!candlesticks.length) return Promise.resolve({ data: [], indicatorId: item.id })
@@ -249,24 +250,33 @@ export const MainChart = (props: MainChartProps) => {
     )
 
     return res
-  }, [candlesticks, props.index])
+  }, [state.mainData.history, props.index])
 
   useEffect(() => {
     const timeIndex = useKChartStore.getState().state[props.index].timeIndex
 
+    kChartUtils.setMainData({
+      index: props.index,
+      data: candlesticks,
+      dateConvert: true,
+      timeIndex: timeIndex
+    })
+  }, [candlesticks, props.index])
+
+  useEffect(() => {
     calcIndicatorData().then(r => {
       kChartUtils.setIndicatorsData({
         index: props.index,
         data: r
       })
-      kChartUtils.setMainData({
-        index: props.index,
-        data: candlesticks,
-        dateConvert: true,
-        timeIndex: timeIndex
+
+      setTimeout(() => {
+        renderFn.current()
       })
     })
-  }, [candlesticks, props.index, calcIndicatorData])
+  }, [calcIndicatorData, props.index])
+
+
 
   useEffect(() => {
     const unsubscribe = useIndicator.subscribe(() => {
@@ -322,7 +332,7 @@ export const MainChart = (props: MainChartProps) => {
       renderSecondaryLocalIndicators(_options, state.secondaryIndicators, state)
     }
     renderWatermark(_options, state.timeIndex)
-    chart.current.setOption(_options, true)
+    chart.current.setOption(_options, { replaceMerge: ['series', 'grid', 'xAxis', 'yAxis', 'dataZoom', 'graphic', 'markLine', 'markPoint'], lazyUpdate: true })
     console.log('render', chart.current.getOption())
   }
 

@@ -46,7 +46,7 @@ export const calcIndicator = async (
   interval: number
 ) => {
   const module = await getPolicyModule()
-
+  // console.log(data)
   const rawData = data.map((item: StockRawRecord) => {
     return [Math.floor(stockUtils.parseTime(item[0]) / 1000), ...item.slice(1)] as unknown as StockRawRecord
   }, true)

@@ -52,6 +52,19 @@ export const renderUtils = {
   getGridSize: (chart: EChartsType) => {
     const grid = chart.getOption().grid
   },
+  addSeries: (options: ECOption, series: any) => {
+    if (!options.series) {
+      options.series = []
+    }else if(!Array.isArray(options.series)){
+      options.series = [options.series]
+    }
+
+    if (Array.isArray(series)) {
+      options.series.push(...series)
+    } else {
+      options.series.push(series)
+    }
+  },
 
   getTooltipIndex: (options: ECOption, index: number) => {
     if (Array.isArray(options.tooltip)) {

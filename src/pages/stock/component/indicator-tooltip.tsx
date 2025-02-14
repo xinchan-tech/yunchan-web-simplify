@@ -166,8 +166,9 @@ export const IndicatorTooltipGroup = memo((props: IndicatorTooltipGroupProps) =>
     return Object.values(props.indicators)
   }, [props.indicators])
   const [expand, { toggle }] = useBoolean(true)
+  const state = useKChartStore(s => s.state[props.mainIndex])
   return (
-    <div className="absolute top-4 left-2 space-y-2 main-indicator-tooltip">
+    <div className="absolute top-4 space-y-2 main-indicator-tooltip" style={{left: state.yAxis.left ? 80: 8}}>
       {expand
         ? indicators.map(item => (
             <IndicatorTooltip mainIndex={props.mainIndex} key={item.id} type="main" indicator={item} />

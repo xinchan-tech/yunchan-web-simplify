@@ -1,5 +1,5 @@
 import { getCollectHot } from "@/api"
-import { CapsuleTabs, JknRcTable, type JknRcTableProps, NumSpanSubscribe, StockView, SubscribeSpan } from "@/components"
+import { CapsuleTabs, JknRcTable, type JknRcTableProps, StockView, SubscribeSpan } from "@/components"
 import { useStockQuoteSubscribe, useTableData, useTableRowClickToStockTrading } from "@/hooks"
 import { stockUtils } from "@/utils/stock"
 import { useQuery } from "@tanstack/react-query"

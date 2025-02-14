@@ -194,6 +194,7 @@ export const createOptions = (chart: EChartsType): ECOption => ({
       axisLabel: {
         showMaxLabel: false,
         showMinLabel: false,
+        show: true,
         color: v => {
           const scale = renderUtils.getScaledZoom(chart, 0)!
 
@@ -717,7 +718,27 @@ export const renderMainChart: ChartRender = (options, state) => {
     data: []
   }
 
-  Array.isArray(options.series) && options.series.push(virtualLine)
+  ;renderUtils.addSeries(options, virtualLine)
+
+  if(state.yAxis.left){
+    const leftYAxisSeries = {
+      name: 'left-y-axis',
+      type: 'line',
+      yAxisIndex: 0,
+      xAxisIndex: 0,
+      symbol: 'none',
+      encode: {
+        x: [0],
+        y: [1]
+      },
+      data: data.map(item => ({
+        value: item
+      })),
+      color: 'transparent'
+    }
+
+    renderUtils.addSeries(options, leftYAxisSeries)
+  }
 
   return options
 }
