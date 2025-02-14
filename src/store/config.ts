@@ -8,7 +8,11 @@ const red = '#ff3f4d'
 const green = '#009e45'
 
 const platform = (() => {
-  return /windows|win32/i.test(navigator.userAgent) ? 'windows': /macintosh|mac os x/i.test(navigator.userAgent) ? 'mac' : 'other'
+  return /windows|win32/i.test(navigator.userAgent)
+    ? 'windows'
+    : /macintosh|mac os x/i.test(navigator.userAgent)
+      ? 'mac'
+      : 'other'
 })()
 
 interface ConfigStore {
@@ -38,6 +42,8 @@ interface ConfigStore {
   }
   setSetting: (setting: Partial<ConfigStore['setting']>) => void
   getStockColor: (up?: boolean, format?: 'hex' | 'hsl') => string
+  debug?: boolean
+  setDebug: (value?: boolean) => void
 }
 
 export const useConfig = create<ConfigStore>()(
@@ -48,6 +54,7 @@ export const useConfig = create<ConfigStore>()(
       hasSelected: false,
       consults: [],
       aiAlarmAutoNotice: true,
+      debug: undefined,
       setting: {
         upOrDownColor: 'upGreenAndDownRed',
         operation: 'mouseForKLine',
@@ -57,6 +64,7 @@ export const useConfig = create<ConfigStore>()(
         alarmShow: '1',
         gapShow: '1'
       },
+      setDebug: value => set(() => ({ debug: value })),
       setSetting: setting => set(s => ({ setting: { ...s.setting, ...setting } })),
       setAiAlarmAutoNotice: auto => set(() => ({ aiAlarmAutoNotice: auto })),
       setConsults: consults => set(() => ({ consults })),
