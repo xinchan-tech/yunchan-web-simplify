@@ -253,9 +253,10 @@ export type IndicatorData =
       | IndicatorDataDrawText
       | IndicatorDataDrawNumber
       | IndicatorDataDrawRectRel
+      | IndicatorDataDrawIcon
     )[]
   | undefined
-type DrawFunc = '' | 'STICKLINE' | 'DRAWTEXT' | 'DRAWGRADIENT' | 'DRAWNUMBER' | 'DRAWRECTREL'
+type DrawFunc = '' | 'STICKLINE' | 'DRAWTEXT' | 'DRAWGRADIENT' | 'DRAWNUMBER' | 'DRAWRECTREL' | 'DRAWICON'
 type IndicatorDataBase<T extends DrawFunc> = {
   draw: T
   color: string
@@ -301,6 +302,9 @@ type IndicatorDataDrawNumber = IndicatorDataBase<'DRAWNUMBER'> & {
  */
 type IndicatorDataDrawRectRel = IndicatorDataBase<'DRAWRECTREL'> & {
   draw_data: Record<number, [number, number, number, number, string]>
+}
+type IndicatorDataDrawIcon = IndicatorDataBase<'DRAWICON'> & {
+  draw_data: Record<number, [number, number, number, number]>
 }
 
 /**

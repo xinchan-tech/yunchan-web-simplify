@@ -268,6 +268,8 @@ export const drawText: DrawerFunc<DrawerTextShape[]> = (options, _, { xAxisIndex
       const text = api.value(2) as string
       const point = api.coord([x, y])
       const color = (api.value(3) as string) ?? '#00943c'
+      const yOffset = -api.value(5) as number
+      const xOffset = api.value(4) as number
 
       return {
         type: 'text',
@@ -278,11 +280,11 @@ export const drawText: DrawerFunc<DrawerTextShape[]> = (options, _, { xAxisIndex
           text,
           fill: color,
           fontSize: 12,
-          textAlign: 'middle',
-          textVerticalAlign: 'top'
+          textAlign: 'center',
+          textVerticalAlign: 'middle'
         },
         z: 100,
-        position: [point[0] + 2, point[1]]
+        position: [point[0] + xOffset, point[1] + yOffset]
       }
     },
     name,
@@ -856,4 +858,41 @@ export const drawRectRel: DrawerFunc<DrawRectRelShape[]> = (options, _, { xAxisI
   renderUtils.addGraphic(options, rects)
 
   return options
+}
+
+const iconContext = import.meta.webpackContext('@/assets/icon/script_icons')
+
+type DrawIconShape = {
+  x: XAxis
+  y: YAxis
+  iconId: number, 
+  offsetX: number
+  offsetY: number
+}
+
+export const drawIcon: DrawerFunc<DrawIconShape[]> = (
+  options,
+  _,
+  { xAxisIndex, yAxisIndex, data, name }
+) => {
+  const scatter: ScatterSeriesOption = {
+    type: 'scatter',
+    xAxisIndex: xAxisIndex,
+    yAxisIndex: yAxisIndex,
+    silent: true,
+    symbolSize: 20,
+    name,
+    data: data.map(item => ({
+      value: [item.x, item.y],
+      symbol: `image://${iconContext(`./draw_${item.iconId}.png`)}`,
+      emphasis: {
+        disabled: true
+      },
+      symbolOffset: [item.offsetX, item.offsetY],
+    }))
+  }
+  // console.log(data)
+  Array.isArray(options.series) && options.series.push(scatter)
+  return options
+
 }

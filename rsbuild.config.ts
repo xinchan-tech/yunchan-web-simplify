@@ -45,10 +45,6 @@ export default defineConfig({
         target: 'ws://web.mgjkn.com',
         ws: true
       },
-      '/im-ws': {
-        target: 'ws://im.mgjkn.com:5200',
-        ws: true,
-      },
       "/im-ws": {
         // target: "ws://im.mgjkn.com:5200",
         target: "ws://test.im.mgjkn.com:5200",

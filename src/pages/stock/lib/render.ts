@@ -25,6 +25,7 @@ import {
   drawGradient,
   drawHLine,
   drawHdlyLabel,
+  drawIcon,
   drawLine,
   drawNumber,
   drawPivots,
@@ -1045,6 +1046,21 @@ const renderIndicator = (
         yAxisIndex: params.yAxisIndex,
         name: seriesName,
         data: d.draw_data
+      })
+    } else if(d.draw === 'DRAWICON'){
+      const data = Object.entries(d.draw_data).map(([x, value]) => ({
+        x: +x,
+        y: value[0],
+        iconId: value[1],
+        offsetX: value[2],
+        offsetY: value[3]
+      }))
+
+      drawIcon(options, {} as any, {
+        xAxisIndex: params.xAxisIndex,
+        yAxisIndex: params.yAxisIndex,
+        name: seriesName,
+        data: data
       })
     }
   })

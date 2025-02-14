@@ -8,9 +8,8 @@ const iconContext = import.meta.webpackContext('@/assets/icon', {
   recursive: true
 })
 
-const iconMap: Record<string, string> = {
+const iconMap: Record<string, string> = {}
 
-}
 for (const path of iconContext.keys()) {
   const mod = iconContext(path)
   const name = path.split('/').pop()?.replace('.png', '') as string

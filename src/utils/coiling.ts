@@ -61,11 +61,13 @@ export const calcIndicator = async (
 
   result.data = result.data.map(item => {
     if (item.draw === 'DRAWTEXT') {
-      item.draw_data = drawTextConvert(item.draw_data)
+      item.draw_data = drawTextTransform(item.draw_data)
     } else if (item.draw === 'STICKLINE') {
-      item.draw_data = drawStickLineConvert(item.draw_data)
+      item.draw_data = drawStickLineTransform(item.draw_data)
     } else if (item.draw === 'DRAWGRADIENT') {
-      item.draw_data = drawGradientConvert(item.draw_data)
+      item.draw_data = drawGradientTransform(item.draw_data)
+    } else if (item.draw === 'DRAWICON') {
+      item.draw_data = drawIconTransform(item.draw_data)
     }
 
     return item
@@ -75,7 +77,7 @@ export const calcIndicator = async (
   return result
 }
 
-const drawTextConvert = (drawData: any) => {
+const drawTextTransform = (drawData: any) => {
   if (drawData.length <= 0) {
     return drawData
   }
@@ -98,7 +100,7 @@ const drawTextConvert = (drawData: any) => {
   return r
 }
 
-const drawStickLineConvert = (drawData: any) => {
+const drawStickLineTransform = (drawData: any) => {
   if (drawData.length <= 0) {
     return drawData
   }
@@ -123,7 +125,7 @@ const drawStickLineConvert = (drawData: any) => {
   return r
 }
 
-const drawGradientConvert = (drawData: ([number] | [number, string, string, string, string, number])[]) => {
+const drawGradientTransform = (drawData: ([number] | [number, string, string, string, string, number])[]) => {
   if (drawData.length <= 0) {
     return drawData
   }
@@ -161,4 +163,29 @@ const drawGradientConvert = (drawData: ([number] | [number, string, string, stri
   })
 
   return gradients
+}
+
+const drawIconTransform = (drawData: any[]) => {
+  if (drawData.length <= 0) {
+    return drawData
+  }
+
+  const [condition, y, icon, offsetX, offsetY] = drawData[0]
+
+  const r: any = {}
+
+  Object.entries(drawData).forEach(([key, value]) => {
+    if (key === '0') {
+      if (condition === 0) {
+        return
+      }
+      r[key] = [y, icon, offsetX, offsetY]
+      return
+    }
+
+    const typedValue = value as [number]
+    r[key] = [typedValue[0], icon, offsetX, offsetY]
+  })
+
+  return r
 }
