@@ -1,4 +1,5 @@
 import {
+  bindInviteCode,
   forgotPassword,
   getUser,
   getWxLoginStatus,
@@ -24,6 +25,7 @@ import QRCode from 'qrcode'
 import { appEvent } from '@/utils/event'
 import { LockIcon, MailIcon, RectangleEllipsisIcon } from 'lucide-react'
 import type { SubmitErrorHandler } from 'react-hook-form'
+import dayjs from 'dayjs'
 
 interface LoginFormProps {
   afterLogin?: () => void
@@ -90,6 +92,18 @@ const LoginForm = (props: LoginFormProps & { setPage: (page: 'login' | 'register
       device_flag: '1',
       device_level: '1'
     })
+
+    const code = localStorage.getItem('invite-code')
+
+    if (code) {
+      const codeObj = JSON.parse(code)
+      if (codeObj.timestamp) {
+        const current = dayjs()
+        if (current.diff(codeObj.timestamp, 'day') <= 3) {
+          bindInviteCode(codeObj.code)
+        }
+      }
+    }
 
     props.afterLogin?.()
   }

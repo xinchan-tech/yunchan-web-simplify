@@ -18,8 +18,9 @@ import { GroupPage } from './group-page'
 import { IntroPage } from './intro-page'
 import { useFormContext } from 'react-hook-form'
 import { cn } from '@/utils/style'
-import { useBoolean } from 'ahooks'
+import { useBoolean, useMount } from 'ahooks'
 import to from 'await-to-js'
+import qs from "qs"
 
 const subscribeTypes = [
   { name: '按年订阅', type: 'model_year' },
@@ -70,6 +71,19 @@ const MallPage = () => {
       })
     },
     onOk: async () => {}
+  })
+
+  useMount(() => {
+    const query = qs.parse(window.location.search, { ignoreQueryPrefix: true })
+    if(query.code){
+      const current = new Date().getTime()
+      const codeObj = {
+        code: query.code,
+        timestamp: current
+      }
+
+      localStorage.setItem('invite-code', JSON.stringify(codeObj))
+    }
   })
 
   return (

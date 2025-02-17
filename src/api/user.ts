@@ -116,3 +116,12 @@ type OssResult = {
 export const getAliOssToken = () => {
   return request.get<OssResult>('/upload/getOssToken').then(r => r.data)
 }
+
+/**
+ * 绑定邀请码
+ */
+export const bindInviteCode = (code: string) => {
+  const form = new FormData()
+  form.append('inv_code', code)
+  return request.post('/user/inv/bind', form).then(r => r.data)
+}
