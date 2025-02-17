@@ -15,11 +15,17 @@ const SettingPage = () => {
   }
   const { toast } = useToast()
   const onSend = () => {
-    if (suggestion === 'mode:test') {
-      config.setDebug(true)
-    } else if (suggestion === 'mode:release') {
-      config.setDebug(false)
-    } else {
+    if (!import.meta.env.DEV) {
+      if (suggestion === 'mode:test') {
+        config.setDebug(true)
+      } else if (suggestion === 'mode:release') {
+        config.setDebug(false)
+      } else {
+        toast({
+          description: '感谢您的建议!'
+        })
+      }
+    }else{
       toast({
         description: '感谢您的建议!'
       })
@@ -254,7 +260,11 @@ const SettingPage = () => {
             <div>
               构建信息：<span className="text-sm text-tertiary">{__RELEASE_TAG__}</span>
             </div>
-            {config.debug ? <div>http x-test: true</div> : null}
+            {config.debug ? (
+              <div className="cursor-pointer" onClick={() => config.setDebug(false)} onKeyDown={() => {}}>
+                【test env】 x-test: true
+              </div>
+            ) : null}
           </div>
           <SettingItem label="更多平台支持">
             <div className="flex items-center space-x-12 text-[#565656]">
