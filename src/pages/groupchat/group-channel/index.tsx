@@ -48,6 +48,13 @@ export type GroupData = {
   tags: string;
   total_user: string;
   in_channel: number;
+  products: {
+    channel_id: string;
+    type: string;
+    product_sn: string;
+    price: string;
+    unit: string;
+  }[];
 };
 
 const GroupChannel = (props: {

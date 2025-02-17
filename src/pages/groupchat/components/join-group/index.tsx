@@ -1,16 +1,23 @@
-import { joinGroupService, loopUpdatePaymentStatus } from "@/api";
+import {
+  getGroupDetailService,
+  getPaymentTypesService,
+  joinGroupService,
+  loopUpdatePaymentStatus,
+} from "@/api";
 import { GroupData } from "../../group-channel";
 import ChatAvatar from "../chat-avatar";
 import { Button } from "@/components";
-import { useGroupChatShortStore } from "@/store/group-chat-new";
+import QrCode from "react-qr-code";
+
 import { cn } from "@/utils/style";
 import { useEffect, useRef, useState } from "react";
-import { useShallow } from "zustand/react/shallow";
+
 import WKSDK from "wukongimjssdk";
 import { useToast } from "@/hooks";
 import FullScreenLoading from "@/components/loading";
 import { Checkbox } from "@/components";
 import { setExpireGroupInCache } from "../../chat-utils";
+import { useQuery } from "@tanstack/react-query";
 
 const JoinGroup = (props: {
   data: GroupData;
@@ -19,21 +26,24 @@ const JoinGroup = (props: {
 }) => {
   const { data } = props;
   const { toast } = useToast();
-  const payMethods = [
-    {
-      label: "apple",
-      value: "apple",
-    },
-    {
-      label: "stripe",
-      value: "stripe",
-    },
-    {
-      label: "paypal",
-      value: "paypal",
-    },
-  ];
-  const [curPayMethod, setCurPayMethod] = useState(() => payMethods[0].value);
+
+  const options = {
+    queryFn: () => getPaymentTypesService(),
+    queryKey: [getPaymentTypesService.key],
+  };
+
+  const options2 = {
+    queryFn: () => getGroupDetailService(data.account),
+    queryKey: [getGroupDetailService.key],
+  };
+
+  const { data: payMethods, isFetching: isFetchingPayMethods } =
+    useQuery(options);
+  const { data: groupDetailData, isFetching } = useQuery(options2);
+
+  const [curPayMethod, setCurPayMethod] = useState("");
+  const [wechatPaymentUrl, setWechatPaymentUrl] = useState("");
+
   const renderTags = () => {
     let tags: string[] = [];
     if (data.tags) {
@@ -68,12 +78,12 @@ const JoinGroup = (props: {
       clearInterval(timerRef.current);
     };
   }, []);
-  const { groupDetailData, setReadyToJoinGroup } = useGroupChatShortStore(
-    useShallow((state) => ({
-      groupDetailData: state.groupDetailData,
-      setReadyToJoinGroup: state.setReadyToJoinGroup,
-    }))
-  );
+
+  useEffect(() => {
+    if (!curPayMethod && payMethods) {
+      setCurPayMethod(payMethods[0].type);
+    }
+  }, [payMethods]);
 
   const [joinIng, setJoinIng] = useState(false);
 
@@ -82,7 +92,7 @@ const JoinGroup = (props: {
       loopUpdatePaymentStatus(sn).then((res) => {
         if (Number(res.pay_status) === 1) {
           clearInterval(timerRef.current);
-          setReadyToJoinGroup(null);
+
           WKSDK.shared().config.provider.syncConversationsCallback();
           toast({ description: "加群成功" });
           setExpireGroupInCache(data.account, false);
@@ -94,6 +104,10 @@ const JoinGroup = (props: {
   };
 
   const handleJoinGroup = async () => {
+    if (!curPayMethod) {
+      toast({ description: "请选择支付方式" });
+      return;
+    }
     if (data.account) {
       try {
         let resp;
@@ -107,7 +121,6 @@ const JoinGroup = (props: {
           console.log(resp);
         }
         if (resp === true) {
-          setReadyToJoinGroup(null);
           WKSDK.shared().config.provider.syncConversationsCallback();
           toast({ description: "加群成功" });
           setExpireGroupInCache(data.account, false);
@@ -115,7 +128,11 @@ const JoinGroup = (props: {
           setJoinIng(false);
         } else if (resp.pay_sn && resp.config) {
           if (resp.config.url) {
-            window.open(resp.config.url);
+            if (curPayMethod === "wechat") {
+              setWechatPaymentUrl(resp.config.url);
+            } else {
+              window.open(resp.config.url);
+            }
             loopCheckStatus(resp.pay_sn);
           }
         }
@@ -149,7 +166,9 @@ const JoinGroup = (props: {
       >
         返回
       </div>
-      {joinIng === true && <FullScreenLoading fullScreen={false} />}
+      {(isFetching === true || isFetchingPayMethods === true) && (
+        <FullScreenLoading fullScreen={false} />
+      )}
       <div className="join-group-content">
         <div className="flex items-center justify-center mb-[20px]">
           <div className="flex justify-center items-center">
@@ -218,25 +237,34 @@ const JoinGroup = (props: {
         </div>
         <div className="mt-10">
           <div className="flex justify-center items-center">
-            {payMethods.map((item) => {
-              return (
-                <div className="flex items-center mr-5">
-                  <Checkbox
-                    key={item.value}
-                    checked={curPayMethod === item.value}
-                    onCheckedChange={(chk) => {
-                      if (chk === true) {
-                        setCurPayMethod(item.value);
-                      }
-                    }}
-                  ></Checkbox>
+            {payMethods &&
+              payMethods.map((item) => {
+                return (
+                  <div className="flex items-center mr-5">
+                    <Checkbox
+                      key={item.type}
+                      checked={curPayMethod === item.type}
+                      onCheckedChange={(chk) => {
+                        if (chk === true) {
+                          setCurPayMethod(item.type);
+                        }
+                      }}
+                    ></Checkbox>
 
-                  <span className="ml-2">{item.label}</span>
-                </div>
-              );
-            })}
+                    <span className="ml-2">{item.name}</span>
+                  </div>
+                );
+              })}
           </div>
-          <div className="flex justify-center items-center mt-2">
+          {curPayMethod === "wechat" && wechatPaymentUrl && (
+            <div className="mt-2">
+              <div className="flex justify-center h-[180px]">
+                <QrCode value={wechatPaymentUrl} size={180} />
+              </div>
+              <div className="mt-2 text-center">请使用微信扫码完成支付</div>
+            </div>
+          )}
+          <div className="flex justify-center items-center mt-2 mb-6">
             <Button
               loading={joinIng}
               onClick={handleJoinGroup}

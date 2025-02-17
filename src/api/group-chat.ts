@@ -416,3 +416,18 @@ export const testExitGroup = async (channelId: string) => {
   const r = await request.post(`/channel/${channelId}/out`).then((r) => r);
   return r;
 };
+
+export const getPaymentTypesService = async () => {
+  const r = await request
+    .get<
+      Array<{
+        logo: string;
+        type: string;
+        name: string;
+      }>
+    >("/payment/types")
+    .then((r) => r.data);
+  return r;
+};
+
+getPaymentTypesService.key = "getPaymentTypesService";
