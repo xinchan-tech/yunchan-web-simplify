@@ -69,10 +69,10 @@ const StockFinancials = () => {
         code: lastStock.symbol,
         id,
         date: `a${date} ${time}`,
-        price: lastStock?.close,
+        price: lastStock?.close || undefined,
         percent: lastStock?.percent && (lastStock.percent),
-        turnover: lastStock?.turnover,
-        total: lastStock?.marketValue,
+        turnover: lastStock?.turnover || undefined,
+        total: lastStock?.marketValue || undefined,
         industry: lastStock?.industry,
         prePercent: beforeStock?.percent,
         afterPercent: afterStock?.percent,
@@ -87,7 +87,7 @@ const StockFinancials = () => {
   const columns: JknRcTableProps<TableDataType>['columns'] = useMemo(() => [
     { title: '序号', dataIndex: 'rank', render: (_: any, __, index) => index + 1, align: 'center', width: 80 },
     {
-      title: '名称代码', dataIndex: 'name', align: 'left', width: 'full', sort: true,
+      title: '名称代码', dataIndex: 'code', align: 'left', width: 'full', sort: true,
       render: (_: any, row) => (
         <StockView name={row.name} code={row.code as string} />
       )
@@ -98,7 +98,7 @@ const StockFinancials = () => {
     {
       title: '现价', size: 80, dataIndex: 'price', align: 'right', width: 120, sort: true,
       render: (_: any, row) => (
-        <SubscribeSpan.Price symbol="" subscribe={false} initValue={row.price} decimal={3} initDirection={row.isUp} zeroText="--" />
+        <SubscribeSpan.Price symbol="" subscribe={false} initValue={row.price} decimal={3} initDirection={row.isUp} zeroText="--"/>
       )
     },
     {

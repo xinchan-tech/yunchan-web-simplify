@@ -3,7 +3,7 @@ import { getTradingPeriod } from '@/utils/date'
 import type { ECOption } from '@/utils/echarts'
 import { stockUtils } from '@/utils/stock'
 import dayjs, { type Dayjs } from 'dayjs'
-import type { GraphicComponentOption } from "echarts/components"
+import type { GraphicComponentOption } from 'echarts/components'
 import type { EChartsType } from 'echarts/core'
 import type { ECBasicOption } from 'echarts/types/dist/shared'
 import type { Indicator, KChartContext } from './ctx'
@@ -39,13 +39,13 @@ export const renderUtils = {
   addGraphic: (options: ECOption, graphic: GraphicComponentOption | GraphicComponentOption[]) => {
     if (!options.graphic) {
       options.graphic = []
-    }else if(!Array.isArray(options.graphic)){
+    } else if (!Array.isArray(options.graphic)) {
       options.graphic = [options.graphic]
     }
 
-    if(Array.isArray(graphic)){
+    if (Array.isArray(graphic)) {
       options.graphic.push(...graphic)
-    }else{
+    } else {
       options.graphic.push(graphic)
     }
   },
@@ -55,7 +55,7 @@ export const renderUtils = {
   addSeries: (options: ECOption, series: any) => {
     if (!options.series) {
       options.series = []
-    }else if(!Array.isArray(options.series)){
+    } else if (!Array.isArray(options.series)) {
       options.series = [options.series]
     }
 
@@ -64,6 +64,17 @@ export const renderUtils = {
     } else {
       options.series.push(series)
     }
+  },
+  addMarkPointMarkLine: (options: ECOption, mark: any[]) => {
+    if(!options.series) return
+
+    if(!Array.isArray(options.series)) return
+
+    const mainSeries = options.series.find(s => s.name === 'kChart')
+
+    if (!mainSeries?.markLine?.data) return
+
+    mainSeries.markLine.data.push(...mark)
   },
 
   getTooltipIndex: (options: ECOption, index: number) => {
@@ -95,6 +106,33 @@ export const renderUtils = {
       .format('YYYY-MM-DD')
   },
 
+  setYMax: (v: {max: number, min: number}) => {
+    const diff = v.max - v.min
+    if (diff <= 1){
+      return v.max + 0.01
+    }
+    if (diff < 10) {
+      return v.max + diff * 0.15
+    }
+    if (diff < 100) {
+      return v.max + diff * 0.075
+    }
+    return v.max + diff * 0.02
+  },
+
+  setYMin: (v: {max: number, min: number}) => {
+    const diff = v.max - v.min
+    if (diff <= 1){
+      return v.min - 0.01
+    }
+    if (diff < 10) {
+      return v.min - diff * 0.1
+    }
+    if (diff < 100) {
+      return v.min - diff * 0.05
+    }
+    return  v.min - diff * 0.02
+  },
   /**
    * 布局策略
    * 1. 无副图 -> 主图占满, 底部留出24显示标签
@@ -214,7 +252,6 @@ export const renderUtils = {
    * 是否是远程计算的指标
    */
   isRemoteIndicator: (indicator: Indicator) => {
-
     return indicator.calcType === 'svr_policy'
   },
 
@@ -346,12 +383,16 @@ export const renderUtils = {
     if (
       [StockChartInterval.PRE_MARKET, StockChartInterval.INTRA_DAY, StockChartInterval.AFTER_HOURS].includes(interval)
     ) {
-      const r = getTradingPeriod(stockUtils.intervalToTrading(interval)!, dayjs(stockUtils.parseTime(data[0][0])).tz('America/New_York'), 'timestamp').map(item =>{
+     getTradingPeriod(
+        stockUtils.intervalToTrading(interval)!,
+        dayjs(stockUtils.parseTime(data[0][0])).tz('America/New_York'),
+        'timestamp'
+      ).map(item => {
         return (item as number).toString().slice(0, -3)
       })
     }
 
-    const extLen = Math.max(Math.round(data.length * 0.01), 4)
+    const extLen = 60
     // console.log(data[data.length - 1][0]* 1000)
     const startTime = data[data.length - 1][0] * 1000
 
@@ -379,8 +420,12 @@ export const renderUtils = {
    * 必须是有序数组, 使用二分查找
    */
   findNearestTime: (data: StockRawRecord[], time: number, gte?: boolean) => {
+    console.log(data, 111)
     if (data.length === 0) return
-    if (data.length === 1) return data[0]
+    if (data.length === 1) return {
+      index: 0,
+      data: data[0]
+    }
 
     let left = 0
     let right = data.length - 1
@@ -388,9 +433,12 @@ export const renderUtils = {
     while (left < right) {
       const mid = Math.floor((left + right) / 2)
       const midTime = +data[mid][0]!
-
+      console.log(midTime, time)
       if (midTime === time) {
-        return data[mid]
+        return {
+          index: mid,
+          data: data[mid]
+        }
       }
 
       if (midTime < time) {
@@ -400,11 +448,17 @@ export const renderUtils = {
       }
     }
 
-    if (gte) {
-      return data[left]
-    }
-    return data[left - 1]
-  },
+    console.log(left, right)
 
-   
+    if (gte) {
+      return {
+        index: left,
+        data: data[left]
+      }
+    }
+    return {
+      index: left - 1,
+      data: data[left - 1]
+    }
+  }
 }

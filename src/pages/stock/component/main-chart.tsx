@@ -1,4 +1,4 @@
-import { getStockIndicatorData, StockChartInterval } from '@/api'
+import { getStockIndicatorData, StockChartInterval, type StockRawRecord } from '@/api'
 import { StockSelect } from '@/components'
 import { useStockBarSubscribe } from '@/hooks'
 import { useIndicator, useTime } from '@/store'
@@ -9,7 +9,7 @@ import { cn, colorUtil } from '@/utils/style'
 import { useMount, useUnmount, useUpdateEffect } from 'ahooks'
 import dayjs from 'dayjs'
 import type { EChartsType } from 'echarts/core'
-import { lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { type Indicator, kChartUtils, useKChartStore } from '../lib'
 import {
   initOptions,
@@ -34,6 +34,7 @@ import { TimeIndexMenu } from './time-index'
 import { ChartContextMenu } from './chart-context-menu'
 import { chartEvent } from '../lib/event'
 import { queryClient } from '@/utils/query-client'
+import { BackTestBar } from "./back-test-bar"
 
 interface MainChartProps {
   index: number
@@ -45,6 +46,7 @@ export const MainChart = (props: MainChartProps) => {
   const chart = useRef<EChartsType>()
   const renderFn = useRef<() => void>(() => {})
   const fetchFn = useRef<() => void>()
+  const { candlesticks, fetchPrevCandlesticks } = useStockCandlesticks(props.index)
 
   useMount(() => {
     chart.current = echarts.init(dom.current, null, { devicePixelRatio: 3 })
@@ -121,8 +123,6 @@ export const MainChart = (props: MainChartProps) => {
     lastMainHistory.current = state.mainData.history
   }, [state.mainData.history])
 
-  const { candlesticks, fetchPrevCandlesticks } = useStockCandlesticks(props.index)
-
   fetchFn.current = fetchPrevCandlesticks
 
   const subscribeSymbol = useMemo(() => {
@@ -188,99 +188,111 @@ export const MainChart = (props: MainChartProps) => {
           return
         }
       }
-
+      let candlesticks = lastMainHistory.current
       if (!renderUtils.isSameTimeByInterval(dayjs(lastData.timestamp), dayjs(+s[0] * 1000), state.timeIndex)) {
-        kChartUtils.setMainData({
-          index: props.index,
-          data: [...(lastMainHistory.current as any), s],
-          dateConvert: false,
-          timeIndex: state.timeIndex
-        })
+        candlesticks = [...lastMainHistory.current, s]
       } else {
+        candlesticks = [...lastMainHistory.current.slice(0, -1), s]
+      }
+
+      calcIndicatorData(candlesticks).then(r => {
+        kChartUtils.setIndicatorsData({
+          index: props.index,
+          data: r
+        })
         kChartUtils.setMainData({
           index: props.index,
-          data: [...(lastMainHistory.current.slice(0, -1) as any), s],
+          data: candlesticks,
           dateConvert: false,
           timeIndex: state.timeIndex
         })
-      }
+      })
     },
     [state.timeIndex, props.index, trading]
   )
 
   useStockBarSubscribe([subscribeSymbol], subscribeHandler)
 
-  const calcIndicatorData = useCallback(async () => {
-    const timeIndex = useKChartStore.getState().state[props.index].timeIndex
-    const symbol = useKChartStore.getState().state[props.index].symbol
-    const indicators = [
-      ...useKChartStore.getState().state[props.index].secondaryIndicators,
-      ...Object.values(useKChartStore.getState().state[props.index].mainIndicators)
-    ]
-    const candlesticks = state.mainData.history
-    const res = await Promise.all(
-      indicators.map(item => {
-        if (!candlesticks.length) return Promise.resolve({ data: [], indicatorId: item.id })
+  const calcIndicatorData = useCallback(
+    async (candlesticks: StockRawRecord[]) => {
+      const timeIndex = useKChartStore.getState().state[props.index].timeIndex
+      const symbol = useKChartStore.getState().state[props.index].symbol
+      const indicators = [
+        ...useKChartStore.getState().state[props.index].secondaryIndicators,
+        ...Object.values(useKChartStore.getState().state[props.index].mainIndicators)
+      ]
 
-        if (!item.formula) return Promise.resolve({ data: [], indicatorId: item.id })
-        if (renderUtils.isRemoteIndicator(item)) {
-          const indicator = useIndicator.getState().getIndicatorQueryParams(item.id)
-          const params = {
-            symbol: symbol,
-            id: item.id,
-            cycle: timeIndex,
-            start_at: dayjs(+candlesticks[0][0]! * 1000)
-              .tz('America/New_York')
-              .format('YYYY-MM-DD HH:mm:ss'),
-            param: indicator as any,
-            db_type: item.type
+      // 回测模式清除所有指标
+      if (useKChartStore.getState().state[props.index].backTest) {
+        return indicators.map(item => ({ data: [], indicatorId: item.id }))
+      }
+
+      const res = await Promise.all(
+        indicators.map(item => {
+          if (!candlesticks.length) return Promise.resolve({ data: [], indicatorId: item.id })
+
+          if (!item.formula) return Promise.resolve({ data: [], indicatorId: item.id })
+          if (renderUtils.isRemoteIndicator(item)) {
+            const indicator = useIndicator.getState().getIndicatorQueryParams(item.id)
+            const params = {
+              symbol: symbol,
+              id: item.id,
+              cycle: timeIndex,
+              start_at: dayjs(+candlesticks[0][0]! * 1000)
+                .tz('America/New_York')
+                .format('YYYY-MM-DD HH:mm:ss'),
+              param: indicator as any,
+              db_type: item.type
+            }
+            return queryClient.ensureQueryData({
+              queryKey: [getStockIndicatorData.cacheKey, params],
+              queryFn: () => getStockIndicatorData(params).then(r => ({ data: r.result, indicatorId: item.id }))
+            })
           }
-          return queryClient.ensureQueryData({
-            queryKey: [getStockIndicatorData.cacheKey, params],
-            queryFn: () => getStockIndicatorData(params).then(r => ({ data: r.result, indicatorId: item.id }))
-          })
-        }
 
-        return calcIndicator(
-          { formula: item.formula ?? '', symbal: symbol, indicatorId: item.id },
-          candlesticks,
-          timeIndex
-        ).then(r => ({ data: r.data, indicatorId: item.id }))
-      })
-    )
+          return calcIndicator(
+            { formula: item.formula ?? '', symbal: symbol, indicatorId: item.id },
+            candlesticks,
+            timeIndex
+          ).then(r => ({ data: r.data, indicatorId: item.id }))
+        })
+      )
 
-    return res
-  }, [state.mainData.history, props.index])
+      return res
+    },
+    [props.index]
+  )
 
   useEffect(() => {
     const timeIndex = useKChartStore.getState().state[props.index].timeIndex
 
-    kChartUtils.setMainData({
-      index: props.index,
-      data: candlesticks,
-      dateConvert: true,
-      timeIndex: timeIndex
-    })
-  }, [candlesticks, props.index])
-
-  useEffect(() => {
-    calcIndicatorData().then(r => {
+    calcIndicatorData(candlesticks).then(r => {
       kChartUtils.setIndicatorsData({
         index: props.index,
         data: r
       })
 
-      setTimeout(() => {
-        renderFn.current()
+      kChartUtils.setMainData({
+        index: props.index,
+        data: candlesticks,
+        dateConvert: true,
+        timeIndex: timeIndex
       })
     })
-  }, [calcIndicatorData, props.index])
+  }, [candlesticks, props.index, calcIndicatorData])
 
+  // useEffect(() => {
+  //   calcIndicatorData().then(r => {
 
+  //     setTimeout(() => {
+  //       renderFn.current()
+  //     })
+  //   })
+  // }, [calcIndicatorData, props.index])
 
   useEffect(() => {
     const unsubscribe = useIndicator.subscribe(() => {
-      calcIndicatorData().then(r => {
+      calcIndicatorData(useKChartStore.getState().state[props.index].mainData.history).then(r => {
         kChartUtils.setIndicatorsData({
           index: props.index,
           data: r
@@ -309,7 +321,7 @@ export const MainChart = (props: MainChartProps) => {
 
     const _options = renderChart(chart.current)
     renderGrid(_options, state, [chart.current.getWidth(), chart.current.getHeight()], chart.current)
-
+    console.log(state.mainData.history)
     if (state.mainData.history.length > 0) {
       const scale = renderUtils.getScaledZoom(chart.current, 0)
       const oldMainData = (chart.current.getOption()?.series as any[])?.find(
@@ -332,7 +344,10 @@ export const MainChart = (props: MainChartProps) => {
       renderSecondaryLocalIndicators(_options, state.secondaryIndicators, state)
     }
     renderWatermark(_options, state.timeIndex)
-    chart.current.setOption(_options, { replaceMerge: ['series', 'grid', 'xAxis', 'yAxis', 'dataZoom', 'graphic', 'markLine', 'markPoint'], lazyUpdate: true })
+    chart.current.setOption(_options, {
+      replaceMerge: ['series', 'grid', 'xAxis', 'yAxis', 'dataZoom', 'graphic', 'markLine', 'markPoint'],
+      lazyUpdate: true
+    })
     console.log('render', chart.current.getOption())
   }
 
@@ -378,6 +393,10 @@ export const MainChart = (props: MainChartProps) => {
         setTimeout(() => {
           renderFn.current()
         })
+        return
+      }
+
+      if (useKChartStore.getState().state[props.index].backTest) {
         return
       }
 
@@ -450,8 +469,12 @@ export const MainChart = (props: MainChartProps) => {
         onClick={() => kChartUtils.setActiveChart(props.index)}
         onKeyDown={() => {}}
       >
-        <div className="w-full h-full" ref={dom} />
-        <canvas className="w-full h-full" />
+        <div className="w-full" ref={dom} style={{height: state.backTest ? 'calc(100% - 32px)': '100%'}} />
+        
+        {/* <canvas className="w-full h-full" /> */}
+        {
+          state.backTest ? <BackTestBar chartIndex={props.index} candlesticks={candlesticks} onRender={() => render()} /> : null
+        }
         {state.secondaryIndicators.map((item, index, arr) => {
           const grids = renderUtils.calcGridSize(
             [chart.current?.getWidth() ?? 0, chart.current?.getHeight() ?? 0],
@@ -463,7 +486,7 @@ export const MainChart = (props: MainChartProps) => {
               key={item.key}
               className="absolute rounded-sm left-2 flex items-center secondary-indicator-tool space-x-2"
               style={{
-                top: `calc(${grids[index + 1]?.top ?? 0}px + 4px)`,
+                top: `calc(${grids[index + 1]?.top ?? 0 + (state.backTest ? -40 : 0)}px + 4px)`,
                 left: `calc(${grids[index + 1]?.left ?? 0}px + 4px)`
               }}
             >

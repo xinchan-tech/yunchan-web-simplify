@@ -268,7 +268,7 @@ export const drawText: DrawerFunc<DrawerTextShape[]> = (options, _, { xAxisIndex
       const text = api.value(2) as string
       const point = api.coord([x, y])
       const color = (api.value(3) as string) ?? '#00943c'
-      const yOffset = -api.value(5) as number
+      const yOffset = api.value(5) as number
       const xOffset = api.value(4) as number
 
       return {
@@ -680,7 +680,7 @@ export const drawNumber = (
       const y = api.value(1) as number
       const text = api.value(2) as string
       const yOffset = api.value(4) as number
-      const _yOffset = -yOffset
+      const _yOffset = yOffset
       const xOffset = api.value(3) as number
       const color = api.value(5) as string
 

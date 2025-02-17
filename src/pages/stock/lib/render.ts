@@ -180,12 +180,8 @@ export const createOptions = (chart: EChartsType): ECOption => ({
           show: false
         }
       },
-      min: v => {
-        return v.min - (v.max - v.min) * 0.1 - 0.1
-      },
-      max: v => {
-        return v.max + (v.max - v.min) * 0.2 + 0.1
-      },
+      min: renderUtils.setYMin,
+      max: renderUtils.setYMax,
       splitLine: {
         lineStyle: {
           color: 'rgb(31, 32, 33)'
@@ -221,12 +217,8 @@ export const createOptions = (chart: EChartsType): ECOption => ({
       splitLine: {
         show: false
       },
-      min: v => {
-        return v.min - (v.max - v.min) * 0.1 - 0.1
-      },
-      max: v => {
-        return v.max + (v.max - v.min) * 0.2 + 0.1
-      },
+      min: renderUtils.setYMin,
+      max: renderUtils.setYMax,
       axisPointer: {
         label: {
           padding: [0, 0, 0, 0],
@@ -387,9 +379,6 @@ const defaultXAxis: XAXisOption = {
  */
 const defaultYAxis: YAXisOption = {
   scale: true,
-  max: v => {
-    return v.max + (v.max - v.min) * 0.1 + 0.1
-  },
   position: 'right',
   axisLine: { onZero: false, show: false },
   axisTick: {
@@ -594,6 +583,7 @@ export const renderMainChart: ChartRender = (options, state) => {
       borderColor: upColor,
       borderColor0: downColor
     }
+    ;(mainSeries as CandlestickSeriesOption).barWidth = '85%'
     mainSeries.emphasis = {
       disabled: true
     }
@@ -717,10 +707,9 @@ export const renderMainChart: ChartRender = (options, state) => {
     silent: true,
     data: []
   }
+  renderUtils.addSeries(options, virtualLine)
 
-  ;renderUtils.addSeries(options, virtualLine)
-
-  if(state.yAxis.left){
+  if (state.yAxis.left) {
     const leftYAxisSeries = {
       name: 'left-y-axis',
       type: 'line',
@@ -1068,7 +1057,7 @@ const renderIndicator = (
         name: seriesName,
         data: d.draw_data
       })
-    } else if(d.draw === 'DRAWICON'){
+    } else if (d.draw === 'DRAWICON') {
       const data = Object.entries(d.draw_data).map(([x, value]) => ({
         x: +x,
         y: value[0],
@@ -1160,11 +1149,12 @@ export const renderOverlayMark = (options: ECOption, state: ChartState) => {
     })
     .filter(v => !!v[1]) as [string, number, string][]
 
-  series.markLine?.data?.push(
-    ...(data.map(d => [
+  renderUtils.addSeries(
+    options,
+    data.map(d => [
       { xAxis: d[0], yAxis: d[1], name: mark.title },
       { xAxis: d[0], y: 46 }
-    ]) as any)
+    ])
   )
 }
 
@@ -1345,7 +1335,7 @@ export const renderZoom = (options: ECOption, addCount: number, zoom?: [number, 
     return
   }
 
-  const MaxKLineCount = 500
+  const MaxKLineCount = 1000
   const _zoom = [...zoom]
 
   if (_zoom[0] === Number.POSITIVE_INFINITY) {
@@ -1367,7 +1357,39 @@ export const renderZoom = (options: ECOption, addCount: number, zoom?: [number, 
       z.start = undefined
       z.end = undefined
       z.maxValueSpan = MaxKLineCount
-      z.minValueSpan = 30
+      z.minValueSpan = 90
     }
   }
+}
+
+export const renderBackTestMark = (options: ECOption, state: ChartState) => {
+  if (!state.backTestMark) return options
+  const record: Record<string, NonNullable<typeof state.backTestMark>> = {}
+  state.backTestMark.forEach(mark => {
+    if (!record[mark.time]) {
+      record[mark.time] = []
+    }
+
+    record[mark.time].push(mark)
+  })
+
+  Object.entries(record).forEach(([time, marks]) => {
+    let buyCount = 0
+    let sellCount = 0
+    const data = marks.map(mark => {
+      return [
+        {
+          xAxis: time,
+          yAxis: mark.price,
+          name: mark.count
+        },
+        {
+          xAxis: time,
+          y: mark.type === '买入' ? 46 + buyCount++ * 10 : 46 - sellCount++ * 10
+        }
+      ]
+    })
+
+    renderUtils.addSeries(options, data)
+  })
 }

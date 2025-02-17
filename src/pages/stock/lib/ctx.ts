@@ -220,6 +220,22 @@ type KChartUtils = {
     visible: boolean
     secondaryIndex?: number
   }) => void
+
+  /**
+   * 设置回测
+   */
+  setBackTest: (params: { index?: number; backTest?: boolean }) => void
+
+  /**
+   *
+   */
+  addBackTestMark: (params: {
+    index?: number
+    type: '买入' | '卖出'
+    time: string
+    count: number
+    price: number
+  }) => void
 }
 
 /**
@@ -385,6 +401,21 @@ type MainChartState = {
     left?: MainYAxis
     right: MainYAxis
   }
+
+  /**
+   * 回测模式
+   */
+  backTest?: boolean
+
+  /**
+   * 回测买卖点mark的标记
+   */
+  backTestMark?: {
+    type: '买入' | '卖出'
+    time: string
+    count: number
+    price: number
+  }[]
 }
 
 /**
@@ -740,15 +771,6 @@ export const kChartUtils: KChartUtils = {
             history: history as any,
             coilingData
           }
-
-          // //清除指标数据，重新计算
-          // Object.values(item.mainIndicators).forEach(v => {
-          //   v.data = undefined
-          // })
-          // //清除附图指标数据，重新计算
-          // item.secondaryIndicators.forEach(v => {
-          //   v.data = undefined
-          // })
         }
       })
     }))
@@ -886,6 +908,33 @@ export const kChartUtils: KChartUtils = {
         if (item.index === (index ?? state.activeChartIndex)) {
           return produce(item, draft => {
             draft.yAxis = yAxis
+          })
+        }
+        return item
+      })
+    }))
+  },
+  setBackTest: ({ index, backTest }) => {
+    useKChartStore.setState(state => ({
+      state: state.state.map(item => {
+        if (item.index === (index ?? state.activeChartIndex)) {
+          return produce(item, draft => {
+            draft.backTest = backTest === undefined ? !draft.backTest : backTest
+          })
+        }
+        return item
+      })
+    }))
+  },
+  addBackTestMark: params => {
+    useKChartStore.setState(state => ({
+      state: state.state.map(item => {
+        if (item.index === (params.index ?? state.activeChartIndex)) {
+          return produce(item, draft => {
+            if (!draft.backTestMark) {
+              draft.backTestMark = []
+            }
+            draft.backTestMark.push(params)
           })
         }
         return item

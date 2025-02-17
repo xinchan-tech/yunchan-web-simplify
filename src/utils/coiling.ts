@@ -90,11 +90,11 @@ const drawTextTransform = (drawData: any) => {
       if (condition === 0) {
         return
       }
-      r[key] = [x, text, offsetX, offsetY]
+      r[key] = [x, text, offsetX, -offsetY]
       return
     }
 
-    r[key] = [(value as any)[0], text, offsetX, offsetY]
+    r[key] = [(value as any)[0], text, offsetX, -offsetY]
   })
 
   return r
@@ -184,7 +184,7 @@ const drawIconTransform = (drawData: any[]) => {
     }
 
     const typedValue = value as [number]
-    r[key] = [typedValue[0], icon, offsetX, offsetY]
+    r[key] = [typedValue[0], icon, offsetX, -offsetY]
   })
 
   return r

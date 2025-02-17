@@ -19,7 +19,7 @@ const getPeriodByPage = (params: { interval: StockChartInterval; startDate: numb
   const endDate = usDate.format('YYYY-MM-DD HH:mm:ss')
 
   if (interval <= StockChartInterval.THIRTY_MIN) {
-    resultDate = usDate.add(-3, 'd').format('YYYY-MM-DD HH:mm:ss')
+    resultDate = usDate.add(-5, 'd').format('YYYY-MM-DD HH:mm:ss')
   } else if (interval <= StockChartInterval.FORTY_FIVE_MIN) {
     resultDate = usDate.add(-7, 'd').format('YYYY-MM-DD HH:mm:ss')
   } else if (interval <= StockChartInterval.FOUR_HOUR) {
@@ -180,9 +180,10 @@ export const useStockCandlesticks = (index: number) => {
       })
   }, [_symbol, _interval])
 
+
   return {
     candlesticks: result,
     fetchPrevCandlesticks: fetchPrevKline,
-    refreshCandlesticks: refreshKline
+    refreshCandlesticks: refreshKline,
   }
 }
