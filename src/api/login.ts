@@ -19,6 +19,9 @@ type LoginResult = {
     email: string | null;
     money: string;
     avatar: string;
+    re_code: string;
+    in_channel_status: "0" | "1";
+    share_url: string;
     teacher: {
       name: string;
       grade_ids: string;

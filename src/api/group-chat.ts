@@ -431,3 +431,18 @@ export const getPaymentTypesService = async () => {
 };
 
 getPaymentTypesService.key = "getPaymentTypesService";
+
+//邀请码加群
+export const joinGroupByInviteCode = async (params: {
+  re_code: string;
+  type: "1" | "2";
+}) => {
+  const res = await request
+    .post(`/channel/in`, params, {
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+    })
+    .then((r) => r);
+  return res;
+};

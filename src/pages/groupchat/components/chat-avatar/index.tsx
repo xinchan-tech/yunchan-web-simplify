@@ -35,10 +35,20 @@ const ChatAvatar = (props: {
   const { data, className, radius = "50%", size } = props;
 
   const renderName = () => {
+    let name = "";
+    const regex = /^[a-zA-Z0-9\u4e00-\u9fa5]+$/;
     if (data && typeof data.name === "string" && data.name.length > 0) {
-      return data.name[0].toUpperCase();
+      const strArr = data.name.split("");
+
+      for (let i = 0; i < strArr.length; i++) {
+        name = strArr[i];
+        if (regex.test(name)) {
+          break;
+        }
+      }
     }
-    return "";
+
+    return name.toLocaleUpperCase();
   };
   return (
     <div

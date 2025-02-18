@@ -25,14 +25,20 @@ const HeaderUser = () => {
   })
 
   const loginForm = useModal({
-    content: <LoginForm afterLogin={() => loginForm.modal.close()} onClose={() => loginForm.modal.close()} />,
+    content: <LoginForm afterLogin={() => {
+      loginForm.modal.close()
+    }} 
+    onClose={
+      () => loginForm.modal.close()
+    } 
+    />,
     footer: null,
     onOpen: () => {}
   })
 
   const userCenter = useModal({
     content: <UserCenter onLogout={() => userCenter.modal.close()} />,
-    className: 'w-[500px]',
+    className: 'w-[600px]',
     title: t('user center'),
     footer: false,
     closeIcon: true,

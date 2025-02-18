@@ -27,5 +27,7 @@
     "month": "Hot topics this month"
   },
   "goldenStockPool": "Stock gold pool",
-  "hotFundPoll": "Hot fund pool"
+  "hotFundPoll": "Hot fund pool",
+  "inviteCode": "My invitation code",
+  "inputInviteCode": "Input Invite Code"
 }

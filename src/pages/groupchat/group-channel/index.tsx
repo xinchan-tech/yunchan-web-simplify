@@ -563,55 +563,10 @@ const GroupChannel = (props: {
                 </div>
               );
             })}
-            {/* {goodGroups.map((item: GroupData) => {
-              return (
-                <div
-                  key={item.account}
-                  className={cn(
-                    "flex conversation-card",
-                    item.account === readyToJoinGroup?.account && "actived"
-                  )}
-                  onClick={() => {
-                    if (readyToJoinGroup?.account === item.account) {
-                      return;
-                    }
-                    setSelectedChannel(null);
-                    getGroupDetailData(item.account);
-                    setReadyToJoinGroup(item);
-                  }}
-                >
-                  <div className="group-avatar rounded-md flex items-center text-ellipsis justify-center relative">
-                    <ChatAvatar
-                      radius="10px"
-                      className="w-[44px] h-[44px]"
-                      data={{
-                        name: item.name || "",
-                        uid: item.account,
-                        avatar: item.avatar || "",
-                      }}
-                    />
-                  </div>
-                  <div className="group-data flex-1">
-                    <div
-                      title={item.name || ""}
-                      className="group-title max-w-200[px] overflow-hidden whitespace-nowrap text-ellipsis"
-                    >
-                      {item.name || ""}
-                    </div>
-                    <div className="group-last-msg flex justify-between">
-                      <div className="flex-1 overflow-hidden whitespace-nowrap text-ellipsis max-w-24 text-xs">
-                        一起加入群组吧
-                      </div>
-                      <div className="max-w-24 text-xs"></div>
-                    </div>
-                  </div>
-                </div>
-              );
-            })} */}
           </>
         )}
 
-        {
+        {/* {
           // 没有群的时候提供一个输入邀请码的按钮加群,按钮垂直居中展示
           conversationWraps && goodConversations.length === 0 && (
             <div className="flex items-center justify-center h-full w-full flex-col bg-[#313339] text-white text-center text-sm font-bold cursor-pointer">
@@ -627,7 +582,7 @@ const GroupChannel = (props: {
               </Button>
             </div>
           )
-        }
+        } */}
       </div>
       {updateGroupInfoModal.context}
       {inviteToGroupModal.context}

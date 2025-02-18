@@ -1,9 +1,10 @@
-import { useToast } from '@/hooks'
-import { router } from '@/router'
-import { useToken, useUser } from '@/store'
-import { cn } from '@/utils/style'
-import { useEffect, useState } from 'react'
-import { JknIcon } from '../jkn/jkn-icon'
+import { cn } from "@/utils/style"
+import { router } from "@/router"
+import { useEffect, useState } from "react"
+import { useToken, useUser } from "@/store"
+import { useToast } from "@/hooks"
+import { JknIcon } from ".."
+
 type MenuItem = {
   icon: IconName
   title: string
@@ -40,33 +41,10 @@ const MenuRight = () => {
       path: '/push'
     },
     {
-      icon: 'right_menu_4',
-      title: '财务估值',
-      path: '/stock/finance'
+      icon: "group_chat",
+      title: "讨论社群",
+      path: "/mall",
     },
-    {
-      icon: 'group_chat',
-      title: '讨论社群',
-      path: '/mall',
-      handler: () => {
-        if (!token) {
-          toast({
-            title: '请先登录'
-          })
-          return
-        }
-
-        if (user?.permission && user?.permission.chat === true) {
-          window.open(
-            `${window.location.origin}/chat`,
-            'whatever',
-            'hideit,height=750,width=1000,resizable=yes,scrollbars=yes,status=no,location=no'
-          )
-        } else {
-          router.navigate('/mall')
-        }
-      }
-    }
   ]
 
   const onNav = (path: string) => {
@@ -93,13 +71,28 @@ const MenuRight = () => {
         <div
           key={item.title}
           onClick={() => {
-            if (typeof item.handler === 'function') {
-              item.handler()
+            if (item.path === "/mall") {
+              if (!token) {
+                toast({
+                  title: "请先登录",
+                })
+                return
+              }
+
+              if (user?.permission && user.permission.chat === true) {
+                window.open(
+                  `${window.location.origin}/chat`,
+                  "whatever",
+                  "hideit,height=750,width=1000,resizable=yes,scrollbars=yes,status=no,location=no"
+                )
+              } else {
+                onNav(item.path)
+              }
             } else {
               onNav(item.path)
             }
           }}
-          onKeyDown={() => {}}
+          onKeyDown={() => { }}
           className="mb-4 flex flex-col items-center cursor-pointer"
         >
           <div className={cn(pathname === item.path && 'active-icon')}>

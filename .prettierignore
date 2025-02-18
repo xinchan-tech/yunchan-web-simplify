@@ -1,2 +1,4 @@
 types/icon.d.ts
 src/app.tsx
+src/components/header/user/index.tsx
+src/components/header/user/user-center.tsx

@@ -159,7 +159,9 @@ const App = () => {
         <div className="float-right flex items-center h-full space-x-2xl">
           <HeaderMall />
           <HeaderService />
-          <HeaderUser />
+          <HeaderUser afterLogin={() => {
+            setUpdateUserTimes((prev) => prev + 1);
+          }}/>
         </div>
       </div>
       <div className="main overflow-hidden">

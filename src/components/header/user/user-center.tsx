@@ -1,4 +1,4 @@
-import { logout } from "@/api"
+import { bindInviteCode, joinGroupByInviteCode, logout } from "@/api"
 import { getUser, updateUser } from "@/api/user"
 import UserDefaultPng from '@/assets/icon/user_default.png'
 import { Button, FormControl, FormField, FormItem, FormLabel, Input, JknAvatar } from "@/components"
@@ -14,6 +14,8 @@ import { useEffect, useMemo, useRef, useState } from "react"
 import { useFormContext } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import { z } from "zod"
+import copy from 'copy-to-clipboard'
+import { parsePermission } from "@/utils/util"
 
 interface UserCenterProps {
   onLogout: () => void
@@ -48,7 +50,7 @@ const UserCenter = (props: UserCenterProps) => {
 
   useEffect(() => {
     if (query.data) {
-      setUser(query.data)
+      setUser({ ...query.data, permission: parsePermission(query.data.permission) })
     }
   }, [query.data, setUser])
 
@@ -68,7 +70,6 @@ const UserCenter = (props: UserCenterProps) => {
       }
 
       query.refetch()
-
       edit.close()
     },
     onOpen: () => {
@@ -93,6 +94,74 @@ const UserCenter = (props: UserCenterProps) => {
       window.location.href = '/'
     }
   }
+  const [inviteCode, setInviteCode] = useState("")
+  const [isJoining, setIsJoining] = useState(false)
+  const handleInviteToGroup = () => {
+    if (inviteCode) {
+      setIsJoining(true)
+      bindInviteCode(inviteCode).then(r => {
+        if (r.data === true) {
+          const params: {
+            re_code: string,
+            type: "1" | "2"
+          } = {
+            re_code: inviteCode,
+            type: '1'
+          }
+
+          return joinGroupByInviteCode(params)
+        }
+      }).then(r => {
+        if (r?.status === 1) {
+          toast({
+            description: '加群成功'
+          })
+        }
+      }).catch(er => {
+        if (er?.message) {
+          toast({
+            description: er.message
+          })
+        }
+      }).finally(() => {
+        setInviteCode("")
+        inviteToGroupModal.modal.close()
+        setIsJoining(false)
+      })
+    }
+  }
+  const inviteToGroupModal = useModal({
+    content: (
+      <div className="flex items-center justify-center pl-2 pr-2 flex-col pt-5 pb-5">
+        <div
+          className={"border-dialog-border rounded-sm  bg-accent inline-block"}
+        >
+          <Input
+            className="border-none placeholder:text-tertiary flex-1"
+            value={inviteCode}
+            onChange={(e) => {
+              setInviteCode(e.target.value)
+            }}
+            style={{ marginTop: "0" }}
+            placeholder="请输入邀请码"
+          />
+        </div>
+        <Button
+          className="mt-5"
+          loading={isJoining}
+          onClick={() => {
+            handleInviteToGroup()
+          }}
+        >
+          确定
+        </Button>
+      </div>
+    ),
+    footer: false,
+    title: "输入邀请码加群",
+    className: "w-[400px]",
+    closeIcon: true,
+  })
 
   const avatarForm = useModal({
     content: <AvatarSelect onOk={() => { avatarForm.modal.close(); query.refetch() }} />,
@@ -120,12 +189,39 @@ const UserCenter = (props: UserCenterProps) => {
               </div>
               <span className="text-sm text-gray-5 cursor-pointer" onClick={avatarForm.modal.open} onKeyDown={() => { }}>&emsp;&nbsp;&nbsp;{t('edit')}</span>
             </div>
-            <div><div>{t('user')}ID：</div><div>{user?.username}</div></div>
+            <div >
+              <div>{t('user')}ID：</div><div>{user?.username}</div>
+
+            </div>
+            {
+              user?.in_channel_status === '1' && <div className="mt-2">
+                <div>
+                  <span className="cursor-pointer text-primary" onClick={() => {
+                    inviteToGroupModal.modal.open()
+                  }} onKeyDown={() => { }}>{t('inputInviteCode')}</span>
+
+                </div>
+              </div>
+            }
           </div>
           <div className="w-1/2 cell-group">
             <div><div>{t('current packages')}：</div></div>
             <div><div>{t('package name')}：</div><div>{authorized?.name}</div></div>
             <div><div>{t('expiration date')}：</div><div>{authorized?.expire_time ? dayjs(+authorized.expire_time * 1000).format('YYYY-MM-DD') : '-'}</div></div>
+            <div style={{ marginTop: '1rem' }}>
+              <div>{t('inviteCode')}：</div>
+              <div>
+                {user?.re_code}
+                <span className="ml-2 text-primary cursor-pointer" onKeyDown={() => { }} onClick={() => {
+                  if (user?.share_url) {
+                    copy(user.share_url)
+                    toast({
+                      description: '复制成功'
+                    })
+                  }
+                }}>复制邀请短链</span>
+              </div>
+            </div>
           </div>
         </div>
         <div className="text-right" onClick={onLogout} onKeyDown={() => { }}>
@@ -137,6 +233,9 @@ const UserCenter = (props: UserCenterProps) => {
         {
           avatarForm.context
         }
+        {
+          inviteToGroupModal.context
+        }
         <style jsx>
           {`
           .cell-group > div{
@@ -146,7 +245,7 @@ const UserCenter = (props: UserCenterProps) => {
           }
 
           .cell-group > div > div:first-child{
-            width: 70px;
+            width: 90px;
             text-align: right;;
           }
         `}

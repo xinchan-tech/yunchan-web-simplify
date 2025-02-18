@@ -34,5 +34,7 @@
     "month": "本月热点"
   },
   "goldenStockPool": "股票金池",
-  "hotFundPoll": "热度金池"
+  "hotFundPoll": "热度金池",
+  "inviteCode": "我的邀请码",
+  "inputInviteCode": "填写邀请码"
 }

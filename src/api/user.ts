@@ -43,6 +43,9 @@ export type UserResult = {
   username: string;
 
   permission: string;
+  share_url: string;
+  re_code: string;
+  in_channel_status: "0" | "1";
 };
 
 export type Authorized = {
