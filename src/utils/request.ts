@@ -27,17 +27,6 @@ request.interceptors.response.use(
       appEvent.emit('not-login')
       useToken.getState().removeToken()
       useUser.getState().reset()
-      // if(!modalIns){
-      //   modalIns = Modal.error({
-      //     content: '登录已过期，请重新登录',
-      //     afterClose: () => {
-      //       modalIns = null
-      //       useUser.getState().reset()
-      //       useToken.getState().removeToken()
-      //     }
-      //   })
-      // }
-      // throw new Error(response.data.msg)
     }
 
     if (response.data.status !== 1) {

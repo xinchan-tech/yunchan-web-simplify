@@ -70,12 +70,12 @@ const MallPage = () => {
         form.setValue(key as any, value)
       })
     },
-    onOk: async () => {}
+    onOk: async () => { }
   })
 
   useMount(() => {
     const query = qs.parse(window.location.search, { ignoreQueryPrefix: true })
-    if(query.code){
+    if (query.code) {
       const current = new Date().getTime()
       const codeObj = {
         code: query.code,

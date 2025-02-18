@@ -270,9 +270,10 @@ export type IndicatorData =
       | IndicatorDataDrawNumber
       | IndicatorDataDrawRectRel
       | IndicatorDataDrawIcon
+      | IndicatorDataDrawBand
     )[]
   | undefined
-type DrawFunc = '' | 'STICKLINE' | 'DRAWTEXT' | 'DRAWGRADIENT' | 'DRAWNUMBER' | 'DRAWRECTREL' | 'DRAWICON'
+type DrawFunc = '' | 'STICKLINE' | 'DRAWTEXT' | 'DRAWGRADIENT' | 'DRAWNUMBER' | 'DRAWRECTREL' | 'DRAWICON' | 'DRAWBAND'
 type IndicatorDataBase<T extends DrawFunc> = {
   draw: T
   color: string
@@ -306,6 +307,12 @@ type IndicatorDataDrawGradient = IndicatorDataBase<'DRAWGRADIENT'> & {
 }
 type IndicatorDataDrawNumber = IndicatorDataBase<'DRAWNUMBER'> & {
   draw_data: Record<number, [number, number, number, number]>
+}
+type IndicatorDataDrawBand = IndicatorDataBase<'DRAWBAND'> & {
+  draw_data: {
+    color: string
+    points: { y1: number; y2: number; x: number; drawY?: number }[]
+  }[]
 }
 /**
  * 一个固定位置的矩形
@@ -405,7 +412,7 @@ type MainChartState = {
   /**
    * 回测模式
    */
-  backTest?: boolean
+  backTest: boolean
 
   /**
    * 回测买卖点mark的标记
@@ -484,7 +491,9 @@ export const createDefaultChartState = (opts: { symbol?: string; index: number }
     overlayMark: undefined,
     yAxis: {
       right: 'price'
-    }
+    },
+    backTest: false,
+    backTestMark: []
   }
 }
 
@@ -931,10 +940,11 @@ export const kChartUtils: KChartUtils = {
       state: state.state.map(item => {
         if (item.index === (params.index ?? state.activeChartIndex)) {
           return produce(item, draft => {
-            if (!draft.backTestMark) {
-              draft.backTestMark = []
+            if(!draft.backTestMark) {
+              draft.backTestMark = [params]
+            }else{
+              draft.backTestMark.push(params)
             }
-            draft.backTestMark.push(params)
           })
         }
         return item

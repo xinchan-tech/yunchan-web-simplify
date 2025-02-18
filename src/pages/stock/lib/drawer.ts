@@ -27,7 +27,7 @@ export enum LineType {
  * x轴一个Tick默认是8
  * 指标宽度默认是10
  */
-const TICK_WIDTH_PERCENT = 1.8
+const TICK_WIDTH_PERCENT = 1
 
 type DrawerFuncOptions<T = any> = {
   /**
@@ -865,16 +865,12 @@ const iconContext = import.meta.webpackContext('@/assets/icon/script_icons')
 type DrawIconShape = {
   x: XAxis
   y: YAxis
-  iconId: number, 
+  iconId: number
   offsetX: number
   offsetY: number
 }
 
-export const drawIcon: DrawerFunc<DrawIconShape[]> = (
-  options,
-  _,
-  { xAxisIndex, yAxisIndex, data, name }
-) => {
+export const drawIcon: DrawerFunc<DrawIconShape[]> = (options, _, { xAxisIndex, yAxisIndex, data, name }) => {
   const scatter: ScatterSeriesOption = {
     type: 'scatter',
     xAxisIndex: xAxisIndex,
@@ -888,11 +884,98 @@ export const drawIcon: DrawerFunc<DrawIconShape[]> = (
       emphasis: {
         disabled: true
       },
-      symbolOffset: [item.offsetX, item.offsetY],
+      symbolOffset: [item.offsetX, item.offsetY]
     }))
   }
   // console.log(data)
   Array.isArray(options.series) && options.series.push(scatter)
   return options
+}
 
+type DrawBrandShape = {
+  color: string
+  points: { y1: number; y2: number; x: number; drawY?: number }[]
+}
+
+export const drawBrand: DrawerFunc<DrawBrandShape[]> = (options, _, { xAxisIndex, yAxisIndex, data, name }) => {
+  const grid = renderUtils.getGridIndex(options, 0)
+  const left = grid?.left ?? 1
+
+  const maxRight = left + (grid?.width ?? 0)
+
+  const series: CustomSeriesOption = {
+    type: 'custom',
+    xAxisIndex: xAxisIndex,
+    yAxisIndex: yAxisIndex,
+    encode: {
+      x: [0, 1],
+      y: [2, 3]
+    },
+    renderItem: (_, api) => {
+      const rawPoints = api.value(4) as string
+      const color = api.value(5) as string
+
+      // console.log(
+      const points = rawPoints.split(',').map(p => {
+        const [_x, _y, drawY] = p.split('-').map(Number)
+        let [x, y] = api.coord([_x, _y])
+
+        if (x > maxRight) {
+          x = maxRight
+        }
+        if (x < left) {
+          x = left
+        }
+        
+        if(drawY){
+          const _drawY = api.coord([_x, drawY])[1]
+          // const offsetX = drawY * x / _drawY
+          y = _drawY
+          // console.log(offsetX, x, y)
+        }
+
+        return [x, y]
+      })
+
+      return {
+        type: 'polygon',
+        shape: {
+          points: points
+        },
+        emphasisDisabled: true,
+        silent: true,
+        style: {
+          fill: color
+        }
+      }
+    },
+    name,
+    data: data.map(item => {
+      const p1: string[] = []
+      const p2: string[] = []
+      
+      item.points.forEach(p => {
+        p1.push([p.x, p.y1, p.drawY].join('-'))
+        p2.unshift([p.x, p.y2, p.drawY].join('-'))
+      })
+
+      const pointStr = p1.concat(p2).join(',')
+
+      return [
+        item.points[0].x,
+        item.points[item.points.length - 1].x,
+        item.points[0].drawY ?? item.points[0].y1,
+        item.points[item.points.length - 1].drawY ?? item.points[item.points.length - 1].y1,
+        pointStr,
+        item.color
+      ]
+    })
+  }
+
+  Array.isArray(options.series) && options.series.push(series)
+
+  // console.log(data
+  //   .filter(item => !!item[0]))
+
+  return options
 }

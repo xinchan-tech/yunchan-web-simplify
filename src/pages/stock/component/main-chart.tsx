@@ -13,6 +13,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { type Indicator, kChartUtils, useKChartStore } from '../lib'
 import {
   initOptions,
+  renderBackTestMark,
   renderChart,
   renderGrid,
   renderMainChart,
@@ -32,9 +33,9 @@ import { IndicatorTooltip, IndicatorTooltipGroup } from './indicator-tooltip'
 import { SecondaryIndicator } from './secondary-indicator'
 import { TimeIndexMenu } from './time-index'
 import { ChartContextMenu } from './chart-context-menu'
-import { chartEvent } from '../lib/event'
+import { chartEvent, useChartEvent } from '../lib/event'
 import { queryClient } from '@/utils/query-client'
-import { BackTestBar } from "./back-test-bar"
+import { BackTestBar } from './back-test-bar'
 
 interface MainChartProps {
   index: number
@@ -44,7 +45,7 @@ export const MainChart = (props: MainChartProps) => {
   // const [size, dom] = useDomSize<HTMLDivElement>()
   const dom = useRef<HTMLDivElement>(null)
   const chart = useRef<EChartsType>()
-  const renderFn = useRef<() => void>(() => {})
+  const renderFn = useRef<() => void>(() => { })
   const fetchFn = useRef<() => void>()
   const { candlesticks, fetchPrevCandlesticks } = useStockCandlesticks(props.index)
 
@@ -86,28 +87,7 @@ export const MainChart = (props: MainChartProps) => {
     )
   })
 
-  useEffect(() => {
-    const sizeObserver = new ResizeObserver(() => {
-      chart.current?.resize()
-      renderFn.current()
-    })
-
-    sizeObserver.observe(dom.current!)
-
-    const indicatorHandle = (params: { index: number }) => {
-      if (params.index === props.index) {
-        renderFn.current()
-        console.log('on indicatorChange')
-      }
-    }
-
-    chartEvent.event.on('indicatorChange', indicatorHandle)
-
-    return () => {
-      sizeObserver.disconnect()
-      chartEvent.event.off('indicatorChange', indicatorHandle)
-    }
-  }, [props.index])
+  useChartEvent(props.index, { dom, chart, renderFn })
 
   useUnmount(() => {
     chart.current?.dispose()
@@ -195,7 +175,7 @@ export const MainChart = (props: MainChartProps) => {
         candlesticks = [...lastMainHistory.current.slice(0, -1), s]
       }
 
-      calcIndicatorData(candlesticks).then(r => {
+      renderUtils.calcIndicatorData(candlesticks, props.index).then(r => {
         kChartUtils.setIndicatorsData({
           index: props.index,
           data: r
@@ -213,60 +193,10 @@ export const MainChart = (props: MainChartProps) => {
 
   useStockBarSubscribe([subscribeSymbol], subscribeHandler)
 
-  const calcIndicatorData = useCallback(
-    async (candlesticks: StockRawRecord[]) => {
-      const timeIndex = useKChartStore.getState().state[props.index].timeIndex
-      const symbol = useKChartStore.getState().state[props.index].symbol
-      const indicators = [
-        ...useKChartStore.getState().state[props.index].secondaryIndicators,
-        ...Object.values(useKChartStore.getState().state[props.index].mainIndicators)
-      ]
-
-      // 回测模式清除所有指标
-      if (useKChartStore.getState().state[props.index].backTest) {
-        return indicators.map(item => ({ data: [], indicatorId: item.id }))
-      }
-
-      const res = await Promise.all(
-        indicators.map(item => {
-          if (!candlesticks.length) return Promise.resolve({ data: [], indicatorId: item.id })
-
-          if (!item.formula) return Promise.resolve({ data: [], indicatorId: item.id })
-          if (renderUtils.isRemoteIndicator(item)) {
-            const indicator = useIndicator.getState().getIndicatorQueryParams(item.id)
-            const params = {
-              symbol: symbol,
-              id: item.id,
-              cycle: timeIndex,
-              start_at: dayjs(+candlesticks[0][0]! * 1000)
-                .tz('America/New_York')
-                .format('YYYY-MM-DD HH:mm:ss'),
-              param: indicator as any,
-              db_type: item.type
-            }
-            return queryClient.ensureQueryData({
-              queryKey: [getStockIndicatorData.cacheKey, params],
-              queryFn: () => getStockIndicatorData(params).then(r => ({ data: r.result, indicatorId: item.id }))
-            })
-          }
-
-          return calcIndicator(
-            { formula: item.formula ?? '', symbal: symbol, indicatorId: item.id },
-            candlesticks,
-            timeIndex
-          ).then(r => ({ data: r.data, indicatorId: item.id }))
-        })
-      )
-
-      return res
-    },
-    [props.index]
-  )
-
   useEffect(() => {
     const timeIndex = useKChartStore.getState().state[props.index].timeIndex
 
-    calcIndicatorData(candlesticks).then(r => {
+    renderUtils.calcIndicatorData(candlesticks, props.index).then(r => {
       kChartUtils.setIndicatorsData({
         index: props.index,
         data: r
@@ -279,33 +209,26 @@ export const MainChart = (props: MainChartProps) => {
         timeIndex: timeIndex
       })
     })
-  }, [candlesticks, props.index, calcIndicatorData])
-
-  // useEffect(() => {
-  //   calcIndicatorData().then(r => {
-
-  //     setTimeout(() => {
-  //       renderFn.current()
-  //     })
-  //   })
-  // }, [calcIndicatorData, props.index])
+  }, [candlesticks, props.index])
 
   useEffect(() => {
     const unsubscribe = useIndicator.subscribe(() => {
-      calcIndicatorData(useKChartStore.getState().state[props.index].mainData.history).then(r => {
-        kChartUtils.setIndicatorsData({
-          index: props.index,
-          data: r
-        })
+      renderUtils
+        .calcIndicatorData(useKChartStore.getState().state[props.index].mainData.history, props.index)
+        .then(r => {
+          kChartUtils.setIndicatorsData({
+            index: props.index,
+            data: r
+          })
 
-        setTimeout(() => {
-          renderFn.current()
+          setTimeout(() => {
+            renderFn.current()
+          })
         })
-      })
     })
 
     return () => unsubscribe()
-  }, [calcIndicatorData, props.index])
+  }, [props.index])
 
   const render = () => {
     if (!chart.current) return
@@ -321,7 +244,7 @@ export const MainChart = (props: MainChartProps) => {
 
     const _options = renderChart(chart.current)
     renderGrid(_options, state, [chart.current.getWidth(), chart.current.getHeight()], chart.current)
-    console.log(state.mainData.history)
+
     if (state.mainData.history.length > 0) {
       const scale = renderUtils.getScaledZoom(chart.current, 0)
       const oldMainData = (chart.current.getOption()?.series as any[])?.find(
@@ -334,14 +257,13 @@ export const MainChart = (props: MainChartProps) => {
       /**
        * 画主图指标
        */
-      renderOverlay(_options, state.overlayStock)
       renderMainCoiling(_options, state, chart.current)
-
+      renderOverlay(_options, state.overlayStock)
       renderMainIndicators(_options, Object.values(state.mainIndicators))
       renderOverlayMark(_options, state)
-
       renderSecondary(_options, state.secondaryIndicators)
       renderSecondaryLocalIndicators(_options, state.secondaryIndicators, state)
+      renderBackTestMark(_options, state, chart.current)
     }
     renderWatermark(_options, state.timeIndex)
     chart.current.setOption(_options, {
@@ -357,11 +279,9 @@ export const MainChart = (props: MainChartProps) => {
     render()
   }, [state.mainData, state.type, state.overlayMark, state.overlayStock, state.yAxis, state.mainCoiling])
 
-  // useUpdateEffect(() => {}, [state.mainData])
-
-  // useUpdateEffect(() => {
-  //   render()
-  // }, [])
+  useUpdateEffect(() => {
+    kChartUtils.setBackTest({ index: props.index, backTest: false })
+  }, [state.symbol, state.timeIndex])
 
   const onChangeSecondaryIndicators = useCallback(
     async (params: {
@@ -393,10 +313,6 @@ export const MainChart = (props: MainChartProps) => {
         setTimeout(() => {
           renderFn.current()
         })
-        return
-      }
-
-      if (useKChartStore.getState().state[props.index].backTest) {
         return
       }
 
@@ -467,14 +383,14 @@ export const MainChart = (props: MainChartProps) => {
           stateLen > 1 && activeChartIndex === props.index ? 'border-primary' : ''
         )}
         onClick={() => kChartUtils.setActiveChart(props.index)}
-        onKeyDown={() => {}}
+        onKeyDown={() => { }}
       >
-        <div className="w-full" ref={dom} style={{height: state.backTest ? 'calc(100% - 32px)': '100%'}} />
-        
+        <div className="w-full" ref={dom} style={{ height: state.backTest ? 'calc(100% - 32px)' : '100%' }} />
+
         {/* <canvas className="w-full h-full" /> */}
-        {
-          state.backTest ? <BackTestBar chartIndex={props.index} candlesticks={candlesticks} onRender={() => render()} /> : null
-        }
+        {state.backTest ? (
+          <BackTestBar chartIndex={props.index} candlesticks={candlesticks} onRender={() => render()} />
+        ) : null}
         {state.secondaryIndicators.map((item, index, arr) => {
           const grids = renderUtils.calcGridSize(
             [chart.current?.getWidth() ?? 0, chart.current?.getHeight() ?? 0],
@@ -527,7 +443,7 @@ export const MainChart = (props: MainChartProps) => {
                 key={item.symbol}
                 className="text-sm flex items-center border border-solid border-transparent hover:border-white hover:cursor-pointer rounded-sm px-2 text-transparent hover:text-white"
                 onClick={() => closeOverlayStock(item.symbol)}
-                onKeyDown={() => {}}
+                onKeyDown={() => { }}
               >
                 <span className="w-3 h-3 inline-block mr-1" style={{ background: colorUtil.colorPalette[index] }} />
                 <span className="pointer-events-none text-white">{item.symbol}&nbsp;</span>

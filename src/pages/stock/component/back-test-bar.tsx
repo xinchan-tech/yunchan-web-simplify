@@ -10,15 +10,20 @@ import {
   JknIcon,
   Popover,
   PopoverContent,
-  PopoverTrigger
+  PopoverTrigger,
+  useModal
 } from '@/components'
 import { dateUtils } from '@/utils/date'
-import { useMount, useUpdateEffect } from 'ahooks'
+import { useCounter, useUnmount, useUpdateEffect } from 'ahooks'
 import dayjs from 'dayjs'
-import { useRef, useState } from 'react'
-import { kChartUtils, timeIndex, useKChartStore } from '../lib'
+import { memo, useRef, useState } from 'react'
+import { kChartUtils, useKChartStore } from '../lib'
 import { renderUtils } from '../lib/utils'
 import { useImmer } from 'use-immer'
+import Decimal from 'decimal.js'
+import { chartEvent } from "../lib/event"
+import { stockUtils } from "@/utils/stock"
+import { cn } from "@/utils/style"
 
 const disabledDate = (d: Date, candlesticks: StockRawRecord[]) => {
   const day = dayjs(d)
@@ -35,29 +40,32 @@ interface BackTestBarProps {
 }
 
 type TradeRecord = {
-  time: number
-  price: number
-  record: {
+  sell: {
+    time: number
+    price: number
     count: number
-    type: 'buy' | 'sell'
   }[]
+  buy: TradeRecord['sell']
 }
 
-export const BackTestBar = (props: BackTestBarProps) => {
-  const [startDate, setStartDate] = useState<string | undefined>(undefined)
+export const BackTestBar = memo((props: BackTestBarProps) => {
+  // const [startDate, setStartDate] = useState<string | undefined>(undefined)
   const [speed, setSpeed] = useState<number>(1)
   const [number, setNumber] = useState<number>(100)
   const candlesticksRestore = useRef<StockRawRecord[]>(props.candlesticks)
   //交易记录
-  const [tradeRecord, setTradeRecord] = useImmer<TradeRecord[]>([])
+  const [tradeRecord, setTradeRecord] = useImmer<TradeRecord>({ sell: [], buy: [] })
   const [timer, setTimer] = useState<number | null>(null)
+  const [profit, setProfit] = useState<number>(0)
+  const [positiveProfitCount, { inc: incPositiveProfitCount }] = useCounter(0)
+  const [maxProfit, setMaxProfit] = useState<number>(0)
 
   useUpdateEffect(() => {
     candlesticksRestore.current = props.candlesticks
   }, [props.candlesticks])
 
   const onDateChange = (date?: string) => {
-    setStartDate(date)
+    // setStartDate(date)
 
     if (!date) {
       setCandlesticks(candlesticksRestore.current)
@@ -75,18 +83,23 @@ export const BackTestBar = (props: BackTestBarProps) => {
 
   const toNextLine = () => {
     const current = useKChartStore.getState().state[props.chartIndex].mainData.history
-
+    if (current.length === candlesticksRestore.current.length) {
+      resultModel.modal.open()
+      return
+    }
     setCandlesticks(candlesticksRestore.current.slice(0, current.length + 1))
   }
 
-  const toLastKLine = () => {}
+  const toLastKLine = () => {
+    const current = useKChartStore.getState().state[props.chartIndex].mainData.history
+    if (current.length === 0) return
+
+    resultModel.modal.open()
+    setCandlesticks(candlesticksRestore.current.slice(0, current.length - 1))
+  }
 
   const setCandlesticks = (data: StockRawRecord[]) => {
-    kChartUtils.setMainData({
-      index: props.chartIndex,
-      data: data.map(v => [v[0]?.toString(), ...v.slice(1)]) as any,
-      timeIndex: useKChartStore.getState().state[props.chartIndex].timeIndex
-    })
+    chartEvent.event.emit('backTestChange', { index: props.chartIndex, data: data.map(v => [v[0]?.toString(), ...v.slice(1)]) as any })
   }
 
   const startBackTest = () => {
@@ -112,45 +125,164 @@ export const BackTestBar = (props: BackTestBarProps) => {
     setTimer(null)
   }
 
-  const buy = () => {
+  const action = (type: 'buy' | 'sell') => {
     if (number <= 0) return
     const stock =
       candlesticksRestore.current[useKChartStore.getState().state[props.chartIndex].mainData.history.length - 1]
 
-    setTradeRecord(d => {
-      let record = d.find(v => v.time === +stock[0]!)
-      if (!record) {
-        record = {
-          time: +stock[0]!,
-          price: +stock[1]!,
-          record: [
-            {
-              count: number,
-              type: 'buy'
-            }
-          ]
-        }
-        d.push(record)
-      } else {
-        record.record.push({
-          count: number,
-          type: 'buy'
-        })
-      }
+    tradeRecord[type].push({
+      time: +stock[0]!,
+      price: +stock[2]!,
+      count: number
     })
+    setTradeRecord({ ...tradeRecord })
 
     kChartUtils.addBackTestMark({
       index: props.chartIndex,
       time: stock[0]!,
-      price: +stock[2]! * number,
+      price: +stock[2]!,
       count: number,
-      type: '买入'
+      type: type === 'buy' ? '买入' : '卖出'
     })
+
+    const result = calcProfit(tradeRecord)
+    const diffProfit = result - profit
+    setMaxProfit(Math.max(diffProfit, maxProfit))
+    setProfit(result)
+
+    if (result > 0) {
+      incPositiveProfitCount()
+    }
 
     setTimeout(() => {
       props.onRender()
     })
   }
+
+  useUnmount(() => {
+    setTimer(null)
+    setTradeRecord({ buy: [], sell: [] })
+  })
+
+
+  const calcProfit = (record: TradeRecord) => {
+    const buyLength = record.buy.length
+    const sellLength = record.sell.length
+
+    const count =
+      buyLength < sellLength
+        ? record.buy.reduce((prev, cur) => prev + cur.count, 0)
+        : record.sell.reduce((prev, cur) => prev + cur.count, 0)
+
+    let shellPrice = 0
+    let c = 0
+    record.sell.forEach((shell, index) => {
+      if (c + index < count) {
+        shellPrice += shell.price * shell.count
+        c += shell.count
+      } else {
+        shellPrice += shell.price * (count - c)
+        c += count - c
+      }
+    })
+
+    c = 0
+    let buyPrice = 0
+
+    record.buy.forEach((buy, index) => {
+      if (c + index < count) {
+        buyPrice += buy.price * buy.count
+        c += buy.count
+      } else {
+        buyPrice += buy.price * (count - c)
+        c += count - c
+      }
+    })
+
+    return shellPrice - buyPrice
+  }
+
+  //平仓
+  const closePosition = () => {
+    const stock =
+      candlesticksRestore.current[useKChartStore.getState().state[props.chartIndex].mainData.history.length - 1]
+    const sellCount = tradeRecord.sell.reduce((prev, cur) => prev + cur.count, 0)
+    const buyCount = tradeRecord.buy.reduce((prev, cur) => prev + cur.count, 0)
+
+    const diffCount = sellCount - buyCount
+
+    if (diffCount === 0) return
+
+
+    tradeRecord[diffCount > 0 ? 'buy' : 'sell'].push({
+      time: +stock[0]!,
+      price: +stock[2]!,
+      count: number
+    })
+    setTradeRecord({ ...tradeRecord })
+
+    const result = calcProfit(tradeRecord)
+    const diffProfit = result - profit
+    setMaxProfit(Math.max(diffProfit, maxProfit))
+    setProfit(result)
+
+    kChartUtils.addBackTestMark({
+      index: props.chartIndex,
+      time: stock[0]!,
+      price: +stock[2]!,
+      count: diffCount,
+      type: diffCount > 0 ? '买入' : '卖出'
+    })
+    setTimeout(() => {
+      props.onRender()
+    })
+  }
+
+  const resultModel = useModal({
+    title: ' ',
+    closeIcon: true,
+    footer: false,
+    closeOnMaskClick: false,
+    content: () => {
+      const symbol = useKChartStore.getState().state[props.chartIndex].symbol
+      const timeIndex = useKChartStore.getState().state[props.chartIndex].timeIndex
+      const total = tradeRecord.buy.length + tradeRecord.sell.length
+
+      return (
+        <div className="text-center px-4">
+          <div className="my-4 text-4xl">再接再厉，交易员！</div>
+          <div className="text-lg">
+            您在 {symbol} - {stockUtils.intervalToStr(timeIndex)} 的回测中
+          </div>
+          <div className="flex justify-between items-center my-12 space-x-4">
+            <div className="flex-1 border border-solid border-border rounded py-4">
+              <div className="text-xl mb-2">现金盈利</div>
+              <div>
+                <span className={cn('text-3xl', profit > 0 ? 'text-stock-up' : 'text-stock-down')} >{Decimal.create(profit).toShort()}</span>
+                <span> USD</span>
+              </div>
+            </div>
+            <div className="flex-1 border border-solid border-border rounded py-4">
+              <div className="text-xl mb-2">成功率</div>
+              <div>
+                <span className={cn('text-3xl', profit > 0 ? 'text-stock-up' : 'text-stock-down')}> {total === 0 ? '0.00' : Decimal.create(positiveProfitCount).div(total).mul(100).toFixed(2)}</span>
+                <span> %</span>
+              </div>
+            </div>
+            <div className="flex-1 border border-solid border-border rounded py-4">
+              <div className="text-xl mb-2"> 最赚钱的交易</div>
+              <div>
+                <span className={cn('text-3xl', profit > 0 ? 'text-stock-up' : 'text-stock-down')} >{Decimal.create(maxProfit).toShort()}</span>
+                <span> USD</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )
+    }
+  })
+
+
 
   return (
     <div className="h-8 box-border items-center flex text-xs justify-between px-2">
@@ -165,7 +297,7 @@ export const BackTestBar = (props: BackTestBarProps) => {
           <div
             className="border border-solid border-border rounded-sm px-1 py-0.5 flex items-center"
             onClick={startBackTest}
-            onKeyDown={() => {}}
+            onKeyDown={() => { }}
           >
             <JknIcon name="ic_huice2" className="w-3 h-3" />
             &nbsp;
@@ -175,7 +307,7 @@ export const BackTestBar = (props: BackTestBarProps) => {
           <div
             className="border border-solid border-border rounded-sm px-1 py-0.5 flex items-center"
             onClick={stopBackTest}
-            onKeyDown={() => {}}
+            onKeyDown={() => { }}
           >
             <JknIcon name="ic_huice3" className="w-3 h-3" />
             &nbsp;
@@ -193,21 +325,24 @@ export const BackTestBar = (props: BackTestBarProps) => {
       </div>
 
       <div className="flex items-center space-x-4">
-        <span>0.00</span>
-        <Button size="mini" variant="destructive">
+        <span>{Decimal.create(profit).toFixed(3)}</span>
+        <Button size="mini" variant="destructive" onClick={() => action('sell')}>
           卖出
         </Button>
         <NumberInput value={number} onChange={setNumber} />
-        <Button size="mini" className="bg-[#00b058]" onClick={buy}>
+        <Button size="mini" className="bg-[#00b058]" onClick={() => action('buy')}>
           买入
         </Button>
-        <Button size="mini" className="bg-[#232323]">
+        <Button size="mini" className="bg-[#232323]" onClick={closePosition}>
           平仓
         </Button>
       </div>
+      {
+        resultModel.context
+      }
     </div>
   )
-}
+})
 
 const speedOptions = [
   { value: 10, label: '每秒更新10次' },
@@ -265,63 +400,63 @@ const NumberInput = (props: { value: number; onChange: (v: number) => void }) =>
           <div
             className="text-center border border-solid border-border rounded-sm leading-6 cursor-pointer"
             onClick={() => props.onChange(props.value - 1)}
-            onKeyDown={() => {}}
+            onKeyDown={() => { }}
           >
             -
           </div>
           <div
             className="text-center border border-solid border-border rounded-sm leading-6 cursor-pointer"
             onClick={() => props.onChange(0)}
-            onKeyDown={() => {}}
+            onKeyDown={() => { }}
           >
             清零
           </div>
           <div
             className="text-center border border-solid border-border rounded-sm leading-6 cursor-pointer"
             onClick={() => props.onChange(props.value + 1)}
-            onKeyDown={() => {}}
+            onKeyDown={() => { }}
           >
             +
           </div>
           <div
             className="text-center border border-solid border-border rounded-sm leading-6 cursor-pointer"
             onClick={() => props.onChange(props.value + 1)}
-            onKeyDown={() => {}}
+            onKeyDown={() => { }}
           >
             1
           </div>
           <div
             className="text-center border border-solid border-border rounded-sm leading-6 cursor-pointer"
             onClick={() => props.onChange(props.value + 5)}
-            onKeyDown={() => {}}
+            onKeyDown={() => { }}
           >
             5
           </div>
           <div
             className="text-center border border-solid border-border rounded-sm leading-6 cursor-pointer"
             onClick={() => props.onChange(props.value + 25)}
-            onKeyDown={() => {}}
+            onKeyDown={() => { }}
           >
             25
           </div>
           <div
             className="text-center border border-solid border-border rounded-sm leading-6 cursor-pointer"
             onClick={() => props.onChange(props.value + 100)}
-            onKeyDown={() => {}}
+            onKeyDown={() => { }}
           >
             100
           </div>
           <div
             className="text-center border border-solid border-border rounded-sm leading-6 cursor-pointer"
             onClick={() => props.onChange(props.value + 500)}
-            onKeyDown={() => {}}
+            onKeyDown={() => { }}
           >
             500
           </div>
           <div
             className="text-center border border-solid border-border rounded-sm leading-6 cursor-pointer"
             onClick={() => props.onChange(props.value + 1000)}
-            onKeyDown={() => {}}
+            onKeyDown={() => { }}
           >
             1000
           </div>

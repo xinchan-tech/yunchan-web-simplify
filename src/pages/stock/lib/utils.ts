@@ -1,4 +1,4 @@
-import { StockChartInterval, type StockRawRecord } from '@/api'
+import { getStockIndicatorData, StockChartInterval, type StockRawRecord } from '@/api'
 import { getTradingPeriod } from '@/utils/date'
 import type { ECOption } from '@/utils/echarts'
 import { stockUtils } from '@/utils/stock'
@@ -6,7 +6,10 @@ import dayjs, { type Dayjs } from 'dayjs'
 import type { GraphicComponentOption } from 'echarts/components'
 import type { EChartsType } from 'echarts/core'
 import type { ECBasicOption } from 'echarts/types/dist/shared'
-import type { Indicator, KChartContext } from './ctx'
+import { useKChartStore, type Indicator, type KChartContext } from './ctx'
+import { useIndicator } from '@/store'
+import { calcIndicator } from '@/utils/coiling'
+import { queryClient } from '@/utils/query-client'
 
 export const renderUtils = {
   getXAxisIndex: (options: ECOption, index: number) => {
@@ -65,16 +68,20 @@ export const renderUtils = {
       options.series.push(series)
     }
   },
-  addMarkPointMarkLine: (options: ECOption, mark: any[]) => {
-    if(!options.series) return
+  addMarkLine: (options: ECOption, mark: any[] | any) => {
+    if (!options.series) return
 
-    if(!Array.isArray(options.series)) return
+    if (!Array.isArray(options.series)) return
 
     const mainSeries = options.series.find(s => s.name === 'kChart')
 
     if (!mainSeries?.markLine?.data) return
 
-    mainSeries.markLine.data.push(...mark)
+    if (Array.isArray(mark)) {
+      mainSeries.markLine.data.push(...mark)
+    } else {
+      mainSeries.markLine.data.push(mark)
+    }
   },
 
   getTooltipIndex: (options: ECOption, index: number) => {
@@ -106,9 +113,9 @@ export const renderUtils = {
       .format('YYYY-MM-DD')
   },
 
-  setYMax: (v: {max: number, min: number}) => {
+  setYMax: (v: { max: number; min: number }) => {
     const diff = v.max - v.min
-    if (diff <= 1){
+    if (diff <= 1) {
       return v.max + 0.01
     }
     if (diff < 10) {
@@ -120,9 +127,9 @@ export const renderUtils = {
     return v.max + diff * 0.02
   },
 
-  setYMin: (v: {max: number, min: number}) => {
+  setYMin: (v: { max: number; min: number }) => {
     const diff = v.max - v.min
-    if (diff <= 1){
+    if (diff <= 1) {
       return v.min - 0.01
     }
     if (diff < 10) {
@@ -131,7 +138,7 @@ export const renderUtils = {
     if (diff < 100) {
       return v.min - diff * 0.05
     }
-    return  v.min - diff * 0.02
+    return v.min - diff * 0.02
   },
   /**
    * 布局策略
@@ -324,7 +331,7 @@ export const renderUtils = {
    */
   getScaledZoom: (chart: EChartsType, index = 0): [number, number] | undefined => {
     // @ts-ignore
-    return chart.getModel().getComponent('xAxis', index)?.axis.scale.getExtent()
+    return chart.getModel().getComponent('xAxis', index)?.axis?.scale.getExtent()
   },
 
   /**
@@ -383,7 +390,7 @@ export const renderUtils = {
     if (
       [StockChartInterval.PRE_MARKET, StockChartInterval.INTRA_DAY, StockChartInterval.AFTER_HOURS].includes(interval)
     ) {
-     getTradingPeriod(
+      getTradingPeriod(
         stockUtils.intervalToTrading(interval)!,
         dayjs(stockUtils.parseTime(data[0][0])).tz('America/New_York'),
         'timestamp'
@@ -422,10 +429,11 @@ export const renderUtils = {
   findNearestTime: (data: StockRawRecord[], time: number, gte?: boolean) => {
     console.log(data, 111)
     if (data.length === 0) return
-    if (data.length === 1) return {
-      index: 0,
-      data: data[0]
-    }
+    if (data.length === 1)
+      return {
+        index: 0,
+        data: data[0]
+      }
 
     let left = 0
     let right = data.length - 1
@@ -448,8 +456,6 @@ export const renderUtils = {
       }
     }
 
-    console.log(left, right)
-
     if (gte) {
       return {
         index: left,
@@ -460,5 +466,47 @@ export const renderUtils = {
       index: left - 1,
       data: data[left - 1]
     }
+  },
+
+  calcIndicatorData: async (candlesticks: StockRawRecord[], index: number) => {
+    const timeIndex = useKChartStore.getState().state[index].timeIndex
+    const symbol = useKChartStore.getState().state[index].symbol
+    const indicators = [
+      ...useKChartStore.getState().state[index].secondaryIndicators,
+      ...Object.values(useKChartStore.getState().state[index].mainIndicators)
+    ]
+
+    const res = await Promise.all(
+      indicators.map(item => {
+        if (!candlesticks.length) return Promise.resolve({ data: [], indicatorId: item.id })
+
+        if (!item.formula) return Promise.resolve({ data: [], indicatorId: item.id })
+        if (renderUtils.isRemoteIndicator(item)) {
+          const indicator = useIndicator.getState().getIndicatorQueryParams(item.id)
+          const params = {
+            symbol: symbol,
+            id: item.id,
+            cycle: timeIndex,
+            start_at: dayjs(+candlesticks[0][0]! * 1000)
+              .tz('America/New_York')
+              .format('YYYY-MM-DD HH:mm:ss'),
+            param: indicator as any,
+            db_type: item.type
+          }
+          return queryClient.ensureQueryData({
+            queryKey: [getStockIndicatorData.cacheKey, params],
+            queryFn: () => getStockIndicatorData(params).then(r => ({ data: r.result, indicatorId: item.id }))
+          })
+        }
+
+        return calcIndicator(
+          { formula: item.formula ?? '', symbal: symbol, indicatorId: item.id },
+          candlesticks,
+          timeIndex
+        ).then(r => ({ data: r.data, indicatorId: item.id }))
+      })
+    )
+
+    return res
   }
 }

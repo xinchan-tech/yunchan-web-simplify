@@ -21,7 +21,7 @@ const getPeriodByPage = (params: { interval: StockChartInterval; startDate: numb
   if (interval <= StockChartInterval.THIRTY_MIN) {
     resultDate = usDate.add(-5, 'd').format('YYYY-MM-DD HH:mm:ss')
   } else if (interval <= StockChartInterval.FORTY_FIVE_MIN) {
-    resultDate = usDate.add(-7, 'd').format('YYYY-MM-DD HH:mm:ss')
+    resultDate = usDate.add(-15, 'd').format('YYYY-MM-DD HH:mm:ss')
   } else if (interval <= StockChartInterval.FOUR_HOUR) {
     resultDate = usDate.add(-30, 'd').format('YYYY-MM-DD HH:mm:ss')
   } else if (interval === StockChartInterval.DAY) {
@@ -90,12 +90,12 @@ export const useStockCandlesticks = (index: number) => {
   const fetchPrevKline = useCallback(async () => {
     if (isTimeIndexChart(interval.current)) return
     if (isLoading.current) return
-
+    if (useKChartStore.getState().state[index].backTest) return
     const [start, end] = getPeriodByPage({ startDate: startDate.current, interval: interval.current })
 
     const r = await fetchKline(start, end, interval.current)
     setResult(r ?? [])
-  }, [fetchKline])
+  }, [fetchKline, index])
 
   const refreshKline = useCallback(async () => {
     if (!symbol.current) return
@@ -151,6 +151,7 @@ export const useStockCandlesticks = (index: number) => {
 
     timer.current = window.setInterval(() => {
       if (isLoading.current) return
+      if (useKChartStore.getState().state[index].backTest) return
       refreshKline()
     }, 1000 * 60)
   })
@@ -180,10 +181,9 @@ export const useStockCandlesticks = (index: number) => {
       })
   }, [_symbol, _interval])
 
-
   return {
     candlesticks: result,
     fetchPrevCandlesticks: fetchPrevKline,
-    refreshCandlesticks: refreshKline,
+    refreshCandlesticks: refreshKline
   }
 }

@@ -17,11 +17,12 @@ import {
   calculateMA,
   calculateTradingPoint
 } from './coilling'
-import { CoilingIndicatorId, type Indicator, type KChartContext, isTimeIndexChart } from './ctx'
+import { CoilingIndicatorId, type Indicator, type KChartContext, isTimeIndexChart, useKChartStore } from './ctx'
 import {
   type DrawerRectShape,
   type DrawerTextShape,
   LineType,
+  drawBrand,
   drawGradient,
   drawHLine,
   drawHdlyLabel,
@@ -1045,12 +1046,6 @@ const renderIndicator = (
         data: data
       })
     } else if (d.draw === 'DRAWGRADIENT') {
-      // const data = Object.entries(d.draw_data).map(([_, value]) => ({
-      //   leftTop: { x: value[0], y: value[1] },
-      //   rightBottom: { x: value[2], y: value[3] },
-      //   color: value[4]
-      // }))
-
       drawGradient(options, {} as any, {
         xAxisIndex: params.xAxisIndex,
         yAxisIndex: params.yAxisIndex,
@@ -1071,6 +1066,13 @@ const renderIndicator = (
         yAxisIndex: params.yAxisIndex,
         name: seriesName,
         data: data
+      })
+    } else if(d.draw === 'DRAWBAND'){
+      drawBrand(options, {} as any, {
+        xAxisIndex: params.xAxisIndex,
+        yAxisIndex: params.yAxisIndex,
+        name: seriesName,
+        data: d.draw_data
       })
     }
   })
@@ -1357,39 +1359,113 @@ export const renderZoom = (options: ECOption, addCount: number, zoom?: [number, 
       z.start = undefined
       z.end = undefined
       z.maxValueSpan = MaxKLineCount
-      z.minValueSpan = 90
+      z.minValueSpan = 70
     }
   }
 }
 
-export const renderBackTestMark = (options: ECOption, state: ChartState) => {
-  if (!state.backTestMark) return options
-  const record: Record<string, NonNullable<typeof state.backTestMark>> = {}
-  state.backTestMark.forEach(mark => {
+export const renderBackTestMark = (options: ECOption, state: ChartState, chart: EChartsType) => {
+  const backTestMark = useKChartStore.getState().state[state.index].backTestMark
+  const candlestick = useKChartStore.getState().state[state.index].mainData.history
+  if (!backTestMark?.length) return options
+  const record: Record<string, NonNullable<typeof backTestMark>> = {}
+  backTestMark.forEach(mark => {
     if (!record[mark.time]) {
       record[mark.time] = []
     }
 
     record[mark.time].push(mark)
   })
-
+  let totalCount = 0
+  let totalPrice = 0
+  let totalSellPrice = 0
+  let totalBuyPrice = 0
+  let totalDiff = 0
   Object.entries(record).forEach(([time, marks]) => {
     let buyCount = 0
     let sellCount = 0
     const data = marks.map(mark => {
+      const y = chart.convertToPixel({ yAxisIndex: 1 }, mark.price)
+      totalCount += mark.count
+      totalPrice += mark.price * mark.count
+      totalDiff += mark.type === '买入' ? mark.count : -mark.count
+      if (mark.type === '买入') {
+        totalBuyPrice += mark.price * mark.count
+      } else {
+        totalSellPrice += mark.price * mark.count
+      }
       return [
         {
           xAxis: time,
           yAxis: mark.price,
-          name: mark.count
+          name: mark.count,
+          lineStyle: {
+            color: '#696a6d'
+          }
         },
         {
           xAxis: time,
-          y: mark.type === '买入' ? 46 + buyCount++ * 10 : 46 - sellCount++ * 10
+          y: mark.type === '买入' ? y + 120 - buyCount++ * 40 : (y - 240 < 0 ? 0 : y - 240) + sellCount++ * 40,
+          label: {
+            formatter: () => {
+              if (mark.type === '买入') {
+                return `${mark.type} ${mark.count}\n\$ ${mark.price}`
+              }
+              return `${mark.type} ${mark.count}\n\$ ${mark.price}`
+            },
+            backgroundColor: mark.type === '买入' ? '#00b058' : '#ff3248'
+          }
         }
       ]
     })
 
-    renderUtils.addSeries(options, data)
+    renderUtils.addMarkLine(options, data)
   })
+
+  if (totalDiff !== 0) {
+    const avgPrice = totalPrice / totalCount
+    const lastStock = stockUtils.toStock(candlestick[candlestick.length - 1])
+    const lastPrice = lastStock.close * totalDiff
+    const totalDiffPrice = totalSellPrice - totalBuyPrice
+
+    const totalProfit = totalDiff < 0 ? 0 : lastPrice + totalDiffPrice
+
+    const markLine = {
+      yAxis: avgPrice,
+      name: 'backTestMarkLine',
+      label: {
+        distance: [0, 8],
+        position: 'insideStart',
+        formatter: () => {
+          return `${Math.abs(totalDiff)} | ${avgPrice.toFixed(3)} {${totalProfit > 0 ? 'u' : 'd'}|${(totalProfit).toFixed(3)}USD}`
+        },
+        backgroundColor: '#3861f6',
+        borderRadius: 8,
+        padding: [2, 4, 2, 4],
+        rich: {
+          u: {
+            color: useConfig.getState().getStockColor(true, 'hex'),
+            backgroundColor: 'black',
+            borderRadius: [0,5, 5, 0],
+            align: 'left',
+            fontSize: 14,
+            padding: [0, 10, 0, 10]
+          },
+          d: {
+            color: useConfig.getState().getStockColor(false, 'hex'),
+            backgroundColor: 'black',
+            borderRadius: [0, 5, 5, 0],
+            align: 'left',
+            fontSize: 14,
+            padding: [0, 10, 0, 10]
+          }
+        }
+      },
+      lineStyle: {
+        color: '#3861f6',
+        type: [5, 15]
+      }
+    }
+    renderUtils.addMarkLine(options, markLine)
+  }
 }

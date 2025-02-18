@@ -68,6 +68,8 @@ export const calcIndicator = async (
       item.draw_data = drawGradientTransform(item.draw_data)
     } else if (item.draw === 'DRAWICON') {
       item.draw_data = drawIconTransform(item.draw_data)
+    } else if (item.draw === 'DRAWBAND') {
+      item.draw_data = drawBandTransform(item.draw_data)
     }
 
     return item
@@ -179,7 +181,7 @@ const drawIconTransform = (drawData: any[]) => {
       if (condition === 0) {
         return
       }
-      r[key] = [y, icon, offsetX, offsetY]
+      r[key] = [y, icon, offsetX, -offsetY]
       return
     }
 
@@ -188,4 +190,113 @@ const drawIconTransform = (drawData: any[]) => {
   })
 
   return r
+}
+
+const drawBandTransform = (drawData: Record<string, [number, string, number, string]>) => {
+  let polygon: { color: string; points: { y1: number; y2: number; x: number; drawY?: number }[] } = {
+    color: '',
+    points: []
+  }
+  const polygons: (typeof polygon)[] = []
+
+  Object.entries(drawData).forEach(([x, [y1, color1, y2, color2]], index, arr) => {
+    if (polygon.points.length === 0) {
+      polygon.color = y1 >= y2 ? color1 : color2
+    }
+
+    polygon.points.push({ y1, y2, x: Number(x) })
+
+    if (polygon.points.length > 1) {
+      const currentPoints = polygon.points[polygon.points.length - 1]
+      if (currentPoints.y1 === currentPoints.y2) {
+        polygons.push(polygon)
+        polygon = {
+          color: '',
+          points: []
+        }
+
+        return
+      }
+
+      const lastPoints = polygon.points[polygon.points.length - 2]
+      const lastDirection = lastPoints.y1 >= lastPoints.y2 ? 1 : -1
+      const currentDirection = currentPoints.y1 >= currentPoints.y2 ? 1 : -1
+
+      /**
+       * 当前方向与上一个方向不一致时， 两条线有交叉，计算交叉点
+       */
+      if (lastDirection !== currentDirection) {
+        const line1 = [lastPoints.x, lastPoints.y1, currentPoints.x, currentPoints.y1]
+
+        const line2 = [lastPoints.x, lastPoints.y2, currentPoints.x, currentPoints.y2]
+
+        const drawY = getIntersectionY(
+          [line1[0], line1[1]],
+          [line1[2], line1[3]],
+          [line2[0], line2[1]],
+          [line2[2], line2[3]]
+        )
+
+        if (drawY) {
+          currentPoints.drawY = drawY
+        }
+
+        polygons.push(polygon)
+        polygon = {
+          color: y1 >= y2 ? color1 : color2,
+          points: [currentPoints]
+        }
+
+        return
+      }
+
+      if(arr.length - 1 === index) {
+        polygons.push(polygon)
+        polygon = {
+          color: y1 >= y2 ? color1 : color2,
+          points: [currentPoints]
+        }
+
+        return
+      }
+    }
+  })
+
+  return polygons
+}
+
+const getIntersectionY = (
+  s1p1: [number, number],
+  s1p2: [number, number],
+  s2p1: [number, number],
+  s2p2: [number, number]
+): number | null => {
+  const [x1, y1] = s1p1
+  const [x2, y2] = s1p2
+  const [x3, y3] = s2p1
+  const [x4, y4] = s2p2
+
+  const a1 = x2 - x1
+  const b1 = -(x4 - x3)
+  const c1 = x3 - x1
+
+  const a2 = y2 - y1
+  const b2 = -(y4 - y3)
+  const c2 = y3 - y1
+
+  const denominator = a1 * b2 - a2 * b1
+
+  if (denominator === 0) {
+    return null // 线段平行或重合，无交点
+  }
+
+  const t = (c1 * b2 - c2 * b1) / denominator
+  const u = (a1 * c2 - a2 * c1) / denominator
+
+  if (t >= 0 && t <= 1 && u >= 0 && u <= 1) {
+    const y = y1 + t * (y2 - y1)
+    return y
+  }
+
+  return null // 交点不在线段上
 }
