@@ -23,7 +23,7 @@ import WKSDK, { Channel } from "wukongimjssdk";
 const UpdateGroupInfo = (props: {
   group: Channel;
   total?: number;
-  onSuccess?: () => void;
+  onSuccess?: (params: EditGroupPayload) => void;
 }) => {
   const options = {
     queryFn: () => {
@@ -84,7 +84,7 @@ const UpdateGroupInfo = (props: {
         if (props.group.channelID === selectedChannel?.channelID) {
           getGroupDetailData(props.group.channelID);
         }
-        typeof props.onSuccess === "function" && props.onSuccess();
+        typeof props.onSuccess === "function" && props.onSuccess(params);
         notifyChannelUpdate();
       })
       .finally(() => {

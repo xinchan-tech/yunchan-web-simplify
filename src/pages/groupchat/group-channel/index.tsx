@@ -48,7 +48,7 @@ export type GroupData = {
   tags: string;
   total_user: string;
   in_channel: number;
-  products: {
+  products?: {
     channel_id: string;
     type: string;
     product_sn: string;
@@ -133,7 +133,7 @@ const GroupChannel = (props: {
     queryKey: ["channel:fetchData"],
   };
 
-  const { data, refetch } = useQuery(options);
+  const { data } = useQuery(options);
   const [editChannel, setEditChannel] = useState<ConversationWrap>();
   // 修改社群
   const updateGroupInfoModal = useModal({
@@ -142,8 +142,22 @@ const GroupChannel = (props: {
         {editChannel && (
           <UpdateGroupInfo
             group={editChannel.channel}
-            onSuccess={() => {
-              refetch();
+            onSuccess={(params) => {
+              // refetch();
+              const target = data?.items.find(
+                (item) => item.account === params.account
+              );
+              if (target) {
+                if (params.avatar) {
+                  target.avatar = params.avatar;
+                }
+                if (params.name) {
+                  target.name = params.name;
+                }
+                WKSDK.shared().channelManager.setChannleInfoForCache(
+                  toChannelInfo({ ...target })
+                );
+              }
             }}
             total={Number(editChannel.total_user)}
           />
