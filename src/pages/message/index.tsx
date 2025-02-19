@@ -143,7 +143,7 @@ const MessageCenter = () => {
           </div>
         ))}
       </div>
-      <div className="flex-1 box-border">
+      <div className="flex-1 box-border overflow-hidden">
         {type === 'chat' ? <ChatMessageContent msgKey={active} /> : <SystemMessageContent msgKey={active} />}
       </div>
     </div>
@@ -170,10 +170,10 @@ const ChatMessageContent = (props: MessageContentProps) => {
   })
   const queryClient = useQueryClient()
 
-  const ws = useWsChat((msg) => { 
+  const ws = useWsChat((msg) => {
     const fromUid = msg.data.from_uid
 
-    if(fromUid !== props.msgKey) return
+    if (fromUid !== props.msgKey) return
 
     queryClient.cancelQueries({ queryKey: [getChatRecords.cacheKey, props.msgKey] })
 
@@ -383,8 +383,8 @@ const SystemMessageContent = (props: SystemMessageContentProps) => {
   }, [notices.data])
 
   return (
-    <div className="h-full overflow-hidden">
-      <ScrollArea ref={scrollRef} className="h-full border-0 border-b border-solid border-b-border p-4 box-border">
+    <div className="h-full overflow-hidden w-full">
+      <div className="w-full h-full overflow-y-auto">
         <div className="space-y-8">
           {data?.map(msg => (
             <div key={msg.id} className="space-y-4">
@@ -397,19 +397,19 @@ const SystemMessageContent = (props: SystemMessageContentProps) => {
                 }
                 <div className="w-1/5 h-0 border-0 border-b border-solid border-b-border ml-2" />
               </div>
-              <div className="flex items-center w-full">
-                <div className="mr-auto flex items-start text-black max-w-[60%]">
+              <div className="flex items-center max-w-[60%] overflow-hidden">
+                <div className="flex items-start text-black w-full">
                   <JknAvatar className="mr-3" src="" title={msg.title} />
-                  <div className="bg-stock-green rounded py-2 px-2 relative message-content-right box-border text-base">
+                  <div className="bg-stock-green rounded py-2 px-2 relative message-content-right text-base w-full overflow-hidden box-border">
                     <div className="font-bold">{msg.title}</div>
-                    <pre >{msg.content}</pre>
+                    <pre style={{ whiteSpace: 'pre-wrap', wordWrap: 'break-word' }}>{msg.content}</pre>
                   </div>
                 </div>
               </div>
             </div>
           ))}
         </div>
-      </ScrollArea>
+      </div>
       <style jsx>
         {`
         .message-content-right::after {
