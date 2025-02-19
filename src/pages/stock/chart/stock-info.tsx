@@ -408,7 +408,7 @@ const StockQuote = () => {
             估值泡沫
           </div>
           <div className="w-1/2 flex items-center justify-center border-0 border-b border-solid border-border text-stock-green h-full">
-            <span className={cn(Decimal.create(bubble.value).gt(1) ? 'text-stock-down' : 'text-stock-up')}>
+            <span className={cn(Decimal.create(bubble.value).gte(2) ? 'text-stock-down' : 'text-stock-up')}>
               {Decimal.create(bubble.value).toFixed(2)}({bubble.text})
             </span>
           </div>

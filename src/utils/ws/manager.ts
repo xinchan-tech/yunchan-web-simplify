@@ -68,6 +68,14 @@ type AlarmEventResult = MessageReceived<{
 
 type AckEventResult = MessageReceived<unknown>
 
+type ChatEventResult = MessageReceived<{
+  content: string
+  from_uid: string
+  group_id: number
+  type: number
+  user_id: string
+}>
+
 export type EventResult<T extends WsEvent> = T extends 'default'
   ? DefaultEventResult
   : T extends 'login'
@@ -76,7 +84,9 @@ export type EventResult<T extends WsEvent> = T extends 'default'
       ? AlarmEventResult
       : T extends 'ack'
         ? AckEventResult
-        : MessageReceived<any>
+        : T extends 'chat'
+          ? ChatEventResult
+          : MessageReceived<any>
 
 export class WsManager {
   private url: string

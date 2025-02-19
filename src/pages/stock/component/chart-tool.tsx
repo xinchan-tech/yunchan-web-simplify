@@ -1,4 +1,4 @@
-import { getStockIndicators, getStockTabList, type StockIndicator } from '@/api'
+import { type StockIndicator, getStockIndicators, getStockTabList } from '@/api'
 import {
   Button,
   DropdownMenu,
@@ -11,18 +11,18 @@ import {
   JknIcon,
   StockSelect
 } from '@/components'
+import { useDomSize } from '@/hooks'
+import { calcIndicator } from '@/utils/coiling'
 import { cn } from '@/utils/style'
 import { useQuery } from '@tanstack/react-query'
-import { useMemo, useState } from 'react'
-import { type CoilingIndicatorId, kChartUtils, useKChartStore } from '../lib'
-import { MainIndicator } from './main-indicator'
-import { ViewModeSelect } from './view-mode-select'
-import { SearchList } from './search-list'
 import { nanoid } from 'nanoid'
-import { useDomSize } from '@/hooks'
+import { useMemo, useState } from 'react'
 import { useShallow } from 'zustand/react/shallow'
-import { calcIndicator } from '@/utils/coiling'
+import { type CoilingIndicatorId, type Indicator, kChartUtils, useKChartStore } from '../lib'
 import { chartEvent } from '../lib/event'
+import { MainIndicator } from './main-indicator'
+import { SearchList } from './search-list'
+import { ViewModeSelect } from './view-mode-select'
 
 const CHART_TOOL = ['主图指标', '线型切换', '多图模式', '股票PK', '叠加标记', '画线工具']
 
@@ -37,6 +37,7 @@ export const ChartToolSelect = () => {
   })
 
   const onOverlayClick = (symbol: string) => {
+    kChartUtils.setYAxis({ yAxis: { right: 'percent' } })
     kChartUtils.addOverlayStock({ symbol })
   }
 
@@ -85,33 +86,54 @@ const MainIndicatorSelect = ({ indicators }: { indicators?: Awaited<ReturnType<t
 
   const currentIndex = useKChartStore(s => s.activeChartIndex)
 
-  const onChangeMainIndicator = async (_: any, data: any[], name: string) => {
-    const indicators = data.map(v => ({
-      id: v.value,
-      type: v.extra.db_type,
-      timeIndex,
-      symbol,
-      key: nanoid(),
-      name: name,
-      formula: v.extra.formula,
-      calcType: v.extra.calcType
-    }))
-    const candlesticks = useKChartStore.getState().state[useKChartStore.getState().activeChartIndex].mainData.history
-    kChartUtils.setMainIndicators({ indicators })
-    const r = await data.map(v => {
-      return calcIndicator(
-        { formula: v.extra.formula, symbal: symbol, indicatorId: v.value },
-        candlesticks,
-        timeIndex
-      ).then(data => ({
-        indicatorId: v.value,
-        data: data.data
-      }))
+  const onChangeMainIndicator = async (_: any, data: any, name: string) => {
+    const mainIndicators = useKChartStore.getState().state[useKChartStore.getState().activeChartIndex].mainIndicators
+    const indicators: Indicator[] = []
+    Object.values(mainIndicators).forEach((value) => {
+      if (value.id !== data.value) {
+        indicators.push(value)
+      }
     })
 
-    await Promise.all(r).then(data => {
-      kChartUtils.setIndicatorsData({ index: currentIndex, data })
-    })
+    if (indicators.length === Object.keys(mainIndicators).length) {
+      indicators.push({
+        id: data.value,
+        type: data.extra.db_type,
+        timeIndex,
+        symbol,
+        key: nanoid(),
+        name: name,
+        formula: data.extra.formula,
+        calcType: data.extra.calcType
+      })
+
+      kChartUtils.setMainIndicators({ indicators })
+      const candlesticks = useKChartStore.getState().state[useKChartStore.getState().activeChartIndex].mainData.history
+      await calcIndicator(
+        { formula: data.extra.formula, symbal: symbol, indicatorId: data.value },
+        candlesticks,
+        timeIndex
+      ).then(c => {
+        kChartUtils.setIndicatorData({ index: currentIndex, indicatorId: data.value, data: c.data })
+      })
+
+    } else {
+
+      kChartUtils.setMainIndicators({ indicators })
+      kChartUtils.setIndicatorData({ index: currentIndex, indicatorId: data.value, data: [] })
+    }
+
+
+
+
+
+    // const r = await data.map(v => {
+    //   return 
+    // })
+
+    // await Promise.all(r).then(data => {
+    //   kChartUtils.setIndicatorsData({ index: currentIndex, data })
+    // })
 
     chartEvent.event.emit('indicatorChange', { index: currentIndex })
   }
@@ -141,7 +163,7 @@ const MainIndicatorSelect = ({ indicators }: { indicators?: Awaited<ReturnType<t
             </HoverCardContent>
           </HoverCard>
         ))}
-      <div className="!ml-auto flex items-center cursor-pointer" onClick={() => kChartUtils.setBackTest({})} onKeyDown={() => {}}>
+      <div className="!ml-auto flex items-center cursor-pointer" onClick={() => kChartUtils.setBackTest({})} onKeyDown={() => { }}>
         <JknIcon name="ic_replay" className="w-4 h-3.5" />
         <span className="text-sm">回测</span>
       </div>
@@ -164,7 +186,7 @@ const LineTypeSelect = () => {
     <div className="flex items-center space-x-3 text-xs">
       <div
         onClick={() => onChangeMainChartType('line')}
-        onKeyDown={() => {}}
+        onKeyDown={() => { }}
         className={cn('flex items-center cursor-pointer', chartType === 'line' && 'text-primary')}
       >
         <JknIcon name="line_type_1" className="w-4 h-4 mr-1" checked={chartType === 'line'} />
@@ -172,7 +194,7 @@ const LineTypeSelect = () => {
       </div>
       <div
         onClick={() => onChangeMainChartType('k-line')}
-        onKeyDown={() => {}}
+        onKeyDown={() => { }}
         className={cn('flex items-center cursor-pointer', chartType === 'k-line' && 'text-primary')}
       >
         <JknIcon name="line_type_2" className="w-4 h-4 mr-1" checked={chartType === 'k-line'} />

@@ -50,7 +50,7 @@ const FactorStep = () => {
       <div className="w-36 px-4 flex items-center flex-shrink-0  border-t-0 border border-solid border-background">
         第四步：叠加策略
       </div>
-      <div className="flex-1 flex items-stretch">
+      <div className="flex-1 flex items-stretch py-2">
         <div className="flex-shrink-0 px-4 flex items-center text-sm text-stock-up">
           <JknIcon name="ic_price_up_green" />
           底部信号

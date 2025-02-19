@@ -10,6 +10,7 @@ import { produce } from 'immer'
 import { uid } from 'radash'
 import { type ComponentRef, useEffect, useMemo, useRef, useState } from 'react'
 import { MessageInput } from './components/message-input'
+
 const formatTime = (date: string) => {
   const day = dayjs(+date * 1000)
   if (day.isSame(dayjs(), 'day')) {
@@ -64,6 +65,21 @@ const MessageCenter = () => {
     }
   })
 
+  useWsChat((msg) => {
+    const fromUid = msg.data.from_uid
+
+    queryClient.setQueryData<typeof chats.data>(chatsQueryKey, produce(draft => {
+      const item = draft?.find(item => item.uid === fromUid)
+      if (item) {
+        item.message = msg.data.content
+        item.create_time = dateUtils.toUsDay(msg.time).valueOf().toString().slice(0, -3)
+        if (active !== fromUid) {
+          item.unread = (+item.unread + 1).toString()
+        }
+      }
+    }))
+  })
+
   return (
     <div className="bg-muted h-full flex items-stretch-around">
       <div className="w-[300px] border-0 border-r border-solid border-border flex-shrink-0">
@@ -75,13 +91,13 @@ const MessageCenter = () => {
               setType('chat')
               markAsReadMutation.mutate(item.uid)
             }}
-            onKeyDown={() => {}}
+            onKeyDown={() => { }}
             className={cn(
               'flex py-4 hover:bg-[#3a3a3a] cursor-pointer transition-all px-2 items-center border-0 border-b border-solid border-border',
-              item.uid === active && 'bg-[#3a3a3a]'
+              (item.uid === active && type === 'chat') && 'bg-[#3a3a3a]'
             )}
           >
-            <JknAvatar className="w-8 h-8" src={item.avatar ?? undefined} />
+            <JknAvatar className="w-12 h-12" src={item.avatar ?? undefined} />
             <div className="text-sm ml-2 flex-1 overflow-hidden">
               <div className="flex items-center w-full">
                 <div>{item.username}</div>
@@ -90,9 +106,9 @@ const MessageCenter = () => {
                     {item.unread}
                   </span>
                 )}
-                <span className="ml-auto text-sm">{formatTime(item.create_time)}</span>
+                <span className="ml-auto text-tertiary text-xs">{formatTime(item.create_time)}</span>
               </div>
-              <div className="mt-1 w-full text-ellipsis overflow-hidden whitespace-nowrap">{item.message}</div>
+              <div className="mt-1 w-full text-ellipsis overflow-hidden whitespace-nowrap text-tertiary text-xs">{item.message}</div>
             </div>
           </div>
         ))}
@@ -103,24 +119,24 @@ const MessageCenter = () => {
               setActive(item.id)
               setType('notice')
             }}
-            onKeyDown={() => {}}
+            onKeyDown={() => { }}
             className={cn(
               'flex py-4 hover:bg-[#3a3a3a] cursor-pointer transition-all px-2 items-center border-0 border-b border-solid border-border',
-              item.id === active && 'bg-[#3a3a3a]'
+              (item.id === active && type === 'notice') && 'bg-[#3a3a3a]'
             )}
           >
-            <JknAvatar className="w-8 h-8" src={item.avatar ?? undefined} />
+            <JknAvatar className="w-12 h-12" src={item.avatar ?? undefined} title={item.name} />
             <div className="text-sm ml-2 flex-1 overflow-hidden">
               <div className="flex items-center w-full">
                 <div>{item.name}</div>
                 {+item.unread > 0 && (
-                  <span className="text-xs ml-2 h-4 w-4 bg-stock-down text-white rounded-full text-center leading-4">
+                  <span className="text-xs ml-2 h-5 w-5 bg-stock-down text-white rounded-full text-center leading-5">
                     {item.unread}
                   </span>
                 )}
-                <span className="ml-auto text-sm">{item.create_time ? formatTime(item.create_time) : '--'}</span>
+                <span className="ml-auto text-xs text-tertiary">{item.create_time ? dateUtils.dateAgo(item.create_time) : '--'}</span>
               </div>
-              <div className="mt-1 w-full text-ellipsis overflow-hidden  whitespace-nowrap">
+              <div className="mt-1 w-full text-ellipsis overflow-hidden  whitespace-nowrap text-tertiary text-xs">
                 {item.describe || '--'}
               </div>
             </div>
@@ -152,8 +168,34 @@ const ChatMessageContent = (props: MessageContentProps) => {
         page: 1
       })
   })
+  const queryClient = useQueryClient()
 
-  const ws = useWsChat(() => {})
+  const ws = useWsChat((msg) => { 
+    const fromUid = msg.data.from_uid
+
+    if(fromUid !== props.msgKey) return
+
+    queryClient.cancelQueries({ queryKey: [getChatRecords.cacheKey, props.msgKey] })
+
+    queryClient.setQueryData<typeof chats.data>(
+      [getChatRecords.cacheKey, props.msgKey],
+      produce(draft => {
+        draft?.items.push({
+          from_user: {
+            id: msg.data.from_uid,
+            username: msg.data.user_id,
+            avatar: ''
+          },
+          id: uid(16),
+          group_id: msg.data.group_id.toString(),
+          type: msg.data.type.toString() as any,
+          message: msg.data.content,
+          is_read: '1',
+          create_time: dateUtils.toUsDay(msg.time).valueOf().toString().slice(0, -3)
+        })
+      })
+    )
+  })
 
   const data = useMemo<MessageType[]>(() => {
     // console.log(notices.data, chats.data)
@@ -190,8 +232,6 @@ const ChatMessageContent = (props: MessageContentProps) => {
       })
     }
   }, [chats.data])
-
-  const queryClient = useQueryClient()
 
   const sendMessage = useMutation({
     mutationFn: (params: { msg: string; type: '0' | '1' }) => {
@@ -237,7 +277,7 @@ const ChatMessageContent = (props: MessageContentProps) => {
         <div className="">
           {data?.map(group => (
             <div key={group[0].create_time} className="space-y-4">
-              <div className="text-center flex items-center justify-center text-tertiary mt-4 text-xs">
+              <div className="text-center flex items-center justify-center text-tertiary mt-4 text-sm">
                 <div className="w-1/5 h-0 border-0 border-b border-solid border-b-border mr-2" />
                 <JknIcon name="ic_us" className="w-3 h-3 mr-2" />
                 美东时间&nbsp;
@@ -346,22 +386,25 @@ const SystemMessageContent = (props: SystemMessageContentProps) => {
     <div className="h-full overflow-hidden">
       <ScrollArea ref={scrollRef} className="h-full border-0 border-b border-solid border-b-border p-4 box-border">
         <div className="space-y-8">
-          {data.map(msg => (
-            <div key={msg.id}>
-              <div className="text-center text-xs text-tertiary my-2">
-                <span>
-                  {dateUtils.toUsDay(new Date().valueOf()).to(dateUtils.toUsDay(+msg.create_time))}
-                  &nbsp;
-                  {dateUtils.toUsDay(+msg.create_time).format('HH:mm')}
-                </span>
+          {data?.map(msg => (
+            <div key={msg.id} className="space-y-4">
+              <div className="text-center flex items-center justify-center text-tertiary mt-4 text-sm">
+                <div className="w-1/5 h-0 border-0 border-b border-solid border-b-border mr-2" />
+                <JknIcon name="ic_us" className="w-3 h-3 mr-2" />
+                美东时间&nbsp;
+                {
+                  dateUtils.toUsDay(msg.create_time).format('MM-DD w HH:mm')
+                }
+                <div className="w-1/5 h-0 border-0 border-b border-solid border-b-border ml-2" />
               </div>
-              <div className="bg-[#282828] px-4 py-2 max-w-[600px] max-h-[102px] box-border flex items-start overflow-hidden rounded text-secondary mx-auto w-fit cursor-pointer">
-                <div className="text-sm">{msg.title}</div>
-                {msg.img ? (
-                  <div className="w-[110px] h-[82px] ml-auto flex-shrink-0 ">
-                    <img src={msg.img} alt={msg.title} className="w-full h-full" />
+              <div className="flex items-center w-full">
+                <div className="mr-auto flex items-start text-black max-w-[60%]">
+                  <JknAvatar className="mr-3" src="" title={msg.title} />
+                  <div className="bg-stock-green rounded py-2 px-2 relative message-content-right box-border text-base">
+                    <div className="font-bold">{msg.title}</div>
+                    <pre >{msg.content}</pre>
                   </div>
-                ) : null}
+                </div>
               </div>
             </div>
           ))}
@@ -369,19 +412,6 @@ const SystemMessageContent = (props: SystemMessageContentProps) => {
       </ScrollArea>
       <style jsx>
         {`
-        .message-content::after {
-          content: '';
-          position: absolute;
-          width: 0;
-          height: 0;
-          border-bottom: 6px solid transparent;
-          border-left: 6px solid #1e8bf1;
-          border-top: 6px solid transparent;
-          top: 50%;
-          transform: translateY(-50%);
-          right: -5px;
-        }
-
         .message-content-right::after {
           content: '';
           position: absolute;
@@ -390,8 +420,7 @@ const SystemMessageContent = (props: SystemMessageContentProps) => {
           border-bottom: 6px solid transparent;
           border-right: 6px solid hsl(var(--color-stock-green));
           border-top: 6px solid transparent;
-          top: 50%;
-          transform: translateY(-50%);
+          top: 14px;
           left: -5px;
         }
       `}

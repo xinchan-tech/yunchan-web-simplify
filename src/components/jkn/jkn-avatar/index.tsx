@@ -5,12 +5,20 @@ import UserDefaultPng from '@/assets/icon/user_default.png'
 interface JknAvatarProps extends ComponentProps<typeof Avatar> {
   src?: string
   fallback?: string
+  title?: string
+  randomBg?: boolean
 }
-const JknAvatar = ({src, fallback, ...props}: JknAvatarProps) => {
+const JknAvatar = ({src, fallback,title, ...props}: JknAvatarProps) => {
   return (
     <Avatar {...props}>
       <AvatarImage src={src} />
-      <AvatarFallback><img src={fallback ?? UserDefaultPng} alt="" className="w-full h-full" /></AvatarFallback>
+      {
+        title ? (
+          <AvatarFallback style={{}}>{title.slice(0, 1).toUpperCase()}</AvatarFallback>
+        ): (
+          <AvatarFallback><img src={fallback ?? UserDefaultPng} alt="" className="w-full h-full" /></AvatarFallback>
+        )
+      }
     </Avatar>
   )
 }

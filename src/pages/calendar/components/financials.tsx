@@ -47,14 +47,14 @@ const StockFinancials = () => {
     }
   }, [query.data?.dates, active])
 
-  const [data, {onSort, setList}] = useTableData<TableDataType>([])
+  const [data, { onSort, setList }] = useTableData<TableDataType>([])
 
 
 
   useEffect(() => {
     const r: TableDataType[] = []
-    
-    if(!query.data?.items) {
+
+    if (!query.data?.items) {
       setList([])
       return
     }
@@ -87,7 +87,7 @@ const StockFinancials = () => {
   const columns: JknRcTableProps<TableDataType>['columns'] = useMemo(() => [
     { title: '序号', dataIndex: 'rank', render: (_: any, __, index) => index + 1, align: 'center', width: 80 },
     {
-      title: '名称代码', dataIndex: 'code', align: 'left', width: 'full', sort: true,
+      title: '名称代码', dataIndex: 'code', align: 'left', sort: true, width: '16%',
       render: (_: any, row) => (
         <StockView name={row.name} code={row.code as string} />
       )
@@ -98,7 +98,7 @@ const StockFinancials = () => {
     {
       title: '现价', size: 80, dataIndex: 'price', align: 'right', width: 120, sort: true,
       render: (_: any, row) => (
-        <SubscribeSpan.Price symbol="" subscribe={false} initValue={row.price} decimal={3} initDirection={row.isUp} zeroText="--"/>
+        <SubscribeSpan.Price symbol="" subscribe={false} initValue={row.price} decimal={3} initDirection={row.isUp} zeroText="--" />
       )
     },
     {

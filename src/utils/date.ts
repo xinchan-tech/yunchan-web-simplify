@@ -234,5 +234,33 @@ export const dateUtils = {
     }
 
     return true
+  },
+  dateAgo: (date: string | Dayjs) => {
+    const d = dateUtils.toUsDay(date)
+    if (d.isSame(dayjs(), 'day')) {
+      const diff = dayjs().diff(d, 'second')
+      if (diff <= 60) {
+        return '刚刚'
+      }
+      if (diff > 60) {
+        const minAgo = dayjs().diff(d, 'minute')
+        if (minAgo > 60) {
+          const hourAgo = dayjs().diff(d, 'hour')
+          return `${hourAgo}小时前`
+        }
+        return `${minAgo}分钟前`
+      }
+      return d.format('今天 HH:mm')
+    }
+    
+    if (d.isSame(dayjs().subtract(1, 'day'), 'day')) {
+      return d.format('昨天 HH:mm')
+    }
+
+    if (d.isSame(dayjs(), 'year')) {
+      return d.format('MM-dd HH:mm')
+    }
+
+    return d.format('YYYY-MM-dd HH:mm')
   }
 }

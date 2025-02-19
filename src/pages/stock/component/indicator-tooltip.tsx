@@ -35,6 +35,7 @@ export const IndicatorTooltip = (props: IndicatorTooltipProps) => {
   const mainIndicators = useKChartStore(useShallow(s => s.state[props.mainIndex].mainIndicators))
 
   useEffect(() => {
+    console.log(props.indicator)
     if (props.indicator.data) {
       const indicators = props.indicator.data
         .filter(item => !!item.name)
@@ -144,12 +145,12 @@ export const IndicatorTooltip = (props: IndicatorTooltipProps) => {
         {props.type === 'main' && (
           <span className="flex-shrink-0">
             {visible ? (
-              <EyeClosedIcon onClick={() => _onChangeIndicatorVisible(false)} className="cursor-pointer" />
+              <EyeClosedIcon onClick={() => _onChangeIndicatorVisible(false)} className="cursor-pointer pointer-events-auto" />
             ) : (
-              <EyeOpenIcon onClick={() => _onChangeIndicatorVisible(true)} className="cursor-pointer" />
+              <EyeOpenIcon onClick={() => _onChangeIndicatorVisible(true)} className="cursor-pointer pointer-events-auto" />
             )}
             &emsp;
-            <TrashIcon className="cursor-pointer" onClick={deleteIndicator} />
+            <TrashIcon className="cursor-pointer pointer-events-auto" onClick={deleteIndicator} />
           </span>
         )}
       </div>
@@ -168,17 +169,17 @@ export const IndicatorTooltipGroup = memo((props: IndicatorTooltipGroupProps) =>
   const [expand, { toggle }] = useBoolean(true)
   const state = useKChartStore(s => s.state[props.mainIndex])
   return (
-    <div className="absolute top-4 space-y-2 main-indicator-tooltip" style={{left: state.yAxis.left ? 80: 8}}>
+    <div className="absolute top-4 space-y-2 main-indicator-tooltip pointer-events-none" style={{ left: state.yAxis.left ? 80 : 8, right: state.yAxis.right ? 80 : 8 }}>
       {expand
         ? indicators.map(item => (
-            <IndicatorTooltip mainIndex={props.mainIndex} key={item.id} type="main" indicator={item} />
-          ))
+          <IndicatorTooltip mainIndex={props.mainIndex} key={item.id} type="main" indicator={item} />
+        ))
         : null}
       {indicators.length > 0 && (
         <span
           className="border border-gray-600 border-solid rounded px-1 cursor-pointer flex items-center justify-center w-6 h-4"
           onClick={toggle}
-          onKeyDown={() => {}}
+          onKeyDown={() => { }}
         >
           {!expand ? (
             <>

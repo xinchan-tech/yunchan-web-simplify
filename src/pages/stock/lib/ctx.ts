@@ -1,7 +1,7 @@
 import {
   StockChartInterval,
   type StockRawRecord,
-  getStockChart,
+  type getStockChart,
   getStockChartV2,
   getStockIndicatorData,
   getStockTabData
@@ -702,9 +702,12 @@ export const kChartUtils: KChartUtils = {
   addOverlayStock: ({ index, symbol }) => {
     const chart = useKChartStore.getState().state[index ?? useKChartStore.getState().activeChartIndex]
     if (chart.overlayStock.some(item => item.symbol === symbol)) return
+
     const startTime =
       useKChartStore.getState().state[index ?? useKChartStore.getState().activeChartIndex].mainData.history[0]?.[0]
+
     const interval = useKChartStore.getState().state[index ?? useKChartStore.getState().activeChartIndex].timeIndex
+
     const params = {
       start_at: dayjs(+startTime! * 1000)
         .tz('America/New_York')
@@ -716,17 +719,40 @@ export const kChartUtils: KChartUtils = {
 
     queryClient
       .ensureQueryData({
-        queryKey: [getStockChart.cacheKey, { symbol }],
+        queryKey: [getStockChartV2.cacheKey, { symbol }],
         queryFn: () => getStockChartV2(params)
       })
       .then(data => {
+        const startData = data.data.list[0]
+        const mainData = renderUtils.findNearestTime(
+          useKChartStore.getState().state[index ?? useKChartStore.getState().activeChartIndex].mainData.history,
+          +startData[0]!
+        )
+
+        if(!mainData?.data) return
+        const basePrice = startData[2] as number
+        if(!basePrice) return
+        //将数据按main的数据比例缩放，比较涨跌幅
+        const scale = (mainData.data[2]) as number / basePrice
+
+        const _data = data.data.list.map(item => {
+          return [
+            item[0],
+            item[1]! * scale,
+            item[2]! * scale,
+            item[3]! * scale,
+            item[4]! * scale,
+            ...item.slice(5)
+          ]
+        })
+
         useKChartStore.setState(state => ({
           state: state.state.map(item => {
             if (item.index === (index ?? state.activeChartIndex)) {
               return produce(item, draft => {
                 draft.overlayStock.push({
                   symbol,
-                  data: data.data.list
+                  data: _data as any
                 })
               })
             }
@@ -940,9 +966,9 @@ export const kChartUtils: KChartUtils = {
       state: state.state.map(item => {
         if (item.index === (params.index ?? state.activeChartIndex)) {
           return produce(item, draft => {
-            if(!draft.backTestMark) {
+            if (!draft.backTestMark) {
               draft.backTestMark = [params]
-            }else{
+            } else {
               draft.backTestMark.push(params)
             }
           })

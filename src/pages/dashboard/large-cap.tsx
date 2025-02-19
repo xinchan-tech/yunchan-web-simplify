@@ -354,7 +354,7 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
                   type: 'dashed'
                 },
                 label: {
-                  formatter: `{${lastPercent > 0 ? 'u' : 'd'}|${(lastPercent * 100).toFixed(2)}%}`,
+                  formatter: `{${lastPercent > 0 ? 'u' : 'd'}|${lastPercent > 0 ? '+' : ''}${(lastPercent * 100).toFixed(2)}%}`,
                   rich: {
                     u: {
                       backgroundColor: stockUpColor,
@@ -362,7 +362,7 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
                       color: '#fff',
                       padding: [1, 2, 1, 2],
                       fontSize: 10,
-                      borderRadius: 4
+                      borderRadius: 2
                     },
                     d: {
                       backgroundColor: stockDownColor,
@@ -370,7 +370,7 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
                       color: '#fff',
                       padding: [1, 2, 1, 2],
                       fontSize: 10,
-                      borderRadius: 4
+                      borderRadius: 2
                     }
                   }
                 }

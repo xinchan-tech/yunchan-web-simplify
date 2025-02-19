@@ -427,7 +427,6 @@ export const renderUtils = {
    * 必须是有序数组, 使用二分查找
    */
   findNearestTime: (data: StockRawRecord[], time: number, gte?: boolean) => {
-    console.log(data, 111)
     if (data.length === 0) return
     if (data.length === 1)
       return {
@@ -441,7 +440,7 @@ export const renderUtils = {
     while (left < right) {
       const mid = Math.floor((left + right) / 2)
       const midTime = +data[mid][0]!
-      console.log(midTime, time)
+
       if (midTime === time) {
         return {
           index: mid,

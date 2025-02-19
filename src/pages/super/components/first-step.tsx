@@ -4,30 +4,24 @@ import {
   JknIcon,
   JknRcTable,
   type JknRcTableProps,
-  JknTable,
-  type JknTableProps,
-  NumSpan,
-  NumSpanSubscribe,
-  ScrollArea,
   StockView,
   SubscribeSpan,
   ToggleGroup,
   ToggleGroupItem
 } from '@/components'
+import { useCheckboxGroup, useTableData, useTableRowClickToStockTrading } from '@/hooks'
 import { type Stock, stockUtils } from '@/utils/stock'
 import { cn } from '@/utils/style'
 import { useQuery } from '@tanstack/react-query'
-import type { Row } from '@tanstack/react-table'
 import { useMount, useUnmount, useUpdateEffect } from 'ahooks'
 import Decimal from 'decimal.js'
 import { useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { SuperStockContext } from '../ctx'
-import { useCheckboxGroup, useTableData, useTableRowClickToStockTrading } from '@/hooks'
 
 const baseExtends: StockExtend[] = ['total_share', 'basic_index', 'day_basic', 'alarm_ai', 'alarm_all', 'financials']
 
 const FirstStep = () => {
-  const [type, setType] = useState('golden')
+  const [type, setType] = useState('spec')
 
   const onClickType = (type: string) => {
     setType(type)
@@ -43,22 +37,22 @@ const FirstStep = () => {
           <div
             className={cn(
               'w-1/4 text-center py-4 text-sm border border-solid border-background -ml-[1px]',
-              type === 'golden' && 'text-primary'
+              type === 'spec' && 'text-primary'
             )}
-            onClick={() => onClickType('golden')}
-            onKeyDown={() => {}}
+            onClick={() => onClickType('spec')}
+            onKeyDown={() => { }}
           >
-            股票金池
+            特色榜单
           </div>
           <div
             className={cn(
               'w-1/4 text-center py-4 text-sm border border-solid border-background -ml-[1px]',
-              type === 'spec' && 'text-primary'
+              type === 'golden' && 'text-primary'
             )}
-            onClick={() => onClickType('spec')}
-            onKeyDown={() => {}}
+            onClick={() => onClickType('golden')}
+            onKeyDown={() => { }}
           >
-            特色榜单
+            股票金池
           </div>
           <div
             className={cn(
@@ -66,7 +60,7 @@ const FirstStep = () => {
               type === 'industry' && 'text-primary'
             )}
             onClick={() => onClickType('industry')}
-            onKeyDown={() => {}}
+            onKeyDown={() => { }}
           >
             行业板块
           </div>
@@ -76,7 +70,7 @@ const FirstStep = () => {
               type === 'concept' && 'text-primary'
             )}
             onClick={() => onClickType('concept')}
-            onKeyDown={() => {}}
+            onKeyDown={() => { }}
           >
             概念板块
           </div>

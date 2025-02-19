@@ -8,7 +8,7 @@ type WsChatData = {
   content: string
 }
 
-export const useWsChat = (handler: (data: any) => void) => {
+export const useWsChat = (handler: (data: EventResult<'chat'>) => void) => {
   const send = useCallback(async (userId: string, data: WsChatData['content'], type = '0'): Promise<string> => {
     const wsMsgId = uid(16)
     let timer: number | undefined = undefined
@@ -47,7 +47,7 @@ export const useWsChat = (handler: (data: any) => void) => {
   }, [])
 
   useEffect(() => {
-    const close = wsManager.on('message', handler)
+    const close = wsManager.on('chat', handler)
 
     return close
   }, [handler])
