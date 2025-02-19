@@ -194,14 +194,16 @@ const UserCenter = (props: UserCenterProps) => {
 
             </div>
             {
-              user?.in_channel_status === '1' && <div className="mt-2">
-                <div>
-                  <span className="cursor-pointer text-primary" onClick={() => {
-                    inviteToGroupModal.modal.open()
-                  }} onKeyDown={() => { }}>{t('inputInviteCode')}</span>
+              (user?.in_channel_status === '1' || user?.show_invite === 1) ? (
+                <div className="mt-2">
+                  <div>
+                    <span className="cursor-pointer text-primary" onClick={() => {
+                      inviteToGroupModal.modal.open()
+                    }} onKeyDown={() => { }}>{t('inputInviteCode')}</span>
 
+                  </div>
                 </div>
-              </div>
+              ) : null
             }
           </div>
           <div className="w-1/2 cell-group">
