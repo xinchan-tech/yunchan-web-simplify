@@ -28,7 +28,7 @@
       "cssModules": true
     }
   },
-  "json":{
+  "json": {
     "formatter": {
       "indentStyle": "space"
     }
@@ -49,6 +49,6 @@
     }
   },
   "files": {
-    "ignore": ["examples"]
+    "ignore": ["examples", "src/app.tsx", "src/components/menu/menu-right.tsx"]
   }
 }

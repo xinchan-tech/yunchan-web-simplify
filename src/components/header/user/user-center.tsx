@@ -24,7 +24,6 @@ const userFormSchema = z.object({
   realname: z.string().optional()
 })
 
-
 const UserCenter = (props: UserCenterProps) => {
   const form = useZForm(userFormSchema, { realname: '' })
   const user = useUser(s => s.user)
@@ -35,9 +34,10 @@ const UserCenter = (props: UserCenterProps) => {
   const { t } = useTranslation()
   const query = useQuery({
     queryKey: [getUser.cacheKey],
-    queryFn: () => getUser({
-      extends: ['authorized']
-    })
+    queryFn: () =>
+      getUser({
+        extends: ['authorized']
+      })
   })
 
   const logoutQuery = useRequest(logout, { manual: true })
@@ -146,7 +146,7 @@ const UserCenter = (props: UserCenterProps) => {
   })
 
   return (
-    <div >
+    <div>
       <div className="p-4 text-sm">
         <div className="text-base mb-2 flex items-center">
           <span>{t('base info')}</span>
@@ -276,7 +276,9 @@ const UserEditForm = () => {
 
   return (
     <div className="p-4">
-      <FormField control={form.control} name="realname"
+      <FormField
+        control={form.control}
+        name="realname"
         render={({ field }) => (
           <FormItem>
             <FormLabel>{t('nickname')}</FormLabel>

@@ -50,6 +50,7 @@ export type UserResult = {
   total_inv: number
   total_points: number
   points: number
+  buy_inchannel_status: number
 }
 
 export type Authorized = {

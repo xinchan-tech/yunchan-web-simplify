@@ -1,18 +1,23 @@
 import { useContext, useEffect, useRef, useState } from "react";
 import { GroupChatContext } from "..";
-import { Subscriber } from "wukongimjssdk";
+import type { Subscriber } from "wukongimjssdk";
 import { useUser } from "@/store";
 import { useToast } from "@/hooks";
 import { useGroupChatShortStore } from "@/store/group-chat-new";
 import {
   setGroupManagerService,
-  setManagerServicePayload,
-  forbiddenServicePyload,
+  type setManagerServicePayload,
+  type forbiddenServicePyload,
   setMemberForbiddenService,
+  bindInviteCode,
+  joinGroupByInviteCode,
 } from "@/api";
 import { throttle } from "radash";
-import { ContextMenuContent, ContextMenuItem } from "@/components";
+import { Button, ContextMenuContent, ContextMenuItem, Input } from "@/components";
 import { useLatest } from "ahooks";
+import { useModal } from "@/components";
+
+
 export const useMemberSetting = () => {
   const { user } = useUser();
   const { toast } = useToast();
@@ -238,3 +243,98 @@ export const useScrollToBottomOnArrowClick = (
 
   return { incrementUnreadCount };
 };
+
+
+export const useJoinGroupByInviteCode = (options?: {
+  showTip: boolean,
+  onSuccess: () => void
+}) => {
+  const [inviteCode, setInviteCode] = useState('')
+  const [isJoining, setIsJoining] = useState(false)
+  const {toast} = useToast()
+  const {showTip = true, onSuccess} = options || {}
+  const handleInviteToGroup = () => {
+    if (inviteCode) {
+      setIsJoining(true)
+      bindInviteCode({ inv_code: inviteCode })
+        .then(r => {
+          if (r.data === true) {
+            const params: {
+              re_code: string
+              type: '1' | '2'
+            } = {
+              re_code: inviteCode,
+              type: '1'
+            }
+
+            return joinGroupByInviteCode(params)
+          }
+        })
+        .then(r => {
+          if (r?.status === 1) {
+            toast({
+              description: '加群成功'
+            })
+            typeof onSuccess === 'function' && onSuccess()
+          }
+        })
+        .catch(er => {
+          if (er?.message) {
+            toast({
+              description: er.message
+            })
+          }
+        })
+        .finally(() => {
+          setInviteCode('')
+          inviteToGroupModal.modal.close()
+          setIsJoining(false)
+        })
+    }
+  }
+  const inviteToGroupModal = useModal({
+    content: (
+      <div className="flex items-center justify-center pl-2 pr-2 flex-col pt-5 pb-5">
+        {
+          showTip === true && (
+            <div className="text-sm mb-4">
+              您购买了套餐，尚未加入交流群，请联系主播获取邀请码，填写之后加入交流群
+            </div>
+          )
+        }
+     
+        <div className={'border-dialog-border rounded-sm  bg-accent inline-block'}>
+          <Input
+            className="border-none placeholder:text-tertiary flex-1"
+            value={inviteCode}
+            onChange={e => {
+              setInviteCode(e.target.value)
+            }}
+            style={{ marginTop: '0' }}
+            placeholder="请输入邀请码"
+          />
+        </div>
+        <Button
+          className="mt-5"
+          loading={isJoining}
+          onClick={() => {
+            handleInviteToGroup()
+          }}
+        >
+          确定
+        </Button>
+      </div>
+    ),
+    footer: false,
+    title: '输入邀请码加群',
+    className: 'w-[600px]',
+    closeIcon: true
+  })
+
+  return {
+    contenxt: inviteToGroupModal.context,
+    open: inviteToGroupModal.modal.open,
+    close: inviteToGroupModal.modal.close
+
+  }
+}

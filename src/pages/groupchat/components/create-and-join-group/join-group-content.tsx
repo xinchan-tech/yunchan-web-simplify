@@ -1,65 +1,89 @@
-import { useEffect, useState } from "react";
+import { useRef, useState } from 'react'
 
-import { Input } from "@/components";
-import { cn } from "@/utils/style";
-import { useGroupChatShortStore } from "@/store/group-chat-new";
-import { useQuery } from "@tanstack/react-query";
-import { getGroupChannels } from "@/api";
-import type { GroupChannelItem } from "@/api";
-import GroupChannelCard from "./group-channel-card";
-import JoinGroup from "../join-group";
-import { GroupData } from "../../group-channel";
-import FullScreenLoading from "@/components/loading";
+import { Input } from '@/components'
+import { cn } from '@/utils/style'
+import { useGroupChatShortStore } from '@/store/group-chat-new'
+import { useQuery } from '@tanstack/react-query'
+import { getGroupChannels, joinGroupByInviteCode } from '@/api'
+import type { getGroupChannelsParams, GroupChannelItem } from '@/api'
+import GroupChannelCard from './group-channel-card'
+import JoinGroup from '../join-group'
+import type { GroupData } from '../../group-channel'
+import FullScreenLoading from '@/components/loading'
+import { useToast } from '@/hooks'
 
-type GroupCategoryValue = "1" | "2" | "3";
+type GroupCategoryValue = '1' | '2' | '3'
 
 type GroupCategory = {
-  label: string;
-  value: GroupCategoryValue;
-};
+  label: string
+  value: GroupCategoryValue
+}
 
-const JoinGroupContent = (props: { onSuccess: () => void }) => {
-  const [currentCategory, setCurrentCategory] =
-    useState<GroupCategoryValue>("1");
-  const [keywords, setKeywords] = useState("");
-  const { conversationWraps } = useGroupChatShortStore();
-  const [curGroupData, setCurGroupData] = useState<GroupData | null>(null);
+const JoinGroupContent = (props: { onSuccess: () => void; type?: string }) => {
+  const [currentCategory, setCurrentCategory] = useState<GroupCategoryValue>('1')
+  const [keywords, setKeywords] = useState('')
+  const { conversationWraps } = useGroupChatShortStore()
+  const [curGroupData, setCurGroupData] = useState<GroupData | null>(null)
+  const { toast } = useToast()
+
   const category: GroupCategory[] = [
     {
-      label: "热门",
-      value: "1",
-    },
-    // {
-    //   label: "推荐",
-    //   value: "2",
-    // },
-    // {
-    //   label: "高端",
-    //   value: "3",
-    // },
-  ];
+      label: '热门',
+      value: '1'
+    }
+  ]
 
   const option = {
     queryKey: [getGroupChannels.cacheKey, currentCategory, keywords],
-    queryFn: () =>
-      getGroupChannels({
+    queryFn: () => {
+      let params: getGroupChannelsParams = {
         type: currentCategory,
-        keywords,
-      }),
-  };
-  const [openJoinMask, setOpenJoinMask] = useState(false);
+        keywords
+      }
+      if (props.type === 'change') {
+        if (!keywords) {
+          return Promise.resolve([])
+        }
 
-  const { data, isFetching } = useQuery(option);
+        params = {
+          type: currentCategory,
+          re_code: keywords
+        }
+      }
+      return getGroupChannels(params)
+    }
+  }
+  const [openJoinMask, setOpenJoinMask] = useState(false)
+
+  const { data, isFetching } = useQuery(option)
 
   const judgeIsJoined = (account: string) => {
-    let res = false;
-    if (conversationWraps instanceof Array && conversationWraps.length > 0) {
-      res = conversationWraps.some(
-        (wrap) => wrap.channel.channelID === account
-      );
+    let res = false
+    if (Array.isArray(conversationWraps) && conversationWraps.length > 0) {
+      res = conversationWraps.some(wrap => wrap.channel.channelID === account)
     }
-    return res;
-  };
+    return res
+  }
+
+  const [changeGroupLoading, setChangeGroupLoading] = useState(false)
+  const handleChangeGroup = () => {
+    setChangeGroupLoading(true)
+    joinGroupByInviteCode({
+      re_code: keywords,
+      type: '2'
+    })
+      .then(r => {
+        if (r?.status === 1) {
+          typeof props.onSuccess === 'function' && props.onSuccess()
+          toast({
+            description: '更换群聊成功'
+          })
+        }
+      })
+      .finally(() => {
+        setChangeGroupLoading(false)
+      })
+  }
 
   return (
     <div className="w-full h-full content-box">
@@ -68,58 +92,68 @@ const JoinGroupContent = (props: { onSuccess: () => void }) => {
           <JoinGroup
             data={curGroupData}
             onSuccess={props.onSuccess}
+            type={props.type}
             onClose={() => {
-              setOpenJoinMask(false);
+              setOpenJoinMask(false)
             }}
           />
         </div>
       )}
-      {isFetching === true && <FullScreenLoading fullScreen={false} />}
+      {(isFetching === true || changeGroupLoading === true) && <FullScreenLoading fullScreen={false} />}
       <div className="top-area">
         <div className="flex justify-center">
           <div className=" border-dialog-border rounded-sm  bg-accent top-area-search  w-[600px]">
             <Input
               className="border-none placeholder:text-tertiary"
-              placeholder="请输入内容"
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  setKeywords(e.currentTarget.value);
+              placeholder={props.type === 'change' ? '请输入邀请码' : '请输入群名称'}
+              onKeyDown={e => {
+                if (e.key === 'Enter') {
+                  setKeywords(e.currentTarget.value)
                 }
               }}
-              size={"sm"}
+              size={'sm'}
             />
           </div>
         </div>
-        <div className="flex tag-conts">
-          {category.map((item: GroupCategory) => (
-            <div
-              onClick={() => {
-                setCurrentCategory(item.value);
-              }}
-              key={item.value}
-              className={cn(
-                "mr-4 tag-cont-item",
-                item.value === currentCategory && "tag-active"
-              )}
-            >
-              {item.label}
-            </div>
-          ))}
-        </div>
+        {props.type !== 'change' && (
+          <div className="flex tag-conts">
+            {category.map((item: GroupCategory) => (
+              <div
+                onClick={() => {
+                  setCurrentCategory(item.value)
+                }}
+                onKeyDown={event => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    // Enter or Space key
+                    setCurrentCategory(item.value)
+                  }
+                }}
+                key={item.value}
+                className={cn('mr-4 tag-cont-item', item.value === currentCategory && 'tag-active')}
+              >
+                {item.label}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
       <div className="bottom-area">
-        {(data?.items || []).map((channel: GroupChannelItem) => {
+        {(data || []).map((channel: GroupChannelItem) => {
           return (
             <GroupChannelCard
               key={channel.account}
               joinDisabled={channel.in_channel !== 0}
               data={channel}
               onJoin={() => {
-                setCurGroupData(channel);
-                setOpenJoinMask(true);
+                if (props.type === 'change') {
+                  handleChangeGroup()
+                } else {
+                  setCurGroupData(channel)
+                  setOpenJoinMask(true)
+                }
               }}
-            ></GroupChannelCard>
-          );
+            />
+          )
         })}
         {/* <div className="flex justify-center mt-4 text-sm text-gray-600 cursor-pointer">
           加载更多
@@ -174,7 +208,7 @@ const JoinGroupContent = (props: { onSuccess: () => void }) => {
         }
       `}</style>
     </div>
-  );
-};
+  )
+}
 
-export default JoinGroupContent;
+export default JoinGroupContent

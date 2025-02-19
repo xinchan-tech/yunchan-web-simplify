@@ -1,34 +1,30 @@
-import type { GroupChannelItem } from "@/api";
-import ChatAvatar from "../../chat-avatar";
-import { useMemo } from "react";
-import { Button, JknIcon } from "@/components";
+import type { GroupChannelItem } from '@/api'
+import ChatAvatar from '../../chat-avatar'
+import { useMemo } from 'react'
+import { Button, JknIcon } from '@/components'
 
 export const GroupTag = (props: {
-  tags: string;
-  total?: number | string;
-  showMember?: boolean;
+  tags: string
+  total?: number | string
+  showMember?: boolean
 }) => {
-  const { tags, total, showMember } = props;
+  const { tags, total, showMember } = props
 
   const taglist = useMemo(() => {
-    let result: string[] = [];
+    let result: string[] = []
     if (tags) {
-      result = tags.split(/[,，]/);
+      result = tags.split(/[,，]/)
     }
-    if (result.length > 0 && result[result.length - 1] === "") {
-      result.pop();
+    if (result.length > 0 && result[result.length - 1] === '') {
+      result.pop()
     }
-    return result;
-  }, [tags]);
+    return result
+  }, [tags])
   return (
-    <div className="flex mb-1">
+    <div className="flex mb-1 flex-wrap">
       {showMember === true && (
         <div className="group-tag text-xs">
-          <JknIcon
-            name="ic_top_2"
-            className="mr-1"
-            style={{ width: "14px", height: "14px" }}
-          />
+          <JknIcon name="ic_top_2" className="mr-1" style={{ width: '14px', height: '14px' }} />
           {total}
         </div>
       )}
@@ -38,7 +34,7 @@ export const GroupTag = (props: {
           <div key={Item + index} className="group-tag text-xs">
             {Item}
           </div>
-        );
+        )
       })}
       <style jsx>{`
         .group-tag {
@@ -52,15 +48,15 @@ export const GroupTag = (props: {
         }
       `}</style>
     </div>
-  );
-};
+  )
+}
 
 const GroupChannelCard = (props: {
-  data: GroupChannelItem;
-  onJoin: () => void;
-  joinDisabled?: boolean;
+  data: GroupChannelItem
+  onJoin: () => void
+  joinDisabled?: boolean
 }) => {
-  const { data } = props;
+  const { data } = props
 
   return (
     <div className="flex justify-between  flex-shrink-0 card-container">
@@ -70,7 +66,7 @@ const GroupChannelCard = (props: {
             data={{
               name: data.name,
               avatar: data.avatar,
-              uid: data.account,
+              uid: data.account
             }}
             className="w-[60px] h-[60px]"
           />
@@ -95,9 +91,7 @@ const GroupChannelCard = (props: {
               );
             })}
           </div> */}
-          <div className="group-desc text-xs text-gray-600">
-            社群简介：{data.brief}
-          </div>
+          <div className="group-desc text-xs text-gray-600">社群简介：{data.brief}</div>
         </div>
       </div>
       <div className="group-price">
@@ -109,16 +103,14 @@ const GroupChannelCard = (props: {
           <Button
             size="sm"
             onClick={() => {
-              typeof props.onJoin === "function" && props.onJoin();
+              typeof props.onJoin === 'function' && props.onJoin()
             }}
             style={{
-              backgroundColor: props.joinDisabled
-                ? "rgb(35,35,35)"
-                : "rgb(49,86,245)",
+              backgroundColor: props.joinDisabled ? 'rgb(35,35,35)' : 'rgb(49,86,245)'
             }}
             disabled={props.joinDisabled}
           >
-            {props.joinDisabled === true ? "已加入" : "加入"}
+            {props.joinDisabled === true ? '已加入' : '加入'}
           </Button>
         </div>
       </div>
@@ -161,7 +153,7 @@ const GroupChannelCard = (props: {
         `}
       </style>
     </div>
-  );
-};
+  )
+}
 
-export default GroupChannelCard;
+export default GroupChannelCard

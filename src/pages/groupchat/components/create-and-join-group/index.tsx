@@ -4,73 +4,68 @@ import {
   DropdownMenu,
   DropdownMenuItem,
   DropdownMenuContent,
-  DropdownMenuTrigger,
-} from "@/components";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+  DropdownMenuTrigger
+} from '@/components'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 
-import { useState } from "react";
-import JoinGroupContent from "./join-group-content";
-import CreateGroupForm from "./create-group-form";
-import { CreateGroupRecord } from "@/api";
+import { useState } from 'react'
+import JoinGroupContent from './join-group-content'
+import CreateGroupForm from './create-group-form'
+import type { CreateGroupRecord } from '@/api'
 
 const CreateGroup = () => {
   const createGroup = useModal({
     content: (
       <CreateGroupForm
         onSuccess={() => {
-          createGroup.modal.close();
+          createGroup.modal.close()
         }}
-        onReCreate={(data) => {
-          reCreateModal.modal.open();
-          setCurRecord(data);
+        onReCreate={data => {
+          reCreateModal.modal.open()
+          setCurRecord(data)
         }}
       />
     ),
     footer: null,
-    className: "w-[720px]",
+    className: 'w-[720px]',
     onOpen: () => {},
-    title: "创建社群",
-    closeIcon: true,
-  });
-  const [curRecord, setCurRecord] = useState<CreateGroupRecord | null>(null);
+    title: '创建社群',
+    closeIcon: true
+  })
+  const [curRecord, setCurRecord] = useState<CreateGroupRecord | null>(null)
   const reCreateModal = useModal({
     content: (
       <CreateGroupForm
         onSuccess={() => {
-          reCreateModal.modal.close();
-          createGroup.modal.close();
+          reCreateModal.modal.close()
+          createGroup.modal.close()
         }}
         editMode
         initData={curRecord}
-      ></CreateGroupForm>
+      />
     ),
-    className: "w-[720px]",
-    title: "重新申请",
+    className: 'w-[720px]',
+    title: '重新申请',
     closeIcon: true,
-    footer: null,
-  });
+    footer: null
+  })
 
   const joinGroup = useModal({
     content: (
       <JoinGroupContent
         onSuccess={() => {
-          joinGroup.modal.close();
+          joinGroup.modal.close()
         }}
       />
     ),
     footer: null,
-    className: "w-[800px]",
+    className: 'w-[800px]',
     onOpen: () => {},
-    title: "加入群组",
-    closeIcon: true,
-  });
+    title: '加入群组',
+    closeIcon: true
+  })
 
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(false)
   return (
     <>
       <DropdownMenu>
@@ -83,7 +78,7 @@ const CreateGroup = () => {
                     <JknIcon
                       name="add"
                       onClick={() => {
-                        setOpen(!open);
+                        setOpen(!open)
                       }}
                     />
                   </span>
@@ -96,16 +91,16 @@ const CreateGroup = () => {
         <DropdownMenuContent>
           <DropdownMenuItem
             onClick={() => {
-              createGroup.modal.open();
-              setOpen(false);
+              createGroup.modal.open()
+              setOpen(false)
             }}
           >
             创建社群
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={() => {
-              joinGroup.modal.open();
-              setOpen(false);
+              joinGroup.modal.open()
+              setOpen(false)
             }}
           >
             加入社群
@@ -116,7 +111,7 @@ const CreateGroup = () => {
       {reCreateModal.context}
       {joinGroup.context}
     </>
-  );
-};
+  )
+}
 
-export default CreateGroup;
+export default CreateGroup

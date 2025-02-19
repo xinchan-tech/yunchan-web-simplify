@@ -1,64 +1,56 @@
-import {
-  getGroupDetailService,
-  getPaymentTypesService,
-  joinGroupService,
-  loopUpdatePaymentStatus,
-} from "@/api";
-import { GroupData } from "../../group-channel";
-import ChatAvatar from "../chat-avatar";
-import { Button } from "@/components";
-import QrCode from "react-qr-code";
+import { getGroupDetailService, getPaymentTypesService, joinGroupService, loopUpdatePaymentStatus } from '@/api'
+import type { GroupData } from '../../group-channel'
+import ChatAvatar from '../chat-avatar'
+import { Button } from '@/components'
+import QrCode from 'react-qr-code'
 
-import { cn } from "@/utils/style";
-import { useEffect, useRef, useState } from "react";
+import { cn } from '@/utils/style'
+import { useEffect, useRef, useState } from 'react'
 
-import WKSDK from "wukongimjssdk";
-import { useToast } from "@/hooks";
-import FullScreenLoading from "@/components/loading";
-import { Checkbox } from "@/components";
-import { setExpireGroupInCache } from "../../chat-utils";
-import { useQuery } from "@tanstack/react-query";
+import WKSDK from 'wukongimjssdk'
+import { useToast } from '@/hooks'
+import FullScreenLoading from '@/components/loading'
+import { Checkbox } from '@/components'
+import { setExpireGroupInCache } from '../../chat-utils'
+import { useQuery } from '@tanstack/react-query'
 
 const JoinGroup = (props: {
-  data: GroupData;
-  onSuccess: () => void;
-  onClose: () => void;
+  data: GroupData
+  onSuccess: () => void
+  onClose: () => void
+  type?: string
 }) => {
-  const { data } = props;
-  const { toast } = useToast();
+  const { data } = props
+  const { toast } = useToast()
 
   const options = {
     queryFn: () => getPaymentTypesService(),
-    queryKey: [getPaymentTypesService.key],
-  };
+    queryKey: [getPaymentTypesService.key]
+  }
 
   const options2 = {
     queryFn: () => getGroupDetailService(data.account),
-    queryKey: [getGroupDetailService.key],
-  };
+    queryKey: [getGroupDetailService.key]
+  }
 
-  const { data: payMethods, isFetching: isFetchingPayMethods } =
-    useQuery(options);
-  const { data: groupDetailData, isFetching } = useQuery(options2);
+  const { data: payMethods, isFetching: isFetchingPayMethods } = useQuery(options)
+  const { data: groupDetailData, isFetching } = useQuery(options2)
 
-  const [curPayMethod, setCurPayMethod] = useState("");
-  const [wechatPaymentUrl, setWechatPaymentUrl] = useState("");
+  const [curPayMethod, setCurPayMethod] = useState('')
+  const [wechatPaymentUrl, setWechatPaymentUrl] = useState('')
 
   const renderTags = () => {
-    let tags: string[] = [];
+    let tags: string[] = []
     if (data.tags) {
-      tags = data.tags.split(/[,、]/);
+      tags = data.tags.split(/[,、]/)
     }
 
     return tags.map((tag, idx) => {
       if (!tag) {
-        return null;
+        return null
       }
       return (
-        <div
-          key={`${tag}${idx}`}
-          className="group-tag mr-2 h-5 leading-5 pl-[6px] pr-[6px] rounded-sm"
-        >
+        <div key={`${tag}${idx}`} className="group-tag mr-2 h-5 leading-5 pl-[6px] pr-[6px] rounded-sm">
           {tag}
           <style jsx>{`
             .group-tag {
@@ -68,107 +60,101 @@ const JoinGroup = (props: {
             }
           `}</style>
         </div>
-      );
-    });
-  };
+      )
+    })
+  }
 
-  const timerRef = useRef<number>();
+  const timerRef = useRef<number>()
   useEffect(() => {
     return () => {
-      clearInterval(timerRef.current);
-    };
-  }, []);
+      clearInterval(timerRef.current)
+    }
+  }, [])
 
   useEffect(() => {
     if (!curPayMethod && payMethods) {
-      setCurPayMethod(payMethods[0].type);
+      setCurPayMethod(payMethods[0].type)
     }
-  }, [payMethods]);
+  }, [payMethods])
 
-  const [joinIng, setJoinIng] = useState(false);
+  const [joinIng, setJoinIng] = useState(false)
 
   const loopCheckStatus = (sn: string) => {
     timerRef.current = setInterval(() => {
-      loopUpdatePaymentStatus(sn).then((res) => {
+      loopUpdatePaymentStatus(sn).then(res => {
         if (Number(res.pay_status) === 1) {
-          clearInterval(timerRef.current);
+          clearInterval(timerRef.current)
 
-          WKSDK.shared().config.provider.syncConversationsCallback();
-          toast({ description: "加群成功" });
-          setExpireGroupInCache(data.account, false);
-          setJoinIng(false);
-          typeof props.onSuccess === "function" && props.onSuccess();
+          WKSDK.shared().config.provider.syncConversationsCallback()
+          toast({ description: '加群成功' })
+          setExpireGroupInCache(data.account, false)
+          setJoinIng(false)
+          typeof props.onSuccess === 'function' && props.onSuccess()
         }
-      });
-    }, 10000);
-  };
+      })
+    }, 10000)
+  }
 
   const handleJoinGroup = async () => {
     if (!curPayMethod) {
-      toast({ description: "请选择支付方式" });
-      return;
+      toast({ description: '请选择支付方式' })
+      return
     }
     if (data.account) {
       try {
-        let resp;
+        let resp
 
-        setJoinIng(true);
+        setJoinIng(true)
         if (selectedProdSn) {
           resp = await joinGroupService(data.account, {
             product_sn: selectedProdSn,
-            payment_type: curPayMethod,
-          });
-          console.log(resp);
+            payment_type: curPayMethod
+          })
+          console.log(resp)
         }
         if (resp === true) {
-          WKSDK.shared().config.provider.syncConversationsCallback();
-          toast({ description: "加群成功" });
-          setExpireGroupInCache(data.account, false);
-          typeof props.onSuccess === "function" && props.onSuccess();
-          setJoinIng(false);
+          WKSDK.shared().config.provider.syncConversationsCallback()
+          toast({ description: '加群成功' })
+          setExpireGroupInCache(data.account, false)
+          typeof props.onSuccess === 'function' && props.onSuccess()
+          setJoinIng(false)
         } else if (resp.pay_sn && resp.config) {
           if (resp.config.url) {
-            if (curPayMethod === "wechat") {
-              setWechatPaymentUrl(resp.config.url);
+            if (curPayMethod === 'wechat') {
+              setWechatPaymentUrl(resp.config.url)
             } else {
-              window.open(resp.config.url);
+              window.open(resp.config.url)
             }
-            loopCheckStatus(resp.pay_sn);
+            loopCheckStatus(resp.pay_sn)
           }
         }
       } catch (er) {
-        console.error(er);
-        toast({ description: er?.message || "加群失败" });
-        setJoinIng(false);
+        console.error(er)
+        toast({ description: er?.message || '加群失败' })
+        setJoinIng(false)
       }
     }
-  };
+  }
 
-  const [selectedProdSn, setSelectedProdSn] = useState("");
+  const [selectedProdSn, setSelectedProdSn] = useState('')
 
   useEffect(() => {
-    if (
-      groupDetailData &&
-      groupDetailData.products instanceof Array &&
-      groupDetailData.products.length > 0
-    ) {
-      setSelectedProdSn(groupDetailData.products[0].product_sn);
+    if (groupDetailData && Array.isArray(groupDetailData.products) && groupDetailData.products.length > 0) {
+      setSelectedProdSn(groupDetailData.products[0].product_sn)
     }
-  }, [groupDetailData]);
+  }, [groupDetailData])
 
   return (
     <div className="join-group-panel">
       <div
         className="back-btn text-sm text-gray-400 cursor-pointer"
         onClick={() => {
-          typeof props.onClose === "function" && props.onClose();
+          typeof props.onClose === 'function' && props.onClose()
         }}
       >
         返回
       </div>
-      {(isFetching === true || isFetchingPayMethods === true) && (
-        <FullScreenLoading fullScreen={false} />
-      )}
+      {(isFetching === true || isFetchingPayMethods === true) && <FullScreenLoading fullScreen={false} />}
       <div className="join-group-content">
         <div className="flex items-center justify-center mb-[20px]">
           <div className="flex justify-center items-center">
@@ -176,50 +162,42 @@ const JoinGroup = (props: {
               data={{
                 avatar: data.avatar,
                 name: data.name,
-                uid: data.account,
+                uid: data.account
               }}
               className="w-[80px] h-[80px]"
             />
             <div className="ml-[20px]">
-              <div className="text-xl font-bold text-white mb-4">
-                {data.name || ""}
-              </div>
+              <div className="text-xl font-bold text-white mb-4">{data.name || ''}</div>
               <div className="flex">{renderTags()}</div>
             </div>
           </div>
         </div>
-        <div className="group-info">{groupDetailData?.notice || ""}</div>
+        <div className="group-info">{groupDetailData?.notice || ''}</div>
         <div
           className={cn(
-            "prod-list flex",
-            groupDetailData?.products instanceof Array &&
-              groupDetailData.products.length > 1
-              ? "justify-between"
-              : "justify-center"
+            'prod-list flex',
+            Array.isArray(groupDetailData?.products) && groupDetailData.products.length > 1
+              ? 'justify-between'
+              : 'justify-center'
           )}
         >
-          {groupDetailData?.products instanceof Array &&
+          {Array.isArray(groupDetailData?.products) &&
             groupDetailData.products.length > 0 &&
-            groupDetailData.products.map((prod) => {
+            groupDetailData.products.map(prod => {
               return (
                 <div
                   key={prod.product_sn}
-                  className={cn(
-                    "prod-item",
-                    selectedProdSn === prod.product_sn && "selected"
-                  )}
+                  className={cn('prod-item', selectedProdSn === prod.product_sn && 'selected')}
                   onClick={() => {
-                    setSelectedProdSn(prod.product_sn);
+                    setSelectedProdSn(prod.product_sn)
                   }}
                 >
-                  <div className="font-bold prod-name text-center mb-2">
-                    {groupDetailData?.name}
-                  </div>
+                  <div className="font-bold prod-name text-center mb-2">{groupDetailData?.name}</div>
 
                   <div className="text-center">
                     <span className="prod-price ">$</span>
                     <span className="prod-price ">
-                      {prod.unit === "月"
+                      {prod.unit === '月'
                         ? (Number(prod.price) / 30).toFixed(2)
                         : (Number(prod.price) / 360).toFixed(2)}
                     </span>
@@ -232,31 +210,29 @@ const JoinGroup = (props: {
                     <span>/{prod.unit}</span>
                   </div>
                 </div>
-              );
+              )
             })}
         </div>
         <div className="mt-10">
           <div className="flex justify-center items-center">
-            {payMethods &&
-              payMethods.map((item) => {
-                return (
-                  <div className="flex items-center mr-5">
-                    <Checkbox
-                      key={item.type}
-                      checked={curPayMethod === item.type}
-                      onCheckedChange={(chk) => {
-                        if (chk === true) {
-                          setCurPayMethod(item.type);
-                        }
-                      }}
-                    ></Checkbox>
+            {payMethods?.map(item => {
+              return (
+                <div className="flex items-center mr-5" key={item.type}>
+                  <Checkbox
+                    checked={curPayMethod === item.type}
+                    onCheckedChange={chk => {
+                      if (chk === true) {
+                        setCurPayMethod(item.type)
+                      }
+                    }}
+                  />
 
-                    <span className="ml-2">{item.name}</span>
-                  </div>
-                );
-              })}
+                  <span className="ml-2">{item.name}</span>
+                </div>
+              )
+            })}
           </div>
-          {curPayMethod === "wechat" && wechatPaymentUrl && (
+          {curPayMethod === 'wechat' && wechatPaymentUrl && (
             <div className="mt-2">
               <div className="flex justify-center h-[180px]">
                 <QrCode value={wechatPaymentUrl} size={180} />
@@ -336,7 +312,7 @@ const JoinGroup = (props: {
         `}
       </style>
     </div>
-  );
-};
+  )
+}
 
-export default JoinGroup;
+export default JoinGroup

@@ -1,4 +1,4 @@
-import { getConfig, getStockCollectCates, getUser } from '@/api'
+import { getConfig, getStockCollectCates } from '@/api'
 import { useToast } from '@/hooks'
 import { appEvent } from '@/utils/event'
 import { wsManager } from '@/utils/ws'
@@ -21,11 +21,14 @@ import {
   Toaster
 } from './components'
 import { HeaderMall } from './components/header/mall'
+import { useJoinGroupByInviteCode } from "./pages/groupchat/hooks"
 import { router, routes } from './router'
 import { useConfig, useToken, useUser } from './store'
-import { parsePermission } from './utils/util'
 
 export const CHAT_STOCK_JUMP = 'chat_stock_jump'
+export const CHAT_TO_APP_REFRESH_USER = 'chat_to_app_refresh_user'
+export const APP_TO_CHAT_REFRESH_USER = 'app_to_chat_refresh_user'
+
 
 const App = () => {
   const setConsults = useConfig(s => s.setConsults)
@@ -34,6 +37,7 @@ const App = () => {
   const language = useConfig(s => s.language)
   const hasSelected = useConfig(s => s.hasSelected)
   const token = useToken(s => s.token)
+  const refreshUser = useUser(s => s.refreshUser)
   const { t, i18n } = useTranslation()
   const setUser = useUser(s => s.setUser)
   const notLogin = useRef(0)
@@ -44,22 +48,29 @@ const App = () => {
     queryFn: () => getConfig()
   })
 
+  // 加群提示
+  const inviteModal = useJoinGroupByInviteCode({
+    showTip: true,
+    onSuccess: () => {
+      refreshUser()
+    }
+  })
+
   useEffect(() => {
     if (token) {
-      queryClient
-        .fetchQuery({
-          queryKey: [getUser.cacheKey],
-          queryFn: () =>
-            getUser({
-              extends: ['authorized']
-            })
+      refreshUser().then(res => {
+        if (res.buy_inchannel_status === 1) {
+          inviteModal.open()
+        } else {
+          inviteModal.close()
+        }
+
+        channel.current?.postMessage({
+          type: APP_TO_CHAT_REFRESH_USER,
+          payload: res
         })
-        .then(res => {
-          setUser({
-            ...res,
-            permission: parsePermission(res.permission)
-          })
-        })
+      })
+
     }
   }, [token, queryClient.fetchQuery, setUser])
 
@@ -109,15 +120,18 @@ const App = () => {
   }, [toast])
 
   const navigate = useNavigate()
+  const channel = useRef<BroadcastChannel>()
   useEffect(() => {
-    const channel = new BroadcastChannel('chat-channel')
+    channel.current = new BroadcastChannel('chat-channel')
 
-    channel.onmessage = event => {
+    channel.current.onmessage = event => {
       if (event.data.type === CHAT_STOCK_JUMP) {
         if (event.data.payload) {
           navigate(`/app/stock/trading?symbol=${event.data.payload}`)
           navigate(`/stock/trading?symbol=${event.data.payload}`)
         }
+      } else if (event.data.type === CHAT_TO_APP_REFRESH_USER) {
+        refreshUser()
       }
     }
     const handler = () => {
@@ -135,14 +149,22 @@ const App = () => {
     appEvent.on('not-login', handler)
 
     return () => {
-      channel.close()
+      channel.current?.close()
       appEvent.off('not-login', handler)
     }
   }, [navigate])
 
+
+
+
+
+
   return (
     <div className="container-layout dark">
       <Toaster />
+      {
+        inviteModal.contenxt
+      }
       <div className="header relative z-10 px-4">
         <div className="search float-left flex items-center h-full">
           <StockSelect
@@ -159,9 +181,7 @@ const App = () => {
         <div className="float-right flex items-center h-full space-x-2xl">
           <HeaderMall />
           <HeaderService />
-          <HeaderUser afterLogin={() => {
-            setUpdateUserTimes((prev) => prev + 1);
-          }}/>
+          <HeaderUser />
         </div>
       </div>
       <div className="main overflow-hidden">
