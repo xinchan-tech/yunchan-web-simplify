@@ -1,4 +1,4 @@
-import { bindInviteCode, joinGroupByInviteCode, logout } from "@/api"
+import { bindInviteCode, logout } from "@/api"
 import { getUser, updateUser } from "@/api/user"
 import UserDefaultPng from '@/assets/icon/user_default.png'
 import { Button, FormControl, FormField, FormItem, FormLabel, Input, JknAlert, JknAvatar, Popover, PopoverContent, PopoverTrigger, Separator } from "@/components"
@@ -6,16 +6,15 @@ import { useFormModal, useModal } from "@/components/modal"
 import { useToast, useZForm } from "@/hooks"
 import { useToken, useUser } from "@/store"
 import { uploadUtils } from "@/utils/oss"
+import { parsePermission } from "@/utils/util"
 import { useMutation, useQuery } from "@tanstack/react-query"
 import { useRequest, useUnmount } from "ahooks"
 import to from "await-to-js"
-import dayjs from "dayjs"
+import copy from 'copy-to-clipboard'
 import { useEffect, useMemo, useRef, useState } from "react"
 import { useFormContext } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import { z } from "zod"
-import copy from 'copy-to-clipboard'
-import { parsePermission } from "@/utils/util"
 
 interface UserCenterProps {
   onLogout: () => void
