@@ -1,7 +1,7 @@
 import { bindInviteCode, joinGroupByInviteCode, logout } from "@/api"
 import { getUser, updateUser } from "@/api/user"
 import UserDefaultPng from '@/assets/icon/user_default.png'
-import { Button, FormControl, FormField, FormItem, FormLabel, Input, JknAvatar } from "@/components"
+import { Button, FormControl, FormField, FormItem, FormLabel, Input, JknAlert, JknAvatar, Popover, PopoverContent, PopoverTrigger, Separator } from "@/components"
 import { useFormModal, useModal } from "@/components/modal"
 import { useToast, useZForm } from "@/hooks"
 import { useToken, useUser } from "@/store"
@@ -78,89 +78,64 @@ const UserCenter = (props: UserCenterProps) => {
   })
 
   const onLogout = async () => {
-    const [err] = await to(logoutQuery.runAsync())
+    JknAlert.confirm({
+      title: '退出登录',
+      content: '确定要退出登录吗？',
+      onAction: async (status) => {
+        if (status === 'confirm') {
+          const [err] = await to(logoutQuery.runAsync())
 
-    if (err) {
-      toast({
-        description: err.message
-      })
-      return
-    }
-
-    reset()
-    removeToken()
-    props.onLogout()
-    if (window.location.pathname !== '/') {
-      window.location.href = '/'
-    }
-  }
-  const [inviteCode, setInviteCode] = useState("")
-  const [isJoining, setIsJoining] = useState(false)
-  const handleInviteToGroup = () => {
-    if (inviteCode) {
-      setIsJoining(true)
-      bindInviteCode(inviteCode).then(r => {
-        if (r.data === true) {
-          const params: {
-            re_code: string,
-            type: "1" | "2"
-          } = {
-            re_code: inviteCode,
-            type: '1'
+          if (err) {
+            toast({
+              description: err.message
+            })
+            return
           }
 
-          return joinGroupByInviteCode(params)
+          reset()
+          removeToken()
+          props.onLogout()
+          if (window.location.pathname !== '/') {
+            window.location.href = '/'
+          }
         }
-      }).then(r => {
-        if (r?.status === 1) {
-          toast({
-            description: '加群成功'
-          })
-        }
-      }).catch(er => {
-        if (er?.message) {
-          toast({
-            description: er.message
-          })
-        }
-      }).finally(() => {
-        setInviteCode("")
-        inviteToGroupModal.modal.close()
-        setIsJoining(false)
-      })
-    }
+      }
+    })
+    // const [err] = await to(logoutQuery.runAsync())
+
+    // if (err) {
+    //   toast({
+    //     description: err.message
+    //   })
+    //   return
+    // }
+
+    // reset()
+    // removeToken()
+    // props.onLogout()
+    // if (window.location.pathname !== '/') {
+    //   window.location.href = '/'
+    // }
   }
-  const inviteToGroupModal = useModal({
-    content: (
-      <div className="flex items-center justify-center pl-2 pr-2 flex-col pt-5 pb-5">
-        <div
-          className={"border-dialog-border rounded-sm  bg-accent inline-block"}
-        >
-          <Input
-            className="border-none placeholder:text-tertiary flex-1"
-            value={inviteCode}
-            onChange={(e) => {
-              setInviteCode(e.target.value)
-            }}
-            style={{ marginTop: "0" }}
-            placeholder="请输入邀请码"
-          />
-        </div>
-        <Button
-          className="mt-5"
-          loading={isJoining}
-          onClick={() => {
-            handleInviteToGroup()
-          }}
-        >
-          确定
-        </Button>
-      </div>
-    ),
-    footer: false,
-    title: "输入邀请码加群",
-    className: "w-[400px]",
-    closeIcon: true,
+  const [inviteCode, setInviteCode] = useState("")
+
+  const bindInviteCodeMutation = useMutation({
+    mutationFn: async (closeCb: () => void) => {
+      await bindInviteCode(inviteCode)
+      closeCb()
+    },
+    onSuccess: () => {
+      toast({
+        description: '加群成功'
+      })
+    },
+    onError: (err) => {
+      if (err?.message) {
+        toast({
+          description: err.message
+        })
+      }
+    }
   })
 
   const avatarForm = useModal({
@@ -174,69 +149,104 @@ const UserCenter = (props: UserCenterProps) => {
   return (
     <div >
       <div className="p-4 text-sm">
-        <div className="text-base mb-2">{t('base info')}</div>
+        <div className="text-base mb-2 flex items-center">
+          <span>{t('base info')}</span>
+          {
+            (user?.show_invite === 1) ? (
+              <Popover>
+                <PopoverTrigger asChild>
+                  <span className="cursor-pointer text-primary ml-auto text-sm" >{t('inputInviteCode')}</span>
+                </PopoverTrigger>
+                <PopoverContent className="w-[200px]">
+                  {
+                    (action) => (
+                      <div className="py-2 px-4 text-center space-y-4">
+                        <div className="text-sm text-center">邀请码</div>
+                        <Input className="w-full border-transparent bg-accent placeholder:text-tertiary" placeholder="请输入邀请码" value={inviteCode} size="sm"
+                          onChange={(e) => {
+                            setInviteCode(e.target.value)
+                          }} />
+                        <Button loading={bindInviteCodeMutation.isPending} className="mt-2 px-6" size="sm" onClick={() => bindInviteCodeMutation.mutate(action.close)}>确定</Button>
+                      </div>
+                    )
+                  }
+                </PopoverContent>
+              </Popover>
+            ) : null
+          }
+
+        </div>
         <div className="border-0 border-b border-solid border-b-gray-7" />
         <div className="flex my-2">
-          <div className="w-1/2 cell-group">
+          <div className="w-1/2 cell-group !space-y-4">
             <div>
               <div>{t('nickname')}：</div><div>{user?.realname}</div>
-              <span className="text-sm text-gray-5 cursor-pointer" onClick={() => edit.open()} onKeyDown={() => { }}>&emsp;{t('edit')}</span>
+              <span className="text-xs text-tertiary text-gray-5 cursor-pointer" onClick={() => edit.open()} onKeyDown={() => { }}>&emsp;{t('edit')}</span>
             </div>
             <div className="py-2">
               <div>{t('avatar')}：</div>
               <div>
-                <JknAvatar src={user?.avatar} fallback={UserDefaultPng} />
+                <JknAvatar className="w-12 h-12" src={user?.avatar} fallback={UserDefaultPng} />
               </div>
-              <span className="text-sm text-gray-5 cursor-pointer" onClick={avatarForm.modal.open} onKeyDown={() => { }}>&emsp;&nbsp;&nbsp;{t('edit')}</span>
+              <span className="text-xs text-tertiary text-gray-5 cursor-pointer" onClick={avatarForm.modal.open} onKeyDown={() => { }}>&emsp;&nbsp;&nbsp;{t('edit')}</span>
             </div>
+
+
+          </div>
+          <div className="w-1/2 cell-group !space-y-4">
             <div >
               <div>{t('user')}ID：</div><div>{user?.username}</div>
-
             </div>
-            {
-              (user?.in_channel_status === '1' || user?.show_invite === 1) ? (
-                <div className="mt-2">
-                  <div>
-                    <span className="cursor-pointer text-primary" onClick={() => {
-                      inviteToGroupModal.modal.open()
-                    }} onKeyDown={() => { }}>{t('inputInviteCode')}</span>
-
-                  </div>
-                </div>
-              ) : null
-            }
-          </div>
-          <div className="w-1/2 cell-group">
-            <div><div>{t('current packages')}：</div></div>
             <div><div>{t('package name')}：</div><div>{authorized?.name}</div></div>
-            <div><div>{t('expiration date')}：</div><div>{authorized?.expire_time ? dayjs(+authorized.expire_time * 1000).format('YYYY-MM-DD') : '-'}</div></div>
-            <div style={{ marginTop: '1rem' }}>
-              <div>{t('inviteCode')}：</div>
-              <div>
-                {user?.re_code}
-                <span className="ml-2 text-primary cursor-pointer" onKeyDown={() => { }} onClick={() => {
-                  if (user?.share_url) {
-                    copy(user.share_url)
-                    toast({
-                      description: '复制成功'
-                    })
-                  }
-                }}>复制邀请短链</span>
-              </div>
-            </div>
+            {/* <div><div>{t('expiration date')}：</div><div>{authorized?.expire_time ? dayjs(+authorized.expire_time * 1000).format('YYYY-MM-DD') : '-'}</div></div> */}
           </div>
         </div>
+
+        <div className="text-base mb-2 flex items-center">
+          <span>积分信息</span>
+        </div>
+        <div className="border-0 border-b border-solid border-b-gray-7 mb-3" />
+        <div className="flex my-2">
+          <div className="flex items-center">
+            <div>{t('inviteCode')}：</div>
+            <div className="bg-accent rounded-sm px-4 py-0.5">
+              {user?.re_code}
+            </div>
+            <span className="ml-4 text-primary cursor-pointer" onKeyDown={() => { }} onClick={() => {
+              if (user?.share_url) {
+                copy(user.share_url)
+                toast({
+                  description: '复制成功'
+                })
+              }
+            }}>复制分享链接</span>
+          </div>
+        </div>
+        <div className="flex justify-center items-center my-6">
+          <div className="text-center w-28">
+            <div className="text-sm text-tertiary mb-3">累计转化</div>
+            <div className="text-4xl font-bold">{user?.total_inv}</div>
+          </div>
+          <div className="text-center w-28">
+            <div className="text-sm text-tertiary mb-3">累计点击</div>
+            <div className="text-4xl font-bold">{user?.total_points}</div>
+          </div>
+          <Separator orientation="vertical" className="h-16 bg-accent mx-4" />
+          <div className="text-center w-28">
+            <div className="text-sm text-tertiary mb-3">当前积分</div>
+            <div className="text-4xl font-bold">{user?.points}</div>
+          </div>
+        </div>
+
+
         <div className="text-right" onClick={onLogout} onKeyDown={() => { }}>
-          <Button variant="outline">退出登录</Button>
+          <Button variant="outline" className="border-border">退出登录</Button>
         </div>
         {
           edit.context
         }
         {
           avatarForm.context
-        }
-        {
-          inviteToGroupModal.context
         }
         <style jsx>
           {`

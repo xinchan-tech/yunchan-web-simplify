@@ -47,6 +47,9 @@ export type UserResult = {
   re_code: string
   in_channel_status: '0' | '1'
   show_invite: 0 | 1
+  total_inv: number
+  total_points: number
+  points: number
 }
 
 export type Authorized = {

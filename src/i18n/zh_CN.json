@@ -11,8 +11,8 @@
   "nickname": "昵称",
   "avatar": "头像",
   "user": "用户",
-  "current packages": "当前套餐",
-  "package name": "套餐名称",
+  "current packages": "当前等级",
+  "package name": "软件等级",
   "expiration date": "到期时间",
   "userEdit": {
     "nickname": "修改昵称"

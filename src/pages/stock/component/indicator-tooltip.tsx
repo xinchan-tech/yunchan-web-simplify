@@ -35,7 +35,6 @@ export const IndicatorTooltip = (props: IndicatorTooltipProps) => {
   const mainIndicators = useKChartStore(useShallow(s => s.state[props.mainIndex].mainIndicators))
 
   useEffect(() => {
-    console.log(props.indicator)
     if (props.indicator.data) {
       const indicators = props.indicator.data
         .filter(item => !!item.name)
@@ -133,7 +132,7 @@ export const IndicatorTooltip = (props: IndicatorTooltipProps) => {
         style={props.style}
       >
         {props.type === 'main' && <span className="text-secondary flex-shrink-0">{props.indicator.name}:&emsp;</span>}
-        <span className="pointer-events-none">
+        <span className="pointer-events-auto">
           {data.length > 0 &&
             visible &&
             data.map(item => (

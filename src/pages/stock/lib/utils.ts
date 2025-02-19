@@ -399,7 +399,7 @@ export const renderUtils = {
       })
     }
 
-    const extLen = 60
+    const extLen = 50
     // console.log(data[data.length - 1][0]* 1000)
     const startTime = data[data.length - 1][0] * 1000
 

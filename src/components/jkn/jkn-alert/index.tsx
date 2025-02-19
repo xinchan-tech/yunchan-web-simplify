@@ -97,9 +97,15 @@ const AlertComponent = (props: AlertDialogProps) => {
     <AlertDialog open={open} onOpenChange={(open) => !open && onClose()}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <VisuallyHidden hidden={props.title === undefined}>
-            <AlertDialogTitle>{props.title}</AlertDialogTitle>
-          </VisuallyHidden>
+          {
+            props.title !== undefined ? (
+              <AlertDialogTitle>{props.title}</AlertDialogTitle>
+            ) : (
+              <VisuallyHidden>
+                <AlertDialogTitle />
+              </VisuallyHidden>
+            )
+          }
           <AlertDialogDescription className="text-center text-lg mt-4">
             {
               props.content

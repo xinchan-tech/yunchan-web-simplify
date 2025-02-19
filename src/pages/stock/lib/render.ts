@@ -1067,7 +1067,7 @@ const renderIndicator = (
         name: seriesName,
         data: data
       })
-    } else if(d.draw === 'DRAWBAND'){
+    } else if (d.draw === 'DRAWBAND') {
       drawBrand(options, {} as any, {
         xAxisIndex: params.xAxisIndex,
         yAxisIndex: params.yAxisIndex,
@@ -1340,28 +1340,43 @@ export const renderZoom = (options: ECOption, addCount: number, zoom?: [number, 
   const MaxKLineCount = 1000
   const _zoom = [...zoom]
 
-  if (_zoom[0] === Number.POSITIVE_INFINITY) {
-    _zoom[0] = Math.round(addCount * 0.5)
-  }
-  if (_zoom[1] === Number.NEGATIVE_INFINITY) {
-    _zoom[1] = addCount
-  }
+  if (_zoom[0] === Number.POSITIVE_INFINITY && _zoom[1] === Number.NEGATIVE_INFINITY) {
+    _zoom[0] = Math.round(addCount * 0.4)
+    _zoom[1] = addCount + 20
 
-  const showCount = zoom[1] - zoom[0]
-  if (showCount > MaxKLineCount) {
-    _zoom[0] = zoom[1] - MaxKLineCount
-  }
-
-  if (Array.isArray(options.dataZoom)) {
-    for (const z of options.dataZoom) {
-      z.startValue = _zoom[0] + addCount
-      z.endValue = _zoom[1] + addCount
-      z.start = undefined
-      z.end = undefined
-      z.maxValueSpan = MaxKLineCount
-      z.minValueSpan = 70
+    const showCount = _zoom[1] - _zoom[0]
+    if (showCount > MaxKLineCount) {
+      _zoom[0] = _zoom[1] - MaxKLineCount
+    }
+ 
+    if (Array.isArray(options.dataZoom)) {
+      for (const z of options.dataZoom) {
+        z.startValue = _zoom[0]
+        z.endValue = _zoom[1]
+        z.start = undefined
+        z.end = undefined
+        z.maxValueSpan = MaxKLineCount
+        z.minValueSpan = 50
+      }
+    }
+  } else {
+    const showCount = _zoom[1] - _zoom[0]
+    if (showCount > MaxKLineCount) {
+      _zoom[0] = _zoom[1] - MaxKLineCount
+    }
+    if (Array.isArray(options.dataZoom)) {
+      for (const z of options.dataZoom) {
+        z.startValue = _zoom[0] + addCount
+        z.endValue = _zoom[1] + addCount
+        z.start = undefined
+        z.end = undefined
+        z.maxValueSpan = MaxKLineCount
+        z.minValueSpan = 50
+      }
     }
   }
+
+  // console.log(_zoom[0], _zoom[1], _zoom[0] + addCount, _zoom[1] + addCount)
 }
 
 export const renderBackTestMark = (options: ECOption, state: ChartState, chart: EChartsType) => {
@@ -1446,7 +1461,7 @@ export const renderBackTestMark = (options: ECOption, state: ChartState, chart: 
           u: {
             color: useConfig.getState().getStockColor(true, 'hex'),
             backgroundColor: 'black',
-            borderRadius: [0,5, 5, 0],
+            borderRadius: [0, 5, 5, 0],
             align: 'left',
             fontSize: 14,
             padding: [0, 10, 0, 10]
