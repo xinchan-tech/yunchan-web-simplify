@@ -1,5 +1,54 @@
 # Changelog
 
+## [1.26.0](https://github.com/xinchan-gx/yunchan-web/compare/1.22.0...1.26.0) (2025-02-19)
+
+### ✨ Features | 新功能
+
+* 更新 WebAssembly 策略文件，优化性能 ([28e7c82](https://github.com/xinchan-gx/yunchan-web/commit/28e7c82b96d3479f8507fb2f9dbe366ebdb5f7c4))
+* 更新商城页面版本和订阅类型，移除聊天社群选项 ([4592e4d](https://github.com/xinchan-gx/yunchan-web/commit/4592e4d58177629757d9cb0286b4010ce245424b))
+* 更新消息输入组件，清空输入框；优化订阅组件，调整交易类型默认值；增强信号计算逻辑，修复绘图数据结构；添加相对时间插件支持 ([64ee914](https://github.com/xinchan-gx/yunchan-web/commit/64ee9141466b552f6b4864819a6d430d56b3691f))
+* 更新消息输入组件，支持发送不同类型的消息；优化图片上传逻辑，添加图片选择功能；改进模态框处理逻辑 ([2f34f0d](https://github.com/xinchan-gx/yunchan-web/commit/2f34f0d2f5b72733d46dd4f8c9fac794e82682ba))
+* 扩展股票类型，优化股票数据处理逻辑 ([97b7461](https://github.com/xinchan-gx/yunchan-web/commit/97b74619aa8da3c7d716c521d4827372fdad8032))
+* 添加调试功能，优化请求拦截器以支持调试标头 ([11fde5d](https://github.com/xinchan-gx/yunchan-web/commit/11fde5d65ec635d019183f36f9a79ad8964d5b48))
+* 添加回测功能支持，优化图表事件处理，调整日期计算逻辑 ([badd04f](https://github.com/xinchan-gx/yunchan-web/commit/badd04f87e4d45977e513199e51f941eb6119da9))
+* 添加渐变绘制功能，优化股票数据展示 ([7058843](https://github.com/xinchan-gx/yunchan-web/commit/705884369defcfaf4720007d405e21d31f98718d))
+* 添加散点图支持，优化指标计算逻辑，更新相关类型和方法 ([c217792](https://github.com/xinchan-gx/yunchan-web/commit/c217792703c4efa5990fca79ab9fe97eca7f4c8b))
+* 添加图标绘制功能，优化绘制逻辑并重构相关代码 ([aa0cc44](https://github.com/xinchan-gx/yunchan-web/commit/aa0cc4477c891fb571f4030ed10f54e95115d97f))
+* 添加图表事件管理，优化指标数据处理和财务数据展示逻辑 ([46c3a8c](https://github.com/xinchan-gx/yunchan-web/commit/46c3a8c33521e040f8dac81440cddde18aeb7b1c))
+* 添加线条样式支持，优化绘制逻辑 ([350080e](https://github.com/xinchan-gx/yunchan-web/commit/350080e6dfb68bdc5a2896851f66078d907f054a))
+* 添加邀请码绑定功能，优化登录流程 ([df041b7](https://github.com/xinchan-gx/yunchan-web/commit/df041b712691c85913fb58fabe0d3ce280b43647))
+* 添加指标数据批量设置功能并优化图表渲染逻辑 ([1d6d6d9](https://github.com/xinchan-gx/yunchan-web/commit/1d6d6d9b27ae383393e072ad4a20ccb84ae8770b))
+* 添加quote时间窗口buffer结构，优化数据推送逻辑 ([3ccd026](https://github.com/xinchan-gx/yunchan-web/commit/3ccd026cd5584c7e979767d21ae66cae79a3f2f7))
+* 优化按钮样式，调整破坏性颜色，修复图表绘制逻辑，添加回测功能 ([c2a1f72](https://github.com/xinchan-gx/yunchan-web/commit/c2a1f7213fa0ff6d2b24d1c5a0adeceb642cdd0b))
+* 优化菜单组件和设置页面逻辑，增强用户体验 ([f15c59b](https://github.com/xinchan-gx/yunchan-web/commit/f15c59b9691a2cd9d02938c3922cbcfdf8fe8bc7))
+* 优化代码格式，调整导入顺序；修复部分逻辑，增强频道消息处理；改进状态管理逻辑 ([6615888](https://github.com/xinchan-gx/yunchan-web/commit/6615888665a64e85493020f8c5e61260c8ddc72c))
+* 优化数据展示逻辑，调整图表数据切片长度，增强组件属性支持 ([bc12dc8](https://github.com/xinchan-gx/yunchan-web/commit/bc12dc835f125dcab871aa3dc08457ed709328aa))
+* 优化图表绘制逻辑，添加矩形绘制支持，调整时间区间计算 ([a0c4a3f](https://github.com/xinchan-gx/yunchan-web/commit/a0c4a3ffb602982e4beccd4481d6751f727e48b2))
+* 优化图表渲染逻辑，添加辅助系列支持，重构相关工具函数 ([5ceccd9](https://github.com/xinchan-gx/yunchan-web/commit/5ceccd9df02925a88972a99af7b0c47cf3a25c90))
+* 优化消息中心组件，调整描述文本样式；修复水印渲染逻辑，确保盘中交易状态正确显示 ([0d4ae7f](https://github.com/xinchan-gx/yunchan-web/commit/0d4ae7f939d0f228701162959136e73179a5b761))
+* 优化用户相关代码，重构用户权限处理逻辑 ([e1822e7](https://github.com/xinchan-gx/yunchan-web/commit/e1822e74afc6f4565c2c7d44485e6b979df02d39))
+* 增加用户类型定义中的总邀请数和总积分字段，调整软件等级的翻译 ([58ef21b](https://github.com/xinchan-gx/yunchan-web/commit/58ef21b77e8a2c072466a0fc8bb77db48d66ed6d))
+
+### 🐛 Bug Fixes | Bug 修复
+
+* 修复股票图表数据请求逻辑并优化文本绘制设置 ([ccec402](https://github.com/xinchan-gx/yunchan-web/commit/ccec402ed6ed94e45113f85573c2b5645f5c10c2))
+* 优化股票图表数据请求和时间格式处理 ([d8a619f](https://github.com/xinchan-gx/yunchan-web/commit/d8a619fd815d3c129f0809a8ac36ca64fbd5f964))
+* 优化图表上下文菜单和主图表的状态管理，移除冗余代码 ([4abe6bc](https://github.com/xinchan-gx/yunchan-web/commit/4abe6bc6e744e046dcae12acd9c38861144c85ef))
+* 优化语言切换逻辑，移除冗余代码 ([5550c57](https://github.com/xinchan-gx/yunchan-web/commit/5550c579ce013cf40bd5b27e746c6ae503fa093b))
+
+### 🎫 Chores | 其他更新
+
+* Release v1.23.0 ([6c511cf](https://github.com/xinchan-gx/yunchan-web/commit/6c511cf093f711c03dba4f3a3cdcdcba559d730f))
+* Release v1.24.0 ([2d1a357](https://github.com/xinchan-gx/yunchan-web/commit/2d1a357da8df6134ed52137ba54c9d2f2d5a5fe0))
+* Release v1.25.0 ([fb70cb4](https://github.com/xinchan-gx/yunchan-web/commit/fb70cb4c7e50605142b77c4d22e074ca7a81cfc3))
+
+### ♻ Code Refactoring | 代码重构
+
+* 移除不必要的导入，优化用户中心组件的代码结构 ([e87939e](https://github.com/xinchan-gx/yunchan-web/commit/e87939ed360f7779662622f5e3739c26cc159faf))
+* 优化消息中心组件，调整样式和结构以改善用户体验 ([c296f6b](https://github.com/xinchan-gx/yunchan-web/commit/c296f6bc8fd1ddcf8ede6eb11c9da68af50eb3f2))
+* 优化用户类型定义，增加可选字段并调整格式 ([cfad419](https://github.com/xinchan-gx/yunchan-web/commit/cfad4191a7f703fe5d39d4bf6bbb21346a319500))
+* 优化组件和工具函数，修复样式和类型定义 ([dadff79](https://github.com/xinchan-gx/yunchan-web/commit/dadff79f8c7e54ae64947aece4c5944aaa1c2693))
+
 ## [1.25.0](https://github.com/xinchan-gx/yunchan-web/compare/1.22.0...1.25.0) (2025-02-14)
 
 ### ✨ Features | 新功能
