@@ -110,7 +110,7 @@ export const MainChart = (props: MainChartProps) => {
       return `${state.symbol}@1m`
     }
 
-    if (state.timeIndex <= StockChartInterval.FORTY_FIVE_MIN) {
+    if (state.timeIndex <= StockChartInterval.FOUR_HOUR) {
       return `${state.symbol}@${state.timeIndex}m`
     }
 

@@ -21,17 +21,17 @@ const getPeriodByPage = (params: { interval: StockChartInterval; startDate: numb
   if (interval <= StockChartInterval.THIRTY_MIN) {
     resultDate = usDate.add(-5, 'd').format('YYYY-MM-DD HH:mm:ss')
   } else if (interval <= StockChartInterval.FORTY_FIVE_MIN) {
-    resultDate = usDate.add(-15, 'd').format('YYYY-MM-DD HH:mm:ss')
+    resultDate = usDate.add(-15 * 4, 'd').format('YYYY-MM-DD HH:mm:ss')
   } else if (interval <= StockChartInterval.FOUR_HOUR) {
-    resultDate = usDate.add(-30, 'd').format('YYYY-MM-DD HH:mm:ss')
+    resultDate = usDate.add(-30 * 6, 'd').format('YYYY-MM-DD HH:mm:ss')
   } else if (interval === StockChartInterval.DAY) {
-    resultDate = usDate.add(-365, 'd').format('YYYY-MM-DD HH:mm:ss')
+    resultDate = usDate.add(-365 * 1.5, 'd').format('YYYY-MM-DD HH:mm:ss')
   } else if (interval === StockChartInterval.WEEK) {
-    resultDate = usDate.add(-12, 'm').format('YYYY-MM-DD HH:mm:ss')
+    resultDate = usDate.add(-12 * 2, 'M').format('YYYY-MM-DD HH:mm:ss')
   } else if (interval === StockChartInterval.MONTH) {
-    resultDate = usDate.add(-2, 'y').format('YYYY-MM-DD HH:mm:ss')
+    resultDate = usDate.add(-3, 'y').format('YYYY-MM-DD HH:mm:ss')
   } else if (interval <= StockChartInterval.YEAR) {
-    resultDate = usDate.add(-5, 'y').format('YYYY-MM-DD HH:mm:ss')
+    resultDate = usDate.add(-5 * 2, 'y').format('YYYY-MM-DD HH:mm:ss')
   }
 
   return [resultDate, endDate]
