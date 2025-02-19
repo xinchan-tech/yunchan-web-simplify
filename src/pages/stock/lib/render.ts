@@ -381,6 +381,10 @@ const defaultXAxis: XAXisOption = {
 const defaultYAxis: YAXisOption = {
   scale: true,
   position: 'right',
+  max: (v) => {
+    const diff = v.max - v.min
+    return v.max + diff * 0.05
+  },
   axisLine: { onZero: false, show: false },
   axisTick: {
     show: false

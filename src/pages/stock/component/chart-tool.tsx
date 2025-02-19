@@ -23,6 +23,7 @@ import { chartEvent } from '../lib/event'
 import { MainIndicator } from './main-indicator'
 import { SearchList } from './search-list'
 import { ViewModeSelect } from './view-mode-select'
+import { listify, omit } from 'radash'
 
 const CHART_TOOL = ['主图指标', '线型切换', '多图模式', '股票PK', '叠加标记', '画线工具']
 
@@ -88,14 +89,15 @@ const MainIndicatorSelect = ({ indicators }: { indicators?: Awaited<ReturnType<t
 
   const onChangeMainIndicator = async (_: any, data: any, name: string) => {
     const mainIndicators = useKChartStore.getState().state[useKChartStore.getState().activeChartIndex].mainIndicators
-    const indicators: Indicator[] = []
-    Object.values(mainIndicators).forEach((value) => {
-      if (value.id !== data.value) {
-        indicators.push(value)
-      }
-    })
+    let indicators: Indicator[] = []
+    if (mainIndicators[data.value]) {
+      const indicator = omit(mainIndicators, [data.value]) as Record<string, Indicator>
+      indicators = listify(indicator, (k, v) => ({ ...v, k }))
 
-    if (indicators.length === Object.keys(mainIndicators).length) {
+      kChartUtils.setMainIndicators({ indicators })
+      kChartUtils.setIndicatorData({ index: currentIndex, indicatorId: data.value, data: [] })
+    } else {
+      indicators = listify(mainIndicators, (k, v) => ({ ...v, k }))
       indicators.push({
         id: data.value,
         type: data.extra.db_type,
@@ -106,7 +108,6 @@ const MainIndicatorSelect = ({ indicators }: { indicators?: Awaited<ReturnType<t
         formula: data.extra.formula,
         calcType: data.extra.calcType
       })
-
       kChartUtils.setMainIndicators({ indicators })
       const candlesticks = useKChartStore.getState().state[useKChartStore.getState().activeChartIndex].mainData.history
       await calcIndicator(
@@ -116,26 +117,10 @@ const MainIndicatorSelect = ({ indicators }: { indicators?: Awaited<ReturnType<t
       ).then(c => {
         kChartUtils.setIndicatorData({ index: currentIndex, indicatorId: data.value, data: c.data })
       })
-
-    } else {
-
-      kChartUtils.setMainIndicators({ indicators })
-      kChartUtils.setIndicatorData({ index: currentIndex, indicatorId: data.value, data: [] })
     }
-
-
-
-
-
-    // const r = await data.map(v => {
-    //   return 
-    // })
-
-    // await Promise.all(r).then(data => {
-    //   kChartUtils.setIndicatorsData({ index: currentIndex, data })
-    // })
-
-    chartEvent.event.emit('indicatorChange', { index: currentIndex })
+    setTimeout(() => {
+      chartEvent.event.emit('indicatorChange', { index: currentIndex })
+    })
   }
 
   return (
@@ -163,7 +148,11 @@ const MainIndicatorSelect = ({ indicators }: { indicators?: Awaited<ReturnType<t
             </HoverCardContent>
           </HoverCard>
         ))}
-      <div className="!ml-auto flex items-center cursor-pointer" onClick={() => kChartUtils.setBackTest({})} onKeyDown={() => { }}>
+      <div
+        className="!ml-auto flex items-center cursor-pointer"
+        onClick={() => kChartUtils.setBackTest({})}
+        onKeyDown={() => { }}
+      >
         <JknIcon name="ic_replay" className="w-4 h-3.5" />
         <span className="text-sm">回测</span>
       </div>
