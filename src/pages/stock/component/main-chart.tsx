@@ -1,4 +1,4 @@
-import { getStockIndicatorData, StockChartInterval, type StockRawRecord } from '@/api'
+import { getStockIndicatorData, StockChartInterval } from '@/api'
 import { StockSelect } from '@/components'
 import { useStockBarSubscribe } from '@/hooks'
 import { useIndicator, useTime } from '@/store'
@@ -196,18 +196,29 @@ export const MainChart = (props: MainChartProps) => {
   useEffect(() => {
     const timeIndex = useKChartStore.getState().state[props.index].timeIndex
 
-    renderUtils.calcIndicatorData(candlesticks, props.index).then(r => {
-      kChartUtils.setIndicatorsData({
-        index: props.index,
-        data: r
-      })
-
+    if (candlesticks.length === 0) {
+      kChartUtils.clearIndicatorsData({ index: props.index })
       kChartUtils.setMainData({
         index: props.index,
         data: candlesticks,
         dateConvert: true,
         timeIndex: timeIndex
       })
+      return
+    }
+
+    renderUtils.calcIndicatorData(candlesticks, props.index).then(r => {
+      kChartUtils.setIndicatorsData({
+        index: props.index,
+        data: r
+      })
+      kChartUtils.setMainData({
+        index: props.index,
+        data: candlesticks,
+        dateConvert: true,
+        timeIndex: timeIndex
+      })
+
     })
   }, [candlesticks, props.index])
 

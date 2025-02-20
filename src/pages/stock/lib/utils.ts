@@ -39,6 +39,12 @@ export const renderUtils = {
       }
     }
   },
+  getGridByYAxisIndex: (options: ECOption, index: number) => {
+    const yAxis = renderUtils.getYAxisIndex(options, index)
+    if (yAxis?.gridIndex === undefined) return
+
+    return renderUtils.getGridIndex(options, yAxis.gridIndex)
+  },
   addGraphic: (options: ECOption, graphic: GraphicComponentOption | GraphicComponentOption[]) => {
     if (!options.graphic) {
       options.graphic = []

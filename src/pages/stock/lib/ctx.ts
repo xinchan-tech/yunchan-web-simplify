@@ -187,6 +187,13 @@ type KChartUtils = {
   setIndicatorsData: (params: { index: number; data: { indicatorId: string; data: any }[] }) => void
 
   /**
+   * 清除所有指标数据
+   * @param params 
+   * @returns 
+   */
+  clearIndicatorsData: (params: { index: number }) => void
+
+  /**
    * 修改视图模式
    */
   setViewMode: (params: { index?: number; viewMode: ViewMode }) => void
@@ -289,7 +296,14 @@ type IndicatorDataDrawStickLine = IndicatorDataBase<'STICKLINE'> & {
   draw_data: Record<number, [number, number, number, number]>
 }
 type IndicatorDataDrawText = IndicatorDataBase<'DRAWTEXT'> & {
-  draw_data: Record<number, [number, string, number, number]>
+  draw_data: {
+    x: number
+    y: number
+    drawY: number
+    text: string
+    offsetX: number
+    offsetY: number
+  }[]
 }
 /**
  * 一个渐变的多边形
@@ -306,12 +320,27 @@ type IndicatorDataDrawGradient = IndicatorDataBase<'DRAWGRADIENT'> & {
   draw_data: [number, number, number, number, [number, number][], string, string][]
 }
 type IndicatorDataDrawNumber = IndicatorDataBase<'DRAWNUMBER'> & {
-  draw_data: Record<number, [number, number, number, number]>
+  draw_data: {
+    x: number
+    y: number
+    drawY: number
+    number: number
+    offsetX: number
+    offsetY: number
+  }[]
 }
 type IndicatorDataDrawBand = IndicatorDataBase<'DRAWBAND'> & {
   draw_data: {
-    color: string
-    points: { y1: number; y2: number; x: number; drawY?: number }[]
+    polygonIndex: number
+    x: number
+    y: number
+    polygon?: {
+      color: string
+      points: {
+        x: number
+        drawY: number
+      }[]
+    }
   }[]
 }
 /**
@@ -327,7 +356,14 @@ type IndicatorDataDrawRectRel = IndicatorDataBase<'DRAWRECTREL'> & {
   draw_data: Record<number, [number, number, number, number, string]>
 }
 type IndicatorDataDrawIcon = IndicatorDataBase<'DRAWICON'> & {
-  draw_data: Record<number, [number, number, number, number]>
+  draw_data: {
+    x: number
+    y: number
+    drawY: number
+    icon: number
+    offsetX: number
+    offsetY: number
+  }[]
 }
 
 /**
@@ -729,21 +765,14 @@ export const kChartUtils: KChartUtils = {
           +startData[0]!
         )
 
-        if(!mainData?.data) return
+        if (!mainData?.data) return
         const basePrice = startData[2] as number
-        if(!basePrice) return
+        if (!basePrice) return
         //将数据按main的数据比例缩放，比较涨跌幅
-        const scale = (mainData.data[2]) as number / basePrice
+        const scale = (mainData.data[2] as number) / basePrice
 
         const _data = data.data.list.map(item => {
-          return [
-            item[0],
-            item[1]! * scale,
-            item[2]! * scale,
-            item[3]! * scale,
-            item[4]! * scale,
-            ...item.slice(5)
-          ]
+          return [item[0], item[1]! * scale, item[2]! * scale, item[3]! * scale, item[4]! * scale, ...item.slice(5)]
         })
 
         useKChartStore.setState(state => ({
@@ -848,7 +877,7 @@ export const kChartUtils: KChartUtils = {
           indicators.push(...s.secondaryIndicators.filter(i => i.id === indicatorId))
 
           if (indicators.length === 0) return
-
+          
           indicators.forEach(indicator => {
             indicator.data = data
           })
@@ -971,6 +1000,24 @@ export const kChartUtils: KChartUtils = {
             } else {
               draft.backTestMark.push(params)
             }
+          })
+        }
+        return item
+      })
+    }))
+  },
+  clearIndicatorsData: ({ index }) => {
+    useKChartStore.setState(state => ({
+      state: state.state.map(item => {
+        if (item.index === index) {
+          return produce(item, draft => {
+            Object.values(draft.mainIndicators).forEach(v => {
+              v.data = undefined
+            })
+
+            draft.secondaryIndicators.forEach(v => {
+              v.data = undefined
+            })
           })
         }
         return item

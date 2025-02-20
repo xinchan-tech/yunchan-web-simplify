@@ -122,6 +122,123 @@ export const drawLine: DrawerFunc<[XAxis, number | null][]> = (
 }
 
 /**
+ * 画自定义的线，custom类型
+ */
+export const drawCustomLine: DrawerFunc<[XAxis, [number, number | null]][]> = (
+  options,
+  _,
+  { xAxisIndex, yAxisIndex, data, extra, name }
+) => {
+  const grid = renderUtils.getGridByYAxisIndex(options, yAxisIndex)
+  const left = grid?.left ?? 1
+  const maxRight = left + (grid?.width ?? Number.MAX_SAFE_INTEGER)
+  const top = grid?.top ?? 2
+  const bottom = top + (grid?.height ?? Number.MAX_SAFE_INTEGER)
+
+  const points: (number | null)[][] = []
+
+  data.forEach((item, index, arr) => {
+    if (index !== arr.length - 1) {
+      points.push([item[0], item[1][0], item[1][1], arr[index + 1][0], arr[index + 1][1][0], arr[index + 1][1][1]])
+    }
+  })
+  const line: CustomSeriesOption = {
+    xAxisIndex: xAxisIndex,
+    yAxisIndex: yAxisIndex,
+    name,
+    type: 'custom',
+    id: extra?.seriesId,
+    encode: {
+      x: [0, 3],
+      y: [1, 4]
+    },
+    renderItem: (_, api) => {
+      const startX = api.value(0) as number
+      const startDrawY = api.value(2) as number
+      const endX = api.value(3) as number
+      const endDrawY = api.value(5) as number
+
+      if(startX === null || endX === null) {
+        return
+      }
+
+      const startPoint = api.coord([startX, startDrawY])
+      const endPoint = api.coord([endX, endDrawY])
+
+      //处理边界条件
+      if (startPoint[0] < left) {
+        const angle = Math.atan((endPoint[1] - startPoint[1]) / (endPoint[0] - startPoint[0]))
+        const y = (left - startPoint[0]) * Math.tan(angle) + startPoint[1]
+
+        startPoint[0] = left
+        startPoint[1] = y
+      }
+      if(endPoint[0] > maxRight) {
+        const angle = Math.atan((endPoint[1] - startPoint[1]) / (endPoint[0] - startPoint[0]))
+        const y = (maxRight - startPoint[0]) * Math.tan(angle) + startPoint[1]
+
+        endPoint[0] = maxRight
+        endPoint[1] = y
+      }
+
+      if(startPoint[1] < top) {
+        const angle = Math.atan((endPoint[1] - startPoint[1]) / (endPoint[0] - startPoint[0]))
+        const x = (top - startPoint[1]) / Math.tan(angle) + startPoint[0]
+
+        startPoint[0] = x
+        startPoint[1] = top
+      }
+
+      if(endPoint[1] > bottom) {
+        const angle = Math.atan((endPoint[1] - startPoint[1]) / (endPoint[0] - startPoint[0]))
+        const x = (bottom - startPoint[1]) / Math.tan(angle) + startPoint[0]
+
+        endPoint[0] = x
+        endPoint[1] = bottom
+      }
+
+      if(startPoint[1] > bottom) {
+        const angle = Math.atan((endPoint[1] - startPoint[1]) / (endPoint[0] - startPoint[0]))
+        const x = (bottom - startPoint[1]) / Math.tan(angle) + startPoint[0]
+
+        startPoint[0] = x
+        startPoint[1] = bottom
+      }
+
+      if(endPoint[1] < top) {
+        const angle = Math.atan((endPoint[1] - startPoint[1]) / (endPoint[0] - startPoint[0]))
+        const x = (top - startPoint[1]) / Math.tan(angle) + startPoint[0]
+
+        endPoint[0] = x
+        endPoint[1] = top
+      }
+
+      return {
+        type: 'line',
+        shape: {
+          x1: startPoint[0],
+          y1: startPoint[1],
+          x2: endPoint[0],
+          y2: endPoint[1]
+        },
+        emphasisDisabled: true,
+        z: extra?.z ?? 0,
+        id: extra?.seriesId,
+        name,
+        style: {
+          stroke: extra?.color,
+          lineDash: extra?.type ?? 'solid',
+          lineWidth: 1
+        }
+      }
+    },
+    data: points
+  }
+  renderUtils.addSeries(options, line)
+  return options
+}
+
+/**
  * 水平线
  */
 export const drawHLine: typeof drawLine = (options, _, { xAxisIndex, yAxisIndex, data, extra, name }) => {
@@ -241,11 +358,18 @@ export const drawPolyline: DrawerFunc<[XAxis, YAxis, XAxis, YAxis, LineType][]> 
   return options
 }
 
-export type DrawerTextShape = [XAxis, YAxis, string, DrawerColor, number, number]
+export type DrawerTextShape = {
+  x: XAxis
+  y: YAxis
+  drawY: YAxis
+  text: string
+  color: string
+  xOffset?: number
+  yOffset?: number
+}
 
 /**
  * 文本
- * 值类型为 [x, y, text]
  * @param options echarts配置
  * @param state 当前窗口状态
  * @param opts 画图参数
@@ -258,18 +382,27 @@ export type DrawerTextShape = [XAxis, YAxis, string, DrawerColor, number, number
  *
  */
 export const drawText: DrawerFunc<DrawerTextShape[]> = (options, _, { xAxisIndex, yAxisIndex, data, name }) => {
+  const grid = renderUtils.getGridByYAxisIndex(options, yAxisIndex)
+  const top = grid?.top ?? 2
+  const bottom = top + (grid?.height ?? Number.MAX_SAFE_INTEGER)
+
   const line: CustomSeriesOption = {
     xAxisIndex: xAxisIndex,
     yAxisIndex: yAxisIndex,
     type: 'custom',
     renderItem: (_, api) => {
       const x = api.value(0)
-      const y = api.value(1) as number
+      // const y = api.value(1) as number
       const text = api.value(2) as string
-      const point = api.coord([x, y])
+      const drawY = api.value(6) as number
+      const point = api.coord([x, drawY])
       const color = (api.value(3) as string) ?? '#00943c'
       const yOffset = api.value(5) as number
       const xOffset = api.value(4) as number
+
+      if (point[1] < top || point[1] > bottom) {
+        return
+      }
 
       return {
         type: 'text',
@@ -288,7 +421,7 @@ export const drawText: DrawerFunc<DrawerTextShape[]> = (options, _, { xAxisIndex
       }
     },
     name,
-    data: data
+    data: data.map(item => [item.x, item.y, item.text, item.color, item.xOffset ?? 0, item.yOffset ?? 0, item.drawY])
   }
 
   Array.isArray(options.series) && options.series.push(line)
@@ -665,8 +798,22 @@ type FontSize = number
  */
 export const drawNumber = (
   options: ECOption,
-  params: DrawerFuncOptions<[XAxis, YAxis, Text, YOffset, FontSize, DrawerColor]>
+  params: DrawerFuncOptions<
+    {
+      x: number
+      y: number
+      drawY: number
+      number: number
+      offsetX: number
+      offsetY: number
+      color: string
+    }[]
+  >
 ) => {
+  const grid = renderUtils.getGridByYAxisIndex(options, params.yAxisIndex)
+  const top = grid?.top ?? 2
+  const bottom = top + (grid?.height ?? Number.MAX_SAFE_INTEGER)
+
   const custom: CustomSeriesOption = {
     xAxisIndex: params.xAxisIndex,
     yAxisIndex: params.yAxisIndex,
@@ -678,13 +825,18 @@ export const drawNumber = (
     renderItem: (_, api) => {
       const x = api.value(0) as number
       const y = api.value(1) as number
+      const drawY = api.value(6) as number
       const text = api.value(2) as string
       const yOffset = api.value(4) as number
       const _yOffset = yOffset
       const xOffset = api.value(3) as number
       const color = api.value(5) as string
 
-      const point = api.coord([x, y])
+      const point = api.coord([x, drawY || y])
+
+      if (point[1] < top || point[1] > bottom) {
+        return
+      }
 
       return {
         type: 'text',
@@ -701,7 +853,15 @@ export const drawNumber = (
       }
     },
     name: params.name,
-    data: params.data
+    data: params.data.map(item => [
+      item.x,
+      item.y,
+      item.number.toString(),
+      item.offsetX,
+      item.offsetY,
+      item.color,
+      item.drawY
+    ])
   }
 
   Array.isArray(options.series) && options.series.push(custom)
@@ -865,27 +1025,57 @@ const iconContext = import.meta.webpackContext('@/assets/icon/script_icons')
 type DrawIconShape = {
   x: XAxis
   y: YAxis
+  drawY: YAxis
   iconId: number
   offsetX: number
   offsetY: number
 }
 
 export const drawIcon: DrawerFunc<DrawIconShape[]> = (options, _, { xAxisIndex, yAxisIndex, data, name }) => {
-  const scatter: ScatterSeriesOption = {
-    type: 'scatter',
+  const grid = renderUtils.getGridByYAxisIndex(options, yAxisIndex)
+  const top = grid?.top ?? 2
+  const bottom = top + (grid?.height ?? Number.MAX_SAFE_INTEGER)
+  const scatter: CustomSeriesOption = {
+    type: 'custom',
     xAxisIndex: xAxisIndex,
     yAxisIndex: yAxisIndex,
     silent: true,
-    symbolSize: 20,
+    // symbolSize: 20,
+    encode: {
+      x: [0],
+      y: [1]
+    },
     name,
-    data: data.map(item => ({
-      value: [item.x, item.y],
-      symbol: `image://${iconContext(`./draw_${item.iconId}.png`)}`,
-      emphasis: {
-        disabled: true
-      },
-      symbolOffset: [item.offsetX, item.offsetY]
-    }))
+    data: data.map(item => [item.x, item.y, item.drawY, item.iconId, item.offsetX, item.offsetY]),
+    renderItem: (_, api) => {
+      const x = api.value(0) as number
+      const y = api.value(2) as number
+      const icon = api.value(3) as string
+      const offsetX = api.value(4) as number
+      const offsetY = api.value(5) as number
+      const point = api.coord([x, y])
+
+      const size = 20
+
+      if (point[1] + size > bottom) {
+        return
+      }
+
+      if (point[1] - size < top) {
+        return
+      }
+
+      return {
+        type: 'image',
+        style: {
+          image: (iconContext(`./draw_${icon}.png`) as string) ?? '',
+          x: point[0] + offsetX,
+          y: point[1] + offsetY,
+          width: size,
+          height: size
+        }
+      }
+    }
   }
   // console.log(data)
   Array.isArray(options.series) && options.series.push(scatter)
@@ -893,48 +1083,71 @@ export const drawIcon: DrawerFunc<DrawIconShape[]> = (options, _, { xAxisIndex, 
 }
 
 type DrawBrandShape = {
-  color: string
-  points: { y1: number; y2: number; x: number; drawY?: number }[]
+  /**
+   * 用来判断是哪个多边形的点
+   */
+  polygonIndex: number
+  x: number
+  y: number
+  polygon?: {
+    color: string
+    points: {
+      x: number
+      drawY: number
+    }[]
+  }
 }
 
 export const drawBrand: DrawerFunc<DrawBrandShape[]> = (options, _, { xAxisIndex, yAxisIndex, data, name }) => {
-  const grid = renderUtils.getGridIndex(options, 0)
-  const left = grid?.left ?? 1
+  const grid = renderUtils.getGridByYAxisIndex(options, yAxisIndex)
+  const left = grid?.left ?? 2
 
   const maxRight = left + (grid?.width ?? 0)
+  const top = grid?.top ?? 2
+  const bottom = top + (grid?.height ?? Number.MAX_SAFE_INTEGER)
 
   const series: CustomSeriesOption = {
     type: 'custom',
     xAxisIndex: xAxisIndex,
     yAxisIndex: yAxisIndex,
     encode: {
-      x: [0, 1],
-      y: [2, 3]
+      x: [0],
+      y: [1]
     },
-    renderItem: (_, api) => {
-      const rawPoints = api.value(4) as string
-      const color = api.value(5) as string
+    renderItem: (params, api) => {
+      if (!params.context.polygon) {
+        params.context.polygon = new Set<number>()
+      }
+      const x = api.value(0) as number
+      const startIndex = data[x].polygonIndex
+      if ((params.context.polygon as Set<number>).has(startIndex)) {
+        return null
+      }
+      ;(params.context.polygon as Set<number>).add(startIndex)
 
-      // console.log(
-      const points = rawPoints.split(',').map(p => {
-        const [_x, _y, drawY] = p.split('-').map(Number)
-        let [x, y] = api.coord([_x, _y])
+      const shape = data[startIndex]
 
-        if (x > maxRight) {
-          x = maxRight
+      const color = shape.polygon?.color as string
+
+      const points = shape.polygon!.points.map(p => {
+        const { x, drawY } = p
+
+        let [_x, _y] = api.coord([x, drawY])
+        // console.log(x, drawY, _x, _y)
+        if (_x > maxRight) {
+          _x = maxRight
         }
-        if (x < left) {
-          x = left
-        }
-        
-        if(drawY){
-          const _drawY = api.coord([_x, drawY])[1]
-          // const offsetX = drawY * x / _drawY
-          y = _drawY
-          // console.log(offsetX, x, y)
+        if (_x < left) {
+          _x = left
         }
 
-        return [x, y]
+        if (_y > bottom) {
+          _y = bottom
+        }
+        if (_y < top) {
+          _y = top
+        }
+        return [_x, _y]
       })
 
       return {
@@ -951,24 +1164,7 @@ export const drawBrand: DrawerFunc<DrawBrandShape[]> = (options, _, { xAxisIndex
     },
     name,
     data: data.map(item => {
-      const p1: string[] = []
-      const p2: string[] = []
-      
-      item.points.forEach(p => {
-        p1.push([p.x, p.y1, p.drawY].join('-'))
-        p2.unshift([p.x, p.y2, p.drawY].join('-'))
-      })
-
-      const pointStr = p1.concat(p2).join(',')
-
-      return [
-        item.points[0].x,
-        item.points[item.points.length - 1].x,
-        item.points[0].drawY ?? item.points[0].y1,
-        item.points[item.points.length - 1].drawY ?? item.points[item.points.length - 1].y1,
-        pointStr,
-        item.color
-      ]
+      return [item.x, item.y]
     })
   }
 

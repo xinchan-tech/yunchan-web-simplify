@@ -23,6 +23,7 @@ import {
   type DrawerTextShape,
   LineType,
   drawBrand,
+  drawCustomLine,
   drawGradient,
   drawHLine,
   drawHdlyLabel,
@@ -959,10 +960,11 @@ const renderIndicator = (
   indicator: Indicator,
   params: { xAxisIndex: number; yAxisIndex: number; type: 'main' | 'secondary' }
 ) => {
+
   if (!indicator.data || indicator.visible === false) return
 
   if (renderUtils.isLocalIndicator(indicator.id)) return
-
+  
   indicator.data.forEach((d, index) => {
     if (typeof d === 'string') {
       return
@@ -986,14 +988,22 @@ const renderIndicator = (
           data: d.data.map((s, i) => ({ x: i, y: s })).filter(s => !!s.y)
         })
       } else {
-        drawLine(options, {} as any, {
+        const data = (d.data as any).map((s: any, i: number) => {
+          if(params.type !== 'main'){
+            return [i, [s[1], s[1]]]
+          }
+
+          return [i, s]
+        })
+        drawCustomLine(options, {} as any, {
           extra: {
-            color: d.color || '#ffffff'
+            color: d.color || '#ffffff',
+            type: d.style_type === 'DOTLINE' ? 'dashed' : 'solid'
           },
           name: seriesName,
           xAxisIndex: params.xAxisIndex,
           yAxisIndex: params.yAxisIndex,
-          data: (d.data as number[]).map((s, i) => [i, s])
+          data: data
         })
       }
     } else if (d.draw === 'STICKLINE') {
@@ -1009,32 +1019,26 @@ const renderIndicator = (
         data: data
       })
     } else if (d.draw === 'DRAWTEXT') {
-      const data: DrawerTextShape[] = listify(d.draw_data, (key, value) => [
-        +key,
-        value[0],
-        value[1],
-        d.color,
-        value[2],
-        value[3]
-      ])
       drawText(options, {} as any, {
         xAxisIndex: params.xAxisIndex,
         yAxisIndex: params.yAxisIndex,
         name: seriesName,
-        data: data
+        data: d.draw_data.map(item => ({
+          ...item,
+          y: params.type !== 'main' ? item.drawY : item.y,
+          color: d.color
+        }))
       })
     } else if (d.draw === 'DRAWNUMBER') {
-      const data = Object.entries(d.draw_data as NormalizedRecord<number[]>).map(([key, value]) => [
-        +key,
-        ...value,
-        d.color
-      ])
-
       drawNumber(options, {
         xAxisIndex: params.xAxisIndex,
         yAxisIndex: params.yAxisIndex,
         name: seriesName,
-        data: data as any
+        data: d.draw_data.map(item => ({
+          ...item,
+          y: params.type !== 'main' ? item.drawY : item.y,
+          color: d.color
+        }))
       })
     } else if (d.draw === 'DRAWRECTREL') {
       const data = Object.entries(d.draw_data).map(([_, value]) => ({
@@ -1057,19 +1061,15 @@ const renderIndicator = (
         data: d.draw_data
       })
     } else if (d.draw === 'DRAWICON') {
-      const data = Object.entries(d.draw_data).map(([x, value]) => ({
-        x: +x,
-        y: value[0],
-        iconId: value[1],
-        offsetX: value[2],
-        offsetY: value[3]
-      }))
-
       drawIcon(options, {} as any, {
         xAxisIndex: params.xAxisIndex,
         yAxisIndex: params.yAxisIndex,
         name: seriesName,
-        data: data
+        data: d.draw_data.map(item => ({
+          ...item,
+          y: params.type !== 'main' ? item.drawY : item.y,
+          iconId: item.icon
+        }))
       })
     } else if (d.draw === 'DRAWBAND') {
       drawBrand(options, {} as any, {
@@ -1169,6 +1169,7 @@ export const renderOverlayMark = (options: ECOption, state: ChartState) => {
  */
 export const renderSecondary = (options: ECOption, indicators: Indicator[]) => {
   /** 合并绘制 */
+
   indicators.forEach((indicator, index) => {
     if (renderUtils.isLocalIndicator(indicator.id)) return
 

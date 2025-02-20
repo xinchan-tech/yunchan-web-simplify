@@ -3,12 +3,12 @@ import { stockUtils } from './stock'
 import { useIndicator } from '@/store'
 import { isEmpty, listify } from 'radash'
 
-let coilingModule: Awaited<ReturnType<typeof window.CoilingModule>>
-let policyModule: Awaited<ReturnType<typeof window.PolicyModule>>
+let coilingModule: ReturnType<typeof window.CoilingModule>
+let policyModule: ReturnType<typeof window.PolicyModule>
 
 const getCoilingModule = async () => {
   if (!coilingModule) {
-    coilingModule = await window.CoilingModule()
+    coilingModule = window.CoilingModule()
   }
 
   return coilingModule
@@ -16,7 +16,7 @@ const getCoilingModule = async () => {
 
 const getPolicyModule = async () => {
   if (!policyModule) {
-    policyModule = await window.PolicyModule()
+    policyModule = window.PolicyModule()
   }
 
   return policyModule
@@ -61,15 +61,19 @@ export const calcIndicator = async (
 
   result.data = result.data.map(item => {
     if (item.draw === 'DRAWTEXT') {
-      item.draw_data = drawTextTransform(item.draw_data)
+      item.draw_data = drawTextTransform(data, item.draw_data)
     } else if (item.draw === 'STICKLINE') {
       item.draw_data = drawStickLineTransform(item.draw_data)
     } else if (item.draw === 'DRAWGRADIENT') {
       item.draw_data = drawGradientTransform(item.draw_data)
     } else if (item.draw === 'DRAWICON') {
-      item.draw_data = drawIconTransform(item.draw_data)
+      item.draw_data = drawIconTransform(data, item.draw_data)
     } else if (item.draw === 'DRAWBAND') {
-      item.draw_data = drawBandTransform(item.draw_data)
+      item.draw_data = drawBandTransform(data, item.draw_data)
+    } else if (item.draw === 'DRAWNUMBER') {
+      item.draw_data = drawNumberTransform(data, item.draw_data)
+    } else if (item.draw === '') {
+      item.data = drawLineTransform(data, item.data)
     }
 
     return item
@@ -79,24 +83,45 @@ export const calcIndicator = async (
   return result
 }
 
-const drawTextTransform = (drawData: any) => {
+const drawLineTransform = (candlesticks: StockRawRecord[], drawData: [number | null][]) => {
+  return drawData.map((item, index) => [candlesticks[index][2]!, item])
+}
+
+const drawTextTransform = (candlesticks: StockRawRecord[], drawData: any) => {
   if (drawData.length <= 0) {
     return drawData
   }
-
-  const [condition, x, text, offsetX, offsetY] = drawData[0]
-  const r: any = {}
+  // console.log(drawData)
+  const [condition, y, text, offsetX, offsetY] = drawData[0]
+  const r: {
+    x: number
+    y: number
+    drawY: number
+    text: string
+    offsetX: number
+    offsetY: number
+  }[] = []
 
   Object.entries(drawData).forEach(([key, value]) => {
+    const candlestick = candlesticks[Number(key)]
+
     if (key === '0') {
       if (condition === 0) {
         return
       }
-      r[key] = [x, text, offsetX, -offsetY]
+      r.push({ x: 0, y: candlestick[2]!, text: text, offsetX: offsetX, offsetY: -offsetY, drawY: y })
       return
     }
 
-    r[key] = [(value as any)[0], text, offsetX, -offsetY]
+    const typedValue = value as [number]
+    r.push({
+      x: Number(key),
+      y: candlestick[2]!,
+      text: text,
+      offsetX: offsetX,
+      offsetY: -offsetY,
+      drawY: typedValue[0]
+    })
   })
 
   return r
@@ -167,34 +192,60 @@ const drawGradientTransform = (drawData: ([number] | [number, string, string, st
   return gradients
 }
 
-const drawIconTransform = (drawData: any[]) => {
+const drawIconTransform = (candlesticks: StockRawRecord[], drawData: any[]) => {
   if (drawData.length <= 0) {
     return drawData
   }
-
+  // console.log(drawData)
   const [condition, y, icon, offsetX, offsetY] = drawData[0]
 
-  const r: any = {}
+  const r: {
+    x: number
+    y: number
+    drawY: number
+    icon: number
+    offsetX: number
+    offsetY: number
+  }[] = []
 
   Object.entries(drawData).forEach(([key, value]) => {
+    const candlestick = candlesticks[Number(key)]
+
     if (key === '0') {
       if (condition === 0) {
         return
       }
-      r[key] = [y, icon, offsetX, -offsetY]
+      r[key] = { x: 0, y: candlestick[2]!, icon: icon, offsetX: offsetX, offsetY: -offsetY, drawY: y }
       return
     }
 
     const typedValue = value as [number]
-    r[key] = [typedValue[0], icon, offsetX, -offsetY]
+    r.push({
+      x: Number(key),
+      y: candlestick[2]!,
+      icon: icon,
+      offsetX: offsetX,
+      offsetY: -offsetY,
+      drawY: typedValue[0]
+    })
   })
 
   return r
 }
 
-const drawBandTransform = (drawData: Record<string, [number, string, number, string]>) => {
-  let polygon: { color: string; points: { y1: number; y2: number; x: number; drawY?: number }[] } = {
+const drawBandTransform = (
+  candlesticks: StockRawRecord[],
+  drawData: Record<string, [number, string, number, string]>
+) => {
+  let polygon: {
+    color: string
+    startIndex: number
+    endIndex: number
+    points: { y1: number; y2: number; x: number; drawY: number }[]
+  } = {
     color: '',
+    endIndex: 0,
+    startIndex: 0,
     points: []
   }
   const polygons: (typeof polygon)[] = []
@@ -204,14 +255,17 @@ const drawBandTransform = (drawData: Record<string, [number, string, number, str
       polygon.color = y1 >= y2 ? color1 : color2
     }
 
-    polygon.points.push({ y1, y2, x: Number(x) })
+    polygon.points.push({ y1, y2, x: Number(x), drawY: 0 })
 
     if (polygon.points.length > 1) {
       const currentPoints = polygon.points[polygon.points.length - 1]
       if (currentPoints.y1 === currentPoints.y2) {
+        polygon.endIndex = +x
         polygons.push(polygon)
         polygon = {
           color: '',
+          endIndex: +x,
+          startIndex: +x,
           points: []
         }
 
@@ -240,9 +294,11 @@ const drawBandTransform = (drawData: Record<string, [number, string, number, str
         if (drawY) {
           currentPoints.drawY = drawY
         }
-
+        polygon.endIndex = +x
         polygons.push(polygon)
         polygon = {
+          startIndex: +x,
+          endIndex: +x,
           color: y1 >= y2 ? color1 : color2,
           points: [currentPoints]
         }
@@ -250,9 +306,12 @@ const drawBandTransform = (drawData: Record<string, [number, string, number, str
         return
       }
 
-      if(arr.length - 1 === index) {
+      if (arr.length - 1 === index) {
+        polygon.endIndex = +x
         polygons.push(polygon)
         polygon = {
+          startIndex: +x,
+          endIndex: +x,
           color: y1 >= y2 ? color1 : color2,
           points: [currentPoints]
         }
@@ -262,7 +321,64 @@ const drawBandTransform = (drawData: Record<string, [number, string, number, str
     }
   })
 
-  return polygons
+  const result: {
+    polygonIndex: number
+    x: number
+    y1: number
+    y2: number
+    drawY1: number
+    drawY2: number
+    polygon?: {
+      color: string
+      points?: {
+        x: number
+        drawY: number
+      }[]
+    }
+  }[] = []
+
+  candlesticks.forEach((candlestick, index) => {
+    const node: ArrayItem<typeof result> = {
+      polygonIndex: -1,
+      x: index,
+      y1: candlestick[2]!,
+      y2: candlestick[2]!,
+      drawY1: -1,
+      drawY2: -1
+    }
+    for (let i = 0; i < polygons.length; i++) {
+      const polygon = polygons[i]
+      if (polygon.startIndex <= index && polygon.endIndex >= index) {
+        node.polygonIndex = polygon.startIndex
+        const point = polygon.points[index - polygon.startIndex]
+
+        if (point) {
+          node.drawY1 =
+            point.drawY || point.y1
+          node.drawY2 =
+            point.drawY || point.y2
+        }
+      }
+      if (polygon.startIndex === index) {
+        const leftPoints: { x: number; drawY: number }[] = []
+        const rightPoints: { x: number; drawY: number }[] = []
+
+        polygon.points.forEach(point => {
+          leftPoints.push({ x: point.x, drawY: point.drawY || point.y1 })
+          rightPoints.unshift({ x: point.x, drawY: point.drawY || point.y2 })
+        })
+
+        node.polygon = {
+          color: polygon.color,
+          points: leftPoints.concat(rightPoints)
+        }
+      }
+    }
+
+    result.push(node)
+  })
+
+  return result
 }
 
 const getIntersectionY = (
@@ -299,4 +415,25 @@ const getIntersectionY = (
   }
 
   return null // 交点不在线段上
+}
+
+const drawNumberTransform = (candlesticks: StockRawRecord[], drawData: any[]) => {
+  if (drawData.length <= 0) {
+    return drawData
+  }
+
+  return Object.entries(drawData).map(([key, value]) => {
+    const candlestick = candlesticks[Number(key)]
+
+    const typedValue = value as [number, number, number, number]
+
+    return {
+      x: Number(key),
+      y: candlestick[2]!,
+      number: typedValue[1],
+      offsetX: typedValue[2],
+      offsetY: -typedValue[3],
+      drawY: typedValue[0]
+    }
+  })
 }

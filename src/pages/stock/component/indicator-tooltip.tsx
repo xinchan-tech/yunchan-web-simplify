@@ -40,11 +40,13 @@ export const IndicatorTooltip = (props: IndicatorTooltipProps) => {
         .filter(item => !!item.name)
         .map(item => {
           const { name, color } = item
+
           return {
             name: name!,
             color
           }
         })
+ 
       indicatorRef.current = {
         indicatorId: props.indicator.id,
         indicators
@@ -64,15 +66,24 @@ export const IndicatorTooltip = (props: IndicatorTooltipProps) => {
       const data: IndicatorData[] = []
 
       e.forEach((item: any) => {
+
         if (!item.seriesName) return
 
         const [type, id, name] = item.seriesName.split('_')
 
         if (type !== props.type) return
-
+       
         if (id !== indicatorRef.current.indicatorId) return
 
-        if (!isNumber(item.value)) return
+        let value = item.value
+        if(item.seriesType === 'custom'){
+          const dim = item.dimensionNames.findIndex((d: string) => d === 'value')
+          if(dim !== -1){
+            value = item.data[dim]
+          }
+        }
+       
+        if (!isNumber(value)) return
 
         const indicator = indicatorRef.current.indicators.find(indicator => indicator.name === name)
 
@@ -81,7 +92,7 @@ export const IndicatorTooltip = (props: IndicatorTooltipProps) => {
         data.push({
           name,
           id,
-          value: item.value,
+          value: value.toString(),
           color: indicator.color
         })
       })
