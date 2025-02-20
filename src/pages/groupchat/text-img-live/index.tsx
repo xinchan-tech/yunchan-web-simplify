@@ -1,346 +1,343 @@
 import {
   getLiveOpnions,
-  opinionItem,
-  opinionsRequestParam,
+  type opinionItem,
+  type opinionsRequestParam,
   sendLiveOpinions,
-  sendOpinionRequestPrams,
-} from "@/api";
-import FullScreenLoading from "@/components/loading";
-import { useThrottleFn } from "ahooks";
-import { useEffect, useRef, useState } from "react";
-import { animateScroll, scroller } from "react-scroll";
-import { useUser } from "@/store";
-import { Button, Input, JknIcon } from "@/components";
-import { useToast } from "@/hooks";
-import ChatWindow from "../group-chat-input/chat-window";
-import UploadUtil from "../Service/uploadUtil";
-import { InputBoxImage, InputBoxResult } from "../group-chat-input/useInput";
-import { uid } from "radash";
-import Viewer from "react-viewer";
-import { HighlightDollarWords } from "../Messages/text";
+  type sendOpinionRequestPrams
+} from '@/api'
+import FullScreenLoading from '@/components/loading'
+import { useThrottleFn } from 'ahooks'
+import { useEffect, useRef, useState } from 'react'
+import { animateScroll, scroller } from 'react-scroll'
+import { useUser } from '@/store'
+import { Button, Input, JknIcon } from '@/components'
+import { useToast } from '@/hooks'
+import ChatWindow from '../group-chat-input/chat-window'
+import UploadUtil from '../Service/uploadUtil'
+import type { InputBoxImage, InputBoxResult } from '../group-chat-input/useInput'
+import { uid } from 'radash'
+import Viewer from 'react-viewer'
+import { HighlightDollarWords } from '../Messages/text'
 
 function formatTimestamp(timestamp: number) {
-  const date = new Date(timestamp);
+  const date = new Date(timestamp)
 
   // 配置纽约时区
   const options = {
-    timeZone: "America/New_York",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
+    timeZone: 'America/New_York',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
     hour12: false,
-    weekday: "long",
-  };
+    weekday: 'long'
+  }
 
   // 提取中文格式的日期部件
-  const [month, day, weekday, hh, mm] = new Intl.DateTimeFormat(
-    "zh-CN",
-    options
-  )
+  const [month, day, weekday, hh, mm] = new Intl.DateTimeFormat('zh-CN', options)
     .formatToParts(date)
     .reduce((acc, part) => {
       switch (part.type) {
-        case "month":
-          acc[0] = part.value;
-          break;
-        case "day":
-          acc[1] = part.value;
-          break;
-        case "weekday":
-          acc[2] = part.value;
-          break;
-        case "hour":
-          acc[3] = part.value.padStart(2, "0");
-          break;
-        case "minute":
-          acc[4] = part.value.padStart(2, "0");
-          break;
+        case 'month':
+          acc[0] = part.value
+          break
+        case 'day':
+          acc[1] = part.value
+          break
+        case 'weekday':
+          acc[2] = part.value
+          break
+        case 'hour':
+          acc[3] = part.value.padStart(2, '0')
+          break
+        case 'minute':
+          acc[4] = part.value.padStart(2, '0')
+          break
       }
-      return acc;
-    }, []);
+      return acc
+    }, [])
 
-  return `${month}-${day} ${weekday} ${hh}:${mm}`;
+  return `${month}-${day} ${weekday} ${hh}:${mm}`
 }
 
-const OPINION_ID_PREFIX = "opinion-";
+const OPINION_ID_PREFIX = 'opinion-'
 const TextImgLive = () => {
-  const [opinions, setOpinions] = useState<opinionItem[]>([]);
-  const [loading, setLoading] = useState(false);
-  const { user } = useUser();
-  const jumpOpioionId = useRef<string | null>(null);
-  const pulldowning = useRef(false);
-  const pulldownFinished = useRef(false);
-  const [sending, setSending] = useState(false);
-  const { toast } = useToast();
-  const [keyWord, setKeyWord] = useState("");
+  const [opinions, setOpinions] = useState<opinionItem[]>([])
+  const [loading, setLoading] = useState(false)
+  const { user } = useUser()
+  const jumpOpioionId = useRef<string | null>(null)
+  const pulldowning = useRef(false)
+  const pulldownFinished = useRef(false)
+  const [sending, setSending] = useState(false)
+  const { toast } = useToast()
+  const [keyWord, setKeyWord] = useState('')
 
-  const pageNumber = useRef(1);
+  const pageNumber = useRef(1)
   const pullBeforeData = () => {
     if (pulldowning.current || pulldownFinished.current) {
-      return;
+      return
     }
 
-    const params = generateParams();
-    params.page = String(pageNumber.current + 1);
+    const params = generateParams()
+    params.page = String(pageNumber.current + 1)
     if (keyWord) {
-      params.keyword = keyWord;
+      params.keyword = keyWord
     }
     fetchOpinions(params, { pullBeforeMode: true }).then(() => {
-      pageNumber.current++;
-    });
-  };
+      pageNumber.current++
+    })
+  }
   const generateParams = () => {
     let params: opinionsRequestParam = {
-      type: "1",
+      type: '1',
       page: String(pageNumber.current),
-      limit: "15",
-    };
+      limit: '15'
+    }
 
     // todo 一些角色判断，是不是老师
 
-    return params;
-  };
+    return params
+  }
 
   const pullLatest = async () => {
     let params: opinionsRequestParam = {
-      type: "1",
-      page: "1",
-      limit: "15",
-    };
+      type: '1',
+      page: '1',
+      limit: '15'
+    }
     try {
-      const res = await getLiveOpnions(params);
+      const res = await getLiveOpnions(params)
       if (res.items.length > 0) {
         // 去重，只把老数据里不包含的opinion加进去
         const newPart = res.items
-          .filter((item) => {
+          .filter(item => {
             return (
-              opinions.findIndex((old) => {
-                return item.id === old.id;
+              opinions.findIndex(old => {
+                return item.id === old.id
               }) < 0
-            );
+            )
           })
-          .reverse();
+          .reverse()
 
-        const newOpinions = newPart.concat(opinions);
-        jumpOpioionId.current = "";
+        const newOpinions = newPart.concat(opinions)
+        jumpOpioionId.current = ''
 
-        setOpinions(newOpinions);
+        setOpinions(newOpinions)
       }
     } catch (err) {}
-  };
+  }
 
   const fetchOpinions = async (
     params: opinionsRequestParam,
     options?: {
-      pullBeforeMode?: boolean;
-      reset?: boolean;
+      pullBeforeMode?: boolean
+      reset?: boolean
     }
   ) => {
-    setLoading(true);
-    pulldowning.current = true;
+    setLoading(true)
+    pulldowning.current = true
     try {
-      const res = await getLiveOpnions(params);
-      pulldowning.current = false;
-      setLoading(false);
+      const res = await getLiveOpnions(params)
+      pulldowning.current = false
+      setLoading(false)
       if (res.items.length > 0) {
-        const newPart = res.items.reverse();
+        const newPart = res.items.reverse()
 
         if (options?.reset === true) {
-          jumpOpioionId.current = null;
-          pageNumber.current = 1;
-          setOpinions(newPart);
+          jumpOpioionId.current = null
+          pageNumber.current = 1
+          setOpinions(newPart)
         } else {
-          const newOpinions = newPart.concat(opinions);
+          const newOpinions = newPart.concat(opinions)
           if (options?.pullBeforeMode === true) {
-            jumpOpioionId.current = OPINION_ID_PREFIX + opinions[0].id;
+            jumpOpioionId.current = OPINION_ID_PREFIX + opinions[0].id
           }
 
-          setOpinions(newOpinions);
+          setOpinions(newOpinions)
         }
       }
       if (res.last === pageNumber.current - 1 || res.last === 1) {
-        pulldownFinished.current = true;
+        pulldownFinished.current = true
       }
     } catch (error) {
-      setLoading(false);
-      pulldowning.current = false;
+      setLoading(false)
+      pulldowning.current = false
     }
-  };
+  }
 
   useEffect(() => {
-    const initParams = generateParams();
+    const initParams = generateParams()
     // const close = wsManager.on("opinions", (data) => {
     //   console.log(data);
     //   pullLatest();
     // });
     fetchOpinions(initParams, { reset: true }).finally(() => {
-      pulldowning.current = false;
-    });
+      pulldowning.current = false
+    })
     // return close;
-    const channel = new BroadcastChannel("chat-channel");
-    channel.onmessage = (event) => {
-      if (event.data.type === "opinions") {
-        pullLatest();
+    const channel = new BroadcastChannel('chat-channel')
+    channel.onmessage = event => {
+      if (event.data.type === 'opinions') {
+        pullLatest()
       }
-    };
+    }
 
     return () => {
-      channel.close();
-    };
-  }, []);
+      channel.close()
+    }
+  }, [])
 
   // 消息列表滚动到底部
   const scrollBottom = () => {
     animateScroll.scrollToBottom({
-      containerId: "scroll-content-opinion",
-      duration: 0,
-    });
-  };
+      containerId: 'scroll-content-opinion',
+      duration: 0
+    })
+  }
 
-  const scrollDomRef = useRef<HTMLDivElement>(null);
+  const scrollDomRef = useRef<HTMLDivElement>(null)
   const handleScroll = useThrottleFn(
     (e: any) => {
-      const targetScrollTop = e?.target?.scrollTop;
+      const targetScrollTop = e?.target?.scrollTop
       if (targetScrollTop <= 30) {
         // 下拉
-        pullBeforeData();
+        pullBeforeData()
       }
     },
     { wait: 200 }
-  );
+  )
 
   useEffect(() => {
-    if (opinions instanceof Array && opinions.length > 0) {
+    if (Array.isArray(opinions) && opinions.length > 0) {
       if (jumpOpioionId.current) {
-        const targetID = jumpOpioionId.current;
-        const target = document.getElementById(targetID);
+        const targetID = jumpOpioionId.current
+        const target = document.getElementById(targetID)
         if (target) {
           scroller.scrollTo(targetID, {
-            containerId: "scroll-content-opinion",
-            duration: 0,
-          });
-          jumpOpioionId.current = null;
+            containerId: 'scroll-content-opinion',
+            duration: 0
+          })
+          jumpOpioionId.current = null
         }
       } else {
-        scrollBottom();
+        scrollBottom()
       }
     }
-  }, [opinions]);
-  const imgUploadRef = useRef<HTMLInputElement>();
+  }, [opinions])
+  const imgUploadRef = useRef<HTMLInputElement>()
   const onFileClick = (event: any) => {
-    event.target.value = ""; // 防止选中一个文件取消后不能再选中同一个文件
-  };
+    event.target.value = '' // 防止选中一个文件取消后不能再选中同一个文件
+  }
 
   const onFileChange = () => {
     if (imgUploadRef.current) {
-      let File = (imgUploadRef.current.files || [])[0];
-      dealFile(File);
+      let File = (imgUploadRef.current.files || [])[0]
+      dealFile(File)
     }
-  };
-  const inputRef = useRef<any>();
-  const [showPreview, setShowPreview] = useState(false);
-  const [imageURL, setImageURL] = useState("");
+  }
+  const inputRef = useRef<any>()
+  const [showPreview, setShowPreview] = useState(false)
+  const [imageURL, setImageURL] = useState('')
 
   const handleSend = (data: InputBoxResult) => {
     if (!data) {
-      return;
+      return
     }
-    let content = "";
-    let UploadQueue: Array<InputBoxImage> = [];
+    let content = ''
+    let UploadQueue: Array<InputBoxImage> = []
     if (data.msgData && data.msgData.length > 0) {
-      data.msgData.forEach((text) => {
-        content += text.msg;
-      });
+      data.msgData.forEach(text => {
+        content += text.msg
+      })
     }
 
     if (data.needUploadFile && data.needUploadFile.length > 0) {
-      data.needUploadFile.forEach((file) => {
-        UploadQueue.push(file);
-      });
+      data.needUploadFile.forEach(file => {
+        UploadQueue.push(file)
+      })
     }
 
-    const promises: Promise<{ url: string }>[] = [];
+    const promises: Promise<{ url: string }>[] = []
 
-    UploadQueue.forEach((data) => {
-      promises.push(uploadImg(data));
-    });
+    UploadQueue.forEach(data => {
+      promises.push(uploadImg(data))
+    })
 
     if (promises.length > 0) {
-      setSending(true);
+      setSending(true)
       Promise.all(promises)
-        .then((result) => {
-          console.log(result);
+        .then(result => {
+          console.log(result)
           const sendParams: sendOpinionRequestPrams = {
             content,
             type: 1,
-            urls: [],
-          };
-          if (result instanceof Array && result.length > 0) {
-            result.forEach((item: { url: string }) => {
-              sendParams.urls && sendParams.urls.push(item.url);
-            });
+            urls: []
           }
-          return sendLiveOpinions(sendParams);
+          if (Array.isArray(result) && result.length > 0) {
+            result.forEach((item: { url: string }) => {
+              sendParams.urls?.push(item.url)
+            })
+          }
+          return sendLiveOpinions(sendParams)
         })
-        .then((res) => {})
+        .then(res => {})
         .finally(() => {
-          setSending(false);
-        });
+          setSending(false)
+        })
     } else {
-      setSending(true);
+      setSending(true)
       const sendParams: sendOpinionRequestPrams = {
         content,
         type: 1,
-        urls: [],
-      };
+        urls: []
+      }
       sendLiveOpinions(sendParams).finally(() => {
-        setSending(false);
-      });
+        setSending(false)
+      })
     }
-  };
+  }
 
   const uploadImg = (data: InputBoxImage) => {
-    let fileName = uid(32);
+    let fileName = uid(32)
     if (data.file.type) {
-      const fileType = data.file.type.split("/")[1];
-      fileName = `${fileName}.${fileType}`;
+      const fileType = data.file.type.split('/')[1]
+      fileName = `${fileName}.${fileType}`
     }
-    return UploadUtil.shared.uploadImg(data.file, fileName);
-  };
+    return UploadUtil.shared.uploadImg(data.file, fileName)
+  }
 
   const dealFile = (file: any) => {
-    if (file.type && file.type.startsWith("image/")) {
-      const sizeAllow = file.size / 1024 / 1024 <= 5;
+    if (file.type?.startsWith('image/')) {
+      const sizeAllow = file.size / 1024 / 1024 <= 5
       if (!sizeAllow) {
-        toast({ description: "图片限制最大5M" });
-        return;
+        toast({ description: '图片限制最大5M' })
+        return
       }
 
-      const url = URL.createObjectURL(file);
+      const url = URL.createObjectURL(file)
       if (inputRef.current) {
-        inputRef.current.insertImage(url, file);
+        inputRef.current.insertImage(url, file)
       }
     } else {
-      toast({ description: "暂不支持发送此类文件" });
+      toast({ description: '暂不支持发送此类文件' })
     }
-  };
+  }
 
   return (
     <div className="text-img-live-box">
       {loading && <FullScreenLoading fullScreen={false} />}
-      {user?.user_type === "2" && (
+      {user?.user_type === '2' && (
         <div className="pl-20 pr-20 mb-2">
           <Input
-            className={"h-[24px] placeholder:text-tertiary"}
+            className={'h-[24px] placeholder:text-tertiary'}
             placeholder="搜索记录"
             size="sm"
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                const params = generateParams();
-                params.keyword = e.currentTarget.value;
-                setKeyWord(e.currentTarget.value);
-                fetchOpinions(params, { reset: true });
+            onKeyDown={e => {
+              if (e.key === 'Enter') {
+                const params = generateParams()
+                params.keyword = e.currentTarget.value
+                setKeyWord(e.currentTarget.value)
+                fetchOpinions(params, { reset: true })
               }
             }}
           />
@@ -349,19 +346,15 @@ const TextImgLive = () => {
       <div
         ref={scrollDomRef}
         style={{
-          height: user?.user_type === "2" ? "calc(100% - 210px)" : "100%",
+          height: user?.user_type === '2' ? 'calc(100% - 210px)' : '100%'
         }}
         className="scroll-content-opinion"
         onScroll={handleScroll.run}
         id="scroll-content-opinion"
       >
-        {opinions.map((item) => {
+        {opinions.map(item => {
           return (
-            <div
-              key={item.id}
-              className="opinion-item mb-10"
-              id={OPINION_ID_PREFIX + item.id}
-            >
+            <div key={item.id} className="opinion-item mb-10" id={OPINION_ID_PREFIX + item.id}>
               <div className="avatar-info flex items-center mb-3">
                 <div className="avatar-img mr-2">评</div>
                 <div className="mr-2 teacher-name">{item.user.username}</div>
@@ -373,34 +366,48 @@ const TextImgLive = () => {
               <div className="opinion-content ml-10">
                 <HighlightDollarWords text={item.content} />
 
-                {item.urls instanceof Array && item.urls.length > 0 && (
+                {Array.isArray(item.urls) && item.urls.length > 0 && (
                   <div className="flex mt-2">
                     {item.urls.map((url, index) => {
                       return (
                         <img
+                          alt=""
                           className="mr-3 max-w-[160px] max-h-[160px]"
                           src={url}
-                          key={url + index}
+                          key={url}
                           onClick={() => {
-                            setImageURL(url);
-                            setShowPreview(true);
+                            setImageURL(url)
+                            setShowPreview(true)
+                          }}
+                          onKeyDown={event => {
+                            if (event.key === 'Enter' || event.key === ' ') {
+                              // Enter or Space key
+                              setImageURL(url)
+                              setShowPreview(true)
+                            }
                           }}
                         />
-                      );
+                      )
                     })}
                   </div>
                 )}
               </div>
             </div>
-          );
+          )
         })}
       </div>
-      {user?.user_type === "2" && (
+      {user?.user_type === '2' && (
         <div className="h-[180px] topgap">
           <div className="flex h-[32px] items-center ">
             <span
               onClick={() => {
-                imgUploadRef.current && imgUploadRef.current.click();
+                imgUploadRef.current?.click()
+              }}
+              onKeyDown={event => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  // Enter or Space key
+                  imgUploadRef.current?.click()
+                }
               }}
             >
               <input
@@ -410,7 +417,7 @@ const TextImgLive = () => {
                 multiple={false}
                 accept="image/*"
                 ref={imgUploadRef}
-                style={{ display: "none" }}
+                style={{ display: 'none' }}
               />
               <JknIcon name="pick_image" className="rounded-none" />
             </span>
@@ -427,13 +434,13 @@ const TextImgLive = () => {
               ></textarea> */}
               <ChatWindow
                 style={{
-                  resize: "none",
-                  width: "100%",
-                  height: "100px",
-                  backgroundColor: "rgb(20, 21, 25)",
-                  boxSizing: "border-box",
-                  padding: "10px",
-                  color: "#fff",
+                  resize: 'none',
+                  width: '100%',
+                  height: '100px',
+                  backgroundColor: 'rgb(20, 21, 25)',
+                  boxSizing: 'border-box',
+                  padding: '10px',
+                  color: '#fff'
                 }}
                 ref={inputRef}
                 handleSend={handleSend}
@@ -444,7 +451,7 @@ const TextImgLive = () => {
               loading={sending}
               onClick={() => {
                 if (inputRef.current) {
-                  inputRef.current.dealSend();
+                  inputRef.current.dealSend()
                 }
               }}
             >
@@ -462,16 +469,14 @@ const TextImgLive = () => {
           changeable={false}
           showTotal={false}
           onClose={() => {
-            setShowPreview(false);
+            setShowPreview(false)
           }}
-          customToolbar={(defaultConfigs) => {
-            return defaultConfigs.filter((conf) => {
-              return ![3, 4, 5, 6, 7, 9, 10].includes(
-                conf.actionType as number
-              );
-            });
+          customToolbar={defaultConfigs => {
+            return defaultConfigs.filter(conf => {
+              return ![3, 4, 5, 6, 7, 9, 10].includes(conf.actionType as number)
+            })
           }}
-          images={[{ src: imageURL, alt: "", downloadUrl: imageURL }]}
+          images={[{ src: imageURL, alt: '', downloadUrl: imageURL }]}
         />
       )}
       <style jsx>{`
@@ -556,7 +561,7 @@ const TextImgLive = () => {
         }
       `}</style>
     </div>
-  );
-};
+  )
+}
 
-export default TextImgLive;
+export default TextImgLive

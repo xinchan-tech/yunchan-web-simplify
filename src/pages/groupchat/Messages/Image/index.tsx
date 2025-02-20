@@ -1,91 +1,81 @@
-import { useState } from "react";
-import {
-  MessageImage,
-  MediaMessageContent,
-  MessageContentType,
-  Message,
-} from "wukongimjssdk";
-import MsgCard from "../../components/msg-card";
-import { RevokeText } from "../text";
-import Viewer from "react-viewer";
+import { useState } from 'react'
+import { type MessageImage, MediaMessageContent, MessageContentType, type Message } from 'wukongimjssdk'
+import MsgCard from '../../components/msg-card'
+import { RevokeText } from '../text'
+import Viewer from 'react-viewer'
 
 export class ImageContent extends MediaMessageContent {
-  width!: number;
-  height!: number;
-  url!: string;
-  imgData?: string;
+  width!: number
+  height!: number
+  url!: string
+  imgData?: string
   constructor(file?: File, imgData?: string, width?: number, height?: number) {
-    super();
-    this.file = file;
-    this.imgData = imgData;
-    this.width = width || 0;
-    this.height = height || 0;
+    super()
+    this.file = file
+    this.imgData = imgData
+    this.width = width || 0
+    this.height = height || 0
   }
   decodeJSON(content: any) {
-    this.width = content["width"] || 0;
-    this.height = content["height"] || 0;
-    this.url = content["url"] || "";
-    this.remoteUrl = this.url;
+    this.width = content['width'] || 0
+    this.height = content['height'] || 0
+    this.url = content['url'] || ''
+    this.remoteUrl = this.url
   }
   encodeJSON() {
     return {
       width: this.width || 0,
       height: this.height || 0,
-      url: this.remoteUrl || "",
-    };
+      url: this.remoteUrl || ''
+    }
   }
   get contentType() {
-    return MessageContentType.image;
+    return MessageContentType.image
   }
   get conversationDigest() {
-    return "[图片]";
+    return '[图片]'
   }
 }
 
-const imageScale = (
-  orgWidth: number,
-  orgHeight: number,
-  maxWidth = 250,
-  maxHeight = 250
-) => {
-  let actSize = { width: orgWidth, height: orgHeight };
+const imageScale = (orgWidth: number, orgHeight: number, maxWidth = 250, maxHeight = 250) => {
+  let actSize = { width: orgWidth, height: orgHeight }
   if (orgWidth > orgHeight) {
     //横图
     if (orgWidth > maxWidth) {
       // 横图超过最大宽度
-      let rate = maxWidth / orgWidth; // 缩放比例
-      actSize.width = maxWidth;
-      actSize.height = orgHeight * rate;
+      let rate = maxWidth / orgWidth // 缩放比例
+      actSize.width = maxWidth
+      actSize.height = orgHeight * rate
     }
   } else if (orgWidth < orgHeight) {
     //竖图
     if (orgHeight > maxHeight) {
-      let rate = maxHeight / orgHeight; // 缩放比例
-      actSize.width = orgWidth * rate;
-      actSize.height = maxHeight;
+      let rate = maxHeight / orgHeight // 缩放比例
+      actSize.width = orgWidth * rate
+      actSize.height = maxHeight
     }
   } else if (orgWidth === orgHeight) {
     if (orgWidth > maxWidth) {
-      let rate = maxWidth / orgWidth; // 缩放比例
-      actSize.width = maxWidth;
-      actSize.height = orgHeight * rate;
+      let rate = maxWidth / orgWidth // 缩放比例
+      actSize.width = maxWidth
+      actSize.height = orgHeight * rate
     }
   }
-  return actSize;
-};
+  return actSize
+}
 
 const getImageSrc = (content: MessageImage) => {
-  return content.remoteUrl;
-};
+  return content.remoteUrl
+}
 
 const ImageCell = (props: { message: Message }) => {
-  const { message } = props;
-  const [showPreview, setShowPreview] = useState(false);
+  const { message } = props
+  const [showPreview, setShowPreview] = useState(false)
 
   const getImageElement = () => {
-    const content = message.content as MessageImage;
-    let scaleSize = imageScale(content.width, content.height);
-    const imageURL = getImageSrc(content);
+    const content = message.content as MessageImage
+    let scaleSize = imageScale(content.width, content.height)
+    const imageURL = getImageSrc(content)
     return (
       <MsgCard data={message}>
         <img
@@ -93,12 +83,18 @@ const ImageCell = (props: { message: Message }) => {
           src={imageURL}
           className="msgcard-img"
           style={{
-            borderRadius: "5px",
+            borderRadius: '5px',
             width: scaleSize.width,
-            height: scaleSize.height,
+            height: scaleSize.height
           }}
           onClick={() => {
-            setShowPreview(true);
+            setShowPreview(true)
+          }}
+          onKeyDown={event => {
+            if (event.key === 'Enter' || event.key === ' ') {
+              // Enter or Space key
+              setShowPreview(true)
+            }
           }}
         />
         {showPreview && (
@@ -110,31 +106,23 @@ const ImageCell = (props: { message: Message }) => {
             changeable={false}
             showTotal={false}
             onClose={() => {
-              setShowPreview(false);
+              setShowPreview(false)
             }}
-            customToolbar={(defaultConfigs) => {
-              return defaultConfigs.filter((conf) => {
-                return ![3, 4, 5, 6, 7, 9, 10].includes(
-                  conf.actionType as number
-                );
-              });
+            customToolbar={defaultConfigs => {
+              return defaultConfigs.filter(conf => {
+                return ![3, 4, 5, 6, 7, 9, 10].includes(conf.actionType as number)
+              })
             }}
-            images={[{ src: imageURL, alt: "", downloadUrl: imageURL }]}
+            images={[{ src: imageURL, alt: '', downloadUrl: imageURL }]}
           />
         )}
       </MsgCard>
-    );
-  };
+    )
+  }
 
   return (
-    <>
-      {message?.remoteExtra?.revoke === true ? (
-        <RevokeText data={message?.remoteExtra?.extra} />
-      ) : (
-        getImageElement()
-      )}
-    </>
-  );
-};
+    <>{message?.remoteExtra?.revoke === true ? <RevokeText data={message?.remoteExtra?.extra} /> : getImageElement()}</>
+  )
+}
 
-export default ImageCell;
+export default ImageCell

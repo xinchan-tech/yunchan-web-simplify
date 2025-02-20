@@ -1,159 +1,155 @@
 import {
-  ClipboardEvent,
-  DragEvent,
+  type ClipboardEvent,
+  type DragEvent,
   useState,
   forwardRef,
   useImperativeHandle,
   useEffect,
-  CSSProperties,
-} from "react";
-import { InputBoxResult, useInput } from "./useInput";
-import { useToast } from "@/hooks";
-import { useChatNoticeStore } from "@/store/group-chat-new";
-import { Button } from "@/components";
-import xss from "xss";
+  type CSSProperties
+} from 'react'
+import { type InputBoxResult, useInput } from './useInput'
+import { useToast } from '@/hooks'
+import { useChatNoticeStore } from '@/store/group-chat-new'
+import { Button } from '@/components'
+import xss from 'xss'
 
 const ChatWindow = forwardRef(
   (
     props: {
-      handleSend: (msgListData: InputBoxResult) => void;
-      className?: string;
-      style?: CSSProperties;
-      showSendButton?: boolean;
+      handleSend: (msgListData: InputBoxResult) => void
+      className?: string
+      style?: CSSProperties
+      showSendButton?: boolean
     },
     ref
   ) => {
-    const [htmlValue, setHtmlValue] = useState("");
+    const [htmlValue, setHtmlValue] = useState('')
     const { insertImage, exportMsgData, insertContent } = useInput({
-      editorKey: "xc-chat-input",
-    });
-    const { reEditData } = useChatNoticeStore();
-    const { toast } = useToast();
+      editorKey: 'xc-chat-input'
+    })
+    const { reEditData } = useChatNoticeStore()
+    const { toast } = useToast()
     useImperativeHandle(ref, () => {
       return {
         addEmoji: (emoji: string) => {
-          const tgt = document.getElementById("xc-chat-input");
+          const tgt = document.getElementById('xc-chat-input')
           if (tgt) {
-            setHtmlValue(tgt.innerHTML + emoji);
+            setHtmlValue(tgt.innerHTML + emoji)
           }
         },
         insertImage,
         insertContent,
-        dealSend,
-      };
-    });
+        dealSend
+      }
+    })
 
     // 插入文件
     const insertFile = (file: File) => {
-      const URL = window.URL || window.webkitURL;
-      const url = URL.createObjectURL(file);
-      if (file.type.includes("image")) {
-        const sizeAllow = file.size / 1024 / 1024 <= 5;
+      const URL = window.URL || window.webkitURL
+      const url = URL.createObjectURL(file)
+      if (file.type.includes('image')) {
+        const sizeAllow = file.size / 1024 / 1024 <= 5
         if (!sizeAllow) {
-          toast({ description: "图片限制最大5M" });
-          return;
+          toast({ description: '图片限制最大5M' })
+          return
         }
-        insertImage(url, file);
+        insertImage(url, file)
       } else {
-        toast({ description: "暂不支持发送此类文件" });
+        toast({ description: '暂不支持发送此类文件' })
       }
-    };
+    }
 
     // 处理图片和文件在input框中的显示逻辑
     const handleFileAndImageInsert = (item: any) => {
-      const file = item.getAsFile();
+      const file = item.getAsFile()
 
-      insertFile(file);
-    };
+      insertFile(file)
+    }
 
     const pasteItem = (e: ClipboardEvent<HTMLDivElement>) => {
-      if (!(e.clipboardData && e.clipboardData.items)) {
-        return;
+      if (!e.clipboardData?.items) {
+        return
       }
       return new Promise((resolve, reject) => {
         for (let i = 0, len = e.clipboardData.items.length; i < len; i++) {
-          const item = e.clipboardData.items[i];
-          if (item.kind === "string") {
-            const type = item.type;
+          const item = e.clipboardData.items[i]
+          if (item.kind === 'string') {
+            const type = item.type
             item.getAsString((str: string) => {
               resolve({
                 type,
-                text: str,
-              });
-            });
-          } else if (item.kind === "file") {
-            handleFileAndImageInsert(item);
+                text: str
+              })
+            })
+          } else if (item.kind === 'file') {
+            handleFileAndImageInsert(item)
           } else {
-            reject(new Error("不允许复制这种类型!"));
+            reject(new Error('不允许复制这种类型!'))
           }
         }
-      });
-    };
+      })
+    }
 
     const handlePaste = async (e: ClipboardEvent<HTMLDivElement>) => {
-      const data = e.clipboardData.getData("Text");
+      const data = e.clipboardData.getData('Text')
       if (data) {
-        document.execCommand("insertText", false, data);
-        e.preventDefault();
+        document.execCommand('insertText', false, data)
+        e.preventDefault()
       } else {
         for (let i = 0, len = e.clipboardData.items.length; i < len; i++) {
-          const item = e.clipboardData.items[i];
-          if (item.kind === "file") {
-            handleFileAndImageInsert(item);
-            e.preventDefault();
+          const item = e.clipboardData.items[i]
+          if (item.kind === 'file') {
+            handleFileAndImageInsert(item)
+            e.preventDefault()
           }
         }
       }
-    };
+    }
 
     const handleDrop = (e: DragEvent<HTMLDivElement>) => {
-      e.preventDefault();
-      const copyItems = e.dataTransfer.items;
+      e.preventDefault()
+      const copyItems = e.dataTransfer.items
       for (let i = 0; i < copyItems.length; i++) {
         // 字符串
-        if (copyItems[i].kind === "string") {
-          if (e.dataTransfer.effectAllowed === "copy") {
+        if (copyItems[i].kind === 'string') {
+          if (e.dataTransfer.effectAllowed === 'copy') {
             copyItems[i].getAsString((str: string) => {
-              insertContent(str);
-            });
+              insertContent(str)
+            })
           }
         }
         // 文件
-        if (copyItems[i].kind === "file") {
-          handleFileAndImageInsert(copyItems[i]);
+        if (copyItems[i].kind === 'file') {
+          handleFileAndImageInsert(copyItems[i])
         }
       }
-    };
+    }
 
     const dealSend = () => {
-      const tgt = document.getElementById("xc-chat-input");
+      const tgt = document.getElementById('xc-chat-input')
       if (tgt) {
-        const msgListData = exportMsgData();
-        if (
-          !msgListData ||
-          (msgListData.msgData.length === 0 &&
-            msgListData.needUploadFile.length === 0)
-        ) {
-          return;
+        const msgListData = exportMsgData()
+        if (!msgListData || (msgListData.msgData.length === 0 && msgListData.needUploadFile.length === 0)) {
+          return
         }
-        typeof props.handleSend === "function" && props.handleSend(msgListData);
+        typeof props.handleSend === 'function' && props.handleSend(msgListData)
 
-        tgt.innerHTML = "";
-        setHtmlValue("");
+        tgt.innerHTML = ''
+        setHtmlValue('')
       }
-    };
+    }
 
     // 重新编辑
     useEffect(() => {
-      if (reEditData?.text !== "") {
-        const tgt = document.getElementById("xc-chat-input");
+      if (reEditData?.text !== '') {
+        const tgt = document.getElementById('xc-chat-input')
         if (tgt) {
           // tgt.innerHTML = reEditData.text;
-          const cleanText = xss(reEditData.text);
-          setHtmlValue(cleanText);
+          const cleanText = xss(reEditData.text)
+          setHtmlValue(cleanText)
         }
       }
-    }, [reEditData]);
+    }, [reEditData])
 
     return (
       <>
@@ -163,43 +159,42 @@ const ChatWindow = forwardRef(
           onKeyDown={(e: React.KeyboardEvent<HTMLDivElement>) => {
             if (e.keyCode !== 13) {
               //非回车
-              return;
+              return
             }
             if (e.keyCode === 13 && e.ctrlKey) {
               // ctrl+Enter不处理
-              document.execCommand("insertText", false, "\n");
-              return;
+              document.execCommand('insertText', false, '\n')
+              return
             }
-            e.preventDefault();
-            dealSend();
+            e.preventDefault()
+            dealSend()
           }}
           style={{
-            height:
-              props.showSendButton === true ? "calc(100% - 30px)" : "100%",
-            ...props.style,
+            height: props.showSendButton === true ? 'calc(100% - 30px)' : '100%',
+            ...props.style
           }}
-          onDragOver={(e) => {
-            e.preventDefault();
+          onDragOver={e => {
+            e.preventDefault()
           }}
           onDrop={handleDrop}
           className=" w-full chat-window"
           dangerouslySetInnerHTML={{ __html: htmlValue }}
           contentEditable
           onPaste={handlePaste}
-          onChange={(e) => {
-            const tgt = document.getElementById("xc-chat-input");
+          onChange={e => {
+            const tgt = document.getElementById('xc-chat-input')
             if (tgt) {
-              const cleanText = xss(tgt.innerHTML);
-              setHtmlValue(cleanText);
+              const cleanText = xss(tgt.innerHTML)
+              setHtmlValue(cleanText)
             }
           }}
-        ></div>
+        />
         {props.showSendButton === true && (
           <div className="flex justify-end pr-2">
             <Button
               size="mini"
               onClick={() => {
-                dealSend();
+                dealSend()
               }}
             >
               发送
@@ -232,8 +227,8 @@ const ChatWindow = forwardRef(
           `}
         </style>
       </>
-    );
+    )
   }
-);
+)
 
-export default ChatWindow;
+export default ChatWindow

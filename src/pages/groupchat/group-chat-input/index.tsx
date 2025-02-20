@@ -1,311 +1,265 @@
-import { Resizable } from "re-resizable";
-import {
-  useMemo,
-  useRef,
-  useImperativeHandle,
-  forwardRef,
-  useState,
-  useEffect,
-} from "react";
-import {
-  useGroupChatShortStore,
-  useGroupChatStoreNew,
-} from "@/store/group-chat-new";
+import { Resizable } from 're-resizable'
+import { useMemo, useRef, useImperativeHandle, forwardRef, useState, useEffect } from 'react'
+import { useGroupChatShortStore, useGroupChatStoreNew } from '@/store/group-chat-new'
 
-import WKSDK, {
-  Channel,
-  ChannelTypePerson,
-  MessageImage,
-  MessageText,
-  Setting,
-  Mention,
-  Reply,
-} from "wukongimjssdk";
-import { JknIcon } from "@/components";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import data from "@emoji-mart/data";
-import Picker from "@emoji-mart/react";
-import i18n from "@emoji-mart/data/i18n/zh.json";
-import {
-  genBase64ToFile,
-  genImgFileByUrl,
-  judgeIsExpireGroupCache,
-  MacroTask,
-} from "../chat-utils";
-import ReplyMessageView from "../components/reply-view";
-import { useShallow } from "zustand/react/shallow";
-import { useUser } from "@/store";
-import { useToast } from "@/hooks";
-import ChatWindow from "./chat-window";
-import { InputBoxImage, InputBoxResult, InputBoxText } from "./useInput";
+import WKSDK, { Channel, ChannelTypePerson, MessageImage, MessageText, Setting, Mention, Reply } from 'wukongimjssdk'
+import { JknIcon } from '@/components'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import data from '@emoji-mart/data'
+import Picker from '@emoji-mart/react'
+import i18n from '@emoji-mart/data/i18n/zh.json'
+import { genBase64ToFile, genImgFileByUrl, judgeIsExpireGroupCache, MacroTask } from '../chat-utils'
+import ReplyMessageView from '../components/reply-view'
+import { useShallow } from 'zustand/react/shallow'
+import { useUser } from '@/store'
+import { useToast } from '@/hooks'
+import ChatWindow from './chat-window'
+import type { InputBoxImage, InputBoxResult, InputBoxText } from './useInput'
 
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { MicroTaskQueue } from "../chat-utils";
-const sendTask = new MicroTaskQueue();
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { MicroTaskQueue } from '../chat-utils'
+const sendTask = new MicroTaskQueue()
 
 function useClickaway(callback, ref, excludeRefs) {
   useEffect(() => {
-    const handler = (event) => {
+    const handler = event => {
       if (
         !ref.current ||
-        excludeRefs.some(
-          (excludeRef) =>
-            excludeRef.current && excludeRef.current.contains(event.target)
-        )
+        excludeRefs.some(excludeRef => excludeRef.current && excludeRef.current.contains(event.target))
       ) {
-        return;
+        return
       }
 
       if (ref.current && !ref.current.contains(event.target)) {
-        callback();
+        callback()
       }
-    };
+    }
 
     // 监听文档的点击事件
-    document.addEventListener("mousedown", handler);
-    document.addEventListener("touchstart", handler);
+    document.addEventListener('mousedown', handler)
+    document.addEventListener('touchstart', handler)
 
     return () => {
       // 清理函数，以防止内存泄漏
-      document.removeEventListener("mousedown", handler);
-      document.removeEventListener("touchstart", handler);
-    };
-  }, [callback, ref, excludeRefs]);
+      document.removeEventListener('mousedown', handler)
+      document.removeEventListener('touchstart', handler)
+    }
+  }, [callback, ref, excludeRefs])
 }
 
 const GroupChatInput = forwardRef(
   (
     props: {
-      onMsgSend: () => void;
+      onMsgSend: () => void
     },
     ref
   ) => {
-    const { bottomHeight, setBottomHeight, toChannel } = useGroupChatStoreNew();
-    const lastBottomHeighti = useRef(185);
+    const { bottomHeight, setBottomHeight, toChannel } = useGroupChatStoreNew()
+    const lastBottomHeighti = useRef(185)
 
-    const { onMsgSend } = props;
-    const { user } = useUser();
-    const { toast } = useToast();
-    const mentionCache = useRef<any>({});
+    const { onMsgSend } = props
+    const { user } = useUser()
+    const { toast } = useToast()
+    const mentionCache = useRef<any>({})
 
-    const {
-      replyMessage,
-      setReplyMessage,
-      groupDetailData,
-      subscribers,
-      setMentions,
-      mentions,
-      conversationWraps,
-    } = useGroupChatShortStore(
-      useShallow((state) => ({
-        replyMessage: state.replyMessage,
-        setReplyMessage: state.setReplyMessage,
-        groupDetailData: state.groupDetailData,
-        subscribers: state.subscribers,
-        setMentions: state.setMentions,
-        mentions: state.mentions,
-        conversationWraps: state.conversationWraps,
-      }))
-    );
+    const { replyMessage, setReplyMessage, groupDetailData, subscribers, setMentions, mentions, conversationWraps } =
+      useGroupChatShortStore(
+        useShallow(state => ({
+          replyMessage: state.replyMessage,
+          setReplyMessage: state.setReplyMessage,
+          groupDetailData: state.groupDetailData,
+          subscribers: state.subscribers,
+          setMentions: state.setMentions,
+          mentions: state.mentions,
+          conversationWraps: state.conversationWraps
+        }))
+      )
 
-    const [openEmoji, setOpenEmoji] = useState(false);
-    const emojiRefTrigger = useRef();
-    const pickerRef = useRef();
+    const [openEmoji, setOpenEmoji] = useState(false)
+    const emojiRefTrigger = useRef()
+    const pickerRef = useRef()
     useClickaway(
       () => {
-        setOpenEmoji(false);
+        setOpenEmoji(false)
       },
       emojiRefTrigger,
       [pickerRef]
-    );
+    )
 
     const groupChatIsForbidden = useMemo(() => {
-      let result = false;
-      if (
-        groupDetailData &&
-        subscribers instanceof Array &&
-        subscribers.length > 0
-      ) {
+      let result = false
+      if (groupDetailData && Array.isArray(subscribers) && subscribers.length > 0) {
         // 仅群主能发言
-        const self = subscribers.find((item) => item.uid === user?.username);
-        if (groupDetailData.chat_type === "2") {
-          if (self?.orgData.type !== "2") {
-            result = true;
+        const self = subscribers.find(item => item.uid === user?.username)
+        if (groupDetailData.chat_type === '2') {
+          if (self?.orgData.type !== '2') {
+            result = true
           }
-        } else if (groupDetailData.chat_type === "1") {
-          if (self?.orgData.type == "0") {
-            result = true;
+        } else if (groupDetailData.chat_type === '1') {
+          if (self?.orgData.type === '0') {
+            result = true
           }
         }
       }
-      return result;
-    }, [groupDetailData, subscribers]);
+      return result
+    }, [groupDetailData, subscribers])
 
     // 最终的发送方法
     const finalSend = (content: any, index: number) => {
-      const setting = Setting.fromUint8(0);
+      const setting = Setting.fromUint8(0)
       if (index === 0 && content) {
         if (mentions.length > 0) {
-          const mn = new Mention();
-          mn.all = false;
-          mn.uids = mentions.map((item) => item.uid);
-          content.mention = mn;
+          const mn = new Mention()
+          mn.all = false
+          mn.uids = mentions.map(item => item.uid)
+          content.mention = mn
         }
 
         if (replyMessage) {
-          const reply = new Reply();
-          reply.messageID = replyMessage.messageID;
-          reply.messageSeq = replyMessage.messageSeq;
-          reply.fromUID = replyMessage.fromUID;
+          const reply = new Reply()
+          reply.messageID = replyMessage.messageID
+          reply.messageSeq = replyMessage.messageSeq
+          reply.fromUID = replyMessage.fromUID
           const channelInfo = WKSDK.shared().channelManager.getChannelInfo(
             new Channel(replyMessage.fromUID, ChannelTypePerson)
-          );
+          )
           if (channelInfo) {
-            reply.fromName = channelInfo.title;
+            reply.fromName = channelInfo.title
           }
-          reply.content = replyMessage.content;
-          content.reply = reply;
-          setReplyMessage(null);
+          reply.content = replyMessage.content
+          content.reply = reply
+          setReplyMessage(null)
         }
       }
 
       if (toChannel && content) {
-        WKSDK.shared().chatManager.send(content, toChannel, setting);
+        WKSDK.shared().chatManager.send(content, toChannel, setting)
 
         // setInputValue("");
-        mentionCache.current = {};
+        mentionCache.current = {}
       }
-    };
+    }
 
     const sendOneMsg = async (type: string, data: any, index: number) => {
-      let content: MessageImage | MessageText;
-      if (type === "text") {
-        const temp = data as InputBoxText;
+      let content: MessageImage | MessageText
+      if (type === 'text') {
+        const temp = data as InputBoxText
 
-        let value = temp.msg;
-        if (value?.trim() === "") {
-          return;
+        let value = temp.msg
+        if (value?.trim() === '') {
+          return
         }
-        content = new MessageText(value);
-        await MacroTask();
-        finalSend(content, index);
-      } else if (type === "img") {
-        const temp = data as InputBoxImage;
-        content = new MessageImage();
+        content = new MessageText(value)
+        await MacroTask()
+        finalSend(content, index)
+      } else if (type === 'img') {
+        const temp = data as InputBoxImage
+        content = new MessageImage()
         if (temp.url) {
           try {
-            const res = await genImgFileByUrl(temp.url, temp.file?.type);
-            const blob = genBase64ToFile(res);
-            let fileType = "png";
+            const res = await genImgFileByUrl(temp.url, temp.file?.type)
+            const blob = genBase64ToFile(res)
+            let fileType = 'png'
             if (temp.file?.type) {
-              fileType = temp.file.type.split("/")[1];
+              fileType = temp.file.type.split('/')[1]
             }
             let file = new File([blob], `image.${fileType}`, {
-              type: temp.file?.type || "image/png",
-            });
-            content.width = temp.width || 60; // 图片宽度
-            content.height = temp.height || 60; // 图片高度
-            content.file = file;
-            return finalSend(content, index);
+              type: temp.file?.type || 'image/png'
+            })
+            content.width = temp.width || 60 // 图片宽度
+            content.height = temp.height || 60 // 图片高度
+            content.file = file
+            return finalSend(content, index)
           } catch (er) {
-            console.log(er);
-            content.width = temp.width || 60; // 图片宽度
-            content.height = temp.height || 60; // 图片高度
-            content.remoteUrl = temp.url;
-            return finalSend(content, index);
+            console.log(er)
+            content.width = temp.width || 60 // 图片宽度
+            content.height = temp.height || 60 // 图片高度
+            content.remoteUrl = temp.url
+            return finalSend(content, index)
           }
         }
       }
-    };
+    }
 
     const handleSend = (data: InputBoxResult) => {
-      if (subscribers instanceof Array && subscribers.length > 0) {
-        const target = subscribers.find((sub) => sub.uid === user?.username);
-        if (target && target.orgData?.forbidden === "1") {
+      if (Array.isArray(subscribers) && subscribers.length > 0) {
+        const target = subscribers.find(sub => sub.uid === user?.username)
+        if (target && target.orgData?.forbidden === '1') {
           toast({
-            description: "您已被加入黑名单，无法发言",
-          });
-          return;
+            description: '您已被加入黑名单，无法发言'
+          })
+          return
         }
       }
       if (groupDetailData && judgeIsExpireGroupCache(groupDetailData.account)) {
         toast({
-          description: "群聊已过期，无法发言",
-        });
-        return;
+          description: '群聊已过期，无法发言'
+        })
+        return
       }
       if (!data || !conversationWraps || !groupDetailData) {
-        return;
+        return
       }
-      let msgQueue: Array<InputBoxText | InputBoxImage> = [];
+      let msgQueue: Array<InputBoxText | InputBoxImage> = []
       if (data.msgData && data.msgData.length > 0) {
-        data.msgData.forEach((text) => {
-          msgQueue.push(text);
-        });
+        data.msgData.forEach(text => {
+          msgQueue.push(text)
+        })
       }
 
       if (data.needUploadFile && data.needUploadFile.length > 0) {
-        data.needUploadFile.forEach((file) => {
-          msgQueue.push(file);
-        });
+        data.needUploadFile.forEach(file => {
+          msgQueue.push(file)
+        })
       }
 
-      msgQueue.sort((a, b) => a.order - b.order);
+      msgQueue.sort((a, b) => a.order - b.order)
 
       msgQueue.forEach((msg, index) => {
-        sendTask.enqueue(() => sendOneMsg(msg.type, msg, index));
-      });
-      if (typeof onMsgSend === "function") {
-        onMsgSend();
+        sendTask.enqueue(() => sendOneMsg(msg.type, msg, index))
+      })
+      if (typeof onMsgSend === 'function') {
+        onMsgSend()
       }
-      sendTask.processQueue();
+      sendTask.processQueue()
 
-      setMentions([]);
-    };
+      setMentions([])
+    }
     const onFileClick = (event: any) => {
-      event.target.value = ""; // 防止选中一个文件取消后不能再选中同一个文件
-    };
-    const imgUploadRef = useRef<HTMLInputElement>();
+      event.target.value = '' // 防止选中一个文件取消后不能再选中同一个文件
+    }
+    const imgUploadRef = useRef<HTMLInputElement>()
     const onFileChange = () => {
       if (imgUploadRef.current) {
-        let File = (imgUploadRef.current.files || [])[0];
-        dealFile(File);
+        let File = (imgUploadRef.current.files || [])[0]
+        dealFile(File)
       }
-    };
+    }
 
     const chooseFile = () => {
       if (groupChatIsForbidden === true) {
-        toast({ description: "群组禁言中，无法操作" });
-        return;
+        toast({ description: '群组禁言中，无法操作' })
+        return
       }
-      imgUploadRef.current && imgUploadRef.current.click();
-    };
+      imgUploadRef.current?.click()
+    }
 
     const dealFile = (file: any) => {
-      if (file.type && file.type.startsWith("image/")) {
-        const sizeAllow = file.size / 1024 / 1024 <= 5;
+      if (file.type?.startsWith('image/')) {
+        const sizeAllow = file.size / 1024 / 1024 <= 5
         if (!sizeAllow) {
-          toast({ description: "图片限制最大5M" });
-          return;
+          toast({ description: '图片限制最大5M' })
+          return
         }
 
-        const url = URL.createObjectURL(file);
+        const url = URL.createObjectURL(file)
         if (inputRef.current) {
-          inputRef.current.insertImage(url, file);
+          inputRef.current.insertImage(url, file)
         }
       } else {
-        toast({ description: "暂不支持发送此类文件" });
+        toast({ description: '暂不支持发送此类文件' })
       }
-    };
+    }
 
     // // 解析@
     // const parseMention = (text: string) => {
@@ -358,47 +312,44 @@ const GroupChatInput = forwardRef(
     // 聊天列表里点击右键回复时，这样添加
     const addMention = (uid: string, name: string) => {
       if (name) {
-        mentionCache.current[`${name}`] = { uid: uid, name: name };
+        mentionCache.current[`${name}`] = { uid: uid, name: name }
         // insertText(`@[${name}] `);
       }
-    };
+    }
 
     useImperativeHandle(ref, () => {
       return {
-        addMention,
-      };
-    });
+        addMention
+      }
+    })
 
-    const inputRef = useRef<any>();
+    const inputRef = useRef<any>()
 
     return (
       <Resizable
-        defaultSize={{ height: bottomHeight + "px" }}
+        defaultSize={{ height: bottomHeight + 'px' }}
         onResize={(e, direction, ref, delta) => {
-          const res = delta.height + lastBottomHeighti.current;
+          const res = delta.height + lastBottomHeighti.current
 
-          setBottomHeight(res);
+          setBottomHeight(res)
         }}
         onResizeStop={() => {
-          lastBottomHeighti.current = bottomHeight;
+          lastBottomHeighti.current = bottomHeight
         }}
         enable={{
-          top: true,
+          top: true
         }}
         maxHeight={400}
       >
-        <div
-          style={{ height: bottomHeight + "px" }}
-          className="chat-msg-inputer relative"
-        >
+        <div style={{ height: bottomHeight + 'px' }} className="chat-msg-inputer relative">
           {(replyMessage || (mentions && mentions.length > 0)) && (
             <ReplyMessageView
               message={replyMessage || undefined}
               onClose={() => {
-                setMentions([]);
-                setReplyMessage(null);
+                setMentions([])
+                setReplyMessage(null)
               }}
-            ></ReplyMessageView>
+            />
           )}
           <div className="h-[40px] flex items-center">
             {groupChatIsForbidden === true ? (
@@ -406,7 +357,7 @@ const GroupChatInput = forwardRef(
                 <JknIcon
                   name="smile"
                   onClick={() => {
-                    toast({ description: "群组禁言中，无法操作" });
+                    toast({ description: '群组禁言中，无法操作' })
                   }}
                   className="ml-2"
                 />
@@ -417,7 +368,13 @@ const GroupChatInput = forwardRef(
                   <span
                     ref={emojiRefTrigger}
                     onClick={() => {
-                      setOpenEmoji(!openEmoji);
+                      setOpenEmoji(!openEmoji)
+                    }}
+                    onKeyDown={event => {
+                      if (event.key === 'Enter' || event.key === ' ') {
+                        // Enter or Space key
+                        setOpenEmoji(!openEmoji)
+                      }
                     }}
                   >
                     <JknIcon
@@ -436,13 +393,13 @@ const GroupChatInput = forwardRef(
                       data={data}
                       i18n={i18n}
                       onEmojiSelect={(emoji, event) => {
-                        event.stopPropagation();
+                        event.stopPropagation()
                         // const prevVal = inputValue;
                         if (inputRef.current) {
-                          inputRef.current.addEmoji(emoji.native);
+                          inputRef.current.addEmoji(emoji.native)
                         }
 
-                        setOpenEmoji(false);
+                        setOpenEmoji(false)
                         // setInputValue(msg);
                       }}
                     />
@@ -451,7 +408,15 @@ const GroupChatInput = forwardRef(
               </Popover>
             )}
 
-            <span onClick={chooseFile}>
+            <span
+              onClick={chooseFile}
+              onKeyDown={event => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  // Enter or Space key
+                  chooseFile()
+                }
+              }}
+            >
               <input
                 onClick={onFileClick}
                 onChange={onFileChange}
@@ -459,7 +424,7 @@ const GroupChatInput = forwardRef(
                 multiple={false}
                 accept="image/*"
                 ref={imgUploadRef}
-                style={{ display: "none" }}
+                style={{ display: 'none' }}
               />
               <JknIcon name="pick_image" className="ml-2 rounded-none" />
             </span>
@@ -480,9 +445,15 @@ const GroupChatInput = forwardRef(
 
             <span
               className="text-lg ml-2 mb-[2px] cursor-pointer"
-              style={{ color: "#989898" }}
+              style={{ color: '#989898' }}
               onClick={() => {
-                inputRef.current && inputRef.current.insertContent("$");
+                inputRef.current?.insertContent('$')
+              }}
+              onKeyDown={event => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  // Enter or Space key
+                  inputRef.current?.insertContent('$')
+                }
               }}
             >
               $
@@ -490,20 +461,14 @@ const GroupChatInput = forwardRef(
           </div>
           <div
             style={{
-              height: "calc(100% - 40px)",
+              height: 'calc(100% - 40px)'
             }}
           >
             {groupChatIsForbidden === true ? (
-              <div className="h-full flex items-center justify-center text-sm text-gray-400">
-                群组禁言中
-              </div>
+              <div className="h-full flex items-center justify-center text-sm text-gray-400">群组禁言中</div>
             ) : (
               // -----------
-              <ChatWindow
-                handleSend={handleSend}
-                ref={inputRef}
-                showSendButton
-              />
+              <ChatWindow handleSend={handleSend} ref={inputRef} showSendButton />
             )}
           </div>
         </div>
@@ -569,8 +534,8 @@ const GroupChatInput = forwardRef(
         `}
         </style>
       </Resizable>
-    );
+    )
   }
-);
+)
 
-export default GroupChatInput;
+export default GroupChatInput

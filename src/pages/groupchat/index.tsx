@@ -4,12 +4,12 @@ import GroupChatLeftBar from './left-bar'
 import GroupChatMsgList from './group-chat-msglist'
 import GroupChatInput from './group-chat-input'
 import WKSDK, {
-  ConnectStatusListener,
-  Message,
+  type ConnectStatusListener,
+  type Message,
   Channel,
-  Subscriber,
+  type Subscriber,
   ChannelTypePerson,
-  CMDContent,
+  type CMDContent,
   ConversationAction,
   ChannelTypeGroup
 } from 'wukongimjssdk'
@@ -24,7 +24,7 @@ import GroupMembers from './group-members'
 import { revokeMessageService } from '@/api'
 
 import { Button, Toaster } from '@/components'
-import { ConversationWrap } from './ConversationWrap'
+import type { ConversationWrap } from './ConversationWrap'
 
 import APIClient from './Service/APIClient'
 import TextImgLive from './text-img-live'

@@ -77,12 +77,12 @@ const GroupChannel = (props: {
   const sortConversations = (conversations?: Array<ConversationWrap>) => {
     let newConversations = conversations
     if (!newConversations) {
-      newConversations = [...latestConversation.current]
+      newConversations = [...(latestConversation.current || [])]
     }
     if (!newConversations || newConversations.length <= 0) {
       return []
     }
-    let sortAfter = newConversations.sort((a, b) => {
+    const sortAfter = newConversations.sort((a, b) => {
       let aScore = a.timestamp
       let bScore = b.timestamp
       if (a.extra?.top === 1) {
@@ -218,7 +218,7 @@ const GroupChannel = (props: {
           item.channel.channelID === conversation.channel.channelID &&
           item.channel.channelType === conversation.channel.channelType
       )
-      const temp = [...latestConversation.current]
+      const temp = [...(latestConversation.current || [])]
       if (index && index >= 0) {
         temp.splice(index, 1)
       }
@@ -260,7 +260,7 @@ const GroupChannel = (props: {
         new Channel(conversationWrap.lastMessage.fromUID, ChannelTypePerson)
       )
       if (channelInfo) {
-        head = channelInfo.title + '：'
+        head = `${channelInfo.title}：`
       } else {
         // 没有就缓存下
         const uid = conversationWrap.lastMessage.fromUID
@@ -508,24 +508,6 @@ const GroupChannel = (props: {
               </div>
             )
           })}
-
-        {/* {
-          // 没有群的时候提供一个输入邀请码的按钮加群,按钮垂直居中展示
-          conversationWraps && goodConversations.length === 0 && (
-            <div className="flex items-center justify-center h-full w-full flex-col bg-[#313339] text-white text-center text-sm font-bold cursor-pointer">
-              暂无群组，点击下方按钮加入群组
-              <Button
-                className="mt-4"
-                onClick={() => {
-                  setInviteCode("");
-                  inviteToGroupModal.modal.open();
-                }}
-              >
-                输入邀请码加群
-              </Button>
-            </div>
-          )
-        } */}
       </div>
       {updateGroupInfoModal.context}
       {inviteToGroupModal.context}

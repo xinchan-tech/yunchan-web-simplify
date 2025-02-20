@@ -7,7 +7,7 @@ import {
   JknAlert,
 } from "@/components";
 
-import { KeyboardEvent, useEffect, useState } from "react";
+import { type KeyboardEvent, useEffect, useState } from "react";
 import { cn } from "@/utils/style";
 import { useUser } from "@/store";
 import { useToast } from "@/hooks";
@@ -165,7 +165,7 @@ const MsgFilter = (props: {
         <HoverCardTrigger className="flex items-center">
           <div className="left-trigger h-6 rounded-2xl leading-6 pl-4 pr-4">
             {filterItem.title || ""}
-            <span className="triggerIcon ml-1"></span>
+            <span className="triggerIcon ml-1" />
           </div>
         </HoverCardTrigger>
         <HoverCardContent
@@ -185,6 +185,13 @@ const MsgFilter = (props: {
                   setFilterItem(item);
                   typeof onFilterChange === "function" &&
                     onFilterChange(item.messageType);
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") { // Enter or Space key
+                    setFilterItem(item);
+                    typeof onFilterChange === "function" &&
+                      onFilterChange(item.messageType);
+                  }
                 }}
               >
                 <div className="flex items-center w-6">
@@ -213,6 +220,11 @@ const MsgFilter = (props: {
                     className="im-chat-filter-content-item"
                     onClick={() => {
                       handleEditChatAuth(item);
+                    }}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" || event.key === " ") { // Enter or Space key
+                        handleEditChatAuth(item);
+                      }
                     }}
                   >
                     <div className="flex items-center w-6">

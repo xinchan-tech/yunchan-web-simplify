@@ -1,4 +1,3 @@
-import { useToken } from '@/store'
 import request from '@/utils/request'
 import OSS from 'ali-oss'
 
@@ -7,15 +6,15 @@ class UploadUtil {
   tokenRes: {
     bucket: string
     credentials: {
-      accessKeyId: string;
-      accessKeySecret: string;
-      expiration: string;
-      securityToken: string;
-    };
-    endpoint: string;
-  };
-  clientUpload: (file: File, name: string) => Promise<any>;
-  store: any;
+      accessKeyId: string
+      accessKeySecret: string
+      expiration: string
+      securityToken: string
+    }
+    endpoint: string
+  }
+  clientUpload: (file: File, name: string) => Promise<any>
+  store: any
   constructor(/* fileType = "image" */) {
     this.tokenRes = {
       bucket: '',
@@ -25,24 +24,15 @@ class UploadUtil {
         expiration: '',
         securityToken: ''
       },
-      endpoint: "",
-    };
-    this.clientUpload = async () => {};
-    this.store = null;
+      endpoint: ''
+    }
+    this.clientUpload = async () => {}
+    this.store = null
   }
 
   init() {
-    const token = useToken.getState().token
-    if (token) {
-      this.getOssToken()
-      return
-    }
-
-    useToken.subscribe(s => {
-      if (s.token) {
-        this.getOssToken()
-      }
-    })
+    //接口获取token信息(签名url)
+    this.getOssToken()
   }
 
   getOssToken() {
@@ -55,10 +45,7 @@ class UploadUtil {
 
   //腾讯云
   cos() {
-    const wait =
-      new Date(this.tokenRes.credentials.expiration).getTime() -
-      new Date().getTime() -
-      60 * 100;
+    const wait = new Date(this.tokenRes.credentials.expiration).getTime() - new Date().getTime() - 60 * 100
     const cos = new OSS({
       // yourregion填写Bucket所在地域。以华东1（杭州）为例，Region填写为oss-cn-hangzhou。
       region: 'oss-cn-shenzhen',
@@ -70,43 +57,39 @@ class UploadUtil {
       bucket: this.tokenRes.bucket,
       stsToken: this.tokenRes.credentials.securityToken,
       endpoint: this.tokenRes.endpoint,
-      aclMode: "public-read",
+      aclMode: 'public-read',
       refreshSTSToken: async () => {
         // 调用后端接口获取新的 STS Token
-        const result = await request.get("/upload/getOssToken");
-        this.tokenRes = result.data;
+        const result = await request.get('/upload/getOssToken')
+        this.tokenRes = result.data
 
-        cos.options.stsToken = this.tokenRes.credentials?.securityToken;
+        cos.options.stsToken = this.tokenRes.credentials?.securityToken
         return {
           accessKeyId: this.tokenRes.credentials?.accessKeyId,
           accessKeySecret: this.tokenRes.credentials?.accessKeySecret,
           stsToken: this.tokenRes.credentials?.securityToken,
-          securityToken: this.tokenRes.credentials?.securityToken,
-        };
+          securityToken: this.tokenRes.credentials?.securityToken
+        }
       },
-      refreshSTSTokenInterval: wait,
-    });
-    this.store = cos;
+      refreshSTSTokenInterval: wait
+    })
+    this.store = cos
     // 更改图片权限
     // cos.putBucketACL(this.tokenRes.bucket, 'public-read')
     try {
       this.clientUpload = (file: File, filename: string) => {
         return new Promise((resolve, reject) => {
-          if (window.showToken === true) {
-            console.log(cos.options.stsToken, "cos.options.stsToken");
-          }
-
           cos
-            .put("image/" + filename, file)
-            .then((res) => {
-              console.log("res", res);
-              resolve(res);
+            .put(`image/${filename}`, file)
+            .then(res => {
+              console.log('res', res)
+              resolve(res)
             })
-            .catch((er) => {
-              reject(er);
-            });
-        });
-      };
+            .catch(er => {
+              reject(er)
+            })
+        })
+      }
     } catch (error) {
       console.log(error)
     }
@@ -114,14 +97,12 @@ class UploadUtil {
 
   // 上传
   async uploadImg(file: File, filename: string) {
-    const res: { url: string } = await this.clientUpload(file, filename).catch(
-      (e) => {
-        console.error(e);
-      }
-    );
+    const res: { url: string } = await this.clientUpload(file, filename).catch(e => {
+      console.error(e)
+    })
     return {
-      url: res.url,
-    };
+      url: res.url
+    }
   }
 }
 

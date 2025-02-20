@@ -1,15 +1,13 @@
-import WKSDK, { Channel, ChannelTypePerson, Message } from "wukongimjssdk";
+import WKSDK, { Channel, ChannelTypePerson, type Message } from 'wukongimjssdk'
 const SystemCell = (props: { message: Message }) => {
-  const { message } = props;
+  const { message } = props
 
-  if (message.content.cmd === "messageRevoke") {
-    return "";
+  if (message.content.cmd === 'messageRevoke') {
+    return ''
   }
 
-  if (message.content.cmd === "channelUpdate") {
-    const userInfo = WKSDK.shared().channelManager.getChannelInfo(
-      new Channel(message.fromUID, ChannelTypePerson)
-    );
+  if (message.content.cmd === 'channelUpdate') {
+    const userInfo = WKSDK.shared().channelManager.getChannelInfo(new Channel(message.fromUID, ChannelTypePerson))
     if (userInfo) {
       return (
         <div className="message-system">
@@ -25,7 +23,7 @@ const SystemCell = (props: { message: Message }) => {
             `}
           </style>
         </div>
-      );
+      )
     }
   }
 
@@ -43,7 +41,7 @@ const SystemCell = (props: { message: Message }) => {
         `}
       </style>
     </div>
-  );
-};
+  )
+}
 
-export default SystemCell;
+export default SystemCell
