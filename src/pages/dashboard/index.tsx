@@ -7,15 +7,15 @@ const DashBoardPage = () => {
   return (
     <div className="flex justify-stretch h-full w-full overflow-hidden">
       <div className="w-[66%] flex flex-col overflow-hidden">
-        <div className="h-1/2">
+        <div className="h-1/2 overflow-hidden">
           <LargeCap />
         </div>
-        <div className="h-1/2 flex justify-stretch">
-          <div className="w-1/2">
+        <div className="h-1/2 flex justify-stretch overflow-hidden">
+          <div className="w-1/2 overflow-hidden flex-shrink-0">
             <TopList />
 
           </div>
-          <div className="w-1/2">
+          <div className="w-1/2 overflow-hidden flex-shrink-0">
             <GoldenStockPool />
           </div>
         </div>

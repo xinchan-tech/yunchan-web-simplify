@@ -113,7 +113,7 @@ const LargeCap = () => {
 
   return (
     <div className="h-full flex flex-col">
-      <div className="flex items-center overflow-hidden flex-shrink-0">
+      <div className="flex items-center overflow-hidden flex-shrink-0 h-[63px] my-4">
         <div className="flex-1 overflow-x-auto">
           <div className="p-1.5 flex justify-between space-x-8 whitespace-nowrap">
             {stocks.map(stock => (
@@ -155,7 +155,7 @@ const LargeCap = () => {
           <JknIcon.Svg name="arrow-right" size={12} className="text-[#B8B8B8]" />
         </div>
       </div>
-      <div className="flex-1 relative mt-4">
+      <div className="flex-1 relative">
         <div onDoubleClick={onChartDoubleClick} className="w-full h-full">
           <LargeCapChart code={activeStock} type={stockType} />
         </div>
