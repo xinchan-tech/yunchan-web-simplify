@@ -1,6 +1,10 @@
 import { IncreaseTopStatus, getIncreaseTop } from '@/api'
 import {
   CapsuleTabs,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
   HoverCard,
   HoverCardContent,
   HoverCardTrigger,
@@ -123,7 +127,7 @@ const TopList = () => {
       sort: true,
       width: 100,
       render: (percent, row) => (
-        <SubscribeSpan.PercentBlockBlink
+        <SubscribeSpan.PercentBlink
           trading={
             type === IncreaseTopStatus.PRE_MARKET
               ? 'preMarket'
@@ -214,10 +218,33 @@ const TopList = () => {
   }
 
   const onRowClick = useTableRowClickToStockTrading('symbol')
+
+  const tabs = [
+    { key: IncreaseTopStatus.PRE_MARKET.toString(), label: `${t('stockChart.before')}热门` },
+    { key: IncreaseTopStatus.INTRA_DAY.toString(), label: `${t('stockChart.in')}热门` },
+    { key: IncreaseTopStatus.AFTER_HOURS.toString(), label: `${t('stockChart.after')}热门` },
+    { key: IncreaseTopStatus.YESTERDAY.toString(), label: '昨日' },
+    { key: IncreaseTopStatus.WEEK.toString(), label: '本周' }
+  ]
   return (
     <div className="w-full h-full flex flex-col">
-      <div className="border-style-primary px-1 py-2">
-        <CapsuleTabs activeKey={type.toString()} onChange={v => onTypeChange(+v as IncreaseTopStatus)}>
+      <div className="px-1 py-2">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <div className="inline-flex items-center space-x-2 px-2">
+              <span>{tabs.find(tab => tab.key === type.toString())?.label ?? '-'}</span>
+              <JknIcon.Svg name="arrow-down" size={12} />
+            </div>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            {tabs.map(tab => (
+              <DropdownMenuItem key={tab.key} onClick={() => onTypeChange(+tab.key as IncreaseTopStatus)}>
+                {tab.label}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+        {/* <CapsuleTabs activeKey={type.toString()} onChange={v => onTypeChange(+v as IncreaseTopStatus)}>
           <CapsuleTabs.Tab
             value={IncreaseTopStatus.PRE_MARKET.toString()}
             label={
@@ -274,7 +301,7 @@ const TopList = () => {
           />
           <CapsuleTabs.Tab value={IncreaseTopStatus.YESTERDAY.toString()} label={<span>昨日</span>} />
           <CapsuleTabs.Tab value={IncreaseTopStatus.WEEK.toString()} label={<span>本周</span>} />
-        </CapsuleTabs>
+        </CapsuleTabs> */}
       </div>
       <div className="flex-1 overflow-hidden">
         <JknRcTable

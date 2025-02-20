@@ -1,5 +1,5 @@
 import { getStockCollects } from "@/api"
-import { Button, CollectCapsuleTabs, JknRcTable, StockView, SubscribeSpan } from "@/components"
+import { Button, CollectCapsuleTabs, CollectDropdownMenu, JknRcTable, StockView, SubscribeSpan } from "@/components"
 import { useStockQuoteSubscribe, useTableData, useTableRowClickToStockTrading } from "@/hooks"
 import { useToken } from "@/store"
 import { appEvent } from "@/utils/event"
@@ -52,7 +52,7 @@ const GoldenStockPool = () => {
       title: '涨跌幅', dataIndex: 'percent',
       align: 'right', width: '20%', sort: true,
       render: (percent, row) => (
-        <SubscribeSpan.PercentBlockBlink showSign symbol={row.symbol} decimal={2} initValue={percent} initDirection={stockUtils.isUp(row)} />
+        <SubscribeSpan.PercentBlink showSign symbol={row.symbol} decimal={2} initValue={percent} initDirection={stockUtils.isUp(row)} />
       )
     },
     {
@@ -71,8 +71,8 @@ const GoldenStockPool = () => {
 
   return (
     <div className="w-full h-full flex flex-col overflow-hidden">
-      <div className="border-style-primary px-1 py-2">
-        <CollectCapsuleTabs activeKey={type} onChange={setType} />
+      <div className="flex items-center px-1 py-2">
+        <CollectDropdownMenu activeKey={type} onChange={setType} />
       </div>
       <div className="flex-1 overflow-hidden">
         {

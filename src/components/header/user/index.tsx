@@ -56,8 +56,8 @@ const HeaderUser = () => {
   return (
     <>
       <div className="text-sm flex items-center cursor-pointer" onClick={onClick} onKeyDown={() => {}}>
-        <JknAvatar className="w-5 h-5 mr-2" src={user?.avatar} />
-        <span>{token ? user?.realname : t('login')}</span>
+        <JknAvatar className="w-6 h-6" src={user?.avatar} />
+        {/* <span>{token ? user?.realname : t('login')}</span> */}
       </div>
       {loginForm.context}
       {userCenter.context}

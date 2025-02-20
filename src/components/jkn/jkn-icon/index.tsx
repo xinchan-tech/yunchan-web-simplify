@@ -2,7 +2,7 @@ import { cn } from "@/utils/style"
 import { memo, type HtmlHTMLAttributes, type ReactNode } from "react"
 import { JknIconCheckbox } from './icon-checkbox'
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components"
-import { useConfig } from "@/store"
+import { useConfig, useStockList } from "@/store"
 
 const iconContext = import.meta.webpackContext('@/assets/icon', {
   recursive: true
@@ -82,18 +82,47 @@ const ArrowIcon = memo(({ direction, ...props }: ArrowIconProps) => {
               <JknIcon className="w-3 h-3" name={direction === 'up' ? 'ic_price_up_red' : 'ic_price_down_green'} {...props} />
             )}
           </>
-        ): null
+        ) : null
       }
     </>
   )
 })
 
-type JknIcon = typeof _JknIcon & {
-  Checkbox: typeof JknIconCheckbox
 
-  Arrow: typeof ArrowIcon
+interface JknSvgIconProps extends HtmlHTMLAttributes<SVGElement> {
+  name: IconName
+  size?: number
 }
 
+const JknSvgIcon = ({ name, size = 24, ...props }: JknSvgIconProps) => {
+  return (
+    <svg width={size} height={size} {...props}>
+      <title>{name}</title>
+      <use xlinkHref={`#icon-${name}`} />
+    </svg>
+  )
+}
+
+interface JknIconStockProps extends Omit<JknIconProps, 'stock'> {
+  symbol: string
+}
+
+const JknIconStock = ({ symbol, ...props }: JknIconStockProps) => {
+  const listMap = useStockList(s => s.listMap)
+  const stock = listMap[symbol]
+  return <JknIcon stock={stock?.[0]} className="h-6 w-6" {...props} />
+}
+
+type JknIcon = typeof _JknIcon & {
+  Checkbox: typeof JknIconCheckbox
+  Stock: typeof JknIconStock
+  Arrow: typeof ArrowIcon
+  Svg: typeof JknSvgIcon
+}
+
+
 export const JknIcon = _JknIcon as JknIcon
+JknIcon.Stock = JknIconStock
 JknIcon.Checkbox = JknIconCheckbox
 JknIcon.Arrow = ArrowIcon
+JknIcon.Svg = JknSvgIcon

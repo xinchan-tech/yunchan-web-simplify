@@ -29,7 +29,7 @@
     --input: 0 0 20%;
     --card: 0 0% 100%;
     --card-foreground: 222.2 47.4% 11.2%;
-    --primary: 222.2 47.4% 11.2%;
+    --primary: 224, 100%, 58%;
     --primary-foreground: 210 40% 98%;
     --secondary: 225 9% 9%;
     --secondary-foreground: 222.2 47.4% 11.2%;
@@ -50,8 +50,8 @@
     /**
       * Dark theme colors
       */
-    --background: 0 0% 4.71%;
-    --foreground: 0 0% 92.16%;
+    --background: 0, 0%, 6%;
+    --foreground: 0, 0%, 86%;
     --muted: 225 9.09% 8.63%;
     --muted-foreground: 0 0% 100%;
     --accent: 220 4% 14%;
@@ -62,8 +62,8 @@
     --input: 0 0% 58%;
     --card: 224 71% 4%;
     --card-foreground: 213 31% 91%;
-    --primary: 228.67 90.74% 57.65%;
-    --primary-foreground: var(--foreground);
+    // --primary: 228.67 90.74% 57.65%;
+    // --primary-foreground: var(--foreground);
     --secondary: 222.2 47.4% 11.2%;
     --secondary-foreground: 210 40% 98%;
     --destructive: 354 100% 60%;
@@ -100,6 +100,7 @@ body {
   color: hsl(var(--foreground));
   overflow-y: hidden;
   overflow-x: auto;
+  font-size: 14px;
 
   :focus-visible {
     outline: none;

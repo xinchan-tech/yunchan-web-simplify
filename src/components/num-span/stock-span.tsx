@@ -126,7 +126,7 @@ export const PriceSubscribeSpan = memo(
             onChange={onChange}
             {...props}
           />
-          {value === zeroText ? null : <JknIcon.Arrow direction={direction} />}
+          {value === zeroText ? null : <span data-direction={direction}>{direction === 'up' ? '↑' : '↓'}</span>}
         </span>
       )
     }

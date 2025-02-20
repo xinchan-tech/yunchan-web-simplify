@@ -1,12 +1,12 @@
 import { cn } from "@/utils/style"
 import { router } from "@/router"
-import { useEffect, useState } from "react"
+import { ReactNode, useEffect, useState } from "react"
 import { useToken, useUser } from "@/store"
 import { useToast } from "@/hooks"
 import { JknIcon } from ".."
 
 type MenuItem = {
-  icon: IconName
+  icon: IconName | ReactNode
   title: string
   path: string
   handler?: () => void
@@ -31,17 +31,22 @@ const MenuRight = () => {
 
   const menus: MenuItem[] = [
     {
-      icon: 'right_menu_1',
+      icon: <JknIcon.Svg name="stock" />,
       title: '个股盘口',
       path: '/stock/trading'
     },
     {
-      icon: 'left_menu_6',
+      icon: <JknIcon.Svg name="push" />,
       title: '特色推送',
       path: '/push'
     },
     {
-      icon: "group_chat",
+      icon: <JknIcon.Svg name="financial" />,
+      title: '财务估值',
+      path: '/stock/financials'
+    },
+    {
+      icon: <JknIcon.Svg name="group" />,
       title: "讨论社群",
       path: "/mall",
     },
@@ -66,7 +71,7 @@ const MenuRight = () => {
   }
 
   return (
-    <div>
+    <div className="pt-10">
       {menus.map(item => (
         <div
           key={item.title}
@@ -95,12 +100,14 @@ const MenuRight = () => {
           onKeyDown={() => { }}
           className="mb-4 flex flex-col items-center cursor-pointer"
         >
-          <div className={cn(pathname === item.path && 'active-icon')}>
-            <JknIcon name={item.icon} className="inline-block w-6 h-6 mb-1 rounded-none" />
+          <div className={cn(pathname === item.path && 'text-primary')}>
+            {
+              item.icon
+            }
           </div>
-          <div className={cn('w-8 text-center text-sm text-[#555555]', pathname === item.path && 'active-text')}>
+          {/* <div className={cn('w-8 text-center text-sm text-[#555555]', pathname === item.path && 'active-text')}>
             {item.title}
-          </div>
+          </div> */}
           <style jsx>{`
              {
               .active-icon {

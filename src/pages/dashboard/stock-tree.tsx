@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { getHotSectors, getPlateList, getUsStocks } from '@/api'
 import TreeMap from './components/tree-map'
 import Decimal from 'decimal.js'
-import { CapsuleTabs, Skeleton } from '@/components'
+import { CapsuleTabs, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, JknIcon, Skeleton } from '@/components'
 import { useQuery } from '@tanstack/react-query'
 import { stockUtils, type StockSubscribeHandler } from '@/utils/stock'
 import { useStockQuoteSubscribe } from '@/hooks'
@@ -12,7 +12,7 @@ import { useStockQuoteSubscribe } from '@/hooks'
 type StockTreeType = 'industry' | 'concept' | 'bull' | 'etf' | 'industry-heatmap' | 'etf-heatmap'
 type StockTreeDate = 'day' | 'week' | 'month'
 
-const colors = ['#ac2532', '#782029', '#3a1a1f', '#30333c', '#112e21', '#0e532f', '#07753c']
+const colors = ['#AC312E', '#782029', '#3a1a1f', '#59616C', '#1A3326', '#056636', '#089950']
 
 const steps = ['-3', '-2', '-1', '0', '1', '2', '3']
 
@@ -108,7 +108,7 @@ const StockTree = () => {
   const subscribeHandler: StockSubscribeHandler<'quote'> = useCallback(
     data => {
       if (stockUtils.getTrading(data.record.time) !== 'intraDay') return
-       if (!subscribeStocks.includes(data.topic)) return
+      if (!subscribeStocks.includes(data.topic)) return
 
       setTreeData(s => {
         for (const node of s) {
@@ -201,15 +201,31 @@ const StockTree = () => {
 
   return (
     <div className="h-full flex flex-col">
-      <div className="p-1 border-style-primary h-[34px] box-border flex items-center">
-        <CapsuleTabs activeKey={type} onChange={v => setType(v as unknown as StockTreeType)}>
+      <div className="p-1 h-[34px] box-border flex items-center">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <div className="flex items-center space-x-2 text-sm">
+              <div>{t(`stockTree.${type}`)}</div>
+              <JknIcon.Svg name="arrow-down" size={12} />
+            </div>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            <DropdownMenuItem onClick={() => setType('industry')}>{t('stockTree.industry')}</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setType('concept')}>{t('stockTree.concept')}</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setType('bull')}>{t('stockTree.bull')}</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setType('etf')}>{t('stockTree.etf')}</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setType('industry-heatmap')}>{t('stockTree.industryHeatmap')}</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setType('etf-heatmap')}>{t('stockTree.etfHeatmap')}</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+        {/* <CapsuleTabs activeKey={type} onChange={v => setType(v as unknown as StockTreeType)}>
           <CapsuleTabs.Tab value="industry" label={t('stockTree.industry')} />
           <CapsuleTabs.Tab value="concept" label={t('stockTree.concept')} />
           <CapsuleTabs.Tab value="bull" label={t('stockTree.bull')} />
           <CapsuleTabs.Tab value="etf" label={t('stockTree.etf')} />
           <CapsuleTabs.Tab value="industry-heatmap" label={t('stockTree.industryHeatmap')} />
           <CapsuleTabs.Tab value="etf-heatmap" label={t('stockTree.etfHeatmap')} />
-        </CapsuleTabs>
+        </CapsuleTabs> */}
         <div className="ml-auto">
           <SimpleCheck value={filter} onChange={setFilter} />
         </div>
@@ -217,11 +233,11 @@ const StockTree = () => {
       <div className="flex-1 overflow-hidden">
         {['industry', 'concept'].includes(type) ? (
           <div className="h-full flex flex-col">
-            <CapsuleTabs type="text" activeKey={date} onChange={v => setDate(v as unknown as StockTreeDate)}>
+            {/* <CapsuleTabs type="text" activeKey={date} onChange={v => setDate(v as unknown as StockTreeDate)}>
               <CapsuleTabs.Tab value="day" label={t('stockTree.today')} />
               <CapsuleTabs.Tab value="week" label={t('stockTree.week')} />
               <CapsuleTabs.Tab value="month" label={t('stockTree.month')} />
-            </CapsuleTabs>
+            </CapsuleTabs> */}
             <div className="flex-1 p-1 overflow-hidden">
               {!query.isLoading ? (
                 <TreeMap data={treeData} />
@@ -292,14 +308,15 @@ const SimpleCheck = ({ value, onChange }: StockTreeProps) => {
 
   return (
     <div className="check-group flex items-center space-x-2 text-center text-xs leading-5">
-      {steps.map((step, index) => (
+      <JknIcon.Svg name="filter" size={12} className="cursor-pointer" />
+      {/* {steps.map((step, index) => (
         <div
           key={step}
           style={{
             background: value.includes(+step) ? colors[index] : '#1e1e1e'
           }}
           onClick={() => onClick(+step)}
-          onKeyDown={() => {}}
+          onKeyDown={() => { }}
         >
           {step}%
         </div>
@@ -313,7 +330,7 @@ const SimpleCheck = ({ value, onChange }: StockTreeProps) => {
             cursor: pointer;
             transition: all .2s ease-in-out;
           }
-        `}</style>
+        `}</style> */}
     </div>
   )
 }

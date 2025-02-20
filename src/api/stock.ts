@@ -326,6 +326,7 @@ export const getStockChartV2 = async (params: GetStockChartV2Params) => {
 getStockChartV2.cacheKey = 'stock:kline:v2'
 
 export const getStockChartQuote = async (symbol: string, period: 'pre' | 'intraday' | 'post'| '5d' | number , time_format = 'int' ) => {
+  console.log(period)
   const _period = isString(period) ? period : period === StockChartInterval.PRE_MARKET ? 'pre' : period === StockChartInterval.INTRA_DAY ? 'intraday' : period === StockChartInterval.AFTER_HOURS ? 'post' : '5d'
   const params = { symbol, _period, time_format }
   const paramsKeySort = Object.keys(params).sort() as (keyof typeof params)[]

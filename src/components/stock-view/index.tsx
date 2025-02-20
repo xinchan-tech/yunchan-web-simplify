@@ -5,11 +5,11 @@ import { router } from "@/router"
 interface StockViewProps {
   code: string
   name: string
+  showName?: boolean
 }
 
 
-
-const StockView = ({ code, name }: StockViewProps) => {
+const StockView = ({ code, name, showName = false }: StockViewProps) => {
   const listMap = useStockList(s => s.listMap)
   const stock = listMap[code]
 
@@ -26,7 +26,11 @@ const StockView = ({ code, name }: StockViewProps) => {
       </div>
       <div className="flex-1 overflow-hidden ">
         <div className="text-foreground">{code}</div>
-        <div className="w-full text-tertiary text-xs whitespace-nowrap text-ellipsis overflow-hidden">{name || '--'}</div>
+        {
+          showName ? (
+            <div className="w-full text-tertiary text-xs whitespace-nowrap text-ellipsis overflow-hidden">{name || '--'}</div>
+          ) : null
+        }
       </div>
     </div>
   )

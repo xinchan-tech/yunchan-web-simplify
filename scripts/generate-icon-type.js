@@ -2,6 +2,7 @@ const fs = require('node:fs')
 const path = require('node:path')
 
 const iconRoot = path.resolve(__dirname, '../src/assets/icon')
+const svgRoot = path.resolve(__dirname, '../src/assets/svg')
 const outputPath = path.resolve(__dirname, '../types/icon.d.ts')
 
 const r = []
@@ -29,5 +30,6 @@ const writeTypes = () => {
 
 ;(() => {
   walk(iconRoot)
+  walk(svgRoot)
   writeTypes()
 })()

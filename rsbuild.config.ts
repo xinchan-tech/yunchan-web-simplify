@@ -5,9 +5,20 @@ import CompressionPlugin from 'compression-webpack-plugin'
 import { pluginReleaseTag } from './scripts/release-tag'
 import { pluginTypedCSSModules } from '@rsbuild/plugin-typed-css-modules'
 import { RsdoctorRspackPlugin } from '@rsdoctor/rspack-plugin'
+import path from 'node:path'
+import { pluginSvgSpriteIcons } from './scripts/rsbuild-plugin-svg-sprite-icons'
 
 export default defineConfig({
-  plugins: [pluginReact(), pluginSass(), pluginReleaseTag({ outFile: true }), pluginTypedCSSModules()],
+  plugins: [
+    pluginReact(),
+    pluginSass(),
+    pluginReleaseTag({ outFile: true }),
+    pluginTypedCSSModules(),
+    pluginSvgSpriteIcons({
+      path: path.resolve(__dirname, 'src/assets/svg'),
+      symbolId: 'icon-[name]'
+    })
+  ],
   source: {
     alias: {
       '@': './src'
@@ -31,7 +42,7 @@ export default defineConfig({
         target: 'http://cn.mgjkn.com/',
         changeOrigin: true,
         pathRewrite: {
-          "^/api": ""
+          '^/api': ''
         }
       },
       '/ws': {
@@ -45,16 +56,16 @@ export default defineConfig({
         target: 'ws://web.mgjkn.com',
         ws: true
       },
-      "/im-ws": {
+      '/im-ws': {
         // target: "ws://im.mgjkn.com:5200",
-        target: "ws://test.im.mgjkn.com:5200",
+        target: 'ws://test.im.mgjkn.com:5200',
         ws: true,
-        pathRewrite: { "^/im-ws": "" },
-      },
-    },
+        pathRewrite: { '^/im-ws': '' }
+      }
+    }
   },
   tools: {
-    rspack(_, { appendPlugins }) {
+    rspack(_, { appendPlugins, addRules }) {
       if (process.env.NODE_ENV === 'production') {
         appendPlugins(
           new RsdoctorRspackPlugin({

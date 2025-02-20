@@ -1,5 +1,5 @@
 import { StockChartInterval, getLargeCapIndexes, getStockChartQuote } from '@/api'
-import { CapsuleTabs, SubscribeSpan } from '@/components'
+import { CapsuleTabs, JknIcon, SubscribeSpan } from '@/components'
 import { useStockQuoteSubscribe } from '@/hooks'
 import { useConfig, useTime } from '@/store'
 import { getTradingPeriod } from '@/utils/date'
@@ -35,7 +35,6 @@ const intervalToTradingMap: Partial<Record<StockChartInterval, StockTrading>> = 
 }
 
 const LargeCap = () => {
-  const [activeKey, setActiveKey] = useState<string>()
   const [activeStock, setActiveStock] = useState<string>()
   const time = useTime()
 
@@ -48,22 +47,25 @@ const LargeCap = () => {
   })
 
   const stocks = useMemo(() => {
-    if (!activeKey || !largeCap.data) {
+    if (!largeCap.data) {
       return []
     }
 
-    return (
-      largeCap.data
-        .find(item => item.category_name === activeKey)
-        ?.stocks.map(item => stockUtils.toStock(item.stock, { symbol: item.symbol, name: item.name })) ?? []
-    )
-  }, [activeKey, largeCap.data])
+    const r = []
+
+    for (const item of largeCap.data) {
+      for (const stock of item.stocks) {
+        r.push(stockUtils.toStock(stock.stock, { symbol: stock.symbol, name: stock.name }))
+      }
+    }
+
+    return r
+  }, [largeCap.data])
 
   useStockQuoteSubscribe(stocks.map(o => o.symbol) ?? [])
 
   useEffect(() => {
     if (largeCap.data) {
-      setActiveKey(largeCap.data[1].category_name)
       setActiveStock(largeCap.data[1].stocks[0].symbol)
     }
   }, [largeCap.data])
@@ -73,89 +75,101 @@ const LargeCap = () => {
     navigate(`/stock/trading?symbol=${activeStock}`)
   }, [activeStock, navigate])
 
-  const tabs = useMemo(() => {
-    return largeCap.data?.map(item => ({
-      key: item.category_name,
-      label: item.category_name
-    }))
-  }, [largeCap.data])
+  // const tabs = useMemo(() => {
+  //   return largeCap.data?.map(item => ({
+  //     key: item.category_name,
+  //     label: item.category_name
+  //   }))
+  // }, [largeCap.data])
 
   const { t } = useTranslation()
 
+  const activeKey = useMemo(() => {
+    if (!largeCap.data) {
+      return '指数ETF'
+    }
+
+    let r = '指数ETF'
+
+    for (const item of largeCap.data) {
+      for (const stock of item.stocks) {
+       if(stock.symbol === activeStock) {
+         r = item.category_name
+         break
+       }
+      }
+    }
+
+    return r
+  }, [largeCap.data, activeStock])
+
   const onActiveStockChange = (s: string) => {
+
     setActiveStock(s)
-    if (s === '大盘指数') {
+    if (['SPX', 'IXIC', 'DJI'].includes(s)) {
       setStockType(StockChartInterval.INTRA_DAY)
     }
   }
 
-  const onActiveKeyChange = (key: string) => {
-    setActiveKey(key)
-    const codes =
-      largeCap.data?.find(item => item.category_name === key)?.stocks.map(item => [item.symbol, item.name]) ?? []
-    setActiveStock(codes[0][0])
-  }
-
   return (
     <div className="h-full flex flex-col">
-      <div className="py-1.5 border-style-primary px-2 h-[34px] box-border">
-        <CapsuleTabs activeKey={activeKey} onChange={onActiveKeyChange}>
-          {tabs?.map(item => (
-            <CapsuleTabs.Tab key={item.key} value={item.key} label={item.label} />
-          ))}
-        </CapsuleTabs>
-      </div>
-      <div className="flex p-1.5 border-style-primary justify-between space-x-2 h-[100px] box-border">
-        {stocks.map(stock => (
-          <div
-            key={stock.name}
-            className={cn(
-              'border-style-primary  flex-1 hover:bg-hover text-center py-2 cursor-pointer transition-all duration-300',
-              {
-                'bg-accent': activeStock === stock.symbol
-              }
-            )}
-            onClick={() => onActiveStockChange(stock.symbol)}
-            onKeyDown={() => {}}
-          >
-            <div className="text-center">
-              <span>{stock.name}</span>
-            </div>
-            <div className={clsx('font-black text-[15px]')}>
-              <div className="flex items-center justify-center mt-1">
-                <SubscribeSpan.Price
-                  initValue={stock.close}
-                  symbol={stock.symbol}
-                  initDirection={stockUtils.isUp(stock)}
-                  decimal={3}
-                  arrow
-                />
+      <div className="flex items-center overflow-hidden flex-shrink-0">
+        <div className="flex-1 overflow-x-auto">
+          <div className="p-1.5 flex justify-between space-x-8 whitespace-nowrap">
+            {stocks.map(stock => (
+              <div
+                key={stock.name}
+                className={cn(
+                  'hover:bg-hover text-center py-1.5 px-2 cursor-pointer transition-all duration-300 w-[181px] h-[51px] flex items-center flex-shrink-0 rounded-[300px]',
+                  {
+                    'bg-accent': activeStock === stock.symbol
+                  }
+                )}
+                onClick={() => onActiveStockChange(stock.symbol)}
+                onKeyDown={() => { }}
+              >
+                <JknIcon.Stock symbol={stock.symbol} />
+                <div className="ml-2">
+                  <span className="text-sm">{stock.name}</span>
+                  <div className="flex items-center mt-1 text-xs space-x-2">
+                    <SubscribeSpan.Price
+                      initValue={stock.close}
+                      symbol={stock.symbol}
+                      initDirection={stockUtils.isUp(stock)}
+                      decimal={3}
+                      arrow
+                    />
+                    <SubscribeSpan.Percent
+                      initValue={stockUtils.getPercent(stock)}
+                      symbol={stock.symbol}
+                      initDirection={stockUtils.isUp(stock)}
+                      decimal={2}
+                    />
+                  </div>
+                </div>
               </div>
-              <div className="">
-                <SubscribeSpan.Percent
-                  initValue={stockUtils.getPercent(stock)}
-                  symbol={stock.symbol}
-                  initDirection={stockUtils.isUp(stock)}
-                  decimal={2}
-                />
-              </div>
-            </div>
+            ))}
           </div>
-        ))}
+        </div>
+        <div className="bg-accent rounded-full w-10 h-10 flex items-center justify-center mx-4 cursor-pointer">
+          <JknIcon.Svg name="arrow-right" size={12} className="text-[#B8B8B8]" />
+        </div>
       </div>
-      <div className="flex-1 relative">
+      <div className="flex-1 relative mt-4">
         <div onDoubleClick={onChartDoubleClick} className="w-full h-full">
           <LargeCapChart code={activeStock} type={stockType} />
         </div>
         {activeKey !== '大盘指数' && (
-          <div className="absolute bottom-4 left-10">
+          <div className="absolute top-2 left-12">
             <CapsuleTabs
+              type="text"
               activeKey={stockType.toString()}
               onChange={value => setStockType(+value as unknown as StockChartInterval)}
+              activeColor="#DBDBDB"
             >
-              <CapsuleTabs.Tab value={StockChartInterval.PRE_MARKET.toString()} label={t('stockChart.before')} />
-              <CapsuleTabs.Tab value={StockChartInterval.INTRA_DAY.toString()} label={t('stockChart.in')} />
-              <CapsuleTabs.Tab value={StockChartInterval.AFTER_HOURS.toString()} label={t('stockChart.after')} />
+              <CapsuleTabs.Tab className={cn('border border-solid border-transparent rounded-sm py-1 text-tertiary', stockType === StockChartInterval.PRE_MARKET && 'border-[#DBDBDB]')} value={StockChartInterval.PRE_MARKET.toString()} label={t('stockChart.before')} />
+              <CapsuleTabs.Tab className={cn('border border-solid border-transparent rounded-sm py-1 text-tertiary', stockType === StockChartInterval.INTRA_DAY && 'border-[#DBDBDB]')} value={StockChartInterval.INTRA_DAY.toString()} label={t('stockChart.in')} />
+              <CapsuleTabs.Tab className={cn('border border-solid border-transparent rounded-sm py-1 text-tertiary', stockType === StockChartInterval.AFTER_HOURS && 'border-[#DBDBDB]')} value={StockChartInterval.AFTER_HOURS.toString()} label={t('stockChart.after')} />
             </CapsuleTabs>
           </div>
         )}
@@ -183,7 +197,7 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
     }
     return t
   })(code, type)
-
+  console.log(type)
   const queryData = useQuery({
     queryKey: [getStockChartQuote.cacheKey, code, type],
     queryFn: () => getStockChartQuote(code!, type!),

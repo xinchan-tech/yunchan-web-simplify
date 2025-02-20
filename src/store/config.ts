@@ -4,8 +4,8 @@ import theme from '@/theme/variables.module.scss'
 
 type Language = 'zh_CN' | 'en'
 
-const red = '#ff3f4d'
-const green = '#009e45'
+const red = '#F23645'
+const green = '#089981'
 
 const platform = (() => {
   return /windows|win32/i.test(navigator.userAgent)

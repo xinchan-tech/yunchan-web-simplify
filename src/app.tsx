@@ -165,51 +165,58 @@ const App = () => {
       {
         inviteModal.contenxt
       }
-      <div className="header relative z-10 px-4">
-        <div className="search float-left flex items-center h-full">
-          <StockSelect
-            size="mini"
-            placeholder={t('search.stocks')}
-            onChange={v => router.navigate(`/stock/trading?symbol=${v}`)}
-          />
+      <div className="w-[40px] flex-shrink-0 flex flex-col items-center space-y-4 pt-4">
+        <HeaderUser />
+        <Menu />
+      </div>
+      <div className="flex-1 overflow-hidden flex flex-col">
+        <div className="header relative z-10 px-4">
+          <div className="search float-left flex items-center h-full">
+            <StockSelect
+              size="mini"
+              placeholder={t('search.stocks')}
+              onChange={v => router.navigate(`/stock/trading?symbol=${v}`)}
+            />
+          </div>
+
+          <div className="absolute top-0 left-0 h-full w-full text-center flex justify-center items-center -z-10">
+            <img src={Logo} alt="logo" className="w-6 h-6 mr-2" />
+            <AppTitle />
+          </div>
+          <div className="float-right flex items-center h-full space-x-2xl">
+            <HeaderMall />
+            <HeaderService />
+          </div>
         </div>
 
-        <div className="absolute top-0 left-0 h-full w-full text-center flex justify-center items-center -z-10">
-          <img src={Logo} alt="logo" className="w-6 h-6 mr-2" />
-          <AppTitle />
+        <div className="bg-muted flex-1 overflow-hidden">
+          <Outlet />
         </div>
-        <div className="float-right flex items-center h-full space-x-2xl">
-          <HeaderMall />
-          <HeaderService />
-          <HeaderUser />
+
+        <div className="footer border-style-primary">
+          <Footer />
         </div>
       </div>
-      <div className="main overflow-hidden">
-        <div className="sider h-full float-left bg-background">
-          <Menu />
+      <div className="w-[40px] flex-shrink-0 flex flex-col">
+
+        <MenuRight />
+
+        <div className="mt-auto">
+          <AiAlarmNotice />
         </div>
+      </div>
+      {/* 
+      <div className="main overflow-hidden">
+
         <div className="float-right bg-background h-full sider">
           <div className="flex flex-col items-center h-full">
-            <MenuRight />
 
-            <div className="mt-auto">
-              <AiAlarmNotice />
-            </div>
           </div>
         </div>
         <div className="content overflow-hidden">
-          <div className="bg-muted">
-            <Outlet />
-            {/* <Suspense fallback={<div />}>
-              <RouterProvider router={router} />
-            </Suspense> */}
-          </div>
 
-          <div className="footer border-style-primary">
-            <Footer />
-          </div>
         </div>
-      </div>
+      </div> */}
 
       <style jsx>
         {`
@@ -220,6 +227,7 @@ const App = () => {
             position: relative;
             width: 100vw;
             box-sizing: border-box;
+            display: flex;
             min-width: 1425px;
             min-height: 810px;
             color: hsl(var(--text));

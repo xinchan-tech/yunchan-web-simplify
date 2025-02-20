@@ -6,20 +6,22 @@ interface CapsuleTabsProps {
   onChange?: (value: string) => void
   type?: 'default' | 'text'
   className?: string
+  activeColor?: string
 }
 
 interface CapsuleTabsContext {
   value?: string
   onChange?: (value: string) => void
   type: CapsuleTabsProps['type']
+  activeColor?: string
 }
 
 const CapsuleTabsContext = createContext<CapsuleTabsContext>({} as CapsuleTabsContext)
 
-const _CapsuleTabs = ({ activeKey, onChange, children, type = 'default', className }: PropsWithChildren<CapsuleTabsProps>) => {
+const _CapsuleTabs = ({ activeKey, onChange, children, type = 'default', className, activeColor }: PropsWithChildren<CapsuleTabsProps>) => {
   return (
     <div className={cn('flex items-center space-x-2 flex-wrap', className)}>
-      <CapsuleTabsContext.Provider value={{ value: activeKey, onChange, type }}>
+      <CapsuleTabsContext.Provider value={{ value: activeKey, onChange, type, activeColor }}>
         {
           children
         }
@@ -33,6 +35,7 @@ interface TabItemProps {
   label: string | ReactNode
   disabled?: boolean
   className?: string
+
 }
 
 const TabItem = ({ value, label, disabled, className }: TabItemProps) => {
@@ -45,8 +48,8 @@ const TabItem = ({ value, label, disabled, className }: TabItemProps) => {
         className
       )}
       style={{
-        background: value === context.value && context.type === 'default'  ? 'hsl(var(--active-color))' : 'transparent',
-        color: value === context.value && context.type === 'text' ? 'hsl(var(--active-color))' : 'hsl(var(--text))',
+        background: value === context.value && context.type === 'default' ? 'hsl(var(--active-color))' : 'transparent',
+        color: value === context.value && context.type === 'text' ? context.activeColor || 'hsl(var(--active-color))' : '',
       }}
       onClick={() => { !disabled && context.onChange?.(value) }} onKeyDown={() => { }}
     >
