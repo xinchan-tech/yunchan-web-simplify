@@ -62,12 +62,12 @@ export class MentionModel {
 }
 
 export const sortMessages = (messages: Message[]) => {
-  let result = [...messages]
+  const result = [...messages]
   for (let i = 0; i < result.length; i++) {
     const msg = result[i]
     if (msg.content.cmd === 'messageRevoke') {
-      if (msg.content.param && msg.content.param.message_id) {
-        let revokeMsgId: string = msg.content.param?.message_id
+      if (msg.content.param?.message_id) {
+        const revokeMsgId: string = msg.content.param?.message_id
 
         // const temp = result.splice(i, 1);
         // 目标消息位置
@@ -101,10 +101,10 @@ const _formatDate = (date: Date, fmt: string) => {
     'q+': Math.floor((date.getMonth() + 3) / 3), //季度
     S: date.getMilliseconds() //毫秒
   }
-  if (/(y+)/.test(fmt)) fmt = fmt.replace(RegExp.$1, (date.getFullYear() + '').substr(4 - RegExp.$1.length))
+  if (/(y+)/.test(fmt)) fmt = fmt.replace(RegExp.$1, `${date.getFullYear()}`.substr(4 - RegExp.$1.length))
   for (let k in o)
-    if (new RegExp('(' + k + ')').test(fmt))
-      fmt = fmt.replace(RegExp.$1, RegExp.$1.length === 1 ? o[k] : ('00' + o[k]).substr(('' + o[k]).length))
+    if (new RegExp(`(${k})`).test(fmt))
+      fmt = fmt.replace(RegExp.$1, RegExp.$1.length === 1 ? o[k] : `00${o[k]}`.substr(`${o[k]}`.length))
   return fmt
 }
 
@@ -125,7 +125,7 @@ export function getTimeStringAutoShort2(timestamp: number, mustIncludeTime: bool
   let ret = ''
 
   // 要额外显示的时间分钟
-  let timeExtraStr = mustIncludeTime ? ' ' + _formatDate(srcDate, 'hh:mm') : ''
+  let timeExtraStr = mustIncludeTime ? ` ${_formatDate(srcDate, 'hh:mm')}` : ''
 
   // 当年
   if (currentYear === srcYear) {

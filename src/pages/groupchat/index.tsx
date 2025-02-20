@@ -23,12 +23,14 @@ import GroupMembers from './group-members'
 
 import { revokeMessageService } from '@/api'
 
-import { Button, Toaster } from '@/components'
+import { Button, JknIcon, Toaster } from '@/components'
 import type { ConversationWrap } from './ConversationWrap'
 
 import APIClient from './Service/APIClient'
 import TextImgLive from './text-img-live'
 import { judgeHasReadGroupNotice, setAgreedGroupInCache } from './chat-utils'
+import ChatInfoDrawer from './components/chat-info-drawer'
+import { ChevronRight } from 'lucide-react'
 
 export type ReplyFn = (option: {
   message?: Message
@@ -329,6 +331,8 @@ const GroupChatPage = () => {
     }
   }, [notAgreeNotice])
 
+  const [openDrawer, setOpenDrawer] = useState(false)
+
   return (
     <div className="group-chat-container flex">
       <Toaster />
@@ -343,6 +347,16 @@ const GroupChatPage = () => {
         <TextImgLive />
       ) : (
         <GroupChatContext.Provider value={{ handleReply, handleRevoke, syncSubscriber }}>
+          <ChatInfoDrawer
+            isOpen={openDrawer}
+            position="right"
+            onClose={() => {
+              setOpenDrawer(false)
+            }}
+            channelID={selectedChannel?.channelID || ''}
+            title="聊天信息"
+          />
+
           <GroupChannel
             onInitChannel={onInitChannel}
             onSelectChannel={(channel: Channel, conversation: ConversationWrap) => {
@@ -377,10 +391,19 @@ const GroupChatPage = () => {
                 </div>
               </div>
             )}
-            <div className="group-chat-header justify-between h-[58px]">
+            <div className="group-chat-header justify-between flex h-[58px]">
               <div className="group-title items-center pt-2 h-full">
                 <p className="mb-0 mt-0">{groupDetailData?.name}</p>
                 <p className="text-xs text-gray-400 mt-0 mb-0">{groupDetailData?.brief}</p>
+              </div>
+              <div className="h-full flex items-center mr-2">
+                <JknIcon
+                  name="ic_more"
+                  className="rounded-none"
+                  onClick={() => {
+                    setOpenDrawer(true)
+                  }}
+                />
               </div>
             </div>
             <div className="flex" style={{ height: 'calc(100% - 58px)' }}>

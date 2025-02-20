@@ -319,7 +319,7 @@ export type opinionsRequestParam = {
   /**
    * 0观点，1图文直播
    */
-  type: string
+  type?: string
   /**
    * 用户id（教师关联的uid，type=1才有效）
    */
@@ -359,7 +359,7 @@ export type opinionItem = {
 }
 
 export const getLiveOpnions = async (params: opinionsRequestParam) => {
-  const r = await request.get<PageResult<opinionItem>>('/opinions', { params }).then(r => r.data)
+  const r = await request.get<PageResult<opinionItem>>('/opinions', { params }).then(r => r.data.items)
   return r
 }
 

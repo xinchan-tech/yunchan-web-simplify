@@ -5,10 +5,9 @@ import {
   sendLiveOpinions,
   type sendOpinionRequestPrams
 } from '@/api'
-import FullScreenLoading from '@/components/loading'
-import { useThrottleFn } from 'ahooks'
+
 import { useEffect, useRef, useState } from 'react'
-import { animateScroll, scroller } from 'react-scroll'
+
 import { useUser } from '@/store'
 import { Button, Input, JknIcon } from '@/components'
 import { useToast } from '@/hooks'
@@ -18,6 +17,7 @@ import type { InputBoxImage, InputBoxResult } from '../group-chat-input/useInput
 import { uid } from 'radash'
 import Viewer from 'react-viewer'
 import { HighlightDollarWords } from '../Messages/text'
+import MsgScrollLoader from '../components/msg-scroll-loader'
 
 function formatTimestamp(timestamp: number) {
   const date = new Date(timestamp)
@@ -60,33 +60,15 @@ function formatTimestamp(timestamp: number) {
   return `${month}-${day} ${weekday} ${hh}:${mm}`
 }
 
-const OPINION_ID_PREFIX = 'opinion-'
 const TextImgLive = () => {
-  const [opinions, setOpinions] = useState<opinionItem[]>([])
-  const [loading, setLoading] = useState(false)
   const { user } = useUser()
-  const jumpOpioionId = useRef<string | null>(null)
-  const pulldowning = useRef(false)
-  const pulldownFinished = useRef(false)
+
   const [sending, setSending] = useState(false)
   const { toast } = useToast()
-  const [keyWord, setKeyWord] = useState('')
 
   const pageNumber = useRef(1)
-  const pullBeforeData = () => {
-    if (pulldowning.current || pulldownFinished.current) {
-      return
-    }
+  const [fetchParams, setFetchParams] = useState<opinionsRequestParam>({})
 
-    const params = generateParams()
-    params.page = String(pageNumber.current + 1)
-    if (keyWord) {
-      params.keyword = keyWord
-    }
-    fetchOpinions(params, { pullBeforeMode: true }).then(() => {
-      pageNumber.current++
-    })
-  }
   const generateParams = () => {
     let params: opinionsRequestParam = {
       type: '1',
@@ -99,131 +81,21 @@ const TextImgLive = () => {
     return params
   }
 
-  const pullLatest = async () => {
-    let params: opinionsRequestParam = {
-      type: '1',
-      page: '1',
-      limit: '15'
-    }
-    try {
-      const res = await getLiveOpnions(params)
-      if (res.items.length > 0) {
-        // 去重，只把老数据里不包含的opinion加进去
-        const newPart = res.items
-          .filter(item => {
-            return (
-              opinions.findIndex(old => {
-                return item.id === old.id
-              }) < 0
-            )
-          })
-          .reverse()
-
-        const newOpinions = newPart.concat(opinions)
-        jumpOpioionId.current = ''
-
-        setOpinions(newOpinions)
-      }
-    } catch (err) {}
-  }
-
-  const fetchOpinions = async (
-    params: opinionsRequestParam,
-    options?: {
-      pullBeforeMode?: boolean
-      reset?: boolean
-    }
-  ) => {
-    setLoading(true)
-    pulldowning.current = true
-    try {
-      const res = await getLiveOpnions(params)
-      pulldowning.current = false
-      setLoading(false)
-      if (res.items.length > 0) {
-        const newPart = res.items.reverse()
-
-        if (options?.reset === true) {
-          jumpOpioionId.current = null
-          pageNumber.current = 1
-          setOpinions(newPart)
-        } else {
-          const newOpinions = newPart.concat(opinions)
-          if (options?.pullBeforeMode === true) {
-            jumpOpioionId.current = OPINION_ID_PREFIX + opinions[0].id
-          }
-
-          setOpinions(newOpinions)
-        }
-      }
-      if (res.last === pageNumber.current - 1 || res.last === 1) {
-        pulldownFinished.current = true
-      }
-    } catch (error) {
-      setLoading(false)
-      pulldowning.current = false
-    }
-  }
-
   useEffect(() => {
     const initParams = generateParams()
-    // const close = wsManager.on("opinions", (data) => {
-    //   console.log(data);
-    //   pullLatest();
-    // });
-    fetchOpinions(initParams, { reset: true }).finally(() => {
-      pulldowning.current = false
-    })
-    // return close;
+
     const channel = new BroadcastChannel('chat-channel')
     channel.onmessage = event => {
       if (event.data.type === 'opinions') {
-        pullLatest()
+        setFetchParams({ ...fetchParams })
       }
     }
-
+    setFetchParams(initParams)
     return () => {
       channel.close()
     }
   }, [])
 
-  // 消息列表滚动到底部
-  const scrollBottom = () => {
-    animateScroll.scrollToBottom({
-      containerId: 'scroll-content-opinion',
-      duration: 0
-    })
-  }
-
-  const scrollDomRef = useRef<HTMLDivElement>(null)
-  const handleScroll = useThrottleFn(
-    (e: any) => {
-      const targetScrollTop = e?.target?.scrollTop
-      if (targetScrollTop <= 30) {
-        // 下拉
-        pullBeforeData()
-      }
-    },
-    { wait: 200 }
-  )
-
-  useEffect(() => {
-    if (Array.isArray(opinions) && opinions.length > 0) {
-      if (jumpOpioionId.current) {
-        const targetID = jumpOpioionId.current
-        const target = document.getElementById(targetID)
-        if (target) {
-          scroller.scrollTo(targetID, {
-            containerId: 'scroll-content-opinion',
-            duration: 0
-          })
-          jumpOpioionId.current = null
-        }
-      } else {
-        scrollBottom()
-      }
-    }
-  }, [opinions])
   const imgUploadRef = useRef<HTMLInputElement>()
   const onFileClick = (event: any) => {
     event.target.value = '' // 防止选中一个文件取消后不能再选中同一个文件
@@ -325,7 +197,6 @@ const TextImgLive = () => {
 
   return (
     <div className="text-img-live-box">
-      {loading && <FullScreenLoading fullScreen={false} />}
       {user?.user_type === '2' && (
         <div className="pl-20 pr-20 mb-2">
           <Input
@@ -336,25 +207,27 @@ const TextImgLive = () => {
               if (e.key === 'Enter') {
                 const params = generateParams()
                 params.keyword = e.currentTarget.value
-                setKeyWord(e.currentTarget.value)
-                fetchOpinions(params, { reset: true })
+
+                setFetchParams(params)
               }
             }}
           />
         </div>
       )}
-      <div
-        ref={scrollDomRef}
-        style={{
-          height: user?.user_type === '2' ? 'calc(100% - 210px)' : '100%'
-        }}
-        className="scroll-content-opinion"
-        onScroll={handleScroll.run}
+      <MsgScrollLoader
+        rowKey="id"
         id="scroll-content-opinion"
-      >
-        {opinions.map(item => {
+        reverse
+        fetchParams={fetchParams}
+        fetchData={getLiveOpnions}
+        onPageChange={page => {
+          const params = generateParams()
+          params.page = String(page)
+          return params
+        }}
+        renderItem={(item: opinionItem) => {
           return (
-            <div key={item.id} className="opinion-item mb-10" id={OPINION_ID_PREFIX + item.id}>
+            <div key={item.id} className="opinion-item mb-10" id={item.id}>
               <div className="avatar-info flex items-center mb-3">
                 <div className="avatar-img mr-2">评</div>
                 <div className="mr-2 teacher-name">{item.user.username}</div>
@@ -394,8 +267,9 @@ const TextImgLive = () => {
               </div>
             </div>
           )
-        })}
-      </div>
+        }}
+      />
+
       {user?.user_type === '2' && (
         <div className="h-[180px] topgap">
           <div className="flex h-[32px] items-center ">

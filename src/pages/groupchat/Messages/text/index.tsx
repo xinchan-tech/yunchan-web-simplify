@@ -110,8 +110,8 @@ export const HighlightDollarWords: React.FC<HighlightDollarWordsProps> = ({ text
   return <div>{parts}</div>
 }
 
-const TextCell = (props: { message: Message; messageWrap?: MessageWrap }) => {
-  const { message, messageWrap } = props
+const TextCell = (props: { message: Message; historyMode?: boolean }) => {
+  const { message, historyMode } = props
 
   // 先注释 以后可能用的到
   // const parts = messageWrap?.parts;
@@ -182,8 +182,8 @@ const TextCell = (props: { message: Message; messageWrap?: MessageWrap }) => {
 
   const getNormalText = () => {
     let text = new Array<JSX.Element>()
-    if (messageWrap?.content.text) {
-      const goodText = messageWrap.content.text.split('\n')
+    if (message?.content.text) {
+      const goodText = message.content.text.split('\n')
       goodText.forEach((str: string, idx: number) => {
         text.push(
           <span key={str + idx}>
@@ -195,8 +195,8 @@ const TextCell = (props: { message: Message; messageWrap?: MessageWrap }) => {
         }
       })
     }
-    if (messageWrap?.content.mention && Array.isArray(messageWrap?.content.mention.uids)) {
-      let mentoions = messageWrap.content.mention.uids.map((uid: string) => {
+    if (message.content.mention && Array.isArray(message.content.mention.uids)) {
+      let mentoions = message.content.mention.uids.map((uid: string) => {
         const info = WKSDK.shared().channelManager.getChannelInfo(new Channel(uid, ChannelTypePerson))
         if (info) {
           return (
@@ -216,7 +216,9 @@ const TextCell = (props: { message: Message; messageWrap?: MessageWrap }) => {
       {message.remoteExtra.revoke === true ? (
         <RevokeText data={message.remoteExtra.extra} />
       ) : (
-        <MsgCard data={message}>{getNormalText()}</MsgCard>
+        <MsgCard data={message} historyMode={historyMode}>
+          {getNormalText()}
+        </MsgCard>
       )}
       <style>
         {`

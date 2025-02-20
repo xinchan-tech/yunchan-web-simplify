@@ -68,8 +68,8 @@ const getImageSrc = (content: MessageImage) => {
   return content.remoteUrl
 }
 
-const ImageCell = (props: { message: Message }) => {
-  const { message } = props
+const ImageCell = (props: { message: Message; historyMode?: boolean }) => {
+  const { message, historyMode } = props
   const [showPreview, setShowPreview] = useState(false)
 
   const getImageElement = () => {
@@ -77,7 +77,7 @@ const ImageCell = (props: { message: Message }) => {
     let scaleSize = imageScale(content.width, content.height)
     const imageURL = getImageSrc(content)
     return (
-      <MsgCard data={message}>
+      <MsgCard data={message} historyMode={historyMode}>
         <img
           alt=""
           src={imageURL}

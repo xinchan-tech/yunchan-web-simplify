@@ -1,145 +1,127 @@
-import { cn } from "@/utils/style";
-import { Message, MessageImage, MessageText } from "wukongimjssdk";
-import copy from "copy-to-clipboard";
-import MsgHead from "../msg-head";
-import { ReactNode, useContext } from "react";
+import { cn } from '@/utils/style'
+import { type Message, MessageImage, MessageText } from 'wukongimjssdk'
+import copy from 'copy-to-clipboard'
+import MsgHead from '../msg-head'
+import { type ReactNode, useContext } from 'react'
 
-import {
-  ContextMenu,
-  ContextMenuContent,
-  ContextMenuTrigger,
-  ContextMenuItem,
-} from "@/components";
-import { GroupChatContext } from "../..";
-import { useGroupChatShortStore } from "@/store/group-chat-new";
-import { useUser } from "@/store";
-import { useToast } from "@/hooks";
+import { ContextMenu, ContextMenuContent, ContextMenuTrigger, ContextMenuItem } from '@/components'
+import { GroupChatContext } from '../..'
+import { useGroupChatShortStore } from '@/store/group-chat-new'
+import { useUser } from '@/store'
+import { useToast } from '@/hooks'
 
 function copyImage(message: Message) {
-  const tempImg = document.createElement("img");
-  tempImg.src = message.content.remoteUrl;
+  const tempImg = document.createElement('img')
+  tempImg.src = message.content.remoteUrl
 
   // 将 div 添加到 document
-  document.body.appendChild(tempImg);
+  document.body.appendChild(tempImg)
 
   // 选择 div 中的内容
-  const range = document.createRange();
-  range.selectNode(tempImg);
-  window.getSelection().removeAllRanges(); // 清除现有的选择
-  window.getSelection().addRange(range);
+  const range = document.createRange()
+  range.selectNode(tempImg)
+  window.getSelection().removeAllRanges() // 清除现有的选择
+  window.getSelection().addRange(range)
 
   // 执行复制命令
-  document.execCommand("copy");
+  document.execCommand('copy')
 
   // 清理选择和临时元素
-  window.getSelection().removeAllRanges();
-  document.body.removeChild(tempImg);
+  window.getSelection().removeAllRanges()
+  document.body.removeChild(tempImg)
 }
 
-const MsgCard = (props: { data: Message; children: string | ReactNode }) => {
-  const { data } = props;
-  const subscribers = useGroupChatShortStore((state) => state.subscribers);
-  const { user } = useUser();
-  const { toast } = useToast();
+const MsgCard = (props: { data: Message; children: string | ReactNode; historyMode?: boolean }) => {
+  const { data, historyMode } = props
+  const subscribers = useGroupChatShortStore(state => state.subscribers)
+  const { user } = useUser()
+  const { toast } = useToast()
   //  获取撤回权限
   const getRevokePremession = (data: Message) => {
     // 自己的都能撤回
     if (data.fromUID === user?.username) {
-      return true;
+      return true
     }
     if (subscribers && subscribers.length > 0) {
-      const msgUid = data.fromUID;
-      const self = subscribers.find((item) => item.uid === user?.username);
-      const sender = subscribers.find((item) => item.uid === msgUid);
+      const msgUid = data.fromUID
+      const self = subscribers.find(item => item.uid === user?.username)
+      const sender = subscribers.find(item => item.uid === msgUid)
       // 发送人是群主的不能撤回
-      if (sender?.orgData.type === "2") {
-        return false;
+      if (sender?.orgData.type === '2') {
+        return false
       }
-      if (self && self.orgData.type !== "0") {
+      if (self && self.orgData.type !== '0') {
         // 自己是群主都能撤回
-        if (self.orgData.type === "2") {
-          return true;
-        } else if (self.orgData.type === "1") {
+        if (self.orgData.type === '2') {
+          return true
+        }
+        if (self.orgData.type === '1') {
           // 管理员只能撤回普通群员的
-          if (sender?.orgData.type === "0") {
-            return true;
+          if (sender?.orgData.type === '0') {
+            return true
           }
         }
       }
     }
 
-    return false;
-  };
+    return false
+  }
 
-  const { handleReply, handleRevoke } = useContext(GroupChatContext);
+  const { handleReply, handleRevoke } = useContext(GroupChatContext)
   return (
-    <div
-      className={cn(
-        "flex msg-card items-start",
-        data.send && "justify-end",
-        data.content.reply ? "mb-2" : "mb-6"
-      )}
-    >
+    <div className={cn('flex msg-card items-start', data.send && 'justify-end', data.content.reply ? 'mb-2' : 'mb-6')}>
       {data.send !== true && (
         <div className="w-12 h-full rounded-md  left">
           <MsgHead message={data} type="left" />
         </div>
       )}
 
-      <div
-        className={cn(
-          "bubble  rounded-lg relative text-sm",
-          data.send && "right-bubble"
-        )}
-      >
-        <ContextMenu>
-          <ContextMenuTrigger asChild>
-            <span>{props.children}</span>
-          </ContextMenuTrigger>
-          <ContextMenuContent>
-            <ContextMenuItem
-              onClick={() => {
-                typeof handleReply === "function" &&
-                  handleReply({ message: data, isQuote: true });
-              }}
-            >
-              引用
-            </ContextMenuItem>
-            <ContextMenuItem
-              onClick={() => {
-                typeof handleReply === "function" &&
-                  handleReply({ message: data });
-              }}
-            >
-              回复
-            </ContextMenuItem>
-            {getRevokePremession(data) === true && (
+      <div className={cn('bubble  rounded-lg relative text-sm', data.send && 'right-bubble')}>
+        {!historyMode && (
+          <ContextMenu>
+            <ContextMenuTrigger asChild>
+              <span>{props.children}</span>
+            </ContextMenuTrigger>
+            <ContextMenuContent>
               <ContextMenuItem
                 onClick={() => {
-                  typeof handleRevoke === "function" && handleRevoke(data);
+                  typeof handleReply === 'function' && handleReply({ message: data, isQuote: true })
                 }}
               >
-                撤回
+                引用
               </ContextMenuItem>
-            )}
-            <ContextMenuItem
-              onClick={() => {
-                if (data.content instanceof MessageText && data.content.text) {
-                  copy(data.content.text);
-                  toast({ description: "复制成功" });
-                } else if (
-                  data.content instanceof MessageImage &&
-                  data.content.remoteUrl
-                ) {
-                  copyImage(data);
-                  toast({ description: "复制成功" });
-                }
-              }}
-            >
-              复制
-            </ContextMenuItem>
-          </ContextMenuContent>
-        </ContextMenu>
+              <ContextMenuItem
+                onClick={() => {
+                  typeof handleReply === 'function' && handleReply({ message: data })
+                }}
+              >
+                回复
+              </ContextMenuItem>
+              {getRevokePremession(data) === true && (
+                <ContextMenuItem
+                  onClick={() => {
+                    typeof handleRevoke === 'function' && handleRevoke(data)
+                  }}
+                >
+                  撤回
+                </ContextMenuItem>
+              )}
+              <ContextMenuItem
+                onClick={() => {
+                  if (data.content instanceof MessageText && data.content.text) {
+                    copy(data.content.text)
+                    toast({ description: '复制成功' })
+                  } else if (data.content instanceof MessageImage && data.content.remoteUrl) {
+                    copyImage(data)
+                    toast({ description: '复制成功' })
+                  }
+                }}
+              >
+                复制
+              </ContextMenuItem>
+            </ContextMenuContent>
+          </ContextMenu>
+        )}
       </div>
 
       {data.send === true && (
@@ -190,7 +172,7 @@ const MsgCard = (props: { data: Message; children: string | ReactNode }) => {
         `}
       </style>
     </div>
-  );
-};
+  )
+}
 
-export default MsgCard;
+export default MsgCard

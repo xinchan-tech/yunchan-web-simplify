@@ -557,10 +557,16 @@ const GroupChatMsgList = forwardRef((props, ref) => {
           <div
             onClick={() => {
               setShowNewMsgTip(false)
-
               scrollBottom()
             }}
             className="new-msg-tip flex h-8 items-center rounded-full pl-4 pr-4 text-white"
+            onKeyDown={event => {
+              if (event.key === 'Enter' || event.key === ' ') {
+                // Enter or Space key
+                setShowNewMsgTip(false)
+                scrollBottom()
+              }
+            }}
           >
             您有{unreadCount}条未读消息
           </div>
