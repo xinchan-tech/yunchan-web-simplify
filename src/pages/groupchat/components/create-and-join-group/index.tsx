@@ -12,6 +12,8 @@ import { useState } from 'react'
 import JoinGroupContent from './join-group-content'
 import CreateGroupForm from './create-group-form'
 import type { CreateGroupRecord } from '@/api'
+import { useUser } from '@/store'
+import { toast } from '@/hooks'
 
 const CreateGroup = () => {
   const createGroup = useModal({
@@ -33,6 +35,7 @@ const CreateGroup = () => {
     closeIcon: true
   })
   const [curRecord, setCurRecord] = useState<CreateGroupRecord | null>(null)
+  const { user } = useUser()
   const reCreateModal = useModal({
     content: (
       <CreateGroupForm
@@ -83,20 +86,23 @@ const CreateGroup = () => {
                     />
                   </span>
                 </TooltipTrigger>
-                <TooltipContent>加入/创建社群</TooltipContent>
+                <TooltipContent>{user?.user_type === '0' ? '加入社群' : '加入/创建社群'}</TooltipContent>
               </Tooltip>
             </TooltipProvider>
           </div>
         </DropdownMenuTrigger>
         <DropdownMenuContent>
-          <DropdownMenuItem
-            onClick={() => {
-              createGroup.modal.open()
-              setOpen(false)
-            }}
-          >
-            创建社群
-          </DropdownMenuItem>
+          {user?.user_type !== '0' && (
+            <DropdownMenuItem
+              onClick={() => {
+                createGroup.modal.open()
+                setOpen(false)
+              }}
+            >
+              创建社群
+            </DropdownMenuItem>
+          )}
+
           <DropdownMenuItem
             onClick={() => {
               joinGroup.modal.open()

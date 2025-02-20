@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 
 import { Input } from '@/components'
 import { cn } from '@/utils/style'
@@ -66,10 +66,10 @@ const JoinGroupContent = (props: { onSuccess: () => void; type?: string }) => {
   }
 
   const [changeGroupLoading, setChangeGroupLoading] = useState(false)
-  const handleChangeGroup = () => {
+  const handleChangeGroup = (data: GroupChannelItem) => {
     setChangeGroupLoading(true)
     joinGroupByInviteCode({
-      re_code: keywords,
+      channel_id: data.account,
       type: '2'
     })
       .then(r => {
@@ -146,7 +146,7 @@ const JoinGroupContent = (props: { onSuccess: () => void; type?: string }) => {
               data={channel}
               onJoin={() => {
                 if (props.type === 'change') {
-                  handleChangeGroup()
+                  handleChangeGroup(channel)
                 } else {
                   setCurGroupData(channel)
                   setOpenJoinMask(true)

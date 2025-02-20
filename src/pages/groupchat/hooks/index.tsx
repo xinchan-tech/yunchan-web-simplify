@@ -11,6 +11,7 @@ import {
   setMemberForbiddenService,
   bindInviteCode,
   joinGroupByInviteCode,
+  getGroupChannels,
 } from "@/api";
 import { throttle } from "radash";
 import { Button, ContextMenuContent, ContextMenuItem, Input } from "@/components";
@@ -259,16 +260,25 @@ export const useJoinGroupByInviteCode = (options?: {
       bindInviteCode({ inv_code: inviteCode })
         .then(r => {
           if (r.data === true) {
+            return getGroupChannels({
+              type: '1',
+              re_code: inviteCode
+            })
+          }
+        }).then(data => {
+          if(Array.isArray(data) && data.length > 0) {
+            const channel_id = data[0].account
             const params: {
-              re_code: string
+              channel_id: string
               type: '1' | '2'
             } = {
-              re_code: inviteCode,
+              channel_id,
               type: '1'
             }
-
+  
             return joinGroupByInviteCode(params)
-          }
+          } 
+          return Promise.resolve([])
         })
         .then(r => {
           if (r?.status === 1) {

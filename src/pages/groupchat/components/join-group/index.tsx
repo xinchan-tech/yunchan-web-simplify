@@ -151,6 +151,12 @@ const JoinGroup = (props: {
         onClick={() => {
           typeof props.onClose === 'function' && props.onClose()
         }}
+        onKeyDown={event => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            // Enter or Space key
+            typeof props.onClose === 'function' && props.onClose()
+          }
+        }}
       >
         返回
       </div>

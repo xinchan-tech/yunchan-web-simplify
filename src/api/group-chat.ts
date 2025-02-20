@@ -407,7 +407,7 @@ getPaymentTypesService.key = 'getPaymentTypesService'
 
 //邀请码加群
 export const joinGroupByInviteCode = async (params: {
-  re_code: string
+  channel_id: string
   type: '1' | '2'
 }) => {
   const res = await request
