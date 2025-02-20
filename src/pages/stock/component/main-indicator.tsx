@@ -1,7 +1,7 @@
 import type { getStockIndicators } from "@/api"
 import { HoverCard, HoverCardContent, HoverCardTrigger, JknIcon } from "@/components"
 import { SearchList } from "./search-list"
-import { kChartUtils, useKChartStore } from "../lib"
+import { CoilingIndicatorId, kChartUtils, useKChartStore } from "../lib"
 import { useCallback } from "react"
 
 interface MainIndicatorProps {
@@ -13,7 +13,13 @@ export const MainIndicator = (props: MainIndicatorProps) => {
   const _setMainSystem = useCallback((system: string) => {
     kChartUtils.setMainSystem({ system })
     if(system){
-      
+      kChartUtils.setMainCoiling({coiling: [
+        CoilingIndicatorId.PEN,
+        CoilingIndicatorId.ONE_TYPE,
+        CoilingIndicatorId.TWO_TYPE,
+        CoilingIndicatorId.THREE_TYPE,
+        CoilingIndicatorId.PIVOT
+      ]})
     }else{
       kChartUtils.setMainCoiling({coiling: []})
     }
