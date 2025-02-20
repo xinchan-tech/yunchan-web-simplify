@@ -74,7 +74,7 @@ const GoldenStockPool = () => {
       <div className="flex items-center px-1 py-2">
         <CollectDropdownMenu activeKey={type} onChange={setType} />
       </div>
-      <div className="overflow-hidden">
+      <div className="flex-1 overflow-hidden">
         {
           token ? (
             <JknRcTable isLoading={query.isLoading} columns={columns} data={list} onSort={onSort} rowKey="symbol" className="w-full" onRow={onRowClick} />
