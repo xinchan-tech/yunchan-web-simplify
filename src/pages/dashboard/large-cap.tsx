@@ -112,7 +112,13 @@ const LargeCap = () => {
     const node = document.querySelector(`.large-cap-stock-select[data-stock-symbol="${s}"]`)
 
     if (node) {
-      node.scrollIntoView({ behavior: 'smooth', inline: 'center' })
+
+      const parentElement = node.parentElement
+      if (parentElement) {
+        const width = parentElement.clientWidth
+        node.parentElement.scrollTo({ behavior: 'smooth', left: (node as any).offsetLeft - width / 3 })
+      }
+
     }
   }, [])
 
@@ -126,44 +132,44 @@ const LargeCap = () => {
 
   return (
     <div className="h-full flex flex-col">
-      <div className="flex items-center overflow-hidden flex-shrink-0 h-[63px] my-4">
-        <div className="flex-1 overflow-x-auto">
-          <div className="p-1.5 flex justify-between space-x-8 whitespace-nowrap">
-            {stocks.map(stock => (
-              <div
-                key={stock.name}
-                data-stock-symbol={stock.symbol}
-                className={cn(
-                  'large-cap-stock-select hover:bg-hover text-center py-1.5 px-3 box-border cursor-pointer transition-all duration-300 w-[190px] h-[51px] flex items-center flex-shrink-0 rounded-[300px]',
-                  {
-                    'bg-accent': activeStock === stock.symbol
-                  }
-                )}
-                onClick={() => onActiveStockChange(stock.symbol)}
-                onKeyDown={() => { }}
-              >
-                <JknIcon.Stock symbol={stock.symbol} />
-                <div className="ml-3">
-                  <span className="text-sm">{stock.name}</span>
-                  <div className="flex items-center mt-1 text-xs space-x-2">
-                    <SubscribeSpan.Price
-                      initValue={stock.close}
-                      symbol={stock.symbol}
-                      initDirection={stockUtils.isUp(stock)}
-                      decimal={3}
-                      arrow
-                    />
-                    <SubscribeSpan.Percent
-                      initValue={stockUtils.getPercent(stock)}
-                      symbol={stock.symbol}
-                      initDirection={stockUtils.isUp(stock)}
-                      decimal={2}
-                    />
-                  </div>
+      <div className="flex items-center overflow-hidden flex-shrink-0 h-[63px] my-4 ml-4">
+        <div className="flex-1 overflow-x-auto p-1.5 flex justify-between space-x-8 whitespace-nowrap">
+          {/* <div className=""> */}
+          {stocks.map(stock => (
+            <div
+              key={stock.name}
+              data-stock-symbol={stock.symbol}
+              className={cn(
+                'large-cap-stock-select hover:bg-hover text-center py-1.5 px-3 box-border cursor-pointer transition-all duration-300 w-[190px] h-[51px] flex items-center flex-shrink-0 rounded-[300px]',
+                {
+                  'bg-accent': activeStock === stock.symbol
+                }
+              )}
+              onClick={() => onActiveStockChange(stock.symbol)}
+              onKeyDown={() => { }}
+            >
+              <JknIcon.Stock symbol={stock.symbol} />
+              <div className="ml-3">
+                <span className="text-sm">{stock.name}</span>
+                <div className="flex items-center mt-1 text-xs space-x-2">
+                  <SubscribeSpan.Price
+                    initValue={stock.close}
+                    symbol={stock.symbol}
+                    initDirection={stockUtils.isUp(stock)}
+                    decimal={3}
+                    arrow
+                  />
+                  <SubscribeSpan.Percent
+                    initValue={stockUtils.getPercent(stock)}
+                    symbol={stock.symbol}
+                    initDirection={stockUtils.isUp(stock)}
+                    decimal={2}
+                  />
                 </div>
               </div>
-            ))}
-          </div>
+            </div>
+          ))}
+          {/* </div> */}
         </div>
         <div className="bg-accent rounded-full w-10 h-10 flex items-center justify-center mx-4 cursor-pointer" onClick={onNextStock} onKeyDown={() => { }}>
           <JknIcon.Svg name="arrow-right" size={12} className="text-[#B8B8B8]" />

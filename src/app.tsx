@@ -17,6 +17,7 @@ import {
   JknAlert,
   Menu,
   MenuRight,
+  Separator,
   StockSelect,
   Toaster
 } from './components'
@@ -167,11 +168,13 @@ const App = () => {
         inviteModal.contenxt
       }
       <div className="flex flex-col h-full overflow-hidden">
-        <div className="header relative z-10 px-2.5 mr-1 flex items-center">
+        <div className="header relative z-10 px-2.5 mr-1 flex items-center flex-shrink-0 h-[30px]">
           <div className="w-[120px] mt-1.5"><img className="w-full h-full" src={LogoTitle} /></div>
-          <div className="search float-left flex items-center h-full ml-auto">
+          <Separator orientation="vertical" className="mx-4 h-3 bg-[#2E2E2E]" />
+          <div className="search float-left flex items-center h-full ">
             <StockSelect
               size="mini"
+              className="w-[120px] h-[22px] rounded-xl"
               placeholder={t('search.stocks')}
               onChange={v => router.navigate(`/stock/trading?symbol=${v}`)}
             />
@@ -181,15 +184,15 @@ const App = () => {
             <img src={Logo} alt="logo" className="w-6 h-6 mr-2" />
             <AppTitle />
           </div> */}
-          <div className="flex items-center h-full space-x-2xl ml-4">
+          <div className="flex items-center h-full space-x-2xl ml-auto">
             <HeaderMall />
             <HeaderService />
           </div>
         </div>
 
-        <div className="flex-1 overflow-hidden flex justify-stretch">
+        <div className="flex-1 overflow-hidden flex">
           <div className="w-[40px] flex-shrink-0 bg-accent pt-1">
-            <div className="h-full bg-background w-full space-y-4 flex flex-col items-center pt-4">
+            <div className="h-full bg-background w-full space-y-4 flex flex-col items-center pt-4 rounded-tr-xs">
               <HeaderUser />
               <Menu />
             </div>
