@@ -7,14 +7,14 @@ const DashBoardPage = () => {
   return (
     <div className="flex justify-stretch h-full w-full overflow-hidden bg-accent box-border p-1 space-x-1">
       <div className="w-[66%] flex flex-col overflow-hidden space-y-1">
-        <div className="h-1/2 overflow-hidden bg-background rounded-xs">
+        <div className="flex-1 overflow-hidden bg-background rounded-xs">
           <LargeCap />
         </div>
-        <div className="h-1/2 flex justify-stretch overflow-hidden ">
-          <div className="w-1/2 overflow-hidden flex-shrink-0 rounded-xs bg-background box-border mr-0.5">
+        <div className="flex-1 flex justify-stretch overflow-hidden ">
+          <div className="flex-1 overflow-hidden flex-shrink-0 rounded-xs bg-background box-border mr-0.5">
             <TopList />
           </div>
-          <div className="w-1/2 overflow-hidden flex-shrink-0 rounded-xs bg-background box-border ml-0.5">
+          <div className="flex-1 overflow-hidden flex-shrink-0 rounded-xs bg-background box-border ml-0.5">
             <GoldenStockPool />
           </div>
         </div>
