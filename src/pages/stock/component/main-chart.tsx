@@ -197,6 +197,7 @@ export const MainChart = (props: MainChartProps) => {
     const timeIndex = useKChartStore.getState().state[props.index].timeIndex
 
     if (candlesticks.length === 0) {
+      // console.log("🚀 ~ renderUtils.calcIndicatorData ~ null")
       kChartUtils.clearIndicatorsData({ index: props.index })
       kChartUtils.setMainData({
         index: props.index,
@@ -208,6 +209,8 @@ export const MainChart = (props: MainChartProps) => {
     }
 
     renderUtils.calcIndicatorData(candlesticks, props.index).then(r => {
+      // console.log("🚀 ~ renderUtils.calcIndicatorData ~ r:", r)
+
       kChartUtils.setIndicatorsData({
         index: props.index,
         data: r
@@ -224,8 +227,10 @@ export const MainChart = (props: MainChartProps) => {
 
   useEffect(() => {
     const unsubscribe = useIndicator.subscribe(() => {
+      const candlesticks = useKChartStore.getState().state[props.index].mainData.history
+      if (candlesticks.length === 0) return
       renderUtils
-        .calcIndicatorData(useKChartStore.getState().state[props.index].mainData.history, props.index)
+        .calcIndicatorData(candlesticks, props.index)
         .then(r => {
           kChartUtils.setIndicatorsData({
             index: props.index,
@@ -272,6 +277,7 @@ export const MainChart = (props: MainChartProps) => {
       renderOverlay(_options, state.overlayStock)
       renderMainIndicators(_options, Object.values(state.mainIndicators))
       renderOverlayMark(_options, state)
+      console.log(state.secondaryIndicators, useKChartStore.getState().state[props.index].secondaryIndicators)
       renderSecondary(_options, state.secondaryIndicators)
       renderSecondaryLocalIndicators(_options, state.secondaryIndicators, state)
       renderBackTestMark(_options, state, chart.current)

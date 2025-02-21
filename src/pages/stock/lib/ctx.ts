@@ -864,6 +864,8 @@ export const kChartUtils: KChartUtils = {
     }))
   },
   setIndicatorsData: ({ index, data }) => {
+    // console.log("🚀 ~ data:", data)
+    
     useKChartStore.setState(state => {
       const _state = produce(state.state, draft => {
         const s = draft[index ?? state.activeChartIndex]
