@@ -124,8 +124,24 @@ const MainIndicatorSelect = ({ indicators }: { indicators?: Awaited<ReturnType<t
   }
 
   useEffect(() => {
+    const systems = indicators?.main.find(o => o.name === '缠论系统')?.indicators
+    let systemId: string | undefined = undefined
 
-  }, [mainIndicators])
+    if(systems && systems.length > 0) {
+      systems.forEach(system => {
+        if(system.authorized){
+          systemId = system.id
+        }
+      })
+
+      kChartUtils.setMainSystem({ system: systemId })
+
+      if(!systemId){
+        kChartUtils.setMainCoiling({coiling: []})
+      }
+
+    }
+  }, [indicators])
 
   return (
     <div className="flex items-center space-x-4 w-full">
