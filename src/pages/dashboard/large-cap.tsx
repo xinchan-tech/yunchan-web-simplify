@@ -176,7 +176,7 @@ const LargeCap = () => {
         </div>
       </div>
       <div className="flex-1 relative">
-        <div onDoubleClick={onChartDoubleClick} className="w-full h-full">
+        <div onDoubleClick={onChartDoubleClick} className="w-full h-full p-2 box-border">
           <LargeCapChart code={activeStock} type={stockType} />
         </div>
         {activeKey !== '大盘指数' && (
