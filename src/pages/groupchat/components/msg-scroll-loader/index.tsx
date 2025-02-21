@@ -15,10 +15,12 @@ export interface MsgScrollLoaderProps<T, P> {
   afterFetch?: (data: T[]) => T[]
   fetchParams: P
   rowKey: string
+  rowKeyPerfix?: string
+  onMessageChange?: (messages: T[]) => void
 }
 
 const MsgScrollLoader = <T, P extends Record<string, any>>(props: MsgScrollLoaderProps<T, P>): React.ReactNode => {
-  const { renderItem, onPageChange, fetchData, fetchParams, rowKey } = props
+  const { renderItem, onPageChange, fetchData, fetchParams, rowKey, rowKeyPerfix } = props
   const scrollDomRef = useRef<HTMLDivElement>(null)
   const jumpOpioionId = useRef<string | null>(null)
   const [loading, setLoading] = useState(false)
@@ -33,12 +35,19 @@ const MsgScrollLoader = <T, P extends Record<string, any>>(props: MsgScrollLoade
     }
   }, [fetchParams])
 
+  const judgeNotOver = () => {
+    if (scrollDomRef.current) {
+      return scrollDomRef.current.scrollHeight <= scrollDomRef.current.offsetHeight
+    }
+    return true
+  }
+
   const pullLatest = async (params: P) => {
     try {
       const res = await fetchData(params)
 
       if (res.length > 0) {
-        // 去重，只把老数据里不包含的opinion加进去
+        // 去重，
         let newPart = res.filter(item => {
           const transItem = item as T & { [rowKey: string]: string }
           return (
@@ -83,7 +92,7 @@ const MsgScrollLoader = <T, P extends Record<string, any>>(props: MsgScrollLoade
               }
               const newMessages = newPart.concat(messages)
               const target = messages[0] as T & { [rowKey: string]: string }
-              jumpOpioionId.current = target[rowKey]
+              jumpOpioionId.current = rowKeyPerfix + target[rowKey]
 
               setMessages(newMessages)
             } else {
@@ -119,6 +128,12 @@ const MsgScrollLoader = <T, P extends Record<string, any>>(props: MsgScrollLoade
 
   useEffect(() => {
     if (Array.isArray(messages) && messages.length > 0) {
+      // 第一屏不够高时，再查一遍前面的信息
+
+      const notOver = judgeNotOver()
+      if (notOver) {
+        pullBeforeData()
+      }
       if (jumpOpioionId.current) {
         const targetID = jumpOpioionId.current
         const target = document.getElementById(targetID)
@@ -134,6 +149,7 @@ const MsgScrollLoader = <T, P extends Record<string, any>>(props: MsgScrollLoade
         scrollBottom()
       }
     }
+    typeof props.onMessageChange === 'function' && props.onMessageChange(messages)
   }, [messages])
 
   return (

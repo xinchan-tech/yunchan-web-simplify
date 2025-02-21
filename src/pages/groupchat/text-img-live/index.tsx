@@ -216,6 +216,7 @@ const TextImgLive = () => {
       )}
       <MsgScrollLoader
         rowKey="id"
+        rowKeyPerfix="opinion"
         id="scroll-content-opinion"
         reverse
         fetchParams={fetchParams}
@@ -227,7 +228,7 @@ const TextImgLive = () => {
         }}
         renderItem={(item: opinionItem) => {
           return (
-            <div key={item.id} className="opinion-item mb-10" id={item.id}>
+            <div key={`opinion${item.id}`} className="opinion-item mb-10" id={`opinion${item.id}`}>
               <div className="avatar-info flex items-center mb-3">
                 <div className="avatar-img mr-2">评</div>
                 <div className="mr-2 teacher-name">{item.user.username}</div>

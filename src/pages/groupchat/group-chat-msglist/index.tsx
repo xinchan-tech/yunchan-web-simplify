@@ -18,7 +18,6 @@ import ImageCell from '../Messages/Image'
 // import SystemCell from "../Messages/system";
 import TextCell from '../Messages/text'
 
-import { MessageWrap } from '../Service/Model'
 import ReplyMsg from '../components/reply-msg'
 import { cn } from '@/utils/style'
 import { judgeIsExitNoticeMessage, judgeIsExpireGroupCache, setExpireGroupInCache, sortMessages } from '../chat-utils'
@@ -48,7 +47,6 @@ const GroupChatMsgList = forwardRef((props, ref) => {
 
   const jumpMsgIdRef = useRef('') // 加载上一页消息后滚动条会自动滚到最前面，要用
   const [messageFetching, setMessageFetching] = useState(false)
-  const initOverFlag = useRef(true)
 
   const locatedMessageIdRef = useRef('')
   const { setFilterMode, groupDetailData, setLocatedMessageId, locatedMessageId, messages, setMessages, filterMode } =
@@ -68,9 +66,9 @@ const GroupChatMsgList = forwardRef((props, ref) => {
   const messagesRef = useRef<Message[]>([])
   const getMessage = (m: Message) => {
     let text: string | ReactNode = ''
-    const messageWrap = new MessageWrap(m)
+
     if (m.content instanceof MessageText) {
-      text = <TextCell message={m} messageWrap={messageWrap} />
+      text = <TextCell message={m} />
     } else if (m.content instanceof MessageImage) {
       text = <ImageCell message={m} />
     } else if ([1001, 1005].includes(m.contentType)) {
@@ -393,7 +391,6 @@ const GroupChatMsgList = forwardRef((props, ref) => {
   useEffect(() => {
     if (Array.isArray(messages) && messages.length > 0) {
       // 第一屏不够高时，再查一遍前面的信息
-      initOverFlag.current = false
 
       const notOver = judgeNotOver()
       if (notOver) {

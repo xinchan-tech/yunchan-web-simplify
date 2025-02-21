@@ -1,11 +1,12 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import cacheManager from '../../messageCache'
 import MsgScrollLoader from '../msg-scroll-loader'
 import { type Message, MessageText, MessageImage, PullMode } from 'wukongimjssdk'
 import { Convert } from '../../Service/convert'
-import MsgCard from '../msg-card'
+
 import TextCell from '../../Messages/text'
 import ImageCell from '../../Messages/Image'
+import { Input, JknIcon } from '@/components'
 
 const LIMIT = 20
 
@@ -22,8 +23,6 @@ const filteRevokeMessages = (messages: Message[]) => {
         // 目标消息位置
         result.forEach((m, targetMessagePos) => {
           if (m.messageID === revokeMsgId) {
-            // revoke标志,到时渲染成 xxx 撤回了一条消息
-
             if (result[targetMessagePos]) {
               result[targetMessagePos].remoteExtra.revoke = true
               result[targetMessagePos].remoteExtra.extra.revoker = msg.fromUID
@@ -68,24 +67,56 @@ const ChatHistory = (props: { channelID: string }) => {
     }
     return []
   }
-  return (
-    <div className="p-4 h-[600px]">
-      <MsgScrollLoader
-        id="chat-history-container"
-        fetchParams={fetchParams}
-        rowKey="message"
-        fetchData={fetchData}
-        reverse={false}
-        renderItem={item => {
-          return (
-            <div id={item.clientMsgNo} key={item.clientMsgNo}>
-              {item.content instanceof MessageText && <TextCell message={item} />}
 
-              {item.content instanceof MessageImage && <ImageCell message={item} />}
-            </div>
-          )
-        }}
-      />
+  const firstMsg = useRef<Message | null>(null)
+  const handlePageChange = (page: number) => {
+    const params = {
+      limit: LIMIT,
+      mode: PullMode.Down,
+      start: (firstMsg.current?.messageSeq || 1) - 1,
+      end: 0
+    }
+    return params
+  }
+  const handleMessageChange = (messages: Message[]) => {
+    firstMsg.current = messages[0]
+  }
+
+  return (
+    <div className="p-4 h-[560px]">
+      {/* <div className="flex items-center justify-center h-[40px] border-dialog-border rounded-sm  bg-accent">
+        <JknIcon name="search" className="ml-4" />
+        <Input
+          className="border-none h-[40px] placeholder:text-tertiary"
+          placeholder="搜索"
+          onKeyDown={e => {
+            if (e.key === 'Enter') {
+            }
+          }}
+          size={'sm'}
+        />
+      </div> */}
+      <div className="h-full pt-4 box-border">
+        <MsgScrollLoader
+          id="chat-history-container"
+          fetchParams={fetchParams}
+          rowKey="clientMsgNo"
+          rowKeyPerfix="chathistory"
+          fetchData={fetchData}
+          onPageChange={handlePageChange}
+          onMessageChange={handleMessageChange}
+          reverse={false}
+          renderItem={item => {
+            return (
+              <div id={`chathistory${item.clientMsgNo}`} key={item.clientMsgNo}>
+                {item.content instanceof MessageText && <TextCell message={item} />}
+
+                {item.content instanceof MessageImage && <ImageCell message={item} />}
+              </div>
+            )
+          }}
+        />
+      </div>
     </div>
   )
 }
