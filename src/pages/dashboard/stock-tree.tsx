@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { getHotSectors, getPlateList, getUsStocks } from '@/api'
 import TreeMap from './components/tree-map'
 import Decimal from 'decimal.js'
-import { CapsuleTabs, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, JknIcon, Skeleton } from '@/components'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, JknIcon, Skeleton } from '@/components'
 import { useQuery } from '@tanstack/react-query'
 import { stockUtils, type StockSubscribeHandler } from '@/utils/stock'
 import { useStockQuoteSubscribe } from '@/hooks'
@@ -12,9 +12,9 @@ import { useStockQuoteSubscribe } from '@/hooks'
 type StockTreeType = 'industry' | 'concept' | 'bull' | 'etf' | 'industry-heatmap' | 'etf-heatmap'
 type StockTreeDate = 'day' | 'week' | 'month'
 
-const colors = ['#AC312E', '#782029', '#3a1a1f', '#59616C', '#1A3326', '#056636', '#089950']
+const colors = ['#AC312E', '#782029', '#3a1a1f', '#59616C', '#1A3326', '#089950', '#1A3326']
 
-const steps = ['-3', '-2', '-1', '0', '1', '2', '3']
+const steps = ['-3', '-2', '-1', '0', '0.1', '2', '3']
 
 const getColorByStep = (step: string | number) => {
   const n = new Decimal(step).times(100)
@@ -40,7 +40,7 @@ const StockTree = () => {
       getHotSectors({
         type: date,
         sector: type as 'industry' | 'concept',
-        top: 15,
+        top: 4,
         stock: ['1']
       }),
     refetchInterval: 30 * 1000,
@@ -256,7 +256,7 @@ const StockTree = () => {
         ) : ['industry-heatmap', 'etf-heatmap'].includes(type) ? (
           <div className="h-full overflow-hidden">
             {!queryPlate.isLoading ? (
-              <TreeMap data={dataPlate} />
+              <TreeMap data={dataPlate as any} />
             ) : (
               <div className="space-y-2">
                 <Skeleton className="h-4" />

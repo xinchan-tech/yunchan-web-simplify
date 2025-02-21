@@ -16,7 +16,7 @@ import { calcIndicator } from '@/utils/coiling'
 import { cn } from '@/utils/style'
 import { useQuery } from '@tanstack/react-query'
 import { nanoid } from 'nanoid'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useShallow } from 'zustand/react/shallow'
 import { type CoilingIndicatorId, type Indicator, kChartUtils, useKChartStore } from '../lib'
 import { chartEvent } from '../lib/event'
@@ -122,6 +122,10 @@ const MainIndicatorSelect = ({ indicators }: { indicators?: Awaited<ReturnType<t
       chartEvent.event.emit('indicatorChange', { index: currentIndex })
     })
   }
+
+  useEffect(() => {
+
+  }, [mainIndicators])
 
   return (
     <div className="flex items-center space-x-4 w-full">

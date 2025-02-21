@@ -1,3 +1,4 @@
+import { useToken } from '@/store'
 import request from '@/utils/request'
 import OSS from 'ali-oss'
 
@@ -32,15 +33,31 @@ class UploadUtil {
 
   init() {
     //接口获取token信息(签名url)
-    this.getOssToken()
+    // this.getOssToken()
+
+    const token = useToken.getState().token
+    let unSubscribe: any
+    if (!token) {
+      unSubscribe = useToken.subscribe(state => {
+        if (state.token) {
+          this.getOssToken()
+          unSubscribe?.()
+        }
+      })
+    } else {
+      this.getOssToken()
+    }
   }
 
   getOssToken() {
-    request.get('/upload/getOssToken').then(r => {
-      this.tokenRes = r.data
+    const token = useToken.getState().token
+    if (token) {
+      request.get('/upload/getOssToken').then(r => {
+        this.tokenRes = r.data
 
-      this.cos()
-    })
+        this.cos()
+      })
+    }
   }
 
   //腾讯云

@@ -29,7 +29,7 @@
     --input: 0 0 20%;
     --card: 0 0% 100%;
     --card-foreground: 222.2 47.4% 11.2%;
-    --primary: 224, 100%, 58%;
+    --primary: 224 100% 58%;
     --primary-foreground: 210 40% 98%;
     --secondary: 225 9% 9%;
     --secondary-foreground: 222.2 47.4% 11.2%;
@@ -100,7 +100,7 @@ body {
   color: hsl(var(--foreground));
   overflow-y: hidden;
   overflow-x: auto;
-  font-size: 14px;
+  font-size: 16px;
 
   :focus-visible {
     outline: none;

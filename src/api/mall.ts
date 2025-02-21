@@ -68,5 +68,5 @@ export const createMallProductOrder = (params: CreateMallProductOrderParams) => 
 }
 
 export const checkMallProductOrderStatus = (paySn: string) => {
-  return request.get<{ pay_status: 0 | 1 }>(`/order/pay/payStatus?pay_sn=${paySn}`).then(r => r.data)
+  return request.get<{ pay_status: '0' | '1' }>(`/order/pay/payStatus?pay_sn=${paySn}`).then(r => r.data)
 }

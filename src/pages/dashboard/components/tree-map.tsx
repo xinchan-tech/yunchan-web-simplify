@@ -26,18 +26,25 @@ type TreeMapData = {
    * 图片顶部像素
    */
   iconTop?: number
+  // /**
+  //  * symbol底部像素
+  //  */
+  // symbolLabelTop?: number
+  // /**
+  //  * symbol长度
+  //  */
+  // symbolLabelLen?: number
+  // /**
+  //  * price底部像素
+  //  */
+  // priceLabelTop?: number
   /**
-   * symbol底部像素
+   * 
    */
-  symbolLabelTop?: number
-  /**
-   * symbol长度
-   */
-  symbolLabelLen?: number
-  /**
-   * price底部像素
-   */
-  priceLabelTop?: number
+  percentText: string
+  percentSize: number
+  symbolText: string
+  symbolSize: number
   [key: string]: unknown
 }
 
@@ -50,9 +57,11 @@ interface TreeMapProps {
 
 const SINGLE_CHART_WIDTH = getStringWidth('树', '12px sans-serif')
 const ELLIPSIS_WIDTH = getStringWidth('...', '12px sans-serif')
+const ONE_PX_WIDTH = getStringWidth('T', '1px sans-serif')
+
 
 const TreeMap = (props: TreeMapProps) => {
-  const listMap = useStockList(s => s.listMap)
+  // const listMap = useStockList(s => s.listMap)
   const chartRef = useRef<Selection<SVGSVGElement, unknown, null, undefined>>()
   const chartDomRef = useRef<HTMLDivElement>(null)
   const tipRef = useRef<HTMLDivElement>(null)
@@ -80,8 +89,9 @@ const TreeMap = (props: TreeMapProps) => {
   useEffect(() => {
     render(props.data)
 
-    const resizeObserver = new ResizeObserver(debounce({ delay: 1000 }, (entries) => {
+    const resizeObserver = new ResizeObserver(debounce({ delay: 20 }, (entries) => {
       const { width, height } = entries[0].contentRect
+  
       chartRef.current?.attr('width', width).attr('height', height)
       if (sizeRef.current.width === width && sizeRef.current.height === height) {
         sizeRef.current.width = width
@@ -110,11 +120,11 @@ const TreeMap = (props: TreeMapProps) => {
     }
 
     const { clientWidth, clientHeight } = chartDomRef.current
-    const root = treemap<TreeMapData>().size([clientWidth, clientHeight]).padding(1).paddingTop(18)(hierarchy<TreeMapData>({ name: 'root', children: data }).sum(d => d.value ?? 0))
+    const root = treemap<TreeMapData>().size([clientWidth, clientHeight]).padding(1).paddingTop(24)(hierarchy<TreeMapData>({ name: 'root', children: data as any } as any).sum(d => d.value ?? 0))
     chartRef.current.selectAll('*').remove()
     renderRect(root)
     renderTitles(root)
-    renderIcon(root)
+    // renderIcon(root)
     renderLabel(root)
     renderPercent(root)
   }
@@ -141,7 +151,7 @@ const TreeMap = (props: TreeMapProps) => {
     chartRef.current!.selectAll('titles').data(root.descendants().filter(d => d.depth === 1)).enter()
       .append("text")
       .attr("x", (d) => d.x0)
-      .attr("y", (d) => d.y0 + 14)
+      .attr("y", (d) => d.y0 + 16)
       .text((d) => {
         const totalWidth = d.x1 - d.x0
         let title = `${d.data.name}`
@@ -164,157 +174,52 @@ const TreeMap = (props: TreeMapProps) => {
 
         return _title
       })
-      .attr("font-size", "12px")
-      .attr("fill", () => 'white')
+      .attr("font-size", "14px")
+      .attr("fill", () => '#B8B8B8')
 
-    chartRef.current!.selectAll('titles').data(root.descendants().filter(d => d.depth === 1)).enter()
-      .append("text")
-      .attr("x", (d) => d.x0 + (d.data.titleWidth ?? 0) + 2)
-      .attr("y", (d) => d.y0 + 14)
-      .text((d) => `${Decimal.create(d.data.data).mul(100).toDP(3).toNumber()}%`)
-      .attr("font-size", "12px")
-      .attr("fill", (d) => (d.data.data ?? 0) >= 0 ? 'hsl(var(--stock-up-color)' : 'hsl(var(--stock-down-color))')
+    // chartRef.current!.selectAll('titles').data(root.descendants().filter(d => d.depth === 1)).enter()
+    //   .append("text")
+    //   .attr("x", (d) => d.x0 + (d.data.titleWidth ?? 0) + 2)
+    //   .attr("y", (d) => d.y0 + 14)
+    //   .text((d) => `${Decimal.create(d.data.data).mul(100).toDP(3).toNumber()}%`)
+    //   .attr("font-size", "12px")
+    //   .attr("fill", (d) => (d.data.data ?? 0) >= 0 ? 'hsl(var(--stock-up-color)' : 'hsl(var(--stock-down-color))')
 
   }
 
   const renderLabel = (root: HierarchyRectangularNode<TreeMapData>) => {
     chartRef.current!
       .selectAll("labels")
-      .data(root.leaves().filter(d => !!d.data.symbolLabelTop))
+      .data(root.leaves())
       .enter()
       .append("text")
       .attr("x", (d) => {
+        const text = d.data.name
         const rectWidth = d.x1 - d.x0
-        if (rectWidth < 4) {
-          d.data.symbolLabelLen = 0
-          return 0
+        const maxTextWidth = rectWidth * .6
+        let textSize = Math.floor(maxTextWidth / text.length / ONE_PX_WIDTH)
+
+        if (textSize < 12) {
+          textSize = 12
         }
 
-        let textWidth = getStringWidth(d.data.name, '12px sans-serif')
-
-        let count = d.data.name.length
-
-        if (textWidth > rectWidth) {
-          count = Math.floor((rectWidth - ELLIPSIS_WIDTH) / SINGLE_CHART_WIDTH)
-          d.data.symbolLabelLen = count
-          textWidth = getStringWidth(`${d.data.name.slice(0, count)}...`, '12px sans-serif')
+        if(textSize > 32){
+          textSize = 32
         }
 
-        return d.x0 + (d.x1 - d.x0) / 2 - textWidth / 2
+        const textWidth = getStringWidth(text, `${textSize}px sans-serif`)
+        d.data.symbolSize = textSize
+        d.data.symbolText = text
+        return d.x0 + (rectWidth - textWidth) / 2
       })    // +10 to adjust position (more right)
-      .attr("y", (d) => d.data.symbolLabelTop!)
+      .attr("y", (d) => {
+        return d.y0 + (d.y1 - d.y0) / 2
+      })
       .text((d) => {
-        if (d.data.symbolLabelLen) {
-          return `${d.data.name.slice(0, d.data.symbolLabelLen)}...`
-        }
-
-        if (d.data.symbolLabelLen === 0) {
-          return ''
-        }
         return d.data.name
       })
-      .attr("font-size", "12px")
+      .attr("font-size", d => `${d.data.symbolSize}px`)
       .attr("fill", "white").on('dblclick', (_, d) => {
-        router.navigate(`/stock/trading?symbol=${d.data.name}`)
-      })
-  }
-
-  const renderIcon = (root: HierarchyRectangularNode<TreeMapData>) => {
-    chartRef.current!
-      .selectAll("icons")
-      .data(root.leaves().filter(d => {
-        const rectWidth = d.x1 - d.x0
-        const rectHeight = d.y1 - d.y0
-        d.data.iconTop = undefined
-        d.data.symbolLabelTop = undefined
-        d.data.priceLabelTop = undefined
-        d.data.symbolLabelLen = undefined
-
-        /**
-         * label格式: icon + padding + label + padding + percent
-         * padding = 2
-         * labelHeight = 12 * 1.2
-         * percentHeight = 10 * 1.2
-         * 优先级： icon + label + percent > icon+percent > label + percent > icon > label
-         */
-        // let imgSize = Math.min(rectWidth / 2, rectHeight / 2)
-        // const icon = listMap[d.data.name]
-
-        // if (!icon?.[0]) {
-        //   imgSize = 0
-        // }
-        const imgSize = 0
-
-        const padding = 2
-        const labelHeight = 12 * 1.2
-        const percentHeight = 10 * 1.2
-
-        let totalHeight = imgSize + (imgSize ? padding : 0) + labelHeight + padding + percentHeight
-
-        if (imgSize !== 0) {
-          if (totalHeight < rectHeight - 6) {
-            // icon + label + percent 
-            const top = d.y0 + (rectHeight - totalHeight) / 2
-            d.data.iconTop = top
-            d.data.symbolLabelTop = top + imgSize + padding + labelHeight
-            d.data.priceLabelTop = top + imgSize + padding + labelHeight + padding + percentHeight
-          } else if (totalHeight - labelHeight - padding < rectHeight - 6) {
-            // icon + percent
-            totalHeight = imgSize + padding + percentHeight
-            const top = d.y0 + (rectHeight - totalHeight) / 2
-            d.data.iconTop = top
-            d.data.priceLabelTop = top + imgSize + percentHeight
-          } else if (totalHeight - imgSize - padding < rectHeight - 6) {
-            // label + percent
-            totalHeight = labelHeight + padding + percentHeight
-            const top = d.y0 + (rectHeight - totalHeight) / 2
-            d.data.symbolLabelTop = top + labelHeight
-            d.data.priceLabelTop = top + labelHeight + padding + percentHeight
-          } else if (imgSize < rectHeight - 6) {
-            // icon
-            const top = d.y0 + (rectHeight - imgSize) / 2
-            d.data.iconTop = top
-          } else if (labelHeight < rectHeight - 6) {
-            // label
-            const top = d.y0 + (rectHeight - labelHeight) / 2
-            d.data.symbolLabelTop = top
-          }
-        } else {
-          if (totalHeight < rectHeight - 6) {
-            // label + percent
-            const top = d.y0 + (rectHeight - labelHeight) / 2
-            d.data.symbolLabelTop = top + labelHeight / 2
-            d.data.priceLabelTop = d.data.symbolLabelTop + padding + percentHeight
-          } else if (labelHeight < rectHeight - 6) {
-            // label
-            const top = d.y0 + (rectHeight - labelHeight) / 2
-            d.data.symbolLabelTop = top + labelHeight / 2 + 2
-          } else if (percentHeight < rectHeight - 6) {
-            // percent
-            const top = d.y0 + (rectHeight - percentHeight) / 2
-            d.data.priceLabelTop = top
-          }
-        }
-
-        if (!d.data.iconTop) return false
-
-        return false
-        // if (!icon?.[0]) {
-        //   return false
-        // }
-
-        // d.data.size = imgSize
-        // d.data.img = import.meta.env.PUBLIC_BASE_ICON_URL + icon[0]
-        // return true
-      }))
-      .enter()
-      .append("image")
-      .attr("x", (d) => d.x0 + (d.x1 - d.x0) / 2 - d.data.size! / 2)    // +10 to adjust position (more right)
-      .attr("y", (d) => d.data.iconTop!)
-      .attr("width", (d) => d.data.size!)
-      .attr("height", (d) => d.data.size!)
-      .attr('href', (d) => d.data.img!)
-      .attr('clip-path', d => `inset(0% round ${d.data.size!}px)`).on('dblclick', (_, d) => {
         router.navigate(`/stock/trading?symbol=${d.data.name}`)
       })
   }
@@ -322,29 +227,37 @@ const TreeMap = (props: TreeMapProps) => {
   const renderPercent = (root: HierarchyRectangularNode<TreeMapData>) => {
     chartRef.current!
       .selectAll("percent")
-      .data(root.leaves().filter(d => !!d.data.priceLabelTop))
+      .data(root.leaves())
       .enter()
       .append("text")
       .text((d) => {
-        const text = `${Decimal.create(d.data.data)}%`
-        const textWidth = getStringWidth(text, '10px sans-serif')
+        const text = `${Decimal.create(d.data.data).gt(0) ? '+' : ''}${Decimal.create(d.data.data)}%`
         const rectWidth = d.x1 - d.x0
-
-        if (textWidth > rectWidth) {
-          return ''
+        const maxTextWidth = rectWidth * .4
+        let textSize = Math.floor(maxTextWidth / text.length / ONE_PX_WIDTH)
+        if (textSize < 10) {
+          textSize = 10
         }
 
-        return (Decimal.create(d.data.data).gt(0) ? '+' : '') + text
+        if(textSize > 20){
+          textSize = 20
+        }
+        d.data.percentSize = textSize
+        d.data.percentText = text
+        return text
       })
       .attr("x", (d) => {
-        const text = `${Decimal.create(d.data.data)}%`
-        const textWidth = getStringWidth(text, '10px sans-serif')
-        const rectWidth = d.x1 - d.x0
+        const text = d.data.percentText
 
-        return d.x0 + rectWidth / 2 - textWidth / 2
+        const rectWidth = d.x1 - d.x0
+        const textSize = d.data.percentSize
+        const textWidth = getStringWidth(text, `${textSize}px sans-serif`)
+        return d.x0 + (rectWidth - textWidth) / 2
       })
-      .attr("y", (d) => d.data.priceLabelTop!)
-      .attr("font-size", "10px")
+      .attr("y", (d) => {
+        return d.y0 + (d.y1 - d.y0) / 2 + d.data.percentSize + 10
+      })
+      .attr("font-size", (d) => `${d.data.percentSize}px`)
       // .attr("fill", d => (d.data.data ?? 0) >= 0 ? 'hsl(var(--stock-up-color)' : 'hsl(var(--stock-down-color))')
       .attr("fill", () => '#fff')
       .on('dblclick', (_, d) => {
@@ -354,7 +267,7 @@ const TreeMap = (props: TreeMapProps) => {
 
   return (
     <div className="w-full h-full overflow-hidden relative" >
-      <div ref={chartDomRef} className="w-full h-full overflow-hidden" />
+      <div ref={chartDomRef} className="w-full overflow-hidden absolute -top-6 bottom-0 left-0 right-0" />
       <div className="absolute top-0 left-0" ref={tipRef} />
     </div>
   )

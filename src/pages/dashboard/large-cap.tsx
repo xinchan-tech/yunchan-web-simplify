@@ -8,7 +8,6 @@ import { type StockTrading, stockUtils } from '@/utils/stock'
 import { cn, colorUtil } from '@/utils/style'
 import { useQuery } from '@tanstack/react-query'
 import { useMount, useSize, useUnmount, useUpdateEffect } from 'ahooks'
-import clsx from 'clsx'
 import dayjs from 'dayjs'
 import Decimal from 'decimal.js'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
@@ -140,7 +139,7 @@ const LargeCap = () => {
               key={stock.name}
               data-stock-symbol={stock.symbol}
               className={cn(
-                'large-cap-stock-select hover:bg-hover text-center py-1.5 px-3 box-border cursor-pointer transition-all duration-300 w-[190px] h-[51px] flex items-center flex-shrink-0 rounded-[300px]',
+                'large-cap-stock-select hover:bg-hover text-center py-1.5 px-3 box-border cursor-pointer transition-all duration-300 w-[220px] h-[51px] flex items-center flex-shrink-0 rounded-[300px]',
                 {
                   'bg-accent': activeStock === stock.symbol
                 }
@@ -148,10 +147,10 @@ const LargeCap = () => {
               onClick={() => onActiveStockChange(stock.symbol)}
               onKeyDown={() => { }}
             >
-              <JknIcon.Stock symbol={stock.symbol} />
-              <div className="ml-3">
-                <span className="text-sm">{stock.name}</span>
-                <div className="flex items-center mt-1 text-xs space-x-2">
+              <JknIcon.Stock symbol={stock.symbol} className="w-[28px] h-[28px]" />
+              <div className="ml-3 flex flex-col">
+                <span className="text-sm text-left">{stock.name}</span>
+                <div className="flex items-center mt-1 space-x-2">
                   <SubscribeSpan.Price
                     initValue={stock.close}
                     symbol={stock.symbol}
@@ -160,6 +159,7 @@ const LargeCap = () => {
                     arrow
                   />
                   <SubscribeSpan.Percent
+                    className="text-sm"
                     initValue={stockUtils.getPercent(stock)}
                     symbol={stock.symbol}
                     initDirection={stockUtils.isUp(stock)}
@@ -180,7 +180,7 @@ const LargeCap = () => {
           <LargeCapChart code={activeStock} type={stockType} />
         </div>
         {activeKey !== '大盘指数' && (
-          <div className="absolute bottom-6 left-12 border border-solid border-border rounded p-0.5">
+          <div className="absolute bottom-8 left-4 border border-solid border-border rounded p-0.5">
             <CapsuleTabs
               type="text"
               activeKey={stockType.toString()}
@@ -358,7 +358,6 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
                   type: 'dashed'
                 },
                 label: {
-                  position: 'start',
                   formatter: `{${lastPercent > 0 ? 'u' : 'd'}|${lastPrice.toFixed(2)}}`,
                   rich: {
                     u: {
@@ -380,35 +379,35 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
                   }
                 }
               },
-              {
-                yAxis: lastPrice,
-                lineStyle: {
-                  color: `rgba(${style.r}, ${style.g}, ${style.b} , 1)`,
-                  width: 1,
-                  type: 'dashed'
-                },
-                label: {
-                  formatter: `{${lastPercent > 0 ? 'u' : 'd'}|${lastPercent > 0 ? '+' : ''}${(lastPercent * 100).toFixed(2)}%}`,
-                  rich: {
-                    u: {
-                      backgroundColor: stockUpColor,
-                      width: '100%',
-                      color: '#fff',
-                      padding: 3,
-                      fontSize: 10,
-                      // borderRadius: 2
-                    },
-                    d: {
-                      backgroundColor: stockDownColor,
-                      width: '100%',
-                      color: '#fff',
-                      padding: 3,
-                      fontSize: 10,
-                      // borderRadius: 2
-                    }
-                  }
-                }
-              }
+              // {
+              //   yAxis: lastPrice,
+              //   lineStyle: {
+              //     color: `rgba(${style.r}, ${style.g}, ${style.b} , 1)`,
+              //     width: 1,
+              //     type: 'dashed'
+              //   },
+              //   label: {
+              //     formatter: `{${lastPercent > 0 ? 'u' : 'd'}|${lastPercent > 0 ? '+' : ''}${(lastPercent * 100).toFixed(2)}%}`,
+              //     rich: {
+              //       u: {
+              //         backgroundColor: stockUpColor,
+              //         width: '100%',
+              //         color: '#fff',
+              //         padding: 3,
+              //         fontSize: 10,
+              //         // borderRadius: 2
+              //       },
+              //       d: {
+              //         backgroundColor: stockDownColor,
+              //         width: '100%',
+              //         color: '#fff',
+              //         padding: 3,
+              //         fontSize: 10,
+              //         // borderRadius: 2
+              //       }
+              //     }
+              //   }
+              // }
             ]
           }
         },
@@ -425,7 +424,7 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
 
   const options: ECOption = {
     grid: {
-      left: 50,
+      left: 10,
       right: 50,
       top: '15',
       bottom: 24
@@ -468,6 +467,7 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
         }
       },
       axisLabel: {
+        alignMinLabel: 'left',
         interval(index) {
           return index % 30 === 0
         },
@@ -514,6 +514,8 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
       {
         splitNumber: 8,
         scale: true,
+        position: 'right',
+        show: true,
         axisLine: {
           show: false,
           lineStyle: {
@@ -544,6 +546,7 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
         splitNumber: 8,
         position: 'right',
         scale: true,
+        show: false,
         axisPointer: {
           lineStyle: {
             color: '#404040',

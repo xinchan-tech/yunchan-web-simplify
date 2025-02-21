@@ -167,7 +167,7 @@ const App = () => {
       {
         inviteModal.contenxt
       }
-      <div className="flex flex-col h-full overflow-hidden">
+      <div className="flex flex-col h-full overflow-hidden w-full">
         <div className="header relative z-10 px-2.5 mr-1 flex items-center flex-shrink-0 h-[30px]">
           <div className="w-[120px] mt-1.5"><img className="w-full h-full" src={LogoTitle} /></div>
           <Separator orientation="vertical" className="mx-4 h-3 bg-[#2E2E2E]" />
@@ -187,36 +187,39 @@ const App = () => {
           <div className="flex items-center h-full space-x-2xl ml-auto">
             <HeaderMall />
             <HeaderService />
+            <HeaderUser />
           </div>
         </div>
 
-        <div className="flex-1 overflow-hidden flex">
+        <div className="flex-1 overflow-hidden flex bg-accent">
           <div className="w-[40px] flex-shrink-0 bg-accent pt-1">
             <div className="h-full bg-background w-full space-y-4 flex flex-col items-center pt-4 rounded-tr-xs">
-              <HeaderUser />
+
               <Menu />
             </div>
           </div>
 
           <div className="flex-1 overflow-hidden flex flex-col">
-            <div className="bg-muted flex-1 overflow-hidden">
-              <Outlet />
+            <div className="flex-1 overflow-hidden p-1 box-border">
+              <div className="bg-muted rounded-xs overflow-hidden w-full h-full">
+                <Outlet />
+              </div>
             </div>
 
-            <div className="footer bg-accent px-1 box-border">
+            <div className="footer px-1 box-border">
               <Footer />
+            </div>
+          </div>
+
+          <div className="w-[40px] flex-shrink-0 flex flex-col mt-1 bg-background rounded-tl-xs">
+            <MenuRight />
+            <div className="mt-auto">
+              <AiAlarmNotice />
             </div>
           </div>
         </div>
       </div>
-      <div className="w-[40px] flex-shrink-0 flex flex-col">
 
-        <MenuRight />
-
-        <div className="mt-auto">
-          <AiAlarmNotice />
-        </div>
-      </div>
       {/* 
       <div className="main overflow-hidden">
 

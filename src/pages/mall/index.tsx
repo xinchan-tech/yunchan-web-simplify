@@ -30,7 +30,7 @@ const subscribeTypes = [
 const versions = [
   { name: '旗舰达人', value: 'basic' },
   { name: '量化精英', value: 'plus' },
-  // { name: '聊天社群', value: 'group' },
+  { name: '聊天社群', value: 'group' },
   { name: '增值包', value: 'increment' }
 ]
 
@@ -199,7 +199,7 @@ const CashierPage = ({ types }: { types: string[] }) => {
 
     const r = await checkMallProductOrderStatus(paySn)
 
-    if (r.pay_status === 1) {
+    if (r.pay_status === '1') {
       setFalse()
       toast({ description: '支付成功' })
       //重载页面

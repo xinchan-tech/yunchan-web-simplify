@@ -326,7 +326,7 @@ export const getStockChartV2 = async (params: GetStockChartV2Params) => {
 getStockChartV2.cacheKey = 'stock:kline:v2'
 
 export const getStockChartQuote = async (symbol: string, period: 'pre' | 'intraday' | 'post'| '5d' | number , time_format = 'int' ) => {
-  console.log(period)
+
   const _period = isString(period) ? period : period === StockChartInterval.PRE_MARKET ? 'pre' : period === StockChartInterval.INTRA_DAY ? 'intraday' : period === StockChartInterval.AFTER_HOURS ? 'post' : '5d'
   const params = { symbol, _period, time_format }
   const paramsKeySort = Object.keys(params).sort() as (keyof typeof params)[]
@@ -1812,3 +1812,21 @@ export const getStockPush = (params: GetStockPushParams) => {
   return request.get<GetStockPushResult[]>('/push/index', { params }).then(r => r.data)
 }
 getStockPush.cacheKey = 'push:index'
+
+
+type GetPalTopResult = {
+  create_time: number
+  en_name: string
+  id: number
+  name: string
+  score: number
+  symbol: string
+  update_time: number
+}
+/**
+ * 热力榜单
+ */
+export const getPalTop = (date?: string) => {
+  return request.get<GetPalTopResult[]>('/pal/top', { params: { date } }).then(r => r.data)
+}
+getPalTop.cacheKey = 'pal:top'

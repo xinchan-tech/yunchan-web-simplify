@@ -71,7 +71,7 @@ const MenuRight = () => {
   }
 
   return (
-    <div className="pt-10">
+    <div className="mt-3">
       {menus.map(item => (
         <div
           key={item.title}

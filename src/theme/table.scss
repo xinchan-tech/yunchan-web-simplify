@@ -34,7 +34,7 @@ $dark-table-body-background: transparent;
 .rc-table {
   position: relative;
   box-sizing: border-box;
-  font-size: 14px;
+  font-size: 1rem;
   line-height: 1.4;
   color: hsl(var(--foreground));
 
@@ -222,7 +222,7 @@ $dark-table-body-background: transparent;
 }
 .rc-table tbody tr td {
   background: transparent;
-  font-size: 14px;
+  font-size: 1rem;
 }
 // .rc-table tbody tr th {
 //   background: #1e1f22;

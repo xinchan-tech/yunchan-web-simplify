@@ -24,7 +24,7 @@ export const GroupPage = (props: GroupPageProps) => {
   })
 
   const getPrice = (id: string) => {
-    const products = channels.data?.items.find(channel => channel.id === id)?.products
+    const products = channels.data?.find(channel => channel.id === id)?.products
 
     if (!products) {
       return ''
@@ -55,7 +55,7 @@ export const GroupPage = (props: GroupPageProps) => {
   return (
     <div>
       <div className="grid grid-cols-2 gap-4">
-        {channels.data?.items.map(channel => (
+        {channels.data?.map(channel => (
           <div key={channel.id} className="bg-background rounded-xl p-4 flex items-center w-[500px]">
             <div>
               {channel.avatar ? (

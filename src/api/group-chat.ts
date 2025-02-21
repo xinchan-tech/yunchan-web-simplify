@@ -18,6 +18,13 @@ export type GroupChannelItem = {
   tags: string
   total_user: string
   in_channel: number
+  products: {
+    channel_id: string
+    price: string
+    product_sn: string
+    type: string
+    unit: string
+  }[]
 }
 
 export type GroupChannelsResult = PageResult<GroupChannelItem>
