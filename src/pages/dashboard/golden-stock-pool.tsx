@@ -1,5 +1,5 @@
 import { getStockCollects } from "@/api"
-import { Button, CollectCapsuleTabs, CollectDropdownMenu, JknRcTable, StockView, SubscribeSpan } from "@/components"
+import { Button, CollectDropdownMenu, JknRcTable, StockView, SubscribeSpan } from "@/components"
 import { useStockQuoteSubscribe, useTableData, useTableRowClickToStockTrading } from "@/hooks"
 import { useToken } from "@/store"
 import { appEvent } from "@/utils/event"
@@ -71,7 +71,7 @@ const GoldenStockPool = () => {
 
   return (
     <div className="w-full h-full flex flex-col overflow-hidden">
-      <div className="flex items-center px-1 py-2">
+      <div className="flex items-center px-3 py-3 border-b-default">
         <CollectDropdownMenu activeKey={type} onChange={setType} />
       </div>
       <div className="flex-1 overflow-hidden">

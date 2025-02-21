@@ -24,6 +24,7 @@ import { HeaderMall } from './components/header/mall'
 import { useJoinGroupByInviteCode } from "./pages/groupchat/hooks"
 import { router, routes } from './router'
 import { useConfig, useToken, useUser } from './store'
+import LogoTitle from '@/assets/image/logo-title.png'
 
 export const CHAT_STOCK_JUMP = 'chat_stock_jump'
 export const CHAT_TO_APP_REFRESH_USER = 'chat_to_app_refresh_user'
@@ -165,13 +166,10 @@ const App = () => {
       {
         inviteModal.contenxt
       }
-      <div className="w-[40px] flex-shrink-0 flex flex-col items-center space-y-4 pt-4">
-        <HeaderUser />
-        <Menu />
-      </div>
-      <div className="flex-1 overflow-hidden flex flex-col">
-        <div className="header relative z-10 px-4">
-          <div className="search float-left flex items-center h-full">
+      <div className="flex flex-col h-full overflow-hidden">
+        <div className="header relative z-10 px-2.5 mr-1 flex items-center">
+          <div className="w-[120px] mt-1.5"><img className="w-full h-full" src={LogoTitle} /></div>
+          <div className="search float-left flex items-center h-full ml-auto">
             <StockSelect
               size="mini"
               placeholder={t('search.stocks')}
@@ -179,22 +177,33 @@ const App = () => {
             />
           </div>
 
-          <div className="absolute top-0 left-0 h-full w-full text-center flex justify-center items-center -z-10">
+          {/* <div className="absolute top-0 left-0 h-full w-full text-center flex justify-center items-center -z-10">
             <img src={Logo} alt="logo" className="w-6 h-6 mr-2" />
             <AppTitle />
-          </div>
-          <div className="float-right flex items-center h-full space-x-2xl">
+          </div> */}
+          <div className="flex items-center h-full space-x-2xl ml-4">
             <HeaderMall />
             <HeaderService />
           </div>
         </div>
 
-        <div className="bg-muted flex-1 overflow-hidden">
-          <Outlet />
-        </div>
+        <div className="flex-1 overflow-hidden flex justify-stretch">
+          <div className="w-[40px] flex-shrink-0 bg-accent pt-1">
+            <div className="h-full bg-background w-full space-y-4 flex flex-col items-center pt-4">
+              <HeaderUser />
+              <Menu />
+            </div>
+          </div>
 
-        <div className="footer border-style-primary">
-          <Footer />
+          <div className="flex-1 overflow-hidden flex flex-col">
+            <div className="bg-muted flex-1 overflow-hidden">
+              <Outlet />
+            </div>
+
+            <div className="footer bg-accent px-1 box-border">
+              <Footer />
+            </div>
+          </div>
         </div>
       </div>
       <div className="w-[40px] flex-shrink-0 flex flex-col">

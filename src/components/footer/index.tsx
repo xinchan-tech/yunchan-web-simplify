@@ -11,7 +11,7 @@ export const Footer = () => {
     document.documentElement.classList.toggle('stock-color-reverse', config.setting.upOrDownColor === 'upRedAndDownGreen')
   }, [config.setting.upOrDownColor])
   return (
-    <div className="flex items-center h-full w-full">
+    <div className="flex items-center h-full w-full bg-background px-2">
       <StockBar />
       <div className="ml-auto pr-2">
         <FooterTime />

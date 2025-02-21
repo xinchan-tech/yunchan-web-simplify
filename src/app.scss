@@ -50,15 +50,15 @@
     /**
       * Dark theme colors
       */
-    --background: 0, 0%, 6%;
-    --foreground: 0, 0%, 86%;
+    --background: 0 0% 6%;
+    --foreground: 0 0% 86%;
     --muted: 225 9.09% 8.63%;
     --muted-foreground: 0 0% 100%;
-    --accent: 220 4% 14%;
+    --accent: 0 0% 18%;
     --accent-foreground: 210 40% 98%;
     --popover: var(--muted);
     --popover-foreground: var(--foreground);
-    --border: 0 0% 12%;
+    --border: 0 0% 10.59%;
     --input: 0 0% 58%;
     --card: 224 71% 4%;
     --card-foreground: 213 31% 91%;
@@ -72,7 +72,7 @@
     --ring: 216 34% 17%;
     --radius: 0.5rem;
     --active-color: 229 91% 58%;
-    --text-secondary: 0 0% 80%;
+    --text-secondary: 0 0% 72.16%;
     --text-tertiary: 0 0% 40%;
     --table: var(--muted);
     --table-header: 220 5% 12%;

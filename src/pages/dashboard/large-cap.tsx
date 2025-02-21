@@ -93,21 +93,34 @@ const LargeCap = () => {
 
     for (const item of largeCap.data) {
       for (const stock of item.stocks) {
-       if(stock.symbol === activeStock) {
-         r = item.category_name
-         break
-       }
+        if (stock.symbol === activeStock) {
+          r = item.category_name
+          break
+        }
       }
     }
 
     return r
   }, [largeCap.data, activeStock])
 
-  const onActiveStockChange = (s: string) => {
-
+  const onActiveStockChange = useCallback((s: string) => {
     setActiveStock(s)
     if (['SPX', 'IXIC', 'DJI'].includes(s)) {
       setStockType(StockChartInterval.INTRA_DAY)
+    }
+
+    const node = document.querySelector(`.large-cap-stock-select[data-stock-symbol="${s}"]`)
+
+    if (node) {
+      node.scrollIntoView({ behavior: 'smooth', inline: 'center' })
+    }
+  }, [])
+
+  const onNextStock = () => {
+    if (activeStock) {
+      const currentIndex = stocks.findIndex(stock => stock.symbol === activeStock)
+      const nextIndex = (currentIndex + 1) % stocks.length
+      onActiveStockChange(stocks[nextIndex].symbol)
     }
   }
 
@@ -119,8 +132,9 @@ const LargeCap = () => {
             {stocks.map(stock => (
               <div
                 key={stock.name}
+                data-stock-symbol={stock.symbol}
                 className={cn(
-                  'hover:bg-hover text-center py-1.5 px-2 cursor-pointer transition-all duration-300 w-[181px] h-[51px] flex items-center flex-shrink-0 rounded-[300px]',
+                  'large-cap-stock-select hover:bg-hover text-center py-1.5 px-3 box-border cursor-pointer transition-all duration-300 w-[190px] h-[51px] flex items-center flex-shrink-0 rounded-[300px]',
                   {
                     'bg-accent': activeStock === stock.symbol
                   }
@@ -129,7 +143,7 @@ const LargeCap = () => {
                 onKeyDown={() => { }}
               >
                 <JknIcon.Stock symbol={stock.symbol} />
-                <div className="ml-2">
+                <div className="ml-3">
                   <span className="text-sm">{stock.name}</span>
                   <div className="flex items-center mt-1 text-xs space-x-2">
                     <SubscribeSpan.Price
@@ -151,7 +165,7 @@ const LargeCap = () => {
             ))}
           </div>
         </div>
-        <div className="bg-accent rounded-full w-10 h-10 flex items-center justify-center mx-4 cursor-pointer">
+        <div className="bg-accent rounded-full w-10 h-10 flex items-center justify-center mx-4 cursor-pointer" onClick={onNextStock} onKeyDown={() => { }}>
           <JknIcon.Svg name="arrow-right" size={12} className="text-[#B8B8B8]" />
         </div>
       </div>
@@ -160,16 +174,16 @@ const LargeCap = () => {
           <LargeCapChart code={activeStock} type={stockType} />
         </div>
         {activeKey !== '大盘指数' && (
-          <div className="absolute top-2 left-12">
+          <div className="absolute bottom-6 left-12 border border-solid border-border rounded p-0.5">
             <CapsuleTabs
               type="text"
               activeKey={stockType.toString()}
               onChange={value => setStockType(+value as unknown as StockChartInterval)}
               activeColor="#DBDBDB"
             >
-              <CapsuleTabs.Tab className={cn('border border-solid border-transparent rounded-sm py-1 text-tertiary', stockType === StockChartInterval.PRE_MARKET && 'border-[#DBDBDB]')} value={StockChartInterval.PRE_MARKET.toString()} label={t('stockChart.before')} />
-              <CapsuleTabs.Tab className={cn('border border-solid border-transparent rounded-sm py-1 text-tertiary', stockType === StockChartInterval.INTRA_DAY && 'border-[#DBDBDB]')} value={StockChartInterval.INTRA_DAY.toString()} label={t('stockChart.in')} />
-              <CapsuleTabs.Tab className={cn('border border-solid border-transparent rounded-sm py-1 text-tertiary', stockType === StockChartInterval.AFTER_HOURS && 'border-[#DBDBDB]')} value={StockChartInterval.AFTER_HOURS.toString()} label={t('stockChart.after')} />
+              <CapsuleTabs.Tab className={cn('rounded-sm py-1 text-tertiary leading-5', stockType === StockChartInterval.PRE_MARKET && '!bg-accent')} value={StockChartInterval.PRE_MARKET.toString()} label={t('stockChart.before')} />
+              <CapsuleTabs.Tab className={cn('rounded-sm py-1 text-tertiary leading-5', stockType === StockChartInterval.INTRA_DAY && '!bg-accent')} value={StockChartInterval.INTRA_DAY.toString()} label={t('stockChart.in')} />
+              <CapsuleTabs.Tab className={cn('rounded-sm py-1 text-tertiary leading-5', stockType === StockChartInterval.AFTER_HOURS && '!bg-accent')} value={StockChartInterval.AFTER_HOURS.toString()} label={t('stockChart.after')} />
             </CapsuleTabs>
           </div>
         )}
@@ -197,7 +211,7 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
     }
     return t
   })(code, type)
-  console.log(type)
+
   const queryData = useQuery({
     queryKey: [getStockChartQuote.cacheKey, code, type],
     queryFn: () => getStockChartQuote(code!, type!),
@@ -345,17 +359,17 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
                       backgroundColor: stockUpColor,
                       width: '100%',
                       color: '#fff',
-                      padding: [1, 2, 1, 2],
+                      padding: 3,
                       fontSize: 10,
-                      borderRadius: 4
+                      // borderRadius: 4
                     },
                     d: {
                       backgroundColor: stockDownColor,
                       width: '100%',
                       color: '#fff',
                       fontSize: 10,
-                      padding: [1, 2, 1, 2],
-                      borderRadius: 4
+                      padding: 3,
+                      // borderRadius: 4
                     }
                   }
                 }
@@ -374,17 +388,17 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
                       backgroundColor: stockUpColor,
                       width: '100%',
                       color: '#fff',
-                      padding: [1, 2, 1, 2],
+                      padding: 3,
                       fontSize: 10,
-                      borderRadius: 2
+                      // borderRadius: 2
                     },
                     d: {
                       backgroundColor: stockDownColor,
                       width: '100%',
                       color: '#fff',
-                      padding: [1, 2, 1, 2],
+                      padding: 3,
                       fontSize: 10,
-                      borderRadius: 2
+                      // borderRadius: 2
                     }
                   }
                 }
@@ -426,13 +440,14 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
       data: [],
 
       splitLine: {
-        show: true,
+        show: false,
         lineStyle: {
           color: '#202020',
           type: 'dashed'
         }
       },
       axisLine: {
+        show: false,
         lineStyle: {
           color: '#202020'
         }
@@ -468,8 +483,8 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
         position: 'right',
         backgroundColor: '#777',
         color: '#fff',
-        padding: [0, 0, 0, 0],
-        borderRadius: 4,
+        padding: 0,
+        // borderRadius: 4,
         fontSize: 10,
         rich: {
           u: {
@@ -477,14 +492,14 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
             width: '100%',
             color: '#fff',
             padding: [2, 4, 2, 4],
-            borderRadius: 4
+            // borderRadius: 4
           },
           d: {
             backgroundColor: stockDownColor,
             width: '100%',
             color: '#fff',
             padding: [2, 4, 2, 4],
-            borderRadius: 4
+            // borderRadius: 4
           }
         }
       }
@@ -494,7 +509,7 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
         splitNumber: 8,
         scale: true,
         axisLine: {
-          show: true,
+          show: false,
           lineStyle: {
             color: '#202020',
             type: 'dashed'
@@ -507,7 +522,7 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
           }
         },
         splitLine: {
-          show: true,
+          show: false,
           lineStyle: {
             color: '#202020',
             type: 'dashed'
@@ -530,7 +545,7 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
           }
         },
         axisLine: {
-          show: true,
+          show: false,
           lineStyle: {
             color: '#202020',
             type: 'dashed'

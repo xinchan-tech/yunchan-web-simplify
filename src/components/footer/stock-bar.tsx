@@ -4,7 +4,7 @@ import { stockUtils } from "@/utils/stock"
 import { cn } from "@/utils/style"
 import { useQuery } from "@tanstack/react-query"
 import { useEffect, useState } from "react"
-import { NumSpanSubscribe } from "../num-span"
+import { NumSpanSubscribe, SubscribeSpan } from "../num-span"
 
 // const codes = ['IXIC', 'SPX', 'DJI']
 export const StockBar = () => {
@@ -37,13 +37,13 @@ export const StockBar = () => {
       {
         stockData?.map(item => (
           <span key={item.code}>
-            <span>{item.name}:</span>&nbsp;
+            <span className="text-secondary">{item.name}:</span>&nbsp;
             <span className={cn(item.percent >= 0 ? 'text-stock-up' : 'text-stock-down')}>
-              <NumSpanSubscribe code={item.code} field="close" value={item.price ?? 0} isPositive={item.percent >= 0} decimal={3} arrow />
+              <SubscribeSpan.Price symbol={item.code} initValue={item.price ?? 0} initDirection={item.percent > 0} decimal={3} arrow />
               {/* <JknIcon className="w-4 h-4 -mb-0.5" name={item.percent >= 0 ? 'ic_price_up_green' : 'ic_price_down_red'} /> */}
               &emsp;
-              <NumSpanSubscribe code={item.code} field={(v) => v.close - v.preClose} value={item.offset} isPositive={item.percent >= 0} symbol decimal={3} />&emsp;
-              <NumSpanSubscribe code={item.code} field="percent" value={item.percent * 100} decimal={2} isPositive={item.percent >= 0} percent symbol />&emsp;
+              <SubscribeSpan.Percent symbol={item.code} type="amount" initValue={item.offset} initDirection={item.percent > 0} decimal={3} />&emsp;
+              <SubscribeSpan.Percent symbol={item.code} initValue={item.percent * 100} initDirection={item.percent >= 0} decimal={2} />&emsp;
             </span>
           </span>
         ))

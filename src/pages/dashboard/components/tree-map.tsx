@@ -79,16 +79,16 @@ const TreeMap = (props: TreeMapProps) => {
 
   useEffect(() => {
     render(props.data)
-   
+
     const resizeObserver = new ResizeObserver(debounce({ delay: 1000 }, (entries) => {
       const { width, height } = entries[0].contentRect
       chartRef.current?.attr('width', width).attr('height', height)
-      if(sizeRef.current.width === width && sizeRef.current.height === height) {
+      if (sizeRef.current.width === width && sizeRef.current.height === height) {
         sizeRef.current.width = width
         sizeRef.current.height = height
         render(props.data)
       }
-  
+
     }))
 
     resizeObserver.observe(chartDomRef.current!)
@@ -237,12 +237,13 @@ const TreeMap = (props: TreeMapProps) => {
          * percentHeight = 10 * 1.2
          * 优先级： icon + label + percent > icon+percent > label + percent > icon > label
          */
-        let imgSize = Math.min(rectWidth / 2, rectHeight / 2)
-        const icon = listMap[d.data.name]
+        // let imgSize = Math.min(rectWidth / 2, rectHeight / 2)
+        // const icon = listMap[d.data.name]
 
-        if (!icon?.[0]) {
-          imgSize = 0
-        }
+        // if (!icon?.[0]) {
+        //   imgSize = 0
+        // }
+        const imgSize = 0
 
         const padding = 2
         const labelHeight = 12 * 1.2
@@ -297,13 +298,14 @@ const TreeMap = (props: TreeMapProps) => {
 
         if (!d.data.iconTop) return false
 
-        if (!icon?.[0]) {
-          return false
-        }
+        return false
+        // if (!icon?.[0]) {
+        //   return false
+        // }
 
-        d.data.size = imgSize
-        d.data.img = import.meta.env.PUBLIC_BASE_ICON_URL + icon[0]
-        return true
+        // d.data.size = imgSize
+        // d.data.img = import.meta.env.PUBLIC_BASE_ICON_URL + icon[0]
+        // return true
       }))
       .enter()
       .append("image")
@@ -332,7 +334,7 @@ const TreeMap = (props: TreeMapProps) => {
           return ''
         }
 
-        return text
+        return (Decimal.create(d.data.data).gt(0) ? '+' : '') + text
       })
       .attr("x", (d) => {
         const text = `${Decimal.create(d.data.data)}%`
@@ -343,7 +345,9 @@ const TreeMap = (props: TreeMapProps) => {
       })
       .attr("y", (d) => d.data.priceLabelTop!)
       .attr("font-size", "10px")
-      .attr("fill", d => (d.data.data ?? 0) >= 0 ? 'hsl(var(--stock-up-color)' : 'hsl(var(--stock-down-color))').on('dblclick', (_, d) => {
+      // .attr("fill", d => (d.data.data ?? 0) >= 0 ? 'hsl(var(--stock-up-color)' : 'hsl(var(--stock-down-color))')
+      .attr("fill", () => '#fff')
+      .on('dblclick', (_, d) => {
         router.navigate(`/stock/trading?symbol=${d.data.name}`)
       })
   }

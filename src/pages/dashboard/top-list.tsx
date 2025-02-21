@@ -228,10 +228,10 @@ const TopList = () => {
   ]
   return (
     <div className="w-full h-full flex flex-col">
-      <div className="px-1 py-2">
+      <div className="px-1 py-3 border-b-default">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <div className="inline-flex items-center space-x-2 px-2">
+            <div className="inline-flex items-center space-x-2 px-2 ">
               <span>{tabs.find(tab => tab.key === type.toString())?.label ?? '-'}</span>
               <JknIcon.Svg name="arrow-down" size={12} />
             </div>

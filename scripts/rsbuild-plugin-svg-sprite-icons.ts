@@ -14,6 +14,8 @@ const clearHeightWidth = /(width|height)="([^"]*)"/g
 const hasViewBox = /viewBox="[^"]*"/
 const clearReturn = /[\r\n]/g
 const strokeColor = /stroke="[^"]*"/g
+
+const fillColor = /fill="#[0-9A-Fa-f]{6}"/g
 // 查找并处理 SVG 文件
 function svgFind(directoryPath: string, idPrefix: string): string[] {
   const svgs: string[] = []
@@ -49,6 +51,15 @@ function svgFind(directoryPath: string, idPrefix: string): string[] {
  
       if (strokeColor.test(svgContent)) {
         svgContent = svgContent.replace(strokeColor, 'stroke="currentColor"')
+      }
+      if (fillColor.test(svgContent)) {
+        // fill="none"不替换
+        // if (svgContent.match(fillColor)?.[0].includes('none')) {
+        //   svgContent = svgContent.replace(fillColor, 'fill="none"')
+        // } else {
+        //   svgContent = svgContent.replace(fillColor, 'fill="currentColor"')
+        // }
+        svgContent = svgContent.replace(fillColor, 'fill="currentColor"')
       }
       svgs.push(svgContent)
     }

@@ -201,7 +201,7 @@ const StockTree = () => {
 
   return (
     <div className="h-full flex flex-col">
-      <div className="p-1 h-[34px] box-border flex items-center">
+      <div className="p-3 h-[40px] box-border flex items-center border-b-default">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <div className="flex items-center space-x-2 text-sm">
