@@ -147,7 +147,7 @@ const LargeCap = () => {
             key={stock.name}
             data-stock-symbol={stock.symbol}
             className={cn(
-              'large-cap-stock-select hover:bg-hover text-center py-1.5 px-3 box-border cursor-pointer transition-all duration-300 w-[220px] h-[51px] flex items-center flex-shrink-0 rounded-[300px]',
+              'large-cap-stock-select hover:bg-hover text-center py-3 px-3 box-border cursor-pointer transition-all duration-300 w-[220px] h-[57px] flex items-center flex-shrink-0 rounded-[300px]',
               {
                 'bg-accent': activeStock === stock.symbol
               }
@@ -269,10 +269,10 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
 
             const v = Decimal.create(params.value)
             const perv = v.minus(prevClose).div(prevClose).mul(100)
+          
             if (params.axisIndex === 0) {
               return `{${perv.gte(0) ? 'u' : 'd'}|${v.toFixed(2)}}`
             }
-            return `{${perv.gte(0) ? 'u' : 'd'}|${perv.gte(0) ? '+' : ''}${perv.toFixed(2)}%}`
           }
         }
       },
