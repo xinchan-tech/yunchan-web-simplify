@@ -18,10 +18,37 @@ type GetShoutOrdersParams = {
   direction?: 'up' | string
 }
 
+type GetShoutOrderResult = {
+  content: string
+  create_time: string
+  id: string
+  teacher: {
+    id: string
+    avatar: string
+    brief: string
+    name: string
+    uid: string
+  }
+  timezone: string
+  type: string
+}
+
 /**
  * 喊单列表
  */
 export const getShoutOrders = (params: GetShoutOrdersParams) => {
-  return request.get('/shout/orders', { params }).then(r => r.data)
+  return request.get<PageResult<GetShoutOrderResult>>('/shout/orders', { params }).then(r => r.data)
 }
 getShoutOrders.cacheKey = 'shout:orders'
+
+/**
+ * 获取配置列表
+ *
+ * @param type 配置类型 0新手教程 1名师专栏 2名师推荐 3特色研报 4超短喊单 5喊单王 6牛股跟踪 7价值组合
+ */
+export const getTeacherGrades = (type: string) => {
+  return request
+    .get<{ id: string; name: string; type: string }[]>('/teacher/grades', { params: { type } })
+    .then(r => r.data)
+}
+getTeacherGrades.cacheKey = 'teacher:grades'

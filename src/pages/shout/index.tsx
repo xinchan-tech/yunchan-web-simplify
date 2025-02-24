@@ -1,18 +1,55 @@
-import { getShoutOrders } from "@/api"
+import { getShoutOrders, getTeacherGrades } from "@/api"
 import { Avatar, AvatarImage, JknIcon, ScrollArea } from "@/components"
 import { useUser } from "@/store"
 import { dateToWeek } from "@/utils/date"
-import { useQuery } from "@tanstack/react-query"
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query"
 import dayjs from "dayjs"
+import { useMemo } from "react"
 
 const Shout = () => {
-  const user = useUser(s => s.user)
-  const orders = useQuery({
+  const userGrades = useUser(s => s.user?.user_grade)
+  const teacher = useQuery({
+    queryKey: [getTeacherGrades.cacheKey],
+    queryFn: () => getTeacherGrades('5')
+  })
+
+  const grade = useMemo(() => {
+    if(!teacher.data) return
+    if(!userGrades?.length) return
+
+    const grades = teacher.data.filter((grade) => grade.type === '5')
+
+    if(!grades.length) return
+
+    const grade = grades.find((grade) => userGrades.includes(grade.id))?.id
+
+    return grade
+  }, [teacher.data, userGrades])
+
+  const orders = useInfiniteQuery({
     queryKey: [getShoutOrders.cacheKey],
-    queryFn: () => getShoutOrders({
-      grade_id: '24',
-      limit: 10
-    })
+    queryFn: (params) => {
+      if(params.pageParam !== 1){
+        console.log(params)
+      }
+      console.log(params)
+      return getShoutOrders({ grade_id: grade!, page: params.pageParam, limit: 100, direction: 'up' })
+    },
+    initialPageParam: 1,
+    getNextPageParam: (lastPage,_,lastPageParam) => {
+      return lastPage.total_pages >= lastPageParam ? lastPageParam + 1 : undefined
+    },
+    getPreviousPageParam: () => undefined,
+    enabled: !!grade,
+    select: (data) => {
+      return {
+        items: data.pages.flatMap((page) => {
+          const r = page.items
+          r.reverse()
+          return r
+        })
+      }
+    }
   })
 
   return (

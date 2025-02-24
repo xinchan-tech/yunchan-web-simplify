@@ -51,6 +51,8 @@ export type UserResult = {
   total_points: number
   points: number
   buy_inchannel_status: number
+
+  user_grade: string[]
 }
 
 export type Authorized = {
