@@ -1,8 +1,23 @@
 import { getUser } from '@/api'
 import { queryClient } from '@/utils/query-client'
-import { parsePermission, type UserPermission } from '@/utils/util'
+import { aesDecrypt } from '@/utils/string'
 import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
+
+export type UserPermission = {
+  overlayMark: string[]
+  backTestTime: number
+  stockPoolNum: number
+  stockPickGroup: string[]
+  stockPickMaxTime: number
+  stockPickMaxList: number
+  alarmMark: boolean
+  alarmEmail: boolean
+  textLive: boolean
+  vcomment: boolean
+  chat: boolean
+  stockCompare: boolean
+}
 
 type User = Omit<Awaited<ReturnType<typeof getUser>>, 'permission'> & {
   permission: UserPermission
@@ -30,7 +45,7 @@ export const useUser = create<UserStore>()(
             })
         })
 
-        const permission = parsePermission(res.permission)
+        const permission = parseUserPermission(res.permission)
         const user = {
           ...res,
           permission: permission
@@ -46,3 +61,28 @@ export const useUser = create<UserStore>()(
     }
   )
 )
+
+export const parseUserPermission = (str: string) => {
+  const permission = aesDecrypt(str)
+
+  let result: UserPermission = {
+    overlayMark: [],
+    backTestTime: 0,
+    stockPoolNum: 0,
+    stockPickGroup: [],
+    stockPickMaxTime: 0,
+    stockPickMaxList: 0,
+    alarmMark: false,
+    alarmEmail: false,
+    textLive: false,
+    vcomment: false,
+    chat: false,
+    stockCompare: false
+  }
+
+  try {
+    result = JSON.parse(permission)
+  } catch (er) {}
+
+  return result
+}

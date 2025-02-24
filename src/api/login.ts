@@ -1,5 +1,4 @@
-import request from "@/utils/request";
-import { UserPermission } from "@/utils/util";
+import type { UserPermission } from '@/store'
 import request from '@/utils/request'
 import qs from 'qs'
 

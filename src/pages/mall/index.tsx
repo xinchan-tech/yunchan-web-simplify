@@ -1,17 +1,18 @@
-import { checkMallProductOrderStatus, createMallProductOrder, getMallProducts } from '@/api'
+import { checkMallProductOrderStatus, createMallProductOrder, getMallProducts, getPaymentTypes } from '@/api'
 import {
   Button,
   JknIcon,
   Label,
   RadioGroup,
   RadioGroupItem,
+  Skeleton,
   ToggleGroup,
   ToggleGroupItem,
   useFormModal
 } from '@/components'
 import { useToast, useZForm } from '@/hooks'
-import { useQuery } from '@tanstack/react-query'
-import { type CSSProperties, useRef, useState } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { type CSSProperties, useEffect, useMemo, useRef, useState } from 'react'
 import { z } from 'zod'
 import { BasicPage } from './basic-page'
 import { GroupPage } from './group-page'
@@ -21,6 +22,7 @@ import { cn } from '@/utils/style'
 import { useBoolean, useMount } from 'ahooks'
 import to from 'await-to-js'
 import qs from "qs"
+import { IncrementPage } from "./increment-page"
 
 const subscribeTypes = [
   { name: '按年订阅', type: 'model_year' },
@@ -58,10 +60,18 @@ const MallPage = () => {
     model: ''
   })
 
+  const queryClient = useQueryClient()
+  useMount(() => {
+    queryClient.prefetchQuery({
+      queryKey: [getPaymentTypes.cacheKey],
+      queryFn: getPaymentTypes
+    })
+  })
+
   const cashier = useFormModal({
     form,
     title: '购买商品',
-    content: <CashierPage types={products.data?.payment ?? []} />,
+    content: <CashierPage />,
     closeIcon: true,
     closeOnMaskClick: false,
     footer: null,
@@ -145,10 +155,10 @@ const MallPage = () => {
             />
           ),
           group: <GroupPage title="聊天社群" type={subscribeType} onSubmit={v => cashier.open(v)} />,
-          increment: <div>increment</div>
+          increment: <IncrementPage increment={products.data?.increment ?? []} title="增值包" type={subscribeType} onSubmit={v => cashier.open(v)} />
         }[version] ?? null}
       </div>
-      {['basic', 'plus'].includes(version) ? (
+      {['basic', 'plus', 'increment'].includes(version) ? (
         <div className="mt-8">
           <IntroPage intro={products.data?.intro ?? []} />
         </div>
@@ -159,17 +169,30 @@ const MallPage = () => {
 }
 
 //收银台
-const CashierPage = ({ types }: { types: string[] }) => {
+const CashierPage = () => {
   const form = useFormContext()
   const name = form.getValues('name')
   const price = form.getValues('price')
   const model = form.getValues('model')
   const productId = form.getValues('productId')
-  const [type, setType] = useState(types[0])
+  const [type, setType] = useState<string>()
   const [loading, { setTrue, setFalse }] = useBoolean(false)
   const checkTimer = useRef<number>()
 
   const { toast } = useToast()
+
+  const payments = useQuery({
+    queryKey: [getPaymentTypes.cacheKey],
+    queryFn: getPaymentTypes
+  })
+
+  const types = useMemo(() => payments.data ?? [], [payments.data])
+
+  useEffect(() => {
+    if (payments.data?.length) {
+      setType(payments.data[0].type)
+    }
+  }, [payments.data])
 
   const onBuy = async () => {
     setTrue()
@@ -178,7 +201,7 @@ const CashierPage = ({ types }: { types: string[] }) => {
       model: model,
       number: 1,
       product_id: productId,
-      platform: type
+      platform: type!
     }
 
     const [err, res] = await to(createMallProductOrder(params))
@@ -213,6 +236,8 @@ const CashierPage = ({ types }: { types: string[] }) => {
     }, 1000)
   }
 
+  console.log(type)
+
   return (
     <div className="text-sm pb-10">
       <div className="px-4 border-0 border-b border-solid border-border pb-2">
@@ -226,27 +251,41 @@ const CashierPage = ({ types }: { types: string[] }) => {
       </div>
       <div className="text-center">
         <p className="text-center">请选择支付方式</p>
-        <div className="min-h-48 px-8">
-          <RadioGroup value={type} onValueChange={setType} className="flex items-center space-x-8">
-            {types.map(t => (
-              <div className="flex items-center space-x-2" key={t}>
-                <RadioGroupItem key={t} value={t} id={`mall-payment-${t}`} />
-                <Label htmlFor={`mall-payment-${t}`}>
-                  <JknIcon
-                    className="w-32 h-10 rounded-none"
-                    name={t === 'paypal' ? 'ic_paypal_pay' : t === 'stripe' ? 'ic_stripe_pay' : (t as any)}
-                  />
-                </Label>
-              </div>
-            ))}
-          </RadioGroup>
-        </div>
-        {type ? (
-          <Button type="button" onClick={() => onBuy()}>
-            跳转 {type} 支付
-          </Button>
-        ) : null}
-      </div>
+        {
+          payments.isLoading ? (
+            <div className="space-y-3 my-8">
+              <Skeleton className="w-full h-4" />
+              <Skeleton className="w-full h-4" />
+              <Skeleton className="w-full h-4" />
+              <Skeleton className="w-full h-4" />
+              <Skeleton className="w-full h-4" />
+            </div>
+          ) : (
+            <div className="min-h-48 px-8">
+              <RadioGroup value={type} onValueChange={setType} className="flex items-center justify-between flex-wrap px-4">
+                {types.map(t => (
+                  <div className="flex items-center space-x-2 mb-4" key={t.type}>
+                    <RadioGroupItem key={t.type} value={t.type} id={`mall-payment-${t.type}`} />
+                    <Label htmlFor={`mall-payment-${t.type}`}>
+                      <JknIcon
+                        className="w-32 h-10 rounded-none"
+                        name={t.type === 'paypal' ? 'ic_paypal_pay' : t.type === 'stripe' ? 'ic_stripe_pay' : t.type === 'wechat' ? 'ic_wechat_pay' : t.type === 'alipay' ? 'ic_alipay' : (t as any)}
+                      />
+                    </Label>
+                  </div>
+                ))}
+              </RadioGroup>
+            </div>
+          )
+        }
+        {
+          type ? (
+            <Button type="button" onClick={() => onBuy()}>
+              跳转 {type} 支付
+            </Button>
+          ) : null
+        }
+      </div >
 
       {loading && (
         <div className="fixed left-0 right-0 bottom-0 top-0 bg-background/45 flex items-center justify-center">
@@ -256,7 +295,7 @@ const CashierPage = ({ types }: { types: string[] }) => {
           </div>
         </div>
       )}
-    </div>
+    </div >
   )
 }
 

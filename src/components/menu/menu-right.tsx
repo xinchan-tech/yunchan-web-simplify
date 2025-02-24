@@ -2,7 +2,7 @@ import { cn } from "@/utils/style"
 import { router } from "@/router"
 import { ReactNode, useEffect, useState } from "react"
 import { useToken, useUser } from "@/store"
-import { useToast } from "@/hooks"
+import { useAuthorized, useToast } from "@/hooks"
 import { JknIcon } from ".."
 
 type MenuItem = {
@@ -43,7 +43,7 @@ const MenuRight = () => {
     {
       icon: <JknIcon.Svg name="financial" />,
       title: '财务估值',
-      path: '/stock/financials'
+      path: '/stock/finance'
     },
     {
       icon: <JknIcon.Svg name="group" />,
@@ -51,6 +51,8 @@ const MenuRight = () => {
       path: "/mall",
     },
   ]
+
+  // const [auth, toastNotAuth] = useAuthorized('vcomment')
 
   const onNav = (path: string) => {
     if (!token && path !== '/app') {
@@ -62,6 +64,11 @@ const MenuRight = () => {
 
     const search = new URLSearchParams(window.location.search)
     const symbol = search.get('symbol') ?? 'QQQ'
+
+    // if(path === '/shout' && !auth()){
+    //   toastNotAuth()
+    //   return
+    // }
 
     if (path.startsWith('/stock')) {
       router.navigate(`${path}?symbol=${symbol}`)

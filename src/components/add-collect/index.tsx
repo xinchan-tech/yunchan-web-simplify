@@ -1,9 +1,9 @@
 import { addStockCollectCate, getStockCollectCates } from "@/api"
 import { Button, Input, Popover, PopoverClose, PopoverContent, PopoverTrigger } from "@/components"
-import { useToast } from "@/hooks"
+import { useAuthorized, useToast } from "@/hooks"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { nanoid } from "nanoid"
-import { useState } from "react"
+import { type MouseEventHandler, useState } from "react"
 
 interface AddCollectProps {
   children: React.ReactNode
@@ -17,7 +17,7 @@ export const AddCollect = ({ children, sideOffset, alignOffset }: AddCollectProp
   const collects = useQuery({
     queryKey: [getStockCollectCates.cacheKey],
     queryFn: () => getStockCollectCates(),
-    
+
   })
   const queryClient = useQueryClient()
   const addMutation = useMutation({
@@ -65,14 +65,27 @@ export const AddCollect = ({ children, sideOffset, alignOffset }: AddCollectProp
     addMutation.mutate(name)
   }
 
+  const [auth, toastNotAuth] = useAuthorized('stockPoolNum')
+
+  const _onClick: MouseEventHandler<HTMLDivElement> = (e) => {
+    const max = auth()
+    if (!max || max <= (collects.data?.length ?? 0)) {
+      toastNotAuth()
+      e.preventDefault()
+      e.stopPropagation()
+      return
+    }
+  }
 
   return (
     <Popover>
       <PopoverTrigger asChild>
         <Button reset className="inline">
-          {
-            children
-          }
+          <div onClick={_onClick} onKeyDown={() => { }}>
+            {
+              children
+            }
+          </div>
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-52 text-center" sideOffset={sideOffset} alignOffset={alignOffset}>

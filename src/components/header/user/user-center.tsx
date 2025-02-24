@@ -4,9 +4,8 @@ import UserDefaultPng from '@/assets/icon/user_default.png'
 import { Button, FormControl, FormField, FormItem, FormLabel, Input, JknAlert, JknAvatar, Popover, PopoverContent, PopoverTrigger, Separator } from "@/components"
 import { useFormModal, useModal } from "@/components/modal"
 import { useToast, useZForm } from "@/hooks"
-import { useToken, useUser } from "@/store"
+import { parseUserPermission, useToken, useUser } from "@/store"
 import { uploadUtils } from "@/utils/oss"
-import { parsePermission } from "@/utils/util"
 import { useMutation, useQuery } from "@tanstack/react-query"
 import { useRequest, useUnmount } from "ahooks"
 import to from "await-to-js"
@@ -49,7 +48,7 @@ const UserCenter = (props: UserCenterProps) => {
 
   useEffect(() => {
     if (query.data) {
-      setUser({ ...query.data, permission: parsePermission(query.data.permission) })
+      setUser({ ...query.data, permission: parseUserPermission(query.data.permission) })
     }
   }, [query.data, setUser])
 

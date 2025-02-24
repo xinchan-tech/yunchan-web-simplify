@@ -4,7 +4,7 @@ import { router } from '@/router'
 import { type ReactNode, useEffect, useMemo, useState } from 'react'
 import { Settings } from 'lucide-react'
 import { useToken } from '@/store'
-import { useToast } from '@/hooks'
+import { useAuthorized, useToast } from '@/hooks'
 
 type MenuItem = {
   icon: IconName | ReactNode
@@ -78,11 +78,18 @@ const Menu = () => {
     []
   )
 
+  const [auth, toastNotAuth] = useAuthorized('vcomment')
+
   const onNav = (path: string) => {
     if (!token && path !== '/' && path !== '/setting') {
       toast({
         title: '请先登录'
       })
+      return
+    }
+
+    if(path === '/shout' && !auth()){
+      toastNotAuth()
       return
     }
 

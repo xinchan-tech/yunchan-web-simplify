@@ -60,9 +60,15 @@ export const SecondaryIndicator = memo((props: SecondaryIndicatorProps) => {
   })
   const [searchKey, setSearchKey] = useState('')
   const currentSecondaryIndicator = useKChartStore(s => s.state[props.mainIndex].secondaryIndicators[props.index])
-
+  const { toast } = useToast()
   const _onChange = (v: string) => {
     const indicator = findIndicator(v)
+    if (indicator?.authorized === 0) {
+      toast({
+        description: '暂无相关权限，请联系客服'
+      })
+      return
+    }
 
     props.onIndicatorChange({
       value: v,
@@ -150,7 +156,7 @@ export const SecondaryIndicator = memo((props: SecondaryIndicatorProps) => {
                         <div
                           className="hover:bg-primary cursor-pointer px-2 flex items-center w-full"
                           key={ele.id}
-                          onKeyDown={() => {}}
+                          onKeyDown={() => { }}
                         >
                           <RadioGroupItem
                             className="border-white/70"
@@ -162,6 +168,11 @@ export const SecondaryIndicator = memo((props: SecondaryIndicatorProps) => {
                             htmlFor={`stock-secondary-indicator-${props.mainIndex}-${props.index}-${ele.id}`}
                           >
                             {ele.name}
+                            {
+                              ele.authorized === 0 ? (
+                                <JknIcon name="ic_lock" className="w-3 h-3 ml-1 rounded-none" />
+                              ) : null
+                            }
                           </Label>
                         </div>
                       ))}
@@ -256,7 +267,7 @@ const IndicatorParamsForm = () => {
             className="data-[state=active]:bg-accent hover:!bg-primary py-2 w-60 px-2 box-border"
             data-state={indicator === item.id ? 'active' : ''}
             onClick={() => setIndicator(item.id)}
-            onKeyDown={() => {}}
+            onKeyDown={() => { }}
           >
             {item.name}
           </div>
@@ -304,7 +315,7 @@ const IndicatorParamsForm = () => {
           <div
             className="hover:text-primary cursor-pointer mt-2 text-xs text-tertiary"
             onClick={onResetDefault}
-            onKeyDown={() => {}}
+            onKeyDown={() => { }}
           >
             恢复默认值
           </div>

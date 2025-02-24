@@ -1114,60 +1114,13 @@ export const renderOverlay = (
   const [startIndex, endIndex] = scale
   const series = updateOverlay([startIndex, endIndex], chartIndex, data)
   renderUtils.addSeries(options, series)
-  // if(chart){
-
-  //   // console.log(useKChartStore.getState())
-  //   const candlesticks = useKChartStore.getState().state[chartIndex].mainData.history
-  //   if(!candlesticks || candlesticks.length === 0) return options
-  //   const [first, last] = [candlesticks[startIndex], candlesticks[endIndex > candlesticks.length ? candlesticks.length - 1 : endIndex]]
-  //   if(!first || !last) return options
-
-  //   start = first
-  //   end = last
-  // }
-
-  // data.forEach((stock, index) => {
-  //   let _data = stock.data
-  //   if(start !== undefined && end !== undefined){
-  //     const startStock = renderUtils.findNearestTime(_data, +start[0]!)
-  //     const endStock = renderUtils.findNearestTime(_data, +end[0]!)
-
-  //     if(startStock && endStock){
-  //       _data = stock.data.slice(startStock.index, endStock.index)
-  //       const startBase = start[2]! / startStock.data[2]!
-  //       _data = _data.map(item => [item[0], item[1], item[2]! * startBase, ...item.slice(3)] as any)
-  //     }
-  //   }
-
-  //   const series: LineSeriesOption = {
-  //     name: `overlay-stock-${stock.symbol}`,
-  //     id: stock.symbol,
-  //     smooth: true,
-  //     symbol: 'none',
-  //     type: 'line',
-  //     data: _data.map(o => [o[0]?.toString(), ...o.slice(1)]),
-  //     color: colorUtil.colorPalette[index],
-  //     encode: {
-  //       x: [0],
-  //       y: [2]
-  //     },
-  //     yAxisIndex: 1,
-  //     xAxisIndex: 0
-  //   }
-
-  //   if (!options.series) {
-  //     options.series = [series]
-  //   } else {
-  //     Array.isArray(options.series) && options.series.push(series)
-  //   }
-  // })
 
   return options
 }
 
 export const updateOverlay = (scale: [number, number], chartIndex: number, data: ChartState['overlayStock']) => {
   const [startIndex, endIndex] = scale
-  // console.log(useKChartStore.getState())
+
   const candlesticks = useKChartStore.getState().state[chartIndex].mainData.history
   if (!candlesticks || candlesticks.length === 0) return
   const [first, last] = [

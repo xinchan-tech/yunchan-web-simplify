@@ -1,6 +1,6 @@
 import { getStockCategoryData, getStockSelection } from "@/api"
 import { Button, JknIcon, ScrollArea } from "@/components"
-import { useToast } from "@/hooks"
+import { useAuthorized, useToast } from "@/hooks"
 import { cn } from "@/utils/style"
 import { useQuery } from "@tanstack/react-query"
 import { useBoolean } from "ahooks"
@@ -203,8 +203,18 @@ interface SuperStockTypeTabProps {
 
 const SuperStockTypeTab = (props: SuperStockTypeTabProps) => {
   const _onClick = (type: SuperStockType) => {
+    const authStr = type === SuperStockType.Tech ? 'tech' : type === SuperStockType.Basic ? 'basic' : 'combind'
+
+    if(!auth()?.includes(authStr)){
+      toastNotAuth(undefined, true)
+      return
+    }
     props.onChange?.(type)
   }
+
+  const [auth, toastNotAuth] = useAuthorized('stockPickGroup')
+
+
 
   return (
     <div className="super-stock-type">

@@ -1,5 +1,6 @@
 import { clsx, type ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
+import MD5 from 'crypto-js/md5'
 
 export const cn = (...args: ClassValue[]) => twMerge(clsx(args))
 
@@ -8,10 +9,26 @@ export const colorUtil = {
    * 颜色盘
    */
   colorPalette: [
-    '#FF6633', '#FFB399', '#FF33FF', '#FFFF99', '#00B3E6',
-    '#E6B333', '#3366E6', '#999966', '#99FF99', '#B34D4D',
-    '#80B300', '#809900', '#E6B3B3', '#6680B3', '#66991A',
-    '#FF99E6', '#CCFF1A', '#FF1A66', '#E6331A', '#33FFCC'
+    '#FF6633',
+    '#FFB399',
+    '#FF33FF',
+    '#FFFF99',
+    '#00B3E6',
+    '#E6B333',
+    '#3366E6',
+    '#999966',
+    '#99FF99',
+    '#B34D4D',
+    '#80B300',
+    '#809900',
+    '#E6B3B3',
+    '#6680B3',
+    '#66991A',
+    '#FF99E6',
+    '#CCFF1A',
+    '#FF1A66',
+    '#E6331A',
+    '#33FFCC'
   ],
   hexToRGB(hex: string) {
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
@@ -78,10 +95,36 @@ export const colorUtil = {
     }
     return { r: Math.round(r * 255), g: Math.round(g * 255), b: Math.round(b * 255) }
   },
+  rgbToHex(rgb: { r: number; g: number; b: number }) {
+    const r =  `#${Math.floor(rgb.r).toString(16)}${Math.floor(rgb.g).toString(16)}${Math.floor(rgb.b).toString(16)}`
+    return r
+
+  },
   radomColorForPalette() {
     return this.colorPalette[Math.floor(Math.random() * this.colorPalette.length)]
   },
   randomColor() {
     return ''
+  },
+  stringToColor(str: string, format?: 'rgba' | 'rgb' | 'hex') {
+    const hash = MD5(str.trim()).toString()
+
+    // 提取颜色值并强制不透明
+    const rgbValue = Number.parseInt(hash.slice(0, 6), 16)
+    const baseColor = 0xff000000 | rgbValue
+
+    // RGB直接调暗（近似HSL亮度调整）
+    const r = ((baseColor >> 16) & 0xff) * 0.5
+    const g = ((baseColor >> 8) & 0xff) * 0.5
+    const b = (baseColor & 0xff) * 0.5
+  
+    // 格式化为标准hex
+    if (format === 'rgb') {
+      return `rgb(${r}, ${g}, ${b})`
+    }
+    if (format === 'rgba') {
+      return `rgba(${r}, ${g}, ${b}, 1)`
+    }
+    return colorUtil.rgbToHex({ r, g, b })
   }
 }

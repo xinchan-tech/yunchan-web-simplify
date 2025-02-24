@@ -4,6 +4,7 @@ import { type CSSProperties, useContext, useRef, useState } from "react"
 import { SuperStockContext } from "../ctx"
 import { useMount, useUnmount } from "ahooks"
 import { appEvent } from "@/utils/event"
+import { useAuthorized } from "@/hooks"
 
 const FactorStep = () => {
   const ctx = useContext(SuperStockContext)
@@ -25,7 +26,7 @@ const FactorStep = () => {
     result.current = []
     setSelection([])
   })
-  
+
 
   //TODO 临时方案 待优化
   useMount(() => {
@@ -41,9 +42,13 @@ const FactorStep = () => {
 
   const _onValueChange = (e: string[]) => {
     appEvent.emit('cleanPickerStockMethod')
+
     result.current = e
     setSelection(e)
   }
+
+
+  const [_, toastNotAuth] = useAuthorized()
 
   return (
     <div className="min-h-24 flex border-0 border-b border-solid border-background items-stretch">
@@ -57,12 +62,18 @@ const FactorStep = () => {
         </div>
         <ToggleGroup style={{
           '--toggle-active-bg': 'hsl(var(--stock-up-color))',
-        } as CSSProperties} type="multiple" value={selection} className="flex-1 flex" onValueChange={ _onValueChange}>
+        } as CSSProperties} type="multiple" value={selection} className="flex-1 flex" onValueChange={_onValueChange} >
           {data?.map((child) => (
             child.name !== '' ? (
-              <ToggleGroupItem className="w-36 h-full" key={child.id} value={child.id}>
-                {child.name}
-              </ToggleGroupItem>
+              <div key={child.id} onClick={() => !child.authorized && toastNotAuth()} onKeyUp={() => { }}>
+                <ToggleGroupItem disabled={!child.authorized} className="w-36 h-full relative" value={child.id}
+                >
+                  {
+                    !child.authorized && <JknIcon name="ic_lock" className="absolute right-0 top-0 w-3 h-3 rounded-none" />
+                  }
+                  {child.name}
+                </ToggleGroupItem>
+              </div>
             ) : null
           ))}
         </ToggleGroup>

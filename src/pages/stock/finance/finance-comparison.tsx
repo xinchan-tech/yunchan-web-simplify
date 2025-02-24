@@ -1,6 +1,6 @@
 import { getStockFinancialsPK } from '@/api'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, JknIcon, StockSelect, ToggleGroup, ToggleGroupItem } from "@/components"
-import { useChart } from "@/hooks"
+import { useChart, useToast } from "@/hooks"
 import theme from '@/theme/variables.module.scss'
 import type { ECOption } from "@/utils/echarts"
 import { colorUtil } from "@/utils/style"
@@ -42,6 +42,17 @@ export const FinanceComparison = () => {
 
     return r
   }, [queries, params])
+
+  const { toast } = useToast()
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
+  useEffect(() => {
+    if (queries.some(q => q.isError)) {
+      toast({
+        description: queries.find(q => q.isError)?.error?.message
+      })
+    }
+  }, [queries.some(q => q.isError)])
 
   return (
     <div className="text-sm">

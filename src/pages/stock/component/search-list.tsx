@@ -1,4 +1,5 @@
 import { Input, JknIcon, Label, RadioGroup, RadioGroupItem, ScrollArea } from "@/components"
+import { useToast } from "@/hooks"
 import { useState, type ReactNode } from "react"
 
 interface BaseSearchListProps {
@@ -27,10 +28,18 @@ type SearchListProps<T extends 'single' | 'multi'> = T extends 'single'
 export const SearchList = <T extends 'single' | 'multi'>(props: SearchListProps<T>) => {
   const { data, value, onChange, name, children } = props
   const [searchKey, setSearchKey] = useState('')
+  const { toast } = useToast()
 
   const _onChange = (v: string, data: ArrayItem<BaseSearchListProps['data']>, event: React.ChangeEvent<any>) => {
     event.stopPropagation()
     event.preventDefault()
+
+    if (data.notAuthorized) {
+      toast({
+        description: '暂无相关权限，请联系客服'
+      })
+      return
+    }
 
     if (props.type === 'single') {
       onChange?.(v === value ? '' : v as any, data as any, data.label)
@@ -62,7 +71,7 @@ export const SearchList = <T extends 'single' | 'multi'>(props: SearchListProps<
             <div
               className="hover:bg-primary cursor-pointer px-2 flex items-center w-full"
               key={ele.value}
-              onClick={(e) => !ele.notAuthorized && _onChange(ele.value, ele, e)}
+              onClick={(e) => _onChange(ele.value, ele, e)}
               onKeyDown={() => { }}
             >
               <RadioGroupItem value={ele.value} checked={checked(ele.value)} id={`stock-indicator-${ele.value}`} />

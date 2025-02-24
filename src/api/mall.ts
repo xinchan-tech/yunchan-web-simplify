@@ -26,7 +26,18 @@ type GetMallProductsResult = {
         title: string
       }
     ]
-  }[],
+  }[]
+  increment: {
+    cover: string
+    discount: string
+    give_num: string
+    id: string
+    is_hot: string
+    model_month: string
+    model_year: string
+    name: string
+    professional: string
+  }[]
   payment: string[]
 }
 
@@ -70,3 +81,13 @@ export const createMallProductOrder = (params: CreateMallProductOrderParams) => 
 export const checkMallProductOrderStatus = (paySn: string) => {
   return request.get<{ pay_status: '0' | '1' }>(`/order/pay/payStatus?pay_sn=${paySn}`).then(r => r.data)
 }
+
+/**
+ * 开通的支付列表
+ * @returns
+ */
+export const getPaymentTypes = () => {
+  return request.get<{ logo: string; type: string; name: string }[]>('/payment/types').then(r => r.data)
+}
+
+getPaymentTypes.cacheKey = 'mall:paymentTypes'

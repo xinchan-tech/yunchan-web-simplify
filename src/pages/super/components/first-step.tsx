@@ -9,7 +9,7 @@ import {
   ToggleGroup,
   ToggleGroupItem
 } from '@/components'
-import { useCheckboxGroup, useTableData, useTableRowClickToStockTrading } from '@/hooks'
+import { useAuthorized, useCheckboxGroup, useTableData, useTableRowClickToStockTrading } from '@/hooks'
 import { type Stock, stockUtils } from '@/utils/stock'
 import { cn } from '@/utils/style'
 import { useQuery } from '@tanstack/react-query'
@@ -290,6 +290,7 @@ const RecommendIndex = () => {
   const data = (ctx.data?.stock_range?.children?.t_recommend.from_datas ?? []) as unknown as {
     name: string
     value: string
+    authorized: 0 | 1
   }[]
   const selection = useRef<string[]>([])
 
@@ -307,6 +308,8 @@ const RecommendIndex = () => {
     selection.current = []
   })
 
+  const [_, toastNotAuth] = useAuthorized()
+
   return (
     <ToggleGroup
       onValueChange={value => {
@@ -317,9 +320,14 @@ const RecommendIndex = () => {
     >
       {data?.map(child =>
         child.name !== '' ? (
-          <ToggleGroupItem className="w-full h-full" key={child.value} value={child.value}>
-            {child.name}
-          </ToggleGroupItem>
+          <div key={child.value} onClick={() => !child.authorized && toastNotAuth()} onKeyDown={() => { }}>
+            <ToggleGroupItem className="w-full h-full relative" value={child.value} disabled={!child.authorized}>
+              {
+                !child.authorized && <JknIcon name="ic_lock" className="absolute right-0 top-0 w-3 h-3 rounded-none" />
+              }
+              {child.name}
+            </ToggleGroupItem>
+          </div>
         ) : null
       )}
     </ToggleGroup>

@@ -11,7 +11,7 @@ import {
   JknIcon,
   StockSelect
 } from '@/components'
-import { useDomSize } from '@/hooks'
+import { useAuthorized, useDomSize, useToast } from '@/hooks'
 import { calcIndicator } from '@/utils/coiling'
 import { cn } from '@/utils/style'
 import { useQuery } from '@tanstack/react-query'
@@ -37,7 +37,15 @@ export const ChartToolSelect = () => {
     queryFn: () => getStockIndicators()
   })
 
+  const [authPermission] = useAuthorized('stockCompare')
+  const { toast } = useToast()
   const onOverlayClick = (symbol: string) => {
+    if (!authPermission()) {
+      toast({
+        description: '暂无相关权限，请联系客服'
+      })
+      return
+    }
     kChartUtils.setYAxis({ yAxis: { right: 'percent' } })
     kChartUtils.addOverlayStock({ symbol })
   }
@@ -127,17 +135,17 @@ const MainIndicatorSelect = ({ indicators }: { indicators?: Awaited<ReturnType<t
     const systems = indicators?.main.find(o => o.name === '缠论系统')?.indicators
     let systemId: string | undefined = undefined
 
-    if(systems && systems.length > 0) {
+    if (systems && systems.length > 0) {
       systems.forEach(system => {
-        if(system.authorized){
+        if (system.authorized) {
           systemId = system.id
         }
       })
 
       kChartUtils.setMainSystem({ system: systemId })
 
-      if(!systemId){
-        kChartUtils.setMainCoiling({coiling: []})
+      if (!systemId) {
+        kChartUtils.setMainCoiling({ coiling: [] })
       }
 
     }
@@ -160,7 +168,7 @@ const MainIndicatorSelect = ({ indicators }: { indicators?: Awaited<ReturnType<t
               <SearchList
                 key={item.id}
                 value={Reflect.ownKeys(mainIndicators).map(v => v.toString())}
-                data={item.indicators.map(v => ({ label: v.name ?? '', value: v.id, extra: v }))}
+                data={item.indicators.map(v => ({ label: v.name ?? '', value: v.id, extra: v, notAuthorized: v.authorized === 0 }))}
                 type="multi"
                 name={item.name}
                 onChange={onChangeMainIndicator}
@@ -222,6 +230,8 @@ const MarkList = () => {
 
   const overlayMark = useKChartStore(s => s.state[s.activeChartIndex].overlayMark)
 
+  const [authPermission] = useAuthorized('overlayMark')
+
   return (
     <div className="flex items-center space-x-4">
       {tabList.data?.map(mark => (
@@ -240,7 +250,7 @@ const MarkList = () => {
               }}
               type="single"
               key={mark.key}
-              data={mark.value.map(t => ({ label: t.name, value: t.key, extra: { title: t.name } }))}
+              data={mark.value.map(t => ({ label: t.name, value: t.key, extra: { title: t.name }, notAuthorized: !authPermission()?.some(v => mark.key.startsWith(v)) }))}
               name={mark.title}
               value={overlayMark?.mark}
             />

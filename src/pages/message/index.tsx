@@ -144,7 +144,7 @@ const MessageCenter = () => {
         ))}
       </div>
       <div className="flex-1 box-border overflow-hidden">
-        {type === 'chat' ? <ChatMessageContent msgKey={active} /> : <SystemMessageContent msgKey={active} />}
+        {type === 'chat' ? <ChatMessageContent msgKey={active} /> : <SystemMessageContent msgKey={active} name={types.data?.find(item => item.id === active)?.name} />}
       </div>
     </div>
   )
@@ -356,6 +356,7 @@ const ChatMessageContent = (props: MessageContentProps) => {
 
 interface SystemMessageContentProps {
   msgKey?: string
+  name?: string
 }
 
 type SystemMessageType = Awaited<ReturnType<typeof getNoticeList>>['items']
@@ -399,7 +400,7 @@ const SystemMessageContent = (props: SystemMessageContentProps) => {
               </div>
               <div className="flex items-center max-w-[60%] overflow-hidden">
                 <div className="flex items-start text-black w-full">
-                  <JknAvatar className="mr-3" src="" title={msg.title} />
+                  <JknAvatar className="mr-3" src={props.name} title={props.name ?? ''} />
                   <div className="bg-stock-green rounded py-2 px-2 relative message-content-right text-base w-full overflow-hidden box-border">
                     <div className="font-bold">{msg.title}</div>
                     <pre style={{ whiteSpace: 'pre-wrap', wordWrap: 'break-word' }}>{msg.content}</pre>
