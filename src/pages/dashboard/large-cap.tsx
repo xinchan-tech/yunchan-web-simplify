@@ -13,6 +13,7 @@ import Decimal from 'decimal.js'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router'
+import { ScrollContainer } from "./components/scroll-container"
 
 const tradingToIntervalMap: Record<StockTrading, StockChartInterval> = {
   intraDay: StockChartInterval.INTRA_DAY,
@@ -117,7 +118,6 @@ const LargeCap = () => {
         const width = parentElement.clientWidth
         node.parentElement.scrollTo({ behavior: 'smooth', left: (node as any).offsetLeft - width / 3 })
       }
-
     }
   }, [])
 
@@ -129,52 +129,57 @@ const LargeCap = () => {
     }
   }
 
+  const onPreStock = () => {
+    if (activeStock) {
+      const currentIndex = stocks.findIndex(stock => stock.symbol === activeStock)
+      const nextIndex = (currentIndex - 1 + stocks.length) % stocks.length
+      onActiveStockChange(stocks[nextIndex].symbol)
+    }
+  }
+
   return (
     <div className="h-full flex flex-col">
-      <div className="flex items-center overflow-hidden flex-shrink-0 h-[63px] my-4 ml-4">
-        <div className="flex-1 overflow-x-auto p-1.5 flex justify-between space-x-8 whitespace-nowrap">
-          {/* <div className=""> */}
-          {stocks.map(stock => (
-            <div
-              key={stock.name}
-              data-stock-symbol={stock.symbol}
-              className={cn(
-                'large-cap-stock-select hover:bg-hover text-center py-1.5 px-3 box-border cursor-pointer transition-all duration-300 w-[220px] h-[51px] flex items-center flex-shrink-0 rounded-[300px]',
-                {
-                  'bg-accent': activeStock === stock.symbol
-                }
-              )}
-              onClick={() => onActiveStockChange(stock.symbol)}
-              onKeyDown={() => { }}
-            >
-              <JknIcon.Stock symbol={stock.symbol} className="w-[28px] h-[28px]" />
-              <div className="ml-3 flex flex-col">
-                <span className="text-sm text-left">{stock.name}</span>
-                <div className="flex items-center mt-1 space-x-2">
-                  <SubscribeSpan.Price
-                    initValue={stock.close}
-                    symbol={stock.symbol}
-                    initDirection={stockUtils.isUp(stock)}
-                    decimal={3}
-                    arrow
-                  />
-                  <SubscribeSpan.Percent
-                    className="text-sm"
-                    initValue={stockUtils.getPercent(stock)}
-                    symbol={stock.symbol}
-                    initDirection={stockUtils.isUp(stock)}
-                    decimal={2}
-                  />
-                </div>
+
+      <ScrollContainer onNextStock={onNextStock} onPrevStock={onPreStock}>
+        {/* <div className=""> */}
+        {stocks.map(stock => (
+          <div
+            key={stock.name}
+            data-stock-symbol={stock.symbol}
+            className={cn(
+              'large-cap-stock-select hover:bg-hover text-center py-1.5 px-3 box-border cursor-pointer transition-all duration-300 w-[220px] h-[51px] flex items-center flex-shrink-0 rounded-[300px]',
+              {
+                'bg-accent': activeStock === stock.symbol
+              }
+            )}
+            onClick={() => onActiveStockChange(stock.symbol)}
+            onKeyDown={() => { }}
+          >
+            <JknIcon.Stock symbol={stock.symbol} className="w-[28px] h-[28px]" />
+            <div className="ml-3 flex flex-col">
+              <span className="text-sm text-left">{stock.name}</span>
+              <div className="flex items-center mt-1 space-x-2">
+                <SubscribeSpan.Price
+                  initValue={stock.close}
+                  symbol={stock.symbol}
+                  initDirection={stockUtils.isUp(stock)}
+                  decimal={3}
+                  arrow
+                />
+                <SubscribeSpan.Percent
+                  className="text-sm"
+                  initValue={stockUtils.getPercent(stock)}
+                  symbol={stock.symbol}
+                  initDirection={stockUtils.isUp(stock)}
+                  decimal={2}
+                />
               </div>
             </div>
-          ))}
-          {/* </div> */}
-        </div>
-        <div className="bg-accent rounded-full w-10 h-10 flex items-center justify-center mx-4 cursor-pointer" onClick={onNextStock} onKeyDown={() => { }}>
-          <JknIcon.Svg name="arrow-right" size={12} className="text-[#B8B8B8]" />
-        </div>
-      </div>
+          </div>
+        ))}
+        {/* </div> */}
+      </ScrollContainer>
+
       <div className="flex-1 relative">
         <div onDoubleClick={onChartDoubleClick} className="w-full h-full p-2 box-border">
           <LargeCapChart code={activeStock} type={stockType} />

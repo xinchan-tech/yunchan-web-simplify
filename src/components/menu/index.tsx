@@ -30,42 +30,42 @@ const Menu = () => {
   const menus: MenuItem[] = useMemo(
     () => [
       {
-        icon: <JknIcon.Svg name="dashboard" />,
+        icon: <JknIcon.Svg name="dashboard" size={20} />,
         title: '首页',
         path: '/'
       },
       {
-        icon: <JknIcon.Svg name="views" />,
+        icon: <JknIcon.Svg name="views" size={20} />,
         title: '行情浏览',
         path: '/views'
       },
       {
-        icon: <JknIcon.Svg name="pool" />,
+        icon: <JknIcon.Svg name="pool" size={20} />,
         title: '股票金池',
         path: '/golden'
       },
       {
-        icon: <JknIcon.Svg name="picker" />,
+        icon: <JknIcon.Svg name="picker" size={20} />,
         title: '超级选股',
         path: '/super'
       },
       {
-        icon: <JknIcon.Svg name="ai-alarm" />,
+        icon: <JknIcon.Svg name="ai-alarm" size={20} />,
         title: 'AI报警',
         path: '/alarm'
       },
       {
-        icon: <JknIcon.Svg name="calendar" />,
+        icon: <JknIcon.Svg name="calendar" size={20} />,
         title: '股票日历',
         path: '/calendar'
       },
       {
-        icon: <JknIcon.Svg name="message" />,
+        icon: <JknIcon.Svg name="message" size={20} />,
         title: '消息中心',
         path: '/message'
       },
       {
-        icon: <JknIcon.Svg name="shout" />,
+        icon: <JknIcon.Svg name="shout" size={20} />,
         title: '大V快评',
         path: '/shout'
       },
@@ -98,15 +98,15 @@ const Menu = () => {
 
   // return router.navigate(...args)
   return (
-    <div className="h-full flex flex-col items-center">
+    <div className="h-full flex flex-col items-center w-full px-0.5 box-border space-y-1.5 py-[20px]">
       {menus.map(item => (
         <div
           key={item.title}
           onClick={() => onNav(item.path)}
           onKeyDown={() => { }}
-          className={cn('mb-4 flex flex-col items-center cursor-pointer', item.title === '设置' ? 'mt-auto' : '')}
+          className={cn('flex flex-col items-center cursor-pointer hover:bg-accent w-8 h-8 justify-center rounded-xs', item.title === '设置' ? '!mt-auto' : '', pathname === item.path && 'bg-primary/30')}
         >
-          <div className={cn(pathname === item.path ? 'text-primary' : '')}>
+          <div className={cn('inline-block h-[20px]' ,pathname === item.path ? 'text-primary' : '')}>
             {item.icon}
           </div>
         </div>

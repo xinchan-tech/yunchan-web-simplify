@@ -193,7 +193,7 @@ const App = () => {
 
         <div className="flex-1 overflow-hidden flex bg-accent">
           <div className="w-[40px] flex-shrink-0 bg-accent pt-1">
-            <div className="h-full bg-background w-full space-y-4 flex flex-col items-center pt-4 rounded-tr-xs">
+            <div className="h-full bg-background w-full space-y-4 flex flex-col items-center rounded-tr-xs">
 
               <Menu />
             </div>

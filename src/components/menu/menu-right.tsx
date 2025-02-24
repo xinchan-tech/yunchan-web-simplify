@@ -31,22 +31,22 @@ const MenuRight = () => {
 
   const menus: MenuItem[] = [
     {
-      icon: <JknIcon.Svg name="stock" />,
+      icon: <JknIcon.Svg name="stock" size={20} />,
       title: '个股盘口',
       path: '/stock/trading'
     },
     {
-      icon: <JknIcon.Svg name="push" />,
+      icon: <JknIcon.Svg name="push" size={20} />,
       title: '特色推送',
       path: '/push'
     },
     {
-      icon: <JknIcon.Svg name="financial" />,
+      icon: <JknIcon.Svg name="financial" size={20} />,
       title: '财务估值',
       path: '/stock/finance'
     },
     {
-      icon: <JknIcon.Svg name="group" />,
+      icon: <JknIcon.Svg name="group" size={20} />,
       title: "讨论社群",
       path: "/mall",
     },
@@ -78,7 +78,7 @@ const MenuRight = () => {
   }
 
   return (
-    <div className="mt-3">
+    <div className="px-0.5 box-border space-y-1.5 py-[20px] flex flex-col items-center">
       {menus.map(item => (
         <div
           key={item.title}
@@ -105,9 +105,9 @@ const MenuRight = () => {
             }
           }}
           onKeyDown={() => { }}
-          className="mb-4 flex flex-col items-center cursor-pointer"
+          className={cn("flex flex-col items-center cursor-pointer hover:bg-accent w-8 h-8 justify-center rounded-xs", pathname === item.path && 'bg-primary/30')}
         >
-          <div className={cn(pathname === item.path && 'text-primary')}>
+          <div className={cn('inline-block h-[20px]', pathname === item.path ? 'text-primary' : '')}>
             {
               item.icon
             }
