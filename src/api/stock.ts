@@ -1813,6 +1813,14 @@ export const getStockPush = (params: GetStockPushParams) => {
 }
 getStockPush.cacheKey = 'push:index'
 
+/**
+ * 特色推送股票列表
+ */
+export const getStockPushList = (params: GetStockPushParams) => {
+  return request.get<GetStockPushResult[]>('/push/list', { params }).then(r => r.data)
+}
+getStockPushList.cacheKey = 'push:list'
+
 
 type GetPalTopResult = {
   create_time: number

@@ -1,4 +1,4 @@
-import { JknAvatar } from '@/components'
+import { JknAvatar, JknIcon } from '@/components'
 import { useModal } from '@/components/modal'
 import { useToken, useUser } from '@/store'
 import { appEvent } from '@/utils/event'
@@ -27,13 +27,13 @@ const HeaderUser = () => {
   const loginForm = useModal({
     content: <LoginForm afterLogin={() => {
       loginForm.modal.close()
-    }} 
-    onClose={
-      () => loginForm.modal.close()
-    } 
+    }}
+      onClose={
+        () => loginForm.modal.close()
+      }
     />,
     footer: null,
-    onOpen: () => {}
+    onOpen: () => { }
   })
 
   const userCenter = useModal({
@@ -42,7 +42,7 @@ const HeaderUser = () => {
     title: t('user center'),
     footer: false,
     closeIcon: true,
-    onOpen: () => {}
+    onOpen: () => { }
   })
 
   const onClick = () => {
@@ -55,8 +55,8 @@ const HeaderUser = () => {
 
   return (
     <>
-      <div className="text-sm flex items-center cursor-pointer" onClick={onClick} onKeyDown={() => {}}>
-        <JknAvatar className="w-6 h-6" src={user?.avatar} />
+      <div className="text-sm flex items-center cursor-pointer" onClick={onClick} onKeyDown={() => { }}>
+        <JknIcon.Svg size={24} name="more" />
         {/* <span>{token ? user?.realname : t('login')}</span> */}
       </div>
       {loginForm.context}

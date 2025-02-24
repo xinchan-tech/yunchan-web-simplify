@@ -1,4 +1,5 @@
 import { StockPushType, getStockPush } from "@/api"
+import { getPushMenu } from "@/api/push"
 import { AiAlarm, CapsuleTabs, CollectStar, JknCheckbox, JknIcon, JknRcTable, type JknRcTableProps, StockView, SubscribeSpan } from "@/components"
 import { useCheckboxGroup, useStockQuoteSubscribe, useTableData, useTableRowClickToStockTrading } from "@/hooks"
 import { useTime } from "@/store"
@@ -52,6 +53,11 @@ const PushPage = () => {
   const [list, { setList, onSort }] = useTableData<TableDataType>([], 'id')
   const { checked, onChange, setCheckedAll, getIsChecked } = useCheckboxGroup([])
   const dates = useRef(getPrevTradingDays(date, 7))
+
+  const menus = useQuery({
+    queryKey: [getPushMenu.cacheKey],
+    queryFn: getPushMenu
+  })
 
   const queryParams: Parameters<typeof getStockPush>[0] = {
     type: activeType,
@@ -226,6 +232,10 @@ const PushPage = () => {
               <JknIcon name="ic_tip1" className="w-3 h-3 ml-1" label="盘中实时更新" />
             </span>
           } />
+          {menus.data?.map(item => (
+            <CapsuleTabs.Tab key={item.key} value={item.key} label={item.title} />
+          ))}
+
           {/* <CapsuleTabs.Tab value={StockPushType.COILING} label="缠论推送" />
           <CapsuleTabs.Tab value={StockPushType.MA} label="MA趋势评级" /> */}
         </CapsuleTabs>

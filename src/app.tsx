@@ -168,13 +168,14 @@ const App = () => {
         inviteModal.contenxt
       }
       <div className="flex flex-col h-full overflow-hidden w-full">
-        <div className="header relative z-10 px-2.5 mr-1 flex items-center flex-shrink-0 h-[30px]">
-          <div className="w-[120px] mt-1.5"><img className="w-full h-full" src={LogoTitle} /></div>
-          <Separator orientation="vertical" className="mx-4 h-3 bg-[#2E2E2E]" />
+        <div className="header relative z-10 px-2.5 mr-1 flex items-center flex-shrink-0 h-[56px]">
+          <HeaderUser />
+          <div className="h-[32px] ml-4"><img className="w-full h-full" src={LogoTitle} /></div>
+          <Separator orientation="vertical" className="mx-4 h-4 bg-[#2E2E2E]" />
           <div className="search float-left flex items-center h-full ">
             <StockSelect
-              size="mini"
-              className="w-[120px] h-[22px] rounded-xl"
+              size="sm"
+              className="w-[136px] h-[33px] rounded-[300px]"
               placeholder={t('search.stocks')}
               onChange={v => router.navigate(`/stock/trading?symbol=${v}`)}
             />
@@ -187,7 +188,6 @@ const App = () => {
           <div className="flex items-center h-full space-x-2xl ml-auto">
             <HeaderMall />
             <HeaderService />
-            <HeaderUser />
           </div>
         </div>
 
@@ -257,7 +257,7 @@ const App = () => {
           }
 
           .header {
-            height: 35px;
+            height: 56px;
           }
 
           .content {
