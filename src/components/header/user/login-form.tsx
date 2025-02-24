@@ -100,7 +100,7 @@ const LoginForm = (props: LoginFormProps & { setPage: (page: 'login' | 'register
       if (codeObj.timestamp) {
         const current = dayjs()
         if (current.diff(codeObj.timestamp, 'day') <= 3) {
-          bindInviteCode(codeObj.code)
+          bindInviteCode(codeObj.code, codeObj.cid)
         }
       }
     }

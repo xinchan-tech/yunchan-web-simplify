@@ -25,7 +25,8 @@ import {
   renderSecondary,
   renderSecondaryLocalIndicators,
   renderWatermark,
-  renderZoom
+  renderZoom,
+  updateOverlay
 } from '../lib/render'
 import { useStockCandlesticks } from '../lib/request'
 import { renderUtils } from '../lib/utils'
@@ -73,8 +74,22 @@ export const MainChart = (props: MainChartProps) => {
         start = params.start
       }
 
+
       if (start < 10) {
         fetchFn.current?.()
+      }
+
+      const overlayData = useKChartStore.getState().state[props.index].overlayStock
+
+      if (overlayData.length > 0) {
+        const scale = renderUtils.getScaledZoom(chart.current!, props.index)
+        if (!scale) return
+        const series = updateOverlay(scale, props.index, overlayData)
+        chart.current?.setOption({
+          series: series
+        }, {
+          lazyUpdate: true
+        })
       }
     })
 
@@ -274,10 +289,9 @@ export const MainChart = (props: MainChartProps) => {
        * 画主图指标
        */
       renderMainCoiling(_options, state, chart.current)
-      renderOverlay(_options, state.overlayStock)
+      renderOverlay(_options, chart.current, props.index, state.overlayStock)
       renderMainIndicators(_options, Object.values(state.mainIndicators))
       renderOverlayMark(_options, state)
-      console.log(state.secondaryIndicators, useKChartStore.getState().state[props.index].secondaryIndicators)
       renderSecondary(_options, state.secondaryIndicators)
       renderSecondaryLocalIndicators(_options, state.secondaryIndicators, state)
       renderBackTestMark(_options, state, chart.current)

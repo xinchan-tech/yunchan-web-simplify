@@ -126,8 +126,11 @@ export const getAliOssToken = () => {
 /**
  * 绑定邀请码
  */
-export const bindInviteCode = (code: string) => {
+export const bindInviteCode = (code: string, cid?: string) => {
   const form = new FormData()
   form.append('inv_code', code)
+  if (cid) {
+    form.append('cid', cid)
+  }
   return request.post('/user/inv/bind', form).then(r => r.data)
 }

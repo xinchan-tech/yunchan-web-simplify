@@ -197,7 +197,9 @@ const TreeMap = (props: TreeMapProps) => {
         const text = d.data.name
         const rectWidth = d.x1 - d.x0
         const maxTextWidth = rectWidth * .6
-        let textSize = Math.floor(maxTextWidth / text.length / ONE_PX_WIDTH)
+        const rectHeight = d.y1 - d.y0
+        
+        let textSize = Math.max(Math.sqrt(maxTextWidth * rectHeight) / 6, 12)
 
         if (textSize < 12) {
           textSize = 12
@@ -213,7 +215,7 @@ const TreeMap = (props: TreeMapProps) => {
         return d.x0 + (rectWidth - textWidth) / 2
       })    // +10 to adjust position (more right)
       .attr("y", (d) => {
-        return d.y0 + (d.y1 - d.y0) / 2
+        return d.y0 + (d.y1 - d.y0) / 2 - 2
       })
       .text((d) => {
         return d.data.name
@@ -234,7 +236,8 @@ const TreeMap = (props: TreeMapProps) => {
         const text = `${Decimal.create(d.data.data).gt(0) ? '+' : ''}${Decimal.create(d.data.data)}%`
         const rectWidth = d.x1 - d.x0
         const maxTextWidth = rectWidth * .4
-        let textSize = Math.floor(maxTextWidth / text.length / ONE_PX_WIDTH)
+        const rectHeight = (d.y1 - d.y0) * 0.8
+        let textSize = Math.max(Math.sqrt(maxTextWidth * rectHeight) / 6, 10)
         if (textSize < 10) {
           textSize = 10
         }
@@ -255,7 +258,7 @@ const TreeMap = (props: TreeMapProps) => {
         return d.x0 + (rectWidth - textWidth) / 2
       })
       .attr("y", (d) => {
-        return d.y0 + (d.y1 - d.y0) / 2 + d.data.percentSize + 10
+        return d.y0 + (d.y1 - d.y0) / 2 + d.data.percentSize + 4
       })
       .attr("font-size", (d) => `${d.data.percentSize}px`)
       // .attr("fill", d => (d.data.data ?? 0) >= 0 ? 'hsl(var(--stock-up-color)' : 'hsl(var(--stock-down-color))')

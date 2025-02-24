@@ -382,7 +382,7 @@ const defaultXAxis: XAXisOption = {
 const defaultYAxis: YAXisOption = {
   scale: true,
   position: 'right',
-  max: (v) => {
+  max: v => {
     const diff = v.max - v.min
     return v.max + diff * 0.05
   },
@@ -960,11 +960,10 @@ const renderIndicator = (
   indicator: Indicator,
   params: { xAxisIndex: number; yAxisIndex: number; type: 'main' | 'secondary' }
 ) => {
-
   if (!indicator.data || indicator.visible === false) return
 
   if (renderUtils.isLocalIndicator(indicator.id)) return
-  
+
   indicator.data.forEach((d, index) => {
     if (typeof d === 'string') {
       return
@@ -989,7 +988,7 @@ const renderIndicator = (
         })
       } else {
         const data = (d.data as any).map((s: any, i: number) => {
-          if(params.type !== 'main'){
+          if (params.type !== 'main') {
             return [i, [s[1], s[1]]]
           }
 
@@ -1101,17 +1100,109 @@ export const renderMainIndicators = (options: ECOption, indicators: Indicator[])
 /**
  * 股票叠加
  */
-export const renderOverlay = (options: ECOption, data?: ChartState['overlayStock']) => {
+export const renderOverlay = (
+  options: ECOption,
+  chart: EChartsType,
+  chartIndex: number,
+  data?: ChartState['overlayStock']
+) => {
   if (!data || data.length === 0) return options
+  const scale = renderUtils.getScaledZoom(chart, 0)!
+  if (!scale) {
+    return options
+  }
+  const [startIndex, endIndex] = scale
+  const series = updateOverlay([startIndex, endIndex], chartIndex, data)
+  renderUtils.addSeries(options, series)
+  // if(chart){
+
+  //   // console.log(useKChartStore.getState())
+  //   const candlesticks = useKChartStore.getState().state[chartIndex].mainData.history
+  //   if(!candlesticks || candlesticks.length === 0) return options
+  //   const [first, last] = [candlesticks[startIndex], candlesticks[endIndex > candlesticks.length ? candlesticks.length - 1 : endIndex]]
+  //   if(!first || !last) return options
+
+  //   start = first
+  //   end = last
+  // }
+
+  // data.forEach((stock, index) => {
+  //   let _data = stock.data
+  //   if(start !== undefined && end !== undefined){
+  //     const startStock = renderUtils.findNearestTime(_data, +start[0]!)
+  //     const endStock = renderUtils.findNearestTime(_data, +end[0]!)
+
+  //     if(startStock && endStock){
+  //       _data = stock.data.slice(startStock.index, endStock.index)
+  //       const startBase = start[2]! / startStock.data[2]!
+  //       _data = _data.map(item => [item[0], item[1], item[2]! * startBase, ...item.slice(3)] as any)
+  //     }
+  //   }
+
+  //   const series: LineSeriesOption = {
+  //     name: `overlay-stock-${stock.symbol}`,
+  //     id: stock.symbol,
+  //     smooth: true,
+  //     symbol: 'none',
+  //     type: 'line',
+  //     data: _data.map(o => [o[0]?.toString(), ...o.slice(1)]),
+  //     color: colorUtil.colorPalette[index],
+  //     encode: {
+  //       x: [0],
+  //       y: [2]
+  //     },
+  //     yAxisIndex: 1,
+  //     xAxisIndex: 0
+  //   }
+
+  //   if (!options.series) {
+  //     options.series = [series]
+  //   } else {
+  //     Array.isArray(options.series) && options.series.push(series)
+  //   }
+  // })
+
+  return options
+}
+
+export const updateOverlay = (scale: [number, number], chartIndex: number, data: ChartState['overlayStock']) => {
+  const [startIndex, endIndex] = scale
+  // console.log(useKChartStore.getState())
+  const candlesticks = useKChartStore.getState().state[chartIndex].mainData.history
+  if (!candlesticks || candlesticks.length === 0) return
+  const [first, last] = [
+    candlesticks[startIndex],
+    candlesticks[endIndex > candlesticks.length ? candlesticks.length - 1 : endIndex]
+  ]
+  if (!first || !last) return
+
+  const start = first
+  const end = last
+
+  const series: LineSeriesOption[] = []
 
   data.forEach((stock, index) => {
-    const series: LineSeriesOption = {
-      name: stock.symbol,
+    let _data = stock.data
+    if (start !== undefined && end !== undefined) {
+      const startStock = renderUtils.findNearestTime(_data, +start[0]!)
+      const endStock = renderUtils.findNearestTime(_data, +end[0]!)
+
+      if (startStock && endStock) {
+        if (startStock.data && endStock.data) {
+          _data = stock.data.slice(startStock.index, endStock.index)
+          const startBase = start[2]! / startStock.data[2]!
+          _data = _data.map(item => [item[0], item[1], item[2]! * startBase, ...item.slice(3)] as any)
+        }
+      }
+    }
+
+    const lineSeries: LineSeriesOption = {
+      name: `overlay-stock-${stock.symbol}`,
       id: stock.symbol,
       smooth: true,
       symbol: 'none',
       type: 'line',
-      data: stock.data.map(o => [o[0]?.toString(), ...o.slice(1)]),
+      data: _data.map(o => [o[0]?.toString(), ...o.slice(1)]),
       color: colorUtil.colorPalette[index],
       encode: {
         x: [0],
@@ -1121,14 +1212,10 @@ export const renderOverlay = (options: ECOption, data?: ChartState['overlayStock
       xAxisIndex: 0
     }
 
-    if (!options.series) {
-      options.series = [series]
-    } else {
-      Array.isArray(options.series) && options.series.push(series)
-    }
+    series.push(lineSeries)
   })
 
-  return options
+  return series
 }
 
 /**
@@ -1353,7 +1440,7 @@ export const renderZoom = (options: ECOption, addCount: number, zoom?: [number, 
     if (showCount > MaxKLineCount) {
       _zoom[0] = _zoom[1] - MaxKLineCount
     }
- 
+
     if (Array.isArray(options.dataZoom)) {
       for (const z of options.dataZoom) {
         z.startValue = _zoom[0]

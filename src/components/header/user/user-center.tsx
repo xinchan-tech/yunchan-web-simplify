@@ -125,7 +125,7 @@ const UserCenter = (props: UserCenterProps) => {
     },
     onSuccess: () => {
       toast({
-        description: '加群成功'
+        description: '绑定成功'
       })
     },
     onError: (err) => {

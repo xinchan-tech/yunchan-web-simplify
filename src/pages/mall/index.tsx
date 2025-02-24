@@ -79,6 +79,7 @@ const MallPage = () => {
       const current = new Date().getTime()
       const codeObj = {
         code: query.code,
+        cid: query.cid,
         timestamp: current
       }
 

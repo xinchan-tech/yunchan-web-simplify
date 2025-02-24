@@ -1,7 +1,7 @@
 import {
   StockChartInterval,
   type StockRawRecord,
-  type getStockChart,
+  getStockChart,
   getStockChartV2,
   getStockIndicatorData,
   getStockTabData
@@ -18,6 +18,7 @@ import { mapValues } from 'radash'
 import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
 import { renderUtils } from './utils'
+import { dateUtils } from '@/utils/date'
 
 export type ViewMode =
   | 'single'
@@ -188,8 +189,8 @@ type KChartUtils = {
 
   /**
    * 清除所有指标数据
-   * @param params 
-   * @returns 
+   * @param params
+   * @returns
    */
   clearIndicatorsData: (params: { index: number }) => void
 
@@ -739,49 +740,32 @@ export const kChartUtils: KChartUtils = {
     const chart = useKChartStore.getState().state[index ?? useKChartStore.getState().activeChartIndex]
     if (chart.overlayStock.some(item => item.symbol === symbol)) return
 
-    const startTime =
-      useKChartStore.getState().state[index ?? useKChartStore.getState().activeChartIndex].mainData.history[0]?.[0]
+    // const startTime =
+    //   useKChartStore.getState().state[index ?? useKChartStore.getState().activeChartIndex].mainData.history[0]?.[0]
 
     const interval = useKChartStore.getState().state[index ?? useKChartStore.getState().activeChartIndex].timeIndex
 
     const params = {
-      start_at: dayjs(+startTime! * 1000)
-        .tz('America/New_York')
-        .format('YYYY-MM-DD HH:mm:ss'),
-      symbol: symbol,
-      period: stockUtils.intervalToPeriod(interval),
-      time_format: 'int'
+      ticker: symbol,
+      interval: interval
     }
 
     queryClient
       .ensureQueryData({
-        queryKey: [getStockChartV2.cacheKey, { symbol }],
-        queryFn: () => getStockChartV2(params)
+        queryKey: [getStockChart.cacheKey, { symbol }],
+        queryFn: () => getStockChart(params)
       })
       .then(data => {
-        const startData = data.data.list[0]
-        const mainData = renderUtils.findNearestTime(
-          useKChartStore.getState().state[index ?? useKChartStore.getState().activeChartIndex].mainData.history,
-          +startData[0]!
-        )
-
-        if (!mainData?.data) return
-        const basePrice = startData[2] as number
-        if (!basePrice) return
-        //将数据按main的数据比例缩放，比较涨跌幅
-        const scale = (mainData.data[2] as number) / basePrice
-
-        const _data = data.data.list.map(item => {
-          return [item[0], item[1]! * scale, item[2]! * scale, item[3]! * scale, item[4]! * scale, ...item.slice(5)]
-        })
-
         useKChartStore.setState(state => ({
           state: state.state.map(item => {
             if (item.index === (index ?? state.activeChartIndex)) {
               return produce(item, draft => {
                 draft.overlayStock.push({
                   symbol,
-                  data: _data as any
+                  data: data.history.map(item => [
+                    dateUtils.toUsDay(item[0]).valueOf().toString().slice(0, -3),
+                    ...item.slice(1)
+                  ]) as any
                 })
               })
             }
@@ -865,7 +849,7 @@ export const kChartUtils: KChartUtils = {
   },
   setIndicatorsData: ({ index, data }) => {
     // console.log("🚀 ~ data:", data)
-    
+
     useKChartStore.setState(state => {
       const _state = produce(state.state, draft => {
         const s = draft[index ?? state.activeChartIndex]
@@ -879,7 +863,7 @@ export const kChartUtils: KChartUtils = {
           indicators.push(...s.secondaryIndicators.filter(i => i.id === indicatorId))
 
           if (indicators.length === 0) return
-          
+
           indicators.forEach(indicator => {
             indicator.data = data
           })
