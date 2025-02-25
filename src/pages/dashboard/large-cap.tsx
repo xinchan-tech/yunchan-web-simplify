@@ -269,7 +269,7 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
 
             const v = Decimal.create(params.value)
             const perv = v.minus(prevClose).div(prevClose).mul(100)
-          
+
             if (params.axisIndex === 0) {
               return `{${perv.gte(0) ? 'u' : 'd'}|${v.toFixed(2)}}`
             }
@@ -355,64 +355,42 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
             silent: true,
 
             data: [
-              {
-                yAxis: lastPrice,
-                lineStyle: {
-                  color: `rgba(${style.r}, ${style.g}, ${style.b} , 1)`,
-                  width: 1,
-                  type: 'dashed'
+              [
+                {
+                  xAxis: 'max',
+                  yAxis: lastPrice
                 },
-                label: {
-                  formatter: `{${lastPercent > 0 ? 'u' : 'd'}|${lastPrice.toFixed(2)}}`,
-                  rich: {
-                    u: {
-                      backgroundColor: stockUpColor,
-                      width: '100%',
-                      color: '#fff',
-                      padding: 3,
-                      fontSize: 10,
-                      // borderRadius: 4
-                    },
-                    d: {
-                      backgroundColor: stockDownColor,
-                      width: '100%',
-                      color: '#fff',
-                      fontSize: 10,
-                      padding: 3,
-                      // borderRadius: 4
+                {
+                  x: (chartRef.current?.getWidth() ?? 0) - 50,
+                  yAxis: lastPrice,
+                  lineStyle: {
+                    color: `rgba(${style.r}, ${style.g}, ${style.b} , 1)`,
+                    width: 1,
+                    type: 'dashed'
+                  },
+                  label: {
+                    formatter: `{${lastPercent > 0 ? 'u' : 'd'}|${lastPrice.toFixed(2)}}`,
+                    rich: {
+                      u: {
+                        backgroundColor: stockUpColor,
+                        width: '100%',
+                        color: '#fff',
+                        padding: 3,
+                        fontSize: 10,
+                        // borderRadius: 4
+                      },
+                      d: {
+                        backgroundColor: stockDownColor,
+                        width: '100%',
+                        color: '#fff',
+                        fontSize: 10,
+                        padding: 3,
+                        // borderRadius: 4
+                      }
                     }
                   }
                 }
-              },
-              // {
-              //   yAxis: lastPrice,
-              //   lineStyle: {
-              //     color: `rgba(${style.r}, ${style.g}, ${style.b} , 1)`,
-              //     width: 1,
-              //     type: 'dashed'
-              //   },
-              //   label: {
-              //     formatter: `{${lastPercent > 0 ? 'u' : 'd'}|${lastPercent > 0 ? '+' : ''}${(lastPercent * 100).toFixed(2)}%}`,
-              //     rich: {
-              //       u: {
-              //         backgroundColor: stockUpColor,
-              //         width: '100%',
-              //         color: '#fff',
-              //         padding: 3,
-              //         fontSize: 10,
-              //         // borderRadius: 2
-              //       },
-              //       d: {
-              //         backgroundColor: stockDownColor,
-              //         width: '100%',
-              //         color: '#fff',
-              //         padding: 3,
-              //         fontSize: 10,
-              //         // borderRadius: 2
-              //       }
-              //     }
-              //   }
-              // }
+              ]
             ]
           }
         },

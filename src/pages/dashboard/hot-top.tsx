@@ -27,6 +27,16 @@ export const HotTop = () => {
     })
 
     const options: ECOption = {
+      legend: {
+        data: ['热力值'],
+        show: true,
+        itemWidth: 12,
+        itemHeight: 12,
+        textStyle: {
+          color: '#DBDBDB'
+        },
+        left: 10
+      },
       grid: {
         left: 30,
         right: 10,
@@ -40,10 +50,10 @@ export const HotTop = () => {
         formatter: (params: any) => {
           const [name, score, time] = params.data
           return `
-            <div class="flex flex-col">
+            <div class="flex flex-col" style="min-width: 100px">
               <div class="text-lg text-center" style="color: #FFFFFF">${name}</div>
               <div class="text-lg text-center" style="color: #FFFFFF">${score}</div>
-              <div class="text-xs text-center" style="color: #B7DBF9">${dateUtils.toUsDay(time).format('hh:mm A')}</div>
+              <div class="text-xs text-center" style="color: #B7DBF9">热力值</div>
             </div>
             `
         }
@@ -67,6 +77,7 @@ export const HotTop = () => {
         }
       },
       yAxis: {
+        splitNumber: 3,
         type: 'value',
         axisLabel: {
           showMinLabel: false,
@@ -81,6 +92,7 @@ export const HotTop = () => {
       },
       series: {
         type: 'bar',
+        name: '热力值',
         data: r.map((item) => [item.name, item.score, item.update_time]),
         encode: {
           x: 0,
