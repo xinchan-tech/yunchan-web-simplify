@@ -9,13 +9,22 @@ import { useEffect } from "react"
 export const HotTop = () => {
   const tops = useQuery({
     queryKey: [getPalTop.cacheKey],
-    queryFn: () => getPalTop('2025-02-18'),
+    queryFn: () => getPalTop(),
   })
   const [chart, dom] = useChart()
 
   useEffect(() => {
     if (!chart.current || !tops.data) return
-    const data = tops.data.splice(0, 10)
+    // 数据排序，数据大的放中间，数据小的放两边
+    const data = tops.data.sort((a, b) => b.score - a.score)
+    const r: typeof data = []
+    data.forEach((item, index) => {
+      if(index % 2 === 0) {
+        r.unshift(item)
+      }else{
+        r.push(item)
+      }
+    })
 
     const options: ECOption = {
       grid: {
@@ -32,6 +41,7 @@ export const HotTop = () => {
           const [name, score, time] = params.data
           return `
             <div class="flex flex-col">
+              <div class="text-lg text-center" style="color: #FFFFFF">${name}</div>
               <div class="text-lg text-center" style="color: #FFFFFF">${score}</div>
               <div class="text-xs text-center" style="color: #B7DBF9">${dateUtils.toUsDay(time).format('hh:mm A')}</div>
             </div>
@@ -39,7 +49,7 @@ export const HotTop = () => {
         }
       },
       xAxis: {
-        data: data.map((item) => item.name),
+        data: r.map((item) => item.name),
         boundaryGap: true,
         splitLine: {
           show: false
@@ -71,7 +81,7 @@ export const HotTop = () => {
       },
       series: {
         type: 'bar',
-        data: data.map((item) => [item.name, item.score, item.update_time]),
+        data: r.map((item) => [item.name, item.score, item.update_time]),
         encode: {
           x: 0,
           y: 1,
@@ -93,7 +103,7 @@ export const HotTop = () => {
 
   return (
     <div className="w-full h-full overflow-hidden flex flex-col">
-      <div className="text-lg px-4 my-5">热力排行榜</div>
+      <div className="text-lg px-4 my-5">热力Top榜单</div>
       <div className="flex-1 relative">
         <div className="w-full h-full" ref={dom} />
         {

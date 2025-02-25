@@ -1856,7 +1856,9 @@ type GetPalTopResult = {
 /**
  * 热力榜单
  */
-export const getPalTop = (date?: string) => {
-  return request.get<GetPalTopResult[]>('/pal/top', { params: { date } }).then(r => r.data)
+export const getPalTop = (params?: { date?: string; limit?: number }) => {
+  return request
+    .get<GetPalTopResult[]>('/pal/top', { params: { date: params?.date, limit: params?.limit ?? 10 } })
+    .then(r => r.data)
 }
 getPalTop.cacheKey = 'pal:top'

@@ -15,7 +15,7 @@ const progress = new cliProgress.SingleBar({
 
 const privateKeyPath = '/Users/shipeijun/.ssh/id_ed25519'
 const distPath = path.resolve(__dirname, '../dist')
-
+const remotePath = '/home/ec2-user/web-test'
 // 遍历所有文件
 const findAllFiles = (dir) => {
   const files = fs.readdirSync(dir)
@@ -48,7 +48,7 @@ const findAllFiles = (dir) => {
       privateKey: fs.readFileSync(privateKeyPath, 'utf8')
     })
 
-    await ssh.putDirectory(distPath, '/home/ec2-user/web', {
+    await ssh.putDirectory(distPath, remotePath, {
       recursive: true,
       concurrency: 10,
       tick: (localPath, _, error) => {
