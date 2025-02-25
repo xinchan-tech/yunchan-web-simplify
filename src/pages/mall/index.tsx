@@ -1,6 +1,7 @@
 import { checkMallProductOrderStatus, createMallProductOrder, getMallProducts, getPaymentTypes } from '@/api'
 import {
   Button,
+  JknAlert,
   JknIcon,
   Label,
   RadioGroup,
@@ -23,6 +24,8 @@ import { useBoolean, useMount } from 'ahooks'
 import to from 'await-to-js'
 import qs from "qs"
 import { IncrementPage } from "./increment-page"
+import { useToken } from "@/store"
+import { appEvent } from "@/utils/event"
 
 const subscribeTypes = [
   { name: '按年订阅', type: 'model_year' },
@@ -97,6 +100,22 @@ const MallPage = () => {
     }
   })
 
+  const token = useToken(s => s.token)
+
+  const _onOpenCashier = (values: z.infer<typeof productForm>) => {
+    if(!token){
+      JknAlert.info({
+        content: '您还未登录，请先登录',
+        onAction: async () => {
+          appEvent.emit('login')
+        }
+      })
+      return
+    }
+
+    cashier.open(values)
+  }
+
   return (
     <div className="flex flex-col items-center h-full overflow-auto w-full pb-10 box-border">
       <ToggleGroup
@@ -143,7 +162,7 @@ const MallPage = () => {
               title="旗舰达人"
               basic={products.data?.basic ?? []}
               type={subscribeType}
-              onSubmit={v => cashier.open(v)}
+              onSubmit={v => _onOpenCashier(v)}
             />
           ),
           plus: (
@@ -151,11 +170,11 @@ const MallPage = () => {
               title="量化精英"
               basic={products.data?.plus ?? []}
               type={subscribeType}
-              onSubmit={v => cashier.open(v)}
+              onSubmit={v => _onOpenCashier(v)}
             />
           ),
-          group: <GroupPage title="聊天社群" type={subscribeType} onSubmit={v => cashier.open(v)} />,
-          increment: <IncrementPage increment={products.data?.increment ?? []} title="增值包" type={subscribeType} onSubmit={v => cashier.open(v)} />
+          group: <GroupPage title="聊天社群" type={subscribeType} onSubmit={v => _onOpenCashier(v)} />,
+          increment: <IncrementPage increment={products.data?.increment ?? []} title="增值包" type={subscribeType} onSubmit={v => _onOpenCashier(v)} />
         }[version] ?? null}
       </div>
       {['basic', 'plus', 'increment'].includes(version) ? (

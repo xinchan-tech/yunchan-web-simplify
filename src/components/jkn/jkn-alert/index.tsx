@@ -86,6 +86,7 @@ const AlertComponent = (props: AlertDialogProps) => {
       }
     }
 
+
     setFalse()
 
     setTimeout(() => {
