@@ -227,4 +227,6 @@ class StockSubscribe {
   }
 }
 
-export const stockSubscribe = new StockSubscribe(`${import.meta.env.PUBLIC_BASE_WS_STOCK_URL}?token=shipeijun`)
+const token = uid(14)
+
+export const stockSubscribe = new StockSubscribe(`${import.meta.env.PUBLIC_BASE_WS_STOCK_URL}?token=${token}`)

@@ -446,7 +446,7 @@ export const drawRect: DrawerFunc<DrawerRectShape[]> = (options, _, { xAxisIndex
   const grid = renderUtils.getGridIndex(options, 0)
   const left = (grid?.left ?? 1) + 6
 
-  const maxRight = left + (grid?.width ?? 0) - 6
+  const maxRight = left + (grid?.width ?? 0) - 3
 
   const extraColor = extra?.color
   const line: CustomSeriesOption = {

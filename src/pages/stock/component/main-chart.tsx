@@ -4,13 +4,13 @@ import { useStockBarSubscribe } from '@/hooks'
 import { useIndicator, useTime } from '@/store'
 import { calcIndicator } from '@/utils/coiling'
 import echarts from '@/utils/echarts'
-import { type StockSubscribeHandler, stockUtils } from '@/utils/stock'
+import { stockSubscribe, type StockSubscribeHandler, stockUtils } from '@/utils/stock'
 import { cn, colorUtil } from '@/utils/style'
 import { useMount, useUnmount, useUpdateEffect } from 'ahooks'
 import dayjs from 'dayjs'
 import type { EChartsType } from 'echarts/core'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { type Indicator, kChartUtils, useKChartStore } from '../lib'
+import { type Indicator, kChartUtils, timeIndex, useKChartStore } from '../lib'
 import {
   initOptions,
   renderBackTestMark,
@@ -37,6 +37,8 @@ import { ChartContextMenu } from './chart-context-menu'
 import { chartEvent, useChartEvent } from '../lib/event'
 import { queryClient } from '@/utils/query-client'
 import { BackTestBar } from './back-test-bar'
+import { replace } from "radash"
+import { dateUtils } from "@/utils/date"
 
 interface MainChartProps {
   index: number
@@ -158,31 +160,8 @@ export const MainChart = (props: MainChartProps) => {
 
       s[0] = stock.timestamp.toString().slice(0, -3)
 
-      if (
-        [StockChartInterval.PRE_MARKET, StockChartInterval.INTRA_DAY, StockChartInterval.AFTER_HOURS].includes(
-          state.timeIndex
-        )
-      ) {
-        if (trading === 'preMarket' && state.timeIndex !== StockChartInterval.PRE_MARKET) {
-          return
-        }
+      if (!renderUtils.shouldUpdateChart(trading, state.timeIndex)) return
 
-        if (trading === 'intraDay' && state.timeIndex !== StockChartInterval.INTRA_DAY) {
-          return
-        }
-
-        if (trading === 'afterHours' && state.timeIndex !== StockChartInterval.AFTER_HOURS) {
-          return
-        }
-
-        if (trading === 'close') {
-          return
-        }
-      } else {
-        if (trading !== 'intraDay') {
-          return
-        }
-      }
       let candlesticks = lastMainHistory.current
       if (!renderUtils.isSameTimeByInterval(dayjs(lastData.timestamp), dayjs(+s[0] * 1000), state.timeIndex)) {
         candlesticks = [...lastMainHistory.current, s]
@@ -207,6 +186,34 @@ export const MainChart = (props: MainChartProps) => {
   )
 
   useStockBarSubscribe([subscribeSymbol], subscribeHandler)
+
+  useEffect(() => {
+    const unSubscribe = stockSubscribe.onQuoteTopic(state.symbol, data => {
+      if (!renderUtils.shouldUpdateChart(trading, state.timeIndex)) return
+      if (lastMainHistory.current.length === 0) return
+      const lastStock = lastMainHistory.current[lastMainHistory.current.length - 1]
+
+      if (!lastStock) return
+
+      if (!renderUtils.isSameTimeByInterval(dateUtils.toUsDay(lastStock[0]), dayjs(data.record.time), state.timeIndex)) return
+
+      const newLastStock = replace(lastStock, data.record.close, (_, idx) => idx === 2) as any
+
+      const candlesticks = [...lastMainHistory.current]
+      candlesticks[candlesticks.length - 1] = newLastStock
+
+      kChartUtils.setMainData({
+        index: props.index,
+        data: candlesticks,
+        dateConvert: false,
+        timeIndex: state.timeIndex
+      })
+    })
+
+    return () => {
+      unSubscribe()
+    }
+  }, [state.symbol, trading, state.timeIndex, props.index])
 
   useEffect(() => {
     const timeIndex = useKChartStore.getState().state[props.index].timeIndex

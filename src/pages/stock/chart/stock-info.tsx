@@ -238,7 +238,7 @@ const StockQuoteBar = withTooltip(
     }
 
     const trading = useMemo(() => stockUtils.intervalToTrading(props.interval), [props.interval])
-
+   
     return (
       <div
         className={cn('flex items-center justify-between px-2 box-border text-xs my-1 cursor-pointer text-tertiary')}

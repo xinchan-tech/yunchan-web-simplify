@@ -6,7 +6,7 @@ import dayjs from 'dayjs'
 import { md5 } from 'js-md5'
 import { sha256 } from 'js-sha256'
 import { customAlphabet } from 'nanoid'
-import { isString } from "radash"
+import { isString } from 'radash'
 
 type StockTime = string
 type StockOpen = number
@@ -325,18 +325,31 @@ export const getStockChartV2 = async (params: GetStockChartV2Params) => {
 }
 getStockChartV2.cacheKey = 'stock:kline:v2'
 
-export const getStockChartQuote = async (symbol: string, period: 'pre' | 'intraday' | 'post'| '5d' | number , time_format = 'int' ) => {
-
-  const _period = isString(period) ? period : period === StockChartInterval.PRE_MARKET ? 'pre' : period === StockChartInterval.INTRA_DAY ? 'intraday' : period === StockChartInterval.AFTER_HOURS ? 'post' : '5d'
+export const getStockChartQuote = async (
+  symbol: string,
+  period: 'pre' | 'intraday' | 'post' | '5d' | number,
+  time_format = 'int'
+) => {
+  const _period = isString(period)
+    ? period
+    : period === StockChartInterval.PRE_MARKET
+      ? 'pre'
+      : period === StockChartInterval.INTRA_DAY
+        ? 'intraday'
+        : period === StockChartInterval.AFTER_HOURS
+          ? 'post'
+          : '5d'
   const params = { symbol, _period, time_format }
   const paramsKeySort = Object.keys(params).sort() as (keyof typeof params)[]
   const paramsStr = `${paramsKeySort.reduce((acc, key) => `${acc}${key}=${params[key]}&`, '').slice(0, -1)}&app_key=${'LMOl&8skLax%ls1Haapd'}`
   const sign = md5(sha256(paramsStr))
 
-
-  
   const r = await await axios
-  .get<{list: StockRawRecord[]}>('/apiv2/chart/quote', { params: { symbol: symbol, period: _period, time_format }, headers: { sign } }).then(r => (r.data as any).data as {list: StockRawRecord[]})
+    .get<{ list: StockRawRecord[] }>('/apiv2/chart/quote', {
+      params: { symbol: symbol, period: _period, time_format },
+      headers: { sign }
+    })
+    .then(r => (r.data as any).data as { list: StockRawRecord[] })
   return r
 }
 getStockChartQuote.cacheKey = 'stock:chart:quote'
@@ -1809,18 +1822,27 @@ type GetStockPushResult = {
  * 特色推送
  */
 export const getStockPush = (params: GetStockPushParams) => {
-  return request.get<GetStockPushResult[]>('/push/index', { params }).then(r => r.data)
+  return request.get<GetStockPushResult[]>('/push/index', { params }).then(r => r.data ?? [])
 }
 getStockPush.cacheKey = 'push:index'
 
 /**
  * 特色推送股票列表
  */
-export const getStockPushList = (params: GetStockPushParams) => {
-  return request.get<GetStockPushResult[]>('/push/list', { params }).then(r => r.data)
+type GetStockPushListResult = {
+  bull: number
+  name: string
+  score: number
+  stock: StockRawRecord
+  symbol: string
+  type: number
+  extend?: StockExtendResultMap
+  datetime: number
+}
+export const getStockPushList = (key: string, extend?: StockExtend[]) => {
+  return request.get<GetStockPushListResult[]>('/push/list', { params: { key, extend } }).then(r => r.data)
 }
 getStockPushList.cacheKey = 'push:list'
-
 
 type GetPalTopResult = {
   create_time: number

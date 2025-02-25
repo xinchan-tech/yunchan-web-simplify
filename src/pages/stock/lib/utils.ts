@@ -1,7 +1,7 @@
 import { getStockIndicatorData, StockChartInterval, type StockRawRecord } from '@/api'
 import { getTradingPeriod } from '@/utils/date'
 import type { ECOption } from '@/utils/echarts'
-import { stockUtils } from '@/utils/stock'
+import { type StockTrading, stockUtils } from '@/utils/stock'
 import dayjs, { type Dayjs } from 'dayjs'
 import type { GraphicComponentOption } from 'echarts/components'
 import type { EChartsType } from 'echarts/core'
@@ -513,5 +513,34 @@ export const renderUtils = {
     )
 
     return res
+  },
+  /**
+   * 判断是否应该更新当前k线图
+   */
+  shouldUpdateChart: (trading: StockTrading, timeIndex: StockChartInterval) => {
+    if (
+      [StockChartInterval.PRE_MARKET, StockChartInterval.INTRA_DAY, StockChartInterval.AFTER_HOURS].includes(timeIndex)
+    ) {
+      if (trading === 'preMarket' && timeIndex !== StockChartInterval.PRE_MARKET) {
+        return false
+      }
+
+      if (trading === 'intraDay' && timeIndex !== StockChartInterval.INTRA_DAY) {
+        return false
+      }
+
+      if (trading === 'afterHours' && timeIndex !== StockChartInterval.AFTER_HOURS) {
+        return false
+      }
+
+      if (trading === 'close') {
+        return false
+      }
+    } else {
+      if (trading !== 'intraDay') {
+        return false
+      }
+    }
+    return true
   }
 }

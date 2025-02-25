@@ -244,9 +244,9 @@ const StockListItem = ({ stock, onCollectChange, children }: PropsWithChildren<S
           <div className="text-right text-secondary mt-0.5 scale-90">
             {stock.subPrice ? (
               <span>
-                <SubscribeSpan.Price symbol={stock.code} initValue={stock.subPrice} decimal={3} showColor={false} />
+                <SubscribeSpan.Price trading={['afterHours', 'preMarket']} symbol={stock.code} initValue={stock.subPrice} decimal={3} showColor={false} />
                 &nbsp;&nbsp;
-                <SubscribeSpan.Percent showSign symbol={stock.code} initValue={stock.subPercent} decimal={2} showColor={false} />
+                <SubscribeSpan.Percent trading={['afterHours', 'preMarket']} showSign symbol={stock.code} initValue={stock.subPercent} decimal={2} showColor={false} />
               </span>
             ) : (
               '--'

@@ -1,4 +1,4 @@
-import { StockPushType, getStockPush } from "@/api"
+import { StockPushType, getStockPush, getStockPushList } from "@/api"
 import { getPushMenu } from "@/api/push"
 import { AiAlarm, CapsuleTabs, CollectStar, JknCheckbox, JknIcon, JknRcTable, type JknRcTableProps, StockView, SubscribeSpan } from "@/components"
 import { useCheckboxGroup, useStockQuoteSubscribe, useTableData, useTableRowClickToStockTrading } from "@/hooks"
@@ -26,15 +26,12 @@ type TableDataType = Stock & {
    * bull = 1, 画绿色火苗
    */
   bull: string
-  /**
-   * 推送周期
-   */
-  interval: string
-  coiling_signal: string
   id: string
   percent?: number
   marketValue?: number
 }
+
+
 
 const getLastTime = () => {
   const usTime = useTime.getState().usTime
@@ -47,8 +44,48 @@ const getLastTime = () => {
   return getPrevTradingDays(localDate, 1)[0]
 }
 
+const getTableList = async (type: string, date?: string) => {
+  let res: TableDataType[]
+  if (type === 'JRGW') {
+    if (!date) throw new Error('date is required')
+    const r = await getStockPush({ type: StockPushType.STOCK_KING, date, extend: ['financials', 'total_share', 'collect', 'basic_index'] })
+
+    res = r?.map(item => {
+      const stock = stockUtils.toStockWithExt(item.stock, { extend: item.extend, symbol: item.symbol, name: item.name }) as TableDataType
+      stock.update_time = item.update_time
+      stock.star = item.star
+      stock.id = item.id
+      stock.warning = item.warning
+      stock.percent = stockUtils.getPercent(stock)
+      stock.marketValue = stockUtils.getMarketValue(stock)
+      stock.bull = item.bull
+      stock.create_time = item.create_time
+
+      return stock
+    })
+  } else {
+    const r = await getStockPushList(type, ['financials', 'total_share', 'collect', 'basic_index'])
+
+    res = r.map(item => {
+      const stock = stockUtils.toStockWithExt(item.stock, { extend: item.extend, symbol: item.symbol, name: item.name }) as TableDataType
+      stock.update_time = item.datetime.toString()
+      stock.star = item.score.toString()
+      stock.id = item.symbol
+      stock.warning = (item.type - 1).toString()
+      stock.percent = stockUtils.getPercent(stock)
+      stock.marketValue = stockUtils.getMarketValue(stock)
+      stock.bull = item.bull.toString()
+      stock.create_time = item.datetime.toString()
+
+      return stock
+    })
+  }
+
+  return res
+}
+
 const PushPage = () => {
-  const [activeType, setActiveType] = useState<StockPushType>(StockPushType.STOCK_KING)
+  const [activeType, setActiveType] = useState<string>('JRGW')
   const [date, setDate] = useState(getLastTime())
   const [list, { setList, onSort }] = useTableData<TableDataType>([], 'id')
   const { checked, onChange, setCheckedAll, getIsChecked } = useCheckboxGroup([])
@@ -59,42 +96,43 @@ const PushPage = () => {
     queryFn: getPushMenu
   })
 
-  const queryParams: Parameters<typeof getStockPush>[0] = {
-    type: activeType,
-    date,
-    extend: ['financials', 'total_share', 'collect', 'basic_index']
-  }
+  // const queryParams: Parameters<typeof getStockPush>[0] = {
+  //   type: activeType,
+  //   date,
+  //   extend: ['financials', 'total_share', 'collect', 'basic_index']
+  // }
 
   const query = useQuery({
-    queryKey: [getStockPush.cacheKey, queryParams],
-    queryFn: () => getStockPush(queryParams)
+    queryKey: [getStockPushList.cacheKey, activeType, date],
+    queryFn: () => getTableList(activeType, date)
   })
   const queryClient = useQueryClient()
 
   useEffect(() => {
-    if (query.data) {
-      setList(query.data.map(item => {
-        const stock = stockUtils.toStock(item.stock, { extend: item.extend, symbol: item.symbol, name: item.name }) as TableDataType
-        stock.update_time = item.update_time
-        stock.star = item.star
-        stock.id = item.id
-        stock.warning = item.warning
-        stock.percent = stockUtils.getPercent(stock)
-        stock.marketValue = stockUtils.getMarketValue(stock)
-        stock.bull = item.bull
-        stock.coiling_signal = item.coiling_signal
-        stock.interval = item.interval
-        stock.create_time = item.create_time
-        return stock
-      }))
-    } else {
-      setList([])
-    }
+    // if (query.data) {
+    //   setList(query.data.map(item => {
+    //     const stock = stockUtils.toStock(item.stock, { extend: item.extend, symbol: item.symbol, name: item.name }) as TableDataType
+    //     stock.update_time = item.update_time
+    //     stock.star = item.star
+    //     stock.id = item.id
+    //     stock.warning = item.warning
+    //     stock.percent = stockUtils.getPercent(stock)
+    //     stock.marketValue = stockUtils.getMarketValue(stock)
+    //     stock.bull = item.bull
+    //     stock.coiling_signal = item.coiling_signal
+    //     stock.interval = item.interval
+    //     stock.create_time = item.create_time
+    //     return stock
+    //   }))
+    // } else {
+    //   setList([])
+    // }
+    setList(query.data ?? [])
     setCheckedAll([])
   }, [query.data, setList, setCheckedAll])
 
   const onUpdateCollect = (id: string, checked: boolean) => {
-    queryClient.setQueryData<TableDataType[]>([getStockPush.cacheKey, queryParams], (data) => {
+    queryClient.setQueryData<TableDataType[]>([getStockPush.cacheKey, activeType], (data) => {
       if (!data) return data
       return data.map(produce(item => {
         if (item.id === id) {
@@ -108,7 +146,7 @@ const PushPage = () => {
 
   const columns = (() => {
     const common: JknRcTableProps<TableDataType>['columns'] = [
-      { title: '序号', dataIndex: 'index', width: 60, render: (_, __, i) => i + 1 },
+      { title: '序号', align: 'center', dataIndex: 'index', width: 60, render: (_, __, i) => i + 1 },
       {
         title: '名称代码',
         dataIndex: 'symbol',
@@ -145,7 +183,12 @@ const PushPage = () => {
         render: (marketValue, row) => <SubscribeSpan.MarketValueBlink symbol={row.symbol} showColor={false} decimal={2} initValue={marketValue} totalShare={row.totalShare ?? 0} />
       },
       {
-        title: `${activeType === StockPushType.STOCK_KING ? '股王' : '推荐'}指数`,
+        title: '行业板块',
+        dataIndex: 'industry',
+        align: 'right'
+      },
+      {
+        title: `${activeType === 'JRGW' ? '股王指数' : menus.data?.find(item => item.key === activeType)?.title}`,
         dataIndex: 'star',
         align: 'right',
         sort: true,
@@ -198,25 +241,6 @@ const PushPage = () => {
         render: (_, row) => <JknCheckbox checked={getIsChecked(row.symbol)} onCheckedChange={v => onChange(row.symbol, v)} />
       }
     ]
-
-    if (activeType === StockPushType.STOCK_KING || activeType === StockPushType.MA) {
-      (common as any[]).splice(6, 0, {
-        title: '行业板块',
-        dataIndex: 'industry',
-        align: 'right'
-      })
-    } else {
-      (common as any[]).splice(6, 0, {
-        title: '推送周期',
-        dataIndex: 'interval',
-        align: 'right'
-      }, {
-        title: '缠论信号',
-        dataIndex: 'coiling_signal',
-        align: 'right'
-      })
-    }
-
     return common
   })()
 
@@ -226,7 +250,7 @@ const PushPage = () => {
     <div className="flex flex-col h-full">
       <div className="border border-solid border-border py-1 px-2">
         <CapsuleTabs activeKey={activeType} onChange={v => setActiveType(v as StockPushType)}>
-          <CapsuleTabs.Tab value={StockPushType.STOCK_KING} label={
+          <CapsuleTabs.Tab value="JRGW" label={
             <span className="flex items-center">
               今日股王
               <JknIcon name="ic_tip1" className="w-3 h-3 ml-1" label="盘中实时更新" />
@@ -240,13 +264,17 @@ const PushPage = () => {
           <CapsuleTabs.Tab value={StockPushType.MA} label="MA趋势评级" /> */}
         </CapsuleTabs>
       </div>
-      <div className="border-0 border-b border-solid border-border py-1 px-2">
-        <CapsuleTabs activeKey={date} onChange={v => setDate(v)} type="text">
-          {dates.current.map(d => (
-            <CapsuleTabs.Tab key={d} value={d} label={dayjs(d).format('MM-DD W')} />
-          ))}
-        </CapsuleTabs>
-      </div>
+      {
+        activeType === 'JRGW' ? (
+          <div className="border-0 border-b border-solid border-border py-1 px-2">
+            <CapsuleTabs activeKey={date} onChange={v => setDate(v)} type="text">
+              {dates.current.map(d => (
+                <CapsuleTabs.Tab key={d} value={d} label={dayjs(d).format('MM-DD W')} />
+              ))}
+            </CapsuleTabs>
+          </div>
+        ) : null
+      }
       <div className="flex-1 overflow-hidden">
         <JknRcTable rowKey="id" onSort={onSort} columns={columns} data={list} isLoading={query.isLoading} onRow={onRowClick} />
       </div>
