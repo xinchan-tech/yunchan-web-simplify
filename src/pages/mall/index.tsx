@@ -178,6 +178,7 @@ const CashierPage = () => {
   const [type, setType] = useState<string>()
   const [loading, { setTrue, setFalse }] = useBoolean(false)
   const checkTimer = useRef<number>()
+  const [paySuccess, setPaySuccess] = useState(false)
 
   const { toast } = useToast()
 
@@ -227,7 +228,7 @@ const CashierPage = () => {
       setFalse()
       toast({ description: '支付成功' })
       //重载页面
-      window.location.reload()
+      setPaySuccess(true)
       return
     }
 
@@ -249,43 +250,57 @@ const CashierPage = () => {
           <span>付款方式: {model === 'model_year' ? '包年订阅' : model === 'model_month' ? '包月订阅' : '未知'}</span>
         </div>
       </div>
-      <div className="text-center">
-        <p className="text-center">请选择支付方式</p>
-        {
-          payments.isLoading ? (
-            <div className="space-y-3 my-8">
-              <Skeleton className="w-full h-4" />
-              <Skeleton className="w-full h-4" />
-              <Skeleton className="w-full h-4" />
-              <Skeleton className="w-full h-4" />
-              <Skeleton className="w-full h-4" />
+      {
+        !paySuccess ? (
+          <div className="text-center">
+            <p className="text-center">请选择支付方式</p>
+            {
+              payments.isLoading ? (
+                <div className="space-y-3 my-8">
+                  <Skeleton className="w-full h-4" />
+                  <Skeleton className="w-full h-4" />
+                  <Skeleton className="w-full h-4" />
+                  <Skeleton className="w-full h-4" />
+                  <Skeleton className="w-full h-4" />
+                </div>
+              ) : (
+                <div className="min-h-48 px-8">
+                  <RadioGroup value={type} onValueChange={setType} className="flex items-center justify-between flex-wrap px-4">
+                    {types.map(t => (
+                      <div className="flex items-center space-x-2 mb-4" key={t.type}>
+                        <RadioGroupItem key={t.type} value={t.type} id={`mall-payment-${t.type}`} />
+                        <Label htmlFor={`mall-payment-${t.type}`}>
+                          <JknIcon
+                            className="w-32 h-10 rounded-none"
+                            name={t.type === 'paypal' ? 'ic_paypal_pay' : t.type === 'stripe' ? 'ic_stripe_pay' : t.type === 'wechat' ? 'ic_wechat_pay' : t.type === 'alipay' ? 'ic_alipay' : (t as any)}
+                          />
+                        </Label>
+                      </div>
+                    ))}
+                  </RadioGroup>
+                </div>
+              )
+            }
+            {
+              type ? (
+                <Button type="button" onClick={() => onBuy()}>
+                  跳转 {type} 支付
+                </Button>
+              ) : null
+            }
+          </div >
+        ) : (
+          <div className="min-h-48 flex flex-col items-center mt-12">
+            <div className="bg-stock-green rounded-full w-24 h-24 flex">
+              <JknIcon className="m-auto w-16 h-16" name="dagou_white" />
             </div>
-          ) : (
-            <div className="min-h-48 px-8">
-              <RadioGroup value={type} onValueChange={setType} className="flex items-center justify-between flex-wrap px-4">
-                {types.map(t => (
-                  <div className="flex items-center space-x-2 mb-4" key={t.type}>
-                    <RadioGroupItem key={t.type} value={t.type} id={`mall-payment-${t.type}`} />
-                    <Label htmlFor={`mall-payment-${t.type}`}>
-                      <JknIcon
-                        className="w-32 h-10 rounded-none"
-                        name={t.type === 'paypal' ? 'ic_paypal_pay' : t.type === 'stripe' ? 'ic_stripe_pay' : t.type === 'wechat' ? 'ic_wechat_pay' : t.type === 'alipay' ? 'ic_alipay' : (t as any)}
-                      />
-                    </Label>
-                  </div>
-                ))}
-              </RadioGroup>
-            </div>
-          )
-        }
-        {
-          type ? (
-            <Button type="button" onClick={() => onBuy()}>
-              跳转 {type} 支付
+            <div className="my-8">购买成功</div>
+            <Button type="button" className="w-24" onClick={() => window.location.reload()}>
+              确定
             </Button>
-          ) : null
-        }
-      </div >
+          </div>
+        )
+      }
 
       {loading && (
         <div className="fixed left-0 right-0 bottom-0 top-0 bg-background/45 flex items-center justify-center">

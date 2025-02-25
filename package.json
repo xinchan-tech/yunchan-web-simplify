@@ -11,6 +11,7 @@
     "generate-icon": "node ./scripts/generate-icon-type.js",
     "release": "release-it",
     "deploy": "node ./scripts/deploy.js",
+    "release-deploy": "node ./scripts/release.js",
     "frp": "frpc -c ./frpc.toml"
   },
   "dependencies": {
