@@ -124,6 +124,7 @@
     "@types/qs": "^6.9.18",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
+    "@types/react-scroll": "^1.8.10",
     "@unocss/postcss": "^0.64.1",
     "cli-progress": "^3.12.0",
     "compression-webpack-plugin": "^11.1.0",

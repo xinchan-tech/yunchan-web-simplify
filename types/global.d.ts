@@ -44,6 +44,7 @@ interface Window {
   CoilingModule: () => Promise<Module>
 
   PolicyModule: () => Promise<{
+    libversion: () => string
     policy_execute: (
       fmlData: {
         formula: string

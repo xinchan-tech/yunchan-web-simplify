@@ -1,10 +1,10 @@
 import { getShoutOrders, getTeacherGrades } from "@/api"
-import { Avatar, AvatarImage, JknIcon, ScrollArea } from "@/components"
+import { Avatar, AvatarImage, JknIcon, JknInfiniteArea } from "@/components"
 import { useUser } from "@/store"
 import { dateToWeek } from "@/utils/date"
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query"
 import dayjs from "dayjs"
-import { useMemo } from "react"
+import { type ComponentRef, useEffect, useMemo, useRef } from "react"
 
 const Shout = () => {
   const userGrades = useUser(s => s.user?.user_grade)
@@ -32,7 +32,6 @@ const Shout = () => {
       if(params.pageParam !== 1){
         console.log(params)
       }
-      console.log(params)
       return getShoutOrders({ grade_id: grade!, page: params.pageParam, limit: 100, direction: 'up' })
     },
     initialPageParam: 1,
@@ -52,9 +51,23 @@ const Shout = () => {
     }
   })
 
+  const scroll = useRef<ComponentRef<typeof JknInfiniteArea>>(null)
+  const scrollCount = useRef(0)
+  
+  useEffect(() => {
+    if(orders.data?.items.length && !scrollCount.current){
+      setTimeout(() => {
+        scroll.current?.scrollToBottom()
+      })
+
+      scrollCount.current++
+    }
+ 
+  }, [orders.data])
+
   return (
     <div className="h-full">
-      <ScrollArea className="h-full mx-auto w-[900px] border-0 border-x border-solid border-border overflow-x-hidden">
+      <JknInfiniteArea className="h-full mx-auto w-[900px] border-0 border-x border-solid border-border overflow-x-hidden" ref={scroll}>
         <div className="px-4 w-full">
           {
             orders.data?.items.map((order: any) => (
@@ -82,7 +95,7 @@ const Shout = () => {
             ))
           }
         </div>
-      </ScrollArea>
+      </JknInfiniteArea>
     </div>
   )
 }
