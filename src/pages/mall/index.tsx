@@ -9,7 +9,8 @@ import {
   Skeleton,
   ToggleGroup,
   ToggleGroupItem,
-  useFormModal
+  useFormModal,
+  useModal
 } from '@/components'
 import { useToast, useZForm } from '@/hooks'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
@@ -25,7 +26,10 @@ import to from 'await-to-js'
 import qs from "qs"
 import { IncrementPage } from "./increment-page"
 import { useToken } from "@/store"
+import QRCode from 'qrcode'
 import { appEvent } from "@/utils/event"
+import { uid } from "radash"
+import { QrCode } from "lucide-react"
 
 const subscribeTypes = [
   { name: '按年订阅', type: 'model_year' },
@@ -45,7 +49,8 @@ const productForm = z.object({
   productId: z.string(),
   name: z.string(),
   price: z.string(),
-  model: z.string()
+  model: z.string(),
+  checked: z.boolean()
 })
 
 const MallPage = () => {
@@ -60,7 +65,8 @@ const MallPage = () => {
     productId: '',
     name: '',
     price: '',
-    model: ''
+    model: '',
+    checked: false
   })
 
   const queryClient = useQueryClient()
@@ -194,11 +200,14 @@ const CashierPage = () => {
   const price = form.getValues('price')
   const model = form.getValues('model')
   const productId = form.getValues('productId')
+
+  const checked = form.watch('checked')
+
   const [type, setType] = useState<string>()
   const [loading, { setTrue, setFalse }] = useBoolean(false)
   const checkTimer = useRef<number>()
   const [paySuccess, setPaySuccess] = useState(false)
-
+  const [qrCodeUrl, setQrCodeUrl] = useState('')
   const { toast } = useToast()
 
   const payments = useQuery({
@@ -215,6 +224,10 @@ const CashierPage = () => {
   }, [payments.data])
 
   const onBuy = async () => {
+    if (!checked) {
+      toast({ description: '请先同意订阅协议' })
+      return
+    }
     setTrue()
 
     const params: Parameters<typeof createMallProductOrder>[0] = {
@@ -231,8 +244,14 @@ const CashierPage = () => {
       toast({ description: err.message })
       return
     }
+    if (res.config.type === 'qr_code') {
+      setQrCodeUrl(res.config.url)
+      qrCode.modal.open()
+      setFalse()
+    } else {
+      window.open(res.config.url)
+    }
 
-    window.open(res.config.url)
     checkStatus(res.pay_sn)
   }
 
@@ -256,7 +275,55 @@ const CashierPage = () => {
     }, 1000)
   }
 
-  console.log(type)
+  const totalPrice = useMemo(() => `\$${price}/${model === 'model_year' ? '年' : model === 'model_month' ? '月' : '未知'}`, [price, model])
+
+  const qrCode = useModal({
+    title: '支付二维码',
+    className: 'w-[400px]',
+    content: <WxCharQrCode name={name} price={totalPrice} url={qrCodeUrl} />,
+    footer: null,
+    closeIcon: true
+  })
+
+
+  const checkPayQrcode = () => {
+    if (!paySuccess) {
+      JknAlert.confirm({
+        content: '未验证到支付成功，请确认是否支付成功',
+        okBtnText: '去支付',
+        onAction: async (action) => {
+          if (action === 'confirm') {
+            qrCode.modal.open()
+          }
+        }
+      })
+    } else {
+      setQrCodeUrl('')
+    }
+  }
+
+  //协议modal
+  const agreement = useModal({
+    content: (action) => (
+      <div className="p-8 leading-8">
+        <div className="border border-solid rounded-sm border-gray-700 p-4">
+          在使用本软件前，请仔细阅读以下文字。
+          <br />风险提示:市场有风险，投资需谨慎<br />
+          风险提示<br />
+          一:用户应充分认识到证券投资的风险，公司所提供的所有数据与信息，仅供用户参考使用，不构成用户进行投资操作的直接依据、意见或建议等等，用户据此操作，风险自担，公司不承担任何经济与法律责任。<br />
+          二:公司通过软件产品为用户提供财经金融资讯和行情数据信息，并通过相关数据分析系统、缠论运算模型等对上述资讯和数据进行整理加工和集成，为用户提供高附加值的信息和数据服务，以利于用户在投资过程中理性决策、控制风险。用户在使用软件产品过程中，对于公司提供的数据信息内容，用户不应将其视作公司明示、默示的承诺证券、期货的投资投收益，不应将其视为具体证券品种选择买卖时机的建议，或任何其他形式的证券投资咨询/建议/意见等。公司对用户的投资决策可能带来的风,险或损失不承担任何违约、赔偿或其他民事责任。<br />
+          三:证券市场具有较大的风险，请您注意。<br />
+          四:本公司相关服务及产品仅是投资辅助工具，单一业绩不代表全面业绩，过往业绩不代表将来业绩，无法保证投资不受损失。
+        </div>
+        <div className="text-center mt-2">
+          <Button onClick={action.close}>确定</Button>
+        </div>
+      </div>
+    ),
+    title: '社群服务协议',
+    closeIcon: true,
+    footer: null
+  })
 
   return (
     <div className="text-sm pb-10">
@@ -264,7 +331,7 @@ const CashierPage = () => {
         <div className="my-2">商品名称: {name}</div>
         <div className="flex justify-between">
           <span>
-            商品价格: ${price}/{model === 'model_year' ? '年' : model === 'model_month' ? '月' : '未知'}
+            商品价格: {totalPrice}
           </span>
           <span>付款方式: {model === 'model_year' ? '包年订阅' : model === 'model_month' ? '包月订阅' : '未知'}</span>
         </div>
@@ -300,11 +367,23 @@ const CashierPage = () => {
                 </div>
               )
             }
+            <div className="w-full flex items-center px-12 mb-4">
+              <JknIcon.Checkbox checked={checked} checkedIcon="checkbox_mult_sel" uncheckedIcon="checkbox_mult_nor" onClick={() => form.setValue('checked', !checked)} className="rounded-none" />
+              <span>
+                &nbsp;我已经阅读并同意<span className="text-primary cursor-pointer" onClick={() => agreement.modal.open()} onKeyDown={() => { }}>《软件订阅协议》</span>
+              </span>
+            </div>
             {
               type ? (
-                <Button type="button" onClick={() => onBuy()}>
-                  跳转 {type} 支付
-                </Button>
+                qrCodeUrl ? (
+                  <Button type="button" onClick={() => checkPayQrcode()}>
+                    支付完成？验证支付
+                  </Button>
+                ) : (
+                  <Button type="button" onClick={() => onBuy()}>
+                    跳转 {type} 支付
+                  </Button>
+                )
               ) : null
             }
           </div >
@@ -329,7 +408,49 @@ const CashierPage = () => {
           </div>
         </div>
       )}
+      {
+        qrCode.context
+      }
+      {
+        agreement.context
+      }
     </div >
+  )
+}
+
+interface WxCharQrCodeProps {
+  name: string
+  price: string
+  url: string
+}
+const WxCharQrCode = (props: WxCharQrCodeProps) => {
+  useMount(() => {
+    const url = props.url
+    const canvas = document.querySelector('#wx-pay-qrcode') as HTMLCanvasElement
+    QRCode.toCanvas(canvas, url, {
+      errorCorrectionLevel: 'Q',
+      color: {
+        dark: '#000000',
+        light: '#ffffff'
+      },
+      margin: 2
+    })
+  })
+  return (
+    <div className="flex w-full flex-col space-y-2 items-center py-8">
+      <div>
+        {props.name}
+      </div>
+      <div>
+        {props.price}
+      </div>
+      <div>
+        <canvas id="wx-pay-qrcode" className="w-[160px] h-[160px] m-auto" />
+      </div>
+      <div>
+        请使用微信扫描二维码完成支付
+      </div>
+    </div>
   )
 }
 

@@ -13,6 +13,7 @@ interface IncrementPageProps {
     name: string
     price: string
     model: string
+    checked: boolean
   }) => void
 }
 
@@ -24,7 +25,8 @@ export const IncrementPage = (props: IncrementPageProps) => {
       productId,
       name: `${props.title}-${name}`,
       price,
-      model: props.type
+      model: props.type,
+      checked: false
     })
   }
 

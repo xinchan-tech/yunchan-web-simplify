@@ -14,6 +14,7 @@ interface BasicPageProps {
     name: string
     price: string
     model: string
+    checked: boolean
   }) => void
 }
 
@@ -25,7 +26,8 @@ export const BasicPage = (props: BasicPageProps) => {
       productId,
       name: `${props.title}-${name}`,
       price,
-      model: props.type
+      model: props.type,
+      checked: false
     })
   }
 

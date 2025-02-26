@@ -67,6 +67,7 @@ type CreateMallProductOrderResult = {
   }
   config: {
     url: string
+    type: string
   }
 }
 

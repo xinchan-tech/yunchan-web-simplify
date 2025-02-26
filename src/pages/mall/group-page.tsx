@@ -11,6 +11,7 @@ interface GroupPageProps {
     name: string
     price: string
     model: string
+    checked: boolean
   }) => void
 }
 
@@ -48,7 +49,8 @@ export const GroupPage = (props: GroupPageProps) => {
       productId: channelId,
       name: `${props.title}-${name}`,
       price: getPrice(channelId) ?? '0',
-      model: props.type
+      model: props.type,
+      checked: false
     })
   }
 

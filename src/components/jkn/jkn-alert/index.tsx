@@ -14,10 +14,11 @@ type AlertOptions = {
   title?: ReactNode
   onAction?: (action: AlertAction) => Promise<unknown | boolean>
   cancelBtn?: boolean
+  okBtnText?: string
 }
 
 export const JknAlert = {
-  info({ content, title, onAction, cancelBtn }: AlertOptions) {
+  info({ content, title, onAction, cancelBtn, okBtnText }: AlertOptions) {
     let rootEl = document.getElementById('alert-wrapper')
 
     if (!rootEl) {
@@ -38,7 +39,7 @@ export const JknAlert = {
     }
 
     root.render(
-      <AlertComponent title={title} content={content} afterClose={destroy} onAction={onAction} cancelBtn={cancelBtn} />
+      <AlertComponent title={title} content={content} afterClose={destroy} onAction={onAction} cancelBtn={cancelBtn} okBtnText={okBtnText} />
     )
   },
 
@@ -50,6 +51,7 @@ export const JknAlert = {
 
 interface AlertDialogProps extends AlertOptions {
   afterClose?: () => void
+  okBtnText?: string
 }
 
 const AlertComponent = (props: AlertDialogProps) => {
@@ -119,7 +121,7 @@ const AlertComponent = (props: AlertDialogProps) => {
               <Button variant="outline" onClick={onCancel}>取消</Button>
             )
           }
-          <Button onClick={onConfirm}>确认</Button>
+          <Button onClick={onConfirm}>{props.okBtnText ?? '确认'}</Button>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
