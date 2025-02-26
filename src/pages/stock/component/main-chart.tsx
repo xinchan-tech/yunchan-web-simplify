@@ -166,7 +166,7 @@ export const MainChart = (props: MainChartProps) => {
       if (!renderUtils.isSameTimeByInterval(dayjs(lastData.timestamp), dayjs(+s[0] * 1000), state.timeIndex)) {
         candlesticks = [...lastMainHistory.current, s]
       } else {
-        candlesticks = [...lastMainHistory.current.slice(0, -1), s]
+        // candlesticks = [...lastMainHistory.current.slice(0, -1), s]
       }
 
       renderUtils.calcIndicatorData(candlesticks, props.index).then(r => {
@@ -195,7 +195,7 @@ export const MainChart = (props: MainChartProps) => {
 
       if (!lastStock) return
 
-      if (!renderUtils.isSameTimeByInterval(dateUtils.toUsDay(lastStock[0]), dayjs(data.record.time), state.timeIndex)) return
+      if (!renderUtils.isSameTimeByInterval(dateUtils.toUsDay(+lastStock[0]!), dateUtils.toUsDay(data.record.time), state.timeIndex)) return
 
       const newLastStock = replace(lastStock, data.record.close, (_, idx) => idx === 2) as any
 

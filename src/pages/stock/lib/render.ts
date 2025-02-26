@@ -765,7 +765,7 @@ export const renderMarkLine: ChartRender = (options, state) => {
       padding: [2, 4],
       backgroundColor: lineColor,
       formatter: (params: { data: { yAxis: number } }) => {
-        return params.data.yAxis ? Decimal.create(params.data.yAxis).toFixed(2) : ''
+        return params.data.yAxis ? Decimal.create(params.data.yAxis).toFixed(3) : ''
       }
     },
     silent: true,
