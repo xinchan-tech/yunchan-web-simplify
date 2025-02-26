@@ -1,5 +1,6 @@
 import type { getMallProducts } from "@/api"
 import { Button, JknIcon } from "@/components"
+import { useToast } from "@/hooks"
 import { cn } from "@/utils/style"
 import Decimal from "decimal.js"
 
@@ -21,7 +22,21 @@ interface BasicPageProps {
 export const BasicPage = (props: BasicPageProps) => {
   const unit = props.type === 'model_month' ? '月' : '年'
 
+  const { toast } = useToast()
+
   const onBuy = (productId: string, price: string, name: string) => {
+    const product = props.basic.find(b => b.id === productId)
+    if (!product) {
+      return
+    }
+
+    if(product.forbidden) {
+      toast({
+        description: product.forbidden
+      })
+      return
+    }
+    
     props.onSubmit({
       productId,
       name: `${props.title}-${name}`,

@@ -14,6 +14,7 @@ type GetMallProductsResult = {
     model_year: string
     name: string
     professional: string
+    forbidden?: string
     publicize: [number, string][]
   }[]
   plus: GetMallProductsResult['basic']
@@ -35,6 +36,7 @@ type GetMallProductsResult = {
     is_hot: string
     model_month: string
     model_year: string
+    forbidden?: string
     name: string
     professional: string
   }[]

@@ -34,8 +34,8 @@ import { uid } from "radash"
 import { QrCode } from "lucide-react"
 
 const subscribeTypes = [
-  { name: '按年订阅', type: 'model_year' },
-  { name: '按月订阅', type: 'model_month' }
+  { name: '按月订阅', type: 'model_month' },
+  { name: '按年订阅', type: 'model_year' }
 ]
 
 const versions = [
@@ -62,7 +62,7 @@ const MallPage = () => {
   })
 
   const [version, setVersion] = useState<Version>('basic')
-  const [subscribeType, setSubscribeType] = useState<string>('model_year')
+  const [subscribeType, setSubscribeType] = useState<string>('model_month')
   const form = useZForm(productForm, {
     productId: '',
     name: '',

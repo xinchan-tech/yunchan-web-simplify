@@ -1,5 +1,6 @@
 import type { getMallProducts } from "@/api"
 import { Button } from "@/components"
+import { useToast } from "@/hooks"
 import Decimal from "decimal.js"
 
 
@@ -19,8 +20,19 @@ interface IncrementPageProps {
 
 export const IncrementPage = (props: IncrementPageProps) => {
   const unit = props.type === 'model_month' ? '月' : '年'
-
+  const { toast } = useToast()
   const onBuy = (productId: string, price: string, name: string) => {
+    const product = props.increment.find(b => b.id === productId)
+    if (!product) {
+      return
+    }
+
+    if(product.forbidden) {
+      toast({
+        description: product.forbidden
+      })
+      return
+    }
     props.onSubmit({
       productId,
       name: `${props.title}-${name}`,
