@@ -997,7 +997,8 @@ const renderIndicator = (
         drawCustomLine(options, {} as any, {
           extra: {
             color: d.color || '#ffffff',
-            type: d.style_type === 'DOTLINE' ? 'dashed' : 'solid'
+            type: d.style_type === 'DOTLINE' ? 'dashed' : 'solid',
+            lineWidth: d.linethick
           },
           name: seriesName,
           xAxisIndex: params.xAxisIndex,

@@ -75,6 +75,10 @@ type DrawerFuncOptions<T = any> = {
      * bgColor
      */
     bgColor?: string
+    /**
+     * lineWidth
+     */
+    lineWidth?: number
   }
   /**
    *
@@ -225,15 +229,17 @@ export const drawCustomLine: DrawerFunc<[XAxis, [number, number | null]][]> = (
         z: extra?.z ?? 0,
         id: extra?.seriesId,
         name,
+        
         style: {
           stroke: extra?.color,
           lineDash: extra?.type ?? 'solid',
-          lineWidth: 1
+          lineWidth: extra?.lineWidth ?? 1
         }
       }
     },
     data: points
   }
+
   renderUtils.addSeries(options, line)
   return options
 }
@@ -364,8 +370,8 @@ export type DrawerTextShape = {
   drawY: YAxis
   text: string
   color: string
-  xOffset?: number
-  yOffset?: number
+  offsetX?: number
+  offsetY?: number
 }
 
 /**
@@ -385,7 +391,7 @@ export const drawText: DrawerFunc<DrawerTextShape[]> = (options, _, { xAxisIndex
   const grid = renderUtils.getGridByYAxisIndex(options, yAxisIndex)
   const top = grid?.top ?? 2
   const bottom = top + (grid?.height ?? Number.MAX_SAFE_INTEGER)
-
+  console.log(data)
   const line: CustomSeriesOption = {
     xAxisIndex: xAxisIndex,
     yAxisIndex: yAxisIndex,
@@ -421,7 +427,7 @@ export const drawText: DrawerFunc<DrawerTextShape[]> = (options, _, { xAxisIndex
       }
     },
     name,
-    data: data.map(item => [item.x, item.y, item.text, item.color, item.xOffset ?? 0, item.yOffset ?? 0, item.drawY])
+    data: data.map(item => [item.x, item.y, item.text, item.color, item.offsetX ?? 0, item.offsetY ?? 0, item.drawY])
   }
 
   Array.isArray(options.series) && options.series.push(line)
