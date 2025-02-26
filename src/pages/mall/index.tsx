@@ -316,7 +316,7 @@ const CashierPage = () => {
         </div>
       </div>
     ),
-    title: '社群服务协议',
+    title: '使用条款、政策和免责声明',
     closeIcon: true,
     footer: null
   })
