@@ -1055,6 +1055,10 @@ export const drawIcon: DrawerFunc<DrawIconShape[]> = (options, _, { xAxisIndex, 
       const offsetY = api.value(5) as number
       const point = api.coord([x, y])
 
+      if(!iconContext(`./draw_${icon}.png`)){
+        return null
+      }
+
       const size = 20
 
       if (point[1] + size > bottom) {
