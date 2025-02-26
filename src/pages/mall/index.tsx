@@ -1,11 +1,13 @@
 import { checkMallProductOrderStatus, createMallProductOrder, getMallProducts, getPaymentTypes } from '@/api'
 import {
+  AgreementTerms,
   Button,
   JknAlert,
   JknIcon,
   Label,
   RadioGroup,
   RadioGroupItem,
+  ScrollArea,
   Skeleton,
   ToggleGroup,
   ToggleGroupItem,
@@ -306,15 +308,9 @@ const CashierPage = () => {
   const agreement = useModal({
     content: (action) => (
       <div className="p-8 leading-8">
-        <div className="border border-solid rounded-sm border-gray-700 p-4">
-          在使用本软件前，请仔细阅读以下文字。
-          <br />风险提示:市场有风险，投资需谨慎<br />
-          风险提示<br />
-          一:用户应充分认识到证券投资的风险，公司所提供的所有数据与信息，仅供用户参考使用，不构成用户进行投资操作的直接依据、意见或建议等等，用户据此操作，风险自担，公司不承担任何经济与法律责任。<br />
-          二:公司通过软件产品为用户提供财经金融资讯和行情数据信息，并通过相关数据分析系统、缠论运算模型等对上述资讯和数据进行整理加工和集成，为用户提供高附加值的信息和数据服务，以利于用户在投资过程中理性决策、控制风险。用户在使用软件产品过程中，对于公司提供的数据信息内容，用户不应将其视作公司明示、默示的承诺证券、期货的投资投收益，不应将其视为具体证券品种选择买卖时机的建议，或任何其他形式的证券投资咨询/建议/意见等。公司对用户的投资决策可能带来的风,险或损失不承担任何违约、赔偿或其他民事责任。<br />
-          三:证券市场具有较大的风险，请您注意。<br />
-          四:本公司相关服务及产品仅是投资辅助工具，单一业绩不代表全面业绩，过往业绩不代表将来业绩，无法保证投资不受损失。
-        </div>
+        <ScrollArea className="border border-solid rounded-sm border-gray-700 p-4 h-[400px]">
+          <AgreementTerms />
+        </ScrollArea>
         <div className="text-center mt-2">
           <Button onClick={action.close}>确定</Button>
         </div>
