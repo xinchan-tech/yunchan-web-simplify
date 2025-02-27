@@ -61,11 +61,11 @@ const App = () => {
   useEffect(() => {
     if (token) {
       refreshUser().then(res => {
-        if (res.buy_inchannel_status === 1) {
-          inviteModal.open()
-        } else {
-          inviteModal.close()
-        }
+        // if (res.buy_inchannel_status === 1) {
+        //   inviteModal.open()
+        // } else {
+        //   inviteModal.close()
+        // }
 
         channel.current?.postMessage({
           type: APP_TO_CHAT_REFRESH_USER,
