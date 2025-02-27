@@ -8,7 +8,6 @@ import { uid } from 'radash'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Outlet, useNavigate } from 'react-router'
-import Logo from './assets/icon/icon_jkn@2x.png'
 import {
   AiAlarmNotice,
   Footer,
