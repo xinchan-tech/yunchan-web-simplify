@@ -134,6 +134,7 @@ export interface GroupDetailData {
     price: string
     unit: string
     title: string
+    type: string
   }>
   chat_type: '0' | '1' | '2'
   blacklist: Array<{ uid: string; realname: string }>

@@ -1,4 +1,4 @@
-import { checkMallProductOrderStatus, createMallProductOrder, getMallProducts, getPaymentTypes } from '@/api'
+import { checkMallProductOrderStatus, createMallProductOrder, getGroupDetailService, getMallProducts, getPaymentTypes, joinGroupService } from '@/api'
 import {
   AgreementTerms,
   Button,
@@ -52,7 +52,8 @@ const productForm = z.object({
   name: z.string(),
   price: z.string(),
   model: z.string(),
-  checked: z.boolean()
+  checked: z.boolean(),
+  productType: z.string().optional()
 })
 
 const MallPage = () => {
@@ -200,10 +201,10 @@ const CashierPage = () => {
   const form = useFormContext()
   const name = form.getValues('name')
   const price = form.getValues('price')
-  const model = form.getValues('model')
+  const model = form.getValues('model') as string
   const productId = form.getValues('productId')
-
   const checked = form.watch('checked')
+  const productType = form.getValues('productType')
 
   const [type, setType] = useState<string>()
   const [loading, { setTrue, setFalse }] = useBoolean(false)
@@ -232,6 +233,26 @@ const CashierPage = () => {
     }
     setTrue()
 
+  
+    const [err, res] = await to(productType === 'group' ? buyGroupProduct() : buyNormalProduct())
+
+    if (err) {
+      setFalse()
+      toast({ description: err.message })
+      return
+    }
+    if (res.type === 'qr_code') {
+      setQrCodeUrl(res.url)
+      qrCode.modal.open()
+      setFalse()
+    } else {
+      window.open(res.url)
+    }
+
+    checkStatus(res.pay_sn)
+  }
+
+  const buyNormalProduct = async () => {
     const params: Parameters<typeof createMallProductOrder>[0] = {
       model: model,
       number: 1,
@@ -239,22 +260,36 @@ const CashierPage = () => {
       platform: type!
     }
 
-    const [err, res] = await to(createMallProductOrder(params))
+    const res = await createMallProductOrder(params)
 
-    if (err) {
-      setFalse()
-      toast({ description: err.message })
-      return
+    return {
+      type: res.config.type,
+      url: res.config.url,
+      pay_sn: res.pay_sn
     }
-    if (res.config.type === 'qr_code') {
-      setQrCodeUrl(res.config.url)
-      qrCode.modal.open()
-      setFalse()
-    } else {
-      window.open(res.config.url)
+  }
+
+  const buyGroupProduct = async () => {
+    const channelInfo = await getGroupDetailService(productId)
+
+    const product = channelInfo.products.find(p => p.type === model.replace('model_', ''))
+
+    if(!product) {
+      throw new Error('社群信息不完整')
     }
 
-    checkStatus(res.pay_sn)
+    const params = {
+      payment_type: type!,
+      product_sn: product.product_sn,
+    }
+
+    const res = await joinGroupService(channelInfo.account, params)
+
+    return {
+      type: res.config.type,
+      url: res.config.url,
+      pay_sn: res.pay_sn
+    }
   }
 
   const checkStatus = async (paySn: string) => {

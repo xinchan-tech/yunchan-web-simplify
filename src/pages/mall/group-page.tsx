@@ -1,5 +1,6 @@
 import { getGroupChannels } from '@/api'
 import { Button, JknAvatar, JknIcon } from '@/components'
+import { useToast } from "@/hooks"
 import { colorUtil } from '@/utils/style'
 import { useQuery } from '@tanstack/react-query'
 
@@ -12,12 +13,14 @@ interface GroupPageProps {
     price: string
     model: string
     checked: boolean
+    productType: string
   }) => void
 }
 
 export const GroupPage = (props: GroupPageProps) => {
   const params = {
-    type: '1'
+    type: '1',
+    limit: 100
   }
   const channels = useQuery({
     queryKey: [getGroupChannels.cacheKey, params],
@@ -44,13 +47,14 @@ export const GroupPage = (props: GroupPageProps) => {
 
   const unit = props.type === 'model_month' ? '月' : props.type === 'model_year' ? '年' : '-'
 
-  const onSubmit = (channelId: string, name: string) => {
+  const onSubmit = async (channelId: string, name: string, account: string) => {
     props.onSubmit({
-      productId: channelId,
+      productId: account,
       name: `${props.title}-${name}`,
       price: getPrice(channelId) ?? '0',
       model: props.type,
-      checked: false
+      checked: false,
+      productType: 'group'
     })
   }
 
@@ -113,7 +117,7 @@ export const GroupPage = (props: GroupPageProps) => {
                   <Button
                     className="w-20 !leading-[28px] h-[28px]"
                     size="mini"
-                    onClick={() => onSubmit(channel.id, channel.name)}
+                    onClick={() => onSubmit(channel.id, channel.name, channel.account)}
                   >
                     加入
                   </Button>
