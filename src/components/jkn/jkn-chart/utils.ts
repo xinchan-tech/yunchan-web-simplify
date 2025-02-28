@@ -1,5 +1,10 @@
 import { useConfig } from '@/store'
 import type { Candlestick } from './types'
+import type { StockRawRecord } from "@/api"
+
+export enum ChartTypes {
+  MAIN_PANE_ID = 'candle_pane'
+}
 
 export const transformTextColor = (text: string, startData: Candlestick) => {
   const getColor = useConfig.getState().getStockColor
@@ -34,4 +39,8 @@ export const getStockColor = () => {
     up: getColor(true, 'hex'),
     down: getColor(false, 'hex')
   }
+}
+
+export const candlestickToRaw = (candle: Candlestick): StockRawRecord => {
+  return [candle.timestamp as unknown as string, candle.open, candle.close, candle.high, candle.low, candle.volume ?? 0, candle.turnover ?? 0, candle.prevClose]
 }

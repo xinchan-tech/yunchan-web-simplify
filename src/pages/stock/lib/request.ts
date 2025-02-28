@@ -25,7 +25,7 @@ const getPeriodByPage = (params: { interval: StockChartInterval; startDate: numb
   } else if (interval <= StockChartInterval.FOUR_HOUR) {
     resultDate = usDate.add(-30 * 6, 'd').format('YYYY-MM-DD HH:mm:ss')
   } else if (interval === StockChartInterval.DAY) {
-    resultDate = usDate.add(-365 * 1.5, 'd').format('YYYY-MM-DD HH:mm:ss')
+    resultDate = usDate.add(-365 * 10, 'd').format('YYYY-MM-DD HH:mm:ss')
   } else if (interval === StockChartInterval.WEEK) {
     resultDate = usDate.add(-12 * 2, 'M').format('YYYY-MM-DD HH:mm:ss')
   } else if (interval === StockChartInterval.MONTH) {

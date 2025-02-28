@@ -1,10 +1,20 @@
 import { useMount, useUnmount } from "ahooks"
-import { init, dispose, LayoutChildType, type Chart, CandleType } from 'jkn-kline-chart'
+import { init, dispose, type LayoutChildType, type Chart, type CandleType, registerIndicator } from 'jkn-kline-chart'
 import { forwardRef, useEffect, useImperativeHandle, useRef } from "react"
 import type { AxisPosition, Candlestick } from "./types"
-import { getStockColor, transformCandleColor, transformTextColor } from "./utils"
+import { ChartTypes, getStockColor, transformCandleColor, transformTextColor } from "./utils"
 import { cn } from "@/utils/style"
 import { dateUtils } from "@/utils/date"
+import { CoilingIndicatorId, penCoiling, pivotCoiling, shortLineCoiling, tradePointOneTypeCoiling, tradePointThreeTypeCoiling, tradePointTwoTypeCoiling } from "./coiling"
+
+
+registerIndicator(penCoiling)
+registerIndicator(tradePointOneTypeCoiling)
+registerIndicator(tradePointTwoTypeCoiling)
+registerIndicator(tradePointThreeTypeCoiling)
+registerIndicator(pivotCoiling)
+registerIndicator(shortLineCoiling)
+
 
 interface JknChartProps {
   className?: string
@@ -12,6 +22,7 @@ interface JknChartProps {
 
 interface JknChartIns {
   applyNewData: Chart['applyNewData']
+  setCoiling: (coiling: CoilingIndicatorId, data: CoilingData) => void
   setLeftAxis: (show: boolean) => void
   setRightAxis: (type: 'percentage' | 'normal') => void
   setChartType: (type: 'area' | 'candle') => void
@@ -142,6 +153,7 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
       timezone: 'America/New_York',
     })
     // chart.current?.setStyles('dark')
+
   })
 
   useUnmount(() => {
@@ -174,6 +186,45 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
           type: (type === 'area' ? 'area' : undefined) as CandleType
         }
       })
+    },
+    setCoiling: (coiling, data) => {
+      const hasIndicator = chart.current?.getIndicators({ id: `coiling-${coiling}` })
+      let indicator: { name: string, id: string, calcParams: any[] } | undefined = undefined
+
+      if (CoilingIndicatorId.PEN === coiling) {
+        indicator = {
+          name: `coiling-${CoilingIndicatorId.PEN}`,
+          id: `coiling-${CoilingIndicatorId.PEN}`,
+          calcParams: [data.points, data.status]
+        }
+      } else if ([CoilingIndicatorId.ONE_TYPE, CoilingIndicatorId.TWO_TYPE, CoilingIndicatorId.THREE_TYPE].includes(coiling)) {
+        indicator = {
+          name: `coiling-${coiling}`,
+          id: `coiling-${coiling}`,
+          calcParams: coiling === CoilingIndicatorId.THREE_TYPE ? [data.class_3_trade_points] : coiling === CoilingIndicatorId.TWO_TYPE ? [data.class_2_trade_points] : [data.class_1_trade_points]
+        }
+      } else if(CoilingIndicatorId.PIVOT === coiling) {
+        indicator = {
+          name: `coiling-${CoilingIndicatorId.PIVOT}`,
+          id: `coiling-${CoilingIndicatorId.PIVOT}`,
+          calcParams: [data.pivots, data.expands]
+        }
+      } else if(CoilingIndicatorId.SHORT_LINE === coiling) {
+        indicator = {
+          name: `MA-2`,
+          id: `coiling-${CoilingIndicatorId.SHORT_LINE}`,
+          calcParams: []
+        }
+      }
+
+      if (!indicator) return
+
+      if (hasIndicator?.length) {
+        chart.current?.overrideIndicator(indicator)
+      } else {
+        chart.current?.createIndicator(indicator, true,
+          { id: ChartTypes.MAIN_PANE_ID })
+      }
     }
   }))
 
