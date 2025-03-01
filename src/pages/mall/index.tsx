@@ -41,7 +41,7 @@ const subscribeTypes = [
 const versions = [
   { name: '旗舰达人', value: 'basic' },
   { name: '量化精英', value: 'plus' },
-  { name: '聊天社群', value: 'group' },
+  // { name: '聊天社群', value: 'group' },
   { name: '增值包', value: 'increment' }
 ]
 
@@ -196,6 +196,19 @@ const MallPage = () => {
   )
 }
 
+const gotoPayPage = (url: string) => {
+  const a = document.createElement('a')
+  a.href = url
+  a.id = 'pay-link'
+  a.target = '_blank'
+  if(document.querySelector('#pay-link')) {
+    document.body.removeChild(document.querySelector('#pay-link')!)
+  }
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+}
+
 //收银台
 const CashierPage = () => {
   const form = useFormContext()
@@ -226,6 +239,7 @@ const CashierPage = () => {
     }
   }, [payments.data])
 
+
   const onBuy = async () => {
     if (!checked) {
       toast({ description: '请先同意订阅协议' })
@@ -246,7 +260,7 @@ const CashierPage = () => {
       qrCode.modal.open()
       setFalse()
     } else {
-      window.open(res.url)
+      gotoPayPage(res.url)
     }
 
     checkStatus(res.pay_sn)
