@@ -23,7 +23,7 @@ import { GroupPage } from './group-page'
 import { IntroPage } from './intro-page'
 import { useFormContext } from 'react-hook-form'
 import { cn } from '@/utils/style'
-import { useBoolean, useMount } from 'ahooks'
+import { useBoolean, useMount, useUnmount } from 'ahooks'
 import to from 'await-to-js'
 import qs from "qs"
 import { IncrementPage } from "./increment-page"
@@ -368,6 +368,10 @@ const CashierPage = () => {
 
     setType(v)
   }
+
+  useUnmount(() => {
+    clearTimeout(checkTimer.current)
+  })
 
   //协议modal
   const agreement = useModal({
