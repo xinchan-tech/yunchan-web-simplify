@@ -32,6 +32,7 @@ import QRCode from 'qrcode'
 import { appEvent } from "@/utils/event"
 import { uid } from "radash"
 import { QrCode } from "lucide-react"
+import copy from "copy-to-clipboard"
 
 const subscribeTypes = [
   { name: '按月订阅', type: 'model_month' },
@@ -201,7 +202,7 @@ const gotoPayPage = (url: string) => {
   a.href = url
   a.id = 'pay-link'
   a.target = '_blank'
-  if(document.querySelector('#pay-link')) {
+  if (document.querySelector('#pay-link')) {
     document.body.removeChild(document.querySelector('#pay-link')!)
   }
   document.body.appendChild(a)
@@ -222,8 +223,8 @@ const CashierPage = () => {
   const [type, setType] = useState<string>()
   const [loading, { setTrue, setFalse }] = useBoolean(false)
   const checkTimer = useRef<number>()
-  const [paySuccess, setPaySuccess] = useState(false)
-  const [qrCodeUrl, setQrCodeUrl] = useState('')
+  const [payStatus, setPayStatus] = useState<'pre' | 'paying' | 'paid'>('pre')
+  const [payUrl, setPayUrl] = useState('')
   const { toast } = useToast()
 
   const payments = useQuery({
@@ -247,22 +248,20 @@ const CashierPage = () => {
     }
     setTrue()
 
-  
-    const [err, res] = await to(productType === 'group' ? buyGroupProduct() : buyNormalProduct())
 
+    const [err, res] = await to(productType === 'group' ? buyGroupProduct() : buyNormalProduct())
+    setFalse()
     if (err) {
-      setFalse()
       toast({ description: err.message })
       return
     }
+    setPayUrl(res.url)
     if (res.type === 'qr_code') {
-      setQrCodeUrl(res.url)
       qrCode.modal.open()
-      setFalse()
     } else {
       gotoPayPage(res.url)
     }
-
+    setPayStatus('paying')
     checkStatus(res.pay_sn)
   }
 
@@ -288,7 +287,7 @@ const CashierPage = () => {
 
     const product = channelInfo.products.find(p => p.type === model.replace('model_', ''))
 
-    if(!product) {
+    if (!product) {
       throw new Error('社群信息不完整')
     }
 
@@ -317,7 +316,7 @@ const CashierPage = () => {
       setFalse()
       toast({ description: '支付成功' })
       //重载页面
-      setPaySuccess(true)
+      setPayStatus('paid')
       return
     }
 
@@ -331,26 +330,43 @@ const CashierPage = () => {
   const qrCode = useModal({
     title: '支付二维码',
     className: 'w-[400px]',
-    content: <WxCharQrCode name={name} price={totalPrice} url={qrCodeUrl} />,
+    content: <WxCharQrCode name={name} price={totalPrice} url={payUrl} />,
     footer: null,
     closeIcon: true
   })
 
 
-  const checkPayQrcode = () => {
-    if (!paySuccess) {
-      JknAlert.confirm({
-        content: '未验证到支付成功，请确认是否支付成功',
-        okBtnText: '去支付',
-        onAction: async (action) => {
-          if (action === 'confirm') {
-            qrCode.modal.open()
-          }
+  const checkPay = () => {
+    if (payStatus !== 'paid') {
+      JknAlert.info({
+        content: '未验证到支付成功，请确认',
+        onAction: async () => {
+
         }
       })
     } else {
-      setQrCodeUrl('')
+      setPayUrl('')
+      setPayStatus('paid')
     }
+  }
+
+  const openPay = (url: string) => {
+    if (type === 'wechat') {
+      qrCode.modal.open()
+    } else {
+      gotoPayPage(url)
+    }
+  }
+
+  const onCopyUrl = () => {
+    copy(payUrl)
+    toast({ description: '复制成功' })
+  }
+
+  const onChangeType = (v: string) => {
+    if (payStatus !== 'pre') return
+
+    setType(v)
   }
 
   //协议modal
@@ -382,7 +398,7 @@ const CashierPage = () => {
         </div>
       </div>
       {
-        !paySuccess ? (
+        payStatus !== 'paid' ? (
           <div className="text-center">
             <p className="text-center">请选择支付方式</p>
             {
@@ -396,7 +412,7 @@ const CashierPage = () => {
                 </div>
               ) : (
                 <div className="min-h-48 px-8">
-                  <RadioGroup value={type} onValueChange={setType} className="flex items-center justify-between flex-wrap px-4">
+                  <RadioGroup value={type} onValueChange={onChangeType} className="flex items-center justify-between flex-wrap px-4">
                     {types.map(t => (
                       <div className="flex items-center space-x-2 mb-4" key={t.type}>
                         <RadioGroupItem key={t.type} value={t.type} id={`mall-payment-${t.type}`} />
@@ -413,22 +429,43 @@ const CashierPage = () => {
               )
             }
             <div className="w-full flex items-center px-12 mb-4">
-              <JknIcon.Checkbox checked={checked} checkedIcon="checkbox_mult_sel" uncheckedIcon="checkbox_mult_nor" onClick={() => form.setValue('checked', !checked)} className="rounded-none" />
+              <JknIcon.Checkbox checked={checked} checkedIcon="checkbox_mult_sel" uncheckedIcon="checkbox_mult_nor" onClick={() => payStatus === 'pre' && form.setValue('checked', !checked)} className="rounded-none" />
               <span>
                 &nbsp;我已经阅读并同意<span className="text-primary cursor-pointer" onClick={() => agreement.modal.open()} onKeyDown={() => { }}>《软件订阅协议》</span>
               </span>
             </div>
             {
               type ? (
-                qrCodeUrl ? (
-                  <Button type="button" onClick={() => checkPayQrcode()}>
-                    支付完成？验证支付
-                  </Button>
-                ) : (
+                // payUrl ? (
+                //   <Button type="button" onClick={() => checkPay()}>
+                //     支付完成？验证支付
+                //   </Button>
+                // ) : (
+                //   <Button type="button" onClick={() => onBuy()}>
+                //     支付
+                //   </Button>
+                // )
+                payStatus === 'pre' ? (
                   <Button type="button" onClick={() => onBuy()}>
-                    跳转 {type} 支付
+                    支付
                   </Button>
-                )
+                ) : payStatus === 'paying' ? (
+                  <>
+                    <div className="space-x-4 mb-4">
+                      <Button type="button" variant="outline" onClick={() => checkPay()}>
+                        支付完成？验证支付
+                      </Button>
+                      <Button type="button" onClick={() => openPay(payUrl)}>
+                        跳转 {type} 支付
+                      </Button>
+                    </div>
+                    {
+                      type !== 'wechat' && (
+                        <span className="text-tertiary text-xs">未跳转到支付页面？复制付款<span className="text-primary cursor-pointer" onClick={onCopyUrl} onKeyDown={() => { }}>链接</span></span>
+                      )
+                    }
+                  </>
+                ) : null
               ) : null
             }
           </div >
