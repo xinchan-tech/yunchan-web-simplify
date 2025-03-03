@@ -3,26 +3,15 @@ import { HoverCard, HoverCardContent, HoverCardTrigger, JknIcon } from "@/compon
 import { SearchList } from "./search-list"
 import { CoilingIndicatorId, kChartUtils, useKChartStore } from "../lib"
 import { useCallback } from "react"
+import { chartManage, useChartManage } from "../lib/store"
 
 interface MainIndicatorProps {
   data?: Awaited<ReturnType<typeof getStockIndicators>>
 }
 export const MainIndicator = (props: MainIndicatorProps) => {
-  //TODO, 修改缠论系统版本时，去除不在目标版本里的指标
-  const system = useKChartStore(s => s.state[s.activeChartIndex].system)
+  const system = useChartManage(s => s.getActiveChart().system)
   const _setMainSystem = useCallback((system: string) => {
-    kChartUtils.setMainSystem({ system })
-    if(system){
-      kChartUtils.setMainCoiling({coiling: [
-        CoilingIndicatorId.PEN,
-        CoilingIndicatorId.ONE_TYPE,
-        CoilingIndicatorId.TWO_TYPE,
-        CoilingIndicatorId.THREE_TYPE,
-        CoilingIndicatorId.PIVOT
-      ]})
-    }else{
-      kChartUtils.setMainCoiling({coiling: []})
-    }
+    chartManage.setSystem(system)
   }, [])
 
   return (

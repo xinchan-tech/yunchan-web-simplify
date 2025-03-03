@@ -19,6 +19,7 @@ import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
 import { renderUtils } from './utils'
 import { dateUtils } from '@/utils/date'
+import { chartEvent } from './event'
 
 export type ViewMode =
   | 'single'
@@ -244,6 +245,11 @@ type KChartUtils = {
     count: number
     price: number
   }) => void
+
+  /**
+   *
+   */
+  getActiveStoreFromLocalStorage: () => ChartStore | undefined
 }
 
 /**
@@ -252,120 +258,17 @@ type KChartUtils = {
 export type Indicator = {
   id: string
   type: string
-  timeIndex: StockChartInterval
-  symbol: string
-  start_at?: string
   key: string
   name: string
   visible?: boolean
   formula?: string
-  data?: IndicatorData
   /**
    * 计算类型： =svr_policy 是从后端获取
    */
   calcType: string
 }
 
-/**
- * 指标数据
- */
-export type IndicatorData =
-  | (
-      | IndicatorDataLine
-      | IndicatorDataDrawGradient
-      | IndicatorDataDrawStickLine
-      | IndicatorDataDrawText
-      | IndicatorDataDrawNumber
-      | IndicatorDataDrawRectRel
-      | IndicatorDataDrawIcon
-      | IndicatorDataDrawBand
-    )[]
-  | undefined
-type DrawFunc = '' | 'STICKLINE' | 'DRAWTEXT' | 'DRAWGRADIENT' | 'DRAWNUMBER' | 'DRAWRECTREL' | 'DRAWICON' | 'DRAWBAND'
-type IndicatorDataBase<T extends DrawFunc> = {
-  draw: T
-  color: string
-  linethick: number
-  name?: string
-  style_type?: string
-}
 
-type IndicatorDataLine = IndicatorDataBase<''> & {
-  data: number[]
-}
-type IndicatorDataDrawStickLine = IndicatorDataBase<'STICKLINE'> & {
-  draw_data: Record<number, [number, number, number, number]>
-}
-type IndicatorDataDrawText = IndicatorDataBase<'DRAWTEXT'> & {
-  draw_data: {
-    x: number
-    y: number
-    drawY: number
-    text: string
-    offsetX: number
-    offsetY: number
-  }[]
-}
-/**
- * 一个渐变的多边形
- * 值类型为 [startX, endX, minY, maxY, [number, number][], color1, color2]
- * startX: 多边形起始x轴坐标
- * endX: 多边形结束x轴坐标
- * minY: 多边形最小y轴坐标
- * maxY: 多边形最大y轴坐标
- * [number, number][]: 多边形的点，每个点是一个数组，第一个元素是x轴坐标，第二个元素是y轴坐标
- * color1: 颜色1
- * color2: 颜色2
- */
-type IndicatorDataDrawGradient = IndicatorDataBase<'DRAWGRADIENT'> & {
-  draw_data: [number, number, number, number, [number, number][], string, string][]
-}
-type IndicatorDataDrawNumber = IndicatorDataBase<'DRAWNUMBER'> & {
-  draw_data: {
-    x: number
-    y: number
-    drawY: number
-    number: number
-    offsetX: number
-    offsetY: number
-  }[]
-}
-type IndicatorDataDrawBand = IndicatorDataBase<'DRAWBAND'> & {
-  draw_data: {
-    polygonIndex: number
-    x: number
-    y: number
-    polygon?: {
-      color: string
-      points: {
-        x: number
-        drawY: number
-      }[]
-    }
-  }[]
-}
-/**
- * 一个固定位置的矩形
- * 值类型为 [leftTopX, leftTopY, rightBottomX, rightBottomY, color]
- * leftTopX: 矩形左上角x轴坐标
- * leftTopY: 矩形左上角y轴坐标
- * rightBottomX: 矩形右下角x轴坐标
- * rightBottomY: 矩形右下角y轴坐标
- * color: 颜色
- */
-type IndicatorDataDrawRectRel = IndicatorDataBase<'DRAWRECTREL'> & {
-  draw_data: Record<number, [number, number, number, number, string]>
-}
-type IndicatorDataDrawIcon = IndicatorDataBase<'DRAWICON'> & {
-  draw_data: {
-    x: number
-    y: number
-    drawY: number
-    icon: number
-    offsetX: number
-    offsetY: number
-  }[]
-}
 
 /**
  * 坐标轴
@@ -376,6 +279,63 @@ type MainYAxis = 'price' | 'percent'
  * K线图实例状态
  * 一个实例对应一个窗口
  */
+export type ChartStore = {
+  id: string
+  /**
+   * 主图类型
+   */
+  type: MainChartType
+  /**
+   * 分时
+   */
+  timeIndex: StockChartInterval
+  /**
+   * 缠论系统
+   */
+  system?: string
+  /**
+   * 附图的指标，有几个指标就有几个附图
+   */
+  secondaryIndicators: Indicator[]
+  // /**
+  //  * 附图指标数据, 一定要是长度为5的数组，分别对应5个附图
+  //  */
+  // secondaryIndicatorsData: (Awaited<ReturnType<typeof getStockIndicatorData>>['result'] | null)[]
+  /**
+   * 主图的指标
+   */
+  mainIndicators: NormalizedRecord<Indicator>
+  /**
+   * 主图缠论
+   */
+  mainCoiling: CoilingIndicatorId[]
+  /**
+   * 叠加股票数据
+   */
+  overlayStock: {
+    symbol: string
+  }[]
+  /**
+   * 叠加标记
+   */
+  overlayMark?: {
+    mark: string
+    title: string
+  }
+
+  /**
+   * 主图坐标轴
+   */
+  yAxis: {
+    left?: MainYAxis
+    right: MainYAxis
+  }
+
+  /**
+   * 回测模式
+   */
+  backTest: boolean
+}
 type MainChartState = {
   id: string
   index: number
@@ -594,6 +554,49 @@ export const useKChartStore = create<KChartContext>()(
   )
 )
 
+export const createDefaultChartStore = (): ChartStore => {
+  return {
+    type: 'k-line',
+    timeIndex: StockChartInterval.DAY,
+    system: 'pro',
+    id: nanoid(),
+    /**
+     * 9: 底部信号
+     * 10: 买卖点位
+     */
+    secondaryIndicators: [
+      {
+        id: '9',
+        type: 'system',
+        key: nanoid(),
+        name: '底部信号',
+        calcType: 'trade_point'
+      },
+      {
+        id: '10',
+        type: 'system',
+        key: nanoid(),
+        name: '买卖点位',
+        calcType: 'trade_hdly'
+      }
+    ],
+    mainIndicators: {},
+    mainCoiling: [
+      CoilingIndicatorId.PEN,
+      CoilingIndicatorId.ONE_TYPE,
+      CoilingIndicatorId.TWO_TYPE,
+      CoilingIndicatorId.THREE_TYPE,
+      CoilingIndicatorId.PIVOT
+    ],
+    overlayStock: [],
+    overlayMark: undefined,
+    yAxis: {
+      right: 'price'
+    },
+    backTest: false
+  }
+}
+
 export const kChartUtils: KChartUtils = {
   setSymbol: ({ index, symbol }) => {
     useKChartStore.setState(state => ({
@@ -607,30 +610,8 @@ export const kChartUtils: KChartUtils = {
       })
     }))
   },
-  setTimeIndex: ({ index, timeIndex }) => {
-    useKChartStore.setState(state => ({
-      state: state.state.map(item => {
-        if (item.index === (index ?? state.activeChartIndex)) {
-          return produce(item, draft => {
-            draft.timeIndex = timeIndex
-            if (isTimeIndexChart(timeIndex)) {
-              draft.type = 'line'
-            }
-
-            Object.values(draft.mainIndicators).forEach(v => {
-              v.timeIndex = timeIndex
-              v.data = undefined
-            })
-
-            draft.secondaryIndicators.forEach(v => {
-              v.timeIndex = timeIndex
-              v.data = undefined
-            })
-          })
-        }
-        return item
-      })
-    }))
+  setTimeIndex: ({ timeIndex }) => {
+    chartEvent.get().emit('intervalChange', timeIndex)
   },
   toggleMainChartType: ({ index, type }) => {
     const state = useKChartStore.getState().state[index ?? useKChartStore.getState().activeChartIndex]
@@ -668,17 +649,8 @@ export const kChartUtils: KChartUtils = {
       })
     }))
   },
-  setMainSystem: ({ index, system }) => {
-    useKChartStore.setState(state => ({
-      state: state.state.map(item => {
-        if (item.index === (index ?? state.activeChartIndex)) {
-          return produce(item, draft => {
-            draft.system = system
-          })
-        }
-        return item
-      })
-    }))
+  setMainSystem: ({ system }) => {
+    chartEvent.get().emit('systemChange', system)
   },
   setOverlayMark: async ({ index, mark, type, title }) => {
     const chart = useKChartStore.getState().state[index ?? useKChartStore.getState().activeChartIndex]
@@ -1009,5 +981,17 @@ export const kChartUtils: KChartUtils = {
         return item
       })
     }))
+  },
+  /**
+   *
+   */
+  getActiveStoreFromLocalStorage: () => {
+    const manage = JSON.parse(localStorage.getItem('chartManage') ?? '{}')
+
+    const chartId = manage.activeChartId ?? 'chart-0'
+
+    const store = localStorage.getItem(chartId)
+
+    return store ? JSON.parse(store) : undefined
   }
 }

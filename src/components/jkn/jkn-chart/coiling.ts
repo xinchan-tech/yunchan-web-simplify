@@ -1,16 +1,9 @@
-import { calcCoiling } from '@/utils/coiling'
-import { getFigureClass, IndicatorSeries, IndicatorTemplate, TooltipShowRule } from 'jkn-kline-chart'
-import { candlestickToRaw } from './utils'
-import { inRange } from 'radash'
-import { colorUtil } from '@/utils/style'
-import Decimal from 'decimal.js'
+import { getFigureClass, IndicatorSeries, type IndicatorTemplate, type TooltipShowRule } from 'jkn-kline-chart'
 import {
   calcCoilingPivots,
   calcCoilingPivotsExpands,
   calcTradePoints,
-  calculateMA,
-  calculateMABatch
-} from './coiling-calc'
+  calculateMA} from './coiling-calc'
 
 export enum CoilingIndicatorId {
   PEN = '1',
@@ -72,7 +65,7 @@ export const penCoiling: IndicatorTemplate = {
       new Line({
         name: 'line',
         attrs: {
-          coordinates: result.map(p => ({ x: xAxis.convertToPixel(p.index), y: yAxis.convertToNicePixel(p.price) }))
+          coordinates: result.map(p => ({ x: xAxis.convertToPixel(p.index), y: yAxis.convertToPixel(p.price) }))
         },
         styles: {
           color: '#fff',
@@ -85,7 +78,7 @@ export const penCoiling: IndicatorTemplate = {
         attrs: {
           coordinates: result
             .slice(0, -1)
-            .map(p => ({ x: xAxis.convertToPixel(p.index), y: yAxis.convertToNicePixel(p.price) }))
+            .map(p => ({ x: xAxis.convertToPixel(p.index), y: yAxis.convertToPixel(p.price) }))
         },
         styles: {
           color: '#fff',
@@ -97,7 +90,7 @@ export const penCoiling: IndicatorTemplate = {
         attrs: {
           coordinates: [result[result.length - 2], result[result.length - 1]].map(p => ({
             x: xAxis.convertToPixel(p.index),
-            y: yAxis.convertToNicePixel(p.price)
+            y: yAxis.convertToPixel(p.price)
           }))
         },
         styles: {
@@ -130,8 +123,8 @@ export const pivotCoiling: IndicatorTemplate = {
 
     if (!pivots?.length && !expands?.length) return false
     pivots.forEach(p => {
-      const startPoints = [xAxis.convertToPixel(p.start[0]), yAxis.convertToNicePixel(p.start[1])]
-      const endPoints = [xAxis.convertToPixel(p.end[0]), yAxis.convertToNicePixel(p.end[1])]
+      const startPoints = [xAxis.convertToPixel(p.start[0]), yAxis.convertToPixel(p.start[1])]
+      const endPoints = [xAxis.convertToPixel(p.end[0]), yAxis.convertToPixel(p.end[1])]
       const width = endPoints[0] - startPoints[0]
       const height = endPoints[1] - startPoints[1]
       const mark = `${p.direction === 1 ? '↑' : '↓'}${p.mark}${p.segmentNum >= 9 ? '2' : ''}`
@@ -166,8 +159,8 @@ export const pivotCoiling: IndicatorTemplate = {
     })
 
     expands.forEach(e => {
-      const startPoints = [xAxis.convertToPixel(e.start[0]), yAxis.convertToNicePixel(e.start[1])]
-      const endPoints = [xAxis.convertToPixel(e.end[0]), yAxis.convertToNicePixel(e.end[1])]
+      const startPoints = [xAxis.convertToPixel(e.start[0]), yAxis.convertToPixel(e.start[1])]
+      const endPoints = [xAxis.convertToPixel(e.end[0]), yAxis.convertToPixel(e.end[1])]
       const width = endPoints[0] - startPoints[0]
       const height = endPoints[1] - startPoints[1]
       const mark = `${e.direction === 1 ? '↑' : '↓'}${e.mark}`
@@ -266,7 +259,7 @@ const drawTradePoint = (
   const result = calcTradePoints(coilingData)
 
   result.forEach(p => {
-    const y = yAxis.convertToNicePixel(p.price)
+    const y = yAxis.convertToPixel(p.price)
     const x = xAxis.convertToPixel(p.index)
     const height = y + (!p.buy ? -1 : 1) * 30
     const cy = height + (!p.buy ? -1 : 1) * 12
@@ -319,70 +312,60 @@ const drawTradePoint = (
  * 短线王
  */
 export const shortLineCoiling: IndicatorTemplate = {
-  // name: `coiling-${CoilingIndicatorId.SHORT_LINE}`,
-  // shortName: 'short-line',
-  // zLevel: 1,
-  // series: IndicatorSeries.Price,
-  // calcParams: [],
-  // figures: [
-  //   { key: 'up', title: 'UP: ', type: 'line' },
-  //   { key: 'mid', title: 'MID: ', type: 'line' },
-  //   { key: 'dn', title: 'DN: ', type: 'line' }
-  //   // { key: 'ma20', type: 'line', styles: () => ({ color: 'rgb(186, 64, 127)' }) },
-  //   // { key: 'ma30', type: 'line', styles: () => ({ color: 'rgb(156, 171, 232)' }) }
-  // ],
-  // regenerateFigures: (params) => params.map((p, i) => ({ key: `ma${i + 1}`, title: `MA${p}: `, type: 'line' })),
-  // calc: (dataList, indicator) => {
-  //   const maData = calculateMABatch([20, 30], dataList)
-  //   const figures = indicator.figures
-  //   console.log(1232, maData, dataList)
-  //   return dataList
-  //   // console.log( dataList.map((_, i) => {
-  //   //   const ma: Record<string, number | null> = {}
-  //   //   figures.forEach(f => {
-  //   //     ma[f.key as string] = maData[f.key.replace('ma', '')][i]
-  //   //   })
-
-  //   //   return ma
-  //   // }))
-
-  //   // return dataList.map((_, i) => {
-  //   //   const ma: Record<string, number | null> = {}
-  //   //   figures.forEach(f => {
-  //   //     ma[f.key as string] = maData[f.key.replace('ma', '')][i]
-  //   //   })
-
-  //   //   return ma
-  //   // })
-  // },
-  // // createTooltipDataSource: () => ({ name: '', icons: [], legends: [], calcParamsText: '' })
-  name: 'MA-2',
-  shortName: 'MA',
+  name: `coiling-${CoilingIndicatorId.SHORT_LINE}`,
+  shortName: 'short-line',
   series: IndicatorSeries.Price,
-  calcParams: [5, 10, 30, 60],
+  calcParams: [20, 30],
   precision: 2,
-  shouldOhlc: true,
   figures: [
-    { key: 'ma1', title: 'MA5: ', type: 'line' },
-    { key: 'ma2', title: 'MA10: ', type: 'line' },
-    { key: 'ma3', title: 'MA30: ', type: 'line' },
-    { key: 'ma4', title: 'MA60: ', type: 'line' }
+    { key: 'ma20', type: 'line', styles: () => ({ color: 'rgb(186, 64, 127)' }) },
+    { key: 'ma30', type: 'line', styles: () => ({ color: 'rgb(156, 171, 232)' }) }
   ],
-  regenerateFigures: (params) => params.map((p, i) => ({ key: `ma${i + 1}`, title: `MA${p}: `, type: 'line' })),
   calc: (dataList, indicator) => {
-    const { calcParams: params, figures } = indicator
-    const closeSums: number[] = []
-    return dataList.map((kLineData, i) => {
-      const ma = {}
-      const close = kLineData.close
-      params.forEach((p, index) => {
-        closeSums[index] = (closeSums[index] ?? 0) + close
-        if (i >= p - 1) {
-          ma[figures[index].key] = closeSums[index] / p
-          closeSums[index] -= dataList[i - (p - 1)].close
-        }
+    const { calcParams: params } = indicator
+    const maData = params.map(p => calculateMA(p as number, dataList))
+    // console.log(1232, maData, dataList)
+
+    return dataList.map((_, i) => {
+      const ma: Record<string, number | null> = {}
+      params.forEach((f, index) => {
+        ma[`ma${f}`] = maData[index][i]
       })
+
       return ma
     })
-  }
+  },
+  createTooltipDataSource: () => ({ name: '', icons: [], legends: [], calcParamsText: '' })
+}
+
+/**
+ * 主力趋势
+ */
+export const mainTrendCoiling: IndicatorTemplate = {
+  name: `coiling-${CoilingIndicatorId.MAIN}`,
+  shortName: 'main-trend',
+  series: IndicatorSeries.Price,
+  calcParams: [55, 60, 65, 120, 250],
+  precision: 2,
+  figures: [
+    { key: 'ma55', type: 'line', styles: () => ({ color: 'rgb(250,28,19)' }) },
+    { key: 'ma60', type: 'line', styles: () => ({ color: 'rgb(255,255,255)' }) },
+    { key: 'ma65', type: 'line', styles: () => ({ color: 'rgb(51,251,41)' }) },
+    { key: 'ma120', type: 'line', styles: () => ({ color: 'rgb(51,251,41)', lineWidth: 4 }) },
+    { key: 'ma250', type: 'line', styles: () => ({ color: 'rgb(249,42,251)', lineWidth: 6 }) }
+  ],
+  calc: (dataList, indicator) => {
+    const { calcParams: params } = indicator
+    const maData = params.map(p => calculateMA(p as number, dataList))
+
+    return dataList.map((_, i) => {
+      const ma: Record<string, number | null> = {}
+      params.forEach((f, index) => {
+        ma[`ma${f}`] = maData[index][i]
+      })
+
+      return ma
+    })
+  },
+  createTooltipDataSource: () => ({ name: '', icons: [], legends: [], calcParamsText: '' })
 }

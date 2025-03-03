@@ -1417,11 +1417,11 @@ export const getStockIndicators = () => {
       name: string
       params: { name: string; value: string; default: string; min: string; max: string }[]
     }[] = []
-
+    const formula: Record<string, string> = {}
     r.data.main.forEach(m => {
       m.indicators.forEach(i => {
         if (i.formula) {
-          i.formula = aesDecrypt(i.formula)
+          formula[i.id] = i.formula
         }
         if (i.param) {
           indicator.push({
@@ -1443,7 +1443,7 @@ export const getStockIndicators = () => {
     r.data.secondary.forEach(m => {
       m.indicators.forEach(i => {
         if (i.formula) {
-          i.formula = aesDecrypt(i.formula)
+          formula[i.id] = i.formula
         }
         if (i.param) {
           indicator.push({
@@ -1464,6 +1464,7 @@ export const getStockIndicators = () => {
     })
 
     useIndicator.getState().mergeIndicatorParams(indicator)
+    useIndicator.getState().setFormula(formula)
     return r.data
   })
 }

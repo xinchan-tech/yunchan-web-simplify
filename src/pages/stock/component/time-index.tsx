@@ -1,12 +1,14 @@
 import { StockChartInterval } from "@/api"
 import { JknIcon, CapsuleTabs } from "@/components"
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, Button } from "@/components"
-import { timeIndex, useKChartStore, kChartUtils } from "../lib"
+import { timeIndex, kChartUtils } from "../lib"
 import { stockUtils } from "@/utils/stock"
 import { useDomSize } from "@/hooks"
-import { useCallback, useMemo } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { useTime } from "@/store"
 import dayjs from "dayjs"
+import { chartEvent, type ChartEvents } from "../lib/event"
+import { chartManage, useChartManage } from "../lib/store"
 
 const leftMenu = ['盘前分时', '盘中分时', '盘后分时', '多日分时']
 
@@ -14,10 +16,7 @@ const leftMenu = ['盘前分时', '盘中分时', '盘后分时', '多日分时'
 const ItemWidth = 55
 
 export const TimeIndexSelect = () => {
-  // const activeChartIndex = useKChartStore(s => s.activeChartIndex)
-  // const state = useKChartStore(s => s.state)
-  const activeTimeIndex = useKChartStore(s => s.state[s.activeChartIndex].timeIndex)
-
+  const interval = useChartManage(s => s.getActiveChart().interval)
   const usTime = useTime(s => s.usTime)
   const localStamp = useTime(s => s.localStamp)
   const [size, dom] = useDomSize<HTMLDivElement>()
@@ -47,7 +46,9 @@ export const TimeIndexSelect = () => {
     return count
   }, [size])
 
-
+  const onChangeInterval = (interval: StockChartInterval) => {
+    chartManage.setInterval(interval)
+  }
 
   return (
     <div className="flex items-center w-full overflow-hidden flex-nowrap" ref={dom}>
@@ -56,10 +57,10 @@ export const TimeIndexSelect = () => {
           <div className="flex-shrink-0">
             <Button reset className="text-xs font-normal">
               {
-                timeIndex.findIndex(v => v === activeTimeIndex) > 3 ? '分时' : (
-                  <span className="text-primary">{stockUtils.intervalToStr(activeTimeIndex)}
+                timeIndex.findIndex(v => v === interval) > 3 ? '分时' : (
+                  <span className="text-primary">{stockUtils.intervalToStr(interval)}
                     {
-                      [StockChartInterval.PRE_MARKET, StockChartInterval.INTRA_DAY, StockChartInterval.AFTER_HOURS].includes(activeTimeIndex) && getIsLastDay(activeTimeIndex) ? '(上一交易日)' : ''
+                      [StockChartInterval.PRE_MARKET, StockChartInterval.INTRA_DAY, StockChartInterval.AFTER_HOURS].includes(interval) && getIsLastDay(interval) ? '(上一交易日)' : ''
                     }
                   </span>
                 )
@@ -71,7 +72,7 @@ export const TimeIndexSelect = () => {
         <DropdownMenuContent>
           {
             leftMenu.map((item, index) => (
-              <DropdownMenuItem key={item} onClick={() => kChartUtils.setTimeIndex({ timeIndex: timeIndex[index] })}>
+              <DropdownMenuItem key={item} onClick={() => onChangeInterval(timeIndex[index])}>
                 {
                   item + ([StockChartInterval.PRE_MARKET, StockChartInterval.INTRA_DAY, StockChartInterval.AFTER_HOURS].includes(timeIndex[index]) && getIsLastDay(timeIndex[index]) ? '(上一交易日)' : '')
                 }
@@ -80,7 +81,7 @@ export const TimeIndexSelect = () => {
           }
         </DropdownMenuContent>
       </DropdownMenu>
-      <CapsuleTabs className="flex-nowrap overflow-hidden" type="text" activeKey={activeTimeIndex.toString()} onChange={v => kChartUtils.setTimeIndex({ timeIndex: +v })}>
+      <CapsuleTabs className="flex-nowrap overflow-hidden" type="text" activeKey={interval.toString()} onChange={v => onChangeInterval(+v)}>
         {
           timeIndex.slice(4).slice(0, showCount).map(item => (
             <CapsuleTabs.Tab className="whitespace-nowrap" key={item} label={stockUtils.intervalToStr(item)} value={item.toString()} />
@@ -94,8 +95,8 @@ export const TimeIndexSelect = () => {
               <div className="flex-shrink-0">
                 <Button reset className="text-xs font-normal">
                   {
-                    !timeIndex.slice(4).slice(showCount).includes(activeTimeIndex) ? '周期' : (
-                      <span className="text-primary">{stockUtils.intervalToStr(activeTimeIndex)}</span>
+                    !timeIndex.slice(4).slice(showCount).includes(interval) ? '周期' : (
+                      <span className="text-primary">{stockUtils.intervalToStr(interval)}</span>
                     )
                   }
                 </Button>
@@ -105,7 +106,7 @@ export const TimeIndexSelect = () => {
             <DropdownMenuContent>
               {
                 timeIndex.slice(4).slice(showCount).map((item) => (
-                  <DropdownMenuItem key={item} onClick={() => kChartUtils.setTimeIndex({ timeIndex: +item })}>{stockUtils.intervalToStr(item)}</DropdownMenuItem>
+                  <DropdownMenuItem key={item} onClick={() => onChangeInterval(+item)}>{stockUtils.intervalToStr(item)}</DropdownMenuItem>
                 ))
               }
             </DropdownMenuContent>
@@ -116,38 +117,36 @@ export const TimeIndexSelect = () => {
   )
 }
 
-interface TimeIndexMenuProps {
-  index: number
-}
+// interface TimeIndexMenuProps {
+//   interval: StockChartInterval
+// }
 
-const menus = ['盘前分时', '盘中分时', '盘后分时', '多日分时', '1分', '2分', '3分', '5分', '10分', '15分', '30分', '45分', '1小时', '2小时', '3小时', '4小时', '日线', '周线', '月线', '季线', '半年', '年线']
+// const menus = ['盘前分时', '盘中分时', '盘后分时', '多日分时', '1分', '2分', '3分', '5分', '10分', '15分', '30分', '45分', '1小时', '2小时', '3小时', '4小时', '日线', '周线', '月线', '季线', '半年', '年线']
 
-export const TimeIndexMenu = (props: TimeIndexMenuProps) => {
-  const activeTimeIndex = useKChartStore(s => s.state[s.activeChartIndex].timeIndex)
+// export const TimeIndexMenu = (props: TimeIndexMenuProps) => {
 
+//   const setActiveMin = (min: StockChartInterval) => {
+//     kChartUtils.setTimeIndex({ timeIndex: min })
+//   }
 
-  const setActiveMin = (min: StockChartInterval) => {
-    kChartUtils.setTimeIndex({ index: props.index, timeIndex: min })
-  }
-
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <div>
-          <Button reset className="text-xs font-normal">
-            {
-              menus[timeIndex.findIndex(v => v === activeTimeIndex)]
-            }
-          </Button>
-        </div>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent>
-        {
-          menus.map((item, index) => (
-            <DropdownMenuItem className="justify-center" key={item} onClick={() => setActiveMin(timeIndex[index])}>{item}</DropdownMenuItem>
-          ))
-        }
-      </DropdownMenuContent>
-    </DropdownMenu>
-  )
-}
+//   return (
+//     <DropdownMenu>
+//       <DropdownMenuTrigger asChild>
+//         <div>
+//           <Button reset className="text-xs font-normal">
+//             {
+//               menus[timeIndex.findIndex(v => v === props.interval)]
+//             }
+//           </Button>
+//         </div>
+//       </DropdownMenuTrigger>
+//       <DropdownMenuContent>
+//         {
+//           menus.map((item, index) => (
+//             <DropdownMenuItem className="justify-center" key={item} onClick={() => setActiveMin(timeIndex[index])}>{item}</DropdownMenuItem>
+//           ))
+//         }
+//       </DropdownMenuContent>
+//     </DropdownMenu>
+//   )
+// }

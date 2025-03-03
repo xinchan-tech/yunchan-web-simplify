@@ -259,6 +259,8 @@ interface IndicatorStore {
   isDefaultIndicatorParams: (indicatorId: string) => boolean
   getIndicatorQueryParams: (indicatorId: string) => NormalizedRecord<number>
   mergeIndicatorParams: (params: IndicatorParams[]) => void
+  formula: Record<string, string>
+  setFormula: (params: Record<string, string>) => void
 }
 
 export const useIndicator = create<IndicatorStore>()(
@@ -306,7 +308,9 @@ export const useIndicator = create<IndicatorStore>()(
             }
           })
           return { indicatorParams: newIndicatorParams }
-        })
+        }),
+      formula: {},
+      setFormula: params => set({ formula: params })
     }),
     {
       name: 'indicator',

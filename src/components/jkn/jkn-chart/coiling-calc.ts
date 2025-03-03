@@ -1,6 +1,6 @@
-import { colorUtil } from "@/utils/style"
-import { Candlestick } from "./types"
-import { candlestickToRaw } from "./utils"
+import { colorUtil } from '@/utils/style'
+import { Candlestick } from './types'
+import { candlestickToRaw } from './utils'
 
 const SEGMENT_NUM_LIMIT = 7
 /**
@@ -59,40 +59,42 @@ export const calcCoilingPivotsExpands = (expands: CoilingData['expands'] | undef
 
   const labels = ['A0', 'A1', 'A²', 'A³', 'A⁴', 'A⁵', 'A⁶', 'A⁷', 'A⁸']
 
-  return expands.filter(p => p.level <= 2).map(p => {
-    const mark = p.level > 2 ? '' : labels[p.level]
-    const segmentNum = p.end - p.start
+  return expands
+    .filter(p => p.level <= 2)
+    .map(p => {
+      const mark = p.level > 2 ? '' : labels[p.level]
+      const segmentNum = p.end - p.start
 
-    let bgColor = 'transparent'
-    let color = 'transparent'
-    // 中枢背景颜色
-    if (p.direction === 1) {
-      if (segmentNum === PIVOTS_EXPAND_LIMIT) {
-        bgColor = colorUtil.rgbaToString(colorUtil.argbToRGBA('BCFF1DFC'))
-        color = colorUtil.rgbaToString(colorUtil.argbToRGBA('FFFF1DFC'))
-      } else if (segmentNum > PIVOTS_EXPAND_LIMIT) {
-        bgColor = colorUtil.rgbaToString(colorUtil.argbToRGBA('CB315FFF'))
-        color = colorUtil.rgbaToString(colorUtil.argbToRGBA('FF315FFF'))
+      let bgColor = 'transparent'
+      let color = 'transparent'
+      // 中枢背景颜色
+      if (p.direction === 1) {
+        if (segmentNum === PIVOTS_EXPAND_LIMIT) {
+          bgColor = colorUtil.rgbaToString(colorUtil.argbToRGBA('BCFF1DFC'))
+          color = colorUtil.rgbaToString(colorUtil.argbToRGBA('FFFF1DFC'))
+        } else if (segmentNum > PIVOTS_EXPAND_LIMIT) {
+          bgColor = colorUtil.rgbaToString(colorUtil.argbToRGBA('CB315FFF'))
+          color = colorUtil.rgbaToString(colorUtil.argbToRGBA('FF315FFF'))
+        }
+      } else {
+        if (segmentNum === PIVOTS_EXPAND_LIMIT) {
+          bgColor = colorUtil.rgbaToString(colorUtil.argbToRGBA('CB315FFF'))
+          color = colorUtil.rgbaToString(colorUtil.argbToRGBA('FF315FFF'))
+        } else if (segmentNum > PIVOTS_EXPAND_LIMIT) {
+          bgColor = colorUtil.rgbaToString(colorUtil.argbToRGBA('BCFF1DFC'))
+          color = colorUtil.rgbaToString(colorUtil.argbToRGBA('FFFF1DFC'))
+        }
       }
-    } else {
-      if (segmentNum === PIVOTS_EXPAND_LIMIT) {
-        bgColor = colorUtil.rgbaToString(colorUtil.argbToRGBA('CB315FFF'))
-        color = colorUtil.rgbaToString(colorUtil.argbToRGBA('FF315FFF'))
-      } else if (segmentNum > PIVOTS_EXPAND_LIMIT) {
-        bgColor = colorUtil.rgbaToString(colorUtil.argbToRGBA('BCFF1DFC'))
-        color = colorUtil.rgbaToString(colorUtil.argbToRGBA('FFFF1DFC'))
-      }
-    }
 
-    return {
-      ...p,
-      start: [p.start, p.bottom],
-      end: [p.end, p.top],
-      mark,
-      bgColor,
-      color
-    }
-  })
+      return {
+        ...p,
+        start: [p.start, p.bottom],
+        end: [p.end, p.top],
+        mark,
+        bgColor,
+        color
+      }
+    })
 }
 
 /**
@@ -102,9 +104,7 @@ export const calcCoilingPivotsExpands = (expands: CoilingData['expands'] | undef
  * @param type 买卖类型： 1、2、3
  * @returns
  */
-export const calcTradePoints = (
-  coiling: CoilingData['class_1_trade_points']
-) => {
+export const calcTradePoints = (coiling: CoilingData['class_1_trade_points']) => {
   if (!coiling) return []
 
   return coiling.map(v => {
@@ -126,7 +126,6 @@ export const calcTradePoints = (
     }
   })
 }
-
 
 /**
  * 计算均线
@@ -159,12 +158,12 @@ export const calculateMA = (dayCount: number, candlesticks: Candlestick[]) => {
  * 批量计算均线
  */
 export const calculateMABatch = (dayCounts: number[], candlesticks: Candlestick[]) => {
-  const result: Record<string, Array<number|null>> = {}
-
-  for(let i = 0; i < candlesticks.length; i++){
+  const result: Record<string, Array<number | null>> = {}
+  console.log('start')
+  for (let i = 0; i < candlesticks.length; i++) {
     dayCounts.forEach(dayCount => {
-      if(i < dayCount){
-        if(!result[dayCount]){
+      if (i < dayCount) {
+        if (!result[dayCount]) {
           result[dayCount] = []
         }
         result[dayCount].push(null)
@@ -174,14 +173,14 @@ export const calculateMABatch = (dayCounts: number[], candlesticks: Candlestick[
     let sum = 0
     dayCounts.forEach(dayCount => {
       for (let j = 0; j < dayCount; j++) {
-        sum += candlesticks[i - j].close ?? 0
+        sum += candlesticks[i - j]?.close ?? 0
       }
-      if(!result[dayCount]){
+      if (!result[dayCount]) {
         result[dayCount] = []
       }
       result[dayCount].push(+(sum / dayCount).toFixed(3))
     })
   }
-
+  console.log(result)
   return result
 }

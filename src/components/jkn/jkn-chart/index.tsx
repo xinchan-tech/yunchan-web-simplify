@@ -5,7 +5,10 @@ import type { AxisPosition, Candlestick } from "./types"
 import { ChartTypes, getStockColor, transformCandleColor, transformTextColor } from "./utils"
 import { cn } from "@/utils/style"
 import { dateUtils } from "@/utils/date"
-import { CoilingIndicatorId, penCoiling, pivotCoiling, shortLineCoiling, tradePointOneTypeCoiling, tradePointThreeTypeCoiling, tradePointTwoTypeCoiling } from "./coiling"
+import { CoilingIndicatorId, mainTrendCoiling, penCoiling, pivotCoiling, shortLineCoiling, tradePointOneTypeCoiling, tradePointThreeTypeCoiling, tradePointTwoTypeCoiling } from "./coiling"
+import { useIndicator } from "@/store"
+import { localIndicator } from "./indicator"
+import type { StockChartInterval } from "@/api"
 
 
 registerIndicator(penCoiling)
@@ -14,7 +17,8 @@ registerIndicator(tradePointTwoTypeCoiling)
 registerIndicator(tradePointThreeTypeCoiling)
 registerIndicator(pivotCoiling)
 registerIndicator(shortLineCoiling)
-
+registerIndicator(mainTrendCoiling)
+registerIndicator(localIndicator)
 
 interface JknChartProps {
   className?: string
@@ -26,6 +30,9 @@ interface JknChartIns {
   setLeftAxis: (show: boolean) => void
   setRightAxis: (type: 'percentage' | 'normal') => void
   setChartType: (type: 'area' | 'candle') => void
+  removeCoiling: (coiling: CoilingIndicatorId[]) => void
+  removeAllCoiling: () => void
+  createLocalIndicator: (indicator: string, symbol: string, interval: StockChartInterval) => void
 }
 
 export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartProps, ref) => {
@@ -152,8 +159,6 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
       ],
       timezone: 'America/New_York',
     })
-    // chart.current?.setStyles('dark')
-
   })
 
   useUnmount(() => {
@@ -189,7 +194,7 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
     },
     setCoiling: (coiling, data) => {
       const hasIndicator = chart.current?.getIndicators({ id: `coiling-${coiling}` })
-      let indicator: { name: string, id: string, calcParams: any[] } | undefined = undefined
+      let indicator: { name: string, id: string, calcParams?: any[] } | undefined = undefined
 
       if (CoilingIndicatorId.PEN === coiling) {
         indicator = {
@@ -203,17 +208,21 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
           id: `coiling-${coiling}`,
           calcParams: coiling === CoilingIndicatorId.THREE_TYPE ? [data.class_3_trade_points] : coiling === CoilingIndicatorId.TWO_TYPE ? [data.class_2_trade_points] : [data.class_1_trade_points]
         }
-      } else if(CoilingIndicatorId.PIVOT === coiling) {
+      } else if (CoilingIndicatorId.PIVOT === coiling) {
         indicator = {
           name: `coiling-${CoilingIndicatorId.PIVOT}`,
           id: `coiling-${CoilingIndicatorId.PIVOT}`,
           calcParams: [data.pivots, data.expands]
         }
-      } else if(CoilingIndicatorId.SHORT_LINE === coiling) {
+      } else if (CoilingIndicatorId.SHORT_LINE === coiling) {
         indicator = {
-          name: `MA-2`,
-          id: `coiling-${CoilingIndicatorId.SHORT_LINE}`,
-          calcParams: []
+          name: `coiling-${CoilingIndicatorId.SHORT_LINE}`,
+          id: `coiling-${CoilingIndicatorId.SHORT_LINE}`
+        }
+      } else if (CoilingIndicatorId.MAIN === coiling) {
+        indicator = {
+          name: `coiling-${CoilingIndicatorId.MAIN}`,
+          id: `coiling-${CoilingIndicatorId.MAIN}`
         }
       }
 
@@ -225,6 +234,36 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
         chart.current?.createIndicator(indicator, true,
           { id: ChartTypes.MAIN_PANE_ID })
       }
+    },
+    removeCoiling: (coiling) => {
+      coiling.forEach(c => {
+        chart.current?.removeIndicator({ id: `coiling-${c}` })
+      })
+    },
+    removeAllCoiling: () => {
+      const allCoiling = [
+        CoilingIndicatorId.PEN,
+        CoilingIndicatorId.ONE_TYPE,
+        CoilingIndicatorId.TWO_TYPE,
+        CoilingIndicatorId.THREE_TYPE,
+        CoilingIndicatorId.PIVOT,
+        CoilingIndicatorId.SHORT_LINE,
+        CoilingIndicatorId.MAIN
+      ]
+      allCoiling.forEach(c => {
+        chart.current?.removeIndicator({ id: `coiling-${c}` })
+      })
+    },
+    createLocalIndicator: (indicator, symbol, interval) => {
+      const formula = useIndicator.getState().formula
+
+      if (!formula[indicator]) return
+
+      chart.current?.createIndicator({
+        name: 'local-indicator',
+        id: 'id',
+        calcParams: [indicator, symbol, interval]
+      })
     }
   }))
 

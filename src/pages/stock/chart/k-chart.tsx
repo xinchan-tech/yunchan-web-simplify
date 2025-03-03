@@ -1,6 +1,6 @@
 import { JknIcon } from "@/components"
 import { cn } from "@/utils/style"
-import { useUpdateEffect } from "ahooks"
+import { useLocalStorageState, useUpdateEffect } from "ahooks"
 import { useEffect, useMemo } from "react"
 import { useNavigate } from "react-router"
 import { ChartToolSelect } from "../component/chart-tool"
@@ -8,6 +8,7 @@ import { MainChart } from "../component/main-chart"
 import { TimeIndexSelect } from "../component/time-index"
 import { kChartUtils, useKChartStore, useSymbolQuery } from "../lib"
 import { renderUtils } from "../lib/utils"
+import { chartEvent } from "../lib/event"
 
 interface KChartProps {
   onChangeLeftSide: () => void
@@ -16,17 +17,24 @@ interface KChartProps {
   rightSideVisible: 'full' | 'hide'
 }
 
+const getChartIdByIndex = (index: number) => `chart-${index}`
 
 /**
  * @examples
  */
 export const KChart = (props: KChartProps) => {
+  const [chartManage, setChartManage] = useLocalStorageState('chartManage', {
+    defaultValue: {
+      activeChartId: getChartIdByIndex(0),
+      viewMode: ''
+    }
+  })
   const currentSymbol = useKChartStore(s => s.state[s.activeChartIndex].symbol)
   const viewMode = useKChartStore(s => s.viewMode)
   const symbol = useSymbolQuery()
 
   useEffect(() => {
-    kChartUtils.setSymbol({ symbol })
+    chartEvent.get().emit('symbolChange', symbol)
   }, [symbol])
 
   const navigate = useNavigate()
@@ -63,7 +71,7 @@ export const KChart = (props: KChartProps) => {
         {
           Array.from({ length: chartCount }).map((_, index) => (
             // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
-              <MainChart key={index} index={index} />
+              <MainChart key={index} chartId={getChartIdByIndex(index)} />
           ))
         }
       </div>

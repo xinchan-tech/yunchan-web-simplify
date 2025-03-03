@@ -1,11 +1,15 @@
 import { StockChartInterval, type StockRawRecord, getStockChartQuote, getStockChartV2 } from '@/api'
 import { queryClient } from '@/utils/query-client'
 import { stockUtils } from '@/utils/stock'
-import { useMount, useUnmount, useUpdateEffect } from 'ahooks'
+import { useLatest, useMount, useUnmount, useUpdate, useUpdateEffect } from 'ahooks'
 import to from 'await-to-js'
 import dayjs from 'dayjs'
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { isTimeIndexChart, useKChartStore } from './ctx'
+import { interval } from 'd3'
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
+import { dateUtils } from '@/utils/date'
+import { useImmer } from 'use-immer'
 
 /**
  * k线分页逻辑
@@ -185,5 +189,64 @@ export const useStockCandlesticks = (index: number) => {
     candlesticks: result,
     fetchPrevCandlesticks: fetchPrevKline,
     refreshCandlesticks: refreshKline
+  }
+}
+
+export const useCandlesticks = (symbol: string, interval: StockChartInterval) => {
+  const [params, setParams] = useImmer({
+    symbol,
+    interval,
+    startAt: undefined as number | undefined
+  })
+
+  const [candlesticks, setCandlesticks] = useState<StockRawRecord[]>([])
+  const isFetching = useRef(false)
+
+  const fetchCandlesticks = useCallback(
+    async (symbol: string, interval: StockChartInterval, endAt: number | undefined) => {
+      if (isFetching.current) return
+      isFetching.current = true
+      let endDate = endAt
+      if (!endDate) {
+        endDate = dayjs().second(0).millisecond(0).valueOf()
+      }
+      const [start, end] = getPeriodByPage({ startDate: endDate, interval })
+      const { data } = await getStockChartV2({
+        start_at: start,
+        end_at: !endAt ? undefined : end,
+        symbol,
+        period: stockUtils.intervalToPeriod(interval),
+        time_format: 'int'
+      })
+      setCandlesticks(s => data.list.concat(s))
+      isFetching.current = false
+    },
+    []
+  )
+
+  useEffect(() => {
+    fetchCandlesticks(params.symbol, params.interval, params.startAt)
+  }, [params, fetchCandlesticks])
+
+  useUpdateEffect(() => {
+    setCandlesticks([])
+    setParams(draft => {
+      draft.interval = interval
+      draft.symbol = symbol
+      draft.startAt = undefined
+    })
+  }, [symbol, interval])
+
+  const fetchPrevCandlesticks = useCallback(() => {
+    if (isFetching.current) return
+    setParams(draft => {
+      const [start] = getPeriodByPage({ startDate: draft.startAt!, interval: draft.interval })
+      draft.startAt = dateUtils.toUsDay(start).valueOf()
+    })
+  }, [setParams])
+
+  return {
+    candlesticks,
+    fetchPrevCandlesticks
   }
 }

@@ -15,15 +15,13 @@ import { useAuthorized, useDomSize, useToast } from '@/hooks'
 import { calcIndicator } from '@/utils/coiling'
 import { cn } from '@/utils/style'
 import { useQuery } from '@tanstack/react-query'
-import { nanoid } from 'nanoid'
 import { useEffect, useMemo, useState } from 'react'
 import { useShallow } from 'zustand/react/shallow'
-import { type CoilingIndicatorId, type Indicator, kChartUtils, useKChartStore } from '../lib'
-import { chartEvent } from '../lib/event'
+import { kChartUtils, useKChartStore } from '../lib'
 import { MainIndicator } from './main-indicator'
 import { SearchList } from './search-list'
 import { ViewModeSelect } from './view-mode-select'
-import { listify, omit } from 'radash'
+import { chartManage, Indicator, useChartManage } from "../lib/store"
 
 const CHART_TOOL = ['主图指标', '线型切换', '多图模式', '股票PK', '叠加标记', '画线工具']
 
@@ -89,46 +87,24 @@ export const ChartToolSelect = () => {
  * 主图指标
  */
 const MainIndicatorSelect = ({ indicators }: { indicators?: Awaited<ReturnType<typeof getStockIndicators>> }) => {
-  const timeIndex = useKChartStore(s => s.state[s.activeChartIndex].timeIndex)
-  const symbol = useKChartStore(s => s.state[s.activeChartIndex].symbol)
-  const mainIndicators = useKChartStore(s => s.state[s.activeChartIndex].mainIndicators)
+  // const mainIndicators = useKChartStore(s => s.state[s.activeChartIndex].mainIndicators)
 
-  const currentIndex = useKChartStore(s => s.activeChartIndex)
+  // const currentIndex = useKChartStore(s => s.activeChartIndex)
+  const mainIndicators = useChartManage(s => s.getActiveChart().mainIndicators)
 
   const onChangeMainIndicator = async (_: any, data: any, name: string) => {
-    const mainIndicators = useKChartStore.getState().state[useKChartStore.getState().activeChartIndex].mainIndicators
-    let indicators: Indicator[] = []
-    if (mainIndicators[data.value]) {
-      const indicator = omit(mainIndicators, [data.value]) as Record<string, Indicator>
-      indicators = listify(indicator, (k, v) => ({ ...v, k }))
-
-      kChartUtils.setMainIndicators({ indicators })
-      kChartUtils.setIndicatorData({ index: currentIndex, indicatorId: data.value, data: [] })
+    const index = mainIndicators.findIndex(v => v.id === data.value)
+    if (index > -1) {
+      chartManage.removeMainIndicator(data.value)
     } else {
-      indicators = listify(mainIndicators, (k, v) => ({ ...v, k }))
-      indicators.push({
+      const indicators = {
         id: data.value,
         type: data.extra.db_type,
-        timeIndex,
-        symbol,
-        key: nanoid(),
         name: name,
-        formula: data.extra.formula,
         calcType: data.extra.calcType
-      })
-      kChartUtils.setMainIndicators({ indicators })
-      const candlesticks = useKChartStore.getState().state[useKChartStore.getState().activeChartIndex].mainData.history
-      await calcIndicator(
-        { formula: data.extra.formula, symbal: symbol, indicatorId: data.value },
-        candlesticks,
-        timeIndex
-      ).then(c => {
-        kChartUtils.setIndicatorData({ index: currentIndex, indicatorId: data.value, data: c.data })
-      })
+      }
+      chartManage.addMainIndicator(indicators)
     }
-    setTimeout(() => {
-      chartEvent.event.emit('indicatorChange', { index: currentIndex })
-    })
   }
 
   useEffect(() => {
@@ -167,7 +143,7 @@ const MainIndicatorSelect = ({ indicators }: { indicators?: Awaited<ReturnType<t
             <HoverCardContent side="top" className="w-fit p-0">
               <SearchList
                 key={item.id}
-                value={Reflect.ownKeys(mainIndicators).map(v => v.toString())}
+                value={mainIndicators.map(v => v.id.toString())}
                 data={item.indicators.map(v => ({ label: v.name ?? '', value: v.id, extra: v, notAuthorized: v.authorized === 0 }))}
                 type="multi"
                 name={item.name}
@@ -262,11 +238,12 @@ const MarkList = () => {
 }
 
 const CoilingList = ({ indicators }: { indicators?: Awaited<ReturnType<typeof getStockIndicators>> }) => {
-  const system = useKChartStore(s => s.state[s.activeChartIndex].system)
+  // const system = useKChartStore(s => s.state[s.activeChartIndex].system)
+  const system = useChartManage(s => s.getActiveChart().system)
   const indicatorItems = (
     indicators?.main.find(o => o.name === '缠论系统')?.indicators.find(o => o.id === system) as any
   )?.items as StockIndicator[] | undefined
-  const mainCoiling = useKChartStore(useShallow(s => s.state[s.activeChartIndex].mainCoiling))
+  const coiling = useChartManage(useShallow(s => s.chartStores[s.activeChartId].coiling))
   const [size, dom] = useDomSize<HTMLDivElement>()
 
   const showCount = useMemo(() => {
@@ -275,16 +252,7 @@ const CoilingList = ({ indicators }: { indicators?: Awaited<ReturnType<typeof ge
     return count
   }, [size])
 
-  const onChangeMainCoiling = (id: CoilingIndicatorId) => {
-    const coiling = [...mainCoiling]
-    const index = coiling.indexOf(id)
-    if (index === -1) {
-      coiling.push(id)
-    } else {
-      coiling.splice(index, 1)
-    }
-    kChartUtils.setMainCoiling({ coiling })
-  }
+
 
   return (
     <div className="border-style-primary  !border-t-0 space-x-4" ref={dom}>
@@ -293,8 +261,8 @@ const CoilingList = ({ indicators }: { indicators?: Awaited<ReturnType<typeof ge
           {indicatorItems.slice(0, showCount).map(item => (
             <div key={item.id} className="flex items-center space-x-1">
               <JknIcon.Checkbox
-                onClick={() => onChangeMainCoiling(item.id as any)}
-                checked={mainCoiling.includes(item.id as any)}
+                onClick={() => chartManage.setCoiling(item.id as any)}
+                checked={coiling.includes(item.id as any)}
                 checkedIcon={`chan_tool_${item.id}_sel` as IconName}
                 uncheckedIcon={`chan_tool_${item.id}_nor` as IconName}
                 className="w-6 h-6 rounded-none"
@@ -314,10 +282,10 @@ const CoilingList = ({ indicators }: { indicators?: Awaited<ReturnType<typeof ge
               </DropdownMenuTrigger>
               <DropdownMenuContent>
                 {indicatorItems.slice(showCount).map(item => (
-                  <DropdownMenuItem key={item.id} onClick={() => onChangeMainCoiling(item.id as any)}>
+                  <DropdownMenuItem key={item.id} onClick={() => chartManage.setCoiling(item.id as any)}>
                     <div key={item.id} className="flex items-center space-x-1">
                       <JknIcon.Checkbox
-                        checked={mainCoiling.includes(item.id as any)}
+                        checked={coiling.includes(item.id as any)}
                         checkedIcon={`chan_tool_${item.id}_sel` as IconName}
                         uncheckedIcon={`chan_tool_${item.id}_nor` as IconName}
                         className="w-6 h-6 rounded-none"
