@@ -252,7 +252,7 @@ export type ImgLoginPayload = {
 export const loginImService = async () => {
   const params: ImgLoginPayload = {
     device_flag: '5',
-    device_level: '1'
+    device_level: '0'
   }
   const r = await request.post('/im/login', params, {
     headers: {
