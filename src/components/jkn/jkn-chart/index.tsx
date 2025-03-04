@@ -33,6 +33,7 @@ interface JknChartIns {
   removeCoiling: (coiling: CoilingIndicatorId[]) => void
   removeAllCoiling: () => void
   createLocalIndicator: (indicator: string, symbol: string, interval: StockChartInterval) => void
+  removeLocalIndicator: (indicator: string) => void
 }
 
 export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartProps, ref) => {
@@ -261,9 +262,12 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
 
       chart.current?.createIndicator({
         name: 'local-indicator',
-        id: 'id',
+        id: indicator,
         calcParams: [indicator, symbol, interval]
-      })
+      }, true, { id: ChartTypes.MAIN_PANE_ID })
+    },
+    removeLocalIndicator: (indicator) => {
+      chart.current?.removeIndicator({ id: indicator })
     }
   }))
 

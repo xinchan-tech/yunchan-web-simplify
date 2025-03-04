@@ -12,7 +12,7 @@ import {
   StockSelect
 } from '@/components'
 import { useAuthorized, useDomSize, useToast } from '@/hooks'
-import { calcIndicator } from '@/utils/coiling'
+import { calcIndicator } from '@/utils/coiling/coiling'
 import { cn } from '@/utils/style'
 import { useQuery } from '@tanstack/react-query'
 import { useEffect, useMemo, useState } from 'react'

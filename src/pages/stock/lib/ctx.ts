@@ -7,7 +7,7 @@ import {
   getStockTabData
 } from '@/api'
 import { useIndicator } from '@/store'
-import { calcCoiling } from '@/utils/coiling'
+import { calcCoiling } from '@/utils/coiling/coiling'
 import type echarts from '@/utils/echarts'
 import { queryClient } from '@/utils/query-client'
 import { stockUtils } from '@/utils/stock'

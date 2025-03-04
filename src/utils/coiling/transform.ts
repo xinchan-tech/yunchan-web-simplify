@@ -1,156 +1,187 @@
 import type { StockRawRecord } from '@/api'
-import { stockUtils } from './stock'
-import { useIndicator } from '@/store'
-import { isEmpty, listify } from 'radash'
-
-let coilingModule: ReturnType<typeof window.CoilingModule>
-let policyModule: ReturnType<typeof window.PolicyModule>
-
-const getCoilingModule = async () => {
-  if (!coilingModule) {
-    coilingModule = window.CoilingModule()
-  }
-
-  return coilingModule
-}
-
-const getPolicyModule = async () => {
-  if (!policyModule) {
-    policyModule = window.PolicyModule()
-  }
-
-  return policyModule
-}
 
 /**
- * 计算缠论数据
- * @param data
- *
- * @example @/example/coiling-wasm/coiling.html
+ * 指标数据
  */
-export const calcCoiling = async (data: StockRawRecord[], interval: number): Promise<CoilingData> => {
-  return getCoilingModule().then(module => {
-    const _data = data.map((item: StockRawRecord) => {
-      return [Math.floor(stockUtils.parseTime(item[0]) / 1000), ...item.slice(1)] as unknown as StockRawRecord
-    }, true)
-    return module.coiling_calculate(_data, data.length, interval)
-  })
+export type IndicatorRawData = {
+  color: string
+  data?: any[]
+  draw_data?: any[]
+  draw?: string
+  linethick: number
+  name: string
+  style_type?: string
 }
 
-/**
- * 计算指标
- */
-export const calcIndicator = async (
-  fml: { formula: string; symbal: string; indicatorId: string },
-  data: StockRawRecord[],
-  interval: number
-) => {
-  const module = await getPolicyModule()
-  console.log(module.libversion())
-  const rawData = data.map((item: StockRawRecord) => {
-    return [Math.floor(stockUtils.parseTime(item[0]) / 1000), ...item.slice(1)] as unknown as StockRawRecord
-  }, true)
- 
+export type IndicatorData =
+  | IndicatorDataLine
+  | IndicatorDataDrawGradient
+  | IndicatorDataDrawStickLine
+  | IndicatorDataDrawText
+  | IndicatorDataDrawNumber
+  | IndicatorDataDrawRectRel
+  | IndicatorDataDrawIcon
+  | IndicatorDataDrawBand
 
-  const indicator = useIndicator.getState().getIndicatorQueryParams(fml.indicatorId)
-
-  if (!isEmpty(indicator)) {
-    fml.formula = listify(indicator, (k, v) => `${k}:=${v};`).join('') + fml.formula
-  }
-
-  const result = await module.policy_execute(fml, rawData, interval)
-
-  result.data = result.data.map(item => {
-    if (item.draw === 'DRAWTEXT') {
-      item.draw_data = drawTextTransform(data, item.draw_data)
-    } else if (item.draw === 'STICKLINE') {
-      item.draw_data = drawStickLineTransform(item.draw_data)
-    } else if (item.draw === 'DRAWGRADIENT') {
-      item.draw_data = drawGradientTransform(item.draw_data)
-    } else if (item.draw === 'DRAWICON') {
-      item.draw_data = drawIconTransform(data, item.draw_data)
-    } else if (item.draw === 'DRAWBAND') {
-      item.draw_data = drawBandTransform(data, item.draw_data)
-    } else if (item.draw === 'DRAWNUMBER') {
-      item.draw_data = drawNumberTransform(data, item.draw_data)
-    } else if (item.draw === '') {
-      item.data = drawLineTransform(data, item.data)
-    }
-
-    return item
-  })
-
-  console.log(result)
-  return result
+type DrawFunc = '' | 'STICKLINE' | 'DRAWTEXT' | 'DRAWGRADIENT' | 'DRAWNUMBER' | 'DRAWRECTREL' | 'DRAWICON' | 'DRAWBAND'
+type IndicatorDataBase<T extends DrawFunc> = {
+  draw: T
+  color: string
+  width: number
+  name?: string
+  lineType: string
 }
 
-const drawLineTransform = (candlesticks: StockRawRecord[], drawData: [number | null][]) => {
-  return drawData.map((item, index) => [candlesticks[index][2]!, item])
+type IndicatorDataLine = IndicatorDataBase<''> & {
+  drawData: number[]
 }
-
-const drawTextTransform = (candlesticks: StockRawRecord[], drawData: any) => {
-  if (drawData.length <= 0) {
-    return drawData
-  }
-  // console.log(drawData)
-  const [condition, y, text, offsetX, offsetY] = drawData[0]
-  const r: {
+type IndicatorDataDrawStickLine = IndicatorDataBase<'STICKLINE'> & {
+  drawData: {
+    x: number
+    y1: number
+    y2: number
+    width: number
+    empty: number
+  }[]
+}
+type IndicatorDataDrawText = IndicatorDataBase<'DRAWTEXT'> & {
+  drawData: {
     x: number
     y: number
-    drawY: number
     text: string
     offsetX: number
     offsetY: number
-  }[] = []
+  }[]
+}
+/**
+ * 一个渐变的多边形
+ * 值类型为 [startX, endX, minY, maxY, [number, number][], color1, color2]
+ * startX: 多边形起始x轴坐标
+ * endX: 多边形结束x轴坐标
+ * minY: 多边形最小y轴坐标
+ * maxY: 多边形最大y轴坐标
+ * [number, number][]: 多边形的点，每个点是一个数组，第一个元素是x轴坐标，第二个元素是y轴坐标
+ * color1: 颜色1
+ * color2: 颜色2
+ */
+type IndicatorDataDrawGradient = IndicatorDataBase<'DRAWGRADIENT'> & {
+  drawData: [number, number, number, number, [number, number][], string, string][]
+}
+type IndicatorDataDrawNumber = IndicatorDataBase<'DRAWNUMBER'> & {
+  drawData: {
+    x: number
+    y: number
+    drawY: number
+    number: number
+    offsetX: number
+    offsetY: number
+  }[]
+}
+type IndicatorDataDrawBand = IndicatorDataBase<'DRAWBAND'> & {
+  drawData: {
+    polygonIndex: number
+    x: number
+    y: number
+    polygon?: {
+      color: string
+      points: {
+        x: number
+        drawY: number
+      }[]
+    }
+  }[]
+}
+/**
+ * 一个固定位置的矩形
+ * 值类型为 [leftTopX, leftTopY, rightBottomX, rightBottomY, color]
+ * leftTopX: 矩形左上角x轴坐标
+ * leftTopY: 矩形左上角y轴坐标
+ * rightBottomX: 矩形右下角x轴坐标
+ * rightBottomY: 矩形右下角y轴坐标
+ * color: 颜色
+ */
+type IndicatorDataDrawRectRel = IndicatorDataBase<'DRAWRECTREL'> & {
+  drawData: Record<number, [number, number, number, number, string]>
+}
+type IndicatorDataDrawIcon = IndicatorDataBase<'DRAWICON'> & {
+  drawData: {
+    x: number
+    y: number
+    drawY: number
+    icon: number
+    offsetX: number
+    offsetY: number
+  }[]
+}
+
+export const drawLineTransform = (raw: IndicatorRawData) => {
+  if (raw.draw === '') {
+    raw.draw_data = raw.data
+  }
+
+  return raw
+}
+
+export const drawTextTransform = (raw: IndicatorRawData) => {
+  if (raw.draw !== 'DRAWTEXT') return raw
+  if (raw.draw_data!.length <= 0) return raw
+
+  const drawData = raw.draw_data as [number, number, string, number, number][]
+  const [condition, y, text, offsetX, offsetY] = drawData[0]
+  const r: IndicatorDataDrawText['drawData'] = []
 
   Object.entries(drawData).forEach(([key, value]) => {
-    const candlestick = candlesticks[Number(key)]
-
     if (key === '0') {
       if (condition === 0) {
         return
       }
-      r.push({ x: 0, y: candlestick[2]!, text: text, offsetX: offsetX, offsetY: -offsetY, drawY: y })
+      r.push({ x: 0, y, text: text, offsetX: offsetX, offsetY: -offsetY })
       return
     }
 
-    const typedValue = value as [number]
+    const typedValue = value as unknown as [number]
     r.push({
       x: Number(key),
-      y: candlestick[2]!,
+      y: typedValue[0],
       text: text,
       offsetX: offsetX,
       offsetY: -offsetY,
-      drawY: typedValue[0]
     })
   })
 
-  return r
+  raw.draw_data = r
+  return raw
 }
 
-const drawStickLineTransform = (drawData: any) => {
-  if (drawData.length <= 0) {
-    return drawData
-  }
+export const drawStickLineTransform = (raw: IndicatorRawData) => {
+  if (raw.draw !== 'STICKLINE') return raw
+  if (raw.draw_data!.length <= 0) return raw
 
-  const [condition, y1, y2, width, empty] = drawData[0]
+  /**
+   * index = 0 时, [condition, y1, y2, width, empty]
+   *   当condition === 0时, 第0个不绘制
+   *   当 empty === 1 时， 画空心
+   * index > 0 时, [y1, y2]
+   */
+  const drawData = raw.draw_data as any
+  const [condition, y1, y2, width, empty] = drawData[0] as [number, number, number, number, number]
 
-  const r: any = {}
+  const r: IndicatorDataDrawStickLine['drawData'] = []
 
   Object.entries(drawData).forEach(([key, value]) => {
     if (key === '0') {
       if (condition === 0) {
         return
       }
-      r[key] = [y1, y2, width, empty]
+      r.push({ x: +key, y1, y2, width, empty })
       return
     }
 
     const typedValue = value as [number, number]
-    r[key] = [typedValue[0], typedValue[1], width, empty]
+    r.push({ x: +key, y1: typedValue[0], y2: typedValue[1], width, empty })
   })
-
-  return r
+  raw.draw_data = r
+  return raw
 }
 
 const drawGradientTransform = (drawData: ([number] | [number, string, string, string, string, number])[]) => {
@@ -354,10 +385,8 @@ const drawBandTransform = (
         const point = polygon.points[index - polygon.startIndex]
 
         if (point) {
-          node.drawY1 =
-            point.drawY || point.y1
-          node.drawY2 =
-            point.drawY || point.y2
+          node.drawY1 = point.drawY || point.y1
+          node.drawY2 = point.drawY || point.y2
         }
       }
       if (polygon.startIndex === index) {

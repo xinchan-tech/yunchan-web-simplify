@@ -1,9 +1,9 @@
 import { useIndicator } from '@/store'
-import { calcIndicator } from '@/utils/coiling'
+import { calcIndicator, type IndicatorData } from '@/utils/coiling'
 import { aesDecrypt } from '@/utils/string'
-import { type FigureConstructor, getFigureClass, IndicatorSeries, type IndicatorTemplate } from 'jkn-kline-chart'
+import { Chart, type FigureConstructor, getFigureClass, IndicatorSeries, type IndicatorTemplate, PolygonType } from 'jkn-kline-chart'
 import { candlestickToRaw } from './utils'
-import type { IndicatorData } from './types'
+import { inRange } from "radash"
 
 export const localIndicator: IndicatorTemplate = {
   name: 'local-indicator',
@@ -25,7 +25,7 @@ export const localIndicator: IndicatorTemplate = {
       },
       rawData,
       interval
-    ).then(r => r.data)
+    )
   },
   createTooltipDataSource: () => ({
     name: '',
@@ -35,23 +35,48 @@ export const localIndicator: IndicatorTemplate = {
   }),
   draw: ({ ctx, chart, indicator, bounding, xAxis, yAxis }) => {
     const { realFrom, realTo } = chart.getVisibleRange()
-    const result = indicator.result as IndicatorData
+    const result = indicator.result as unknown as IndicatorData[]
     const dataList = chart.getDataList()
-    console.log(result)
     if (!result) return false
 
     result.forEach(d => {
       if (d.draw === '') {
-        const range = d.data.slice(realFrom, realTo)
-        console.log(range)
+        const range = d.drawData.slice(realFrom, realTo)
         const Line = getFigureClass('line')!
-        drawLine(Line, {
+        drawLine(Line, ctx, {
           color: d.color,
-          width: d.linethick,
-          type: 'solid',
-          data: range.map((v, i) => ({ x: xAxis.convertToPixel(i), y: yAxis.convertToPixel(v[0]) }))
+          width: d.width,
+          type: d.lineType as any,
+          data: range.map((v, i) => ({ x: xAxis.convertToPixel(i + realFrom), y: yAxis.convertToPixel(v) }))
         })
+      }else if (d.draw === 'STICKLINE'){
+        const Rect = getFigureClass('rect')!
+        d.drawData.forEach((item) => {
+          if(inRange(item.x, realFrom, realTo)){
+            const { gapBar, halfGapBar } = chart.getBarSpace()
+            const y = yAxis.convertToPixel(item.y1)
+            const y2 = yAxis.convertToPixel(item.y2)
+            new Rect({
+              name: 'stickLine',
+              attrs: {
+                x: xAxis.convertToPixel(item.x) - halfGapBar * item.width,
+                y: y2,
+                width: gapBar * item.width,
+                height: y - y2
+              },
+              styles: {
+                color: item.empty === 1 ? 'transparent' : d.color,
+                borderColor: item.empty === 0 ? 'transparent' : d.color,
+                borderSize: 1,
+                style: item.empty === 1 ? 'stroke' : 'fill'
+              }
+            }).draw(ctx)
+          }
+        })
+      }else if (d.draw === 'DRAWBAND'){
+        
       }
+
     })
 
     return true
@@ -64,7 +89,7 @@ type LineShape = {
   type: 'solid' | 'dash'
   data: { x: number; y: number }[]
 }
-const drawLine = (Line: FigureConstructor, attr: LineShape) => {
+const drawLine = (Line: FigureConstructor, ctx: CanvasRenderingContext2D, attr: LineShape) => {
   new Line({
     name: 'line',
     attrs: {
@@ -76,3 +101,4 @@ const drawLine = (Line: FigureConstructor, attr: LineShape) => {
     }
   }).draw(ctx)
 }
+

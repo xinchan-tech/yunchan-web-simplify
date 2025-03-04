@@ -3,14 +3,12 @@ import { useCandlesticks } from '../lib/request'
 import { ChartContextMenu } from './chart-context-menu'
 import { JknChart } from "@/components"
 import { stockUtils } from "@/utils/stock"
-import { calcCoiling, calcIndicator } from "@/utils/coiling"
+import { calcCoiling } from "@/utils/coiling/coiling"
 import qs from "qs"
 import { StockChartInterval, type StockRawRecord } from "@/api"
 import dayjs from "dayjs"
 import { chartEvent } from "../lib/event"
 import { useChartManage } from "../lib/store"
-import { useIndicator } from "@/store"
-import { aesDecrypt } from "@/utils/string"
 
 interface MainChartProps {
   chartId: string
@@ -103,18 +101,25 @@ export const MainChart = (props: MainChartProps) => {
           coiling.forEach((coiling) => {
             chartImp.current?.setCoiling(coiling, r)
           })
-
         })
-
       } else {
         chartImp.current?.removeCoiling(coiling)
       }
     })
 
+    const cancelIndicatorEvent = chartEvent.on('mainIndicatorChange', ({ type, indicator }) => {
+      if (type === 'add') {
+        chartImp.current?.createLocalIndicator(indicator.id, symbol, chartStore.interval)
+      } else {
+        chartImp.current?.removeLocalIndicator(indicator.id)
+      }
+    })
+
     return () => {
       cancelSymbolEvent()
+      cancelIndicatorEvent()
     }
-  }, [activeChartId, props.chartId, candlesticks, chartStore.interval])
+  }, [activeChartId, props.chartId, candlesticks, chartStore.interval, symbol])
 
 
   return (

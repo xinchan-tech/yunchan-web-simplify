@@ -8,7 +8,6 @@ import type { EChartsType } from 'echarts/core'
 import type { ECBasicOption } from 'echarts/types/dist/shared'
 import { useKChartStore, type Indicator, type KChartContext } from './ctx'
 import { useIndicator } from '@/store'
-import { calcIndicator } from '@/utils/coiling'
 import { queryClient } from '@/utils/query-client'
 
 export const renderUtils = {
@@ -474,45 +473,45 @@ export const renderUtils = {
   },
 
   calcIndicatorData: async (candlesticks: StockRawRecord[], index: number) => {
-    const timeIndex = useKChartStore.getState().state[index].timeIndex
-    const symbol = useKChartStore.getState().state[index].symbol
-    const indicators = [
-      ...useKChartStore.getState().state[index].secondaryIndicators,
-      ...Object.values(useKChartStore.getState().state[index].mainIndicators)
-    ]
+    // const timeIndex = useKChartStore.getState().state[index].timeIndex
+    // const symbol = useKChartStore.getState().state[index].symbol
+    // const indicators = [
+    //   ...useKChartStore.getState().state[index].secondaryIndicators,
+    //   ...Object.values(useKChartStore.getState().state[index].mainIndicators)
+    // ]
 
-    const res = await Promise.all(
-      indicators.map(item => {
-        if (!candlesticks.length) return Promise.resolve({ data: [], indicatorId: item.id })
+    // const res = await Promise.all(
+    //   indicators.map(item => {
+    //     if (!candlesticks.length) return Promise.resolve({ data: [], indicatorId: item.id })
 
-        if (!item.formula) return Promise.resolve({ data: [], indicatorId: item.id })
-        if (renderUtils.isRemoteIndicator(item)) {
-          const indicator = useIndicator.getState().getIndicatorQueryParams(item.id)
-          const params = {
-            symbol: symbol,
-            id: item.id,
-            cycle: timeIndex,
-            start_at: dayjs(+candlesticks[0][0]! * 1000)
-              .tz('America/New_York')
-              .format('YYYY-MM-DD HH:mm:ss'),
-            param: indicator as any,
-            db_type: item.type
-          }
-          return queryClient.ensureQueryData({
-            queryKey: [getStockIndicatorData.cacheKey, params],
-            queryFn: () => getStockIndicatorData(params).then(r => ({ data: r.result, indicatorId: item.id }))
-          })
-        }
+    //     if (!item.formula) return Promise.resolve({ data: [], indicatorId: item.id })
+    //     if (renderUtils.isRemoteIndicator(item)) {
+    //       const indicator = useIndicator.getState().getIndicatorQueryParams(item.id)
+    //       const params = {
+    //         symbol: symbol,
+    //         id: item.id,
+    //         cycle: timeIndex,
+    //         start_at: dayjs(+candlesticks[0][0]! * 1000)
+    //           .tz('America/New_York')
+    //           .format('YYYY-MM-DD HH:mm:ss'),
+    //         param: indicator as any,
+    //         db_type: item.type
+    //       }
+    //       return queryClient.ensureQueryData({
+    //         queryKey: [getStockIndicatorData.cacheKey, params],
+    //         queryFn: () => getStockIndicatorData(params).then(r => ({ data: r.result, indicatorId: item.id }))
+    //       })
+    //     }
 
-        return calcIndicator(
-          { formula: item.formula ?? '', symbal: symbol, indicatorId: item.id },
-          candlesticks,
-          timeIndex
-        ).then(r => ({ data: r.data, indicatorId: item.id }))
-      })
-    )
+    //     return calcIndicator(
+    //       { formula: item.formula ?? '', symbal: symbol, indicatorId: item.id },
+    //       candlesticks,
+    //       timeIndex
+    //     ).then(r => ({ data: r.data, indicatorId: item.id }))
+    //   })
+    // )
 
-    return res
+    return 
   },
   /**
    * 判断是否应该更新当前k线图
