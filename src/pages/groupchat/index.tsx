@@ -156,6 +156,7 @@ const GroupChatPage = () => {
     config.uid = user.username
     config.token = token
     config.addr = addr
+    config.deviceFlag = 5
     WKSDK.shared().config = config
 
     // 监听连接状态
