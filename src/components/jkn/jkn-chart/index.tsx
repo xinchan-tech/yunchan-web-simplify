@@ -1,5 +1,5 @@
 import { useMount, useUnmount } from "ahooks"
-import { init, dispose, type LayoutChildType, type Chart, type CandleType, registerIndicator } from 'jkn-kline-chart'
+import { init, dispose, type LayoutChildType, type Chart, type CandleType, registerIndicator, registerFigure } from 'jkn-kline-chart'
 import { forwardRef, useEffect, useImperativeHandle, useRef } from "react"
 import type { AxisPosition, Candlestick } from "./types"
 import { ChartTypes, getStockColor, transformCandleColor, transformTextColor } from "./utils"
@@ -9,6 +9,7 @@ import { CoilingIndicatorId, mainTrendCoiling, penCoiling, pivotCoiling, shortLi
 import { useIndicator } from "@/store"
 import { localIndicator } from "./indicator"
 import type { StockChartInterval } from "@/api"
+import { IconFigure } from "./figure"
 
 
 registerIndicator(penCoiling)
@@ -19,6 +20,7 @@ registerIndicator(pivotCoiling)
 registerIndicator(shortLineCoiling)
 registerIndicator(mainTrendCoiling)
 registerIndicator(localIndicator)
+registerFigure(IconFigure)
 
 interface JknChartProps {
   className?: string
@@ -32,15 +34,17 @@ interface JknChartIns {
   setChartType: (type: 'area' | 'candle') => void
   removeCoiling: (coiling: CoilingIndicatorId[]) => void
   removeAllCoiling: () => void
-  createLocalIndicator: (indicator: string, symbol: string, interval: StockChartInterval) => void
+  createLocalIndicator: (indicator: string, symbol: string, interval: StockChartInterval, name: string) => void
   removeLocalIndicator: (indicator: string) => void
 }
 
 export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartProps, ref) => {
   const domRef = useRef<HTMLDivElement>(null)
   const chart = useRef<Chart | null>()
-  const { up: upColor, down: downColor } = getStockColor()
-  useMount(() => {
+
+
+  useEffect(() => {
+    const { up: upColor, down: downColor } = getStockColor()
     const ele = domRef.current
     if (!ele) return
     chart.current = init(ele, {
@@ -160,12 +164,12 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
       ],
       timezone: 'America/New_York',
     })
-  })
 
-  useUnmount(() => {
-    domRef.current && dispose(domRef.current)
-    chart.current = null
-  })
+    return () => {
+      domRef.current && dispose(domRef.current)
+      chart.current = null
+    }
+  }, [])
 
 
   useImperativeHandle(ref, () => ({
@@ -255,7 +259,7 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
         chart.current?.removeIndicator({ id: `coiling-${c}` })
       })
     },
-    createLocalIndicator: (indicator, symbol, interval) => {
+    createLocalIndicator: (indicator, symbol, interval, name) => {
       const formula = useIndicator.getState().formula
 
       if (!formula[indicator]) return
@@ -263,7 +267,8 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
       chart.current?.createIndicator({
         name: 'local-indicator',
         id: indicator,
-        calcParams: [indicator, symbol, interval]
+        calcParams: [indicator, symbol, interval],
+        extendData: { name },
       }, true, { id: ChartTypes.MAIN_PANE_ID })
     },
     removeLocalIndicator: (indicator) => {

@@ -29,7 +29,7 @@ type IndicatorDataBase<T extends DrawFunc> = {
   color: string
   width: number
   name?: string
-  lineType: string
+  lineType: 'POINTDOT' | 'SOLID' | 'DASH' | ''
 }
 
 type IndicatorDataLine = IndicatorDataBase<''> & {
@@ -71,7 +71,6 @@ type IndicatorDataDrawNumber = IndicatorDataBase<'DRAWNUMBER'> & {
   drawData: {
     x: number
     y: number
-    drawY: number
     number: number
     offsetX: number
     offsetY: number
@@ -79,16 +78,10 @@ type IndicatorDataDrawNumber = IndicatorDataBase<'DRAWNUMBER'> & {
 }
 type IndicatorDataDrawBand = IndicatorDataBase<'DRAWBAND'> & {
   drawData: {
-    polygonIndex: number
-    x: number
-    y: number
-    polygon?: {
-      color: string
-      points: {
-        x: number
-        drawY: number
-      }[]
-    }
+    color: string
+    startIndex: number
+    endIndex: number
+    points: { y1: number; y2: number; x: number; drawY: number, drawX: number }[]
   }[]
 }
 /**
@@ -107,7 +100,6 @@ type IndicatorDataDrawIcon = IndicatorDataBase<'DRAWICON'> & {
   drawData: {
     x: number
     y: number
-    drawY: number
     icon: number
     offsetX: number
     offsetY: number
@@ -121,6 +113,7 @@ export const drawLineTransform = (raw: IndicatorRawData) => {
 
   return raw
 }
+
 
 export const drawTextTransform = (raw: IndicatorRawData) => {
   if (raw.draw !== 'DRAWTEXT') return raw
@@ -152,6 +145,7 @@ export const drawTextTransform = (raw: IndicatorRawData) => {
   raw.draw_data = r
   return raw
 }
+
 
 export const drawStickLineTransform = (raw: IndicatorRawData) => {
   if (raw.draw !== 'STICKLINE') return raw
@@ -224,57 +218,46 @@ const drawGradientTransform = (drawData: ([number] | [number, string, string, st
   return gradients
 }
 
-const drawIconTransform = (candlesticks: StockRawRecord[], drawData: any[]) => {
-  if (drawData.length <= 0) {
-    return drawData
-  }
-  // console.log(drawData)
-  const [condition, y, icon, offsetX, offsetY] = drawData[0]
+export const drawIconTransform = (raw: IndicatorRawData) => {
+  if (raw.draw !== 'DRAWICON') return raw
+  if (!raw.draw_data) return raw
+  
+  const [condition, y, icon, offsetX, offsetY] = raw.draw_data[0]
 
   const r: {
     x: number
     y: number
-    drawY: number
     icon: number
     offsetX: number
     offsetY: number
   }[] = []
 
-  Object.entries(drawData).forEach(([key, value]) => {
-    const candlestick = candlesticks[Number(key)]
-
+  Object.entries(raw.draw_data).forEach(([key, value]) => {
     if (key === '0') {
       if (condition === 0) {
         return
       }
-      r[key] = { x: 0, y: candlestick[2]!, icon: icon, offsetX: offsetX, offsetY: -offsetY, drawY: y }
+      r[key] = { x: 0, y: y, icon: icon, offsetX: offsetX, offsetY: -offsetY }
       return
     }
 
     const typedValue = value as [number]
     r.push({
       x: Number(key),
-      y: candlestick[2]!,
+      y: typedValue[0],
       icon: icon,
       offsetX: offsetX,
-      offsetY: -offsetY,
-      drawY: typedValue[0]
+      offsetY: -offsetY
     })
   })
-
-  return r
+  raw.draw_data = r
+  return raw
 }
 
-const drawBandTransform = (
-  candlesticks: StockRawRecord[],
-  drawData: Record<string, [number, string, number, string]>
-) => {
-  let polygon: {
-    color: string
-    startIndex: number
-    endIndex: number
-    points: { y1: number; y2: number; x: number; drawY: number }[]
-  } = {
+export const drawBandTransform = (raw: IndicatorRawData) => {
+  if (raw.draw !== 'DRAWBAND') return raw
+  if (!raw.draw_data) return raw
+  let polygon: ArrayItem<IndicatorDataDrawBand['drawData']> = {
     color: '',
     endIndex: 0,
     startIndex: 0,
@@ -282,12 +265,12 @@ const drawBandTransform = (
   }
   const polygons: (typeof polygon)[] = []
 
-  Object.entries(drawData).forEach(([x, [y1, color1, y2, color2]], index, arr) => {
+  Object.entries(raw.draw_data).forEach(([x, [y1, color1, y2, color2]], index, arr) => {
     if (polygon.points.length === 0) {
       polygon.color = y1 >= y2 ? color1 : color2
     }
 
-    polygon.points.push({ y1, y2, x: Number(x), drawY: 0 })
+    polygon.points.push({ y1, y2, x: Number(x), drawY: 0, drawX: 0 })
 
     if (polygon.points.length > 1) {
       const currentPoints = polygon.points[polygon.points.length - 1]
@@ -316,15 +299,16 @@ const drawBandTransform = (
 
         const line2 = [lastPoints.x, lastPoints.y2, currentPoints.x, currentPoints.y2]
 
-        const drawY = getIntersectionY(
+        const drawPoint = getIntersection(
           [line1[0], line1[1]],
           [line1[2], line1[3]],
           [line2[0], line2[1]],
           [line2[2], line2[3]]
         )
 
-        if (drawY) {
-          currentPoints.drawY = drawY
+        if (drawPoint) {
+          currentPoints.drawY = drawPoint[1]
+          currentPoints.drawX = drawPoint[0]
         }
         polygon.endIndex = +x
         polygons.push(polygon)
@@ -353,70 +337,19 @@ const drawBandTransform = (
     }
   })
 
-  const result: {
-    polygonIndex: number
-    x: number
-    y1: number
-    y2: number
-    drawY1: number
-    drawY2: number
-    polygon?: {
-      color: string
-      points?: {
-        x: number
-        drawY: number
-      }[]
-    }
-  }[] = []
+  raw.draw_data = polygons
 
-  candlesticks.forEach((candlestick, index) => {
-    const node: ArrayItem<typeof result> = {
-      polygonIndex: -1,
-      x: index,
-      y1: candlestick[2]!,
-      y2: candlestick[2]!,
-      drawY1: -1,
-      drawY2: -1
-    }
-    for (let i = 0; i < polygons.length; i++) {
-      const polygon = polygons[i]
-      if (polygon.startIndex <= index && polygon.endIndex >= index) {
-        node.polygonIndex = polygon.startIndex
-        const point = polygon.points[index - polygon.startIndex]
+  console.log(polygons)
 
-        if (point) {
-          node.drawY1 = point.drawY || point.y1
-          node.drawY2 = point.drawY || point.y2
-        }
-      }
-      if (polygon.startIndex === index) {
-        const leftPoints: { x: number; drawY: number }[] = []
-        const rightPoints: { x: number; drawY: number }[] = []
-
-        polygon.points.forEach(point => {
-          leftPoints.push({ x: point.x, drawY: point.drawY || point.y1 })
-          rightPoints.unshift({ x: point.x, drawY: point.drawY || point.y2 })
-        })
-
-        node.polygon = {
-          color: polygon.color,
-          points: leftPoints.concat(rightPoints)
-        }
-      }
-    }
-
-    result.push(node)
-  })
-
-  return result
+  return raw
 }
 
-const getIntersectionY = (
+const getIntersection = (
   s1p1: [number, number],
   s1p2: [number, number],
   s2p1: [number, number],
   s2p2: [number, number]
-): number | null => {
+): [number, number] | null => {
   const [x1, y1] = s1p1
   const [x2, y2] = s1p2
   const [x3, y3] = s2p1
@@ -440,30 +373,46 @@ const getIntersectionY = (
   const u = (a1 * c2 - a2 * c1) / denominator
 
   if (t >= 0 && t <= 1 && u >= 0 && u <= 1) {
+    const x = x1 + t * (x2 - x1)
     const y = y1 + t * (y2 - y1)
-    return y
+    return [x, y]
   }
 
-  return null // 交点不在线段上
+  return null
 }
 
-const drawNumberTransform = (candlesticks: StockRawRecord[], drawData: any[]) => {
-  if (drawData.length <= 0) {
-    return drawData
-  }
-
-  return Object.entries(drawData).map(([key, value]) => {
-    const candlestick = candlesticks[Number(key)]
-
+export const drawNumberTransform = (raw: IndicatorRawData) => {
+  if (raw.draw !== 'DRAWNUMBER') return raw
+  if (!raw.draw_data) return raw
+ 
+  raw.draw_data = Object.entries(raw.draw_data).map(([key, value]) => {
     const typedValue = value as [number, number, number, number]
 
     return {
       x: Number(key),
-      y: candlestick[2]!,
+      y: typedValue[0],
       number: typedValue[1],
       offsetX: typedValue[2],
       offsetY: -typedValue[3],
-      drawY: typedValue[0]
     }
   })
+
+  return raw
+}
+
+export const drawRectrelTransform = (raw: IndicatorRawData) => {
+  if (raw.draw !== 'DRAWRECTREL') return raw
+  if (!raw.draw_data) return raw
+
+
+  raw.draw_data = raw.draw_data.map(item => {
+    return {
+      x: item.x,
+      y: item.y,
+      rectWidth: item.rectWidth || 10,
+      rectHeight: item.rectHeight || 5
+    }
+  });
+
+  return raw;
 }

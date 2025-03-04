@@ -71,7 +71,7 @@ export const MainChart = (props: MainChartProps) => {
 
     if (_store.mainIndicators.length) {
       _store.mainIndicators.forEach(indicator => {
-        chartImp.current?.createLocalIndicator(indicator.id, symbol, interval)
+        chartImp.current?.createLocalIndicator(indicator.id, symbol, interval, indicator.name)
       })
     }
 
