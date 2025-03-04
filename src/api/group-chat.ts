@@ -249,7 +249,11 @@ export type ImgLoginPayload = {
   device_level: string
 }
 
-export const loginImService = async (params: ImgLoginPayload) => {
+export const loginImService = async () => {
+  const params: ImgLoginPayload = {
+    device_flag: '5',
+    device_level: '1'
+  }
   const r = await request.post('/im/login', params, {
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded'

@@ -88,10 +88,7 @@ const LoginForm = (props: LoginFormProps & { setPage: (page: 'login' | 'register
 
     queryClient.refetchQueries({ queryKey: [getUser.cacheKey] })
 
-    loginImService({
-      device_flag: '1',
-      device_level: '1'
-    })
+    loginImService()
 
     const code = localStorage.getItem('invite-code')
 

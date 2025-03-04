@@ -258,7 +258,7 @@ const SettingPage = () => {
               当前版本：<span className="text-sm">{__RELEASE_VERSION__}</span>
             </div>
             <div>
-              构建信息：<span className="text-sm text-tertiary">{__RELEASE_TAG__}</span>
+              构建信息：<span className="text-sm text-tertiary cursor-pointer" onDoubleClick={() => config.setDebug(true)}>{__RELEASE_TAG__}</span>
             </div>
             {config.debug ? (
               <div className="cursor-pointer" onClick={() => config.setDebug(false)} onKeyDown={() => {}}>

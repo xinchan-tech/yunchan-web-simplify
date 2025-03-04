@@ -21,7 +21,7 @@ import { useShallow } from 'zustand/react/shallow'
 
 import GroupMembers from './group-members'
 
-import { revokeMessageService } from '@/api'
+import { loginImService, revokeMessageService } from '@/api'
 
 import { Button, JknIcon, Toaster } from '@/components'
 import type { ConversationWrap } from './ConversationWrap'
@@ -31,6 +31,7 @@ import TextImgLive from './text-img-live'
 import { judgeHasReadGroupNotice, setAgreedGroupInCache } from './chat-utils'
 import ChatInfoDrawer from './components/chat-info-drawer'
 import { ChevronRight } from 'lucide-react'
+import { useLatest, useMount } from "ahooks"
 
 export type ReplyFn = (option: {
   message?: Message
@@ -60,11 +61,20 @@ const COUNT_DOWN_NUM = 10
 const GroupChatPage = () => {
   const { token } = useToken()
   const { user } = useUser()
+  const loginStatus = useRef(false)
 
   const [indexTab, setIndexTab] = useState<'chat' | 'live'>('chat')
   const { selectedChannel } = useGroupChatStoreNew()
 
   const msgListRef = useRef<any>(null)
+
+  useMount(() => {
+    if (!loginStatus.current) {
+      loginImService().then(() => {
+        loginStatus.current = true
+      })
+    }
+  })
 
   const {
     setSubscribers,

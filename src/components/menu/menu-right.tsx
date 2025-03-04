@@ -48,7 +48,7 @@ const MenuRight = () => {
     {
       icon: <JknIcon.Svg name="group" size={20} />,
       title: "讨论社群",
-      path: "/mall",
+      path: "/chat-group",
     },
   ]
 
@@ -83,7 +83,7 @@ const MenuRight = () => {
         <div
           key={item.title}
           onClick={() => {
-            if (item.path === "/mall") {
+            if (item.path === "/chat-group") {
               if (!token) {
                 toast({
                   title: "请先登录",

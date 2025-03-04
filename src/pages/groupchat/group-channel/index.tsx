@@ -434,7 +434,7 @@ const GroupChannel = (props: {
         {!conversationWraps &&
           Array.from({
             length: 10
-          }).map((_, i) => <Skeleton style={{ background: '#555' }} key={i + 'channel'} className="h-[76px]" />)}
+          }).map((_, i) => <Skeleton style={{ background: '#555' }} key={i + 'channel'} className="h-[76px] mb-2" />)}
         {conversationWraps &&
           goodConversations.map((item: ConversationWrap) => {
             return (
