@@ -98,7 +98,7 @@ const MenuRight = () => {
                   "hideit,height=750,width=1000,resizable=yes,scrollbars=yes,status=no,location=no"
                 )
               } else {
-                onNav(item.path)
+                onNav("/mall")
               }
             } else {
               onNav(item.path)

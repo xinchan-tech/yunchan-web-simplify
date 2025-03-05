@@ -130,11 +130,11 @@ const GroupChatMsgList = forwardRef((props, ref) => {
         return res
       })
     }
-    if (result.length !== messages.length) {
-      setFilterMode(true)
-    } else {
-      setFilterMode(false)
-    }
+    // if (result.length !== messages.length) {
+    //   setFilterMode(true)
+    // } else {
+    //   setFilterMode(false)
+    // }
 
     return result
   }, [messages, filterType, filterKeyWord])
@@ -388,45 +388,45 @@ const GroupChatMsgList = forwardRef((props, ref) => {
   scrollEnd = () => {
     pulldowning.current = false
   }
-  useEffect(() => {
-    if (Array.isArray(messages) && messages.length > 0) {
-      // 第一屏不够高时，再查一遍前面的信息
+  // useEffect(() => {
+  //   if (Array.isArray(messages) && messages.length > 0) {
+  //     // 第一屏不够高时，再查一遍前面的信息
+  //     const notOver = judgeNotOver()
 
-      const notOver = judgeNotOver()
-      if (notOver) {
-        pullDown()
-      }
+  //     if (notOver) {
+  //       pullDown()
+  //     }
 
-      // message 更新完成，并且dom也渲染结束，如果有要定位过去的消息，就自动scroll过去
-      if (jumpMsgIdRef.current) {
-        scroller.scrollTo(jumpMsgIdRef.current, {
-          containerId: 'group-chat-msglist',
-          duration: 0
-        })
-      } else if (locatedMessageIdRef.current && jumpToLocatedId.current === true) {
-        // 点击了引用信息后，要跳转并高亮引用的原信息
-        if (messages.findIndex(m => m.clientMsgNo === locatedMessageIdRef.current) >= 0) {
-          gotoLocatedMessagePosition()
-        }
-      } else {
-        if (initToBottomRef.current === true) {
-          scrollBottom()
-          initToBottomRef.current = false
-        } else {
-          // 自己发的信息要滚到最下面
-          let lastMsg = messages[messages.length - 1]
-          if (lastMsg.fromUID === WKSDK.shared().config.uid && lastMsg.content.cmd !== 'messageRevoke') {
-            scrollBottom()
-          } else {
-            const distanceToBottom = calcOffset(scrollDomRef) || 0
-            if (distanceToBottom < 200) {
-              scrollBottom()
-            }
-          }
-        }
-      }
-    }
-  }, [messages])
+  //     // message 更新完成，并且dom也渲染结束，如果有要定位过去的消息，就自动scroll过去
+  //     if (jumpMsgIdRef.current) {
+  //       scroller.scrollTo(jumpMsgIdRef.current, {
+  //         containerId: 'group-chat-msglist',
+  //         duration: 0
+  //       })
+  //     } else if (locatedMessageIdRef.current && jumpToLocatedId.current === true) {
+  //       // 点击了引用信息后，要跳转并高亮引用的原信息
+  //       if (messages.findIndex(m => m.clientMsgNo === locatedMessageIdRef.current) >= 0) {
+  //         gotoLocatedMessagePosition()
+  //       }
+  //     } else {
+  //       if (initToBottomRef.current === true) {
+  //         scrollBottom()
+  //         initToBottomRef.current = false
+  //       } else {
+  //         // 自己发的信息要滚到最下面
+  //         let lastMsg = messages[messages.length - 1]
+  //         if (lastMsg.fromUID === WKSDK.shared().config.uid && lastMsg.content.cmd !== 'messageRevoke') {
+  //           scrollBottom()
+  //         } else {
+  //           const distanceToBottom = calcOffset(scrollDomRef) || 0
+  //           if (distanceToBottom < 200) {
+  //             scrollBottom()
+  //           }
+  //         }
+  //       }
+  //     }
+  //   }
+  // }, [messages])
 
   const calcOffset = (ref: MutableRefObject<HTMLElement | null>) => {
     if (ref.current) {

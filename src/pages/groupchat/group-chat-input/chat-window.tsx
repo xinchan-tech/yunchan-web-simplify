@@ -145,7 +145,7 @@ const ChatWindow = forwardRef(
         const tgt = document.getElementById('xc-chat-input')
         if (tgt) {
           // tgt.innerHTML = reEditData.text;
-          const cleanText = xss(reEditData.text)
+          const cleanText = reEditData.text
           setHtmlValue(cleanText)
         }
       }
@@ -184,7 +184,7 @@ const ChatWindow = forwardRef(
           onChange={e => {
             const tgt = document.getElementById('xc-chat-input')
             if (tgt) {
-              const cleanText = xss(tgt.innerHTML)
+              const cleanText = tgt.innerHTML
               setHtmlValue(cleanText)
             }
           }}

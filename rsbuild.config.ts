@@ -39,7 +39,7 @@ export default defineConfig({
         }
       },
       '/api': {
-        target: 'http://cn.mgjkn.com/',
+        target: 'https://awstest.mgjkn.com/',
         changeOrigin: true,
         pathRewrite: {
           '^/api': ''
@@ -58,7 +58,7 @@ export default defineConfig({
       },
       '/im-ws': {
         // target: "ws://im.mgjkn.com:5200",
-        target: 'ws://im.mgjkn.com:5200',
+        target: 'ws://test.im.mgjkn.com:5200',
         ws: true,
         pathRewrite: { '^/im-ws': '' }
       }
