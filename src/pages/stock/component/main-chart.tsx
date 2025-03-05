@@ -56,6 +56,7 @@ export const MainChart = (props: MainChartProps) => {
   const chartStore = useChartManage(s => s.chartStores[props.chartId])
   const chartImp = useRef<ComponentRef<typeof JknChart>>(null)
   const { candlesticks } = useCandlesticks(symbol, chartStore.interval)
+  const subIndicator = useRef<Map<string, string>>(new Map())
 
 
   const render = useCallback(async ({ candlesticks, interval, chartId, symbol, }: { candlesticks: StockRawRecord[], interval: StockChartInterval, chartId: string, symbol: string }) => {
@@ -71,7 +72,18 @@ export const MainChart = (props: MainChartProps) => {
 
     if (_store.mainIndicators.length) {
       _store.mainIndicators.forEach(indicator => {
-        chartImp.current?.createLocalIndicator(indicator.id, symbol, interval, indicator.name)
+        chartImp.current?.createIndicator(indicator.id, symbol, interval, indicator.name)
+      })
+    }
+
+    if (_store.secondaryIndicators) {
+      _store.secondaryIndicators.forEach(indicator => {
+        chartImp.current?.createSubIndicator({
+          indicator: indicator.id,
+          symbol,
+          interval,
+          name: indicator.name,
+        })
       })
     }
 
@@ -109,9 +121,9 @@ export const MainChart = (props: MainChartProps) => {
 
     const cancelIndicatorEvent = chartEvent.on('mainIndicatorChange', ({ type, indicator }) => {
       if (type === 'add') {
-        chartImp.current?.createLocalIndicator(indicator.id, symbol, chartStore.interval)
+        chartImp.current?.createIndicator(indicator.id, symbol, chartStore.interval, indicator.name)
       } else {
-        chartImp.current?.removeLocalIndicator(indicator.id)
+        chartImp.current?.removeIndicator(indicator.id)
       }
     })
 

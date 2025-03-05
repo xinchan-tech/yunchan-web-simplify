@@ -10,6 +10,7 @@ import { useIndicator } from "@/store"
 import { localIndicator } from "./indicator"
 import type { StockChartInterval } from "@/api"
 import { IconFigure } from "./figure"
+import { uid } from "radash"
 
 
 registerIndicator(penCoiling)
@@ -26,6 +27,13 @@ interface JknChartProps {
   className?: string
 }
 
+type IndicatorParams = {
+  indicator: string
+  symbol: string
+  interval: StockChartInterval
+  name: string
+}
+
 interface JknChartIns {
   applyNewData: Chart['applyNewData']
   setCoiling: (coiling: CoilingIndicatorId, data: CoilingData) => void
@@ -34,14 +42,17 @@ interface JknChartIns {
   setChartType: (type: 'area' | 'candle') => void
   removeCoiling: (coiling: CoilingIndicatorId[]) => void
   removeAllCoiling: () => void
-  createLocalIndicator: (indicator: string, symbol: string, interval: StockChartInterval, name: string) => void
-  removeLocalIndicator: (indicator: string) => void
+  createIndicator: (indicator: string, symbol: string, interval: StockChartInterval, name: string) => void
+  removeIndicator: (indicator: string) => void
+  createSubIndicator: (params: IndicatorParams) => Nullable<string>
+  setSubIndicator: (paneId: string, params: IndicatorParams) => void
+  removeSubIndicator: (paneId: string) => void
 }
 
 export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartProps, ref) => {
   const domRef = useRef<HTMLDivElement>(null)
   const chart = useRef<Chart | null>()
-
+  const subIndicator = useRef<Map<string, { params: IndicatorParams, id: string }>>(new Map())
 
   useEffect(() => {
     const { up: upColor, down: downColor } = getStockColor()
@@ -259,7 +270,7 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
         chart.current?.removeIndicator({ id: `coiling-${c}` })
       })
     },
-    createLocalIndicator: (indicator, symbol, interval, name) => {
+    createIndicator: (indicator, symbol, interval, name) => {
       const formula = useIndicator.getState().formula
 
       if (!formula[indicator]) return
@@ -271,8 +282,48 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
         extendData: { name },
       }, true, { id: ChartTypes.MAIN_PANE_ID })
     },
-    removeLocalIndicator: (indicator) => {
+    removeIndicator: (indicator) => {
       chart.current?.removeIndicator({ id: indicator })
+    },
+    createSubIndicator(params) {
+      if (!chart.current) return null
+      const iid = uid(8)
+      const indicator = {
+        name: 'local-indicator',
+        id: iid,
+        calcParams: [params.indicator, params.symbol, params.interval],
+        extendData: { name: params.name, indicatorId: params.indicator },
+      }
+      const paneId = chart.current?.createIndicator(indicator, false, {
+ 
+      })
+
+      if (paneId) {
+        subIndicator.current.set(paneId, {
+          params: params,
+          id: iid
+        })
+      }
+      return paneId
+    },
+    setSubIndicator(paneId, params) {
+      if (!chart.current) return
+
+      const sub = subIndicator.current.get(paneId)
+
+      if (!sub) return
+
+      chart.current.overrideIndicator({
+        name: 'local-indicator',
+        id: sub?.id,
+        calcParams: [params.indicator, params.symbol, params.interval],
+        extendData: { name: params.name, indicatorId: params.indicator }
+      })
+    },
+    removeSubIndicator(paneId) {
+      if (subIndicator.current.has(paneId)) {
+        chart.current?.removeIndicator({ paneId: paneId })
+      }
     }
   }))
 

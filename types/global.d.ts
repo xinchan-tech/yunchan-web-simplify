@@ -28,6 +28,10 @@ declare type Optional<T, K extends keyof T> = Omit<T, K> & Partial<T>
 
 declare type RequiredBy<T, K extends keyof T> = Partial<Omit<T, K>> & Required<Pick<T, K>>
 
+declare type Nullable<T> = T | null
+
+declare type Undefinable<T> = T | undefined
+
 interface Google {
   accounts: any
 }

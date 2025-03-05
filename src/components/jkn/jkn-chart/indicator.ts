@@ -11,8 +11,8 @@ import {
   type PolygonAttrs
 } from 'jkn-kline-chart'
 import { candlestickToRaw } from './utils'
-import { inRange, title } from 'radash'
-
+import { inRange, isNumber, title } from 'radash'
+import Decimal from 'decimal.js'
 
 type LocalIndicatorExtend = {
   name: string
@@ -43,14 +43,18 @@ export const localIndicator: IndicatorTemplate<IndicatorData, any, LocalIndicato
     return r
   },
   createTooltipDataSource: ({ indicator, crosshair }) => {
-    const data = indicator.result
-    
+    const data = indicator.result.filter(d => d.name)
     return {
       name: (indicator.extendData as LocalIndicatorExtend).name,
       icons: [],
-      legends: indicator.result.filter(d => d.name).map(d => ({
-        title: '123',
-        value: { text: '1' }
+      legends: data.map((d, index, arr) => ({
+        title: { text: `${d.name!}: `, color: d.color },
+        value: {
+          text: isNumber(arr[index].drawData[crosshair.dataIndex!])
+            ? Decimal.create(arr[index].drawData[crosshair.dataIndex!] as any).toFixed(3)
+            : '',
+          color: d.color
+        }
       })),
       calcParamsText: ''
     }
