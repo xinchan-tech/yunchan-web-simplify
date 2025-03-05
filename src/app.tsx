@@ -104,8 +104,8 @@ const App = () => {
       setHasSelected()
       setLanguage(navigator.language === 'zh-CN' ? 'zh_CN' : 'en')
     }
-
     i18n.changeLanguage(language)
+    useConfig.getState().refreshIp()
   })
 
   useEffect(() => {

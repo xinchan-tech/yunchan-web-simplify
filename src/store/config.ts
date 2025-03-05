@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
 import theme from '@/theme/variables.module.scss'
+import { getCurrentIp } from '@/api'
 
 type Language = 'zh_CN' | 'en'
 
@@ -17,6 +18,8 @@ const platform = (() => {
 
 interface ConfigStore {
   language: Language
+  ip: string
+  refreshIp: () => void
   hasSelected: boolean
   consults: {
     name: string
@@ -50,6 +53,7 @@ export const useConfig = create<ConfigStore>()(
   persist(
     (set, get) => ({
       language: 'zh_CN',
+      ip: 'CN',
       platform,
       hasSelected: false,
       consults: [],
@@ -70,6 +74,11 @@ export const useConfig = create<ConfigStore>()(
       setConsults: consults => set(() => ({ consults })),
       setLanguage: language => set(() => ({ language })),
       setHasSelected: () => set(() => ({ hasSelected: true })),
+      refreshIp: () => {
+        getCurrentIp().then(r => {
+          set(() => ({ ip: r.country_code }))
+        })
+      },
       getStockColor: (up = true, format = 'hsl') =>
         up
           ? get().setting.upOrDownColor === 'upGreenAndDownRed'

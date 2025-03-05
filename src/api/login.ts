@@ -168,3 +168,18 @@ export const forgotPassword = (params: {
     .post('/login/forgot', params, { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } })
     .then(r => r.data)
 }
+
+/**
+ * 获取ip地址
+ */
+export const getCurrentIp = () => {
+  return request.get<GetCurrentIpResult>('/index/ip').then(r => r.data)
+}
+type GetCurrentIpResult = {
+  city: string
+  country_code: string
+  end_time: number
+  ip: string
+  region: string
+  start_time: string
+}

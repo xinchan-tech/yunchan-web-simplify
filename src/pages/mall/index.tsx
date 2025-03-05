@@ -30,8 +30,6 @@ import { IncrementPage } from "./increment-page"
 import { useToken } from "@/store"
 import QRCode from 'qrcode'
 import { appEvent } from "@/utils/event"
-import { uid } from "radash"
-import { QrCode } from "lucide-react"
 import copy from "copy-to-clipboard"
 
 const subscribeTypes = [
@@ -40,13 +38,14 @@ const subscribeTypes = [
 ]
 
 const versions = [
-  { name: '旗舰达人', value: 'basic' },
-  { name: '量化精英', value: 'plus' },
+  // { name: '旗舰达人', value: 'basic' },
+  // { name: '量化精英', value: 'plus' },
   // { name: '聊天社群', value: 'group' },
+  { name: '特色软件', value: 'packages' },
   { name: '增值包', value: 'increment' }
 ]
 
-type Version = 'basic' | 'plus' | 'group' | 'increment'
+type Version =  'group' | 'increment' | 'packages'
 
 const productForm = z.object({
   productId: z.string(),
@@ -60,10 +59,21 @@ const productForm = z.object({
 const MallPage = () => {
   const products = useQuery({
     queryKey: [getMallProducts.cacheKey],
-    queryFn: getMallProducts
+    queryFn: getMallProducts,
+    select: (data) => {
+      return {
+        packages: [
+          ...data.basic.filter(item => item.id !== '28' && item.name !== '新手版'),
+          ...data.plus
+        ],
+        intro: data.intro,
+        payment: data.payment,
+        increment: data.increment
+      }
+    }
   })
 
-  const [version, setVersion] = useState<Version>('basic')
+  const [version, setVersion] = useState<Version>('packages')
   const [subscribeType, setSubscribeType] = useState<string>('model_month')
   const form = useZForm(productForm, {
     productId: '',
@@ -167,18 +177,26 @@ const MallPage = () => {
       </div>
       <div>
         {{
-          basic: (
+          // basic: (
+          //   <BasicPage
+          //     title="旗舰达人"
+          //     basic={products.data?.basic ?? []}
+          //     type={subscribeType}
+          //     onSubmit={v => _onOpenCashier(v)}
+          //   />
+          // ),
+          // plus: (
+          //   <BasicPage
+          //     title="量化精英"
+          //     basic={products.data?.plus ?? []}
+          //     type={subscribeType}
+          //     onSubmit={v => _onOpenCashier(v)}
+          //   />
+          // ),
+          packages: (
             <BasicPage
-              title="旗舰达人"
-              basic={products.data?.basic ?? []}
-              type={subscribeType}
-              onSubmit={v => _onOpenCashier(v)}
-            />
-          ),
-          plus: (
-            <BasicPage
-              title="量化精英"
-              basic={products.data?.plus ?? []}
+              title="特色软件"
+              basic={products.data?.packages ?? []}
               type={subscribeType}
               onSubmit={v => _onOpenCashier(v)}
             />
@@ -187,7 +205,7 @@ const MallPage = () => {
           increment: <IncrementPage increment={products.data?.increment ?? []} title="增值包" type={subscribeType} onSubmit={v => _onOpenCashier(v)} />
         }[version] ?? null}
       </div>
-      {['basic', 'plus', 'increment'].includes(version) ? (
+      {['basic', 'plus', 'increment', 'packages'].includes(version) ? (
         <div className="mt-8">
           <IntroPage intro={products.data?.intro ?? []} />
         </div>

@@ -14,8 +14,9 @@ type GetMallProductsResult = {
     model_year: string
     name: string
     professional: string
+    has_channel: number
     forbidden?: string
-    publicize: [number, string][]
+    publicize: [number, string, any?][]
   }[]
   plus: GetMallProductsResult['basic']
   intro: {
