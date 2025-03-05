@@ -22,11 +22,15 @@ export type IndicatorData =
   | IndicatorDataDrawRectRel
   | IndicatorDataDrawIcon
   | IndicatorDataDrawBand
+  | IndicatorDataHorizontalLine
+  | IndicatorDataHdlyLabel
 
-type DrawFunc = '' | 'STICKLINE' | 'DRAWTEXT' | 'DRAWGRADIENT' | 'DRAWNUMBER' | 'DRAWRECTREL' | 'DRAWICON' | 'DRAWBAND'
+export type IndicatorDataType<T extends DrawFunc> = IndicatorData & { draw: T }
+
+type DrawFunc = '' | 'STICKLINE' | 'DRAWTEXT' | 'DRAWGRADIENT' | 'DRAWNUMBER' | 'DRAWRECTREL' | 'DRAWICON' | 'DRAWBAND' | 'HORIZONTALLINE' | 'HDLY_LABEL'
 type IndicatorDataBase<T extends DrawFunc> = {
   draw: T
-  color: string
+  color: string | string[]
   width: number
   name?: string
   lineType: 'POINTDOT' | 'SOLID' | 'DASH' | ''
@@ -42,6 +46,7 @@ type IndicatorDataDrawStickLine = IndicatorDataBase<'STICKLINE'> & {
     y2: number
     width: number
     empty: number
+    color?: string
   }[]
 }
 type IndicatorDataDrawText = IndicatorDataBase<'DRAWTEXT'> & {
@@ -103,6 +108,17 @@ type IndicatorDataDrawIcon = IndicatorDataBase<'DRAWICON'> & {
     icon: number
     offsetX: number
     offsetY: number
+  }[]
+}
+type IndicatorDataHorizontalLine = IndicatorDataBase<'HORIZONTALLINE'> & {
+  drawData: number[]
+}
+type IndicatorDataHdlyLabel = IndicatorDataBase<'HDLY_LABEL'> & {
+  drawData: {
+    color: string
+    x: number
+    y: number
+    text: string
   }[]
 }
 

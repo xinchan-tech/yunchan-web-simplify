@@ -1,4 +1,3 @@
-import { useMount, useUnmount } from "ahooks"
 import { init, dispose, type LayoutChildType, type Chart, type CandleType, registerIndicator, registerFigure } from 'jkn-kline-chart'
 import { forwardRef, useEffect, useImperativeHandle, useRef } from "react"
 import type { AxisPosition, Candlestick } from "./types"
@@ -294,9 +293,7 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
         calcParams: [params.indicator, params.symbol, params.interval],
         extendData: { name: params.name, indicatorId: params.indicator },
       }
-      const paneId = chart.current?.createIndicator(indicator, false, {
- 
-      })
+      const paneId = chart.current?.createIndicator(indicator, false)
 
       if (paneId) {
         subIndicator.current.set(paneId, {

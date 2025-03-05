@@ -56,7 +56,6 @@ export const MainChart = (props: MainChartProps) => {
   const chartStore = useChartManage(s => s.chartStores[props.chartId])
   const chartImp = useRef<ComponentRef<typeof JknChart>>(null)
   const { candlesticks } = useCandlesticks(symbol, chartStore.interval)
-  const subIndicator = useRef<Map<string, string>>(new Map())
 
 
   const render = useCallback(async ({ candlesticks, interval, chartId, symbol, }: { candlesticks: StockRawRecord[], interval: StockChartInterval, chartId: string, symbol: string }) => {
@@ -88,7 +87,6 @@ export const MainChart = (props: MainChartProps) => {
     }
 
     chartImp.current?.applyNewData(stockData)
-
   }, [])
 
   useEffect(() => {
