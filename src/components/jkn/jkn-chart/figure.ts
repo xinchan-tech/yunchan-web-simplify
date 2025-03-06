@@ -47,8 +47,7 @@ export const IconFigure: FigureTemplate<IconAttrs> = {
 
 export type MarkOverlayAttrs = {
   x: number
-  y1: number
-  y2: number
+  y: number
   date: string
   title: string
 }
@@ -56,16 +55,41 @@ export type MarkOverlayAttrs = {
 export const markOverlayFigure: FigureTemplate<MarkOverlayAttrs> = {
   name: 'mark-overlay',
   draw: (ctx, attrs) => {
-    const { x, y1, y2, date, title } = attrs
+  
+    const { x, y, date, title } = attrs
+    const maxWidth = Math.max(ctx.measureText(date).width, ctx.measureText(title).width)
+    const padding = [5, 10, 5, 10]
+    const fontSize = 12
+    const height = padding[0] + fontSize + padding[2]
+    const width = maxWidth + padding[1] + padding[3]
     ctx.beginPath()
-    ctx.moveTo(x, y1)
-    ctx.lineTo(x, y2)
+    // 虚线
+    ctx.moveTo(x, y)
+    ctx.strokeStyle = '#949596'
+    ctx.setLineDash([5, 5])
+    ctx.lineTo(x, height * 2)
     ctx.stroke()
+
+
+    ctx.fillStyle = '#e91e63'
+    ctx.fillRect(x - width / 2, 0, width, height)
+    ctx.fillStyle = '#fff'
+    ctx.font = `${fontSize}px Arial`
+    ctx.fillText(date, x - width / 2 + padding[1], padding[0])
+    // ctx.strokeText(date, x - width / 2 + padding[3], padding[0] + fontSize)
+    
+    ctx.fillStyle = '#fff'
+    ctx.fillRect(x - width / 2, height, width, height)
+    ctx.fillStyle = 'black'
+    ctx.fillText(title, x - width / 2 + padding[1], height + padding[0])
+
+    // ctx.strokeText(title, x - width / 2 + padding[3], height + padding[0] + fontSize)
+
     ctx.closePath()
   },
   checkEventOn: (coordinate, attrs) => {
     const { x, y } = coordinate
-    const { y1, y2 } = attrs
-    return y >= Math.min(y1, y2) && y <= Math.max(y1, y2) && x !== undefined
+    const { y: y1 } = attrs
+    return y >= y1 && y <= y1 && x !== undefined
   }
 }
