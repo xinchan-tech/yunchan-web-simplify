@@ -13,7 +13,7 @@ import {
   type TextAttrs,
   type TextStyle
 } from 'jkn-kline-chart'
-import { candlestickToRaw } from './utils'
+import { candlestickToRaw } from '../utils'
 import { inRange, isArray, isNumber } from 'radash'
 import Decimal from 'decimal.js'
 import type { StockRawRecord } from '@/api'
@@ -175,15 +175,15 @@ type LineShape = {
 const drawLine: DrawFunc<LineShape> = (params, { color, width, type, data }) => {
   const Line = getFigureClass('line')!
   const Circle = getFigureClass('circle')! as FigureConstructor<CircleAttrs>
-  const { realFrom, realTo } = params.chart.getVisibleRange()
-  const range = data.slice(realFrom, realTo)
+  // const { realFrom, realTo } = params.chart.getVisibleRange()
+  // const range = data.slice(realFrom, realTo)
   if (type === 'POINTDOT') {
-    range.forEach((y, x) => {
+    data.forEach((y, x) => {
       if (y) {
         new Circle({
           name: 'circle',
           attrs: {
-            x: params.xAxis.convertToPixel(x + realFrom),
+            x: params.xAxis.convertToPixel(x),
             y: params.yAxis.convertToPixel(y),
             r: 2
           },
@@ -197,8 +197,8 @@ const drawLine: DrawFunc<LineShape> = (params, { color, width, type, data }) => 
     new Line({
       name: 'line',
       attrs: {
-        coordinates: range.map((y, x) => ({
-          x: params.xAxis.convertToPixel(x + realFrom),
+        coordinates: data.map((y, x) => ({
+          x: params.xAxis.convertToPixel(x),
           y: y ? params.yAxis.convertToPixel(y) : y
         }))
       },

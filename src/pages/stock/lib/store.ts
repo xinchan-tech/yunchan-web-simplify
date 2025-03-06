@@ -3,6 +3,7 @@ import { produce } from 'immer'
 import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
 import { chartEvent } from './event'
+import { renderUtils } from './utils'
 
 type ViewMode =
   | 'single'
@@ -66,6 +67,10 @@ export type Indicator = {
 export type ChartStore = {
   id: string
   /**
+   * 股票代码
+   */
+  symbol: string
+  /**
    * 主图类型
    */
   type: ChartType
@@ -100,7 +105,7 @@ export type ChartStore = {
    */
   overlayMark?: {
     mark: string
-    title: string
+    type: string
   }
 
   /**
@@ -127,6 +132,10 @@ interface ChartManageStore {
    */
   activeChartId: string
   /**
+   * current
+   */
+  currentSymbol: string
+  /**
    * 图表配置
    */
   chartStores: Record<string, ChartStore>
@@ -136,12 +145,13 @@ interface ChartManageStore {
   getActiveChart: () => ChartStore
 }
 
-export const createDefaultChartStore = (chartId: string): ChartStore => {
+export const createDefaultChartStore = (chartId: string, symbol?: string): ChartStore => {
   return {
     type: ChartType.Candle,
     interval: StockChartInterval.DAY,
     system: 'pro',
     id: chartId,
+    symbol: symbol ?? 'QQQ',
     /**
      * 9: 底部信号
      * 10: 买卖点位
@@ -182,6 +192,7 @@ export const useChartManage = create<ChartManageStore>()(
     (_set, get) => ({
       viewMode: 'single',
       activeChartId: 'chart-0',
+      currentSymbol: 'QQQ',
       chartStores: {
         'chart-0': createDefaultChartStore('chart-0')
       },
@@ -269,6 +280,74 @@ export const chartManage = {
       if (!indicator) return
       chartEvent.get().emit('mainIndicatorChange', { type: 'remove', indicator })
       state.mainIndicators = state.mainIndicators.filter(indicator => indicator.id !== indicatorId)
+    }, chartId)
+  },
+  /**
+   * 设置主图类型
+   */
+  setType: (type: ChartType, chartId?: string) => {
+    chartManage.setStore(state => {
+      state.type = type
+    }, chartId)
+  },
+  /**
+   * 设置视图模式
+   */
+  setViewMode: (viewMode: ViewMode) => {
+    const currentViewMode = useChartManage.getState().viewMode
+    const active = useChartManage.getState().getActiveChart()
+    if (currentViewMode === viewMode) return
+
+    const currentModeCount = renderUtils.getViewMode(currentViewMode)
+    const targetModeCount = renderUtils.getViewMode(viewMode)
+
+    if (currentModeCount === targetModeCount) {
+      useChartManage.setState({
+        viewMode
+      })
+      return
+    }
+
+    const chartStores = useChartManage.getState().chartStores
+    const newChartStores: typeof chartStores = {}
+
+    for (let i = 0; i < targetModeCount; i++) {
+      const chartId = `chart-${i}`
+      newChartStores[chartId] = chartStores[chartId] || createDefaultChartStore(chartId, active.symbol)
+    }
+
+    useChartManage.setState({
+      viewMode,
+      chartStores: newChartStores
+    })
+  },
+  setStockOverlay: (symbol: string, chartId?: string) => {
+    const overlayStock = chartId
+      ? useChartManage.getState().chartStores[chartId].overlayStock
+      : useChartManage.getState().getActiveChart().overlayStock
+
+    if (overlayStock.some(stock => stock.symbol === symbol)) return
+
+    chartManage.setStore(state => {
+      state.overlayStock.push({ symbol })
+    }, chartId)
+  },
+  removeStockOverlay: (symbol: string, chartId?: string) => {
+    chartManage.setStore(state => {
+      state.overlayStock = state.overlayStock.filter(stock => stock.symbol !== symbol)
+    }, chartId)
+  },
+  setMarkOverlay: (mark: string, type: string, chartId?: string) => {
+    chartManage.setStore(state => {
+      state.overlayMark = {
+        mark,
+        type
+      }
+    }, chartId)
+  },
+  removeMarkOverlay: (chartId?: string) => {
+    chartManage.setStore(state => {
+      state.overlayMark = undefined
     }, chartId)
   }
 }

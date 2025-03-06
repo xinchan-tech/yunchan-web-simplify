@@ -262,5 +262,10 @@ export const dateUtils = {
     }
 
     return d.format('YYYY-MM-dd HH:mm')
+  },
+  timeEqual: (a: string | Dayjs | number, b: string | Dayjs | number) => {
+    const _a = dateUtils.toUsDay(a)
+    const _b = dateUtils.toUsDay(b)
+    return _a.isSame(_b, 'minute')
   }
 }

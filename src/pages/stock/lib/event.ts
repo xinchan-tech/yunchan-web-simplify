@@ -15,6 +15,22 @@ export type ChartEvents = {
     type: 'add' | 'remove'
     indicator: Indicator
   }
+  subIndicatorChange: {
+    type: 'add' | 'remove'
+    indicator: Indicator
+  }
+  stockCompareChange: {
+    type: 'add' | 'remove'
+    symbol: string
+  }
+  markOverlayChange: {
+    type: 'add' | 'remove'
+    params: {
+      type: string,
+      mark: string,
+      title: string
+    }
+  }
 }
 
 export const chartEvent = {

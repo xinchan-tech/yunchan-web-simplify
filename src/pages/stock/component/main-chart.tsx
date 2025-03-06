@@ -1,47 +1,19 @@
 import { type ComponentRef, useCallback, useEffect, useRef, useState } from 'react'
-import { useCandlesticks } from '../lib/request'
+import { fetchCandlesticks, fetchOverlayMark, useCandlesticks } from '../lib/request'
 import { ChartContextMenu } from './chart-context-menu'
 import { JknChart } from "@/components"
 import { stockUtils } from "@/utils/stock"
 import { calcCoiling } from "@/utils/coiling/coiling"
 import qs from "qs"
-import { StockChartInterval, type StockRawRecord } from "@/api"
+import type { StockChartInterval, StockRawRecord } from "@/api"
 import dayjs from "dayjs"
 import { chartEvent } from "../lib/event"
-import { useChartManage } from "../lib/store"
+import { ChartType, useChartManage } from "../lib/store"
+import { useMount, useUpdateEffect } from "ahooks"
+import { renderUtils } from "../lib/utils"
 
 interface MainChartProps {
   chartId: string
-}
-
-/**
- * k线分页逻辑
- * k线只去取盘中的数据
- * 盘中时间： 9:30 - 15:59
- */
-const getPeriodByPage = (params: { interval: StockChartInterval; startDate: number }) => {
-  const { interval, startDate } = params
-  const usDate = dayjs(startDate).tz('America/New_York')
-  let resultDate: string = usDate.format('YYYY-MM-DD HH:mm:ss')
-  const endDate = usDate.format('YYYY-MM-DD HH:mm:ss')
-
-  if (interval <= StockChartInterval.THIRTY_MIN) {
-    resultDate = usDate.add(-5, 'd').format('YYYY-MM-DD HH:mm:ss')
-  } else if (interval <= StockChartInterval.FORTY_FIVE_MIN) {
-    resultDate = usDate.add(-15 * 4, 'd').format('YYYY-MM-DD HH:mm:ss')
-  } else if (interval <= StockChartInterval.FOUR_HOUR) {
-    resultDate = usDate.add(-30 * 6, 'd').format('YYYY-MM-DD HH:mm:ss')
-  } else if (interval === StockChartInterval.DAY) {
-    resultDate = usDate.add(-365 * 10, 'd').format('YYYY-MM-DD HH:mm:ss')
-  } else if (interval === StockChartInterval.WEEK) {
-    resultDate = usDate.add(-12 * 2, 'M').format('YYYY-MM-DD HH:mm:ss')
-  } else if (interval === StockChartInterval.MONTH) {
-    resultDate = usDate.add(-3, 'y').format('YYYY-MM-DD HH:mm:ss')
-  } else if (interval <= StockChartInterval.YEAR) {
-    resultDate = usDate.add(-5 * 2, 'y').format('YYYY-MM-DD HH:mm:ss')
-  }
-
-  return [resultDate, endDate]
 }
 
 
@@ -55,10 +27,13 @@ export const MainChart = (props: MainChartProps) => {
   const activeChartId = useChartManage(s => s.activeChartId)
   const chartStore = useChartManage(s => s.chartStores[props.chartId])
   const chartImp = useRef<ComponentRef<typeof JknChart>>(null)
-  const { candlesticks } = useCandlesticks(symbol, chartStore.interval)
+  const { candlesticks, startAt } = useCandlesticks(symbol, chartStore.interval)
+  const stockCache = useRef({
+    compare: new Map(),
+    mark: ''
+  })
 
-
-  const render = useCallback(async ({ candlesticks, interval, chartId, symbol, }: { candlesticks: StockRawRecord[], interval: StockChartInterval, chartId: string, symbol: string }) => {
+  const render = useCallback(async ({ candlesticks, interval, chartId }: { candlesticks: StockRawRecord[], interval: StockChartInterval, chartId: string }) => {
     const _store = useChartManage.getState().chartStores[chartId]
     const stockData = candlesticks.map(c => stockUtils.toStock(c))
 
@@ -69,9 +44,20 @@ export const MainChart = (props: MainChartProps) => {
       })
     }
 
+    chartImp.current?.setChartType(_store.type === ChartType.Candle ? 'candle' : 'area')
+
+    chartImp.current?.applyNewData(stockData)
+  }, [])
+
+  /**
+   * 初始化
+   */
+  useMount(() => {
+    const _store = useChartManage.getState().chartStores[props.chartId]
+
     if (_store.mainIndicators.length) {
       _store.mainIndicators.forEach(indicator => {
-        chartImp.current?.createIndicator(indicator.id, symbol, interval, indicator.name)
+        chartImp.current?.createIndicator(indicator.id, symbol, chartStore.interval, indicator.name)
       })
     }
 
@@ -80,23 +66,27 @@ export const MainChart = (props: MainChartProps) => {
         chartImp.current?.createSubIndicator({
           indicator: indicator.id,
           symbol,
-          interval,
+          interval: chartStore.interval,
           name: indicator.name,
         })
       })
     }
 
-    chartImp.current?.applyNewData(stockData)
-  }, [])
+    chartImp.current?.setChartType(_store.type === ChartType.Candle ? 'candle' : 'area')
+
+    if (_store.overlayMark) {
+      stockCache.current.mark = chartImp.current?.createMarkOverlay(symbol, _store.overlayMark.type, _store.overlayMark.mark) ?? ''
+    }
+  })
 
   useEffect(() => {
     if (!candlesticks.length) {
       chartImp.current?.applyNewData([])
       return
     }
-    render({ candlesticks, interval: chartStore.interval, chartId: props.chartId, symbol })
+    render({ candlesticks, interval: chartStore.interval, chartId: props.chartId })
 
-  }, [candlesticks, chartStore.interval, render, props.chartId, symbol])
+  }, [candlesticks, chartStore.interval, render, props.chartId])
 
 
   /**
@@ -125,11 +115,70 @@ export const MainChart = (props: MainChartProps) => {
       }
     })
 
+    const cancelSubIndicatorEvent = chartEvent.on('subIndicatorChange', ({ type, indicator }) => {
+      if (type === 'add') {
+        chartImp.current?.createSubIndicator({
+          indicator: indicator.id,
+          symbol,
+          interval: chartStore.interval,
+          name: indicator.name,
+        })
+      } else {
+        chartImp.current?.removeSubIndicator(indicator.id)
+      }
+    })
+
+    const cancelStockCompareChange = chartEvent.on('stockCompareChange', ({ type, symbol }) => {
+      if (chartImp.current === null) return
+      if (type === 'add') {
+        if (!stockCache.current.compare.has(symbol)) {
+          fetchCandlesticks(symbol, chartStore.interval, startAt.current).then(r => {
+            if (!r.data.list.length) return
+
+            const compareStockStart = r.data.list[0][0]! as unknown as number
+
+            const startInCandlesticksIndex = renderUtils.findNearestTime(candlesticks, compareStockStart)
+
+            if (!startInCandlesticksIndex || startInCandlesticksIndex?.index === -1) return
+
+            const compareCandlesticks = new Array(startInCandlesticksIndex!.index).fill(null).concat(r.data.list.map(c => c[2]))
+
+            stockCache.current.compare.set(symbol, chartImp.current?.createStockCompare(compareCandlesticks, 'blue'))
+          })
+        }
+      } else {
+        stockCache.current.compare.delete(symbol)
+        chartImp.current?.removeStockCompare(symbol)
+      }
+    })
+
+    const cancelMarkChange = chartEvent.on('markOverlayChange', async ({ type, params }) => {
+      if (type === 'add') {
+        if (stockCache.current.mark) {
+          chartImp.current?.removeMarkOverlay(stockCache.current.mark)
+        }
+
+        stockCache.current.mark = chartImp.current?.createMarkOverlay(symbol, params.type, params.mark) ?? ''
+      } else {
+        chartImp.current?.removeMarkOverlay(stockCache.current.mark)
+        stockCache.current.mark = ''
+      }
+    })
+
     return () => {
       cancelSymbolEvent()
       cancelIndicatorEvent()
+      cancelSubIndicatorEvent()
+      cancelStockCompareChange()
+      cancelMarkChange()
     }
-  }, [activeChartId, props.chartId, candlesticks, chartStore.interval, symbol])
+  }, [activeChartId, props.chartId, candlesticks, chartStore.interval, symbol, startAt])
+
+
+  useUpdateEffect(() => {
+    chartImp.current?.setChartType(chartStore.type === ChartType.Candle ? 'candle' : 'area')
+  }, [chartStore.type])
+
 
 
   return (

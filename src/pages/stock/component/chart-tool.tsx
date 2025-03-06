@@ -12,7 +12,6 @@ import {
   StockSelect
 } from '@/components'
 import { useAuthorized, useDomSize, useToast } from '@/hooks'
-import { calcIndicator } from '@/utils/coiling/coiling'
 import { cn } from '@/utils/style'
 import { useQuery } from '@tanstack/react-query'
 import { useEffect, useMemo, useState } from 'react'
@@ -21,7 +20,8 @@ import { kChartUtils, useKChartStore } from '../lib'
 import { MainIndicator } from './main-indicator'
 import { SearchList } from './search-list'
 import { ViewModeSelect } from './view-mode-select'
-import { chartManage, Indicator, useChartManage } from "../lib/store"
+import { chartManage, ChartType, useChartManage } from "../lib/store"
+import { chartEvent } from "../lib/event"
 
 const CHART_TOOL = ['主图指标', '线型切换', '多图模式', '股票PK', '叠加标记', '画线工具']
 
@@ -44,8 +44,8 @@ export const ChartToolSelect = () => {
       })
       return
     }
-    kChartUtils.setYAxis({ yAxis: { right: 'percent' } })
-    kChartUtils.addOverlayStock({ symbol })
+    chartManage.setStockOverlay(symbol)
+    chartEvent.get().emit('stockCompareChange', { type: 'add', symbol })
   }
 
   return (
@@ -169,28 +169,28 @@ const MainIndicatorSelect = ({ indicators }: { indicators?: Awaited<ReturnType<t
  * @returns
  */
 const LineTypeSelect = () => {
-  const onChangeMainChartType = (type?: 'line' | 'k-line') => {
-    kChartUtils.toggleMainChartType({ type: type })
+  const onChangeMainChartType = (type: ChartType) => {
+    chartManage.setType(type)
   }
 
-  const chartType = useKChartStore(s => s.state[s.activeChartIndex].type)
+  const chartType = useChartManage(s => s.getActiveChart().type)
 
   return (
     <div className="flex items-center space-x-3 text-xs">
       <div
-        onClick={() => onChangeMainChartType('line')}
+        onClick={() => onChangeMainChartType(ChartType.Area)}
         onKeyDown={() => { }}
-        className={cn('flex items-center cursor-pointer', chartType === 'line' && 'text-primary')}
+        className={cn('flex items-center cursor-pointer', chartType === ChartType.Area && 'text-primary')}
       >
-        <JknIcon name="line_type_1" className="w-4 h-4 mr-1" checked={chartType === 'line'} />
+        <JknIcon name="line_type_1" className="w-4 h-4 mr-1" checked={chartType === ChartType.Area} />
         折线图
       </div>
       <div
-        onClick={() => onChangeMainChartType('k-line')}
+        onClick={() => onChangeMainChartType(ChartType.Candle)}
         onKeyDown={() => { }}
-        className={cn('flex items-center cursor-pointer', chartType === 'k-line' && 'text-primary')}
+        className={cn('flex items-center cursor-pointer', chartType === ChartType.Candle && 'text-primary')}
       >
-        <JknIcon name="line_type_2" className="w-4 h-4 mr-1" checked={chartType === 'k-line'} />
+        <JknIcon name="line_type_2" className="w-4 h-4 mr-1" checked={chartType === ChartType.Candle} />
         蜡烛图
       </div>
     </div>
@@ -204,7 +204,7 @@ const MarkList = () => {
     placeholderData: () => []
   })
 
-  const overlayMark = useKChartStore(s => s.state[s.activeChartIndex].overlayMark)
+  const overlayMark = useChartManage(s => s.getActiveChart().overlayMark)
 
   const [authPermission] = useAuthorized('overlayMark')
 
@@ -222,7 +222,8 @@ const MarkList = () => {
             <SearchList
               search={false}
               onChange={(v, d) => {
-                kChartUtils.setOverlayMark({ mark: v, type: mark.key, title: d.label })
+                chartManage.setMarkOverlay(v, mark.key)
+                chartEvent.get().emit('markOverlayChange', { type: 'add', params: { mark: v, type: mark.key, title: d.label } })
               }}
               type="single"
               key={mark.key}

@@ -9,6 +9,7 @@ import { TimeIndexSelect } from "../component/time-index"
 import { kChartUtils, useKChartStore, useSymbolQuery } from "../lib"
 import { renderUtils } from "../lib/utils"
 import { chartEvent } from "../lib/event"
+import { useChartManage } from "../lib/store"
 
 interface KChartProps {
   onChangeLeftSide: () => void
@@ -29,8 +30,8 @@ export const KChart = (props: KChartProps) => {
       viewMode: ''
     }
   })
-  const currentSymbol = useKChartStore(s => s.state[s.activeChartIndex].symbol)
-  const viewMode = useKChartStore(s => s.viewMode)
+  // const currentSymbol = useChartManage(s => s.currentSymbol)
+  const viewMode = useChartManage(s => s.viewMode)
   const symbol = useSymbolQuery()
 
   useEffect(() => {
@@ -39,9 +40,9 @@ export const KChart = (props: KChartProps) => {
 
   const navigate = useNavigate()
 
-  useUpdateEffect(() => {
-    navigate(`/stock/trading?symbol=${currentSymbol}`)
-  }, [currentSymbol])
+  // useUpdateEffect(() => {
+  //   navigate(`/stock/trading?symbol=${currentSymbol}`)
+  // }, [currentSymbol])
 
 
   const chartCount = useMemo(() => renderUtils.getViewMode(viewMode), [viewMode])
@@ -71,7 +72,7 @@ export const KChart = (props: KChartProps) => {
         {
           Array.from({ length: chartCount }).map((_, index) => (
             // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
-              <MainChart key={index} chartId={getChartIdByIndex(index)} />
+            <MainChart key={index} chartId={getChartIdByIndex(index)} />
           ))
         }
       </div>

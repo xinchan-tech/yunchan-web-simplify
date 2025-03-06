@@ -1,4 +1,4 @@
-import { init, dispose, type LayoutChildType, type Chart, type CandleType, registerIndicator, registerFigure } from 'jkn-kline-chart'
+import { init, dispose, type LayoutChildType, type Chart, type CandleType, registerIndicator, registerFigure, PaneState } from 'jkn-kline-chart'
 import { forwardRef, useEffect, useImperativeHandle, useRef } from "react"
 import type { AxisPosition, Candlestick } from "./types"
 import { ChartTypes, getStockColor, transformCandleColor, transformTextColor } from "./utils"
@@ -6,10 +6,11 @@ import { cn } from "@/utils/style"
 import { dateUtils } from "@/utils/date"
 import { CoilingIndicatorId, mainTrendCoiling, penCoiling, pivotCoiling, shortLineCoiling, tradePointOneTypeCoiling, tradePointThreeTypeCoiling, tradePointTwoTypeCoiling } from "./coiling"
 import { useIndicator } from "@/store"
-import { localIndicator } from "./indicator"
+import { compareIndicator, localIndicator } from "./indicator"
 import type { StockChartInterval } from "@/api"
-import { IconFigure } from "./figure"
+import { IconFigure, markOverlayFigure } from "./figure"
 import { uid } from "radash"
+import { markIndicator } from "./indicator/mark"
 
 
 registerIndicator(penCoiling)
@@ -20,7 +21,10 @@ registerIndicator(pivotCoiling)
 registerIndicator(shortLineCoiling)
 registerIndicator(mainTrendCoiling)
 registerIndicator(localIndicator)
+registerIndicator(compareIndicator)
+registerIndicator(markIndicator)
 registerFigure(IconFigure)
+registerFigure(markOverlayFigure)
 
 interface JknChartProps {
   className?: string
@@ -46,6 +50,11 @@ interface JknChartIns {
   createSubIndicator: (params: IndicatorParams) => Nullable<string>
   setSubIndicator: (paneId: string, params: IndicatorParams) => void
   removeSubIndicator: (paneId: string) => void
+  createStockCompare: (candlesticks: number[], color: string) => string
+  removeStockCompare: (indicatorId: string) => void
+  createMarkOverlay: (symbol: string, type: string, mark: string) => string
+  removeMarkOverlay: (indicatorId: string) => void
+  setMarkOverlay: (mark: string) => void
 }
 
 export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartProps, ref) => {
@@ -143,6 +152,9 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
             color: '#202123'
           }
         },
+        separator: {
+          color: '#202020'
+        },
         crosshair: {
           horizontal: {
             text: {
@@ -203,7 +215,7 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
     setChartType: (type) => {
       chart.current?.setStyles({
         candle: {
-          type: (type === 'area' ? 'area' : undefined) as CandleType
+          type: (type === 'area' ? 'area' : 'candle_solid') as CandleType
         }
       })
     },
@@ -293,7 +305,9 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
         calcParams: [params.indicator, params.symbol, params.interval],
         extendData: { name: params.name, indicatorId: params.indicator },
       }
-      const paneId = chart.current?.createIndicator(indicator, false)
+      const paneId = chart.current?.createIndicator(indicator, false, {
+
+      })
 
       if (paneId) {
         subIndicator.current.set(paneId, {
@@ -321,7 +335,30 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
       if (subIndicator.current.has(paneId)) {
         chart.current?.removeIndicator({ paneId: paneId })
       }
-    }
+    },
+    createStockCompare: (candlesticks, color) => {
+      const indicator = uid(8)
+      chart.current?.createIndicator({
+        name: 'compare-indicator',
+        id: indicator,
+        calcParams: [candlesticks, color],
+      }, true, { id: ChartTypes.MAIN_PANE_ID })
+
+      return indicator
+    },
+    removeStockCompare: (indicatorId) => {
+      chart.current?.removeIndicator({ id: indicatorId })
+    },
+    createMarkOverlay: (symbol, type, mark) => {
+      return chart.current?.createIndicator({
+        name: 'mark-indicator',
+        calcParams: [symbol, type, mark],
+      }, true, { id: ChartTypes.MAIN_PANE_ID })!
+    },
+    removeMarkOverlay: (indicatorId) => {
+      chart.current?.removeIndicator({ id: indicatorId })
+    },
+    setMarkOverlay: (_mark) => { }
   }))
 
   useEffect(() => {

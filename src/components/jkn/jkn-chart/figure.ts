@@ -45,16 +45,27 @@ export const IconFigure: FigureTemplate<IconAttrs> = {
   }
 }
 
-// type FigureAttrs = {
-//   x1: number
-//   x2: number
-//   points: { x: number; y: number }[]
-// }
+export type MarkOverlayAttrs = {
+  x: number
+  y1: number
+  y2: number
+  date: string
+  title: string
+}
 
-
-// /**
-//  * 飘带
-//  */
-// export const bandFigure: FigureTemplate<FigureAttrs> = {
-
-// }
+export const markOverlayFigure: FigureTemplate<MarkOverlayAttrs> = {
+  name: 'mark-overlay',
+  draw: (ctx, attrs) => {
+    const { x, y1, y2, date, title } = attrs
+    ctx.beginPath()
+    ctx.moveTo(x, y1)
+    ctx.lineTo(x, y2)
+    ctx.stroke()
+    ctx.closePath()
+  },
+  checkEventOn: (coordinate, attrs) => {
+    const { x, y } = coordinate
+    const { y1, y2 } = attrs
+    return y >= Math.min(y1, y2) && y <= Math.max(y1, y2) && x !== undefined
+  }
+}
