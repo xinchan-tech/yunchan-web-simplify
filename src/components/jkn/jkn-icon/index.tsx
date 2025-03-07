@@ -112,10 +112,22 @@ interface JknIconStockProps extends Omit<JknIconProps, 'stock'> {
   symbol: string
 }
 
-const JknIconStock = ({ symbol, ...props }: JknIconStockProps) => {
+const JknIconStock = ({ symbol, className, ...props }: JknIconStockProps) => {
   const listMap = useStockList(s => s.listMap)
   const stock = listMap[symbol]
-  return <JknIcon stock={stock?.[0]} className="h-6 w-6" {...props} />
+
+  // return <JknIcon stock={stock?.[0]} className="h-6 w-6" {...props} />
+  return (
+    <>
+      {stock?.[0] ? (
+        <JknIcon stock={stock[0]} className={cn('h-6 w-6 mr-3', className)}  {...props} />
+      ) : (
+        <div className={cn('h-6 w-6 mr-3 leading-6 text-center rounded-full bg-black', className)} {...props}>
+          {symbol.slice(0, 1)}
+        </div>
+      )}
+    </>
+  )
 }
 
 type JknIcon = typeof _JknIcon & {

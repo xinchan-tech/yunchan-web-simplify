@@ -27,7 +27,7 @@ const _CapsuleTabs = ({
   activeColor
 }: PropsWithChildren<CapsuleTabsProps>) => {
   return (
-    <div className={cn('flex items-center space-x-2 flex-wrap', className)}>
+    <div className={cn('flex items-center flex-wrap capsule-tabs space-x-4', className)}>
       <CapsuleTabsContext.Provider value={{ value: activeKey, onChange, type, activeColor }}>
         {children}
       </CapsuleTabsContext.Provider>
@@ -48,18 +48,19 @@ const TabItem = ({ value, label, disabled, className }: TabItemProps) => {
   return (
     <div
       className={cn(
-        'items-center justify-center rounded-xl cursor-pointer text-xs px-3 py-0.5 transition-all duration-200',
+        'items-center justify-center rounded-xl cursor-pointer py-3.5 transition-all duration-200 text-tertiary capsule-tab-item relative',
         className
       )}
+      data-checked={value === context.value}
+      data-type={context.type}
       style={{
         background: value === context.value && context.type === 'default' ? 'hsl(var(--active-color))' : 'transparent',
-        color:
-          value === context.value && context.type === 'text' ? context.activeColor || 'hsl(var(--active-color))' : ''
+        color: value === context.value && context.type === 'text' ? (context.activeColor || 'hsl(var(--foreground))') : '',
       }}
       onClick={() => {
         !disabled && context.onChange?.(value)
       }}
-      onKeyDown={() => {}}
+      onKeyDown={() => { }}
     >
       {label}
     </div>

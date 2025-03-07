@@ -59,13 +59,12 @@ export const KChart = (props: KChartProps) => {
         </div>
         <ChartToolSelect />
       </div> */}
-      <IndicatorModal />
-      {/* <div className={cn('flex-1 overflow-hidden main-chart', `main-chart-${viewMode}`)}>
+      <div className={cn('flex-1 overflow-hidden main-chart', `main-chart-${viewMode}`)}>
         {Array.from({ length: chartCount }).map((_, index) => (
           // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
           <MainChart key={index} chartId={getChartIdByIndex(index)} />
         ))}
-      </div> */}
+      </div>
     </div>
   )
 }

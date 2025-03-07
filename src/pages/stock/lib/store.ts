@@ -99,6 +99,7 @@ export type ChartStore = {
    */
   overlayStock: {
     symbol: string
+    name: string
   }[]
   /**
    * 叠加标记
@@ -340,7 +341,7 @@ export const chartManage = {
       chartStores: newChartStores
     })
   },
-  setStockOverlay: (symbol: string, chartId?: string) => {
+  setStockOverlay: (symbol: string, name: string, chartId?: string) => {
     const overlayStock = chartId
       ? useChartManage.getState().chartStores[chartId].overlayStock
       : useChartManage.getState().getActiveChart().overlayStock
@@ -348,7 +349,7 @@ export const chartManage = {
     if (overlayStock.some(stock => stock.symbol === symbol)) return
 
     chartManage.setStore(state => {
-      state.overlayStock.push({ symbol })
+      state.overlayStock.push({ symbol, name })
     }, chartId)
   },
   removeStockOverlay: (symbol: string, chartId?: string) => {

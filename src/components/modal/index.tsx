@@ -2,7 +2,6 @@ import { usePropValue } from '@/hooks'
 import { useConfig } from '@/store'
 import { cn } from '@/utils/style'
 import type { DialogContentProps } from '@radix-ui/react-dialog'
-import { Cross2Icon } from '@radix-ui/react-icons'
 import { isFunction } from '@tanstack/react-table'
 import { useBoolean, useUpdateEffect } from 'ahooks'
 import to from 'await-to-js'
@@ -11,6 +10,7 @@ import { FormProvider, type UseFormReturn } from 'react-hook-form'
 import type { z } from 'zod'
 import { Button } from '../ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog'
+import { JknIcon } from "../jkn/jkn-icon"
 
 export interface UseModalAction {
   open: (...arg: unknown[]) => void
@@ -94,23 +94,22 @@ export const useModal = ({
         <DialogContent className={cn('w-[680px]', className)} onPointerDownOutside={onPointerDownOutside}>
           <DialogHeader>
             <DialogTitle asChild>
-              <div>
+              <div className="px-4 flex items-center">
                 {innerTitle && (
-                  <div className="title text-center h-10" style={{}}>
-                    {closeIcon && (
-                      <span
-                        className={cn(
-                          'bg-[#F36059] box-border rounded-full cursor-pointer  hover:opacity-90 absolute -z-0 w-4 h-4 top-3 flex items-center justify-center',
-                          platform === 'mac' ? 'left-2' : 'right-2'
-                        )}
-                        onClick={toggleModalVisible}
-                        onKeyDown={() => {}}
-                      >
-                        <Cross2Icon className="scale-75" />
-                      </span>
-                    )}
-                    <span className="leading-[40px]">{innerTitle}</span>
+                  <div className="text-xl">
+                    {innerTitle}
                   </div>
+                )}
+                {closeIcon && (
+                  <span
+                    className={cn(
+                      'box-border rounded cursor-pointer flex items-center justify-center ml-auto w-5 h-5 hover:bg-accent',
+                    )}
+                    onClick={toggleModalVisible}
+                    onKeyDown={() => { }}
+                  >
+                    <JknIcon.Svg name="close" className="w-3 h-3" />
+                  </span>
                 )}
               </div>
             </DialogTitle>
@@ -195,3 +194,5 @@ export const useFormModal = <T extends z.ZodTypeAny>({
     getFieldValue: form.getValues
   }
 }
+
+

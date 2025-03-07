@@ -1,6 +1,5 @@
 import { addAlarm, getStockBaseCodeInfo } from '@/api'
-import { useToast, useZForm } from '@/hooks'
-import StockSelectInput from '@/pages/alarm/components/stock-select-input'
+import { useStockSearch, useToast, useZForm } from '@/hooks'
 import { stockUtils } from '@/utils/stock'
 import { useQuery } from '@tanstack/react-query'
 import to from 'await-to-js'
@@ -15,6 +14,9 @@ import { Checkbox } from '../ui/checkbox'
 import { FormControl, FormField, FormItem, FormLabel } from '../ui/form'
 import { Input } from '../ui/input'
 import { ToggleGroup, ToggleGroupItem } from '../ui/toggle-group'
+import { useStockList } from "@/store"
+import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover"
+import { JknVirtualList } from "../jkn/jkn-virtual-list"
 
 const formSchema = z.object({
   symbol: z.string({ message: '股票代码错误' }).min(1, '股票代码错误'),
@@ -75,15 +77,15 @@ export const PriceAlarmSetting = (props: PriceAlarmSetting) => {
   return (
     <div>
       <FormProvider {...form}>
-        <form className="space-y-4 px-8 mt-4">
+        <form className="px-8 mt-4">
           <FormField
             control={form.control}
             name="symbol"
             render={({ field }) => (
-              <FormItem className="pb-4 border-0 border-b border-solid border-dialog-border">
-                <FormLabel>一、选择股票</FormLabel>
+              <FormItem className="pb-4 flex items-center border-0 border-b border-solid border-dialog-border space-y-0">
+                <FormLabel className="w-32">股票名称</FormLabel>
                 <FormControl>
-                  <StockSelectInput {...field} />
+                  <StockSelect {...field} />
                 </FormControl>
               </FormItem>
             )}
@@ -137,6 +139,70 @@ export const PriceAlarmSetting = (props: PriceAlarmSetting) => {
         </div>
       </div>
     </div>
+  )
+}
+
+interface StockSelectProps {
+  value?: string
+  onChange?: (value: string) => void
+}
+
+const StockSelect = ({ value, onChange }: StockSelectProps) => {
+  const stockMap = useStockList(s => s.listMap)
+  const [search, setSearch] = useState('A')
+  const [result] = useStockSearch(search)
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <div className="flex items-center border border-input border-solid rounded-md px-5 py-2.5 flex-1">
+          {
+            value ? (
+              <>
+                <JknIcon.Stock symbol={value} className="w-6 h-6 mr-2" />
+                <span>{value}</span>
+                <span className="ml-2 text-tertiary text-xs">{stockMap[value]?.[2]}</span>
+              </>
+            ) : <span className="text-tertiary text-xs">--</span>
+          }
+          <JknIcon.Svg name="arrow-down" className="ml-auto text-tertiary" size={10} />
+        </div>
+      </PopoverTrigger>
+      <PopoverContent className="w-[458px]">
+        <div>
+          <div className="flex items-center border-b-primary px-4">
+            <JknIcon.Svg name="search" className="w-6 h-6 text-tertiary" />
+            <Input
+              className="w-full placeholder:text-tertiary text-secondary border-none"
+              placeholder="请输入股票代码"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+            />
+          </div>
+          <div>
+            <JknVirtualList
+              className="h-[400px]"
+              rowKey="1"
+              data={result}
+              itemHeight={50}
+              renderItem={([_icon, symbol, name]) => (
+                <div
+                  key={symbol}
+                  className="flex items-center px-2 cursor-pointer hover:bg-accent py-4"
+                  onClick={() => {
+                    onChange?.(symbol)
+                  }}
+                  onKeyDown={() => { }}
+                >
+                  <JknIcon.Stock symbol={symbol} className="w-6 h-6 mr-2" />
+                  <span>{symbol}</span>
+                  <span className="ml-2 text-tertiary text-xs">{name}</span>
+                </div>
+              )}
+            />
+          </div>
+        </div>
+      </PopoverContent>
+    </Popover>
   )
 }
 

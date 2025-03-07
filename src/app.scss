@@ -7,7 +7,6 @@
 @tailwind components;
 @tailwind utilities;
 
-
 @layer base {
 
   /**
@@ -18,7 +17,6 @@
     --color-stock-green: #{theme.$colorStockGreen};
     /** 股票红色 */
     --color-stock-red: #{theme.$colorStockRed};
-
     --background: 0 0% 100%;
     --foreground: 0 0% 100%;
     --muted: 210 40.0% 96.1%;
@@ -52,14 +50,14 @@
       */
     --background: 0 0% 6%;
     --foreground: 0 0% 86%;
-    --muted: 225 9.09% 8.63%;
+    --muted: 0 0% 10%;
     --muted-foreground: 0 0% 100%;
     --accent: 0 0% 18%;
     --accent-foreground: 210 40% 98%;
     --popover: var(--muted);
     --popover-foreground: var(--foreground);
     --border: 0 0% 24%;
-    --input: 0 0% 58%;
+    --input: 227 8% 34%;
     --card: 224 71% 4%;
     --card-foreground: 213 31% 91%;
     // --primary: 228.67 90.74% 57.65%;
@@ -124,6 +122,7 @@ body {
 
 .stock-blink {
   animation-duration: 0.3s;
+
   &[data-blink="up"] {
     animation-name: stock-blink-up;
   }
@@ -135,6 +134,7 @@ body {
 
 .rc-table-cell {
   animation-duration: 0.3s;
+
   &[data-blink="up"] {
     animation-name: stock-blink-up;
   }
@@ -146,6 +146,7 @@ body {
 
 .stock-blink-gradient {
   animation-duration: 0.3s;
+
   &[data-blink="up"] {
     animation-name: stock-blink-gradient-up;
   }
@@ -155,14 +156,15 @@ body {
   }
 }
 
-
 @keyframes stock-blink-up {
   0% {
     background: transparent;
   }
+
   50% {
     background: hsl(var(--stock-up-color) / 0.2);
   }
+
   100% {
     background: transparent;
   }
@@ -172,9 +174,11 @@ body {
   0% {
     background: transparent;
   }
+
   50% {
     background: hsl(var(--stock-down-color) / 0.2);
   }
+
   100% {
     background: transparent;
   }
@@ -184,9 +188,11 @@ body {
   0% {
     background: transparent;
   }
+
   50% {
     background: linear-gradient(-90deg, hsl(var(--stock-up-color) / 0.2), transparent);
   }
+
   100% {
     background: transparent;
   }
@@ -196,14 +202,15 @@ body {
   0% {
     background: transparent;
   }
+
   50% {
     background: linear-gradient(-90deg, hsl(var(--stock-down-color) / 0.2), transparent);
   }
+
   100% {
     background: transparent;
   }
 }
-
 
 @for $i from 1 through 10 {
   .chart-item-#{$i} {
@@ -233,7 +240,7 @@ span[data-direction="down"] {
 div[data-direction-bg="up"] {
   background: hsl(var(--stock-up-color));
 
-  span[data-direction-sign="true"]::before{
+  span[data-direction-sign="true"]::before {
     content: "+";
   }
 }
@@ -246,7 +253,7 @@ div[data-direction-nan="true"] {
   background: transparent;
 }
 
-span[data-direction-show="false"][data-direction]{
+span[data-direction-show="false"][data-direction] {
   color: inherit;
 }
 
@@ -254,3 +261,13 @@ span[data-direction-sign="true"][data-direction="up"]::before {
   content: "+";
 }
 
+.capsule-tabs .capsule-tab-item[data-type="text"][data-checked="true"]::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  border-radius: 30px;
+  background: currentColor;
+}

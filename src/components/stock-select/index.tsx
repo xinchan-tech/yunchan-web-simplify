@@ -10,6 +10,7 @@ import { Input, type InputProps } from '../ui/input'
 import { Popover, PopoverAnchor, PopoverContent } from '../ui/popover'
 import { ScrollArea } from '../ui/scroll-area'
 import { Trie } from './trie-tree'
+import { useStockSearch } from "@/hooks"
 
 interface StockSelectProps extends Omit<InputProps, 'onChange'> {
   onChange?: (symbol: string) => void
@@ -112,47 +113,7 @@ interface VirtualStockListProps {
 }
 
 const VirtualStockList = (props: VirtualStockListProps) => {
-  const stockList = useStockList(s => s.list)
-  const stockMap = useStockList(s => s.listMap)
-  const stockListKey = useStockList(s => s.key)
-  const setStockList = useStockList(s => s.setList)
-  const query = useQuery({
-    queryKey: [getAllStocks.cacheKey],
-    queryFn: () => getAllStocks(stockListKey)
-  })
-  // const  = useRef<Trie>(new Trie())
-
-  const trie = useMemo(() => {
-    const trie = new Trie()
-    stockList.forEach(item => trie.insert(item[1]))
-    return trie
-  }, [stockList])
-
-  const data = useMemo(() => {
-    if (!props.keyword) {
-      return [...stockList]
-    }
-
-    return trie.searchPrefix(props.keyword.toUpperCase()).map(item => stockMap[item])
-  }, [stockMap, props.keyword, stockList, trie])
-
-  useEffect(() => {
-    if (query.data?.key === stockListKey) return
-
-    if (query.data?.data) {
-      const data = atob(query.data.data)
-
-      const dataUint8 = new Uint8Array(data.length)
-
-      for (let i = 0; i < data.length; i++) {
-        dataUint8[i] = data.charCodeAt(i)
-      }
-
-      const res = JSON.parse(pako.inflate(dataUint8, { to: 'string' })) as [string, string, string, string][]
-      res.sort((a, b) => a[1].localeCompare(b[1]))
-      setStockList(res, query.data.key)
-    }
-  }, [query.data, setStockList, stockListKey])
+  const [data] = useStockSearch(props.keyword ?? '')
 
   const containerRef = useRef<HTMLDivElement>(null)
   const wrapperRef = useRef<HTMLDivElement>(null)
