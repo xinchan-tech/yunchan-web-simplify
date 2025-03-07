@@ -25,7 +25,7 @@ export const groupToChannelInfo = (
   },
   fromUID: string
 ): ChannelInfo => {
-  let channelInfo = new ChannelInfo()
+  const channelInfo = new ChannelInfo()
   channelInfo.channel = new Channel(fromUID, ChannelTypeGroup)
   channelInfo.title = data.name
   channelInfo.mute = false
@@ -44,7 +44,7 @@ export const userToChannelInfo = (
   },
   fromUID: string
 ): ChannelInfo => {
-  let channelInfo = new ChannelInfo()
+  const channelInfo = new ChannelInfo()
   channelInfo.channel = new Channel(fromUID, ChannelTypePerson)
   channelInfo.title = data.name
   channelInfo.mute = false
@@ -57,7 +57,7 @@ export const userToChannelInfo = (
 }
 
 export class MentionModel {
-  all: boolean = false
+  all = false
   uids?: Array<string>
 }
 
@@ -92,7 +92,7 @@ export const sortMessages = (messages: Message[]) => {
 }
 
 const _formatDate = (date: Date, fmt: string) => {
-  let o: any = {
+  const o: any = {
     'M+': date.getMonth() + 1, //月份
     'd+': date.getDate(), //日
     'h+': date.getHours(), //小时
@@ -102,7 +102,7 @@ const _formatDate = (date: Date, fmt: string) => {
     S: date.getMilliseconds() //毫秒
   }
   if (/(y+)/.test(fmt)) fmt = fmt.replace(RegExp.$1, `${date.getFullYear()}`.substr(4 - RegExp.$1.length))
-  for (let k in o)
+  for (const k in o)
     if (new RegExp(`(${k})`).test(fmt))
       fmt = fmt.replace(RegExp.$1, RegExp.$1.length === 1 ? o[k] : `00${o[k]}`.substr(`${o[k]}`.length))
   return fmt
@@ -110,29 +110,29 @@ const _formatDate = (date: Date, fmt: string) => {
 
 export function getTimeStringAutoShort2(timestamp: number, mustIncludeTime: boolean) {
   // 当前时间
-  let currentDate = new Date()
+  const currentDate = new Date()
   // 目标判断时间
-  let srcDate = new Date(timestamp)
+  const srcDate = new Date(timestamp)
 
-  let currentYear = currentDate.getFullYear()
-  let currentMonth = currentDate.getMonth() + 1
-  let currentDateD = currentDate.getDate()
+  const currentYear = currentDate.getFullYear()
+  const currentMonth = currentDate.getMonth() + 1
+  const currentDateD = currentDate.getDate()
 
-  let srcYear = srcDate.getFullYear()
-  let srcMonth = srcDate.getMonth() + 1
-  let srcDateD = srcDate.getDate()
+  const srcYear = srcDate.getFullYear()
+  const srcMonth = srcDate.getMonth() + 1
+  const srcDateD = srcDate.getDate()
 
   let ret = ''
 
   // 要额外显示的时间分钟
-  let timeExtraStr = mustIncludeTime ? ` ${_formatDate(srcDate, 'hh:mm')}` : ''
+  const timeExtraStr = mustIncludeTime ? ` ${_formatDate(srcDate, 'hh:mm')}` : ''
 
   // 当年
   if (currentYear === srcYear) {
-    let currentTimestamp = currentDate.getTime()
-    let srcTimestamp = timestamp
+    const currentTimestamp = currentDate.getTime()
+    const srcTimestamp = timestamp
     // 相差时间（单位：毫秒）
-    let deltaTime = currentTimestamp - srcTimestamp
+    const deltaTime = currentTimestamp - srcTimestamp
 
     // 当天（月份和日期一致才是）
     if (currentMonth === srcMonth && currentDateD === srcDateD) {
@@ -144,11 +144,11 @@ export function getTimeStringAutoShort2(timestamp: number, mustIncludeTime: bool
     // 当年 && 当天之外的时间（即昨天及以前的时间）
     else {
       // 昨天（以“现在”的时候为基准-1天）
-      let yesterdayDate = new Date()
+      const yesterdayDate = new Date()
       yesterdayDate.setDate(yesterdayDate.getDate() - 1)
 
       // 前天（以“现在”的时候为基准-2天）
-      let beforeYesterdayDate = new Date()
+      const beforeYesterdayDate = new Date()
       beforeYesterdayDate.setDate(beforeYesterdayDate.getDate() - 2)
 
       // 用目标日期的“月”和“天”跟上方计算出来的“昨天”进行比较，是最为准确的（如果用时间戳差值
@@ -161,7 +161,7 @@ export function getTimeStringAutoShort2(timestamp: number, mustIncludeTime: bool
         ret = '前天' + timeExtraStr // -2d
       else {
         // 跟当前时间相差的小时数
-        let deltaHour = deltaTime / (3600 * 1000)
+        const deltaHour = deltaTime / (3600 * 1000)
 
         // // 如果小于或等 7*24小时就显示星期几
         // if (deltaHour <= 7 * 24) {
@@ -243,7 +243,7 @@ type Task = () => void
 
 export class MicroTaskQueue {
   private queue: Task[] = []
-  private isProcessing: boolean = false
+  private isProcessing = false
 
   enqueue(task: Task) {
     this.queue.push(task)
@@ -274,7 +274,7 @@ export class MicroTaskQueue {
 
 export const MacroTask = () => {
   return new Promise(resolve => {
-    let timer = setTimeout(() => {
+    const timer = setTimeout(() => {
       clearTimeout(timer)
       resolve('')
     }, 0)
@@ -282,7 +282,7 @@ export const MacroTask = () => {
 }
 
 export const judgeIsUserInSyncChannelCache = (uid: string) => {
-  let session = sessionStorage.getItem('syncUserChannelIds')
+  const session = sessionStorage.getItem('syncUserChannelIds')
   let syncUserChannelIds: Record<string, boolean> = {}
   if (session) {
     syncUserChannelIds = JSON.parse(session) as Record<string, boolean>
@@ -295,7 +295,7 @@ export const judgeIsUserInSyncChannelCache = (uid: string) => {
 
 export const setUserInSyncChannelCache = (uid: string, payload: boolean) => {
   let syncUserChannelIds: Record<string, boolean> = {}
-  let session = sessionStorage.getItem('syncUserChannelIds')
+  const session = sessionStorage.getItem('syncUserChannelIds')
   if (session) {
     syncUserChannelIds = JSON.parse(session) as Record<string, boolean>
   }
@@ -304,7 +304,7 @@ export const setUserInSyncChannelCache = (uid: string, payload: boolean) => {
 }
 
 export const judgeIsExpireGroupCache = (uid: string) => {
-  let session = sessionStorage.getItem('expireGroupIds')
+  const session = sessionStorage.getItem('expireGroupIds')
   let expireGroupIds: Record<string, boolean> = {}
   if (session) {
     expireGroupIds = JSON.parse(session) as Record<string, boolean>
@@ -317,7 +317,7 @@ export const judgeIsExpireGroupCache = (uid: string) => {
 
 export const setExpireGroupInCache = (uid: string, payload: boolean) => {
   let expireGroupIds: Record<string, boolean> = {}
-  let session = sessionStorage.getItem('expireGroupIds')
+  const session = sessionStorage.getItem('expireGroupIds')
   if (session) {
     expireGroupIds = JSON.parse(session) as Record<string, boolean>
   }
@@ -340,7 +340,7 @@ export const judgeIsExitNoticeMessage = (message: Message) => {
 
 export const judgeHasReadGroupNotice = (groupId: string) => {
   let agreedGroupIds: Record<string, boolean> = {}
-  let stroage = localStorage.getItem('agreedGroupIds')
+  const stroage = localStorage.getItem('agreedGroupIds')
 
   if (stroage) {
     agreedGroupIds = JSON.parse(stroage) as Record<string, boolean>
@@ -353,7 +353,7 @@ export const judgeHasReadGroupNotice = (groupId: string) => {
 
 export const setAgreedGroupInCache = (uid: string, payload: boolean) => {
   let agreedGroupIds: Record<string, boolean> = {}
-  let stroage = localStorage.getItem('agreedGroupIds')
+  const stroage = localStorage.getItem('agreedGroupIds')
   if (stroage) {
     agreedGroupIds = JSON.parse(stroage) as Record<string, boolean>
   }

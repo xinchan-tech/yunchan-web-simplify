@@ -1,4 +1,4 @@
-import { type Message, type MessageText, MessageContentType } from 'wukongimjssdk'
+import { type Message, MessageContentType, type MessageText } from 'wukongimjssdk'
 
 export enum PartType {
   text = 0, // 普通文本

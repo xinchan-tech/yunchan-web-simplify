@@ -49,7 +49,7 @@ const getOssClient = async () => {
     endpoint: ossConfig.endpoint!,
     region: 'oss-cn-shenzhen'
   })
-  
+
   return ossClient
 }
 

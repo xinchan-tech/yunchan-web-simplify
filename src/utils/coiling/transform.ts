@@ -27,7 +27,17 @@ export type IndicatorData =
 
 export type IndicatorDataType<T extends DrawFunc> = IndicatorData & { draw: T }
 
-type DrawFunc = '' | 'STICKLINE' | 'DRAWTEXT' | 'DRAWGRADIENT' | 'DRAWNUMBER' | 'DRAWRECTREL' | 'DRAWICON' | 'DRAWBAND' | 'HORIZONTALLINE' | 'HDLY_LABEL'
+type DrawFunc =
+  | ''
+  | 'STICKLINE'
+  | 'DRAWTEXT'
+  | 'DRAWGRADIENT'
+  | 'DRAWNUMBER'
+  | 'DRAWRECTREL'
+  | 'DRAWICON'
+  | 'DRAWBAND'
+  | 'HORIZONTALLINE'
+  | 'HDLY_LABEL'
 type IndicatorDataBase<T extends DrawFunc> = {
   draw: T
   color: string | string[]
@@ -86,7 +96,7 @@ type IndicatorDataDrawBand = IndicatorDataBase<'DRAWBAND'> & {
     color: string
     startIndex: number
     endIndex: number
-    points: { y1: number; y2: number; x: number; drawY: number, drawX: number }[]
+    points: { y1: number; y2: number; x: number; drawY: number; drawX: number }[]
   }[]
 }
 /**
@@ -130,7 +140,6 @@ export const drawLineTransform = (raw: IndicatorRawData) => {
   return raw
 }
 
-
 export const drawTextTransform = (raw: IndicatorRawData) => {
   if (raw.draw !== 'DRAWTEXT') return raw
   if (raw.draw_data!.length <= 0) return raw
@@ -154,14 +163,13 @@ export const drawTextTransform = (raw: IndicatorRawData) => {
       y: typedValue[0],
       text: text,
       offsetX: offsetX,
-      offsetY: -offsetY,
+      offsetY: -offsetY
     })
   })
 
   raw.draw_data = r
   return raw
 }
-
 
 export const drawStickLineTransform = (raw: IndicatorRawData) => {
   if (raw.draw !== 'STICKLINE') return raw
@@ -237,7 +245,7 @@ const drawGradientTransform = (drawData: ([number] | [number, string, string, st
 export const drawIconTransform = (raw: IndicatorRawData) => {
   if (raw.draw !== 'DRAWICON') return raw
   if (!raw.draw_data) return raw
-  
+
   const [condition, y, icon, offsetX, offsetY] = raw.draw_data[0]
 
   const r: {
@@ -400,7 +408,7 @@ const getIntersection = (
 export const drawNumberTransform = (raw: IndicatorRawData) => {
   if (raw.draw !== 'DRAWNUMBER') return raw
   if (!raw.draw_data) return raw
- 
+
   raw.draw_data = Object.entries(raw.draw_data).map(([key, value]) => {
     const typedValue = value as [number, number, number, number]
 
@@ -409,7 +417,7 @@ export const drawNumberTransform = (raw: IndicatorRawData) => {
       y: typedValue[0],
       number: typedValue[1],
       offsetX: typedValue[2],
-      offsetY: -typedValue[3],
+      offsetY: -typedValue[3]
     }
   })
 
@@ -420,7 +428,6 @@ export const drawRectrelTransform = (raw: IndicatorRawData) => {
   if (raw.draw !== 'DRAWRECTREL') return raw
   if (!raw.draw_data) return raw
 
-
   raw.draw_data = raw.draw_data.map(item => {
     return {
       x: item.x,
@@ -428,7 +435,7 @@ export const drawRectrelTransform = (raw: IndicatorRawData) => {
       rectWidth: item.rectWidth || 10,
       rectHeight: item.rectHeight || 5
     }
-  });
+  })
 
-  return raw;
+  return raw
 }

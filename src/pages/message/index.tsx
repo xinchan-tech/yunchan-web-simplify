@@ -65,19 +65,22 @@ const MessageCenter = () => {
     }
   })
 
-  useWsChat((msg) => {
+  useWsChat(msg => {
     const fromUid = msg.data.from_uid
 
-    queryClient.setQueryData<typeof chats.data>(chatsQueryKey, produce(draft => {
-      const item = draft?.find(item => item.uid === fromUid)
-      if (item) {
-        item.message = msg.data.content
-        item.create_time = dateUtils.toUsDay(msg.time).valueOf().toString().slice(0, -3)
-        if (active !== fromUid) {
-          item.unread = (+item.unread + 1).toString()
+    queryClient.setQueryData<typeof chats.data>(
+      chatsQueryKey,
+      produce(draft => {
+        const item = draft?.find(item => item.uid === fromUid)
+        if (item) {
+          item.message = msg.data.content
+          item.create_time = dateUtils.toUsDay(msg.time).valueOf().toString().slice(0, -3)
+          if (active !== fromUid) {
+            item.unread = (+item.unread + 1).toString()
+          }
         }
-      }
-    }))
+      })
+    )
   })
 
   return (
@@ -91,10 +94,10 @@ const MessageCenter = () => {
               setType('chat')
               markAsReadMutation.mutate(item.uid)
             }}
-            onKeyDown={() => { }}
+            onKeyDown={() => {}}
             className={cn(
               'flex py-4 hover:bg-[#3a3a3a] cursor-pointer transition-all px-2 items-center border-0 border-b border-solid border-border',
-              (item.uid === active && type === 'chat') && 'bg-[#3a3a3a]'
+              item.uid === active && type === 'chat' && 'bg-[#3a3a3a]'
             )}
           >
             <JknAvatar className="w-12 h-12" src={item.avatar ?? undefined} />
@@ -108,7 +111,9 @@ const MessageCenter = () => {
                 )}
                 <span className="ml-auto text-tertiary text-xs">{formatTime(item.create_time)}</span>
               </div>
-              <div className="mt-1 w-full text-ellipsis overflow-hidden whitespace-nowrap text-tertiary text-xs">{item.message}</div>
+              <div className="mt-1 w-full text-ellipsis overflow-hidden whitespace-nowrap text-tertiary text-xs">
+                {item.message}
+              </div>
             </div>
           </div>
         ))}
@@ -119,10 +124,10 @@ const MessageCenter = () => {
               setActive(item.id)
               setType('notice')
             }}
-            onKeyDown={() => { }}
+            onKeyDown={() => {}}
             className={cn(
               'flex py-4 hover:bg-[#3a3a3a] cursor-pointer transition-all px-2 items-center border-0 border-b border-solid border-border',
-              (item.id === active && type === 'notice') && 'bg-[#3a3a3a]'
+              item.id === active && type === 'notice' && 'bg-[#3a3a3a]'
             )}
           >
             <JknAvatar className="w-12 h-12" src={item.avatar ?? undefined} title={item.name} />
@@ -134,7 +139,9 @@ const MessageCenter = () => {
                     {item.unread}
                   </span>
                 )}
-                <span className="ml-auto text-xs text-tertiary">{item.create_time ? dateUtils.dateAgo(item.create_time) : '--'}</span>
+                <span className="ml-auto text-xs text-tertiary">
+                  {item.create_time ? dateUtils.dateAgo(item.create_time) : '--'}
+                </span>
               </div>
               <div className="mt-1 w-full text-ellipsis overflow-hidden  whitespace-nowrap text-tertiary text-xs">
                 {item.describe || '--'}
@@ -144,7 +151,11 @@ const MessageCenter = () => {
         ))}
       </div>
       <div className="flex-1 box-border overflow-hidden">
-        {type === 'chat' ? <ChatMessageContent msgKey={active} /> : <SystemMessageContent msgKey={active} name={types.data?.find(item => item.id === active)?.name} />}
+        {type === 'chat' ? (
+          <ChatMessageContent msgKey={active} />
+        ) : (
+          <SystemMessageContent msgKey={active} name={types.data?.find(item => item.id === active)?.name} />
+        )}
       </div>
     </div>
   )
@@ -170,7 +181,7 @@ const ChatMessageContent = (props: MessageContentProps) => {
   })
   const queryClient = useQueryClient()
 
-  const ws = useWsChat((msg) => {
+  const ws = useWsChat(msg => {
     const fromUid = msg.data.from_uid
 
     if (fromUid !== props.msgKey) return
@@ -393,9 +404,7 @@ const SystemMessageContent = (props: SystemMessageContentProps) => {
                 <div className="w-1/5 h-0 border-0 border-b border-solid border-b-border mr-2" />
                 <JknIcon name="ic_us" className="w-3 h-3 mr-2" />
                 美东时间&nbsp;
-                {
-                  dateUtils.toUsDay(msg.create_time).format('MM-DD w HH:mm')
-                }
+                {dateUtils.toUsDay(msg.create_time).format('MM-DD w HH:mm')}
                 <div className="w-1/5 h-0 border-0 border-b border-solid border-b-border ml-2" />
               </div>
               <div className="flex items-center max-w-[60%] overflow-hidden">

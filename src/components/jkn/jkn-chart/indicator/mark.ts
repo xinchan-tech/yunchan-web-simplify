@@ -1,11 +1,11 @@
-import { dateUtils } from '@/utils/date'
-import { type FigureConstructor, getFigureClass, IndicatorSeries, type IndicatorTemplate } from 'jkn-kline-chart'
-import type { MarkOverlayAttrs } from '../figure'
-import { inRange } from 'radash'
 import { getStockTabData } from '@/api'
+import { dateUtils } from '@/utils/date'
 import { queryClient } from '@/utils/query-client'
 import dayjs from 'dayjs'
-import { findEqualTime } from "../utils"
+import { type FigureConstructor, IndicatorSeries, type IndicatorTemplate, getFigureClass } from 'jkn-kline-chart'
+import { inRange } from 'radash'
+import type { MarkOverlayAttrs } from '../figure'
+import { findEqualTime } from '../utils'
 
 export const markIndicator: IndicatorTemplate<any, any> = {
   name: 'mark-indicator',
@@ -41,13 +41,12 @@ export const markIndicator: IndicatorTemplate<any, any> = {
       const data = findEqualTime(_dataList, dateUtils.toUsDay(item.date).hour(0).minute(0).second(0).valueOf())
 
       if (!data) return
-  
+
       ret.push({
         x: data.timestamp,
         y: data.close,
         title: item.event_zh
       })
-
     })
 
     return ret
@@ -76,7 +75,7 @@ export const markIndicator: IndicatorTemplate<any, any> = {
         name: 'mark-overlay',
         attrs: {
           x: xPixel,
-          y: y1,         
+          y: y1,
           date: dateUtils.toUsDay(item.x).format('YYYY-MM-DD'),
           title: item.title
         },

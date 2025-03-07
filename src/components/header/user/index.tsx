@@ -25,15 +25,16 @@ const HeaderUser = () => {
   })
 
   const loginForm = useModal({
-    content: <LoginForm afterLogin={() => {
-      loginForm.modal.close()
-    }}
-      onClose={
-        () => loginForm.modal.close()
-      }
-    />,
+    content: (
+      <LoginForm
+        afterLogin={() => {
+          loginForm.modal.close()
+        }}
+        onClose={() => loginForm.modal.close()}
+      />
+    ),
     footer: null,
-    onOpen: () => { }
+    onOpen: () => {}
   })
 
   const userCenter = useModal({
@@ -42,7 +43,7 @@ const HeaderUser = () => {
     title: t('user center'),
     footer: false,
     closeIcon: true,
-    onOpen: () => { }
+    onOpen: () => {}
   })
 
   const onClick = () => {
@@ -55,7 +56,7 @@ const HeaderUser = () => {
 
   return (
     <>
-      <div className="text-sm flex items-center cursor-pointer" onClick={onClick} onKeyDown={() => { }}>
+      <div className="text-sm flex items-center cursor-pointer" onClick={onClick} onKeyDown={() => {}}>
         <JknIcon.Svg size={24} name="more" />
         {/* <span>{token ? user?.realname : t('login')}</span> */}
       </div>

@@ -1,4 +1,11 @@
-import { checkMallProductOrderStatus, createMallProductOrder, getGroupDetailService, getMallProducts, getPaymentTypes, joinGroupService } from '@/api'
+import {
+  checkMallProductOrderStatus,
+  createMallProductOrder,
+  getGroupDetailService,
+  getMallProducts,
+  getPaymentTypes,
+  joinGroupService
+} from '@/api'
 import {
   AgreementTerms,
   Button,
@@ -15,22 +22,22 @@ import {
   useModal
 } from '@/components'
 import { useToast, useZForm } from '@/hooks'
+import { useToken } from '@/store'
+import { appEvent } from '@/utils/event'
+import { cn } from '@/utils/style'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useBoolean, useMount, useUnmount } from 'ahooks'
+import to from 'await-to-js'
+import copy from 'copy-to-clipboard'
+import QRCode from 'qrcode'
+import qs from 'qs'
 import { type CSSProperties, useEffect, useMemo, useRef, useState } from 'react'
+import { useFormContext } from 'react-hook-form'
 import { z } from 'zod'
 import { BasicPage } from './basic-page'
 import { GroupPage } from './group-page'
+import { IncrementPage } from './increment-page'
 import { IntroPage } from './intro-page'
-import { useFormContext } from 'react-hook-form'
-import { cn } from '@/utils/style'
-import { useBoolean, useMount, useUnmount } from 'ahooks'
-import to from 'await-to-js'
-import qs from "qs"
-import { IncrementPage } from "./increment-page"
-import { useToken } from "@/store"
-import QRCode from 'qrcode'
-import { appEvent } from "@/utils/event"
-import copy from "copy-to-clipboard"
 
 const subscribeTypes = [
   { name: '按月订阅', type: 'model_month' },
@@ -45,7 +52,7 @@ const versions = [
   { name: '增值包', value: 'increment' }
 ]
 
-type Version =  'group' | 'increment' | 'packages'
+type Version = 'group' | 'increment' | 'packages'
 
 const productForm = z.object({
   productId: z.string(),
@@ -60,12 +67,9 @@ const MallPage = () => {
   const products = useQuery({
     queryKey: [getMallProducts.cacheKey],
     queryFn: getMallProducts,
-    select: (data) => {
+    select: data => {
       return {
-        packages: [
-          ...data.basic.filter(item => item.id !== '28' && item.name !== '新手版'),
-          ...data.plus
-        ],
+        packages: [...data.basic.filter(item => item.id !== '28' && item.name !== '新手版'), ...data.plus],
         intro: data.intro,
         payment: data.payment,
         increment: data.increment
@@ -103,7 +107,7 @@ const MallPage = () => {
         form.setValue(key as any, value)
       })
     },
-    onOk: async () => { }
+    onOk: async () => {}
   })
 
   useMount(() => {
@@ -123,7 +127,7 @@ const MallPage = () => {
   const token = useToken(s => s.token)
 
   const _onOpenCashier = (values: z.infer<typeof productForm>) => {
-    if(!token){
+    if (!token) {
       JknAlert.info({
         content: '您还未登录，请先登录',
         onAction: async () => {
@@ -202,7 +206,14 @@ const MallPage = () => {
             />
           ),
           group: <GroupPage title="聊天社群" type={subscribeType} onSubmit={v => _onOpenCashier(v)} />,
-          increment: <IncrementPage increment={products.data?.increment ?? []} title="增值包" type={subscribeType} onSubmit={v => _onOpenCashier(v)} />
+          increment: (
+            <IncrementPage
+              increment={products.data?.increment ?? []}
+              title="增值包"
+              type={subscribeType}
+              onSubmit={v => _onOpenCashier(v)}
+            />
+          )
         }[version] ?? null}
       </div>
       {['basic', 'plus', 'increment', 'packages'].includes(version) ? (
@@ -258,14 +269,12 @@ const CashierPage = () => {
     }
   }, [payments.data])
 
-
   const onBuy = async () => {
     if (!checked) {
       toast({ description: '请先同意订阅协议' })
       return
     }
     setTrue()
-
 
     const [err, res] = await to(productType === 'group' ? buyGroupProduct() : buyNormalProduct())
     setFalse()
@@ -311,7 +320,7 @@ const CashierPage = () => {
 
     const params = {
       payment_type: type!,
-      product_sn: product.product_sn,
+      product_sn: product.product_sn
     }
 
     const res = await joinGroupService(channelInfo.account, params)
@@ -343,7 +352,10 @@ const CashierPage = () => {
     }, 1000)
   }
 
-  const totalPrice = useMemo(() => `\$${price}/${model === 'model_year' ? '年' : model === 'model_month' ? '月' : '未知'}`, [price, model])
+  const totalPrice = useMemo(
+    () => `\$${price}/${model === 'model_year' ? '年' : model === 'model_month' ? '月' : '未知'}`,
+    [price, model]
+  )
 
   const qrCode = useModal({
     title: '支付二维码',
@@ -353,14 +365,11 @@ const CashierPage = () => {
     closeIcon: true
   })
 
-
   const checkPay = () => {
     if (payStatus !== 'paid') {
       JknAlert.info({
         content: '未验证到支付成功，请确认',
-        onAction: async () => {
-
-        }
+        onAction: async () => {}
       })
     } else {
       setPayUrl('')
@@ -393,7 +402,7 @@ const CashierPage = () => {
 
   //协议modal
   const agreement = useModal({
-    content: (action) => (
+    content: action => (
       <div className="p-8 leading-8">
         <ScrollArea className="border border-solid rounded-sm border-gray-700 p-4 h-[400px]">
           <AgreementTerms />
@@ -413,96 +422,114 @@ const CashierPage = () => {
       <div className="px-4 border-0 border-b border-solid border-border pb-2">
         <div className="my-2">商品名称: {name}</div>
         <div className="flex justify-between">
-          <span>
-            商品价格: {totalPrice}
-          </span>
+          <span>商品价格: {totalPrice}</span>
           <span>付款方式: {model === 'model_year' ? '包年订阅' : model === 'model_month' ? '包月订阅' : '未知'}</span>
         </div>
       </div>
-      {
-        payStatus !== 'paid' ? (
-          <div className="text-center">
-            <p className="text-center">请选择支付方式</p>
-            {
-              payments.isLoading ? (
-                <div className="space-y-3 my-8">
-                  <Skeleton className="w-full h-4" />
-                  <Skeleton className="w-full h-4" />
-                  <Skeleton className="w-full h-4" />
-                  <Skeleton className="w-full h-4" />
-                  <Skeleton className="w-full h-4" />
-                </div>
-              ) : (
-                <div className="min-h-48 px-8">
-                  <RadioGroup value={type} onValueChange={onChangeType} className="flex items-center justify-between flex-wrap px-4">
-                    {types.map(t => (
-                      <div className="flex items-center space-x-2 mb-4" key={t.type}>
-                        <RadioGroupItem key={t.type} value={t.type} id={`mall-payment-${t.type}`} />
-                        <Label htmlFor={`mall-payment-${t.type}`}>
-                          <JknIcon
-                            className="w-32 h-10 rounded-none"
-                            name={t.type === 'paypal' ? 'ic_paypal_pay' : t.type === 'stripe' ? 'ic_stripe_pay' : t.type === 'wechat' ? 'ic_wechat_pay' : t.type === 'alipay' ? 'ic_alipay' : (t as any)}
-                          />
-                        </Label>
-                      </div>
-                    ))}
-                  </RadioGroup>
-                </div>
-              )
-            }
-            <div className="w-full flex items-center px-12 mb-4">
-              <JknIcon.Checkbox checked={checked} checkedIcon="checkbox_mult_sel" uncheckedIcon="checkbox_mult_nor" onClick={() => payStatus === 'pre' && form.setValue('checked', !checked)} className="rounded-none" />
-              <span>
-                &nbsp;我已经阅读并同意<span className="text-primary cursor-pointer" onClick={() => agreement.modal.open()} onKeyDown={() => { }}>《软件订阅协议》</span>
+      {payStatus !== 'paid' ? (
+        <div className="text-center">
+          <p className="text-center">请选择支付方式</p>
+          {payments.isLoading ? (
+            <div className="space-y-3 my-8">
+              <Skeleton className="w-full h-4" />
+              <Skeleton className="w-full h-4" />
+              <Skeleton className="w-full h-4" />
+              <Skeleton className="w-full h-4" />
+              <Skeleton className="w-full h-4" />
+            </div>
+          ) : (
+            <div className="min-h-48 px-8">
+              <RadioGroup
+                value={type}
+                onValueChange={onChangeType}
+                className="flex items-center justify-between flex-wrap px-4"
+              >
+                {types.map(t => (
+                  <div className="flex items-center space-x-2 mb-4" key={t.type}>
+                    <RadioGroupItem key={t.type} value={t.type} id={`mall-payment-${t.type}`} />
+                    <Label htmlFor={`mall-payment-${t.type}`}>
+                      <JknIcon
+                        className="w-32 h-10 rounded-none"
+                        name={
+                          t.type === 'paypal'
+                            ? 'ic_paypal_pay'
+                            : t.type === 'stripe'
+                              ? 'ic_stripe_pay'
+                              : t.type === 'wechat'
+                                ? 'ic_wechat_pay'
+                                : t.type === 'alipay'
+                                  ? 'ic_alipay'
+                                  : (t as any)
+                        }
+                      />
+                    </Label>
+                  </div>
+                ))}
+              </RadioGroup>
+            </div>
+          )}
+          <div className="w-full flex items-center px-12 mb-4">
+            <JknIcon.Checkbox
+              checked={checked}
+              checkedIcon="checkbox_mult_sel"
+              uncheckedIcon="checkbox_mult_nor"
+              onClick={() => payStatus === 'pre' && form.setValue('checked', !checked)}
+              className="rounded-none"
+            />
+            <span>
+              &nbsp;我已经阅读并同意
+              <span className="text-primary cursor-pointer" onClick={() => agreement.modal.open()} onKeyDown={() => {}}>
+                《软件订阅协议》
               </span>
-            </div>
-            {
-              type ? (
-                // payUrl ? (
-                //   <Button type="button" onClick={() => checkPay()}>
-                //     支付完成？验证支付
-                //   </Button>
-                // ) : (
-                //   <Button type="button" onClick={() => onBuy()}>
-                //     支付
-                //   </Button>
-                // )
-                payStatus === 'pre' ? (
-                  <Button type="button" onClick={() => onBuy()}>
-                    支付
-                  </Button>
-                ) : payStatus === 'paying' ? (
-                  <>
-                    <div className="space-x-4 mb-4">
-                      <Button type="button" variant="outline" onClick={() => checkPay()}>
-                        支付完成？验证支付
-                      </Button>
-                      <Button type="button" onClick={() => openPay(payUrl)}>
-                        跳转 {type} 支付
-                      </Button>
-                    </div>
-                    {
-                      type !== 'wechat' && (
-                        <span className="text-tertiary text-xs">未跳转到支付页面？复制付款<span className="text-primary cursor-pointer" onClick={onCopyUrl} onKeyDown={() => { }}>链接</span></span>
-                      )
-                    }
-                  </>
-                ) : null
-              ) : null
-            }
-          </div >
-        ) : (
-          <div className="min-h-48 flex flex-col items-center mt-12">
-            <div className="bg-stock-green rounded-full w-24 h-24 flex">
-              <JknIcon className="m-auto w-16 h-16" name="dagou_white" />
-            </div>
-            <div className="my-8">购买成功</div>
-            <Button type="button" className="w-24" onClick={() => window.location.reload()}>
-              确定
-            </Button>
+            </span>
           </div>
-        )
-      }
+          {type ? (
+            // payUrl ? (
+            //   <Button type="button" onClick={() => checkPay()}>
+            //     支付完成？验证支付
+            //   </Button>
+            // ) : (
+            //   <Button type="button" onClick={() => onBuy()}>
+            //     支付
+            //   </Button>
+            // )
+            payStatus === 'pre' ? (
+              <Button type="button" onClick={() => onBuy()}>
+                支付
+              </Button>
+            ) : payStatus === 'paying' ? (
+              <>
+                <div className="space-x-4 mb-4">
+                  <Button type="button" variant="outline" onClick={() => checkPay()}>
+                    支付完成？验证支付
+                  </Button>
+                  <Button type="button" onClick={() => openPay(payUrl)}>
+                    跳转 {type} 支付
+                  </Button>
+                </div>
+                {type !== 'wechat' && (
+                  <span className="text-tertiary text-xs">
+                    未跳转到支付页面？复制付款
+                    <span className="text-primary cursor-pointer" onClick={onCopyUrl} onKeyDown={() => {}}>
+                      链接
+                    </span>
+                  </span>
+                )}
+              </>
+            ) : null
+          ) : null}
+        </div>
+      ) : (
+        <div className="min-h-48 flex flex-col items-center mt-12">
+          <div className="bg-stock-green rounded-full w-24 h-24 flex">
+            <JknIcon className="m-auto w-16 h-16" name="dagou_white" />
+          </div>
+          <div className="my-8">购买成功</div>
+          <Button type="button" className="w-24" onClick={() => window.location.reload()}>
+            确定
+          </Button>
+        </div>
+      )}
 
       {loading && (
         <div className="fixed left-0 right-0 bottom-0 top-0 bg-background/45 flex items-center justify-center">
@@ -512,13 +539,9 @@ const CashierPage = () => {
           </div>
         </div>
       )}
-      {
-        qrCode.context
-      }
-      {
-        agreement.context
-      }
-    </div >
+      {qrCode.context}
+      {agreement.context}
+    </div>
   )
 }
 
@@ -542,18 +565,12 @@ const WxCharQrCode = (props: WxCharQrCodeProps) => {
   })
   return (
     <div className="flex w-full flex-col space-y-2 items-center py-8">
-      <div>
-        {props.name}
-      </div>
-      <div>
-        {props.price}
-      </div>
+      <div>{props.name}</div>
+      <div>{props.price}</div>
       <div>
         <canvas id="wx-pay-qrcode" className="w-[160px] h-[160px] m-auto" />
       </div>
-      <div>
-        请使用微信扫描二维码完成支付
-      </div>
+      <div>请使用微信扫描二维码完成支付</div>
     </div>
   )
 }

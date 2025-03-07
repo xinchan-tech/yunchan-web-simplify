@@ -1,9 +1,9 @@
-import { AlarmType } from "@/api"
-import { CapsuleTabs } from "@/components"
-import { useState } from "react"
-import AlarmList from "./alarm-list"
-import AlarmLog from "./alarm-log"
-import { PriceAlarmSetting } from "./price-alarm-setting"
+import { AlarmType } from '@/api'
+import { CapsuleTabs } from '@/components'
+import { useState } from 'react'
+import AlarmList from './alarm-list'
+import AlarmLog from './alarm-log'
+import { PriceAlarmSetting } from './price-alarm-setting'
 
 interface PriceAlarmFormProps {
   code?: string
@@ -21,9 +21,7 @@ const PriceAlarmForm = (props: PriceAlarmFormProps) => {
           <CapsuleTabs.Tab label="报警列表" value="2" />
           <CapsuleTabs.Tab label="已触发报警" value="3" />
         </CapsuleTabs>
-        <div className="text-xs ml-auto">
-          当前运行报警：{count} 条
-        </div>
+        <div className="text-xs ml-auto">当前运行报警：{count} 条</div>
       </div>
       <div className="flex-1 overflow-hidden">
         {{
@@ -35,7 +33,5 @@ const PriceAlarmForm = (props: PriceAlarmFormProps) => {
     </div>
   )
 }
-
-
 
 export default PriceAlarmForm

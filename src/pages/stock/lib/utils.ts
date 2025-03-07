@@ -1,14 +1,14 @@
-import { getStockIndicatorData, StockChartInterval, type StockRawRecord } from '@/api'
+import { StockChartInterval, type StockRawRecord, getStockIndicatorData } from '@/api'
+import { useIndicator } from '@/store'
 import { getTradingPeriod } from '@/utils/date'
 import type { ECOption } from '@/utils/echarts'
+import { queryClient } from '@/utils/query-client'
 import { type StockTrading, stockUtils } from '@/utils/stock'
 import dayjs, { type Dayjs } from 'dayjs'
 import type { GraphicComponentOption } from 'echarts/components'
 import type { EChartsType } from 'echarts/core'
 import type { ECBasicOption } from 'echarts/types/dist/shared'
-import { useKChartStore, type Indicator, type KChartContext } from './ctx'
-import { useIndicator } from '@/store'
-import { queryClient } from '@/utils/query-client'
+import { type Indicator, type KChartContext, useKChartStore } from './ctx'
 
 export const renderUtils = {
   getXAxisIndex: (options: ECOption, index: number) => {
@@ -511,7 +511,7 @@ export const renderUtils = {
     //   })
     // )
 
-    return 
+    return
   },
   /**
    * 判断是否应该更新当前k线图
@@ -542,6 +542,14 @@ export const renderUtils = {
     }
     return true
   },
-
-
+  /**
+   * 判断是否是分时图
+   */
+  isTimeIndexChart: (timeIndex: StockChartInterval) =>
+    [
+      StockChartInterval.PRE_MARKET,
+      StockChartInterval.AFTER_HOURS,
+      StockChartInterval.INTRA_DAY,
+      StockChartInterval.FIVE_DAY
+    ].includes(timeIndex)
 }

@@ -8,7 +8,7 @@ import { type Stock, type StockSubscribeHandler, stockUtils } from '@/utils/stoc
 import { colorUtil } from '@/utils/style'
 import { useQuery } from '@tanstack/react-query'
 import { useMount, useUnmount, useUpdateEffect } from 'ahooks'
-import { memo, type PropsWithChildren, useCallback, useEffect, useRef, useState } from 'react'
+import { type PropsWithChildren, memo, useCallback, useEffect, useRef, useState } from 'react'
 import { withSort } from '../jkn/jkn-icon/with-sort'
 
 const extend: StockExtend[] = [
@@ -244,9 +244,22 @@ const StockListItem = ({ stock, onCollectChange, children }: PropsWithChildren<S
           <div className="text-right text-secondary mt-0.5 scale-90">
             {stock.subPrice ? (
               <span>
-                <SubscribeSpan.Price trading={['afterHours', 'preMarket']} symbol={stock.code} initValue={stock.subPrice} decimal={3} showColor={false} />
+                <SubscribeSpan.Price
+                  trading={['afterHours', 'preMarket']}
+                  symbol={stock.code}
+                  initValue={stock.subPrice}
+                  decimal={3}
+                  showColor={false}
+                />
                 &nbsp;&nbsp;
-                <SubscribeSpan.Percent trading={['afterHours', 'preMarket']} showSign symbol={stock.code} initValue={stock.subPercent} decimal={2} showColor={false} />
+                <SubscribeSpan.Percent
+                  trading={['afterHours', 'preMarket']}
+                  showSign
+                  symbol={stock.code}
+                  initValue={stock.subPercent}
+                  decimal={2}
+                  showColor={false}
+                />
               </span>
             ) : (
               '--'

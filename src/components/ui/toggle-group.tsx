@@ -1,34 +1,33 @@
-import * as React from "react"
-import * as ToggleGroupPrimitive from "@radix-ui/react-toggle-group"
-import type { VariantProps } from "class-variance-authority"
+import * as ToggleGroupPrimitive from '@radix-ui/react-toggle-group'
+import type { VariantProps } from 'class-variance-authority'
+import * as React from 'react'
 
-import { cn } from "@/utils/style"
-import { toggleVariants } from "@/components/ui/toggle"
+import { toggleVariants } from '@/components/ui/toggle'
+import { cn } from '@/utils/style'
 
-const ToggleGroupContext = React.createContext<
-  VariantProps<typeof toggleVariants> & { activeColor?: string }
->({
-  size: "default",
-  variant: "default",
+const ToggleGroupContext = React.createContext<VariantProps<typeof toggleVariants> & { activeColor?: string }>({
+  size: 'default',
+  variant: 'default'
 })
 
 const ToggleGroup = React.forwardRef<
   React.ElementRef<typeof ToggleGroupPrimitive.Root>,
   React.ComponentPropsWithoutRef<typeof ToggleGroupPrimitive.Root> &
-  VariantProps<typeof toggleVariants> & { activeColor?: string }
->(({ className, variant, size, children, activeColor, style, ...props }, ref) => (
+  VariantProps<typeof toggleVariants> & { activeColor?: string, hoverColor?: string }
+>(({ className, variant, size, children, activeColor, hoverColor, style, ...props }, ref) => (
   <ToggleGroupPrimitive.Root
     ref={ref}
-    className={cn("flex items-center gap-2 flex-wrap", className)}
-    style={{
-      '--toggle-active-bg': activeColor ?? 'hsl(var(--primary))',
-      ...style
-    } as React.CSSProperties}
+    className={cn('flex items-center gap-2 flex-wrap', className)}
+    style={
+      {
+        '--toggle-active-bg': activeColor ?? '#fff',
+        '--toggle-hover-bg': hoverColor ?? '#4A4A4A',
+        ...style
+      } as React.CSSProperties
+    }
     {...props}
   >
-    <ToggleGroupContext.Provider value={{ variant, size, activeColor }}>
-      {children}
-    </ToggleGroupContext.Provider>
+    <ToggleGroupContext.Provider value={{ variant, size, activeColor }}>{children}</ToggleGroupContext.Provider>
   </ToggleGroupPrimitive.Root>
 ))
 
@@ -47,7 +46,7 @@ const ToggleGroupItem = React.forwardRef<
       className={cn(
         toggleVariants({
           variant: context.variant || variant,
-          size: context.size || size,
+          size: context.size || size
         }),
         className
       )}

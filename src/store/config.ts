@@ -1,7 +1,7 @@
+import { getCurrentIp } from '@/api'
+import theme from '@/theme/variables.module.scss'
 import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
-import theme from '@/theme/variables.module.scss'
-import { getCurrentIp } from '@/api'
 
 type Language = 'zh_CN' | 'en'
 

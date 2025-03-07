@@ -1,6 +1,6 @@
-import pako from 'pako'
 import aes from 'crypto-js/aes'
 import encUtf8 from 'crypto-js/enc-utf8'
+import pako from 'pako'
 
 /**
  * 计算字符串宽度

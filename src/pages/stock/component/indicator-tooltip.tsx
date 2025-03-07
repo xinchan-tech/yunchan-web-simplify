@@ -46,7 +46,7 @@ export const IndicatorTooltip = (props: IndicatorTooltipProps) => {
             color
           }
         })
- 
+
       indicatorRef.current = {
         indicatorId: props.indicator.id,
         indicators
@@ -66,23 +66,22 @@ export const IndicatorTooltip = (props: IndicatorTooltipProps) => {
       const data: IndicatorData[] = []
 
       e.forEach((item: any) => {
-
         if (!item.seriesName) return
 
         const [type, id, name] = item.seriesName.split('_')
 
         if (type !== props.type) return
-       
+
         if (id !== indicatorRef.current.indicatorId) return
 
         let value = item.value
-        if(item.seriesType === 'custom'){
+        if (item.seriesType === 'custom') {
           const dim = item.dimensionNames.findIndex((d: string) => d === 'value')
-          if(dim !== -1){
+          if (dim !== -1) {
             value = item.data[dim]
           }
         }
-       
+
         if (!isNumber(value)) return
 
         const indicator = indicatorRef.current.indicators.find(indicator => indicator.name === name)
@@ -155,9 +154,15 @@ export const IndicatorTooltip = (props: IndicatorTooltipProps) => {
         {props.type === 'main' && (
           <span className="flex-shrink-0">
             {visible ? (
-              <EyeClosedIcon onClick={() => _onChangeIndicatorVisible(false)} className="cursor-pointer pointer-events-auto" />
+              <EyeClosedIcon
+                onClick={() => _onChangeIndicatorVisible(false)}
+                className="cursor-pointer pointer-events-auto"
+              />
             ) : (
-              <EyeOpenIcon onClick={() => _onChangeIndicatorVisible(true)} className="cursor-pointer pointer-events-auto" />
+              <EyeOpenIcon
+                onClick={() => _onChangeIndicatorVisible(true)}
+                className="cursor-pointer pointer-events-auto"
+              />
             )}
             &emsp;
             <TrashIcon className="cursor-pointer pointer-events-auto" onClick={deleteIndicator} />
@@ -179,17 +184,20 @@ export const IndicatorTooltipGroup = memo((props: IndicatorTooltipGroupProps) =>
   const [expand, { toggle }] = useBoolean(true)
   const state = useKChartStore(s => s.state[props.mainIndex])
   return (
-    <div className="absolute top-4 space-y-2 main-indicator-tooltip pointer-events-none" style={{ left: state.yAxis.left ? 80 : 8, right: state.yAxis.right ? 80 : 8 }}>
+    <div
+      className="absolute top-4 space-y-2 main-indicator-tooltip pointer-events-none"
+      style={{ left: state.yAxis.left ? 80 : 8, right: state.yAxis.right ? 80 : 8 }}
+    >
       {expand
         ? indicators.map(item => (
-          <IndicatorTooltip mainIndex={props.mainIndex} key={item.id} type="main" indicator={item} />
-        ))
+            <IndicatorTooltip mainIndex={props.mainIndex} key={item.id} type="main" indicator={item} />
+          ))
         : null}
       {indicators.length > 0 && (
         <span
           className="border border-gray-600 border-solid rounded px-1 cursor-pointer flex items-center justify-center w-6 h-4"
           onClick={toggle}
-          onKeyDown={() => { }}
+          onKeyDown={() => {}}
         >
           {!expand ? (
             <>

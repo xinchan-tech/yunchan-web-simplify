@@ -1,23 +1,23 @@
-import { useContext, useEffect, useRef, useState } from "react"
-import { GroupChatContext } from ".."
-import type { Subscriber } from "wukongimjssdk"
-import { useUser } from "@/store"
-import { useToast } from "@/hooks"
-import { useGroupChatShortStore } from "@/store/group-chat-new"
 import {
+  bindInviteCode,
+  type forbiddenServicePyload,
+  getGroupChannels,
+  joinGroupByInviteCode,
   setGroupManagerService,
   type setManagerServicePayload,
-  type forbiddenServicePyload,
   setMemberForbiddenService,
-  bindInviteCode,
-  joinGroupByInviteCode,
-  getGroupChannels,
 } from "@/api"
-import { throttle } from "radash"
 import { Button, ContextMenuContent, ContextMenuItem, Input } from "@/components"
-import { useLatest } from "ahooks"
 import { useModal } from "@/components"
+import { useToast } from "@/hooks"
+import { useUser } from "@/store"
+import { useGroupChatShortStore } from "@/store/group-chat-new"
+import { useLatest } from "ahooks"
 import to from "await-to-js"
+import { throttle } from "radash"
+import { useContext, useEffect, useRef, useState } from "react"
+import type { Subscriber } from "wukongimjssdk"
+import { GroupChatContext } from ".."
 
 
 export const useMemberSetting = () => {
@@ -43,7 +43,7 @@ export const useMemberSetting = () => {
 
   const handleSetManager = async (item: Subscriber) => {
     if (groupDetailData) {
-      let data: setManagerServicePayload = {
+      const data: setManagerServicePayload = {
         channelId: groupDetailData.account,
         username: item.uid,
         type: "1",
@@ -79,7 +79,7 @@ export const useMemberSetting = () => {
 
   const handleLahei = async (item: Subscriber) => {
     if (groupDetailData) {
-      let data: forbiddenServicePyload = {
+      const data: forbiddenServicePyload = {
         channelId: groupDetailData.account,
         uids: [item.uid],
         forbidden: "0",

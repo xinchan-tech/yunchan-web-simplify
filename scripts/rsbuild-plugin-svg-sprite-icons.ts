@@ -48,7 +48,7 @@ function svgFind(directoryPath: string, idPrefix: string): string[] {
         .replaceAll('prefix_', () => {
           return idPrefix.replace('[name]', dirent.name.replace('.svg', ''))
         })
- 
+
       if (strokeColor.test(svgContent)) {
         svgContent = svgContent.replace(strokeColor, 'stroke="currentColor"')
       }

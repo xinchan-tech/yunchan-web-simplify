@@ -1,6 +1,6 @@
-import type { StockChartInterval } from "@/api"
-import type {EChartsType as EEChartsType} from 'echarts/core'
-import type { Emitter } from "mitt"
+import type { StockChartInterval } from '@/api'
+import type { EChartsType as EEChartsType } from 'echarts/core'
+import type { Emitter } from 'mitt'
 
 declare module 'echarts/core' {
   interface EChartsType extends EEChartsType {
@@ -8,13 +8,13 @@ declare module 'echarts/core' {
       dataZoom: {
         start: number
         end: number
-      },
+      }
       yAxis: {
-        left?: 'price' | 'percent',
+        left?: 'price' | 'percent'
         right: 'price' | 'percent'
-      },
-      mainData: any[],
-      timeIndex: StockChartInterval,
+      }
+      mainData: any[]
+      timeIndex: StockChartInterval
       event: Emitter<any>
     }
   }

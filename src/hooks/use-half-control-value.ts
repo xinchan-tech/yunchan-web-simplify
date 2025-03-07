@@ -1,16 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react'
 
 export function usePropValue<T>(controlledValue: T | undefined) {
-  const [value, setValue] = useState<T | undefined>(controlledValue);
+  const [value, setValue] = useState<T | undefined>(controlledValue)
 
   useEffect(() => {
     if (controlledValue !== undefined) {
-      setValue(controlledValue);
+      setValue(controlledValue)
     }
+  }, [controlledValue])
 
-  }, [controlledValue]);
-
- 
-
-  return [value, setValue] as const;
+  return [value, setValue] as const
 }

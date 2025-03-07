@@ -1,10 +1,9 @@
-import request from "@/utils/request"
-import type { StockRawRecord } from "./stock"
+import request from '@/utils/request'
+import type { StockRawRecord } from './stock'
 
 /**
  * 大盘指数
  */
-
 
 type LargeCapIndex = {
   category_name: string
@@ -17,10 +16,8 @@ type LargeCapIndexStock = {
   symbol: string
 }
 
-
 export const getLargeCapIndexes = async () => {
   const r = await request.get<LargeCapIndex[]>('/index/largeCapIndexes').then(r => r.data)
   return r
 }
 getLargeCapIndexes.cacheKey = 'index:largeCapIndexes'
-

@@ -1,19 +1,19 @@
 import {
-  useModal,
-  JknIcon,
   DropdownMenu,
-  DropdownMenuItem,
   DropdownMenuContent,
-  DropdownMenuTrigger
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  JknIcon,
+  useModal
 } from '@/components'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 
-import { useState } from 'react'
-import JoinGroupContent from './join-group-content'
-import CreateGroupForm from './create-group-form'
 import type { CreateGroupRecord } from '@/api'
-import { useUser } from '@/store'
 import { toast } from '@/hooks'
+import { useUser } from '@/store'
+import { useState } from 'react'
+import CreateGroupForm from './create-group-form'
+import JoinGroupContent from './join-group-content'
 
 const CreateGroup = () => {
   const createGroup = useModal({

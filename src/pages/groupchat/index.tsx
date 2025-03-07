@@ -1,8 +1,8 @@
 import GroupChannel from './group-channel'
 import GroupChatLeftBar from './left-bar'
 
-import GroupChatMsgList from './group-chat-msglist'
-import GroupChatInput from './group-chat-input'
+import { useToken, useUser } from '@/store'
+import { createContext, useEffect, useRef, useState } from 'react'
 import WKSDK, {
   type ConnectStatusListener,
   type Message,
@@ -13,8 +13,8 @@ import WKSDK, {
   ConversationAction,
   ChannelTypeGroup
 } from 'wukongimjssdk'
-import { useEffect, useRef, useState, createContext } from 'react'
-import { useUser, useToken } from '@/store'
+import GroupChatInput from './group-chat-input'
+import GroupChatMsgList from './group-chat-msglist'
 
 import { useGroupChatShortStore, useGroupChatStoreNew } from '@/store/group-chat-new'
 import { useShallow } from 'zustand/react/shallow'
@@ -26,12 +26,12 @@ import { loginImService, revokeMessageService } from '@/api'
 import { Button, JknIcon, Toaster } from '@/components'
 import type { ConversationWrap } from './ConversationWrap'
 
+import { useLatest, useMount } from 'ahooks'
+import { ChevronRight } from 'lucide-react'
 import APIClient from './Service/APIClient'
-import TextImgLive from './text-img-live'
 import { judgeHasReadGroupNotice, setAgreedGroupInCache } from './chat-utils'
 import ChatInfoDrawer from './components/chat-info-drawer'
-import { ChevronRight } from 'lucide-react'
-import { useLatest, useMount } from "ahooks"
+import TextImgLive from './text-img-live'
 
 export type ReplyFn = (option: {
   message?: Message

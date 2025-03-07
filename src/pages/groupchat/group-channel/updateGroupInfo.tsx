@@ -1,16 +1,16 @@
-import { useQuery } from '@tanstack/react-query'
 import { type EditGroupPayload, editGroupService, getGroupDetailService, getGroupMembersService } from '@/api'
+import { useQuery } from '@tanstack/react-query'
 
-import AliyunOssUploader from '../components/aliyun-oss-uploader'
-import { useEffect, useRef, useState } from 'react'
-import FullScreenLoading from '@/components/loading'
 import { Textarea, useModal } from '@/components'
-import { GroupTag } from '../components/create-and-join-group/group-channel-card'
-import ChatAvatar from '../components/chat-avatar'
 import { JknIcon } from '@/components'
+import FullScreenLoading from '@/components/loading'
 import { useToast } from '@/hooks'
 import { useGroupChatShortStore, useGroupChatStoreNew } from '@/store/group-chat-new'
+import { useEffect, useRef, useState } from 'react'
 import WKSDK, { type Channel } from 'wukongimjssdk'
+import AliyunOssUploader from '../components/aliyun-oss-uploader'
+import ChatAvatar from '../components/chat-avatar'
+import { GroupTag } from '../components/create-and-join-group/group-channel-card'
 
 const UpdateGroupInfo = (props: {
   group: Channel

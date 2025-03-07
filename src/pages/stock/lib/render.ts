@@ -1,5 +1,6 @@
 import { StockChartInterval, type StockRawRecord, type getStockChart } from '@/api'
 import { useConfig } from '@/store'
+import { dateUtils } from '@/utils/date'
 import { type ECOption, echartUtils } from '@/utils/echarts'
 import { stockUtils } from '@/utils/stock'
 import { colorUtil } from '@/utils/style'
@@ -9,6 +10,7 @@ import type { CandlestickSeriesOption, LineSeriesOption } from 'echarts/charts'
 import type { GraphicComponentOption } from 'echarts/components'
 import type { EChartsType } from 'echarts/core'
 import type { XAXisOption, YAXisOption } from 'echarts/types/dist/shared'
+import { listify } from 'radash'
 import {
   calcBottomSignal,
   calcCoilingPivots,
@@ -40,8 +42,6 @@ import {
 } from './drawer'
 import { chartEvent } from './event'
 import { renderUtils } from './utils'
-import { dateUtils } from '@/utils/date'
-import { listify } from 'radash'
 
 const MAIN_CHART_NAME = 'kChart'
 const MAIN_CHART_NAME_VIRTUAL = 'kChart-virtual'

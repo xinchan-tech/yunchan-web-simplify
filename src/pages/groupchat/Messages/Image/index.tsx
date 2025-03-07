@@ -1,8 +1,8 @@
 import { useState } from 'react'
-import { type MessageImage, MediaMessageContent, MessageContentType, type Message } from 'wukongimjssdk'
+import Viewer from 'react-viewer'
+import { MediaMessageContent, type Message, MessageContentType, type MessageImage } from 'wukongimjssdk'
 import MsgCard from '../../components/msg-card'
 import { RevokeText } from '../text'
-import Viewer from 'react-viewer'
 
 export class ImageContent extends MediaMessageContent {
   width!: number
@@ -38,25 +38,25 @@ export class ImageContent extends MediaMessageContent {
 }
 
 const imageScale = (orgWidth: number, orgHeight: number, maxWidth = 250, maxHeight = 250) => {
-  let actSize = { width: orgWidth, height: orgHeight }
+  const actSize = { width: orgWidth, height: orgHeight }
   if (orgWidth > orgHeight) {
     //横图
     if (orgWidth > maxWidth) {
       // 横图超过最大宽度
-      let rate = maxWidth / orgWidth // 缩放比例
+      const rate = maxWidth / orgWidth // 缩放比例
       actSize.width = maxWidth
       actSize.height = orgHeight * rate
     }
   } else if (orgWidth < orgHeight) {
     //竖图
     if (orgHeight > maxHeight) {
-      let rate = maxHeight / orgHeight // 缩放比例
+      const rate = maxHeight / orgHeight // 缩放比例
       actSize.width = orgWidth * rate
       actSize.height = maxHeight
     }
   } else if (orgWidth === orgHeight) {
     if (orgWidth > maxWidth) {
-      let rate = maxWidth / orgWidth // 缩放比例
+      const rate = maxWidth / orgWidth // 缩放比例
       actSize.width = maxWidth
       actSize.height = orgHeight * rate
     }
@@ -74,7 +74,7 @@ const ImageCell = (props: { message: Message; historyMode?: boolean }) => {
 
   const getImageElement = () => {
     const content = message.content as MessageImage
-    let scaleSize = imageScale(content.width, content.height)
+    const scaleSize = imageScale(content.width, content.height)
     const imageURL = getImageSrc(content)
     return (
       <MsgCard data={message} historyMode={historyMode}>

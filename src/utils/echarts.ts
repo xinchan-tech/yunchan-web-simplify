@@ -1,52 +1,51 @@
 import * as echarts from 'echarts/core'
 
 import {
-  LineChart,
-  type LineSeriesOption,
-  TreemapChart,
-  type TreemapSeriesOption,
+  BarChart,
+  type BarSeriesOption,
   CandlestickChart,
   type CandlestickSeriesOption,
   CustomChart,
   type CustomSeriesOption,
-  BarChart,
-  type BarSeriesOption,
+  LineChart,
+  type LineSeriesOption,
   PieChart,
   type PieSeriesOption,
   ScatterChart,
   type ScatterSeriesOption,
+  TreemapChart,
+  type TreemapSeriesOption
 } from 'echarts/charts'
 
 import {
-  TitleComponent,
-  type TitleComponentOption,
-  TooltipComponent,
-  type TooltipComponentOption,
-  GridComponent,
-  type GridComponentOption,
-  DatasetComponent,
-  type DatasetComponentOption,
-  TransformComponent,
-  MarkLineComponent,
-  type MarkLineComponentOption,
-  LegendComponent,
-  type LegendComponentOption,
-  ToolboxComponent,
-  type ToolboxComponentOption,
-  DataZoomInsideComponent,
-  DataZoomSliderComponent,
   DataZoomComponent,
   type DataZoomComponentOption,
+  DataZoomInsideComponent,
+  DataZoomSliderComponent,
+  DatasetComponent,
+  type DatasetComponentOption,
   GraphicComponent,
   type GraphicComponentOption,
+  GridComponent,
+  type GridComponentOption,
+  LegendComponent,
+  type LegendComponentOption,
+  MarkLineComponent,
+  type MarkLineComponentOption,
+  MarkPointComponent,
   type MarkPointComponentOption,
-  MarkPointComponent
+  TitleComponent,
+  type TitleComponentOption,
+  ToolboxComponent,
+  type ToolboxComponentOption,
+  TooltipComponent,
+  type TooltipComponentOption,
+  TransformComponent
 } from 'echarts/components'
 
 import { LabelLayout, UniversalTransition } from 'echarts/features'
 // 引入 Canvas 渲染器，注意引入 CanvasRenderer 或者 SVGRenderer 是必须的一步
 import { CanvasRenderer } from 'echarts/renderers'
-
 
 echarts.use([
   TitleComponent,
@@ -95,9 +94,7 @@ export type ECOption = echarts.ComposeOption<
   | ScatterSeriesOption
 >
 
-
 export default echarts
-
 
 export const echartUtils = {
   getAxisScale: (chart: echarts.ECharts, axisIndex = 0) => {

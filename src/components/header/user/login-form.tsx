@@ -9,23 +9,23 @@ import {
   registerByEmail,
   sendEmailCode
 } from '@/api'
-import WechatLoginIcon from '@/assets/icon/wechat_login.png'
-import LoginLeftImg from '@/assets/image/login_left.png'
 import AppleIcon from '@/assets/icon/apple.png'
 import GoogleIcon from '@/assets/icon/google.png'
-import { useToken } from '@/store'
-import { z } from 'zod'
+import WechatLoginIcon from '@/assets/icon/wechat_login.png'
+import LoginLeftImg from '@/assets/image/login_left.png'
 import { Button, Form, FormControl, FormField, FormItem, Input, JknCheckbox, Separator, useModal } from '@/components'
 import { useCheckbox, useToast, useZForm } from '@/hooks'
+import { useToken } from '@/store'
+import { appEvent } from '@/utils/event'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useCountDown, useMount, useUnmount } from 'ahooks'
-import { useEffect, useRef, useState } from 'react'
-import { uid } from 'radash'
-import QRCode from 'qrcode'
-import { appEvent } from '@/utils/event'
-import { LockIcon, MailIcon, RectangleEllipsisIcon } from 'lucide-react'
-import type { SubmitErrorHandler } from 'react-hook-form'
 import dayjs from 'dayjs'
+import { LockIcon, MailIcon, RectangleEllipsisIcon } from 'lucide-react'
+import QRCode from 'qrcode'
+import { uid } from 'radash'
+import { useEffect, useRef, useState } from 'react'
+import type { SubmitErrorHandler } from 'react-hook-form'
+import { z } from 'zod'
 
 interface LoginFormProps {
   afterLogin?: () => void

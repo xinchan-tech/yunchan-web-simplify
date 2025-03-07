@@ -1,7 +1,7 @@
-import { ToggleGroup, ToggleGroupItem } from "@/components"
-import { useContext, useRef, type CSSProperties } from "react"
-import { SuperStockContext } from "../ctx"
-import { useMount, useUnmount } from "ahooks"
+import { ToggleGroup, ToggleGroupItem } from '@/components'
+import { useMount, useUnmount } from 'ahooks'
+import { type CSSProperties, useContext, useRef } from 'react'
+import { SuperStockContext } from '../ctx'
 
 const BubbleStep = () => {
   const ctx = useContext(SuperStockContext)
@@ -27,17 +27,21 @@ const BubbleStep = () => {
         第五步：估值泡沫
       </div>
       <div className="flex items-center px-4">
-        <ToggleGroup type="single" onValueChange={v => { selection.current = v }} style={{ '--toggle-active-bg': 'hsl(var(--stock-up-color))' } as CSSProperties}>
-          {
-            data.map(item => (
-              <ToggleGroupItem className="w-32 h-8 " key={item.name} value={item.value}>
-                {item.name}
-              </ToggleGroupItem>
-            ))
-          }
+        <ToggleGroup
+          type="single"
+          onValueChange={v => {
+            selection.current = v
+          }}
+          style={{ '--toggle-active-bg': 'hsl(var(--stock-up-color))' } as CSSProperties}
+        >
+          {data.map(item => (
+            <ToggleGroupItem className="w-32 h-8 " key={item.name} value={item.value}>
+              {item.name}
+            </ToggleGroupItem>
+          ))}
         </ToggleGroup>
       </div>
-    </div >
+    </div>
   )
 }
 

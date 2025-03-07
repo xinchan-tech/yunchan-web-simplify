@@ -1,8 +1,8 @@
-import dayjs from 'dayjs'
-import { getTrading } from '../date'
 import type { StockExtendResultMap, StockRawRecord } from '@/api'
+import dayjs from 'dayjs'
 import Decimal from 'decimal.js'
 import { isNumber } from 'radash'
+import { getTrading } from '../date'
 
 export type StockTrading = 'preMarket' | 'intraDay' | 'afterHours' | 'close'
 
@@ -244,7 +244,6 @@ export class StockRecord {
   }
 }
 
-
 export type Stock = {
   symbol: string
   name: string
@@ -299,4 +298,10 @@ export type Stock = {
   totalShare?: number
 }
 
-export type StockWithExt = Stock & { percent?: number; marketValue?: number; pe?: number; pb?: number; turnoverRate?: number }
+export type StockWithExt = Stock & {
+  percent?: number
+  marketValue?: number
+  pe?: number
+  pb?: number
+  turnoverRate?: number
+}

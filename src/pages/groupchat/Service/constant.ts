@@ -1,1 +1,1 @@
-export const MessagePerPageLimit = 20;
+export const MessagePerPageLimit = 20

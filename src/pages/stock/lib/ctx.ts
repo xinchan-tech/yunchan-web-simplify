@@ -8,6 +8,7 @@ import {
 } from '@/api'
 import { useIndicator } from '@/store'
 import { calcCoiling } from '@/utils/coiling/coiling'
+import { dateUtils } from '@/utils/date'
 import type echarts from '@/utils/echarts'
 import { queryClient } from '@/utils/query-client'
 import { stockUtils } from '@/utils/stock'
@@ -17,9 +18,8 @@ import { nanoid } from 'nanoid'
 import { mapValues } from 'radash'
 import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
-import { renderUtils } from './utils'
-import { dateUtils } from '@/utils/date'
 import { chartEvent } from './event'
+import { renderUtils } from './utils'
 
 export type ViewMode =
   | 'single'
@@ -268,8 +268,6 @@ export type Indicator = {
   calcType: string
 }
 
-
-
 /**
  * 坐标轴
  */
@@ -493,17 +491,6 @@ export const createDefaultChartState = (opts: { symbol?: string; index: number }
     backTestMark: []
   }
 }
-
-/**
- * 判断是否是分时图
- */
-export const isTimeIndexChart = (timeIndex: StockChartInterval) =>
-  [
-    StockChartInterval.PRE_MARKET,
-    StockChartInterval.AFTER_HOURS,
-    StockChartInterval.INTRA_DAY,
-    StockChartInterval.FIVE_DAY
-  ].includes(timeIndex)
 
 export const useKChartStore = create<KChartContext>()(
   persist(

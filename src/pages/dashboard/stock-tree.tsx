@@ -1,13 +1,20 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
-import { useImmer } from 'use-immer'
-import { useTranslation } from 'react-i18next'
 import { getHotSectors, getPlateList, getUsStocks } from '@/api'
-import TreeMap from './components/tree-map'
-import Decimal from 'decimal.js'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, JknIcon, Skeleton } from '@/components'
-import { useQuery } from '@tanstack/react-query'
-import { stockUtils, type StockSubscribeHandler } from '@/utils/stock'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  JknIcon,
+  Skeleton
+} from '@/components'
 import { useStockQuoteSubscribe } from '@/hooks'
+import { type StockSubscribeHandler, stockUtils } from '@/utils/stock'
+import { useQuery } from '@tanstack/react-query'
+import Decimal from 'decimal.js'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import { useImmer } from 'use-immer'
+import TreeMap from './components/tree-map'
 
 type StockTreeType = 'industry' | 'concept' | 'bull' | 'etf' | 'industry-heatmap' | 'etf-heatmap'
 type StockTreeDate = 'day' | 'week' | 'month'
@@ -214,7 +221,9 @@ const StockTree = () => {
             <DropdownMenuItem onClick={() => setType('concept')}>{t('stockTree.concept')}</DropdownMenuItem>
             <DropdownMenuItem onClick={() => setType('bull')}>{t('stockTree.bull')}</DropdownMenuItem>
             <DropdownMenuItem onClick={() => setType('etf')}>{t('stockTree.etf')}</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setType('industry-heatmap')}>{t('stockTree.industryHeatmap')}</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setType('industry-heatmap')}>
+              {t('stockTree.industryHeatmap')}
+            </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setType('etf-heatmap')}>{t('stockTree.etfHeatmap')}</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

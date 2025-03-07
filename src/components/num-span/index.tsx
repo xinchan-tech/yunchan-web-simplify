@@ -1,5 +1,12 @@
-import { SubscribeSpan as _SubscribeSpan, NumSpanSubscribe, NumSpan } from './num-span'
-import { PercentSubscribeSpan, PriceSubscribeSpan, TurnoverSubscribeSpan, MarketValueSubscribeSpan, PercentSubscribeBlock, withTableCellBlink } from "./stock-span"
+import { NumSpan, NumSpanSubscribe, SubscribeSpan as _SubscribeSpan } from './num-span'
+import {
+  MarketValueSubscribeSpan,
+  PercentSubscribeBlock,
+  PercentSubscribeSpan,
+  PriceSubscribeSpan,
+  TurnoverSubscribeSpan,
+  withTableCellBlink
+} from './stock-span'
 
 const PriceBlink = withTableCellBlink(PriceSubscribeSpan)
 const PercentBlink = withTableCellBlink(PercentSubscribeSpan)

@@ -1,19 +1,18 @@
 import dayjs from 'dayjs'
-import utc from 'dayjs/plugin/utc'
-import tz from 'dayjs/plugin/timezone'
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter'
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore'
-import weekday from 'dayjs/plugin/weekday'
 import quarterOfYear from 'dayjs/plugin/quarterOfYear'
 import relativeTime from 'dayjs/plugin/relativeTime'
+import tz from 'dayjs/plugin/timezone'
+import utc from 'dayjs/plugin/utc'
+import weekday from 'dayjs/plugin/weekday'
 import 'dayjs/locale/zh-cn'
 
 // https://github.com/iamkun/dayjs/blob/dev/src/constant.js
-const FORMAT_DEFAULT = '/\[([^\]]+)]|Y{1,4}|M{1,4}|D{1,2}|d{1,4}|H{1,2}|h{1,2}|a|A|m{1,2}|s{1,2}|Z{1,2}|SSS/g'
-
+const FORMAT_DEFAULT = '/[([^]]+)]|Y{1,4}|M{1,4}|D{1,2}|d{1,4}|H{1,2}|h{1,2}|a|A|m{1,2}|s{1,2}|Z{1,2}|SSS/g'
 
 // biome-ignore lint/complexity/useArrowFunction: <explanation>
-const weekFormat = function(_: any, c: any){
+const weekFormat = function (_: any, c: any) {
   const proto = c.prototype
   const oldFormat = proto.format
 
@@ -41,18 +40,17 @@ const weekFormat = function(_: any, c: any){
 
 declare module 'dayjs' {
   interface Dayjs {
-    halfYearOfYear(): number;
+    halfYearOfYear(): number
   }
 }
 
 const halfYearOfYear: dayjs.PluginFunc = (_option, _, dayjsProto) => {
   // @ts-ignore
-  dayjsProto.halfYearOfYear = function() {
-      // @ts-ignore
+  dayjsProto.halfYearOfYear = function () {
+    // @ts-ignore
     return Math.floor(this.month() / 6) + 1
   }
 }
-
 
 dayjs.extend(utc)
 dayjs.extend(utc)

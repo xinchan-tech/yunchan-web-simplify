@@ -1,9 +1,5 @@
-import { getFigureClass, IndicatorSeries, type IndicatorTemplate, type TooltipShowRule } from 'jkn-kline-chart'
-import {
-  calcCoilingPivots,
-  calcCoilingPivotsExpands,
-  calcTradePoints,
-  calculateMA} from './coiling-calc'
+import { IndicatorSeries, type IndicatorTemplate, type TooltipShowRule, getFigureClass } from 'jkn-kline-chart'
+import { calcCoilingPivots, calcCoilingPivotsExpands, calcTradePoints, calculateMA } from './coiling-calc'
 
 export enum CoilingIndicatorId {
   PEN = '1',

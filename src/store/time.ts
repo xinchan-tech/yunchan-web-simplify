@@ -1,8 +1,8 @@
+import { getTrading } from '@/utils/date'
+import { type StockTrading, stockUtils } from '@/utils/stock'
 import dayjs from 'dayjs'
 import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
-import { getTrading } from '@/utils/date'
-import { stockUtils, type StockTrading } from '@/utils/stock'
 
 interface TimeStore {
   /**
@@ -20,7 +20,7 @@ interface TimeStore {
    */
   getCurrentUsTime: () => number
   /**
-   * 
+   *
    * 用来判断是否是最新的一个交易周期
    * @deprecated 需要判断休市时间
    * @param date 日期
@@ -40,7 +40,7 @@ export const useTime = create<TimeStore>((set, get) => ({
   },
   getTrading: () => {
     const usTime = dayjs(get().usTime).tz('America/New_York').valueOf()
-    
+
     return stockUtils.getTrading(usTime)
   },
   isToday: data => {
@@ -48,10 +48,12 @@ export const useTime = create<TimeStore>((set, get) => ({
     return date.isSame(dayjs(get().usTime).tz('America/New_York'), 'day')
   },
   getCurrentUsTime: () => {
-    return dayjs(new Date().valueOf() - get().localStamp + get().usTime).tz('America/New_York').valueOf()
+    return dayjs(new Date().valueOf() - get().localStamp + get().usTime)
+      .tz('America/New_York')
+      .valueOf()
   },
   isLastTrading: (trading, date) => {
-    if(!date) return false
+    if (!date) return false
     const currentTimeStamp = new Date().valueOf()
     const lastUsTime = currentTimeStamp - get().localStamp + get().usTime
     const lastUsDay = dayjs(lastUsTime).tz('America/New_York')

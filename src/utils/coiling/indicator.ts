@@ -3,15 +3,15 @@ import { useIndicator } from '@/store'
 import { chain, isEmpty, listify } from 'radash'
 import { stockUtils } from '../stock'
 import {
+  type IndicatorData,
+  type IndicatorRawData,
   drawBandTransform,
   drawIconTransform,
   drawLineTransform,
   drawNumberTransform,
   drawRectrelTransform,
   drawStickLineTransform,
-  drawTextTransform,
-  type IndicatorData,
-  type IndicatorRawData
+  drawTextTransform
 } from './transform'
 
 let policyModule: ReturnType<typeof window.PolicyModule>

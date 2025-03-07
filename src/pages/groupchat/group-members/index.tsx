@@ -1,84 +1,60 @@
-import ChatAvatar from "../components/chat-avatar";
-import { useGroupChatShortStore } from "@/store/group-chat-new";
-import {
-  JknIcon,
-  ContextMenu,
-  ContextMenuTrigger,
-  Skeleton,
-} from "@/components";
+import { ContextMenu, ContextMenuTrigger, JknIcon, Skeleton } from '@/components'
+import { useGroupChatShortStore } from '@/store/group-chat-new'
+import ChatAvatar from '../components/chat-avatar'
 
-import { useMemberSetting } from "../hooks";
-import { useMemo } from "react";
+import { useMemo } from 'react'
+import { useMemberSetting } from '../hooks'
 
 const GroupMembers = (props: { total: string | number }) => {
-  const subscribers = useGroupChatShortStore((state) => state.subscribers);
-  const fetchingSubscribers = useGroupChatShortStore(
-    (state) => state.fetchingSubscribers
-  );
-  const groupDetailData = useGroupChatShortStore(
-    (state) => state.groupDetailData
-  );
+  const subscribers = useGroupChatShortStore(state => state.subscribers)
+  const fetchingSubscribers = useGroupChatShortStore(state => state.fetchingSubscribers)
+  const groupDetailData = useGroupChatShortStore(state => state.groupDetailData)
 
-  const { renderContextMenu } = useMemberSetting();
+  const { renderContextMenu } = useMemberSetting()
   const skeletonArr = useMemo(() => {
-    let result = [];
-    const len = props.total as number;
+    const result = []
+    const len = props.total as number
     for (let i = 0; i < len; i++) {
-      result.push(i);
+      result.push(i)
     }
 
-    return result;
-  }, [props.total]);
+    return result
+  }, [props.total])
 
   return (
     <div className="h-full">
       <div className="group-notice">
         <div className="box-title flex items-center">群公告</div>
-        <div className="text-xs p-2" style={{ color: "rgb(125,129,138)" }}>
-          {groupDetailData?.notice || ""}
+        <div className="text-xs p-2" style={{ color: 'rgb(125,129,138)' }}>
+          {groupDetailData?.notice || ''}
         </div>
       </div>
       <div className="group-members">
         <div className="box-title flex items-center">活跃成员</div>
         {fetchingSubscribers === true &&
-          skeletonArr.map((idx) => {
-            return (
-              <Skeleton
-                key={idx}
-                style={{ background: "#555" }}
-                className="mt-[6px] h-5"
-              />
-            );
+          skeletonArr.map(idx => {
+            return <Skeleton key={idx} style={{ background: '#555' }} className="mt-[6px] h-5" />
           })}
         {fetchingSubscribers === false &&
-          subscribers.map((item) => {
+          subscribers.map(item => {
             return (
-              <div
-                key={item.uid}
-                className="member-item flex items-center justify-between"
-              >
+              <div key={item.uid} className="member-item flex items-center justify-between">
                 <ContextMenu>
                   <ContextMenuTrigger asChild>
                     <div className="flex h-full items-center w-[200px]">
                       <ChatAvatar data={item} size="sm" />
                       <div className="flex flex-1 h-full items-center">
-                        <div className="member-name overflow-hidden text-ellipsis whitespace-nowrap">
-                          {item.name}
-                        </div>
-                        {item.orgData?.type === "2" && <JknIcon name="owner" />}
-                        {item.orgData?.forbidden === "1" && (
-                          <JknIcon name="forbidden" />
-                        )}
-                        {item.orgData?.type === "1" && (
-                          <JknIcon name="manager" />
-                        )}
+                        <div className="member-name overflow-hidden text-ellipsis whitespace-nowrap">{item.name}</div>
+                        {item.orgData?.type === '2' && <JknIcon name="owner" />}
+                        {item.orgData?.forbidden === '1' && <JknIcon name="forbidden" />}
+                        {item.orgData?.type === '1' && <JknIcon name="manager" />}
                       </div>
                     </div>
                   </ContextMenuTrigger>
                   {renderContextMenu(item)}
                 </ContextMenu>
               </div>
-            );
+            )
           })}
       </div>
 
@@ -118,7 +94,7 @@ const GroupMembers = (props: { total: string | number }) => {
         }
       `}</style>
     </div>
-  );
-};
+  )
+}
 
-export default GroupMembers;
+export default GroupMembers

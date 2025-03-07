@@ -162,7 +162,7 @@ export const drawCustomLine: DrawerFunc<[XAxis, [number, number | null]][]> = (
       const endX = api.value(3) as number
       const endDrawY = api.value(5) as number
 
-      if(startX === null || endX === null) {
+      if (startX === null || endX === null) {
         return
       }
 
@@ -177,7 +177,7 @@ export const drawCustomLine: DrawerFunc<[XAxis, [number, number | null]][]> = (
         startPoint[0] = left
         startPoint[1] = y
       }
-      if(endPoint[0] > maxRight) {
+      if (endPoint[0] > maxRight) {
         const angle = Math.atan((endPoint[1] - startPoint[1]) / (endPoint[0] - startPoint[0]))
         const y = (maxRight - startPoint[0]) * Math.tan(angle) + startPoint[1]
 
@@ -185,7 +185,7 @@ export const drawCustomLine: DrawerFunc<[XAxis, [number, number | null]][]> = (
         endPoint[1] = y
       }
 
-      if(startPoint[1] < top) {
+      if (startPoint[1] < top) {
         const angle = Math.atan((endPoint[1] - startPoint[1]) / (endPoint[0] - startPoint[0]))
         const x = (top - startPoint[1]) / Math.tan(angle) + startPoint[0]
 
@@ -193,7 +193,7 @@ export const drawCustomLine: DrawerFunc<[XAxis, [number, number | null]][]> = (
         startPoint[1] = top
       }
 
-      if(endPoint[1] > bottom) {
+      if (endPoint[1] > bottom) {
         const angle = Math.atan((endPoint[1] - startPoint[1]) / (endPoint[0] - startPoint[0]))
         const x = (bottom - startPoint[1]) / Math.tan(angle) + startPoint[0]
 
@@ -201,7 +201,7 @@ export const drawCustomLine: DrawerFunc<[XAxis, [number, number | null]][]> = (
         endPoint[1] = bottom
       }
 
-      if(startPoint[1] > bottom) {
+      if (startPoint[1] > bottom) {
         const angle = Math.atan((endPoint[1] - startPoint[1]) / (endPoint[0] - startPoint[0]))
         const x = (bottom - startPoint[1]) / Math.tan(angle) + startPoint[0]
 
@@ -209,7 +209,7 @@ export const drawCustomLine: DrawerFunc<[XAxis, [number, number | null]][]> = (
         startPoint[1] = bottom
       }
 
-      if(endPoint[1] < top) {
+      if (endPoint[1] < top) {
         const angle = Math.atan((endPoint[1] - startPoint[1]) / (endPoint[0] - startPoint[0]))
         const x = (top - startPoint[1]) / Math.tan(angle) + startPoint[0]
 
@@ -229,7 +229,7 @@ export const drawCustomLine: DrawerFunc<[XAxis, [number, number | null]][]> = (
         z: extra?.z ?? 0,
         id: extra?.seriesId,
         name,
-        
+
         style: {
           stroke: extra?.color,
           lineDash: extra?.type ?? 'solid',
@@ -1061,7 +1061,7 @@ export const drawIcon: DrawerFunc<DrawIconShape[]> = (options, _, { xAxisIndex, 
       const offsetY = api.value(5) as number
       const point = api.coord([x, y])
 
-      if(!iconContext(`./draw_${icon}.png`)){
+      if (!iconContext(`./draw_${icon}.png`)) {
         return null
       }
 

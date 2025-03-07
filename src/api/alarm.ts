@@ -84,7 +84,6 @@ export const deleteAlarm = async (params: { ids?: string[]; symbols?: string[]; 
   return request.post('/alarms/delete', f).then(r => r.data)
 }
 
-
 /**
  * 添加报警
  */
@@ -107,7 +106,6 @@ type AddAlarmParams = {
 export const addAlarm = async (params: AddAlarmParams) => {
   return request.post('/alarm/add', params).then(r => r.data)
 }
-
 
 type GetAlarmTypesResult = {
   own: []
@@ -133,7 +131,6 @@ export const getAlarmTypes = async () => {
   return request.get<GetAlarmTypesResult>('/alarm/getStocks').then(r => r.data)
 }
 getAlarmTypes.cacheKey = 'alarms:getStocks'
-
 
 type GetAlarmLogsParams = {
   limit?: number | string
@@ -176,7 +173,6 @@ type GetAlarmLogsResult = PageResult<{
     trigger?: PriceAlarmTrigger
   }
   id: string
-  
 }>
 
 /**

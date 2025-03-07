@@ -1,5 +1,5 @@
-import type { ComponentType } from "react"
-import { JknIcon } from "."
+import type { ComponentType } from 'react'
+import { JknIcon } from '.'
 
 type SortProps = {
   sort?: 'asc' | 'desc'
@@ -19,7 +19,6 @@ const SortNone = () => <JknIcon name="ic_btn_nor" className="w-1.5 h-3 align-mid
 
 export const withSort = <T = any>(Component: ComponentType<T>) => {
   return ({ field, onSort, sort, ...props }: SortProps & T) => {
-
     const onClick = () => {
       if (sort === 'asc') {
         onSort(field, 'desc')
@@ -31,14 +30,17 @@ export const withSort = <T = any>(Component: ComponentType<T>) => {
     }
 
     return (
-      <div className="block items-center" onClick={onClick} onKeyDown={() => { }}>
+      <div className="block items-center" onClick={onClick} onKeyDown={() => {}}>
         <Component {...(props as any)} />
-        <span className="ml-1 align-top box-border"  >
-          {sort ? ({
-            asc: <SortUp />,
-            desc: <SortDown />,
-          }[sort]) : <SortNone />
-          }
+        <span className="ml-1 align-top box-border">
+          {sort ? (
+            {
+              asc: <SortUp />,
+              desc: <SortDown />
+            }[sort]
+          ) : (
+            <SortNone />
+          )}
         </span>
       </div>
     )

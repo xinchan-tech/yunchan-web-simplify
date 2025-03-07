@@ -1,15 +1,15 @@
-import { CapsuleTabs } from "@/components"
-import { useState } from "react"
-import { FinanceCore } from "./finance-core"
-import { FinanceValuation } from "./finance-valuation"
-import { stockBaseCodeInfoExtend } from "../lib"
-import { useQueryParams } from "@/hooks"
-import { useQuery } from "@tanstack/react-query"
-import { getStockBaseCodeInfo } from "@/api"
-import { stockUtils } from "@/utils/stock"
-import { FinanceStatistics } from "./finance-statistics"
-import { FinanceStatisticsCate } from "./finance-statistics-cate"
-import { FinanceComparison } from "./finance-comparison"
+import { getStockBaseCodeInfo } from '@/api'
+import { CapsuleTabs } from '@/components'
+import { useQueryParams } from '@/hooks'
+import { stockUtils } from '@/utils/stock'
+import { useQuery } from '@tanstack/react-query'
+import { useState } from 'react'
+import { stockBaseCodeInfoExtend } from '../lib'
+import { FinanceComparison } from './finance-comparison'
+import { FinanceCore } from './finance-core'
+import { FinanceStatistics } from './finance-statistics'
+import { FinanceStatisticsCate } from './finance-statistics-cate'
+import { FinanceValuation } from './finance-valuation'
 
 export const Finance = () => {
   const [queryParams] = useQueryParams<{ symbol: string }>()
@@ -19,7 +19,7 @@ export const Finance = () => {
     queryKey: [getStockBaseCodeInfo.cacheKey, symbol, stockBaseCodeInfoExtend],
     queryFn: () => getStockBaseCodeInfo({ symbol, extend: stockBaseCodeInfoExtend }),
     enabled: !!symbol,
-    select: data => stockUtils.toStockWithExt(data.stock, {extend: data.extend})
+    select: data => stockUtils.toStockWithExt(data.stock, { extend: data.extend })
   })
 
   const [activeTab, setActiveTab] = useState('core')
@@ -35,15 +35,13 @@ export const Finance = () => {
         </CapsuleTabs>
       </div>
       <div className="flex-1">
-        {
-          {
-            core: <FinanceCore stock={stockBaseInfo.data} />,
-            valuation: <FinanceValuation stock={stockBaseInfo.data} />,
-            statistics: <FinanceStatistics stock={stockBaseInfo.data} />,
-            statisticsCate: <FinanceStatisticsCate />,
-            pk: <FinanceComparison />
-          }[activeTab] ?? null
-        }
+        {{
+          core: <FinanceCore stock={stockBaseInfo.data} />,
+          valuation: <FinanceValuation stock={stockBaseInfo.data} />,
+          statistics: <FinanceStatistics stock={stockBaseInfo.data} />,
+          statisticsCate: <FinanceStatisticsCate />,
+          pk: <FinanceComparison />
+        }[activeTab] ?? null}
       </div>
     </div>
   )

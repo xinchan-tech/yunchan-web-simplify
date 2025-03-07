@@ -1,12 +1,11 @@
 import {
   type FigureConstructor,
-  getFigureClass,
   IndicatorSeries,
+  type IndicatorTemplate,
   type LineAttrs,
   type LineStyle,
-  type IndicatorTemplate
+  getFigureClass
 } from 'jkn-kline-chart'
-
 
 export const compareIndicator: IndicatorTemplate<any, any> = {
   name: 'compare-indicator',

@@ -1,11 +1,11 @@
+import path from 'node:path'
 import { defineConfig } from '@rsbuild/core'
 import { pluginReact } from '@rsbuild/plugin-react'
 import { pluginSass } from '@rsbuild/plugin-sass'
-import CompressionPlugin from 'compression-webpack-plugin'
-import { pluginReleaseTag } from './scripts/release-tag'
 import { pluginTypedCSSModules } from '@rsbuild/plugin-typed-css-modules'
 import { RsdoctorRspackPlugin } from '@rsdoctor/rspack-plugin'
-import path from 'node:path'
+import CompressionPlugin from 'compression-webpack-plugin'
+import { pluginReleaseTag } from './scripts/release-tag'
 import { pluginSvgSpriteIcons } from './scripts/rsbuild-plugin-svg-sprite-icons'
 
 export default defineConfig({

@@ -1,6 +1,6 @@
 import { getGroupChannels } from '@/api'
 import { Button, JknAvatar, JknIcon } from '@/components'
-import { useToast } from "@/hooks"
+import { useToast } from '@/hooks'
 import { colorUtil } from '@/utils/style'
 import { useQuery } from '@tanstack/react-query'
 

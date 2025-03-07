@@ -1,21 +1,20 @@
+import type { StockChartInterval, StockRawRecord } from '@/api'
+import { JknChart } from '@/components'
+import { calcCoiling } from '@/utils/coiling/coiling'
+import { stockUtils } from '@/utils/stock'
+import { useMount, useUpdateEffect } from 'ahooks'
+import dayjs from 'dayjs'
+import qs from 'qs'
 import { type ComponentRef, useCallback, useEffect, useRef, useState } from 'react'
+import { chartEvent } from '../lib/event'
 import { fetchCandlesticks, fetchOverlayMark, useCandlesticks } from '../lib/request'
+import { ChartType, useChartManage } from '../lib/store'
+import { renderUtils } from '../lib/utils'
 import { ChartContextMenu } from './chart-context-menu'
-import { JknChart } from "@/components"
-import { stockUtils } from "@/utils/stock"
-import { calcCoiling } from "@/utils/coiling/coiling"
-import qs from "qs"
-import type { StockChartInterval, StockRawRecord } from "@/api"
-import dayjs from "dayjs"
-import { chartEvent } from "../lib/event"
-import { ChartType, useChartManage } from "../lib/store"
-import { useMount, useUpdateEffect } from "ahooks"
-import { renderUtils } from "../lib/utils"
 
 interface MainChartProps {
   chartId: string
 }
-
 
 const getSymbolByUrl = () => {
   const query = qs.parse(window.location.search, { ignoreQueryPrefix: true })
@@ -33,21 +32,28 @@ export const MainChart = (props: MainChartProps) => {
     mark: ''
   })
 
-  const render = useCallback(async ({ candlesticks, interval, chartId }: { candlesticks: StockRawRecord[], interval: StockChartInterval, chartId: string }) => {
-    const _store = useChartManage.getState().chartStores[chartId]
-    const stockData = candlesticks.map(c => stockUtils.toStock(c))
+  const render = useCallback(
+    async ({
+      candlesticks,
+      interval,
+      chartId
+    }: { candlesticks: StockRawRecord[]; interval: StockChartInterval; chartId: string }) => {
+      const _store = useChartManage.getState().chartStores[chartId]
+      const stockData = candlesticks.map(c => stockUtils.toStock(c))
 
-    if (_store.coiling.length) {
-      const r = await calcCoiling(candlesticks, interval)
-      _store.coiling.forEach((coiling) => {
-        chartImp.current?.setCoiling(coiling, r)
-      })
-    }
+      if (_store.coiling.length) {
+        const r = await calcCoiling(candlesticks, interval)
+        _store.coiling.forEach(coiling => {
+          chartImp.current?.setCoiling(coiling, r)
+        })
+      }
 
-    chartImp.current?.setChartType(_store.type === ChartType.Candle ? 'candle' : 'area')
+      chartImp.current?.setChartType(_store.type === ChartType.Candle ? 'candle' : 'area')
 
-    chartImp.current?.applyNewData(stockData)
-  }, [])
+      chartImp.current?.applyNewData(stockData)
+    },
+    []
+  )
 
   /**
    * 初始化
@@ -67,7 +73,7 @@ export const MainChart = (props: MainChartProps) => {
           indicator: indicator.id,
           symbol,
           interval: chartStore.interval,
-          name: indicator.name,
+          name: indicator.name
         })
       })
     }
@@ -75,7 +81,8 @@ export const MainChart = (props: MainChartProps) => {
     chartImp.current?.setChartType(_store.type === ChartType.Candle ? 'candle' : 'area')
 
     if (_store.overlayMark) {
-      stockCache.current.mark = chartImp.current?.createMarkOverlay(symbol, _store.overlayMark.type, _store.overlayMark.mark) ?? ''
+      stockCache.current.mark =
+        chartImp.current?.createMarkOverlay(symbol, _store.overlayMark.type, _store.overlayMark.mark) ?? ''
     }
   })
 
@@ -85,9 +92,7 @@ export const MainChart = (props: MainChartProps) => {
       return
     }
     render({ candlesticks, interval: chartStore.interval, chartId: props.chartId })
-
   }, [candlesticks, chartStore.interval, render, props.chartId])
-
 
   /**
    * chart事件处理
@@ -98,7 +103,7 @@ export const MainChart = (props: MainChartProps) => {
     const cancelSymbolEvent = chartEvent.on('coilingChange', ({ type, coiling }) => {
       if (type === 'add') {
         calcCoiling(candlesticks, chartStore.interval).then(r => {
-          coiling.forEach((coiling) => {
+          coiling.forEach(coiling => {
             chartImp.current?.setCoiling(coiling, r)
           })
         })
@@ -121,7 +126,7 @@ export const MainChart = (props: MainChartProps) => {
           indicator: indicator.id,
           symbol,
           interval: chartStore.interval,
-          name: indicator.name,
+          name: indicator.name
         })
       } else {
         chartImp.current?.removeSubIndicator(indicator.id)
@@ -141,7 +146,9 @@ export const MainChart = (props: MainChartProps) => {
 
             if (!startInCandlesticksIndex || startInCandlesticksIndex?.index === -1) return
 
-            const compareCandlesticks = new Array(startInCandlesticksIndex!.index).fill(null).concat(r.data.list.map(c => c[2]))
+            const compareCandlesticks = new Array(startInCandlesticksIndex!.index)
+              .fill(null)
+              .concat(r.data.list.map(c => c[2]))
 
             stockCache.current.compare.set(symbol, chartImp.current?.createStockCompare(compareCandlesticks, 'blue'))
           })
@@ -174,17 +181,17 @@ export const MainChart = (props: MainChartProps) => {
     }
   }, [activeChartId, props.chartId, candlesticks, chartStore.interval, symbol, startAt])
 
-
   useUpdateEffect(() => {
     chartImp.current?.setChartType(chartStore.type === ChartType.Candle ? 'candle' : 'area')
   }, [chartStore.type])
 
-
-
   return (
-    <ChartContextMenu index={0} onChangeSecondaryCount={(count: number): void => {
-      throw new Error("Function not implemented.")
-    }}>
+    <ChartContextMenu
+      index={0}
+      onChangeSecondaryCount={(count: number): void => {
+        throw new Error('Function not implemented.')
+      }}
+    >
       <JknChart className="w-full h-full" ref={chartImp} />
     </ChartContextMenu>
   )

@@ -1,13 +1,13 @@
-import { getStockEconomic, getStockEconomicDetail } from "@/api"
-import { JknIcon, JknRcTable, type JknRcTableProps, useFormModal, useModal } from "@/components"
-import { useTime } from "@/store"
-import echarts, { type ECOption } from "@/utils/echarts"
-import { useQuery } from "@tanstack/react-query"
-import { useMount, useUnmount } from "ahooks"
-import dayjs from "dayjs"
-import Decimal from "decimal.js"
-import { useCallback, useEffect, useMemo, useRef } from "react"
-import { useForm, useFormContext } from "react-hook-form"
+import { getStockEconomic, getStockEconomicDetail } from '@/api'
+import { JknIcon, JknRcTable, type JknRcTableProps, useFormModal, useModal } from '@/components'
+import { useTime } from '@/store'
+import echarts, { type ECOption } from '@/utils/echarts'
+import { useQuery } from '@tanstack/react-query'
+import { useMount, useUnmount } from 'ahooks'
+import dayjs from 'dayjs'
+import Decimal from 'decimal.js'
+import { useCallback, useEffect, useMemo, useRef } from 'react'
+import { useForm, useFormContext } from 'react-hook-form'
 
 type TableDataType = {
   name: string
@@ -26,25 +26,27 @@ const StockEconomic = () => {
   const time = useTime()
   const query = useQuery({
     queryKey: [getStockEconomic.cacheKey, 0],
-    queryFn: () => getStockEconomic({
-      limit: 50,
-      page: 1,
-      type: 0,
-      sort: 'ASC'
-    })
+    queryFn: () =>
+      getStockEconomic({
+        limit: 50,
+        page: 1,
+        type: 0,
+        sort: 'ASC'
+      })
   })
 
-  const data = query.data?.items.map(item => ({
-    id: item.id,
-    name: item.title,
-    date: item.date,
-    nextDate: item.next_time,
-    star: item.impact,
-    before: item.previous,
-    key: item.key,
-    current: item.actual,
-    predict: item.estimate
-  })) ?? []
+  const data =
+    query.data?.items.map(item => ({
+      id: item.id,
+      name: item.title,
+      date: item.date,
+      nextDate: item.next_time,
+      star: item.impact,
+      before: item.previous,
+      key: item.key,
+      current: item.actual,
+      predict: item.estimate
+    })) ?? []
 
   const form = useForm({
     defaultValues: {
@@ -65,66 +67,104 @@ const StockEconomic = () => {
       form.setValue('nextDate', nextDate)
       formModal.title(id)
     },
-    onOk: () => {
-
-    }
+    onOk: () => {}
   })
 
-  const getColor = useCallback((date: string) => {
-    const current = dayjs(time.usTime + new Date().valueOf() - time.localStamp).tz('America/New_York')
-    const usDay = dayjs(date)
-    if (current.format('YYYY-MM-DD') > usDay.format('YYYY-MM-DD')) {
-      return '#5e5f61'
-    }
-    console.log(current.day(6).format('YYYY-MM-DD'))
-    if (current.day(6).isAfter(usDay)) {
-      return 'hsl(var(--primary))'
-    }
+  const getColor = useCallback(
+    (date: string) => {
+      const current = dayjs(time.usTime + new Date().valueOf() - time.localStamp).tz('America/New_York')
+      const usDay = dayjs(date)
+      if (current.format('YYYY-MM-DD') > usDay.format('YYYY-MM-DD')) {
+        return '#5e5f61'
+      }
+      console.log(current.day(6).format('YYYY-MM-DD'))
+      if (current.day(6).isAfter(usDay)) {
+        return 'hsl(var(--primary))'
+      }
 
-    return ''
-  }, [time])
+      return ''
+    },
+    [time]
+  )
 
   const columns: JknRcTableProps<TableDataType>['columns'] = [
-    { title: '序号', dataIndex: 'rank', width: 60, render: (_, row, index) => <span style={{ color: getColor(row.date) }}>{index + 1}</span>, align: 'center' },
     {
-      title: '名称', dataIndex: 'name',
-      render: (_, row) => (<span className="block py-1" style={{ color: getColor(row.date) }}>{row.name}</span>)
+      title: '序号',
+      dataIndex: 'rank',
+      width: 60,
+      render: (_, row, index) => <span style={{ color: getColor(row.date) }}>{index + 1}</span>,
+      align: 'center'
     },
     {
-      title: '前值', dataIndex: 'before', align: 'center',
-      render: (_, row) => (<span style={{ color: getColor(row.date) }}>{row.before ?? '--'}</span>)
+      title: '名称',
+      dataIndex: 'name',
+      render: (_, row) => (
+        <span className="block py-1" style={{ color: getColor(row.date) }}>
+          {row.name}
+        </span>
+      )
     },
     {
-      title: '现值', dataIndex: 'current', align: 'center',
-      render: (_, row) => (<span style={{ color: getColor(row.date) }}>{row.current ?? '--'}</span>)
+      title: '前值',
+      dataIndex: 'before',
+      align: 'center',
+      render: (_, row) => <span style={{ color: getColor(row.date) }}>{row.before ?? '--'}</span>
     },
     {
-      title: '预测值', dataIndex: 'predict', align: 'center',
-      render: (_, row) => (<span style={{ color: getColor(row.date) }}>{row.predict ?? '--'}</span>)
+      title: '现值',
+      dataIndex: 'current',
+      align: 'center',
+      render: (_, row) => <span style={{ color: getColor(row.date) }}>{row.current ?? '--'}</span>
     },
     {
-      title: '发布时间（美东）', dataIndex: 'date', align: 'center',
-      render: (_, row) => (<span style={{ color: getColor(row.date) }}>{row.date?.slice(0, 16) || '--'}</span>)
+      title: '预测值',
+      dataIndex: 'predict',
+      align: 'center',
+      render: (_, row) => <span style={{ color: getColor(row.date) }}>{row.predict ?? '--'}</span>
     },
     {
-      title: '下次发布时间（美东）', dataIndex: 'nextDate', align: 'center',
-      render: (_, row) => (<span style={{ color: getColor(row.date) }}>{row.nextDate?.slice(0, 16) || '--'}</span>)
+      title: '发布时间（美东）',
+      dataIndex: 'date',
+      align: 'center',
+      render: (_, row) => <span style={{ color: getColor(row.date) }}>{row.date?.slice(0, 16) || '--'}</span>
     },
     {
-      title: '重要性', dataIndex: 'star', align: 'center',
-      render: (_, row) => (<div className="space-x-1 text-right" style={{ color: getColor(row.date) }}>
-        {
-          // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
-          Array.from(new Array(row.star)).map((_, i) => <JknIcon name="ic_star_on" key={i} className="w-3 h-3" />)
-        }
-      </div>)
+      title: '下次发布时间（美东）',
+      dataIndex: 'nextDate',
+      align: 'center',
+      render: (_, row) => <span style={{ color: getColor(row.date) }}>{row.nextDate?.slice(0, 16) || '--'}</span>
     },
     {
-      title: '详解', dataIndex: 'opt', align: 'center', width: 60,
+      title: '重要性',
+      dataIndex: 'star',
+      align: 'center',
+      render: (_, row) => (
+        <div className="space-x-1 text-right" style={{ color: getColor(row.date) }}>
+          {
+            // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
+            Array.from(new Array(row.star)).map((_, i) => (
+              <JknIcon name="ic_star_on" key={i} className="w-3 h-3" />
+            ))
+          }
+        </div>
+      )
+    },
+    {
+      title: '详解',
+      dataIndex: 'opt',
+      align: 'center',
+      width: 60,
       render: (_, row) => {
         return (
           <>
-            <span className="cursor-pointer" onClick={() => formModal.open({ id: row.key, nextDate: row.nextDate.slice(0, 11) || '--' })} onKeyDown={() => { }} style={{ color: getColor(row.date) }}>详解</span>
+            <span
+              className="cursor-pointer"
+              onClick={() => formModal.open({ id: row.key, nextDate: row.nextDate.slice(0, 11) || '--' })}
+              onKeyDown={() => {}}
+              style={{ color: getColor(row.date) }}
+            >
+              详解
+            </span>
           </>
         )
       }
@@ -133,19 +173,11 @@ const StockEconomic = () => {
 
   return (
     <div className="bg-background h-full overflow-hidden">
-      <JknRcTable
-        rowKey="id"
-        columns={columns}
-        data={data}
-      />
-      {
-        formModal.context
-      }
+      <JknRcTable rowKey="id" columns={columns} data={data} />
+      {formModal.context}
     </div>
   )
 }
-
-
 
 const DetailForm = () => {
   const form = useFormContext()
@@ -153,7 +185,7 @@ const DetailForm = () => {
   const nextDate = form.watch('nextDate')
   const query = useQuery({
     queryKey: [getStockEconomicDetail.cacheKey, id],
-    queryFn: () => getStockEconomicDetail(id),
+    queryFn: () => getStockEconomicDetail(id)
   })
 
   const chartRef = useRef<HTMLDivElement>(null)
@@ -178,8 +210,18 @@ const DetailForm = () => {
       show: true
     },
     yAxis: [
-      { type: 'value', axisLabel: { formatter: v => Decimal.create(v).toFixed(2) }, splitLine: { lineStyle: { color: '#6e7079' } } },
-      { type: 'value', show: false, position: 'right', axisLine: { show: false }, axisLabel: { formatter: v => Decimal.create(v).toFixed(2) } }
+      {
+        type: 'value',
+        axisLabel: { formatter: v => Decimal.create(v).toFixed(2) },
+        splitLine: { lineStyle: { color: '#6e7079' } }
+      },
+      {
+        type: 'value',
+        show: false,
+        position: 'right',
+        axisLine: { show: false },
+        axisLabel: { formatter: v => Decimal.create(v).toFixed(2) }
+      }
     ],
     xAxis: {
       type: 'category',
@@ -232,7 +274,6 @@ const DetailForm = () => {
 
       max = Math.max(max, +data.actual, +data.estimate)
       min = Math.min(min, +data.actual, +data.estimate)
-
     }
 
     chart.current?.setOption({
@@ -247,37 +288,32 @@ const DetailForm = () => {
         }
       ],
       xAxis: { data: category },
-      series: [{ data: d1, symbol: false, connectNulls: true }, { data: d2, symbol: false, connectNulls: true }]
+      series: [
+        { data: d1, symbol: false, connectNulls: true },
+        { data: d2, symbol: false, connectNulls: true }
+      ]
     })
-
   }, [query.data])
-
 
   return (
     <div className="w-[900px] h-[750px] box-border px-8 py-4">
       <div className="h-[340px] w-full" ref={chartRef} />
       <div className="text-stock-up">
-        <div className="flex justify-between bg-background py-3 px-4 my-4" >
+        <div className="flex justify-between bg-background py-3 px-4 my-4">
           <div>
             <JknIcon name="ic_message_arrow" className="rotate-180 w-2 h-3" />
             &nbsp;数据公布机构:&nbsp;
-            <span className="text-foreground"> {
-              query.data?.introduce.institutions
-            }</span>
+            <span className="text-foreground"> {query.data?.introduce.institutions}</span>
           </div>
           <div>
             <JknIcon name="ic_message_arrow" className="rotate-180 w-2 h-3" />
             &nbsp;发布频率:&nbsp;
-            <span className="text-foreground">{
-              query.data?.introduce.frequency
-            }</span>
+            <span className="text-foreground">{query.data?.introduce.frequency}</span>
           </div>
           <div>
             <JknIcon name="ic_message_arrow" className="rotate-180 w-2 h-3" />
             &nbsp;下次公布时间:&nbsp;
-            <span className="text-foreground">
-              {nextDate}
-            </span>
+            <span className="text-foreground">{nextDate}</span>
           </div>
         </div>
         <div className="space-y-4">
@@ -285,27 +321,20 @@ const DetailForm = () => {
             <div className="w-3 self-stretch bg-stock-up py-2 box-border mr-3" />
             数据影响
           </div>
-          <div className="text-foreground text-sm">
-            {query.data?.introduce.impact}
-          </div>
+          <div className="text-foreground text-sm">{query.data?.introduce.impact}</div>
           <div className="flex items-center">
             <div className="w-3 self-stretch bg-stock-up py-2 box-border mr-3" />
             数据解析
           </div>
-          <div className="text-foreground text-sm">
-            {query.data?.introduce.analysis}
-          </div>
+          <div className="text-foreground text-sm">{query.data?.introduce.analysis}</div>
           <div className="flex items-center">
             <div className="w-3 self-stretch bg-stock-up py-2 box-border mr-3" />
             潜在影响
           </div>
-          <div className="text-foreground text-sm">
-            {query.data?.introduce.reasons}
-          </div>
-
+          <div className="text-foreground text-sm">{query.data?.introduce.reasons}</div>
         </div>
       </div>
-    </div >
+    </div>
   )
 }
 

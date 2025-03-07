@@ -14,16 +14,16 @@ import {
   useModal
 } from '@/components'
 import { dateUtils } from '@/utils/date'
+import { stockUtils } from '@/utils/stock'
+import { cn } from '@/utils/style'
 import { useCounter, useUnmount, useUpdateEffect } from 'ahooks'
 import dayjs from 'dayjs'
-import { memo, useRef, useState } from 'react'
-import { kChartUtils, useKChartStore } from '../lib'
-import { renderUtils } from '../lib/utils'
-import { useImmer } from 'use-immer'
 import Decimal from 'decimal.js'
-import { chartEvent } from "../lib/event"
-import { stockUtils } from "@/utils/stock"
-import { cn } from "@/utils/style"
+import { memo, useRef, useState } from 'react'
+import { useImmer } from 'use-immer'
+import { kChartUtils, useKChartStore } from '../lib'
+import { chartEvent } from '../lib/event'
+import { renderUtils } from '../lib/utils'
 
 const disabledDate = (d: Date, candlesticks: StockRawRecord[]) => {
   const day = dayjs(d)
@@ -99,7 +99,10 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
   }
 
   const setCandlesticks = (data: StockRawRecord[]) => {
-    chartEvent.event.emit('backTestChange', { index: props.chartIndex, data: data.map(v => [v[0]?.toString(), ...v.slice(1)]) as any })
+    chartEvent.event.emit('backTestChange', {
+      index: props.chartIndex,
+      data: data.map(v => [v[0]?.toString(), ...v.slice(1)]) as any
+    })
   }
 
   const startBackTest = () => {
@@ -164,7 +167,6 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
     setTradeRecord({ buy: [], sell: [] })
   })
 
-
   const calcProfit = (record: TradeRecord) => {
     const buyLength = record.buy.length
     const sellLength = record.sell.length
@@ -213,7 +215,6 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
 
     if (diffCount === 0) return
 
-
     tradeRecord[diffCount > 0 ? 'buy' : 'sell'].push({
       time: +stock[0]!,
       price: +stock[2]!,
@@ -258,21 +259,28 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
             <div className="flex-1 border border-solid border-border rounded py-4">
               <div className="text-xl mb-2">现金盈利</div>
               <div>
-                <span className={cn('text-3xl', profit > 0 ? 'text-stock-up' : 'text-stock-down')} >{Decimal.create(profit).toShort()}</span>
+                <span className={cn('text-3xl', profit > 0 ? 'text-stock-up' : 'text-stock-down')}>
+                  {Decimal.create(profit).toShort()}
+                </span>
                 <span> USD</span>
               </div>
             </div>
             <div className="flex-1 border border-solid border-border rounded py-4">
               <div className="text-xl mb-2">成功率</div>
               <div>
-                <span className={cn('text-3xl', profit > 0 ? 'text-stock-up' : 'text-stock-down')}> {total === 0 ? '0.00' : Decimal.create(positiveProfitCount).div(total).mul(100).toFixed(2)}</span>
+                <span className={cn('text-3xl', profit > 0 ? 'text-stock-up' : 'text-stock-down')}>
+                  {' '}
+                  {total === 0 ? '0.00' : Decimal.create(positiveProfitCount).div(total).mul(100).toFixed(2)}
+                </span>
                 <span> %</span>
               </div>
             </div>
             <div className="flex-1 border border-solid border-border rounded py-4">
               <div className="text-xl mb-2"> 最赚钱的交易</div>
               <div>
-                <span className={cn('text-3xl', profit > 0 ? 'text-stock-up' : 'text-stock-down')} >{Decimal.create(maxProfit).toShort()}</span>
+                <span className={cn('text-3xl', profit > 0 ? 'text-stock-up' : 'text-stock-down')}>
+                  {Decimal.create(maxProfit).toShort()}
+                </span>
                 <span> USD</span>
               </div>
             </div>
@@ -281,8 +289,6 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
       )
     }
   })
-
-
 
   return (
     <div className="h-8 box-border items-center flex text-xs justify-between px-2">
@@ -297,7 +303,7 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
           <div
             className="border border-solid border-border rounded-sm px-1 py-0.5 flex items-center"
             onClick={startBackTest}
-            onKeyDown={() => { }}
+            onKeyDown={() => {}}
           >
             <JknIcon name="ic_huice2" className="w-3 h-3" />
             &nbsp;
@@ -307,7 +313,7 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
           <div
             className="border border-solid border-border rounded-sm px-1 py-0.5 flex items-center"
             onClick={stopBackTest}
-            onKeyDown={() => { }}
+            onKeyDown={() => {}}
           >
             <JknIcon name="ic_huice3" className="w-3 h-3" />
             &nbsp;
@@ -337,9 +343,7 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
           平仓
         </Button>
       </div>
-      {
-        resultModel.context
-      }
+      {resultModel.context}
     </div>
   )
 })
@@ -400,63 +404,63 @@ const NumberInput = (props: { value: number; onChange: (v: number) => void }) =>
           <div
             className="text-center border border-solid border-border rounded-sm leading-6 cursor-pointer"
             onClick={() => props.onChange(props.value - 1)}
-            onKeyDown={() => { }}
+            onKeyDown={() => {}}
           >
             -
           </div>
           <div
             className="text-center border border-solid border-border rounded-sm leading-6 cursor-pointer"
             onClick={() => props.onChange(0)}
-            onKeyDown={() => { }}
+            onKeyDown={() => {}}
           >
             清零
           </div>
           <div
             className="text-center border border-solid border-border rounded-sm leading-6 cursor-pointer"
             onClick={() => props.onChange(props.value + 1)}
-            onKeyDown={() => { }}
+            onKeyDown={() => {}}
           >
             +
           </div>
           <div
             className="text-center border border-solid border-border rounded-sm leading-6 cursor-pointer"
             onClick={() => props.onChange(props.value + 1)}
-            onKeyDown={() => { }}
+            onKeyDown={() => {}}
           >
             1
           </div>
           <div
             className="text-center border border-solid border-border rounded-sm leading-6 cursor-pointer"
             onClick={() => props.onChange(props.value + 5)}
-            onKeyDown={() => { }}
+            onKeyDown={() => {}}
           >
             5
           </div>
           <div
             className="text-center border border-solid border-border rounded-sm leading-6 cursor-pointer"
             onClick={() => props.onChange(props.value + 25)}
-            onKeyDown={() => { }}
+            onKeyDown={() => {}}
           >
             25
           </div>
           <div
             className="text-center border border-solid border-border rounded-sm leading-6 cursor-pointer"
             onClick={() => props.onChange(props.value + 100)}
-            onKeyDown={() => { }}
+            onKeyDown={() => {}}
           >
             100
           </div>
           <div
             className="text-center border border-solid border-border rounded-sm leading-6 cursor-pointer"
             onClick={() => props.onChange(props.value + 500)}
-            onKeyDown={() => { }}
+            onKeyDown={() => {}}
           >
             500
           </div>
           <div
             className="text-center border border-solid border-border rounded-sm leading-6 cursor-pointer"
             onClick={() => props.onChange(props.value + 1000)}
-            onKeyDown={() => { }}
+            onKeyDown={() => {}}
           >
             1000
           </div>

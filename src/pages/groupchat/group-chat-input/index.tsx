@@ -1,18 +1,18 @@
-import { Resizable } from 're-resizable'
-import { useMemo, useRef, useImperativeHandle, forwardRef, useState, useEffect } from 'react'
 import { useGroupChatShortStore, useGroupChatStoreNew } from '@/store/group-chat-new'
+import { Resizable } from 're-resizable'
+import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
 
-import WKSDK, { Channel, ChannelTypePerson, MessageImage, MessageText, Setting, Mention, Reply } from 'wukongimjssdk'
 import { JknIcon } from '@/components'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import data from '@emoji-mart/data'
-import Picker from '@emoji-mart/react'
-import i18n from '@emoji-mart/data/i18n/zh.json'
-import { genBase64ToFile, genImgFileByUrl, judgeIsExpireGroupCache, MacroTask } from '../chat-utils'
-import ReplyMessageView from '../components/reply-view'
-import { useShallow } from 'zustand/react/shallow'
-import { useUser } from '@/store'
 import { useToast } from '@/hooks'
+import { useUser } from '@/store'
+import data from '@emoji-mart/data'
+import i18n from '@emoji-mart/data/i18n/zh.json'
+import Picker from '@emoji-mart/react'
+import WKSDK, { Channel, ChannelTypePerson, MessageImage, MessageText, Setting, Mention, Reply } from 'wukongimjssdk'
+import { useShallow } from 'zustand/react/shallow'
+import { MacroTask, genBase64ToFile, genImgFileByUrl, judgeIsExpireGroupCache } from '../chat-utils'
+import ReplyMessageView from '../components/reply-view'
 import ChatWindow from './chat-window'
 import type { InputBoxImage, InputBoxResult, InputBoxText } from './useInput'
 
@@ -145,7 +145,7 @@ const GroupChatInput = forwardRef(
       if (type === 'text') {
         const temp = data as InputBoxText
 
-        let value = temp.msg
+        const value = temp.msg
         if (value?.trim() === '') {
           return
         }
@@ -163,7 +163,7 @@ const GroupChatInput = forwardRef(
             if (temp.file?.type) {
               fileType = temp.file.type.split('/')[1]
             }
-            let file = new File([blob], `image.${fileType}`, {
+            const file = new File([blob], `image.${fileType}`, {
               type: temp.file?.type || 'image/png'
             })
             content.width = temp.width || 60 // 图片宽度
@@ -200,7 +200,7 @@ const GroupChatInput = forwardRef(
       if (!data || !conversationWraps || !groupDetailData) {
         return
       }
-      let msgQueue: Array<InputBoxText | InputBoxImage> = []
+      const msgQueue: Array<InputBoxText | InputBoxImage> = []
       if (data.msgData && data.msgData.length > 0) {
         data.msgData.forEach(text => {
           msgQueue.push(text)
@@ -231,7 +231,7 @@ const GroupChatInput = forwardRef(
     const imgUploadRef = useRef<HTMLInputElement>()
     const onFileChange = () => {
       if (imgUploadRef.current) {
-        let File = (imgUploadRef.current.files || [])[0]
+        const File = (imgUploadRef.current.files || [])[0]
         dealFile(File)
       }
     }

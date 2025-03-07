@@ -1,7 +1,7 @@
+import type { EChartsType } from 'echarts/core'
 import { uid } from 'radash'
-import { GraphicBase } from './base'
-import { EChartsType } from 'echarts/core'
 import { throttle } from 'radash'
+import { GraphicBase } from './base'
 
 type LineGraphicOption = {
   start: [number, number]
@@ -89,7 +89,6 @@ export class LineGraphic extends GraphicBase {
 
     if (this.hasCompleted) return
 
-
     const end = this.graphic.children.find(g => g.id === `${this.id}-circle-end`)
     const line = this.graphic.children.find(g => g.id === `${this.id}-line`)
 
@@ -112,8 +111,6 @@ export class LineGraphic extends GraphicBase {
     line.shape.y2 = endStartY
 
     if (!end) return
-
-  
 
     this.chart.setOption({
       graphic: this.graphic

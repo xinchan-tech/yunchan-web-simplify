@@ -1,8 +1,8 @@
+import { Buffer } from 'buffer'
+import BigNumber from 'bignumber.js'
 import { MessageContentType } from 'wukongimjssdk'
 import { Conversation, Setting } from 'wukongimjssdk'
-import { WKSDK, Message, StreamItem, Channel, MessageStatus, MessageExtra } from 'wukongimjssdk'
-import BigNumber from 'bignumber.js'
-import { Buffer } from 'buffer'
+import { Channel, Message, MessageExtra, MessageStatus, StreamItem, WKSDK } from 'wukongimjssdk'
 export class Convert {
   static toMessage(msgMap: any): Message {
     const message = new Message()
@@ -39,7 +39,7 @@ export class Convert {
     try {
       const decodedBuffer = Buffer.from(msgMap['payload'], 'base64')
       const jsonStr = decodedBuffer.toString('utf8')
-      let contentObj = JSON.parse(jsonStr)
+      const contentObj = JSON.parse(jsonStr)
 
       if (contentObj) {
         contentType = contentObj.type

@@ -428,6 +428,6 @@ export const joinGroupByInviteCode = async (params: {
         'Content-Type': 'application/x-www-form-urlencoded'
       }
     })
-    .then((r) => r);
-  return res;
-};
+    .then(r => r)
+  return res
+}

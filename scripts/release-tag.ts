@@ -1,8 +1,8 @@
-import type { RsbuildPlugin } from '@rsbuild/core'
-import {execSync} from 'node:child_process'
-import packageJson from '../package.json'
+import { execSync } from 'node:child_process'
 import fs from 'node:fs'
 import path from 'node:path'
+import type { RsbuildPlugin } from '@rsbuild/core'
+import packageJson from '../package.json'
 
 export type ReleaseTagOptions = {
   outFile?: boolean
@@ -10,10 +10,10 @@ export type ReleaseTagOptions = {
 
 export const pluginReleaseTag = (options: ReleaseTagOptions): RsbuildPlugin => ({
   name: 'plugin-release-tag',
-  setup(api){
+  setup(api) {
     let version = 'development'
 
-    if(process.env.NODE_ENV === 'production'){
+    if (process.env.NODE_ENV === 'production') {
       const gitVersion = execSync('git rev-parse --short HEAD').toString().trim()
       const gitBranch = execSync('git rev-parse --abbrev-ref HEAD').toString().trim()
       const date = new Date().toISOString().split('T')[0].replace(/-/g, '')
@@ -21,12 +21,12 @@ export const pluginReleaseTag = (options: ReleaseTagOptions): RsbuildPlugin => (
       version = `${gitBranch}.${gitVersion}.${gitAuthor}.${date}`
     }
 
-    api.modifyRsbuildConfig((config) => {
-      if(!config.source){
+    api.modifyRsbuildConfig(config => {
+      if (!config.source) {
         config.source = {}
       }
 
-      if(!config.source.define){
+      if (!config.source.define) {
         config.source.define = {}
       }
 
@@ -35,11 +35,18 @@ export const pluginReleaseTag = (options: ReleaseTagOptions): RsbuildPlugin => (
     })
 
     api.onAfterBuild(() => {
-      if(options.outFile){
-        fs.writeFileSync(path.resolve(__dirname, '../dist/release-tag.json'), JSON.stringify({
-          version,
-          packageVersion: packageJson.version
-        }, null, 2))
+      if (options.outFile) {
+        fs.writeFileSync(
+          path.resolve(__dirname, '../dist/release-tag.json'),
+          JSON.stringify(
+            {
+              version,
+              packageVersion: packageJson.version
+            },
+            null,
+            2
+          )
+        )
       }
     })
   }

@@ -1,11 +1,21 @@
-import { Skeleton } from "@/components"
-import { useDomSize } from "@/hooks"
-import { type ColumnDef, type ColumnSort, type Row, type SortingState, type TableOptions, flexRender, getCoreRowModel, getSortedRowModel, useReactTable } from "@tanstack/react-table"
+import { Skeleton } from '@/components'
+import { useDomSize } from '@/hooks'
+import {
+  type ColumnDef,
+  type ColumnSort,
+  type Row,
+  type SortingState,
+  type TableOptions,
+  flexRender,
+  getCoreRowModel,
+  getSortedRowModel,
+  useReactTable
+} from '@tanstack/react-table'
 import { useVirtualizer } from '@tanstack/react-virtual'
-import { useUpdateEffect } from "ahooks"
-import { type CSSProperties, useRef, useState } from "react"
-import { useCellWidth, useTableEvent } from "./lib"
-import { JknTableHeader } from "./table-header"
+import { useUpdateEffect } from 'ahooks'
+import { type CSSProperties, useRef, useState } from 'react'
+import { useCellWidth, useTableEvent } from './lib'
+import { JknTableHeader } from './table-header'
 
 export interface JknTableProps<TData extends Record<string, unknown> = Record<string, unknown>, TValue = unknown> {
   columns: ColumnDef<TData, TValue>[]
@@ -19,17 +29,21 @@ export interface JknTableProps<TData extends Record<string, unknown> = Record<st
   style?: CSSProperties
   className?: string
   rowHeight?: number
-  onEvent?: (arg: { event: string, params: any }) => void
+  onEvent?: (arg: { event: string; params: any }) => void
 }
 
 /**
  * @deprecated
- * @returns 
+ * @returns
  */
-const VirtualizedTable = <TData extends Record<string, unknown>, TValue>({ className, style, ...props }: JknTableProps<TData, TValue>) => {
+const VirtualizedTable = <TData extends Record<string, unknown>, TValue>({
+  className,
+  style,
+  ...props
+}: JknTableProps<TData, TValue>) => {
   const [sorting, setSorting] = useState<SortingState>([])
   const [rowSelection, setRowSelection] = useState({})
-  const _onSortCHange: TableOptions<TData>['onSortingChange'] = (e) => {
+  const _onSortCHange: TableOptions<TData>['onSortingChange'] = e => {
     setSorting(e)
   }
 
@@ -48,9 +62,9 @@ const VirtualizedTable = <TData extends Record<string, unknown>, TValue>({ class
     data: props.data,
     state: {
       sorting,
-      rowSelection,
+      rowSelection
     },
-    getRowId: (row) => row[props.rowKey ?? 'id'] as string,
+    getRowId: row => row[props.rowKey ?? 'id'] as string,
     enableMultiSort: false,
     enableSorting: true,
     sortDescFirst: true,
@@ -73,11 +87,10 @@ const VirtualizedTable = <TData extends Record<string, unknown>, TValue>({ class
     getScrollElement: () => scrollRef.current,
     //measure dynamic row height, except in firefox because it measures table border height incorrectly
     measureElement:
-      typeof window !== 'undefined' &&
-        navigator.userAgent.indexOf('Firefox') === -1
+      typeof window !== 'undefined' && navigator.userAgent.indexOf('Firefox') === -1
         ? element => element?.getBoundingClientRect().height
         : undefined,
-    overscan: 10,
+    overscan: 10
   })
 
   const _onRowClick = (row: Row<TData>) => {
@@ -92,72 +105,67 @@ const VirtualizedTable = <TData extends Record<string, unknown>, TValue>({ class
 
   return (
     <div className="jkn-table-virtualized overflow-hidden h-full flex flex-col" ref={dom}>
-      {
-        cellWidth ? (
-          <>
-            <JknTableHeader table={table} width={cellWidth} />
-            {
-              !props.loading ? (
-                <div className="jkn-table-virtualized-body overflow-y-auto overflow-x-hidden flex-1" ref={scrollRef}>
-                  <table className="table-fixed grid relative z-0" style={{ height: `${rowVirtualizer.getTotalSize()}px` }}>
-                    <tbody>
-                      {
-                        table.getRowModel().rows?.length ? (
-                          rowVirtualizer.getVirtualItems().map(virtualRow => {
-                            const row = rows[virtualRow.index] as Row<TData>
+      {cellWidth ? (
+        <>
+          <JknTableHeader table={table} width={cellWidth} />
+          {!props.loading ? (
+            <div className="jkn-table-virtualized-body overflow-y-auto overflow-x-hidden flex-1" ref={scrollRef}>
+              <table className="table-fixed grid relative z-0" style={{ height: `${rowVirtualizer.getTotalSize()}px` }}>
+                <tbody>
+                  {table.getRowModel().rows?.length ? (
+                    rowVirtualizer.getVirtualItems().map(virtualRow => {
+                      const row = rows[virtualRow.index] as Row<TData>
+                      return (
+                        <tr
+                          data-index={virtualRow.index}
+                          key={row.id}
+                          data-state={row.getIsSelected() && 'selected'}
+                          ref={node => rowVirtualizer.measureElement(node)}
+                          onClick={() => _onRowClick(row)}
+                          onKeyDown={() => {}}
+                          className="hover:bg-accent transition-all duration-200 flex absolute w-full z-0"
+                          style={{
+                            transform: `translateY(${virtualRow.start}px)` //this should always be a `style` as it changes on scroll
+                          }}
+                        >
+                          {row.getVisibleCells().map(cell => {
+                            const { align } = cell.column.columnDef.meta ?? {}
                             return (
-                              <tr
-                                data-index={virtualRow.index}
-                                key={row.id}
-                                data-state={row.getIsSelected() && "selected"}
-                                ref={node => rowVirtualizer.measureElement(node)}
-                                onClick={() => _onRowClick(row)}
-                                onKeyDown={() => { }}
-                                className="hover:bg-accent transition-all duration-200 flex absolute w-full z-0"
-                                style={{
-                                  transform: `translateY(${virtualRow.start}px)` //this should always be a `style` as it changes on scroll
-                                }}
+                              <td
+                                key={cell.id}
+                                className="jkn-table-virtualized-td"
+                                style={{ width: cellWidth[cell.column.id] ?? 120 }}
                               >
-                                {row.getVisibleCells().map((cell) => {
-                                  const { align } = cell.column.columnDef.meta ?? {}
-                                  return (
-                                    <td key={cell.id} className="jkn-table-virtualized-td" style={{ width: cellWidth[cell.column.id] ?? 120 }}>
-                                      <div className="w-full" style={{ textAlign: align as undefined, }}>
-                                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                                      </div>
-                                    </td>
-                                  )
-                                })}
-                              </tr>
+                                <div className="w-full" style={{ textAlign: align as undefined }}>
+                                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                                </div>
+                              </td>
                             )
-                          })
-                        ) : (
-                          <tr className="flex">
-                            <td colSpan={props.columns.length} className="h-24 text-center w-full mt-12">
-                              暂无数据
-                            </td>
-                          </tr>
-                        )
-                      }
-                    </tbody>
-                  </table>
-                </div>
-              ) : (
-                <div className="space-y-2 my-2">
-                  {
-                    Array.from({ length: 8 }).map((_, i) => (
-                      // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
-                      <Skeleton key={i} className="h-5" />
-                    ))
-                  }
-                </div>
-              )
-            }
-          </>
-        ) : null
-      }
-      <style jsx>{
-        `
+                          })}
+                        </tr>
+                      )
+                    })
+                  ) : (
+                    <tr className="flex">
+                      <td colSpan={props.columns.length} className="h-24 text-center w-full mt-12">
+                        暂无数据
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="space-y-2 my-2">
+              {Array.from({ length: 8 }).map((_, i) => (
+                // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
+                <Skeleton key={i} className="h-5" />
+              ))}
+            </div>
+          )}
+        </>
+      ) : null}
+      <style jsx>{`
         .jkn-table-virtualized-td {
           display: flex;
           align-items: center;
@@ -171,11 +179,9 @@ const VirtualizedTable = <TData extends Record<string, unknown>, TValue>({ class
 
         .jkn-table-virtualized-td:last-child {
           border-right: none;
-        `
-      }</style>
+        `}</style>
     </div>
   )
 }
-
 
 export default VirtualizedTable

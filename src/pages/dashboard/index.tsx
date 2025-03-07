@@ -1,8 +1,8 @@
-import GoldenStockPool from "./golden-stock-pool"
-import { HotTop } from "./hot-top"
-import LargeCap from "./large-cap"
-import StockTree from "./stock-tree"
-import TopList from "./top-list"
+import GoldenStockPool from './golden-stock-pool'
+import { HotTop } from './hot-top'
+import LargeCap from './large-cap'
+import StockTree from './stock-tree'
+import TopList from './top-list'
 
 const DashBoardPage = () => {
   return (

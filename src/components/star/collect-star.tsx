@@ -1,18 +1,17 @@
+import { addStockCollectBatch, getStockCollectCates } from '@/api'
+import { usePropValue, useToast } from '@/hooks'
+import type { HoverCardContentProps } from '@radix-ui/react-hover-card'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useBoolean, useMemoizedFn } from 'ahooks'
+import { produce } from 'immer'
+import { memo } from 'react'
+import { AddCollect, Checkbox, ScrollArea } from '..'
+import { HoverCard, HoverCardContent, HoverCardPortal, HoverCardTrigger } from '../ui/hover-card'
+import { CollectStarBatch } from './collect-star-batch'
+import Star from './index'
 
-import { addStockCollectBatch, getStockCollectCates } from "@/api"
-import { usePropValue, useToast } from "@/hooks"
-import type { HoverCardContentProps } from "@radix-ui/react-hover-card"
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { useBoolean, useMemoizedFn } from "ahooks"
-import { produce } from "immer"
-import { AddCollect, Checkbox, ScrollArea } from ".."
-import { HoverCard, HoverCardContent, HoverCardPortal, HoverCardTrigger } from "../ui/hover-card"
-import { CollectStarBatch } from "./collect-star-batch"
-import Star from "./index"
-import { memo } from "react"
-
-
-interface CollectStarProps extends Partial<Pick<HoverCardContentProps, 'sideOffset' | 'alignOffset' | 'side' | 'align'>> {
+interface CollectStarProps
+  extends Partial<Pick<HoverCardContentProps, 'sideOffset' | 'alignOffset' | 'side' | 'align'>> {
   checked: boolean
   code: string
   onUpdate?: (checked: boolean) => void
@@ -28,22 +27,21 @@ const _CollectStar = memo((props: CollectStarProps) => {
   })
 
   return (
-    <HoverCard
-      onOpenChange={open => open ? setTrue() : setFalse()}
-      openDelay={100}
-      closeDelay={100}
-    >
+    <HoverCard onOpenChange={open => (open ? setTrue() : setFalse())} openDelay={100} closeDelay={100}>
       <HoverCardTrigger asChild>
-        <div className="flex justify-center items-center"><Star checked={checked} /></div>
+        <div className="flex justify-center items-center">
+          <Star checked={checked} />
+        </div>
       </HoverCardTrigger>
-      <HoverCardPortal >
-        <HoverCardContent sideOffset={props.sideOffset ?? -10} alignOffset={props.alignOffset ?? -50}
-          align={props.align ?? 'start'} side={props.side ?? 'left'}
+      <HoverCardPortal>
+        <HoverCardContent
+          sideOffset={props.sideOffset ?? -10}
+          alignOffset={props.alignOffset ?? -50}
+          align={props.align ?? 'start'}
+          side={props.side ?? 'left'}
           className="p-0 w-48 bg-muted border-dialog-border border border-solid"
         >
-          {
-            render ? <CollectList code={props.code} onUpdate={_onUpdate} /> : null
-          }
+          {render ? <CollectList code={props.code} onUpdate={_onUpdate} /> : null}
         </HoverCardContent>
       </HoverCardPortal>
     </HoverCard>
@@ -56,7 +54,6 @@ interface CollectListProps {
 }
 
 const CollectList = (props: CollectListProps) => {
-
   const queryClient = useQueryClient()
   const cateQuery = useQuery({
     queryKey: [getStockCollectCates.cacheKey, props.code],
@@ -80,9 +77,11 @@ const CollectList = (props: CollectListProps) => {
 
       if (previous) {
         queryClient.setQueryData([getStockCollectCates.cacheKey, props.code], (s: typeof cateQuery.data) => {
-          return s?.map(produce(draft => {
-            draft.active = cates.includes(+draft.id) ? 1 : 0
-          }))
+          return s?.map(
+            produce(draft => {
+              draft.active = cates.includes(+draft.id) ? 1 : 0
+            })
+          )
         })
       }
 
@@ -117,22 +116,21 @@ const CollectList = (props: CollectListProps) => {
     <>
       <div className="bg-background py-2 text-center">加入金池</div>
       <ScrollArea className="h-[240px] space-y-2 ">
-        {
-          cateQuery.data?.map(item => (
-            <div key={item.id} onClick={() => onCheck(item)} onKeyDown={() => { }} className="flex cursor-pointer items-center pl-4 space-x-4 hover:bg-primary py-1">
-              {
-                <Checkbox checked={item.active === 1} />
-              }
-              <span>{item.name}</span>
-            </div>
-          ))
-        }
+        {cateQuery.data?.map(item => (
+          <div
+            key={item.id}
+            onClick={() => onCheck(item)}
+            onKeyDown={() => {}}
+            className="flex cursor-pointer items-center pl-4 space-x-4 hover:bg-primary py-1"
+          >
+            {<Checkbox checked={item.active === 1} />}
+            <span>{item.name}</span>
+          </div>
+        ))}
       </ScrollArea>
       <div className="w-full">
         <AddCollect sideOffset={-100}>
-          <div className="rounded-none w-48 bg-primary h-10 leading-10">
-            新建金池
-          </div>
+          <div className="rounded-none w-48 bg-primary h-10 leading-10">新建金池</div>
         </AddCollect>
       </div>
     </>

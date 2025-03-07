@@ -1,10 +1,10 @@
 import { StockChartInterval, getStockChartV2, getStockTabData } from '@/api'
-import { stockUtils } from '@/utils/stock'
-import { useRef } from 'react'
-import { useQuery } from '@tanstack/react-query'
 import { dateUtils } from '@/utils/date'
-import { queryClient } from "@/utils/query-client"
-import { symbol } from "d3"
+import { queryClient } from '@/utils/query-client'
+import { stockUtils } from '@/utils/stock'
+import { useQuery } from '@tanstack/react-query'
+import { symbol } from 'd3'
+import { useRef } from 'react'
 
 /**
  * k线获取数据逻辑
@@ -49,7 +49,6 @@ export const useCandlesticks = (symbol: string, interval: StockChartInterval) =>
   }
 }
 
-
 export const fetchCandlesticks = async (symbol: string, interval: StockChartInterval, startAt: string) => {
   const queryKey = [
     getStockChartV2.cacheKey,
@@ -74,7 +73,6 @@ export const fetchCandlesticks = async (symbol: string, interval: StockChartInte
 
   return res
 }
-
 
 export const fetchOverlayMark = async (type: string, mark: string, symbol: string) => {
   const queryKey = [

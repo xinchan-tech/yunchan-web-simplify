@@ -1,10 +1,10 @@
+import { AlarmType } from '@/api'
 import { AiAlarm, CapsuleTabs, JknIcon, PriceAlarm, useModal } from '@/components'
 import { useState } from 'react'
-import AlarmList from '../../components/ai-alarm/alarm-list'
 import AiAlarmForm from '../../components/ai-alarm/ai-alarm-form'
-import PriceAlarmForm from '../../components/ai-alarm/price-alarm-form'
+import AlarmList from '../../components/ai-alarm/alarm-list'
 import AlarmLog from '../../components/ai-alarm/alarm-log'
-import { AlarmType } from '@/api'
+import PriceAlarmForm from '../../components/ai-alarm/price-alarm-form'
 
 const AlarmPage = () => {
   const [alarmType, setAlarmType] = useState<AlarmType>(AlarmType.AI)

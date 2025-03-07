@@ -1,8 +1,8 @@
+import { useModal } from '@/components'
 import { cn } from '@/utils/style'
 import { ChevronRight } from 'lucide-react'
 import { useEffect, useRef } from 'react'
 import ReactDOM from 'react-dom'
-import { useModal } from '@/components'
 import ChatHistory from './chat-history'
 
 interface DrawerProps {

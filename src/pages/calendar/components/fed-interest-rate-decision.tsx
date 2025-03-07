@@ -1,17 +1,17 @@
-import { getStockEconomicDetail, getStockFedCalendar } from "@/api"
-import { JknIcon, JknRcTable, type JknRcTableProps } from "@/components"
-import echarts, { type ECOption } from "@/utils/echarts"
-import { useQuery } from "@tanstack/react-query"
-import { useMount, useUnmount } from "ahooks"
-import dayjs from "dayjs"
-import Decimal from "decimal.js"
-import { uid } from "radash"
-import { useRef, useEffect, useMemo } from "react"
+import { getStockEconomicDetail, getStockFedCalendar } from '@/api'
+import { JknIcon, JknRcTable, type JknRcTableProps } from '@/components'
+import echarts, { type ECOption } from '@/utils/echarts'
+import { useQuery } from '@tanstack/react-query'
+import { useMount, useUnmount } from 'ahooks'
+import dayjs from 'dayjs'
+import Decimal from 'decimal.js'
+import { uid } from 'radash'
+import { useEffect, useMemo, useRef } from 'react'
 
 export const FedInterestRateDecision = () => {
   const query = useQuery({
     queryKey: [getStockEconomicDetail.cacheKey, 'Fed Interest Rate Decision'],
-    queryFn: () => getStockEconomicDetail('Fed Interest Rate Decision'),
+    queryFn: () => getStockEconomicDetail('Fed Interest Rate Decision')
   })
 
   const fedCalendar = useQuery({
@@ -42,7 +42,9 @@ export const FedInterestRateDecision = () => {
     },
     yAxis: [
       {
-        type: 'value', axisLabel: { formatter: v => Decimal.create(v).toFixed(2) }, scale: true,
+        type: 'value',
+        axisLabel: { formatter: v => Decimal.create(v).toFixed(2) },
+        scale: true,
         axisLine: {
           lineStyle: {
             color: '#6e7079'
@@ -53,7 +55,7 @@ export const FedInterestRateDecision = () => {
             color: '#6e7079'
           }
         }
-      },
+      }
     ],
     xAxis: {
       type: 'category',
@@ -64,7 +66,7 @@ export const FedInterestRateDecision = () => {
     },
     series: [
       { name: '实际值', type: 'line', data: [], connectNulls: true },
-      { name: '预测值', type: 'line', data: [], connectNulls: true },
+      { name: '预测值', type: 'line', data: [], connectNulls: true }
     ]
   }
 
@@ -106,66 +108,105 @@ export const FedInterestRateDecision = () => {
 
       max = Math.max(max, +data.actual, +data.estimate)
       min = Math.min(min, +data.actual, +data.estimate)
-
     }
     category.reverse()
     d1.reverse()
     d2.reverse()
     chart.current?.setOption({
       xAxis: { data: category },
-      series: [{ data: d1, symbol: false }, { data: d2, symbol: false }]
+      series: [
+        { data: d1, symbol: false },
+        { data: d2, symbol: false }
+      ]
     })
-
   }, [query.data])
 
+  const columns = useMemo<JknRcTableProps<any>['columns']>(
+    () => [
+      {
+        title: <span className="text-stock-up">月份</span>,
+        dataIndex: 'date',
+        align: 'center',
+        render: v => <span className="text-white inline-block leading-8">{v}</span>
+      },
+      {
+        title: <span className="text-stock-up">决议声明</span>,
+        dataIndex: 'declare',
+        align: 'center',
+        render: v => <span className="text-white">{v}</span>
+      },
+      {
+        title: <span className="text-stock-up">发布会</span>,
+        dataIndex: 'conference',
+        align: 'center',
+        render: v => <span className="text-white">{v}</span>
+      },
+      {
+        title: <span className="text-stock-up">点阵图</span>,
+        dataIndex: 'bitmap',
+        align: 'center',
+        render: v => <span className="text-white">{v}</span>
+      },
+      {
+        title: <span className="text-stock-up">经济预测</span>,
+        dataIndex: 'prediction',
+        align: 'center',
+        render: v => <span className="text-white">{v}</span>
+      },
+      {
+        title: <span className="text-stock-up">纪要</span>,
+        dataIndex: 'summary',
+        align: 'center',
+        render: v => <span className="text-white">{v}</span>
+      },
+      {
+        title: <span className="text-stock-up">褐皮书</span>,
+        dataIndex: 'beige_book',
+        align: 'center',
+        render: v => <span className="text-white">{v}</span>
+      }
+    ],
+    []
+  )
 
-
-  const columns = useMemo<JknRcTableProps<any>['columns']>(() => [
-    { title: <span className="text-stock-up">月份</span>, dataIndex: 'date', align: 'center', render: (v) => <span className="text-white inline-block leading-8">{v}</span> },
-    { title: <span className="text-stock-up">决议声明</span>, dataIndex: 'declare', align: 'center', render: (v) => <span className="text-white">{v}</span> },
-    { title: <span className="text-stock-up">发布会</span>, dataIndex: 'conference', align: 'center', render: (v) => <span className="text-white">{v}</span> },
-    { title: <span className="text-stock-up">点阵图</span>, dataIndex: 'bitmap', align: 'center', render: (v) => <span className="text-white">{v}</span> },
-    { title: <span className="text-stock-up">经济预测</span>, dataIndex: 'prediction', align: 'center', render: (v) => <span className="text-white">{v}</span> },
-    { title: <span className="text-stock-up">纪要</span>, dataIndex: 'summary', align: 'center', render: (v) => <span className="text-white">{v}</span> },
-    { title: <span className="text-stock-up">褐皮书</span>, dataIndex: 'beige_book', align: 'center', render: (v) => <span className="text-white">{v}</span> },
-  ], [])
-
-  const data = useMemo(() => fedCalendar.data?.map(item => ({
-    id: uid(8),
-    ...item
-  })) ?? [], [fedCalendar.data])
+  const data = useMemo(
+    () =>
+      fedCalendar.data?.map(item => ({
+        id: uid(8),
+        ...item
+      })) ?? [],
+    [fedCalendar.data]
+  )
 
   return (
     <div className="w-[900px] box-border px-8 py-4 mx-auto h-full overflow-y-auto">
-
       <p className="text-center text-lg">美联储利率决议</p>
       <p className="text-center text-sm bg-background py-2">
-        <span>最新值：<span className="text-stock-up">--亿美元</span></span>&emsp;&emsp;&emsp;
-        <span>预测值：<span className="text-stock-up">--亿美元</span></span>
+        <span>
+          最新值：<span className="text-stock-up">--亿美元</span>
+        </span>
+        &emsp;&emsp;&emsp;
+        <span>
+          预测值：<span className="text-stock-up">--亿美元</span>
+        </span>
       </p>
       <div className="h-[400px] w-full" ref={chartRef} />
       <div className="text-stock-up">
-        <div className="flex justify-between bg-background py-3 px-4 my-4" >
+        <div className="flex justify-between bg-background py-3 px-4 my-4">
           <div>
             <JknIcon name="ic_message_arrow" className="rotate-180 w-2 h-3" />
             &nbsp;数据公布机构:&nbsp;
-            <span className="text-foreground"> {
-              query.data?.introduce.institutions
-            }</span>
+            <span className="text-foreground"> {query.data?.introduce.institutions}</span>
           </div>
           <div>
             <JknIcon name="ic_message_arrow" className="rotate-180 w-2 h-3" />
             &nbsp;发布频率:&nbsp;
-            <span className="text-foreground">{
-              query.data?.introduce.frequency
-            }</span>
+            <span className="text-foreground">{query.data?.introduce.frequency}</span>
           </div>
           <div>
             <JknIcon name="ic_message_arrow" className="rotate-180 w-2 h-3" />
             &nbsp;下次公布时间:&nbsp;
-            <span className="text-foreground">
-              --
-            </span>
+            <span className="text-foreground">--</span>
           </div>
         </div>
 
@@ -180,8 +221,12 @@ export const FedInterestRateDecision = () => {
         </div>
         <div className="text-foreground text-sm my-4">
           利率决议1年8次，通常在北京时间周四凌层两三点发布结果。其中每季未那次决议的声明中会公布经济预测和点阵图，
-          半小时后再举行美联储主席发布会，其他几次决议只有决议声明。<br /><br />
-          纪要、褐皮书：纪要在该月决议后三周公布，褐皮书在决议前两周公布。<br /><br />
+          半小时后再举行美联储主席发布会，其他几次决议只有决议声明。
+          <br />
+          <br />
+          纪要、褐皮书：纪要在该月决议后三周公布，褐皮书在决议前两周公布。
+          <br />
+          <br />
           跨天处理：美联储上表日期在财历上对应次日北京时间凌晨，为提示用户不错过半夜发布的内容，汇通网央行专题的上
           表日期按“交易日”预报，比如北京时间周四凌晨 02:00 发布的，在上表写周三交易日的日期。
         </div>
@@ -190,24 +235,17 @@ export const FedInterestRateDecision = () => {
             <div className="w-3 self-stretch bg-stock-up py-2 box-border mr-3" />
             数据影响
           </div>
-          <div className="text-foreground text-sm">
-            {query.data?.introduce.impact}
-          </div>
+          <div className="text-foreground text-sm">{query.data?.introduce.impact}</div>
           <div className="flex items-center">
             <div className="w-3 self-stretch bg-stock-up py-2 box-border mr-3" />
             数据解析
           </div>
-          <div className="text-foreground text-sm">
-            {query.data?.introduce.analysis}
-          </div>
+          <div className="text-foreground text-sm">{query.data?.introduce.analysis}</div>
           <div className="flex items-center">
             <div className="w-3 self-stretch bg-stock-up py-2 box-border mr-3" />
             潜在影响
           </div>
-          <div className="text-foreground text-sm">
-            {query.data?.introduce.reasons}
-          </div>
-
+          <div className="text-foreground text-sm">{query.data?.introduce.reasons}</div>
         </div>
       </div>
     </div>

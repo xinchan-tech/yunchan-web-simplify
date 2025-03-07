@@ -55,7 +55,6 @@ export type MarkOverlayAttrs = {
 export const markOverlayFigure: FigureTemplate<MarkOverlayAttrs> = {
   name: 'mark-overlay',
   draw: (ctx, attrs) => {
-  
     const { x, y, date, title } = attrs
     const maxWidth = Math.max(ctx.measureText(date).width, ctx.measureText(title).width)
     const padding = [5, 10, 5, 10]
@@ -70,14 +69,13 @@ export const markOverlayFigure: FigureTemplate<MarkOverlayAttrs> = {
     ctx.lineTo(x, height * 2)
     ctx.stroke()
 
-
     ctx.fillStyle = '#e91e63'
     ctx.fillRect(x - width / 2, 0, width, height)
     ctx.fillStyle = '#fff'
     ctx.font = `${fontSize}px Arial`
     ctx.fillText(date, x - width / 2 + padding[1], padding[0])
     // ctx.strokeText(date, x - width / 2 + padding[3], padding[0] + fontSize)
-    
+
     ctx.fillStyle = '#fff'
     ctx.fillRect(x - width / 2, height, width, height)
     ctx.fillStyle = 'black'

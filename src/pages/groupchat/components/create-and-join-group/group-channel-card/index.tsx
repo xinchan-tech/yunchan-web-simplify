@@ -1,7 +1,7 @@
 import type { GroupChannelItem } from '@/api'
-import ChatAvatar from '../../chat-avatar'
-import { useMemo } from 'react'
 import { Button, JknIcon } from '@/components'
+import { useMemo } from 'react'
+import ChatAvatar from '../../chat-avatar'
 
 export const GroupTag = (props: {
   tags: string

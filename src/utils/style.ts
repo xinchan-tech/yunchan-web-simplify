@@ -1,6 +1,6 @@
-import { clsx, type ClassValue } from 'clsx'
-import { twMerge } from 'tailwind-merge'
+import { type ClassValue, clsx } from 'clsx'
 import MD5 from 'crypto-js/md5'
+import { twMerge } from 'tailwind-merge'
 
 export const cn = (...args: ClassValue[]) => twMerge(clsx(args))
 
@@ -96,9 +96,8 @@ export const colorUtil = {
     return { r: Math.round(r * 255), g: Math.round(g * 255), b: Math.round(b * 255) }
   },
   rgbToHex(rgb: { r: number; g: number; b: number }) {
-    const r =  `#${Math.floor(rgb.r).toString(16)}${Math.floor(rgb.g).toString(16)}${Math.floor(rgb.b).toString(16)}`
+    const r = `#${Math.floor(rgb.r).toString(16)}${Math.floor(rgb.g).toString(16)}${Math.floor(rgb.b).toString(16)}`
     return r
-
   },
   radomColorForPalette() {
     return this.colorPalette[Math.floor(Math.random() * this.colorPalette.length)]
@@ -117,7 +116,7 @@ export const colorUtil = {
     const r = ((baseColor >> 16) & 0xff) * 0.5
     const g = ((baseColor >> 8) & 0xff) * 0.5
     const b = (baseColor & 0xff) * 0.5
-  
+
     // 格式化为标准hex
     if (format === 'rgb') {
       return `rgb(${r}, ${g}, ${b})`

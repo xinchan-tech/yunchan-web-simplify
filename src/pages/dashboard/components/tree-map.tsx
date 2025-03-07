@@ -1,12 +1,12 @@
-import { useStockList } from "@/store"
-import { useMount, useUnmount } from "ahooks"
-import { useEffect, useRef } from "react"
-import { select, hierarchy, treemap, type Selection, type HierarchyRectangularNode } from 'd3'
+import { useStockList } from '@/store'
+import { useMount, useUnmount } from 'ahooks'
+import { type HierarchyRectangularNode, type Selection, hierarchy, select, treemap } from 'd3'
+import { useEffect, useRef } from 'react'
 
-import { getStringWidth } from "@/utils/string"
-import Decimal from "decimal.js"
-import { router } from "@/router"
-import { debounce, } from "radash"
+import { router } from '@/router'
+import { getStringWidth } from '@/utils/string'
+import Decimal from 'decimal.js'
+import { debounce } from 'radash'
 
 type TreeMapData = {
   name: string
@@ -39,7 +39,7 @@ type TreeMapData = {
   //  */
   // priceLabelTop?: number
   /**
-   * 
+   *
    */
   percentText: string
   percentSize: number
@@ -54,18 +54,16 @@ interface TreeMapProps {
   loading?: boolean
 }
 
-
 const SINGLE_CHART_WIDTH = getStringWidth('树', '12px sans-serif')
 const ELLIPSIS_WIDTH = getStringWidth('...', '12px sans-serif')
 const ONE_PX_WIDTH = getStringWidth('T', '1px sans-serif')
-
 
 const TreeMap = (props: TreeMapProps) => {
   // const listMap = useStockList(s => s.listMap)
   const chartRef = useRef<Selection<SVGSVGElement, unknown, null, undefined>>()
   const chartDomRef = useRef<HTMLDivElement>(null)
   const tipRef = useRef<HTMLDivElement>(null)
-  const sizeRef = useRef<{ width: number, height: number }>({ width: 0, height: 0 })
+  const sizeRef = useRef<{ width: number; height: number }>({ width: 0, height: 0 })
 
   useMount(() => {
     if (!chartDomRef.current) {
@@ -74,10 +72,7 @@ const TreeMap = (props: TreeMapProps) => {
     }
 
     const { clientWidth, clientHeight } = chartDomRef.current
-    const svg = select(chartDomRef.current)
-      .append('svg')
-      .attr('width', clientWidth)
-      .attr('height', clientHeight)
+    const svg = select(chartDomRef.current).append('svg').attr('width', clientWidth).attr('height', clientHeight)
 
     chartRef.current = svg
   })
@@ -89,17 +84,18 @@ const TreeMap = (props: TreeMapProps) => {
   useEffect(() => {
     render(props.data)
 
-    const resizeObserver = new ResizeObserver(debounce({ delay: 20 }, (entries) => {
-      const { width, height } = entries[0].contentRect
-  
-      chartRef.current?.attr('width', width).attr('height', height)
-      if (sizeRef.current.width === width && sizeRef.current.height === height) {
-        sizeRef.current.width = width
-        sizeRef.current.height = height
-        render(props.data)
-      }
+    const resizeObserver = new ResizeObserver(
+      debounce({ delay: 20 }, entries => {
+        const { width, height } = entries[0].contentRect
 
-    }))
+        chartRef.current?.attr('width', width).attr('height', height)
+        if (sizeRef.current.width === width && sizeRef.current.height === height) {
+          sizeRef.current.width = width
+          sizeRef.current.height = height
+          render(props.data)
+        }
+      })
+    )
 
     resizeObserver.observe(chartDomRef.current!)
 
@@ -120,7 +116,9 @@ const TreeMap = (props: TreeMapProps) => {
     }
 
     const { clientWidth, clientHeight } = chartDomRef.current
-    const root = treemap<TreeMapData>().size([clientWidth, clientHeight]).padding(1).paddingTop(24)(hierarchy<TreeMapData>({ name: 'root', children: data as any } as any).sum(d => d.value ?? 0))
+    const root = treemap<TreeMapData>().size([clientWidth, clientHeight]).padding(1).paddingTop(24)(
+      hierarchy<TreeMapData>({ name: 'root', children: data as any } as any).sum(d => d.value ?? 0)
+    )
     chartRef.current.selectAll('*').remove()
     renderRect(root)
     renderTitles(root)
@@ -133,13 +131,18 @@ const TreeMap = (props: TreeMapProps) => {
     chartRef.current?.remove()
   })
 
-
   const renderRect = (root: HierarchyRectangularNode<TreeMapData>) => {
-    chartRef.current!.selectAll('rect').data(root.leaves()).enter().append('rect').attr('x', (d) => d.x0)
-      .attr('y', (d) => d.y0)
-      .attr('width', (d) => d.x1 - d.x0)
-      .attr('height', (d) => d.y1 - d.y0)
-      .attr('fill', d => d.data.color ?? 'transport').on('dblclick', (_, d) => {
+    chartRef
+      .current!.selectAll('rect')
+      .data(root.leaves())
+      .enter()
+      .append('rect')
+      .attr('x', d => d.x0)
+      .attr('y', d => d.y0)
+      .attr('width', d => d.x1 - d.x0)
+      .attr('height', d => d.y1 - d.y0)
+      .attr('fill', d => d.data.color ?? 'transport')
+      .on('dblclick', (_, d) => {
         router.navigate(`/stock/trading?symbol=${d.data.name}`)
       })
   }
@@ -148,11 +151,14 @@ const TreeMap = (props: TreeMapProps) => {
     if (root.height <= 1) {
       return
     }
-    chartRef.current!.selectAll('titles').data(root.descendants().filter(d => d.depth === 1)).enter()
-      .append("text")
-      .attr("x", (d) => d.x0)
-      .attr("y", (d) => d.y0 + 16)
-      .text((d) => {
+    chartRef
+      .current!.selectAll('titles')
+      .data(root.descendants().filter(d => d.depth === 1))
+      .enter()
+      .append('text')
+      .attr('x', d => d.x0)
+      .attr('y', d => d.y0 + 16)
+      .text(d => {
         const totalWidth = d.x1 - d.x0
         let title = `${d.data.name}`
         const percentTitle = ` ${Decimal.create(d.data.data).mul(100).toDP(3).toNumber()}%`
@@ -174,8 +180,8 @@ const TreeMap = (props: TreeMapProps) => {
 
         return _title
       })
-      .attr("font-size", "14px")
-      .attr("fill", () => '#B8B8B8')
+      .attr('font-size', '14px')
+      .attr('fill', () => '#B8B8B8')
 
     // chartRef.current!.selectAll('titles').data(root.descendants().filter(d => d.depth === 1)).enter()
     //   .append("text")
@@ -184,28 +190,27 @@ const TreeMap = (props: TreeMapProps) => {
     //   .text((d) => `${Decimal.create(d.data.data).mul(100).toDP(3).toNumber()}%`)
     //   .attr("font-size", "12px")
     //   .attr("fill", (d) => (d.data.data ?? 0) >= 0 ? 'hsl(var(--stock-up-color)' : 'hsl(var(--stock-down-color))')
-
   }
 
   const renderLabel = (root: HierarchyRectangularNode<TreeMapData>) => {
-    chartRef.current!
-      .selectAll("labels")
+    chartRef
+      .current!.selectAll('labels')
       .data(root.leaves())
       .enter()
-      .append("text")
-      .attr("x", (d) => {
+      .append('text')
+      .attr('x', d => {
         const text = d.data.name
         const rectWidth = d.x1 - d.x0
-        const maxTextWidth = rectWidth * .6
+        const maxTextWidth = rectWidth * 0.6
         const rectHeight = d.y1 - d.y0
-        
+
         let textSize = Math.max(Math.sqrt(maxTextWidth * rectHeight) / 6, 12)
 
         if (textSize < 12) {
           textSize = 12
         }
 
-        if(textSize > 32){
+        if (textSize > 32) {
           textSize = 32
         }
 
@@ -213,43 +218,44 @@ const TreeMap = (props: TreeMapProps) => {
         d.data.symbolSize = textSize
         d.data.symbolText = text
         return d.x0 + (rectWidth - textWidth) / 2
-      })    // +10 to adjust position (more right)
-      .attr("y", (d) => {
+      }) // +10 to adjust position (more right)
+      .attr('y', d => {
         return d.y0 + (d.y1 - d.y0) / 2 - 2
       })
-      .text((d) => {
+      .text(d => {
         return d.data.name
       })
-      .attr("font-size", d => `${d.data.symbolSize}px`)
-      .attr("fill", "white").on('dblclick', (_, d) => {
+      .attr('font-size', d => `${d.data.symbolSize}px`)
+      .attr('fill', 'white')
+      .on('dblclick', (_, d) => {
         router.navigate(`/stock/trading?symbol=${d.data.name}`)
       })
   }
 
   const renderPercent = (root: HierarchyRectangularNode<TreeMapData>) => {
-    chartRef.current!
-      .selectAll("percent")
+    chartRef
+      .current!.selectAll('percent')
       .data(root.leaves())
       .enter()
-      .append("text")
-      .text((d) => {
+      .append('text')
+      .text(d => {
         const text = `${Decimal.create(d.data.data).gt(0) ? '+' : ''}${Decimal.create(d.data.data)}%`
         const rectWidth = d.x1 - d.x0
-        const maxTextWidth = rectWidth * .4
+        const maxTextWidth = rectWidth * 0.4
         const rectHeight = (d.y1 - d.y0) * 0.8
         let textSize = Math.max(Math.sqrt(maxTextWidth * rectHeight) / 6, 10)
         if (textSize < 10) {
           textSize = 10
         }
 
-        if(textSize > 20){
+        if (textSize > 20) {
           textSize = 20
         }
         d.data.percentSize = textSize
         d.data.percentText = text
         return text
       })
-      .attr("x", (d) => {
+      .attr('x', d => {
         const text = d.data.percentText
 
         const rectWidth = d.x1 - d.x0
@@ -257,25 +263,23 @@ const TreeMap = (props: TreeMapProps) => {
         const textWidth = getStringWidth(text, `${textSize}px sans-serif`)
         return d.x0 + (rectWidth - textWidth) / 2
       })
-      .attr("y", (d) => {
+      .attr('y', d => {
         return d.y0 + (d.y1 - d.y0) / 2 + d.data.percentSize + 4
       })
-      .attr("font-size", (d) => `${d.data.percentSize}px`)
+      .attr('font-size', d => `${d.data.percentSize}px`)
       // .attr("fill", d => (d.data.data ?? 0) >= 0 ? 'hsl(var(--stock-up-color)' : 'hsl(var(--stock-down-color))')
-      .attr("fill", () => '#fff')
+      .attr('fill', () => '#fff')
       .on('dblclick', (_, d) => {
         router.navigate(`/stock/trading?symbol=${d.data.name}`)
       })
   }
 
   return (
-    <div className="w-full h-full overflow-hidden relative" >
+    <div className="w-full h-full overflow-hidden relative">
       <div ref={chartDomRef} className="w-full overflow-hidden absolute -top-6 bottom-0 left-0 right-0" />
       <div className="absolute top-0 left-0" ref={tipRef} />
     </div>
   )
 }
-
-
 
 export default TreeMap

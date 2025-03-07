@@ -1,16 +1,16 @@
+import { usePropValue } from '@/hooks'
+import { useConfig } from '@/store'
 import { cn } from '@/utils/style'
+import type { DialogContentProps } from '@radix-ui/react-dialog'
 import { Cross2Icon } from '@radix-ui/react-icons'
+import { isFunction } from '@tanstack/react-table'
 import { useBoolean, useUpdateEffect } from 'ahooks'
 import to from 'await-to-js'
-import { useCallback, type ReactNode } from 'react'
+import { type ReactNode, useCallback } from 'react'
 import { FormProvider, type UseFormReturn } from 'react-hook-form'
 import type { z } from 'zod'
 import { Button } from '../ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog'
-import { useConfig } from '@/store'
-import { usePropValue } from '@/hooks'
-import type { DialogContentProps } from '@radix-ui/react-dialog'
-import { isFunction } from '@tanstack/react-table'
 
 export interface UseModalAction {
   open: (...arg: unknown[]) => void
@@ -116,7 +116,7 @@ export const useModal = ({
             </DialogTitle>
             <DialogDescription className="text-center" />
           </DialogHeader>
-          {isFunction(content) ? content({...modal, onOk: props.onOk}) : content}
+          {isFunction(content) ? content({ ...modal, onOk: props.onOk }) : content}
           {footer === null ? null : footer === undefined ? (
             <DialogFooter className="m-4">
               <Button variant="outline" onClick={() => toggleModalVisible()}>

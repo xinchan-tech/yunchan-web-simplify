@@ -1,15 +1,15 @@
-import { getPalTop } from "@/api"
-import { Skeleton } from "@/components"
-import { useChart } from "@/hooks"
-import { dateUtils } from "@/utils/date"
-import echarts, { type ECOption } from "@/utils/echarts"
-import { useQuery } from "@tanstack/react-query"
-import { useEffect } from "react"
+import { getPalTop } from '@/api'
+import { Skeleton } from '@/components'
+import { useChart } from '@/hooks'
+import { dateUtils } from '@/utils/date'
+import echarts, { type ECOption } from '@/utils/echarts'
+import { useQuery } from '@tanstack/react-query'
+import { useEffect } from 'react'
 
 export const HotTop = () => {
   const tops = useQuery({
     queryKey: [getPalTop.cacheKey],
-    queryFn: () => getPalTop(),
+    queryFn: () => getPalTop()
   })
   const [chart, dom] = useChart()
 
@@ -19,9 +19,9 @@ export const HotTop = () => {
     const data = tops.data.sort((a, b) => b.score - a.score)
     const r: typeof data = []
     data.forEach((item, index) => {
-      if(index % 2 === 0) {
+      if (index % 2 === 0) {
         r.unshift(item)
-      }else{
+      } else {
         r.push(item)
       }
     })
@@ -41,7 +41,7 @@ export const HotTop = () => {
         left: 30,
         right: 10,
         top: 40,
-        bottom: 30,
+        bottom: 30
       },
       tooltip: {
         trigger: 'item',
@@ -59,7 +59,7 @@ export const HotTop = () => {
         }
       },
       xAxis: {
-        data: r.map((item) => item.name),
+        data: r.map(item => item.name),
         boundaryGap: true,
         splitLine: {
           show: false
@@ -87,13 +87,12 @@ export const HotTop = () => {
           lineStyle: {
             color: '#3B3741'
           }
-        },
-
+        }
       },
       series: {
         type: 'bar',
         name: '热力值',
-        data: r.map((item) => [item.name, item.score, item.update_time]),
+        data: r.map(item => [item.name, item.score, item.update_time]),
         encode: {
           x: 0,
           y: 1,
@@ -102,12 +101,12 @@ export const HotTop = () => {
         itemStyle: {
           color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
             { offset: 0, color: 'rgba(255, 84, 84, 1)' },
-            { offset: 1, color: 'rgba(255, 187, 84, 1)' },
+            { offset: 1, color: 'rgba(255, 187, 84, 1)' }
           ]),
-          borderRadius: [4, 4, 0, 0],
+          borderRadius: [4, 4, 0, 0]
         },
         barWidth: 12
-      },
+      }
     }
 
     chart.current.setOption(options)
@@ -118,16 +117,14 @@ export const HotTop = () => {
       <div className="text-lg px-4 my-5">热力Top榜单</div>
       <div className="flex-1 relative">
         <div className="w-full h-full" ref={dom} />
-        {
-          tops.isLoading ? (
-            <div className="absolute left-0 top-0 right-0 bottom-0 space-y-2">
-              <Skeleton className="w-full h-4 rounded-l-none" />
-              <Skeleton className="w-full h-4 rounded-l-none" />
-              <Skeleton className="w-full h-4 rounded-l-none" />
-              <Skeleton className="w-full h-4 rounded-l-none" />
-            </div>
-          ) : null
-        }
+        {tops.isLoading ? (
+          <div className="absolute left-0 top-0 right-0 bottom-0 space-y-2">
+            <Skeleton className="w-full h-4 rounded-l-none" />
+            <Skeleton className="w-full h-4 rounded-l-none" />
+            <Skeleton className="w-full h-4 rounded-l-none" />
+            <Skeleton className="w-full h-4 rounded-l-none" />
+          </div>
+        ) : null}
       </div>
     </div>
   )

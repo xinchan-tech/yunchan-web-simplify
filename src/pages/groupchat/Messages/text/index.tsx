@@ -1,9 +1,9 @@
 import MsgCard from '../../components/msg-card'
 
+import { CHAT_STOCK_JUMP } from '@/app'
+import { useChatNoticeStore } from '@/store/group-chat-new'
 import WKSDK, { Channel, ChannelTypePerson, type Message } from 'wukongimjssdk'
 import type { MessageWrap } from '../../Service/Model'
-import { useChatNoticeStore } from '@/store/group-chat-new'
-import { CHAT_STOCK_JUMP } from '@/app'
 
 export const RevokeText = (props: {
   data: {
@@ -70,7 +70,7 @@ export const HighlightDollarWords: React.FC<HighlightDollarWordsProps> = ({ text
   const regex: RegExp = /\$[A-Z]+/g
   // 用于存储分割后的字符串部分
   const parts: (string | React.ReactElement)[] = []
-  let lastIndex: number = 0
+  let lastIndex = 0
   // 使用正则表达式的 exec 方法查找匹配项
   let match: RegExpExecArray | null
   while ((match = regex.exec(text)) !== null) {
@@ -181,7 +181,7 @@ const TextCell = (props: { message: Message; historyMode?: boolean }) => {
   // }
 
   const getNormalText = () => {
-    let text = new Array<JSX.Element>()
+    const text = new Array<JSX.Element>()
     if (message?.content.text) {
       const goodText = message.content.text.split('\n')
       goodText.forEach((str: string, idx: number) => {
@@ -196,7 +196,7 @@ const TextCell = (props: { message: Message; historyMode?: boolean }) => {
       })
     }
     if (message.content.mention && Array.isArray(message.content.mention.uids)) {
-      let mentoions = message.content.mention.uids.map((uid: string) => {
+      const mentoions = message.content.mention.uids.map((uid: string) => {
         const info = WKSDK.shared().channelManager.getChannelInfo(new Channel(uid, ChannelTypePerson))
         if (info) {
           return (

@@ -1,8 +1,8 @@
-import { AlarmType } from "@/api"
-import { AiAlarmSetting, CapsuleTabs } from "@/components"
-import { useState } from "react"
-import AlarmList from "./alarm-list"
-import AlarmLog from "./alarm-log"
+import { AlarmType } from '@/api'
+import { AiAlarmSetting, CapsuleTabs } from '@/components'
+import { useState } from 'react'
+import AlarmList from './alarm-list'
+import AlarmLog from './alarm-log'
 
 interface AiAlarmFormProps {
   code?: string
@@ -19,9 +19,7 @@ const AiAlarmForm = (props: AiAlarmFormProps) => {
           <CapsuleTabs.Tab label="报警列表" value="2" />
           <CapsuleTabs.Tab label="已触发报警" value="3" />
         </CapsuleTabs>
-        <div className="text-xs ml-auto">
-          当前运行报警：{count} 条
-        </div>
+        <div className="text-xs ml-auto">当前运行报警：{count} 条</div>
       </div>
       <div className="flex-1">
         {{
@@ -33,8 +31,5 @@ const AiAlarmForm = (props: AiAlarmFormProps) => {
     </div>
   )
 }
-
-
-
 
 export default AiAlarmForm

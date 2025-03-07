@@ -7,7 +7,7 @@ const outputPath = path.resolve(__dirname, '../types/icon.d.ts')
 
 const r = []
 // 递归遍历文件夹
-const walk = (dir) => {
+const walk = dir => {
   const files = fs.readdirSync(dir)
   for (const f of files) {
     const filePath = path.join(dir, f)
@@ -27,7 +27,6 @@ const writeTypes = () => {
   `
   fs.writeFileSync(outputPath, content)
 }
-
 ;(() => {
   walk(iconRoot)
   walk(svgRoot)

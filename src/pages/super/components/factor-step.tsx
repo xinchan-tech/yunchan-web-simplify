@@ -1,14 +1,14 @@
-import type { StockCategory } from "@/api"
-import { JknIcon, ToggleGroup, ToggleGroupItem } from "@/components"
-import { type CSSProperties, useContext, useRef, useState } from "react"
-import { SuperStockContext } from "../ctx"
-import { useMount, useUnmount } from "ahooks"
-import { appEvent } from "@/utils/event"
-import { useAuthorized } from "@/hooks"
+import type { StockCategory } from '@/api'
+import { JknIcon, ToggleGroup, ToggleGroupItem } from '@/components'
+import { useAuthorized } from '@/hooks'
+import { appEvent } from '@/utils/event'
+import { useMount, useUnmount } from 'ahooks'
+import { type CSSProperties, useContext, useRef, useState } from 'react'
+import { SuperStockContext } from '../ctx'
 
 const FactorStep = () => {
   const ctx = useContext(SuperStockContext)
-  const data = (ctx.data?.technology?.children?.factor.children) as unknown as StockCategory[]
+  const data = ctx.data?.technology?.children?.factor.children as unknown as StockCategory[]
 
   const [selection, setSelection] = useState<string[]>([])
   const result = useRef<string[]>([])
@@ -26,7 +26,6 @@ const FactorStep = () => {
     result.current = []
     setSelection([])
   })
-
 
   //TODO 临时方案 待优化
   useMount(() => {
@@ -47,7 +46,6 @@ const FactorStep = () => {
     setSelection(e)
   }
 
-
   const [_, toastNotAuth] = useAuthorized()
 
   return (
@@ -60,24 +58,30 @@ const FactorStep = () => {
           <JknIcon name="ic_price_up_green" />
           底部信号
         </div>
-        <ToggleGroup style={{
-          '--toggle-active-bg': 'hsl(var(--stock-up-color))',
-        } as CSSProperties} type="multiple" value={selection} className="flex-1 flex" onValueChange={_onValueChange} >
-          {data?.map((child) => (
+        <ToggleGroup
+          style={
+            {
+              '--toggle-active-bg': 'hsl(var(--stock-up-color))'
+            } as CSSProperties
+          }
+          type="multiple"
+          value={selection}
+          className="flex-1 flex"
+          onValueChange={_onValueChange}
+        >
+          {data?.map(child =>
             child.name !== '' ? (
-              <div key={child.id} onClick={() => !child.authorized && toastNotAuth()} onKeyUp={() => { }}>
-                <ToggleGroupItem disabled={!child.authorized} className="w-36 h-full relative" value={child.id}
-                >
-                  {
-                    !child.authorized && <JknIcon name="ic_lock" className="absolute right-0 top-0 w-3 h-3 rounded-none" />
-                  }
+              <div key={child.id} onClick={() => !child.authorized && toastNotAuth()} onKeyUp={() => {}}>
+                <ToggleGroupItem disabled={!child.authorized} className="w-36 h-full relative" value={child.id}>
+                  {!child.authorized && (
+                    <JknIcon name="ic_lock" className="absolute right-0 top-0 w-3 h-3 rounded-none" />
+                  )}
                   {child.name}
                 </ToggleGroupItem>
               </div>
             ) : null
-          ))}
+          )}
         </ToggleGroup>
-
       </div>
     </div>
   )

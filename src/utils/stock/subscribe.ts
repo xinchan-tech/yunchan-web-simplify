@@ -1,12 +1,14 @@
-import { Ws } from '../ws'
-import mitt from 'mitt'
 import type { StockRawRecord } from '@/api'
-import { uid } from "radash"
+import mitt from 'mitt'
+import { uid } from 'radash'
+import { Ws } from '../ws'
 
 const barActionResultParser = (data: any) => {
   const action = data.ev as string
   const [topic, ...raws] = data.b.split(',')
-  const rawRecord = raws.map((raw: string, index: number) => index === 0 ? raw : Number.parseFloat(raw as string)) as StockRawRecord
+  const rawRecord = raws.map((raw: string, index: number) =>
+    index === 0 ? raw : Number.parseFloat(raw as string)
+  ) as StockRawRecord
 
   /**
    * 新版是开高低收
@@ -35,7 +37,7 @@ const quoteActionResultParser = (data: any) => {
     changePercent: Number.parseFloat(raws[3]),
     percent: (Number.parseFloat(raws[1]) - Number.parseFloat(raws[2])) / Number.parseFloat(raws[2]),
     volume: Number.parseFloat(raws[4]),
-    turnover: Number.parseFloat(raws[5]),
+    turnover: Number.parseFloat(raws[5])
   }
 
   return {
@@ -46,14 +48,16 @@ const quoteActionResultParser = (data: any) => {
   }
 }
 
-
-
-export type StockSubscribeHandler<T extends SubscribeActionType> = T extends 'bar' ? (data: ReturnType<typeof barActionResultParser>) => void : (data: ReturnType<typeof quoteActionResultParser>) => void
+export type StockSubscribeHandler<T extends SubscribeActionType> = T extends 'bar'
+  ? (data: ReturnType<typeof barActionResultParser>) => void
+  : (data: ReturnType<typeof quoteActionResultParser>) => void
 
 export type SubscribeActionType = 'bar' | 'quote'
 
-
-type BufferItem = {action: string, data: ReturnType<typeof barActionResultParser> | ReturnType<typeof quoteActionResultParser>}
+type BufferItem = {
+  action: string
+  data: ReturnType<typeof barActionResultParser> | ReturnType<typeof quoteActionResultParser>
+}
 
 /**
  * quote 时间窗口buffer结构
@@ -87,17 +91,16 @@ class StockSubscribe {
       onMessage: ev => {
         const data = JSON.parse(ev.data)
         if (data.ev) {
-          if(data.b){
-            const parserData = barActionResultParser(data) 
-            this.buffer.push({action: parserData.topic, data: parserData})
-            if(this.buffer.length > this.bufferMax){
+          if (data.b) {
+            const parserData = barActionResultParser(data)
+            this.buffer.push({ action: parserData.topic, data: parserData })
+            if (this.buffer.length > this.bufferMax) {
               this.buffer.shift()
             }
-          }else{
+          } else {
             const parserData = quoteActionResultParser(data)
             this.quoteBuffer[parserData.topic] = parserData
           }
-         
         }
       }
     })
@@ -118,7 +121,7 @@ class StockSubscribe {
       }
     })
 
-    if(_params.length > 0){
+    if (_params.length > 0) {
       this.ws.send({
         action: _action,
         cid: this.cid,
@@ -132,7 +135,6 @@ class StockSubscribe {
   }
 
   public unsubscribe(action: SubscribeActionType, params: string[]) {
-
     params.forEach(symbol => {
       const topic = `${action}:${symbol}`
       if (this.subscribeTopic[topic]) {
@@ -176,7 +178,7 @@ class StockSubscribe {
       if (value.count === 0) {
         delete this.subscribeTopic[key]
         const [action, symbol] = key.split(':')
-        if(!cleanTopic[action]){
+        if (!cleanTopic[action]) {
           cleanTopic[action] = []
         }
         cleanTopic[action].push(symbol)
@@ -200,7 +202,7 @@ class StockSubscribe {
    * quote以时间窗口的方式推送
    * 每300ms推送一次
    */
-  private startBufferHandle(){
+  private startBufferHandle() {
     let count = this.bufferHandleLength
     const quoteBuffer = Object.entries(this.quoteBuffer)
     this.quoteBuffer = {}
@@ -208,10 +210,10 @@ class StockSubscribe {
       this.subscribed.emit(`${topic}:quote`, data)
       this.subscribed.emit(topic, data)
     })
-    
-    while(count > 0 && this.buffer.length > 0){
+
+    while (count > 0 && this.buffer.length > 0) {
       const item = this.buffer.shift()!
-     
+
       this.subscribed.emit(item.data.action, item.data)
       // if(item.data.topic.indexOf('@') === -1){
 
@@ -220,7 +222,7 @@ class StockSubscribe {
       // this.bufferMap.delete(item.data.action)
       count--
     }
-  
+
     setTimeout(() => {
       this.startBufferHandle()
     }, 300)

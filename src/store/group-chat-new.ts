@@ -1,9 +1,9 @@
-import { create } from 'zustand'
-import { createJSONStorage, persist } from 'zustand/middleware'
-import type { Channel, Message, Subscriber } from 'wukongimjssdk'
+import { type GroupDetailData, getGroupDetailService } from '@/api'
 import type { ConversationWrap } from '@/pages/groupchat/ConversationWrap'
 import type { GroupData } from '@/pages/groupchat/group-channel'
-import { getGroupDetailService, type GroupDetailData } from '@/api'
+import type { Channel, Message, Subscriber } from 'wukongimjssdk'
+import { create } from 'zustand'
+import { createJSONStorage, persist } from 'zustand/middleware'
 
 interface GroupChatStore {
   bottomHeight: number

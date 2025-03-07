@@ -1,11 +1,10 @@
-import { stockSubscribe, type StockSubscribeHandler, type SubscribeActionType } from "@/utils/stock"
-import { useEffect, useRef } from "react"
-
+import { type StockSubscribeHandler, type SubscribeActionType, stockSubscribe } from '@/utils/stock'
+import { useEffect, useRef } from 'react'
 
 const useStockSubscribe = (action: SubscribeActionType, symbols: string[]) => {
   useEffect(() => {
-    if(symbols.length === 0) return
-    const unsubscribe =  stockSubscribe.subscribe(action, symbols)
+    if (symbols.length === 0) return
+    const unsubscribe = stockSubscribe.subscribe(action, symbols)
 
     return unsubscribe
   }, [action, symbols])
@@ -24,7 +23,7 @@ export const useStockQuoteSubscribe = (symbols: string[], handler?: StockSubscri
   }, [handler])
 
   useEffect(() => {
-    const unSubscribe =  stockSubscribe.on('quote', (d) => {
+    const unSubscribe = stockSubscribe.on('quote', d => {
       handlerRef.current(d)
     })
 
@@ -39,10 +38,9 @@ export const useStockBarSubscribe = (symbols: string[], handler: StockSubscribeH
 
   useEffect(() => {
     stockSubscribe.on('bar', handler)
- 
+
     return () => {
       stockSubscribe.off('bar', handler)
     }
   }, [handler])
 }
-

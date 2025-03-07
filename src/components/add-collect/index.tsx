@@ -1,9 +1,9 @@
-import { addStockCollectCate, getStockCollectCates } from "@/api"
-import { Button, Input, Popover, PopoverClose, PopoverContent, PopoverTrigger } from "@/components"
-import { useAuthorized, useToast } from "@/hooks"
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { nanoid } from "nanoid"
-import { type MouseEventHandler, useState } from "react"
+import { addStockCollectCate, getStockCollectCates } from '@/api'
+import { Button, Input, Popover, PopoverClose, PopoverContent, PopoverTrigger } from '@/components'
+import { useAuthorized, useToast } from '@/hooks'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { nanoid } from 'nanoid'
+import { type MouseEventHandler, useState } from 'react'
 
 interface AddCollectProps {
   children: React.ReactNode
@@ -16,8 +16,7 @@ export const AddCollect = ({ children, sideOffset, alignOffset }: AddCollectProp
   const { toast } = useToast()
   const collects = useQuery({
     queryKey: [getStockCollectCates.cacheKey],
-    queryFn: () => getStockCollectCates(),
-
+    queryFn: () => getStockCollectCates()
   })
   const queryClient = useQueryClient()
   const addMutation = useMutation({
@@ -67,7 +66,7 @@ export const AddCollect = ({ children, sideOffset, alignOffset }: AddCollectProp
 
   const [auth, toastNotAuth] = useAuthorized('stockPoolNum')
 
-  const _onClick: MouseEventHandler<HTMLDivElement> = (e) => {
+  const _onClick: MouseEventHandler<HTMLDivElement> = e => {
     const max = auth()
     if (!max || max <= (collects.data?.length ?? 0)) {
       toastNotAuth()
@@ -81,10 +80,8 @@ export const AddCollect = ({ children, sideOffset, alignOffset }: AddCollectProp
     <Popover>
       <PopoverTrigger asChild>
         <Button reset className="inline">
-          <div onClick={_onClick} onKeyDown={() => { }}>
-            {
-              children
-            }
+          <div onClick={_onClick} onKeyDown={() => {}}>
+            {children}
           </div>
         </Button>
       </PopoverTrigger>
@@ -93,7 +90,9 @@ export const AddCollect = ({ children, sideOffset, alignOffset }: AddCollectProp
         <div className="px-4">
           <Input size="sm" placeholder="输入金池名称" onChange={e => setName(e.target.value)} />
           <PopoverClose asChild>
-            <Button size="sm" className="w-16 my-4" onClick={onAdd}>确定</Button>
+            <Button size="sm" className="w-16 my-4" onClick={onAdd}>
+              确定
+            </Button>
           </PopoverClose>
         </div>
       </PopoverContent>

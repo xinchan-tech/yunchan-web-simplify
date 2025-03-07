@@ -1,18 +1,18 @@
 import { getGroupDetailService, getPaymentTypesService, joinGroupService, loopUpdatePaymentStatus } from '@/api'
-import type { GroupData } from '../../group-channel'
-import ChatAvatar from '../chat-avatar'
 import { Button } from '@/components'
 import QrCode from 'react-qr-code'
+import type { GroupData } from '../../group-channel'
+import ChatAvatar from '../chat-avatar'
 
 import { cn } from '@/utils/style'
 import { useEffect, useRef, useState } from 'react'
 
-import WKSDK from 'wukongimjssdk'
-import { useToast } from '@/hooks'
-import FullScreenLoading from '@/components/loading'
 import { Checkbox } from '@/components'
-import { setExpireGroupInCache } from '../../chat-utils'
+import FullScreenLoading from '@/components/loading'
+import { useToast } from '@/hooks'
 import { useQuery } from '@tanstack/react-query'
+import WKSDK from 'wukongimjssdk'
+import { setExpireGroupInCache } from '../../chat-utils'
 
 const JoinGroup = (props: {
   data: GroupData

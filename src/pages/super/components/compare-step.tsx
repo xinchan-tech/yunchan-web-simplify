@@ -1,7 +1,7 @@
-import { ToggleGroup, ToggleGroupItem } from "@/components"
-import { useContext, useRef, type CSSProperties } from "react"
-import { SuperStockContext } from "../ctx"
-import { useMount, useUnmount } from "ahooks"
+import { ToggleGroup, ToggleGroupItem } from '@/components'
+import { useMount, useUnmount } from 'ahooks'
+import { type CSSProperties, useContext, useRef } from 'react'
+import { SuperStockContext } from '../ctx'
 
 const CompareStep = () => {
   const ctx = useContext(SuperStockContext)
@@ -28,14 +28,18 @@ const CompareStep = () => {
         第六步：行业比价
       </div>
       <div className="flex items-center px-4">
-        <ToggleGroup onValueChange={v => { selection.current = v }} type="multiple" style={{ '--toggle-active-bg': 'hsl(var(--stock-up-color))' } as CSSProperties}>
-          {
-            data.map(item => (
-              <ToggleGroupItem size="sm" className="w-32" key={item.name} value={item.value}>
-                {item.name}
-              </ToggleGroupItem>
-            ))
-          }
+        <ToggleGroup
+          onValueChange={v => {
+            selection.current = v
+          }}
+          type="multiple"
+          style={{ '--toggle-active-bg': 'hsl(var(--stock-up-color))' } as CSSProperties}
+        >
+          {data.map(item => (
+            <ToggleGroupItem size="sm" className="w-32" key={item.name} value={item.value}>
+              {item.name}
+            </ToggleGroupItem>
+          ))}
         </ToggleGroup>
       </div>
     </div>

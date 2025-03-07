@@ -1,12 +1,10 @@
+import { getAllStocks } from '@/api'
+import { createStoreIndexStorage } from '@/plugins/createStoreIndexStorage'
+import pako from 'pako'
 import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
-import { createStoreIndexStorage } from "@/plugins/createStoreIndexStorage"
-import { getAllStocks } from "@/api"
-import pako from "pako"
 
 type StockData = [string, string, string, string]
-
-
 
 interface StockListStore {
   history: StockData[]
@@ -42,16 +40,13 @@ export const useStockList = create<StockListStore>()(
           m[item[1]] = item
         }
         set({ list: data, key, listMap: m })
-      },
-
+      }
     }),
     {
       name: 'stock-list',
-      onRehydrateStorage: (s) => {
- 
-        return (state) =>{
-  
-          if(!state?.key){
+      onRehydrateStorage: s => {
+        return state => {
+          if (!state?.key) {
             getAllStocks().then(r => {
               const data = atob(r.data)
               const dataUint8 = new Uint8Array(data.length)

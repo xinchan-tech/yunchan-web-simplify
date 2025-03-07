@@ -1,11 +1,11 @@
 import {
+  StockChartInterval,
   getStockBaseCodeInfo,
   getStockBrief,
   getStockNotice,
   getStockQuote,
   getStockRelated,
-  getStockTrades,
-  StockChartInterval
+  getStockTrades
 } from '@/api'
 import {
   AiAlarm,
@@ -42,7 +42,7 @@ import Decimal from 'decimal.js'
 import Autoplay from 'embla-carousel-autoplay'
 import { nanoid } from 'nanoid'
 import { memo, useCallback, useEffect, useMemo, useState } from 'react'
-import { kChartUtils, stockBaseCodeInfoExtend, useSymbolQuery } from '../lib'
+import { stockBaseCodeInfoExtend, useSymbolQuery } from '../lib'
 export const StockInfo = () => {
   const [active, setActive] = useState<'quote' | 'news'>('quote')
   const code = useSymbolQuery()
@@ -234,11 +234,11 @@ const StockQuoteBar = withTooltip(
     // const trading = useTime(s => s.getTrading())
 
     const onClick = () => {
-      kChartUtils.setTimeIndex({ timeIndex: props.interval })
+      // kChartUtils.setTimeIndex({ timeIndex: props.interval })
     }
 
     const trading = useMemo(() => stockUtils.intervalToTrading(props.interval), [props.interval])
-   
+
     return (
       <div
         className={cn('flex items-center justify-between px-2 box-border text-xs my-1 cursor-pointer text-tertiary')}

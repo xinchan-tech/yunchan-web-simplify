@@ -1,7 +1,7 @@
-import { useUser, type UserPermission } from '@/store'
+import { router } from '@/router'
+import { type UserPermission, useUser } from '@/store'
 import { useCallback } from 'react'
 import { useToast } from './use-toast'
-import { router } from '@/router'
 
 type Authorized = keyof UserPermission
 
@@ -19,7 +19,6 @@ export const useAuthorized = <T extends Authorized>(
   const authPermission = useCallback((): UserPermission[T] | undefined => {
     if (!permission) return
     if (!key) return
-    console.log('🚀 ~ authPermission ~ permission:', permission)
     return permission[key]
   }, [key, permission])
 

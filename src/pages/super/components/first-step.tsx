@@ -40,7 +40,7 @@ const FirstStep = () => {
               type === 'spec' && 'text-primary'
             )}
             onClick={() => onClickType('spec')}
-            onKeyDown={() => { }}
+            onKeyDown={() => {}}
           >
             特色榜单
           </div>
@@ -50,7 +50,7 @@ const FirstStep = () => {
               type === 'golden' && 'text-primary'
             )}
             onClick={() => onClickType('golden')}
-            onKeyDown={() => { }}
+            onKeyDown={() => {}}
           >
             股票金池
           </div>
@@ -60,7 +60,7 @@ const FirstStep = () => {
               type === 'industry' && 'text-primary'
             )}
             onClick={() => onClickType('industry')}
-            onKeyDown={() => { }}
+            onKeyDown={() => {}}
           >
             行业板块
           </div>
@@ -70,7 +70,7 @@ const FirstStep = () => {
               type === 'concept' && 'text-primary'
             )}
             onClick={() => onClickType('concept')}
-            onKeyDown={() => { }}
+            onKeyDown={() => {}}
           >
             概念板块
           </div>
@@ -320,11 +320,9 @@ const RecommendIndex = () => {
     >
       {data?.map(child =>
         child.name !== '' ? (
-          <div key={child.value} onClick={() => !child.authorized && toastNotAuth()} onKeyDown={() => { }}>
+          <div key={child.value} onClick={() => !child.authorized && toastNotAuth()} onKeyDown={() => {}}>
             <ToggleGroupItem className="w-full h-full relative" value={child.value} disabled={!child.authorized}>
-              {
-                !child.authorized && <JknIcon name="ic_lock" className="absolute right-0 top-0 w-3 h-3 rounded-none" />
-              }
+              {!child.authorized && <JknIcon name="ic_lock" className="absolute right-0 top-0 w-3 h-3 rounded-none" />}
               {child.name}
             </ToggleGroupItem>
           </div>

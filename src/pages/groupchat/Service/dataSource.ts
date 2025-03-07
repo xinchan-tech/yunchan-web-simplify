@@ -3,23 +3,23 @@ import {
   ChannelInfo,
   ChannelTypeGroup,
   ChannelTypePerson,
-  type SyncOptions,
-  WKSDK,
   type Conversation,
   type Message,
   type MessageTask,
+  type PullMode,
   Subscriber,
-  type PullMode
+  type SyncOptions,
+  WKSDK
 } from 'wukongimjssdk'
 
-import { MediaMessageUploadTask } from './task'
-import APIClient from './APIClient'
-import { syncRecentConversation, getGroupMembersService, type GroupMemberResult } from '@/api'
-import { Convert } from './convert'
+import { type GroupMemberResult, getGroupMembersService, syncRecentConversation } from '@/api'
 import request from '@/utils/request'
-import UploadUtil from './uploadUtil'
 import { judgeIsExpireGroupCache, userToChannelInfo } from '../chat-utils'
 import cacheManager, { LocalCacheManager } from '../messageCache'
+import APIClient from './APIClient'
+import { Convert } from './convert'
+import { MediaMessageUploadTask } from './task'
+import UploadUtil from './uploadUtil'
 
 LocalCacheManager.page = 1
 

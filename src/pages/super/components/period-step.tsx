@@ -1,7 +1,7 @@
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components"
-import { useContext, useRef } from "react"
-import { SuperStockContext } from "../ctx"
-import { useMount, useUnmount } from "ahooks"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components'
+import { useMount, useUnmount } from 'ahooks'
+import { useContext, useRef } from 'react'
+import { SuperStockContext } from '../ctx'
 
 type PeriodStepItemType = {
   conditions: {
@@ -15,7 +15,7 @@ type PeriodStepItemType = {
 }
 const PeriodStep = () => {
   const ctx = useContext(SuperStockContext)
-  const data = ((ctx.data?.basic?.children?.period.from_datas) ?? {}) as unknown as PeriodStepItemType
+  const data = (ctx.data?.basic?.children?.period.from_datas ?? {}) as unknown as PeriodStepItemType
 
   const form = useRef<Record<string, string>>({})
 
@@ -34,46 +34,37 @@ const PeriodStep = () => {
   })
 
   const onValueChange = (field: string, value: string) => {
-    if(value === 'none'){
+    if (value === 'none') {
       delete form.current[field]
-    }else{
+    } else {
       form.current[field] = value
     }
   }
 
-  
   return (
     <div className="min-h-24 flex border-0 border-b border-solid border-background items-stretch">
       <div className="w-36 px-4 flex items-center flex-shrink-0  border-t-0 border border-solid border-background">
         第四步：量价指标
       </div>
       <div className="space-y-4 p-4">
-        {
-          data.conditions?.map(item => (
-            <div key={item.key} className="flex items-center text-sm">
-              <span className="w-28">
-                {item.name}
-              </span>
-              <Select onValueChange={v => onValueChange(item.key, v)}>
-                <SelectTrigger className="w-[280px] ml-8">
-                  <SelectValue placeholder="请选择" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={'none'}>
-                    请选择
+        {data.conditions?.map(item => (
+          <div key={item.key} className="flex items-center text-sm">
+            <span className="w-28">{item.name}</span>
+            <Select onValueChange={v => onValueChange(item.key, v)}>
+              <SelectTrigger className="w-[280px] ml-8">
+                <SelectValue placeholder="请选择" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={'none'}>请选择</SelectItem>
+                {item.items.map(subItem => (
+                  <SelectItem key={subItem.name} value={subItem.value}>
+                    {subItem.name}
                   </SelectItem>
-                  {
-                    item.items.map(subItem => (
-                      <SelectItem key={subItem.name} value={subItem.value}>
-                        {subItem.name}
-                      </SelectItem>
-                    ))
-                  }
-                </SelectContent>
-              </Select>
-            </div>
-          ))
-        }
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        ))}
       </div>
     </div>
   )

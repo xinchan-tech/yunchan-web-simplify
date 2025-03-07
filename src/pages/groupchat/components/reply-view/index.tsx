@@ -1,49 +1,43 @@
-import { JknIcon } from "@/components";
-import { useMemo } from "react";
-import WKSDK, { Message, Channel, ChannelTypePerson } from "wukongimjssdk";
-import { useGroupChatShortStore } from "@/store/group-chat-new";
+import { JknIcon } from '@/components'
+import { useGroupChatShortStore } from '@/store/group-chat-new'
+import { useMemo } from 'react'
+import WKSDK, { type Message, Channel, ChannelTypePerson } from 'wukongimjssdk'
 
 const ReplyMessageView = (props: {
-  message?: Message;
-  onClose: () => void;
+  message?: Message
+  onClose: () => void
 }) => {
-  const { message, onClose } = props;
+  const { message, onClose } = props
 
-  const { mentions } = useGroupChatShortStore();
+  const { mentions } = useGroupChatShortStore()
   const fromChannelInfo = useMemo(() => {
-    let id;
+    let id
     console.log(mentions, 'mentionsmentionsmentions')
     if (message) {
-      id = message.fromUID;
+      id = message.fromUID
     } else if (mentions && mentions.length > 0) {
-      id = mentions[0].uid;
+      id = mentions[0].uid
     }
     if (id) {
-      return WKSDK.shared().channelManager.getChannelInfo(
-        new Channel(id, ChannelTypePerson)
-      );
+      return WKSDK.shared().channelManager.getChannelInfo(new Channel(id, ChannelTypePerson))
     } else {
-      return null;
+      return null
     }
-  }, [message, mentions]);
+  }, [message, mentions])
 
   return (
     <div className="absolute items-center reply-message-container w-full box-border flex justify-between">
       <div>
         <div className="text-sm text-gray-300">
-          {mentions && mentions.length > 0 ? "回复" : "引用"}
+          {mentions && mentions.length > 0 ? '回复' : '引用'}
           {fromChannelInfo?.title}
         </div>
-        {message && (
-          <div className="text-xs text-gray-400 mt-2">
-            {message.content?.conversationDigest}
-          </div>
-        )}
+        {message && <div className="text-xs text-gray-400 mt-2">{message.content?.conversationDigest}</div>}
       </div>
       <JknIcon
         name="close"
         onClick={() => {
-          typeof onClose === "function" && onClose();
+          typeof onClose === 'function' && onClose()
         }}
       />
       <style jsx>
@@ -61,7 +55,7 @@ const ReplyMessageView = (props: {
         `}
       </style>
     </div>
-  );
-};
+  )
+}
 
-export default ReplyMessageView;
+export default ReplyMessageView

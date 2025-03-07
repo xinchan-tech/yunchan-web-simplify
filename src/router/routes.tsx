@@ -1,11 +1,10 @@
-import { lazy } from "react"
-import type { RouteObject } from "react-router"
-import App from "@/app"
+import App from '@/app'
+import { lazy } from 'react'
+import type { RouteObject } from 'react-router'
 
 export const routes: RouteObject[] = [
- 
   {
-    path: "/",
+    path: '/',
     element: <App />,
     children: [
       {
@@ -13,7 +12,7 @@ export const routes: RouteObject[] = [
         Component: lazy(() => import('@/pages/dashboard')),
         handle: {
           title: '首页'
-        },
+        }
       },
       {
         path: '/stock/:type',
@@ -23,14 +22,14 @@ export const routes: RouteObject[] = [
         }
       },
       {
-        path: "/golden",
+        path: '/golden',
         Component: lazy(() => import('@/pages/golden-pool')),
         handle: {
           title: '股票金池'
         }
       },
       {
-        path: "/views",
+        path: '/views',
         Component: lazy(() => import('@/pages/views')),
         handle: {
           title: '行情概览'
@@ -100,8 +99,8 @@ export const routes: RouteObject[] = [
         handle: {
           title: '特色商城'
         }
-      },
-    ],
+      }
+    ]
   },
   {
     path: '/chat',
@@ -110,6 +109,4 @@ export const routes: RouteObject[] = [
       title: '讨论社群'
     }
   }
-
 ]
-

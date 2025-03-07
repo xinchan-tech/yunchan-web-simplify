@@ -1,8 +1,8 @@
 import type { getStockChart, getStockIndicatorData } from '@/api'
-import { CoilingIndicatorId } from './ctx'
+import echarts from '@/utils/echarts'
 import { colorUtil } from '@/utils/style'
 import Decimal from 'decimal.js'
-import echarts from '@/utils/echarts'
+import { CoilingIndicatorId } from './ctx'
 
 /**
  * 缠论计算方法
@@ -153,40 +153,42 @@ export const calcCoilingPivotsExpands = (expands: CoilingData['expands'] | undef
 
   const labels = ['A0', 'A1', 'A²', 'A³', 'A⁴', 'A⁵', 'A⁶', 'A⁷', 'A⁸']
 
-  return expands.filter(p => p.level <= 2).map(p => {
-    const mark = p.level > 2 ? '__1_' : `${p.direction === 1 ? '↑' : '↓'}_${labels[p.level]}_1_`
-    const segmentNum = p.end - p.start
+  return expands
+    .filter(p => p.level <= 2)
+    .map(p => {
+      const mark = p.level > 2 ? '__1_' : `${p.direction === 1 ? '↑' : '↓'}_${labels[p.level]}_1_`
+      const segmentNum = p.end - p.start
 
-    let bgColor = 'transparent'
-    let color = 'transparent'
-    // 中枢背景颜色
-    if (p.direction === 1) {
-      if (segmentNum === PIVOTS_EXPAND_LIMIT) {
-        bgColor = colorUtil.rgbaToString(colorUtil.argbToRGBA('BCFF1DFC'))
-        color = colorUtil.rgbaToString(colorUtil.argbToRGBA('FFFF1DFC'))
-      } else if (segmentNum > PIVOTS_EXPAND_LIMIT) {
-        bgColor = colorUtil.rgbaToString(colorUtil.argbToRGBA('CB315FFF'))
-        color = colorUtil.rgbaToString(colorUtil.argbToRGBA('FF315FFF'))
+      let bgColor = 'transparent'
+      let color = 'transparent'
+      // 中枢背景颜色
+      if (p.direction === 1) {
+        if (segmentNum === PIVOTS_EXPAND_LIMIT) {
+          bgColor = colorUtil.rgbaToString(colorUtil.argbToRGBA('BCFF1DFC'))
+          color = colorUtil.rgbaToString(colorUtil.argbToRGBA('FFFF1DFC'))
+        } else if (segmentNum > PIVOTS_EXPAND_LIMIT) {
+          bgColor = colorUtil.rgbaToString(colorUtil.argbToRGBA('CB315FFF'))
+          color = colorUtil.rgbaToString(colorUtil.argbToRGBA('FF315FFF'))
+        }
+      } else {
+        if (segmentNum === PIVOTS_EXPAND_LIMIT) {
+          bgColor = colorUtil.rgbaToString(colorUtil.argbToRGBA('CB315FFF'))
+          color = colorUtil.rgbaToString(colorUtil.argbToRGBA('FF315FFF'))
+        } else if (segmentNum > PIVOTS_EXPAND_LIMIT) {
+          bgColor = colorUtil.rgbaToString(colorUtil.argbToRGBA('BCFF1DFC'))
+          color = colorUtil.rgbaToString(colorUtil.argbToRGBA('FFFF1DFC'))
+        }
       }
-    } else {
-      if (segmentNum === PIVOTS_EXPAND_LIMIT) {
-        bgColor = colorUtil.rgbaToString(colorUtil.argbToRGBA('CB315FFF'))
-        color = colorUtil.rgbaToString(colorUtil.argbToRGBA('FF315FFF'))
-      } else if (segmentNum > PIVOTS_EXPAND_LIMIT) {
-        bgColor = colorUtil.rgbaToString(colorUtil.argbToRGBA('BCFF1DFC'))
-        color = colorUtil.rgbaToString(colorUtil.argbToRGBA('FFFF1DFC'))
-      }
-    }
 
-    return {
-      ...p,
-      start: [p.start, p.bottom],
-      end: [p.end, p.top],
-      mark,
-      bgColor,
-      color
-    }
-  })
+      return {
+        ...p,
+        start: [p.start, p.bottom],
+        end: [p.end, p.top],
+        mark,
+        bgColor,
+        color
+      }
+    })
 }
 
 /**
@@ -497,7 +499,7 @@ export const calcBottomSignal = (
       }
     }
   })
-  
+
   const monthLineData = monthLine(candlesticks)
   const horizonData = horizon(candlesticks)
   const topLine = candlesticks.map((_, index) => [index, 100])

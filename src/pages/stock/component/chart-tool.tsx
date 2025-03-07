@@ -17,11 +17,11 @@ import { useQuery } from '@tanstack/react-query'
 import { useEffect, useMemo, useState } from 'react'
 import { useShallow } from 'zustand/react/shallow'
 import { kChartUtils, useKChartStore } from '../lib'
+import { chartEvent } from '../lib/event'
+import { ChartType, chartManage, useChartManage } from '../lib/store'
 import { MainIndicator } from './main-indicator'
 import { SearchList } from './search-list'
 import { ViewModeSelect } from './view-mode-select'
-import { chartManage, ChartType, useChartManage } from "../lib/store"
-import { chartEvent } from "../lib/event"
 
 const CHART_TOOL = ['主图指标', '线型切换', '多图模式', '股票PK', '叠加标记', '画线工具']
 
@@ -123,7 +123,6 @@ const MainIndicatorSelect = ({ indicators }: { indicators?: Awaited<ReturnType<t
       if (!systemId) {
         kChartUtils.setMainCoiling({ coiling: [] })
       }
-
     }
   }, [indicators])
 
@@ -144,7 +143,12 @@ const MainIndicatorSelect = ({ indicators }: { indicators?: Awaited<ReturnType<t
               <SearchList
                 key={item.id}
                 value={mainIndicators.map(v => v.id.toString())}
-                data={item.indicators.map(v => ({ label: v.name ?? '', value: v.id, extra: v, notAuthorized: v.authorized === 0 }))}
+                data={item.indicators.map(v => ({
+                  label: v.name ?? '',
+                  value: v.id,
+                  extra: v,
+                  notAuthorized: v.authorized === 0
+                }))}
                 type="multi"
                 name={item.name}
                 onChange={onChangeMainIndicator}
@@ -155,7 +159,7 @@ const MainIndicatorSelect = ({ indicators }: { indicators?: Awaited<ReturnType<t
       <div
         className="!ml-auto flex items-center cursor-pointer"
         onClick={() => kChartUtils.setBackTest({})}
-        onKeyDown={() => { }}
+        onKeyDown={() => {}}
       >
         <JknIcon name="ic_replay" className="w-4 h-3.5" />
         <span className="text-sm">回测</span>
@@ -179,7 +183,7 @@ const LineTypeSelect = () => {
     <div className="flex items-center space-x-3 text-xs">
       <div
         onClick={() => onChangeMainChartType(ChartType.Area)}
-        onKeyDown={() => { }}
+        onKeyDown={() => {}}
         className={cn('flex items-center cursor-pointer', chartType === ChartType.Area && 'text-primary')}
       >
         <JknIcon name="line_type_1" className="w-4 h-4 mr-1" checked={chartType === ChartType.Area} />
@@ -187,7 +191,7 @@ const LineTypeSelect = () => {
       </div>
       <div
         onClick={() => onChangeMainChartType(ChartType.Candle)}
-        onKeyDown={() => { }}
+        onKeyDown={() => {}}
         className={cn('flex items-center cursor-pointer', chartType === ChartType.Candle && 'text-primary')}
       >
         <JknIcon name="line_type_2" className="w-4 h-4 mr-1" checked={chartType === ChartType.Candle} />
@@ -223,11 +227,18 @@ const MarkList = () => {
               search={false}
               onChange={(v, d) => {
                 chartManage.setMarkOverlay(v, mark.key)
-                chartEvent.get().emit('markOverlayChange', { type: 'add', params: { mark: v, type: mark.key, title: d.label } })
+                chartEvent
+                  .get()
+                  .emit('markOverlayChange', { type: 'add', params: { mark: v, type: mark.key, title: d.label } })
               }}
               type="single"
               key={mark.key}
-              data={mark.value.map(t => ({ label: t.name, value: t.key, extra: { title: t.name }, notAuthorized: !authPermission()?.some(v => mark.key.startsWith(v)) }))}
+              data={mark.value.map(t => ({
+                label: t.name,
+                value: t.key,
+                extra: { title: t.name },
+                notAuthorized: !authPermission()?.some(v => mark.key.startsWith(v))
+              }))}
               name={mark.title}
               value={overlayMark?.mark}
             />
@@ -252,8 +263,6 @@ const CoilingList = ({ indicators }: { indicators?: Awaited<ReturnType<typeof ge
     const count = Math.floor(size?.width / ItemWidth) - 1
     return count
   }, [size])
-
-
 
   return (
     <div className="border-style-primary  !border-t-0 space-x-4" ref={dom}>

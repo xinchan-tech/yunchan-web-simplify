@@ -1,17 +1,17 @@
-import { addAlarm, getAlarmTypes, type StockCategory } from "@/api"
-import { useZForm, useToast } from "@/hooks"
-import StockSelectInput from "@/pages/alarm/components/stock-select-input"
-import to from "await-to-js"
-import { FormProvider, useFormContext } from "react-hook-form"
-import { FormField, FormItem, FormLabel, FormControl } from "../ui/form"
-import { cn } from "@/utils/style"
-import { useQuery } from "@tanstack/react-query"
-import { useBoolean, useUpdateEffect } from "ahooks"
-import { forwardRef, useState, useMemo, useEffect, type CSSProperties } from "react"
-import { JknIcon } from "../jkn/jkn-icon"
-import { z } from "zod"
-import { ToggleGroup, ToggleGroupItem } from "../ui/toggle-group"
-import { Button } from "../ui/button"
+import { type StockCategory, addAlarm, getAlarmTypes } from '@/api'
+import { useToast, useZForm } from '@/hooks'
+import StockSelectInput from '@/pages/alarm/components/stock-select-input'
+import { cn } from '@/utils/style'
+import { useQuery } from '@tanstack/react-query'
+import { useBoolean, useUpdateEffect } from 'ahooks'
+import to from 'await-to-js'
+import { type CSSProperties, forwardRef, useEffect, useMemo, useState } from 'react'
+import { FormProvider, useFormContext } from 'react-hook-form'
+import { z } from 'zod'
+import { JknIcon } from '../jkn/jkn-icon'
+import { Button } from '../ui/button'
+import { FormControl, FormField, FormItem, FormLabel } from '../ui/form'
+import { ToggleGroup, ToggleGroupItem } from '../ui/toggle-group'
 
 const formSchema = z.object({
   symbol: z.string({ message: '股票代码错误' }).min(1, '股票代码错误'),
@@ -69,12 +69,13 @@ const AiAlarmSetting = (props: AiAlarmSetting) => {
     toggle()
   }
 
-
   return (
     <div>
       <FormProvider {...form}>
         <form className="space-y-4 px-8">
-          <FormField control={form.control} name="symbol"
+          <FormField
+            control={form.control}
+            name="symbol"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>一、选择股票</FormLabel>
@@ -85,7 +86,9 @@ const AiAlarmSetting = (props: AiAlarmSetting) => {
             )}
           />
 
-          <FormField control={form.control} name="stockCycle"
+          <FormField
+            control={form.control}
+            name="stockCycle"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>二、报警周期</FormLabel>
@@ -96,7 +99,9 @@ const AiAlarmSetting = (props: AiAlarmSetting) => {
             )}
           />
 
-          <FormField control={form.control} name="categoryIds"
+          <FormField
+            control={form.control}
+            name="categoryIds"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>三、报警类型</FormLabel>
@@ -107,7 +112,9 @@ const AiAlarmSetting = (props: AiAlarmSetting) => {
             )}
           />
 
-          <FormField control={form.control} name="categoryHdlyIds"
+          <FormField
+            control={form.control}
+            name="categoryHdlyIds"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>四、底部策略</FormLabel>
@@ -117,18 +124,18 @@ const AiAlarmSetting = (props: AiAlarmSetting) => {
               </FormItem>
             )}
           />
-
         </form>
       </FormProvider>
       <div className="text-center mt-6">
-        <Button className="w-24" loading={loading} onClick={onSubmit}>确定</Button>
+        <Button className="w-24" loading={loading} onClick={onSubmit}>
+          确定
+        </Button>
       </div>
     </div>
   )
 }
 
 export default AiAlarmSetting
-
 
 interface StockCycleSelectProps {
   value?: string[]
@@ -142,20 +149,15 @@ const StockCycleSelect = forwardRef((props: StockCycleSelectProps, _) => {
 
   return (
     <ToggleGroup value={props.value} type="multiple" onValueChange={props.onChange}>
-      {
-        query.data?.stock_kline.map(item => (
-          <ToggleGroupItem disabled={!item.authorized} className="w-20 relative" key={item.id} value={item.value}>
-            {
-              !item.authorized && <JknIcon name="ic_lock" className="absolute right-0 top-0 w-3 h-3" />
-            }
-            {item.name}
-          </ToggleGroupItem>
-        ))
-      }
+      {query.data?.stock_kline.map(item => (
+        <ToggleGroupItem disabled={!item.authorized} className="w-20 relative" key={item.id} value={item.value}>
+          {!item.authorized && <JknIcon name="ic_lock" className="absolute right-0 top-0 w-3 h-3" />}
+          {item.name}
+        </ToggleGroupItem>
+      ))}
     </ToggleGroup>
   )
 })
-
 
 interface AlarmsTypeSelectProps {
   value?: string[]
@@ -168,10 +170,7 @@ const AlarmsTypeSelect = forwardRef((props: AlarmsTypeSelectProps, _) => {
   })
   const [method, setMethod] = useState<Awaited<ReturnType<typeof getAlarmTypes>>['stocks'][0]>()
 
-
-
   const data = useMemo(() => query.data?.stocks.find(item => item.name === '报警类型'), [query.data])
-
 
   const form = useFormContext()
 
@@ -184,14 +183,11 @@ const AlarmsTypeSelect = forwardRef((props: AlarmsTypeSelectProps, _) => {
     }
   }, [categoryHdlyIds, props.onChange, method])
 
-
   useEffect(() => {
     if (data?.children && data.children?.length > 0) {
       setMethod(data.children[0])
     }
   }, [data])
-
-
 
   const _onValueChange = (e: string[], type: string) => {
     if (type === '空头策略') {
@@ -205,63 +201,70 @@ const AlarmsTypeSelect = forwardRef((props: AlarmsTypeSelectProps, _) => {
     <>
       <div className="flex-1 flex flex-col">
         <div className="py-3 ml-3">
-          {
-            data?.children?.map((item) => (
-              <div
-                key={item.id}
-                className={cn(
-                  'h-10 leading-10 w-40 mb-2 relative text-center rounded-sm text-secondary transition-all cursor-pointer bg-accent',
-                  method?.id === item.id && 'bg-primary text-foreground'
-                )}
-                onClick={() => setMethod(item)}
-                onKeyDown={() => { }}
-              >
-                {item.name}
-                {
-                  method?.id === item.id && props.value?.length && props.value.length > 0 ? (
-                    <div className="bg-stock-down rounded-full absolute -right-2 -top-2 w-4 h-4 text-xs">
-                      {props.value?.length}
-                    </div>
-                  ) : null
-                }
-              </div>
-            ))
-          }
+          {data?.children?.map(item => (
+            <div
+              key={item.id}
+              className={cn(
+                'h-10 leading-10 w-40 mb-2 relative text-center rounded-sm text-secondary transition-all cursor-pointer bg-accent',
+                method?.id === item.id && 'bg-primary text-foreground'
+              )}
+              onClick={() => setMethod(item)}
+              onKeyDown={() => {}}
+            >
+              {item.name}
+              {method?.id === item.id && props.value?.length && props.value.length > 0 ? (
+                <div className="bg-stock-down rounded-full absolute -right-2 -top-2 w-4 h-4 text-xs">
+                  {props.value?.length}
+                </div>
+              ) : null}
+            </div>
+          ))}
         </div>
         <div className="py-3 border-0 border-t border-solid border-background">
-          {
-            method?.children?.map((item) => (
-              <div key={item.id} className="flex mb-4">
-                <div
-                  className="flex-shrink-0 px-4 flex items-center text-sm"
-                  style={{ color: item.name === '多头策略' ? 'hsl(var(--stock-up-color))' : 'hsl(var(--stock-down-color))' }}
-                >
-                  <JknIcon name={item.name === '多头策略' ? 'ic_price_up_green' : 'ic_price_down_red'} />
-                  {item.name}
-                </div>
-                <ToggleGroup value={props.value} onValueChange={v => _onValueChange(v, item.name)} style={{
-                  '--toggle-active-bg': item.name === '多头策略' ? 'hsl(var(--stock-up-color))' : 'hsl(var(--stock-down-color))',
-                } as CSSProperties} type="multiple" className="flex-1 flex">
-                  {(item.children as unknown as StockCategory[])?.map((child) => (
-                    child.name !== '' ? (
-                      <ToggleGroupItem disabled={!child.authorized} className="w-28 relative" key={child.id} value={child.id}>
-                        {
-                          !child.authorized && <JknIcon name="ic_lock" className="absolute right-0 top-0 w-3 h-3" />
-                        }
-                        {child.name}
-                      </ToggleGroupItem>
-                    ) : null
-                  ))}
-                </ToggleGroup>
+          {method?.children?.map(item => (
+            <div key={item.id} className="flex mb-4">
+              <div
+                className="flex-shrink-0 px-4 flex items-center text-sm"
+                style={{
+                  color: item.name === '多头策略' ? 'hsl(var(--stock-up-color))' : 'hsl(var(--stock-down-color))'
+                }}
+              >
+                <JknIcon name={item.name === '多头策略' ? 'ic_price_up_green' : 'ic_price_down_red'} />
+                {item.name}
               </div>
-            ))
-          }
+              <ToggleGroup
+                value={props.value}
+                onValueChange={v => _onValueChange(v, item.name)}
+                style={
+                  {
+                    '--toggle-active-bg':
+                      item.name === '多头策略' ? 'hsl(var(--stock-up-color))' : 'hsl(var(--stock-down-color))'
+                  } as CSSProperties
+                }
+                type="multiple"
+                className="flex-1 flex"
+              >
+                {(item.children as unknown as StockCategory[])?.map(child =>
+                  child.name !== '' ? (
+                    <ToggleGroupItem
+                      disabled={!child.authorized}
+                      className="w-28 relative"
+                      key={child.id}
+                      value={child.id}
+                    >
+                      {!child.authorized && <JknIcon name="ic_lock" className="absolute right-0 top-0 w-3 h-3" />}
+                      {child.name}
+                    </ToggleGroupItem>
+                  ) : null
+                )}
+              </ToggleGroup>
+            </div>
+          ))}
         </div>
       </div>
     </>
   )
 })
-
 
 interface StockHdlySelectProps {
   value?: string[]
@@ -281,17 +284,18 @@ const StockHdlySelect = forwardRef((props: StockHdlySelectProps, _) => {
         <JknIcon.Arrow direction="up" className="h-5 w-5" />
         <span className="text-stock-up text-sm">底部信号</span>
       </div>
-      <ToggleGroup activeColor="hsl(var(--stock-up-color))" value={props.value} type="multiple" onValueChange={props.onChange}>
-        {
-          data?.children?.map(item => (
-            <ToggleGroupItem disabled={!item.authorized} className="w-20 relative" key={item.id} value={item.id}>
-              {
-                !item.authorized && <JknIcon name="ic_lock" className="absolute right-0 top-0 w-3 h-3" />
-              }
-              {item.name}
-            </ToggleGroupItem>
-          ))
-        }
+      <ToggleGroup
+        activeColor="hsl(var(--stock-up-color))"
+        value={props.value}
+        type="multiple"
+        onValueChange={props.onChange}
+      >
+        {data?.children?.map(item => (
+          <ToggleGroupItem disabled={!item.authorized} className="w-20 relative" key={item.id} value={item.id}>
+            {!item.authorized && <JknIcon name="ic_lock" className="absolute right-0 top-0 w-3 h-3" />}
+            {item.name}
+          </ToggleGroupItem>
+        ))}
       </ToggleGroup>
     </div>
   )

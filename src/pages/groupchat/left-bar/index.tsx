@@ -1,14 +1,14 @@
 import { Button, JknIcon } from '@/components'
-import ChatAvatar from '../components/chat-avatar'
+import { useModal } from '@/components'
 import { useUser } from '@/store'
 import { cn } from '@/utils/style'
-import { useModal } from '@/components'
+import ChatAvatar from '../components/chat-avatar'
 
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
-import JoinGroupContent from '../components/create-and-join-group/join-group-content'
-import WKSDK from 'wukongimjssdk'
-import { useEffect, useRef } from 'react'
 import { APP_TO_CHAT_REFRESH_USER, CHAT_TO_APP_REFRESH_USER } from '@/app'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { useEffect, useRef } from 'react'
+import WKSDK from 'wukongimjssdk'
+import JoinGroupContent from '../components/create-and-join-group/join-group-content'
 
 const GroupChatLeftBar = (props: {
   indexTab: 'chat' | 'live'

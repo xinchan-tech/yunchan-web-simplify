@@ -1,21 +1,21 @@
 import {
-  JknIcon,
-  Input,
   HoverCard,
-  HoverCardTrigger,
   HoverCardContent,
+  HoverCardTrigger,
+  Input,
   JknAlert,
+  JknIcon,
 } from "@/components";
 
-import { type KeyboardEvent, useEffect, useState } from "react";
-import { cn } from "@/utils/style";
-import { useUser } from "@/store";
+import { editGroupService } from "@/api";
 import { useToast } from "@/hooks";
+import { useUser } from "@/store";
 import {
   useGroupChatShortStore,
   useGroupChatStoreNew,
 } from "@/store/group-chat-new";
-import { editGroupService } from "@/api";
+import { cn } from "@/utils/style";
+import { type KeyboardEvent, useEffect, useState } from "react";
 
 export type FilterKey = "live" | "owner" | "stock" | "mention";
 export type ChatAuthKey = "0" | "1" | "2";
@@ -285,7 +285,7 @@ const MsgFilter = (props: {
                     setFilterKeyWord("");
                     typeof onKeywordFilter === "function" &&
                       onKeywordFilter("");
-                    let timer = setTimeout(() => {
+                    const timer = setTimeout(() => {
                       clearTimeout(timer);
                       setShowFilter(false);
                     }, 300);

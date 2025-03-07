@@ -1,5 +1,5 @@
-import type { ComponentProps } from "react"
-import { JknIcon } from "."
+import type { ComponentProps } from 'react'
+import { JknIcon } from '.'
 
 interface IconCheckboxProps extends ComponentProps<typeof JknIcon> {
   checked?: boolean
@@ -7,15 +7,5 @@ interface IconCheckboxProps extends ComponentProps<typeof JknIcon> {
   uncheckedIcon?: IconName
 }
 export const JknIconCheckbox = ({ checked, checkedIcon, uncheckedIcon, ...props }: IconCheckboxProps) => {
-  return (
-    <>
-      {
-        checked ? (
-          <JknIcon name={checkedIcon} {...props} />
-        ) : (
-          <JknIcon name={uncheckedIcon} {...props} />
-        )
-      }
-    </>
-  )
+  return <>{checked ? <JknIcon name={checkedIcon} {...props} /> : <JknIcon name={uncheckedIcon} {...props} />}</>
 }

@@ -1,12 +1,12 @@
 import { useRef, useState } from 'react'
+import { type Message, MessageImage, MessageText, PullMode } from 'wukongimjssdk'
+import { Convert } from '../../Service/convert'
 import cacheManager from '../../messageCache'
 import MsgScrollLoader from '../msg-scroll-loader'
-import { type Message, MessageText, MessageImage, PullMode } from 'wukongimjssdk'
-import { Convert } from '../../Service/convert'
 
-import TextCell from '../../Messages/text'
-import ImageCell from '../../Messages/Image'
 import { Input, JknIcon } from '@/components'
+import ImageCell from '../../Messages/Image'
+import TextCell from '../../Messages/text'
 
 const LIMIT = 20
 

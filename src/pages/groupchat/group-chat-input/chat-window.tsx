@@ -1,17 +1,17 @@
-import {
-  type ClipboardEvent,
-  type DragEvent,
-  useState,
-  forwardRef,
-  useImperativeHandle,
-  useEffect,
-  type CSSProperties
-} from 'react'
-import { type InputBoxResult, useInput } from './useInput'
+import { Button } from '@/components'
 import { useToast } from '@/hooks'
 import { useChatNoticeStore } from '@/store/group-chat-new'
-import { Button } from '@/components'
+import {
+  type CSSProperties,
+  type ClipboardEvent,
+  type DragEvent,
+  forwardRef,
+  useEffect,
+  useImperativeHandle,
+  useState
+} from 'react'
 import xss from 'xss'
+import { type InputBoxResult, useInput } from './useInput'
 
 const ChatWindow = forwardRef(
   (

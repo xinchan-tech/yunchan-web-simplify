@@ -23,7 +23,7 @@ export default class APIClient {
   // 仅仅做演示，所以直接调用的WuKongIM的接口，实际项目中，建议调用自己的后台接口，
   // 然后后台接口再调用WuKongIM的接口，这样自己的后台可以返回一些自己的业务数据填充到Message.remoteExtra中
   syncMessages = async (channel: Channel, opts: SyncOptions) => {
-    let resultMessages = new Array<Message>()
+    const resultMessages = new Array<Message>()
     try {
       const resp = await request.post('/message/sync', {
         login_uid: WKSDK.shared().config.uid,
@@ -54,7 +54,7 @@ export default class APIClient {
   // 仅仅做演示，所以直接调用的WuKongIM的接口，实际项目中，建议调用自己的后台接口，
   // 然后后台接口再调用WuKongIM的接口，这样自己的后台可以返回一些自己的业务数据填充到Conversation.extra中
   syncConversations = async () => {
-    let resultConversations = new Array<Conversation>()
+    const resultConversations = new Array<Conversation>()
     const resp = await request.post('/conversation/sync', {
       uid: WKSDK.shared().config.uid,
       msg_count: 20

@@ -1,10 +1,10 @@
-import { JknIcon } from '../jkn/jkn-icon'
-import { cn } from '@/utils/style'
-import { router } from '@/router'
-import { type ReactNode, useEffect, useMemo, useState } from 'react'
-import { Settings } from 'lucide-react'
-import { useToken } from '@/store'
 import { useAuthorized, useToast } from '@/hooks'
+import { router } from '@/router'
+import { useToken } from '@/store'
+import { cn } from '@/utils/style'
+import { Settings } from 'lucide-react'
+import { type ReactNode, useEffect, useMemo, useState } from 'react'
+import { JknIcon } from '../jkn/jkn-icon'
 
 type MenuItem = {
   icon: IconName | ReactNode
@@ -88,7 +88,7 @@ const Menu = () => {
       return
     }
 
-    if(path === '/shout' && !auth()){
+    if (path === '/shout' && !auth()) {
       toastNotAuth()
       return
     }
@@ -103,12 +103,14 @@ const Menu = () => {
         <div
           key={item.title}
           onClick={() => onNav(item.path)}
-          onKeyDown={() => { }}
-          className={cn('flex flex-col items-center cursor-pointer hover:bg-accent w-8 h-8 justify-center rounded-xs', item.title === '设置' ? '!mt-auto' : '', pathname === item.path && 'bg-primary/30')}
+          onKeyDown={() => {}}
+          className={cn(
+            'flex flex-col items-center cursor-pointer hover:bg-accent w-8 h-8 justify-center rounded-xs',
+            item.title === '设置' ? '!mt-auto' : '',
+            pathname === item.path && 'bg-primary/30'
+          )}
         >
-          <div className={cn('inline-block h-[20px]' ,pathname === item.path ? 'text-primary' : '')}>
-            {item.icon}
-          </div>
+          <div className={cn('inline-block h-[20px]', pathname === item.path ? 'text-primary' : '')}>{item.icon}</div>
         </div>
       ))}
       <style jsx>{`

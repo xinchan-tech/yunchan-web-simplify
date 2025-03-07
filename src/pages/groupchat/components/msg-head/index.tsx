@@ -1,135 +1,113 @@
-import { cn } from "@/utils/style";
-import WKSDK, {
-  Message,
-  Channel,
-  ChannelTypePerson,
-  MessageStatus,
-} from "wukongimjssdk";
-import ChatAvatar from "../chat-avatar";
-import { ContextMenu, ContextMenuTrigger } from "@/components";
-import { useMemberSetting } from "../../hooks";
-import {
-  useGroupChatShortStore,
-  useChatNoticeStore,
-} from "@/store/group-chat-new";
-import { useEffect, useMemo, useState } from "react";
+import { ContextMenu, ContextMenuTrigger } from '@/components'
+import { useChatNoticeStore, useGroupChatShortStore } from '@/store/group-chat-new'
+import { cn } from '@/utils/style'
+import { useEffect, useMemo, useState } from 'react'
+import WKSDK, { type Message, Channel, ChannelTypePerson, MessageStatus } from 'wukongimjssdk'
 import {
   getTimeStringAutoShort2,
   judgeIsUserInSyncChannelCache,
   setPersonChannelCache,
-  setUserInSyncChannelCache,
-} from "../../chat-utils";
+  setUserInSyncChannelCache
+} from '../../chat-utils'
+import { useMemberSetting } from '../../hooks'
+import ChatAvatar from '../chat-avatar'
 
-const MsgHead = (props: { message: Message; type: "left" | "right" }) => {
-  const { message, type } = props;
-  const subscribers = useGroupChatShortStore((state) => state.subscribers);
+const MsgHead = (props: { message: Message; type: 'left' | 'right' }) => {
+  const { message, type } = props
+  const subscribers = useGroupChatShortStore(state => state.subscribers)
 
-  const { renderContextMenu } = useMemberSetting();
-  const { updateForceUpdateAvatarId, forceUpdateAvatarId } =
-    useChatNoticeStore();
+  const { renderContextMenu } = useMemberSetting()
+  const { updateForceUpdateAvatarId, forceUpdateAvatarId } = useChatNoticeStore()
   // 群成员
   const member = useMemo(() => {
-    let result = null;
+    let result = null
     if (subscribers instanceof Array && subscribers.length > 0) {
-      const target = subscribers.find((item) => item.uid === message.fromUID);
+      const target = subscribers.find(item => item.uid === message.fromUID)
       if (target) {
-        result = target;
+        result = target
       }
     }
-    return result;
-  }, [subscribers, message]);
+    return result
+  }, [subscribers, message])
   const [channelInfo, setChannelInfo] = useState<{
-    name: string;
-    avatar: string;
-    uid: string;
+    name: string
+    avatar: string
+    uid: string
   }>({
-    name: "",
-    avatar: "",
-    uid: "",
-  });
+    name: '',
+    avatar: '',
+    uid: ''
+  })
 
   useEffect(() => {
     if (forceUpdateAvatarId > 1) {
-      const temp = WKSDK.shared().channelManager.getChannelInfo(
-        new Channel(message.fromUID, ChannelTypePerson)
-      );
+      const temp = WKSDK.shared().channelManager.getChannelInfo(new Channel(message.fromUID, ChannelTypePerson))
       if (temp) {
         setChannelInfo({
           name: temp.title,
           avatar: temp.logo,
-          uid: temp.channel.channelID,
-        });
+          uid: temp.channel.channelID
+        })
       }
     }
-  }, [forceUpdateAvatarId]);
+  }, [forceUpdateAvatarId])
   useEffect(() => {
     if (message) {
-      const temp = WKSDK.shared().channelManager.getChannelInfo(
-        new Channel(message.fromUID, ChannelTypePerson)
-      );
+      const temp = WKSDK.shared().channelManager.getChannelInfo(new Channel(message.fromUID, ChannelTypePerson))
       if (temp) {
         setChannelInfo({
           name: temp.title,
           avatar: temp.logo,
-          uid: temp.channel.channelID,
-        });
+          uid: temp.channel.channelID
+        })
       } else {
         if (judgeIsUserInSyncChannelCache(message.fromUID)) {
-          return;
+          return
         } else {
-          setUserInSyncChannelCache(message.fromUID, true);
+          setUserInSyncChannelCache(message.fromUID, true)
 
           setPersonChannelCache(message.fromUID).then(() => {
-            const temp = WKSDK.shared().channelManager.getChannelInfo(
-              new Channel(message.fromUID, ChannelTypePerson)
-            );
+            const temp = WKSDK.shared().channelManager.getChannelInfo(new Channel(message.fromUID, ChannelTypePerson))
             if (temp) {
               setChannelInfo({
                 name: temp.title,
                 avatar: temp.logo,
-                uid: temp.channel.channelID,
-              });
-              updateForceUpdateAvatarId();
+                uid: temp.channel.channelID
+              })
+              updateForceUpdateAvatarId()
             }
 
-            setUserInSyncChannelCache(message.fromUID, false);
-          });
+            setUserInSyncChannelCache(message.fromUID, false)
+          })
         }
       }
     }
-  }, [message]);
+  }, [message])
 
   const getMessageStatus = () => {
     if (!message.send) {
-      return "";
+      return ''
     }
     if (message.status === MessageStatus.Fail) {
-      return "发送失败";
+      return '发送失败'
     }
     if (message.status === MessageStatus.Wait) {
-      return "发送中";
+      return '发送中'
     }
 
-    return "已发送";
-  };
+    return '已发送'
+  }
 
   return (
     <div className="relative">
-      <div
-        className={cn(
-          "absolute user-name text-nowrap",
-          type === "left" ? "left-name" : "right-name"
-        )}
-      >
+      <div className={cn('absolute user-name text-nowrap', type === 'left' ? 'left-name' : 'right-name')}>
         {channelInfo.name}
         {/* {type === "left" && (
           <span className="ml-2 text-gray-400">
             {getTimeStringAutoShort2(message.timestamp * 1000, true)}
           </span>
         )} */}
-        <span className="ml-2 text-gray-400">
-          {getTimeStringAutoShort2(message.timestamp * 1000, true)}
-        </span>
+        <span className="ml-2 text-gray-400">{getTimeStringAutoShort2(message.timestamp * 1000, true)}</span>
       </div>
       <ContextMenu>
         <ContextMenuTrigger asChild>
@@ -162,7 +140,7 @@ const MsgHead = (props: { message: Message; type: "left" | "right" }) => {
         `}
       </style>
     </div>
-  );
-};
+  )
+}
 
-export default MsgHead;
+export default MsgHead

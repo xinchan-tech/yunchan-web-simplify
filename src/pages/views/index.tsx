@@ -1,8 +1,8 @@
-import { CapsuleTabs } from "@/components"
-import { useState } from "react"
-import SingleTable from "./single-table"
-import DoubleTable from "./double-table"
-import PageTable from "./components/page-table"
+import { CapsuleTabs } from '@/components'
+import { useState } from 'react'
+import PageTable from './components/page-table'
+import DoubleTable from './double-table'
+import SingleTable from './single-table'
 
 const Views = () => {
   const [activeKey, setActiveKey] = useState('all')
@@ -28,14 +28,16 @@ const Views = () => {
         </CapsuleTabs>
       </div>
       <div className="flex-1 overflow-hidden">
-        {
-          !activeKey || ['all', 'ixic', 'spx', 'dji', 'etf'].includes(activeKey) ? <PageTable type={activeKey} /> : ['industry', 'concept'].includes(activeKey) ? <DoubleTable type={activeKey === 'industry' ? 1 : 2} /> : <SingleTable type={activeKey} />
-        }
+        {!activeKey || ['all', 'ixic', 'spx', 'dji', 'etf'].includes(activeKey) ? (
+          <PageTable type={activeKey} />
+        ) : ['industry', 'concept'].includes(activeKey) ? (
+          <DoubleTable type={activeKey === 'industry' ? 1 : 2} />
+        ) : (
+          <SingleTable type={activeKey} />
+        )}
       </div>
     </div>
   )
 }
-
-
 
 export default Views

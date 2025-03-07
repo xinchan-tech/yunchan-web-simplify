@@ -2,7 +2,7 @@ import { Button, JknIcon, Label, RadioGroup, RadioGroupItem, ScrollArea, Textare
 import { useToast } from '@/hooks'
 import { useConfig } from '@/store'
 import { cn } from '@/utils/style'
-import { useState, type PropsWithChildren } from 'react'
+import { type PropsWithChildren, useState } from 'react'
 
 const SettingPage = () => {
   const config = useConfig()
@@ -25,7 +25,7 @@ const SettingPage = () => {
           description: '感谢您的建议!'
         })
       }
-    }else{
+    } else {
       toast({
         description: '感谢您的建议!'
       })
@@ -258,7 +258,10 @@ const SettingPage = () => {
               当前版本：<span className="text-sm">{__RELEASE_VERSION__}</span>
             </div>
             <div>
-              构建信息：<span className="text-sm text-tertiary cursor-pointer" onDoubleClick={() => config.setDebug(true)}>{__RELEASE_TAG__}</span>
+              构建信息：
+              <span className="text-sm text-tertiary cursor-pointer" onDoubleClick={() => config.setDebug(true)}>
+                {__RELEASE_TAG__}
+              </span>
             </div>
             {config.debug ? (
               <div className="cursor-pointer" onClick={() => config.setDebug(false)} onKeyDown={() => {}}>

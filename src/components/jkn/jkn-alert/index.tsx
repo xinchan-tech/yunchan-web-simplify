@@ -1,11 +1,18 @@
-import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog'
-import { useBoolean, useMount } from "ahooks"
-import { nanoid } from "nanoid"
-import type { ReactNode } from "react"
-import { createRoot } from 'react-dom/client'
-import { Button } from "../../ui/button"
-import to from "await-to-js"
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle
+} from '@/components/ui/alert-dialog'
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden'
+import { useBoolean, useMount } from 'ahooks'
+import to from 'await-to-js'
+import { nanoid } from 'nanoid'
+import type { ReactNode } from 'react'
+import { createRoot } from 'react-dom/client'
+import { Button } from '../../ui/button'
 
 type AlertAction = 'confirm' | 'cancel' | 'close'
 
@@ -39,14 +46,20 @@ export const JknAlert = {
     }
 
     root.render(
-      <AlertComponent title={title} content={content} afterClose={destroy} onAction={onAction} cancelBtn={cancelBtn} okBtnText={okBtnText} />
+      <AlertComponent
+        title={title}
+        content={content}
+        afterClose={destroy}
+        onAction={onAction}
+        cancelBtn={cancelBtn}
+        okBtnText={okBtnText}
+      />
     )
   },
 
   confirm(args: AlertOptions) {
     return JknAlert.info({ cancelBtn: true, ...args })
   }
-
 }
 
 interface AlertDialogProps extends AlertOptions {
@@ -78,7 +91,6 @@ const AlertComponent = (props: AlertDialogProps) => {
       setLoadingTrue()
       const [err, r] = await to(props.onAction?.(action))
 
-
       if (err) {
         setLoadingFalse()
         throw err
@@ -88,7 +100,6 @@ const AlertComponent = (props: AlertDialogProps) => {
       }
     }
 
-
     setFalse()
 
     setTimeout(() => {
@@ -97,30 +108,24 @@ const AlertComponent = (props: AlertDialogProps) => {
   }
 
   return (
-    <AlertDialog open={open} onOpenChange={(open) => !open && onClose()}>
+    <AlertDialog open={open} onOpenChange={open => !open && onClose()}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          {
-            props.title !== undefined ? (
-              <AlertDialogTitle>{props.title}</AlertDialogTitle>
-            ) : (
-              <VisuallyHidden>
-                <AlertDialogTitle />
-              </VisuallyHidden>
-            )
-          }
-          <AlertDialogDescription className="text-center text-lg mt-4">
-            {
-              props.content
-            }
-          </AlertDialogDescription>
+          {props.title !== undefined ? (
+            <AlertDialogTitle>{props.title}</AlertDialogTitle>
+          ) : (
+            <VisuallyHidden>
+              <AlertDialogTitle />
+            </VisuallyHidden>
+          )}
+          <AlertDialogDescription className="text-center text-lg mt-4">{props.content}</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          {
-            props.cancelBtn && (
-              <Button variant="outline" onClick={onCancel}>取消</Button>
-            )
-          }
+          {props.cancelBtn && (
+            <Button variant="outline" onClick={onCancel}>
+              取消
+            </Button>
+          )}
           <Button onClick={onConfirm}>{props.okBtnText ?? '确认'}</Button>
         </AlertDialogFooter>
       </AlertDialogContent>

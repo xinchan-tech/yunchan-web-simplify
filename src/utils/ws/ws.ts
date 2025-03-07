@@ -95,7 +95,7 @@ export class Ws {
 
   private handleOpen() {
     this.retryCount = 0
-    if(!this.options.beat) return
+    if (!this.options.beat) return
     this.startHeartbeat()
   }
 

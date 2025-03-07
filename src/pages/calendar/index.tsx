@@ -1,14 +1,13 @@
-import { CapsuleTabs } from "@/components"
-import StockFinancials from "./components/financials"
-import { useState } from "react"
-import StockEconomic from "./components/economic"
-import StockEvent from "./components/event"
-import StockHolidays from "./components/holidays"
-import { FedInterestRateDecision } from "./components/fed-interest-rate-decision"
-import { WitchingDay } from "./components/witching-day"
+import { CapsuleTabs } from '@/components'
+import { useState } from 'react'
+import StockEconomic from './components/economic'
+import StockEvent from './components/event'
+import { FedInterestRateDecision } from './components/fed-interest-rate-decision'
+import StockFinancials from './components/financials'
+import StockHolidays from './components/holidays'
+import { WitchingDay } from './components/witching-day'
 
 const StockCalendar = () => {
-
   const [active, setActive] = useState('financials')
   return (
     <div className="h-full bg-muted flex flex-col">

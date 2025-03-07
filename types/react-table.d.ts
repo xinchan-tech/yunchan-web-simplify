@@ -12,6 +12,6 @@ declare module '@tanstack/react-table' {
   }
 
   interface TableMeta<TData extends RowData> {
-    emit: (arg: {event: string, params: any}) => void
+    emit: (arg: { event: string; params: any }) => void
   }
 }

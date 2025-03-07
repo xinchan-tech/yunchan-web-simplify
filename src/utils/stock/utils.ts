@@ -1,10 +1,10 @@
 import { StockChartInterval, type StockExtendResultMap, StockPeriod, type StockRawRecord } from '@/api'
 import dayjs from 'dayjs'
 import Decimal from 'decimal.js'
-import {  isNumber } from 'radash'
+import { isNumber } from 'radash'
+import { dateUtils } from '../date'
 import { type Stock, StockRecord, type StockResultRecord, type StockTrading, type StockWithExt } from './stock'
 import type { StockSubscribeHandler } from './subscribe'
-import { dateUtils } from "../date"
 
 /**
  * 判断时间数据

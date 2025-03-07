@@ -1,8 +1,8 @@
-import { type ComponentType, memo, useCallback, useMemo, useRef, type ComponentProps } from 'react'
-import { SubscribeSpan } from './num-span'
-import { JknIcon } from '../jkn/jkn-icon'
 import { usePropValue } from '@/hooks'
 import Decimal from 'decimal.js'
+import { type ComponentProps, type ComponentType, memo, useCallback, useMemo, useRef } from 'react'
+import { JknIcon } from '../jkn/jkn-icon'
+import { SubscribeSpan } from './num-span'
 
 type SubscribeSpanProps = ComponentProps<typeof SubscribeSpan>
 type OnValueChangeFn = NonNullable<SubscribeSpanProps['onChange']>
@@ -198,7 +198,7 @@ export const PercentSubscribeSpan = memo(
       <SubscribeSpan
         value={value}
         data-direction={direction}
-        data-direction-show={(showColor && value !== nanText) ? 'true' : 'false'}
+        data-direction-show={showColor && value !== nanText ? 'true' : 'false'}
         data-direction-sign={showSign && value !== nanText}
         formatter={subscribeFormatter}
         onChange={onChange}

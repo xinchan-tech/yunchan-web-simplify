@@ -1,8 +1,7 @@
-import type { StockRawRecord } from "@/api"
-import { stockUtils } from "../stock"
+import type { StockRawRecord } from '@/api'
+import { stockUtils } from '../stock'
 
 let coilingModule: ReturnType<typeof window.CoilingModule>
-
 
 const getCoilingModule = async () => {
   if (!coilingModule) {
@@ -11,7 +10,6 @@ const getCoilingModule = async () => {
 
   return coilingModule
 }
-
 
 /**
  * 计算缠论数据
@@ -27,4 +25,3 @@ export const calcCoiling = async (data: StockRawRecord[], interval: number): Pro
     return module.coiling_calculate(_data, data.length, interval)
   })
 }
-

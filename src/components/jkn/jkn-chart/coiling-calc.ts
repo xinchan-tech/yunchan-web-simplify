@@ -1,5 +1,5 @@
 import { colorUtil } from '@/utils/style'
-import { Candlestick } from './types'
+import type { Candlestick } from './types'
 import { candlestickToRaw } from './utils'
 
 const SEGMENT_NUM_LIMIT = 7

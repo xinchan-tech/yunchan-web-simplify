@@ -1,11 +1,11 @@
-import { getStockBaseCodeInfo } from "@/api"
-import { JknIcon, StockSelect } from "@/components"
-import { useStockList } from "@/store"
-import { stockUtils } from "@/utils/stock"
-import { cn } from "@/utils/style"
-import { useQuery } from "@tanstack/react-query"
-import Decimal from "decimal.js"
-import { forwardRef, useMemo } from "react"
+import { getStockBaseCodeInfo } from '@/api'
+import { JknIcon, StockSelect } from '@/components'
+import { useStockList } from '@/store'
+import { stockUtils } from '@/utils/stock'
+import { cn } from '@/utils/style'
+import { useQuery } from '@tanstack/react-query'
+import Decimal from 'decimal.js'
+import { forwardRef, useMemo } from 'react'
 
 interface StockSelectInputProps {
   value?: string
@@ -29,7 +29,7 @@ const StockSelectInput = forwardRef((props: StockSelectInputProps, _) => {
       name: s?.[3],
       total: 0,
       price: 0,
-      percent: 0,
+      percent: 0
     }
 
     if (query.data) {
@@ -48,21 +48,19 @@ const StockSelectInput = forwardRef((props: StockSelectInputProps, _) => {
         <div className="w-6 h-6 mr-2">
           <JknIcon stock={data.icon} className="w-full h-full" />
         </div>
-        {
-          data.price ? (
+        {data.price ? (
+          <div>
             <div>
-              <div >
-                <span>{data.symbol}</span>&nbsp;&nbsp;
-                <span className={cn(data.percent >= 0 ? 'text-stock-up' : 'text-stock-down',)}>
-                  {Decimal.create(data.price).toFixed(3)} &nbsp;&nbsp; {Decimal.create(data.percent * 100).toFixed(2)}%
-                </span>
-              </div>
-              <div className="text-tertiary text-xs">{data.name}</div>
+              <span>{data.symbol}</span>&nbsp;&nbsp;
+              <span className={cn(data.percent >= 0 ? 'text-stock-up' : 'text-stock-down')}>
+                {Decimal.create(data.price).toFixed(3)} &nbsp;&nbsp; {Decimal.create(data.percent * 100).toFixed(2)}%
+              </span>
             </div>
-          ) : (
-            <span className="h-[36px]">- &nbsp;&nbsp;-&nbsp;&nbsp;-</span>
-          )
-        }
+            <div className="text-tertiary text-xs">{data.name}</div>
+          </div>
+        ) : (
+          <span className="h-[36px]">- &nbsp;&nbsp;-&nbsp;&nbsp;-</span>
+        )}
       </div>
     </div>
   )

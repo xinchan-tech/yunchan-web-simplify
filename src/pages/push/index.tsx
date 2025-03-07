@@ -1,16 +1,24 @@
-import { StockPushType, getStockPush, getStockPushList } from "@/api"
-import { getPushMenu } from "@/api/push"
-import { AiAlarm, CapsuleTabs, CollectStar, JknCheckbox, JknIcon, JknRcTable, type JknRcTableProps, StockView, SubscribeSpan } from "@/components"
-import { useCheckboxGroup, useStockQuoteSubscribe, useTableData, useTableRowClickToStockTrading } from "@/hooks"
-import { useTime } from "@/store"
-import { getPrevTradingDays } from "@/utils/date"
-import { type Stock, stockUtils } from "@/utils/stock"
-import { useQuery, useQueryClient } from "@tanstack/react-query"
-import dayjs from "dayjs"
-import { produce } from "immer"
-import { useEffect, useRef, useState } from "react"
-
-
+import { StockPushType, getStockPush, getStockPushList } from '@/api'
+import { getPushMenu } from '@/api/push'
+import {
+  AiAlarm,
+  CapsuleTabs,
+  CollectStar,
+  JknCheckbox,
+  JknIcon,
+  JknRcTable,
+  type JknRcTableProps,
+  StockView,
+  SubscribeSpan
+} from '@/components'
+import { useCheckboxGroup, useStockQuoteSubscribe, useTableData, useTableRowClickToStockTrading } from '@/hooks'
+import { useTime } from '@/store'
+import { getPrevTradingDays } from '@/utils/date'
+import { type Stock, stockUtils } from '@/utils/stock'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import dayjs from 'dayjs'
+import { produce } from 'immer'
+import { useEffect, useRef, useState } from 'react'
 
 type TableDataType = Stock & {
   star: string
@@ -31,8 +39,6 @@ type TableDataType = Stock & {
   marketValue?: number
 }
 
-
-
 const getLastTime = () => {
   const usTime = useTime.getState().usTime
   const localTime = useTime.getState().localStamp
@@ -48,10 +54,18 @@ const getTableList = async (type: string, date?: string) => {
   let res: TableDataType[]
   if (type === 'JRGW') {
     if (!date) throw new Error('date is required')
-    const r = await getStockPush({ type: StockPushType.STOCK_KING, date, extend: ['financials', 'total_share', 'collect', 'basic_index'] })
+    const r = await getStockPush({
+      type: StockPushType.STOCK_KING,
+      date,
+      extend: ['financials', 'total_share', 'collect', 'basic_index']
+    })
 
     res = r?.map(item => {
-      const stock = stockUtils.toStockWithExt(item.stock, { extend: item.extend, symbol: item.symbol, name: item.name }) as TableDataType
+      const stock = stockUtils.toStockWithExt(item.stock, {
+        extend: item.extend,
+        symbol: item.symbol,
+        name: item.name
+      }) as TableDataType
       stock.update_time = item.update_time
       stock.star = item.star
       stock.id = item.id
@@ -67,7 +81,11 @@ const getTableList = async (type: string, date?: string) => {
     const r = await getStockPushList(type, ['financials', 'total_share', 'collect', 'basic_index'])
 
     res = r.map(item => {
-      const stock = stockUtils.toStockWithExt(item.stock, { extend: item.extend, symbol: item.symbol, name: item.name }) as TableDataType
+      const stock = stockUtils.toStockWithExt(item.stock, {
+        extend: item.extend,
+        symbol: item.symbol,
+        name: item.name
+      }) as TableDataType
       stock.update_time = item.datetime.toString()
       stock.star = item.score.toString()
       stock.id = item.symbol
@@ -132,13 +150,15 @@ const PushPage = () => {
   }, [query.data, setList, setCheckedAll])
 
   const onUpdateCollect = (id: string, checked: boolean) => {
-    queryClient.setQueryData<TableDataType[]>([getStockPush.cacheKey, activeType], (data) => {
+    queryClient.setQueryData<TableDataType[]>([getStockPush.cacheKey, activeType], data => {
       if (!data) return data
-      return data.map(produce(item => {
-        if (item.id === id) {
-          item.extend!.collect = checked ? 1 : 0
-        }
-      }))
+      return data.map(
+        produce(item => {
+          if (item.id === id) {
+            item.extend!.collect = checked ? 1 : 0
+          }
+        })
+      )
     })
   }
 
@@ -159,28 +179,53 @@ const PushPage = () => {
         dataIndex: 'close',
         align: 'right',
         sort: true,
-        render: (v, row) => <SubscribeSpan.PriceBlink symbol={row.symbol} initValue={v} initDirection={stockUtils.isUp(row)} />
+        render: (v, row) => (
+          <SubscribeSpan.PriceBlink symbol={row.symbol} initValue={v} initDirection={stockUtils.isUp(row)} />
+        )
       },
       {
         title: '涨跌幅%',
         dataIndex: 'percent',
         align: 'right',
         sort: true,
-        render: (percent, row) => <SubscribeSpan.PercentBlockBlink symbol={row.symbol} decimal={2} initValue={percent} initDirection={stockUtils.isUp(row)} />
+        render: (percent, row) => (
+          <SubscribeSpan.PercentBlockBlink
+            symbol={row.symbol}
+            decimal={2}
+            initValue={percent}
+            initDirection={stockUtils.isUp(row)}
+          />
+        )
       },
       {
         title: '成交额',
         dataIndex: 'turnover',
         align: 'right',
         sort: true,
-        render: (turnover, row) => <SubscribeSpan.TurnoverBlink symbol={row.symbol} showColor={false} decimal={2} initValue={turnover} initDirection />
+        render: (turnover, row) => (
+          <SubscribeSpan.TurnoverBlink
+            symbol={row.symbol}
+            showColor={false}
+            decimal={2}
+            initValue={turnover}
+            initDirection
+          />
+        )
       },
       {
         title: '总市值',
         dataIndex: 'marketValue',
         align: 'right',
         sort: true,
-        render: (marketValue, row) => <SubscribeSpan.MarketValueBlink symbol={row.symbol} showColor={false} decimal={2} initValue={marketValue} totalShare={row.totalShare ?? 0} />
+        render: (marketValue, row) => (
+          <SubscribeSpan.MarketValueBlink
+            symbol={row.symbol}
+            showColor={false}
+            decimal={2}
+            initValue={marketValue}
+            totalShare={row.totalShare ?? 0}
+          />
+        )
       },
       {
         title: '行业板块',
@@ -192,21 +237,34 @@ const PushPage = () => {
         dataIndex: 'star',
         align: 'right',
         sort: true,
-        render: (v, row) => Array.from({ length: v }).map((_, i) => (
-          // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
-          <JknIcon key={i} name={
-            activeType === StockPushType.STOCK_KING ?
-              (row.warning === '0' ? 'ic_fire_green' : 'ic_flash') :
-              (row.bull === '1' ? 'ic_fire_green' : 'ic_fire_red')
-          } />
-        ))
+        render: (v, row) =>
+          Array.from({ length: v }).map((_, i) => (
+            // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
+            <JknIcon
+              key={i}
+              name={
+                activeType === StockPushType.STOCK_KING
+                  ? row.warning === '0'
+                    ? 'ic_fire_green'
+                    : 'ic_flash'
+                  : row.bull === '1'
+                    ? 'ic_fire_green'
+                    : 'ic_fire_red'
+              }
+            />
+          ))
       },
       {
         title: '首次入选时间',
         dataIndex: 'create_time',
         align: 'center',
         sort: true,
-        render: v => v ? `${dayjs(+v * 1000).tz('America/New_York').format('MM-DD W HH:mm')}` : '-'
+        render: v =>
+          v
+            ? `${dayjs(+v * 1000)
+                .tz('America/New_York')
+                .format('MM-DD W HH:mm')}`
+            : '-'
       },
       {
         title: '更新时间',
@@ -214,31 +272,56 @@ const PushPage = () => {
         align: 'center',
         width: 80,
         sort: true,
-        render: (v, row) => v === row.create_time ? '--' : v ? `${dayjs(+v * 1000).tz('America/New_York').format('HH:mm')}` : '-'
+        render: (v, row) =>
+          v === row.create_time
+            ? '--'
+            : v
+              ? `${dayjs(+v * 1000)
+                  .tz('America/New_York')
+                  .format('HH:mm')}`
+              : '-'
       },
       {
         title: '+股票金池',
         dataIndex: 'collect',
         width: 80,
-        render: (_, row) => <CollectStar code={row.symbol} checked={row.extend?.collect === 1} onUpdate={(checked) => onUpdateCollect(row.id, checked)} />
+        render: (_, row) => (
+          <CollectStar
+            code={row.symbol}
+            checked={row.extend?.collect === 1}
+            onUpdate={checked => onUpdateCollect(row.id, checked)}
+          />
+        )
       },
       {
         title: 'AI报警',
         dataIndex: 'ai',
         width: 60,
-        render: (_, row) => <div className="text-center"><AiAlarm code={row.symbol}><JknIcon name="ic_add" className="rounded-none" /></AiAlarm></div>
+        render: (_, row) => (
+          <div className="text-center">
+            <AiAlarm code={row.symbol}>
+              <JknIcon name="ic_add" className="rounded-none" />
+            </AiAlarm>
+          </div>
+        )
       },
       {
-        title: <CollectStar.Batch checked={checked} onCheckChange={(v) => setCheckedAll(v ? list.map(o => o.symbol) : [])}
-          onUpdate={() => {
-            query.refetch()
-            setCheckedAll([])
-          }}
-        />,
+        title: (
+          <CollectStar.Batch
+            checked={checked}
+            onCheckChange={v => setCheckedAll(v ? list.map(o => o.symbol) : [])}
+            onUpdate={() => {
+              query.refetch()
+              setCheckedAll([])
+            }}
+          />
+        ),
         dataIndex: 'checked',
         align: 'center',
         width: 60,
-        render: (_, row) => <JknCheckbox checked={getIsChecked(row.symbol)} onCheckedChange={v => onChange(row.symbol, v)} />
+        render: (_, row) => (
+          <JknCheckbox checked={getIsChecked(row.symbol)} onCheckedChange={v => onChange(row.symbol, v)} />
+        )
       }
     ]
     return common
@@ -250,12 +333,15 @@ const PushPage = () => {
     <div className="flex flex-col h-full">
       <div className="border border-solid border-border py-1 px-2">
         <CapsuleTabs activeKey={activeType} onChange={v => setActiveType(v as StockPushType)}>
-          <CapsuleTabs.Tab value="JRGW" label={
-            <span className="flex items-center">
-              今日股王
-              <JknIcon name="ic_tip1" className="w-3 h-3 ml-1" label="盘中实时更新" />
-            </span>
-          } />
+          <CapsuleTabs.Tab
+            value="JRGW"
+            label={
+              <span className="flex items-center">
+                今日股王
+                <JknIcon name="ic_tip1" className="w-3 h-3 ml-1" label="盘中实时更新" />
+              </span>
+            }
+          />
           {menus.data?.map(item => (
             <CapsuleTabs.Tab key={item.key} value={item.key} label={item.title} />
           ))}
@@ -264,19 +350,24 @@ const PushPage = () => {
           <CapsuleTabs.Tab value={StockPushType.MA} label="MA趋势评级" /> */}
         </CapsuleTabs>
       </div>
-      {
-        activeType === 'JRGW' ? (
-          <div className="border-0 border-b border-solid border-border py-1 px-2">
-            <CapsuleTabs activeKey={date} onChange={v => setDate(v)} type="text">
-              {dates.current.map(d => (
-                <CapsuleTabs.Tab key={d} value={d} label={dayjs(d).format('MM-DD W')} />
-              ))}
-            </CapsuleTabs>
-          </div>
-        ) : null
-      }
+      {activeType === 'JRGW' ? (
+        <div className="border-0 border-b border-solid border-border py-1 px-2">
+          <CapsuleTabs activeKey={date} onChange={v => setDate(v)} type="text">
+            {dates.current.map(d => (
+              <CapsuleTabs.Tab key={d} value={d} label={dayjs(d).format('MM-DD W')} />
+            ))}
+          </CapsuleTabs>
+        </div>
+      ) : null}
       <div className="flex-1 overflow-hidden">
-        <JknRcTable rowKey="id" onSort={onSort} columns={columns} data={list} isLoading={query.isLoading} onRow={onRowClick} />
+        <JknRcTable
+          rowKey="id"
+          onSort={onSort}
+          columns={columns}
+          data={list}
+          isLoading={query.isLoading}
+          onRow={onRowClick}
+        />
       </div>
     </div>
   )

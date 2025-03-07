@@ -26,8 +26,8 @@ export type ChartEvents = {
   markOverlayChange: {
     type: 'add' | 'remove'
     params: {
-      type: string,
-      mark: string,
+      type: string
+      mark: string
       title: string
     }
   }

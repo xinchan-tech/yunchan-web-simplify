@@ -1,13 +1,27 @@
-import { getStockValuation } from "@/api"
-import { Button, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, JknIcon, JknTable, type JknTableProps, NumSpan, StockSelect, SubscribeSpan, ToggleGroup, ToggleGroupItem } from "@/components"
-import { useChart, useQueryParams } from "@/hooks"
-import { useStockList } from "@/store"
-import type { ECOption } from "@/utils/echarts"
-import { stockUtils, type StockRecord, type StockWithExt } from "@/utils/stock"
-import { useQuery } from "@tanstack/react-query"
-import dayjs from "dayjs"
-import Decimal from "decimal.js"
-import { useEffect, useMemo, useState } from "react"
+import { getStockValuation } from '@/api'
+import {
+  Button,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  JknIcon,
+  JknTable,
+  type JknTableProps,
+  NumSpan,
+  StockSelect,
+  SubscribeSpan,
+  ToggleGroup,
+  ToggleGroupItem
+} from '@/components'
+import { useChart, useQueryParams } from '@/hooks'
+import { useStockList } from '@/store'
+import type { ECOption } from '@/utils/echarts'
+import { type StockRecord, type StockWithExt, stockUtils } from '@/utils/stock'
+import { useQuery } from '@tanstack/react-query'
+import dayjs from 'dayjs'
+import Decimal from 'decimal.js'
+import { useEffect, useMemo, useState } from 'react'
 
 const convertDate = (date: string): [string, string] => {
   const current = dayjs()
@@ -29,9 +43,8 @@ const convertDate = (date: string): [string, string] => {
 }
 
 interface FinanceValuationProps {
-   stock?: StockWithExt
+  stock?: StockWithExt
 }
-
 
 export const FinanceValuation = (props: FinanceValuationProps) => {
   const [queryParams, setQueryParams] = useQueryParams<{ symbol: string }>()
@@ -39,7 +52,6 @@ export const FinanceValuation = (props: FinanceValuationProps) => {
   const [date, setDate] = useState('最近三个月')
   const [chartType, setChartType] = useState<'pb' | 'pe'>('pe')
   const dates = useMemo(() => convertDate(date), [date])
-
 
   const { data: valuation } = useQuery({
     queryKey: [getStockValuation.cacheKey, symbol, dates],
@@ -98,7 +110,10 @@ export const FinanceValuation = (props: FinanceValuationProps) => {
 
       <div className="my-12 relative text-center">
         <ToggleGroup
-          value={chartType} onValueChange={v => setChartType(v as any)} type="single" className="gap-0 justify-center"
+          value={chartType}
+          onValueChange={v => setChartType(v as any)}
+          type="single"
+          className="gap-0 justify-center"
         >
           <ToggleGroupItem value="pe" variant="outline" className="rounded-none h-8">
             <div className="w-24">
@@ -171,16 +186,16 @@ const ValuationChart = ({ data }: ValuationChartProps) => {
       xAxis: {
         type: 'category',
         axisLine: {
-          show: false,
+          show: false
         },
         axisTick: {
-          show: false,
+          show: false
         },
         data: data.items.map(v => v[0])
       },
       yAxis: {
         axisLine: {
-          show: true,
+          show: true
         },
         splitLine: {
           lineStyle: {
@@ -188,13 +203,13 @@ const ValuationChart = ({ data }: ValuationChartProps) => {
           }
         },
         axisTick: {
-          show: false,
+          show: false
         },
         splitNumber: 4,
         type: 'value',
         scale: true,
         axisPointer: {
-          show: true,
+          show: true
         }
       },
       series: [
@@ -203,7 +218,7 @@ const ValuationChart = ({ data }: ValuationChartProps) => {
           type: 'line',
           symbol: 'none',
           data: data.items.map(v => v[1]),
-          color: '#ff9800',
+          color: '#ff9800'
         },
         {
           name: '高区位',
@@ -228,7 +243,7 @@ const ValuationChart = ({ data }: ValuationChartProps) => {
               }
             }
           },
-          data: [0, data.max],
+          data: [0, data.max]
         },
         {
           name: '常规区',
@@ -250,9 +265,7 @@ const ValuationChart = ({ data }: ValuationChartProps) => {
     chart.current.setOption(options)
   }, [data, chart])
 
-  return (
-    <div className="w-full h-full" ref={dom} />
-  )
+  return <div className="w-full h-full" ref={dom} />
 }
 
 interface ValuationPieChartProps {
@@ -272,7 +285,7 @@ const ValuationPieChart = ({ name, data, options }: ValuationPieChartProps) => {
   useEffect(() => {
     if (!chart.current) return
 
-    if(!data){
+    if (!data) {
       chart.current.clear()
       return
     }
@@ -289,7 +302,7 @@ const ValuationPieChart = ({ name, data, options }: ValuationPieChartProps) => {
           label: {
             show: false,
             position: 'center',
-            color: '#fff',
+            color: '#fff'
           },
           type: 'pie',
           radius: ['30%', '80%'],
@@ -297,7 +310,7 @@ const ValuationPieChart = ({ name, data, options }: ValuationPieChartProps) => {
           labelLine: {
             show: false
           },
-          data: data?.map(v => ({ name: v.name, value: v.revenue })),
+          data: data?.map(v => ({ name: v.name, value: v.revenue }))
         }
       ]
     }
@@ -311,17 +324,26 @@ const ValuationPieChart = ({ name, data, options }: ValuationPieChartProps) => {
     }
   }, [options, quarter])
 
-  const columns = useMemo<JknTableProps<ArrayItem<typeof data>>['columns']>(() => [
-    { header: '名称', accessorKey: 'name', enableSorting: false, meta: { align: 'left' } },
-    {
-      header: '营收', accessorKey: 'revenue', enableSorting: false, meta: { align: 'center', width: 90 },
-      cell: ({ row }) => Decimal.create(row.getValue('revenue')).mul(10000).toShortCN()
-    },
-    {
-      header: '占比', accessorKey: 'ratio', enableSorting: false, meta: { align: 'center', width: 90 },
-      cell: ({ row }) => `${Decimal.create(row.getValue('ratio')).mul(100).toFixed(2)}%`
-    }
-  ], [])
+  const columns = useMemo<JknTableProps<ArrayItem<typeof data>>['columns']>(
+    () => [
+      { header: '名称', accessorKey: 'name', enableSorting: false, meta: { align: 'left' } },
+      {
+        header: '营收',
+        accessorKey: 'revenue',
+        enableSorting: false,
+        meta: { align: 'center', width: 90 },
+        cell: ({ row }) => Decimal.create(row.getValue('revenue')).mul(10000).toShortCN()
+      },
+      {
+        header: '占比',
+        accessorKey: 'ratio',
+        enableSorting: false,
+        meta: { align: 'center', width: 90 },
+        cell: ({ row }) => `${Decimal.create(row.getValue('ratio')).mul(100).toFixed(2)}%`
+      }
+    ],
+    []
+  )
 
   return (
     <div>
@@ -337,13 +359,9 @@ const ValuationPieChart = ({ name, data, options }: ValuationPieChartProps) => {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent>
-              {
-                options?.map(v => (
-                  <DropdownMenuItem key={v.year + v.period}>
-                    {`${v.year} ${v.period}`}
-                  </DropdownMenuItem>
-                ))
-              }
+              {options?.map(v => (
+                <DropdownMenuItem key={v.year + v.period}>{`${v.year} ${v.period}`}</DropdownMenuItem>
+              ))}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>

@@ -1,11 +1,11 @@
-import { AddCollect, Button, JknCheckbox, Popover, PopoverAnchor, PopoverContent } from '..'
 import { addStockCollect, getStockCollectCates } from '@/api'
-import to from 'await-to-js'
 import { useToast } from '@/hooks'
-import { useRef, type PropsWithChildren } from 'react'
 import type { CheckboxProps } from '@radix-ui/react-checkbox'
 import { useQuery } from '@tanstack/react-query'
 import { useBoolean } from 'ahooks'
+import to from 'await-to-js'
+import { type PropsWithChildren, useRef } from 'react'
+import { AddCollect, Button, JknCheckbox, Popover, PopoverAnchor, PopoverContent } from '..'
 
 interface CollectStarBatchProps {
   checked: string[]
@@ -16,20 +16,34 @@ interface CollectStarBatchProps {
 
 export const CollectStarBatch = (props: CollectStarBatchProps) => {
   return (
-    <CollectStarBatchPopover open={props.checked.length > 0} onCheckChange={props.onCheckChange} checked={props.checked} allCheckLength={props.allCheckLength}>
+    <CollectStarBatchPopover
+      open={props.checked.length > 0}
+      onCheckChange={props.onCheckChange}
+      checked={props.checked}
+      allCheckLength={props.allCheckLength}
+    >
       <CollectStarBatchContent checked={props.checked} onUpdate={props.onUpdate} />
     </CollectStarBatchPopover>
   )
 }
 
 const CollectStarBatchPopover = (
-  props: PropsWithChildren<{ open: boolean; onCheckChange: CheckboxProps['onCheckedChange']; allCheckLength?: number; checked: string[] }>
+  props: PropsWithChildren<{
+    open: boolean
+    onCheckChange: CheckboxProps['onCheckedChange']
+    allCheckLength?: number
+    checked: string[]
+  }>
 ) => {
   return (
     <Popover open={props.open}>
       <PopoverAnchor asChild>
         <div className="inline-flex items-center justify-center h-full">
-          <JknCheckbox className="w-[15px] h-[15px]" checked={props.allCheckLength ? props.allCheckLength === props.checked.length : props.checked.length > 0} onCheckedChange={props.onCheckChange} />
+          <JknCheckbox
+            className="w-[15px] h-[15px]"
+            checked={props.allCheckLength ? props.allCheckLength === props.checked.length : props.checked.length > 0}
+            onCheckedChange={props.onCheckChange}
+          />
         </div>
       </PopoverAnchor>
       <PopoverContent className="w-60" align="start" side="left">

@@ -1,5 +1,5 @@
-import type { GraphicComponentOption } from "echarts/components"
-import type { EChartsType } from "echarts/core"
+import type { GraphicComponentOption } from 'echarts/components'
+import type { EChartsType } from 'echarts/core'
 
 export abstract class GraphicBase {
   id: string

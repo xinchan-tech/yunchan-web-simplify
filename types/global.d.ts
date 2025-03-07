@@ -57,7 +57,7 @@ interface Window {
       },
       data: StockRawRecord[],
       interval: number
-    ) => Promise<{ data: any[]; status: number}>
+    ) => Promise<{ data: any[]; status: number }>
   }>
 }
 

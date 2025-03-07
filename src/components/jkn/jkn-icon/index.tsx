@@ -1,8 +1,8 @@
-import { cn } from "@/utils/style"
-import { memo, type HtmlHTMLAttributes, type ReactNode } from "react"
+import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components'
+import { useConfig, useStockList } from '@/store'
+import { cn } from '@/utils/style'
+import { type HtmlHTMLAttributes, type ReactNode, memo } from 'react'
 import { JknIconCheckbox } from './icon-checkbox'
-import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components"
-import { useConfig, useStockList } from "@/store"
 
 const iconContext = import.meta.webpackContext('@/assets/icon', {
   recursive: true
@@ -35,11 +35,13 @@ const _JknIcon = ({ name, stock, className, checked, label, ...props }: JknIconP
   const src = name ? iconMap[name] : `${import.meta.env.PUBLIC_BASE_ICON_URL}${stock}`
 
   // biome-ignore lint/a11y/useAltText: <explanation>
-  const icon = (<img className={cn(
-    'w-5 h-5 cursor-pointer rounded-full',
-    checked && 'icon-checked',
-    className
-  )} src={src} alt=""  {...props} />
+  const icon = (
+    <img
+      className={cn('w-5 h-5 cursor-pointer rounded-full', checked && 'icon-checked', className)}
+      src={src}
+      alt=""
+      {...props}
+    />
   )
 
   if (label) {
@@ -52,13 +54,9 @@ const _JknIcon = ({ name, stock, className, checked, label, ...props }: JknIconP
 const wrapperLabel = (component: ReactNode, label: string | ReactNode) => {
   return (
     <HoverCard openDelay={300} closeDelay={300}>
-      <HoverCardTrigger className="flex items-center">
-        {component}
-      </HoverCardTrigger>
+      <HoverCardTrigger className="flex items-center">{component}</HoverCardTrigger>
       <HoverCardContent align="center" side="bottom" className="w-fit py-1 px-2 text-sm">
-        {
-          label
-        }
+        {label}
       </HoverCardContent>
     </HoverCard>
   )
@@ -69,25 +67,32 @@ interface ArrowIconProps extends JknIconProps {
 }
 
 const ArrowIcon = memo(({ direction, ...props }: ArrowIconProps) => {
-  const { setting: { upOrDownColor } } = useConfig()
+  const {
+    setting: { upOrDownColor }
+  } = useConfig()
 
   return (
     <>
-      {
-        direction ? (
-          <>
-            {upOrDownColor === 'upGreenAndDownRed' ? (
-              <JknIcon className="w-3 h-3" name={direction === 'up' ? 'ic_price_up_green' : 'ic_price_down_red'} {...props} />
-            ) : (
-              <JknIcon className="w-3 h-3" name={direction === 'up' ? 'ic_price_up_red' : 'ic_price_down_green'} {...props} />
-            )}
-          </>
-        ) : null
-      }
+      {direction ? (
+        <>
+          {upOrDownColor === 'upGreenAndDownRed' ? (
+            <JknIcon
+              className="w-3 h-3"
+              name={direction === 'up' ? 'ic_price_up_green' : 'ic_price_down_red'}
+              {...props}
+            />
+          ) : (
+            <JknIcon
+              className="w-3 h-3"
+              name={direction === 'up' ? 'ic_price_up_red' : 'ic_price_down_green'}
+              {...props}
+            />
+          )}
+        </>
+      ) : null}
     </>
   )
 })
-
 
 interface JknSvgIconProps extends HtmlHTMLAttributes<SVGElement> {
   name: IconName
@@ -119,7 +124,6 @@ type JknIcon = typeof _JknIcon & {
   Arrow: typeof ArrowIcon
   Svg: typeof JknSvgIcon
 }
-
 
 export const JknIcon = _JknIcon as JknIcon
 JknIcon.Stock = JknIconStock

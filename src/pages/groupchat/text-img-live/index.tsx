@@ -8,16 +8,16 @@ import {
 
 import { useEffect, useRef, useState } from 'react'
 
-import { useUser } from '@/store'
 import { Button, Input, JknIcon } from '@/components'
 import { useToast } from '@/hooks'
-import ChatWindow from '../group-chat-input/chat-window'
-import UploadUtil from '../Service/uploadUtil'
-import type { InputBoxImage, InputBoxResult } from '../group-chat-input/useInput'
+import { useUser } from '@/store'
 import { uid } from 'radash'
 import Viewer from 'react-viewer'
 import { HighlightDollarWords } from '../Messages/text'
+import UploadUtil from '../Service/uploadUtil'
 import MsgScrollLoader from '../components/msg-scroll-loader'
+import ChatWindow from '../group-chat-input/chat-window'
+import type { InputBoxImage, InputBoxResult } from '../group-chat-input/useInput'
 
 function formatTimestamp(timestamp: number) {
   const date = new Date(timestamp)
@@ -70,7 +70,7 @@ const TextImgLive = () => {
   const [fetchParams, setFetchParams] = useState<opinionsRequestParam>({})
 
   const generateParams = () => {
-    let params: opinionsRequestParam = {
+    const params: opinionsRequestParam = {
       type: '1',
       page: String(pageNumber.current),
       limit: '15'
@@ -103,7 +103,7 @@ const TextImgLive = () => {
 
   const onFileChange = () => {
     if (imgUploadRef.current) {
-      let File = (imgUploadRef.current.files || [])[0]
+      const File = (imgUploadRef.current.files || [])[0]
       dealFile(File)
     }
   }
@@ -116,7 +116,7 @@ const TextImgLive = () => {
       return
     }
     let content = ''
-    let UploadQueue: Array<InputBoxImage> = []
+    const UploadQueue: Array<InputBoxImage> = []
     if (data.msgData && data.msgData.length > 0) {
       data.msgData.forEach(text => {
         content += text.msg

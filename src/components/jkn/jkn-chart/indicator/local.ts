@@ -1,23 +1,23 @@
+import type { StockRawRecord } from '@/api'
 import { useIndicator } from '@/store'
-import { calcIndicator, type IndicatorData } from '@/utils/coiling'
+import { type IndicatorData, calcIndicator } from '@/utils/coiling'
+import type { IndicatorDataType } from '@/utils/coiling/transform'
 import { aesDecrypt } from '@/utils/string'
+import Decimal from 'decimal.js'
 import {
   type CircleAttrs,
   type FigureConstructor,
-  getFigureClass,
   type IndicatorDrawParams,
   IndicatorSeries,
   type IndicatorTemplate,
   type LineAttrs,
   type PolygonAttrs,
   type TextAttrs,
-  type TextStyle
+  type TextStyle,
+  getFigureClass
 } from 'jkn-kline-chart'
-import { candlestickToRaw } from '../utils'
 import { inRange, isArray, isNumber } from 'radash'
-import Decimal from 'decimal.js'
-import type { StockRawRecord } from '@/api'
-import type { IndicatorDataType } from '@/utils/coiling/transform'
+import { candlestickToRaw } from '../utils'
 
 type LocalIndicatorExtend = {
   name: string

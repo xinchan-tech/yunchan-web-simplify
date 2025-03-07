@@ -1,16 +1,11 @@
 const FullScreenLoading = (props: {
-  fullScreen?: boolean;
-  description?: string;
+  fullScreen?: boolean
+  description?: string
 }) => {
   return (
-    <div
-      className="fullscreen-loader flex-col"
-      style={{ position: props.fullScreen === false ? "absolute" : "fixed" }}
-    >
+    <div className="fullscreen-loader flex-col" style={{ position: props.fullScreen === false ? 'absolute' : 'fixed' }}>
       <div className="spinner"></div>
-      <div className="text-white text-sm mt-3">
-        {props.description || "加载中"}
-      </div>
+      <div className="text-white text-sm mt-3">{props.description || '加载中'}</div>
       <style jsx>{`
          {
           .fullscreen-loader {
@@ -46,7 +41,7 @@ const FullScreenLoading = (props: {
         }
       `}</style>
     </div>
-  );
-};
+  )
+}
 
-export default FullScreenLoading;
+export default FullScreenLoading

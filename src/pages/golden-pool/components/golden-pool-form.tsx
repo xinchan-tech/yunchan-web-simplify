@@ -1,6 +1,6 @@
-import { FormField, FormItem, FormLabel, FormControl, Input } from "@/components"
-import { useFormContext } from "react-hook-form"
-import { z } from "zod"
+import { FormControl, FormField, FormItem, FormLabel, Input } from '@/components'
+import { useFormContext } from 'react-hook-form'
+import { z } from 'zod'
 
 export const poolSchema = z.object({
   id: z.string(),
@@ -38,4 +38,3 @@ export const GoldenPoolForm = () => {
     </div>
   )
 }
-

@@ -1,5 +1,7 @@
-import { useGroupChatStoreNew, useGroupChatShortStore } from '@/store/group-chat-new'
-import { useEffect, useRef, useMemo, useState, type MutableRefObject } from 'react'
+import { useGroupChatShortStore, useGroupChatStoreNew } from '@/store/group-chat-new'
+import { type MutableRefObject, useEffect, useMemo, useRef, useState } from 'react'
+import { type ReactNode, forwardRef, useImperativeHandle } from 'react'
+import { Events, animateScroll, scroller } from 'react-scroll'
 import WKSDK, {
   type Message,
   MessageText,
@@ -12,24 +14,22 @@ import WKSDK, {
   type MessageListener,
   type MessageStatusListener
 } from 'wukongimjssdk'
-import { animateScroll, scroller, Events } from 'react-scroll'
-import { useImperativeHandle, forwardRef, type ReactNode } from 'react'
 import ImageCell from '../Messages/Image'
 // import SystemCell from "../Messages/system";
 import TextCell from '../Messages/text'
 
-import ReplyMsg from '../components/reply-msg'
 import { cn } from '@/utils/style'
 import { judgeIsExitNoticeMessage, judgeIsExpireGroupCache, setExpireGroupInCache, sortMessages } from '../chat-utils'
+import ReplyMsg from '../components/reply-msg'
 
-import MsgFilter, { type FilterKey } from './msg-filterbar'
+import FullScreenLoading from '@/components/loading'
 import { useUser } from '@/store'
 import { useLatest, useThrottleFn } from 'ahooks'
 import { useShallow } from 'zustand/react/shallow'
 import SystemCell from '../Messages/system'
 // import { useScrollToBottomOnArrowClick } from "../hooks";
 import { MessagePerPageLimit } from '../Service/constant'
-import FullScreenLoading from '@/components/loading'
+import MsgFilter, { type FilterKey } from './msg-filterbar'
 
 let scrollStart: () => void
 let scrollEnd: () => void
@@ -342,7 +342,7 @@ const GroupChatMsgList = forwardRef((props, ref) => {
       }
     }
   }
-  let jumpToLocatedId = useRef(true)
+  const jumpToLocatedId = useRef(true)
   const gotoLocatedMessagePosition = () => {
     jumpToLocatedId.current = false
     const dom = document.getElementById(locatedMessageIdRef.current)
@@ -492,8 +492,8 @@ const GroupChatMsgList = forwardRef((props, ref) => {
 
   messageStatusListener = (ack: SendackPacket) => {
     // 有时一次会发多条消息，要缓存一下已经赋值过id和seq的消息
-    let msgIdCache: Record<string, boolean> = {}
-    let seqCache: Record<string, boolean> = {}
+    const msgIdCache: Record<string, boolean> = {}
+    const seqCache: Record<string, boolean> = {}
 
     for (let i = 0; i < messagesRef.current.length; i++) {
       const m = messagesRef.current[i]

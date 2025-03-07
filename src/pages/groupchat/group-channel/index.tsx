@@ -1,3 +1,8 @@
+import { Button, Input, useModal } from '@/components'
+import { useChatNoticeStore, useGroupChatShortStore, useGroupChatStoreNew } from '@/store/group-chat-new'
+import { cn } from '@/utils/style'
+import { useLatest } from 'ahooks'
+import { type ReactNode, useEffect, useRef, useState } from 'react'
 import WKSDK, {
   ConnectStatus,
   ConversationAction,
@@ -8,19 +13,16 @@ import WKSDK, {
   CMDContent,
   ChannelTypePerson
 } from 'wukongimjssdk'
-import { ConversationWrap } from '../ConversationWrap'
-import { type ReactNode, useEffect, useRef, useState } from 'react'
-import { useGroupChatStoreNew, useGroupChatShortStore, useChatNoticeStore } from '@/store/group-chat-new'
-import { cn } from '@/utils/style'
-import APIClient from '../Service/APIClient'
-import { useLatest } from 'ahooks'
 import { useShallow } from 'zustand/react/shallow'
-import { Button, Input, useModal } from '@/components'
+import { ConversationWrap } from '../ConversationWrap'
+import APIClient from '../Service/APIClient'
 
 import { getGroupChannels } from '@/api'
 // import { useQuery } from "@tanstack/react-query";
 import ChatAvatar from '../components/chat-avatar'
 
+import { JknIcon, Skeleton } from '@/components'
+import { useQuery } from '@tanstack/react-query'
 import {
   groupToChannelInfo,
   judgeIsExpireGroupCache,
@@ -29,10 +31,8 @@ import {
   setPersonChannelCache,
   setUserInSyncChannelCache
 } from '../chat-utils'
-import { JknIcon, Skeleton } from '@/components'
-import UpdateGroupInfo from './updateGroupInfo'
-import { useQuery } from '@tanstack/react-query'
 import CreateGroup from '../components/create-and-join-group'
+import UpdateGroupInfo from './updateGroupInfo'
 
 export type GroupData = {
   id: string

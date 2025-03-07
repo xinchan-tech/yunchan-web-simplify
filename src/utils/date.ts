@@ -252,7 +252,7 @@ export const dateUtils = {
       }
       return d.format('今天 HH:mm')
     }
-    
+
     if (d.isSame(dayjs().subtract(1, 'day'), 'day')) {
       return d.format('昨天 HH:mm')
     }
