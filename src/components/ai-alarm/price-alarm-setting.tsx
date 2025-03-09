@@ -149,10 +149,10 @@ interface StockSelectProps {
 
 const StockSelect = ({ value, onChange }: StockSelectProps) => {
   const stockMap = useStockList(s => s.listMap)
-  const [search, setSearch] = useState('A')
+  const [search, setSearch] = useState('')
   const [result] = useStockSearch(search)
   return (
-    <Popover>
+    <Popover modal>
       <PopoverTrigger asChild>
         <div className="flex items-center border border-input border-solid rounded-md px-5 py-2.5 flex-1">
           {
@@ -168,7 +168,7 @@ const StockSelect = ({ value, onChange }: StockSelectProps) => {
         </div>
       </PopoverTrigger>
       <PopoverContent className="w-[458px]">
-        <div>
+        <div className="w-full">
           <div className="flex items-center border-b-primary px-4">
             <JknIcon.Svg name="search" className="w-6 h-6 text-tertiary" />
             <Input
@@ -187,15 +187,15 @@ const StockSelect = ({ value, onChange }: StockSelectProps) => {
               renderItem={([_icon, symbol, name]) => (
                 <div
                   key={symbol}
-                  className="flex items-center px-2 cursor-pointer hover:bg-accent py-4"
+                  className="flex items-center px-2 cursor-pointer hover:bg-accent py-4 overflow-hidden w-[458px] box-border"
                   onClick={() => {
                     onChange?.(symbol)
                   }}
                   onKeyDown={() => { }}
                 >
-                  <JknIcon.Stock symbol={symbol} className="w-6 h-6 mr-2" />
+                  <JknIcon.Stock symbol={symbol} className="w-6 h-6 mr-2 flex-shrink-0" />
                   <span>{symbol}</span>
-                  <span className="ml-2 text-tertiary text-xs">{name}</span>
+                  <span className="ml-2 text-tertiary text-xs overflow-hidden text-ellipsis whitespace-nowrap">{name}</span>
                 </div>
               )}
             />

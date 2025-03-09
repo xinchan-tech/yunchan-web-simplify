@@ -1,6 +1,6 @@
 import type { StockChartInterval, StockRawRecord } from '@/api'
 import { JknChart } from '@/components'
-import { calcCoiling } from '@/utils/coiling/coiling'
+import { calcCoiling } from '@/utils/coiling'
 import { stockUtils } from '@/utils/stock'
 import { useMount, useUpdateEffect } from 'ahooks'
 import dayjs from 'dayjs'
@@ -40,8 +40,9 @@ export const MainChart = (props: MainChartProps) => {
     }: { candlesticks: StockRawRecord[]; interval: StockChartInterval; chartId: string }) => {
       const _store = useChartManage.getState().chartStores[chartId]
       const stockData = candlesticks.map(c => stockUtils.toStock(c))
-
+ 
       if (_store.coiling.length) {
+        console.log(candlesticks)
         const r = await calcCoiling(candlesticks, interval)
         _store.coiling.forEach(coiling => {
           chartImp.current?.setCoiling(coiling, r)
@@ -101,6 +102,7 @@ export const MainChart = (props: MainChartProps) => {
     if (activeChartId !== props.chartId) return
 
     const cancelSymbolEvent = chartEvent.on('coilingChange', ({ type, coiling }) => {
+      console.log('coilingChange', type, coiling)
       if (type === 'add') {
         calcCoiling(candlesticks, chartStore.interval).then(r => {
           coiling.forEach(coiling => {
