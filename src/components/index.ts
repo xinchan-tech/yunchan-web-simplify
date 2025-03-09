@@ -51,4 +51,5 @@ export * from './ui/toast'
 export * from './ui/toaster'
 export * from './ui/toggle'
 export * from './ui/toggle-group'
+export * from './ui/tabs'
 
