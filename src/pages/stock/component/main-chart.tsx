@@ -42,7 +42,6 @@ export const MainChart = (props: MainChartProps) => {
       const stockData = candlesticks.map(c => stockUtils.toStock(c))
  
       if (_store.coiling.length) {
-        console.log(candlesticks)
         const r = await calcCoiling(candlesticks, interval)
         _store.coiling.forEach(coiling => {
           chartImp.current?.setCoiling(coiling, r)
@@ -102,7 +101,6 @@ export const MainChart = (props: MainChartProps) => {
     if (activeChartId !== props.chartId) return
 
     const cancelSymbolEvent = chartEvent.on('coilingChange', ({ type, coiling }) => {
-      console.log('coilingChange', type, coiling)
       if (type === 'add') {
         calcCoiling(candlesticks, chartStore.interval).then(r => {
           coiling.forEach(coiling => {

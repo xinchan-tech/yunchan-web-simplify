@@ -17,6 +17,8 @@ import { ToggleGroup, ToggleGroupItem } from '../ui/toggle-group'
 import { useStockList } from "@/store"
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover"
 import { JknVirtualList } from "../jkn/jkn-virtual-list"
+import { Separator } from "../ui/separator"
+import { cn } from "@/utils/style"
 
 const formSchema = z.object({
   symbol: z.string({ message: '股票代码错误' }).min(1, '股票代码错误'),
@@ -75,14 +77,14 @@ export const PriceAlarmSetting = (props: PriceAlarmSetting) => {
   }
 
   return (
-    <div>
+    <div className="w-full overflow-hidden">
       <FormProvider {...form}>
         <form className="px-8 mt-4">
           <FormField
             control={form.control}
             name="symbol"
             render={({ field }) => (
-              <FormItem className="pb-4 flex items-center border-0 border-b border-solid border-dialog-border space-y-0">
+              <FormItem className="pb-4 flex items-center space-y-0">
                 <FormLabel className="w-32">股票名称</FormLabel>
                 <FormControl>
                   <StockSelect {...field} />
@@ -91,13 +93,15 @@ export const PriceAlarmSetting = (props: PriceAlarmSetting) => {
             )}
           />
 
+          <div className="text-xs text-tertiary">条件</div>
+          <Separator className="my-2 h-[1px] w-full" />
           <FormField
             control={form.control}
             name="rise"
             render={({ field }) => (
-              <FormItem>
-                <FormLabel>二、股价设置</FormLabel>
-                <FormControl>
+              <FormItem className="pb-4 flex space-y-0">
+                <FormLabel className="w-32">价格报警</FormLabel>
+                <FormControl className="flex-1">
                   <PriceSetting mode="rise" value={field.value} onChange={field.onChange} />
                 </FormControl>
               </FormItem>
@@ -108,7 +112,8 @@ export const PriceAlarmSetting = (props: PriceAlarmSetting) => {
             control={form.control}
             name="fall"
             render={({ field }) => (
-              <FormItem className="!mt-4 pb-4 border-0 border-b border-solid border-dialog-border">
+              <FormItem className="pb-4 flex space-y-0">
+                <FormLabel className="w-32" />
                 <FormControl>
                   <PriceSetting mode="fall" value={field.value} onChange={field.onChange} />
                 </FormControl>
@@ -151,16 +156,17 @@ const StockSelect = ({ value, onChange }: StockSelectProps) => {
   const stockMap = useStockList(s => s.listMap)
   const [search, setSearch] = useState('')
   const [result] = useStockSearch(search)
+  const [open, setOpen] = useState(false)
   return (
-    <Popover modal>
+    <Popover modal open={open} onOpenChange={v => !v && setOpen(false)}>
       <PopoverTrigger asChild>
-        <div className="flex items-center border border-input border-solid rounded-md px-5 py-2.5 flex-1">
+        <div className="flex items-center border border-input border-solid rounded-md px-5 py-2.5 flex-1 overflow-hidden" onClick={() => setOpen(true)} onKeyDown={() => { }}>
           {
             value ? (
               <>
                 <JknIcon.Stock symbol={value} className="w-6 h-6 mr-2" />
                 <span>{value}</span>
-                <span className="ml-2 text-tertiary text-xs">{stockMap[value]?.[2]}</span>
+                <span className="ml-2 text-tertiary text-xs w-64 overflow-hidden text-ellipsis whitespace-nowrap">{stockMap[value]?.[2]}</span>
               </>
             ) : <span className="text-tertiary text-xs">--</span>
           }
@@ -190,6 +196,7 @@ const StockSelect = ({ value, onChange }: StockSelectProps) => {
                   className="flex items-center px-2 cursor-pointer hover:bg-accent py-4 overflow-hidden w-[458px] box-border"
                   onClick={() => {
                     onChange?.(symbol)
+                    setOpen(false)
                   }}
                   onKeyDown={() => { }}
                 >
@@ -270,43 +277,48 @@ const PriceSetting = forwardRef((props: PriceSettingProps, _) => {
   }
 
   return (
-    <div className="flex flex-col space-y-2 text-sm">
+    <div className="flex flex-col space-y-2 text-sm flex-1">
       {list.map((item, index) => (
-        <div key={item.id} className="flex items-center space-x-2">
-          <Checkbox checked={item.checked} onCheckedChange={checked => onCheckChange(item.id, checked)} />
-          {props.mode === 'rise' ? (
-            <>
-              <span>股价涨到</span>
-              <JknIcon name="ic_price_up_green" className="w-4 h-4" />
-              <Input
-                type="number"
-                className="w-32 border-border text-stock-up"
-                size="sm"
-                value={item.value}
-                onChange={e => onValueChange(item.id, e.target.value)}
-              />
-              <span className="text-stock-up w-24">{calcPercent(item.value)}</span>
-            </>
-          ) : (
-            <>
-              <span>股价跌到</span>
-              <JknIcon name="ic_price_down_red" className="w-4 h-4" />
-              <Input
-                type="number"
-                className="w-32 border-border text-stock-down"
-                size="sm"
-                value={item.value}
-                onChange={e => onValueChange(item.id, e.target.value)}
-              />
-              <span className="text-stock-down w-24">{calcPercent(item.value)}</span>
-            </>
-          )}
+        <div key={item.id} className="flex flex-col">
+          <div className={cn('text-tertiary flex items-center space-x-2 my-2', item.checked ? 'text-foreground' : '')}>
+            <Checkbox checked={item.checked} onCheckedChange={checked => onCheckChange(item.id, checked)} />
+            <span>
+              {props.mode === 'rise' ? '上涨' : '下跌'}
+            </span>
+          </div>
+          <div className="flex items-center">
+            {props.mode === 'rise' ? (
+              <div className="py-1 border border-solid border-input rounded w-full flex items-center">
+                <Input
+                  type="number"
+                  className="w-64 border-none flex-1"
+                  value={item.value}
+                  onChange={e => onValueChange(item.id, e.target.value)}
+                />
+                <Separator className="h-4 w-[1px] bg-border mx-2" />
+                <span className="text-stock-up min-w-16 text-center">{calcPercent(item.value)}</span>
+              </div>
+            ) : (
+              <>
+                 <div className="py-1 border border-solid border-input rounded w-full flex items-center">
+                <Input
+                  type="number"
+                  className="w-64 border-none flex-1"
+                  value={item.value}
+                  onChange={e => onValueChange(item.id, e.target.value)}
+                />
+                <Separator className="h-4 w-[1px] bg-border mx-2" />
+                <span className="text-stock-down min-w-16 text-center">{calcPercent(item.value)}</span>
+              </div>
+              </>
+            )}
 
-          {index === 0 ? (
-            <JknIcon name="add" className="w-4 h-4" onClick={addListItem} />
-          ) : (
-            <JknIcon name="ic_del_bg" className="w-4 h-4" onClick={() => removeListItem(item.id)} />
-          )}
+            {index === 0 ? (
+              <JknIcon name="add" className="w-6 h-6 mx-1" onClick={addListItem} />
+            ) : (
+              <JknIcon name="ic_del_bg" className="w-6 h-6 mx-1" onClick={() => removeListItem(item.id)} />
+            )}
+          </div>
         </div>
       ))}
     </div>
