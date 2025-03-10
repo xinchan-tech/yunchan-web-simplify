@@ -6,7 +6,6 @@ import {
   type CandleType,
   type Chart,
   type LayoutChildType,
-  PaneState,
   dispose,
   init,
   registerFigure,
@@ -107,7 +106,7 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
             noChangeWickColor: downColor
           },
           tooltip: {
-            showType: 'rect',
+            showType: 'rect' as any,
             custom: ({ current }: { current: Candlestick }) => {
               let format = 'MM-DD HH:mm w'
 

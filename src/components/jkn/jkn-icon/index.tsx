@@ -1,7 +1,7 @@
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components'
 import { useConfig, useStockList } from '@/store'
 import { cn } from '@/utils/style'
-import { type HtmlHTMLAttributes, type ReactNode, memo } from 'react'
+import { CSSProperties, type HtmlHTMLAttributes, type ReactNode, memo } from 'react'
 import { JknIconCheckbox } from './icon-checkbox'
 
 const iconContext = import.meta.webpackContext('@/assets/icon', {
@@ -26,8 +26,9 @@ interface JknIconProps extends HtmlHTMLAttributes<HTMLImageElement> {
   stock?: string
   checked?: boolean
   label?: string | ReactNode
+  style?: CSSProperties
 }
-const _JknIcon = ({ name, stock, className, checked, label, ...props }: JknIconProps) => {
+const _JknIcon = ({ name, stock, className, checked, label, style, ...props }: JknIconProps) => {
   if (!name && !stock) {
     return null
   }
@@ -39,6 +40,7 @@ const _JknIcon = ({ name, stock, className, checked, label, ...props }: JknIconP
     <img
       className={cn('w-5 h-5 cursor-pointer rounded-full', checked && 'icon-checked', className)}
       src={src}
+      style={style}
       alt=""
       {...props}
     />

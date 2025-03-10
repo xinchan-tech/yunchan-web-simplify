@@ -38,7 +38,7 @@ export const KChart = (props: KChartProps) => {
   const chartCount = useMemo(() => renderUtils.getViewMode(viewMode), [viewMode])
 
   return (
-    <div className="h-full overflow-hidden flex flex-col">
+    <div className="h-full overflow-hidden flex flex-col bg-background">
       <ChartToolBar />
       {/* <div className="w-full flex-shrink-0">
         <div className="flex border border-solid border-border px-4 items-center">

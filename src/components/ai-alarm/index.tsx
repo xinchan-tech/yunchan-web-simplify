@@ -155,7 +155,7 @@ export const StockAlarm = (props: PropsWithChildren<AiAlarmProps>) => {
               </VisuallyHidden>
             </DialogHeader>
             <div>
-              <PriceAlarmForm code={props.code} />
+              <PriceAlarmForm code={props.code} onClose={() => setFalse()} />
             </div>
           </DialogContent>
         </Dialog>

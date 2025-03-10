@@ -60,8 +60,10 @@ export const markOverlayFigure: FigureTemplate<MarkOverlayAttrs> = {
     const padding = [5, 10, 5, 10]
     const fontSize = 12
     const height = padding[0] + fontSize + padding[2]
-    const width = maxWidth + padding[1] + padding[3]
+    const width = maxWidth + padding[1] + padding[3] + padding[3]
+    ctx.save()
     ctx.beginPath()
+
     // 虚线
     ctx.moveTo(x, y)
     ctx.strokeStyle = '#949596'
@@ -73,6 +75,7 @@ export const markOverlayFigure: FigureTemplate<MarkOverlayAttrs> = {
     ctx.fillRect(x - width / 2, 0, width, height)
     ctx.fillStyle = '#fff'
     ctx.font = `${fontSize}px Arial`
+    ctx.textBaseline = 'top'
     ctx.fillText(date, x - width / 2 + padding[1], padding[0])
     // ctx.strokeText(date, x - width / 2 + padding[3], padding[0] + fontSize)
 
@@ -84,6 +87,7 @@ export const markOverlayFigure: FigureTemplate<MarkOverlayAttrs> = {
     // ctx.strokeText(title, x - width / 2 + padding[3], height + padding[0] + fontSize)
 
     ctx.closePath()
+    ctx.restore()
   },
   checkEventOn: (coordinate, attrs) => {
     const { x, y } = coordinate

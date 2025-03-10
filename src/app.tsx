@@ -200,7 +200,7 @@ const App = () => {
 
           <div className="flex-1 overflow-hidden flex flex-col">
             <div className="flex-1 overflow-hidden p-1 box-border">
-              <div className="bg-muted rounded-xs overflow-hidden w-full h-full">
+              <div className="rounded-xs overflow-hidden w-full h-full">
                 <Outlet />
               </div>
             </div>

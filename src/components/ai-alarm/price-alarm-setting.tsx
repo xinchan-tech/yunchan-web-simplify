@@ -13,12 +13,12 @@ import { Button } from '../ui/button'
 import { Checkbox } from '../ui/checkbox'
 import { FormControl, FormField, FormItem, FormLabel } from '../ui/form'
 import { Input } from '../ui/input'
-import { ToggleGroup, ToggleGroupItem } from '../ui/toggle-group'
 import { useStockList } from "@/store"
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover"
 import { JknVirtualList } from "../jkn/jkn-virtual-list"
 import { Separator } from "../ui/separator"
 import { cn } from "@/utils/style"
+import { Tabs, TabsList, TabsTrigger } from "../ui/tabs"
 
 const formSchema = z.object({
   symbol: z.string({ message: '股票代码错误' }).min(1, '股票代码错误'),
@@ -29,6 +29,7 @@ const formSchema = z.object({
 
 interface PriceAlarmSetting {
   code?: string
+  onClose?: () => void
 }
 
 export const PriceAlarmSetting = (props: PriceAlarmSetting) => {
@@ -121,13 +122,15 @@ export const PriceAlarmSetting = (props: PriceAlarmSetting) => {
             )}
           />
 
+          <Separator className="my-2 h-[1px] w-full" />
+
           <FormField
             control={form.control}
             name="frequency"
             render={({ field }) => (
-              <FormItem>
-                <FormLabel>三、提醒频率</FormLabel>
-                <FormControl>
+              <FormItem className="pb-4 flex space-y-0">
+                <FormLabel className="w-32">三、触发频率</FormLabel>
+                <FormControl >
                   <FrequencySelect {...field} />
                 </FormControl>
               </FormItem>
@@ -135,13 +138,13 @@ export const PriceAlarmSetting = (props: PriceAlarmSetting) => {
           />
         </form>
       </FormProvider>
-      <div className="text-center mt-8">
+      <div className="text-right mt-8 space-x-2">
+        <Button className="w-24" variant="outline" onClick={() => props.onClose?.()}>
+          取消
+        </Button>
         <Button className="w-24" onClick={onSubmit}>
           确定
         </Button>
-        <div className="text-xs text-tertiary mt-2">
-          报警设置说明：选择股票后输入股票价涨跌值，设置提醒频率即可添加报警
-        </div>
       </div>
     </div>
   )
@@ -300,23 +303,23 @@ const PriceSetting = forwardRef((props: PriceSettingProps, _) => {
               </div>
             ) : (
               <>
-                 <div className="py-1 border border-solid border-input rounded w-full flex items-center">
-                <Input
-                  type="number"
-                  className="w-64 border-none flex-1"
-                  value={item.value}
-                  onChange={e => onValueChange(item.id, e.target.value)}
-                />
-                <Separator className="h-4 w-[1px] bg-border mx-2" />
-                <span className="text-stock-down min-w-16 text-center">{calcPercent(item.value)}</span>
-              </div>
+                <div className="py-1 border border-solid border-input rounded w-full flex items-center">
+                  <Input
+                    type="number"
+                    className="w-64 border-none flex-1"
+                    value={item.value}
+                    onChange={e => onValueChange(item.id, e.target.value)}
+                  />
+                  <Separator className="h-4 w-[1px] bg-border mx-2" />
+                  <span className="text-stock-down min-w-16 text-center">{calcPercent(item.value)}</span>
+                </div>
               </>
             )}
 
             {index === 0 ? (
-              <JknIcon name="add" className="w-6 h-6 mx-1" onClick={addListItem} />
+              <JknIcon.Svg name="plus-circle" className="w-6 h-6 ml-2 text-tertiary hover:text-foreground cursor-pointer" onClick={addListItem} />
             ) : (
-              <JknIcon name="ic_del_bg" className="w-6 h-6 mx-1" onClick={() => removeListItem(item.id)} />
+              <JknIcon.Svg name="delete" className="w-6 h-6 ml-2 text-tertiary hover:text-foreground cursor-pointer" onClick={() => removeListItem(item.id)} />
             )}
           </div>
         </div>
@@ -331,13 +334,17 @@ interface FrequencySelectProps {
 }
 const FrequencySelect = forwardRef((props: FrequencySelectProps, _) => {
   return (
-    <ToggleGroup value={props.value} type="single" onValueChange={props.onChange}>
-      <ToggleGroupItem className="w-32 " value="0">
-        仅提醒一次
-      </ToggleGroupItem>
-      <ToggleGroupItem className="w-32" value="1">
-        持续提醒
-      </ToggleGroupItem>
-    </ToggleGroup>
+    <div className="ml-auto">
+      <Tabs value={props.value} onValueChange={props.onChange}>
+        <TabsList size="lg">
+          <TabsTrigger value="0" asChild>
+            <span>仅提醒一次</span>
+          </TabsTrigger>
+          <TabsTrigger value="1" asChild>
+            <span>持续提醒</span>
+          </TabsTrigger>
+        </TabsList>
+      </Tabs>
+    </div>
   )
 })

@@ -31,7 +31,7 @@ const StockPage = () => {
   }, [])
 
   return (
-    <div className="h-full flex flex-nowrap bg-muted overflow-hidden">
+    <div className="h-full flex flex-nowrap overflow-hidden">
       {/* {
         leftVisible !== 'hide' ? (
           <div id="stock-trading-left-container" data-width={leftVisible} className="order w-[300px] data-[width=half]:w-[200px] data-[width=hide]:hidden h-full flex-shrink-0">
@@ -39,7 +39,7 @@ const StockPage = () => {
           </div>
         ) : null
       } */}
-      <div className="flex-1 order-1 h-full">
+      <div className="flex-1 order-1 h-full rounded-xs overflow-hidden">
         {params.type && !['finance'].includes(params.type) ? (
           <KChart
             onChangeLeftSide={onLeftSideChange}

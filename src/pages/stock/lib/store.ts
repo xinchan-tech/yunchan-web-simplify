@@ -224,6 +224,7 @@ export const chartManage = {
    * 设置分时
    */
   setInterval: (interval: StockChartInterval, chartId?: string) => {
+    chartEvent.get().emit('intervalChange', interval)
     chartManage.setStore(state => {
       state.interval = interval
     }, chartId)

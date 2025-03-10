@@ -3,12 +3,11 @@ import { JknChart } from '@/components'
 import { calcCoiling } from '@/utils/coiling'
 import { stockUtils } from '@/utils/stock'
 import { useMount, useUpdateEffect } from 'ahooks'
-import dayjs from 'dayjs'
 import qs from 'qs'
 import { type ComponentRef, useCallback, useEffect, useRef, useState } from 'react'
 import { chartEvent } from '../lib/event'
-import { fetchCandlesticks, fetchOverlayMark, useCandlesticks } from '../lib/request'
-import { ChartType, useChartManage } from '../lib/store'
+import { fetchCandlesticks, useCandlesticks } from '../lib/request'
+import { chartManage, ChartType, useChartManage } from '../lib/store'
 import { renderUtils } from '../lib/utils'
 import { ChartContextMenu } from './chart-context-menu'
 
@@ -40,7 +39,7 @@ export const MainChart = (props: MainChartProps) => {
     }: { candlesticks: StockRawRecord[]; interval: StockChartInterval; chartId: string }) => {
       const _store = useChartManage.getState().chartStores[chartId]
       const stockData = candlesticks.map(c => stockUtils.toStock(c))
- 
+
       if (_store.coiling.length) {
         const r = await calcCoiling(candlesticks, interval)
         _store.coiling.forEach(coiling => {
@@ -112,6 +111,12 @@ export const MainChart = (props: MainChartProps) => {
       }
     })
 
+    const cancelIntervalEvent = chartEvent.on('intervalChange', async (interval) => {
+      if (renderUtils.isTimeIndexChart(interval)) {
+        chartManage.setType(ChartType.Area, props.chartId)
+      }
+    })
+
     const cancelIndicatorEvent = chartEvent.on('mainIndicatorChange', ({ type, indicator }) => {
       if (type === 'add') {
         chartImp.current?.createIndicator(indicator.id, symbol, chartStore.interval, indicator.name)
@@ -178,6 +183,7 @@ export const MainChart = (props: MainChartProps) => {
       cancelSubIndicatorEvent()
       cancelStockCompareChange()
       cancelMarkChange()
+      cancelIntervalEvent()
     }
   }, [activeChartId, props.chartId, candlesticks, chartStore.interval, symbol, startAt])
 

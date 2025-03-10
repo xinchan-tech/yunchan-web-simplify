@@ -2,6 +2,7 @@ import {
   StockChartInterval,
   getStockBaseCodeInfo,
   getStockBrief,
+  getStockCollects,
   getStockNotice,
   getStockQuote,
   getStockRelated,
@@ -13,6 +14,7 @@ import {
   CapsuleTabs,
   Carousel,
   CarouselContent,
+  CollectDropdownMenu,
   CollectStar,
   DropdownMenu,
   DropdownMenuContent,
@@ -29,11 +31,12 @@ import {
   PriceAlarm,
   ScrollArea,
   Separator,
+  StockView,
   SubscribeSpan,
   withTooltip
 } from '@/components'
-import { usePropValue, useStockQuoteSubscribe, useTableData, useTableRowClickToStockTrading } from '@/hooks'
-import { useTime } from '@/store'
+import { useStockQuoteSubscribe, useTableData, useTableRowClickToStockTrading } from '@/hooks'
+import { useTime, useToken } from '@/store'
 import { stockUtils } from '@/utils/stock'
 import { cn } from '@/utils/style'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
@@ -43,48 +46,27 @@ import Autoplay from 'embla-carousel-autoplay'
 import { nanoid } from 'nanoid'
 import { memo, useCallback, useEffect, useMemo, useState } from 'react'
 import { stockBaseCodeInfoExtend, useSymbolQuery } from '../lib'
+import { dateUtils } from "@/utils/date"
+import type { TableProps } from "rc-table"
 export const StockInfo = () => {
-  const [active, setActive] = useState<'quote' | 'news'>('quote')
+  // const [active] = useState<'quote' | 'news'>('quote')
   const code = useSymbolQuery()
 
   return (
-    <div className="border border-solid border-border h-full flex flex-col overflow-hidden">
-      <div className="p-1 border-0 border-b border-solid border-border">
-        <CapsuleTabs activeKey={active} onChange={setActive as (v: string) => void}>
-          <CapsuleTabs.Tab className="flex-1 text-center" label="报价" value="quote" />
-          <CapsuleTabs.Tab className="flex-1 text-center" label="简介" value="news" />
-        </CapsuleTabs>
-      </div>
+    <div className="h-full flex flex-col overflow-hidden rounded-xs ml-1">
       <div className="flex-1 flex flex-col overflow-hidden">
-        <StockBaseInfo />
-        {active === 'quote' ? (
-          <>
-            <StockQuote />
-            <div className="flex w-full">
-              <div className="text-[#ff0075] py-8 flex-1 flex flex-col items-center border-0 border-r border-b border-solid border-border">
-                <PriceAlarm code={code}>
-                  <div className="mt-1">
-                    <JknIcon name="ic_price_call" className="w-10 h-10" />
-                    <div>股价报警</div>
-                  </div>
-                </PriceAlarm>
-              </div>
-              <div className="text-[#ff0075] py-8 flex-1 flex flex-col items-center border-0 border-b border-solid border-border">
-                <AiAlarm code={code}>
-                  <div className="mt-1">
-                    <JknIcon name="ai_call" className="w-10 h-10" />
-                    <div>AI报警</div>
-                  </div>
-                </AiAlarm>
-              </div>
-            </div>
-            <StockNews />
-            <Separator />
-            <StockRelated />
-          </>
-        ) : (
-          <StockBrief />
-        )}
+        <div className="bg-background rounded overflow-hidden flex-shrink-0">
+          <StockBaseInfo />
+          <StockQuote />
+          <StockNews />
+        </div>
+        <div className="flex-1 overflow-hidden mt-1">
+          <GoldenStockPool />
+        </div>
+        <div className="flex-1 overflow-hidden mt-1">
+          <StockRelated />
+        </div>
+
       </div>
     </div>
   )
@@ -162,9 +144,15 @@ const StockBaseInfo = () => {
   )
   return (
     <>
-      <div className="flex w-full items-center px-2 box-border py-2 border-0 border-b border-solid border-border">
-        <span className="text-lg">{code}</span>
-        <span className="flex-1 text-sm text-tertiary mx-2">{data?.name}</span>
+      <div className="flex w-full items-center px-2 box-border pt-2 bg-background ">
+        {/* <span className="text-lg">{code}</span>
+        <span className="flex-1 text-sm text-tertiary mx-2">{data?.name}</span> */}
+        <span className="flex items-center w-full overflow-hidden">
+          <JknIcon.Stock symbol={code} />
+          <span className="text-lg">{code}</span>
+          &nbsp;
+          <span className="text-tertiary text-xs flex-1 overflow-hidden text-ellipsis whitespace-nowrap">{data?.name}</span>
+        </span>
         {data?.code ? (
           <CollectStar
             onUpdate={onStarUpdate}
@@ -175,7 +163,7 @@ const StockBaseInfo = () => {
           />
         ) : null}
       </div>
-      <div className="mt-1 py-2 border-0 border-b border-solid border-border">
+      <div className="py-1 space-y-2 bg-background">
         <StockQuoteBar
           label="点击查看盘中分时走势"
           percent={data?.percent}
@@ -241,11 +229,11 @@ const StockQuoteBar = withTooltip(
 
     return (
       <div
-        className={cn('flex items-center justify-between px-2 box-border text-xs my-1 cursor-pointer text-tertiary')}
+        className={cn('flex items-baseline flex-wrap px-2 box-border text-xs my-1 cursor-pointer text-tertiary')}
         onClick={onClick}
-        onKeyDown={() => {}}
+        onKeyDown={() => { }}
       >
-        <span className={cn('text-base font-bold ', props.interval === StockChartInterval.INTRA_DAY && 'text-lg')}>
+        <span className={cn('text-base font-bold ', props.interval === StockChartInterval.INTRA_DAY && 'text-xl')}>
           <SubscribeSpan.Price
             symbol={symbol}
             arrow={props.percent !== Number.POSITIVE_INFINITY}
@@ -257,6 +245,7 @@ const StockQuoteBar = withTooltip(
             zeroText="--"
           />
         </span>
+        &emsp;
         <span>
           <SubscribeSpan.Percent
             type="amount"
@@ -270,6 +259,7 @@ const StockQuoteBar = withTooltip(
             zeroText="--"
           />
         </span>
+        &emsp;
         <span>
           <SubscribeSpan.Percent
             symbol={symbol}
@@ -283,16 +273,14 @@ const StockQuoteBar = withTooltip(
             nanText="--"
           />
         </span>
-        <span className="text-tertiary">
+        <span className="text-tertiary w-full text-xs">
           {props.tradingLabel}
           <SubscribeSpan
             trading={trading}
             symbol={symbol}
             value={props.time?.slice(5, 11).replace('-', '/')}
             formatter={v =>
-              dayjs(v.record.time * 1000)
-                .tz('America/New_York')
-                .format('MM/DD')
+              dateUtils.toUsDay(v).format('MM/DD hh:mm')
             }
           />
         </span>
@@ -302,6 +290,7 @@ const StockQuoteBar = withTooltip(
 )
 
 const StockQuote = () => {
+  const [expanded, setExpanded] = useState(false)
   const code = useSymbolQuery()
 
   const quote = useQuery({
@@ -326,83 +315,76 @@ const StockQuote = () => {
   }, [codeInfo.data])
 
   return (
-    <div>
-      <div className="mt-1 py-2 grid grid-cols-2 border-0 border-b border-solid border-border text-xs px-2 gap-y-2">
-        <div>
-          <span className="text-tertiary">最高价&nbsp;&nbsp;</span>
-          <span>
-            <NumSpan
-              value={quote.data?.q_high}
-              isPositive={Decimal.create(quote.data?.q_high).gte(quote.data?.q_close ?? 0)}
-            />
-          </span>
+    <div className="bg-background">
+      <div className="mt-1 grid grid-cols-2 text-xs px-2 gap-y-2 gap-x-4 text-tertiary">
+        <div className="flex items-center justify-between">
+          <span>最高价&nbsp;&nbsp;</span>
+          <span>{Decimal.create(quote.data?.q_high).toFixed(3)}</span>
         </div>
-        <div>
-          <span className="text-tertiary">今开价&nbsp;&nbsp;</span>
-          <span>
-            <NumSpan
-              value={quote.data?.q_open}
-              isPositive={Decimal.create(quote.data?.q_open).gte(quote.data?.q_close ?? 0)}
-            />
-          </span>
+        <div className="flex items-center justify-between">
+          <span>今日价&nbsp;&nbsp;</span>
+          <span>{Decimal.create(quote.data?.q_open).toFixed(3)}</span>
         </div>
-        <div>
-          <span className="text-tertiary">最低价&nbsp;&nbsp;</span>
-          <span>
-            <NumSpan
-              value={quote.data?.q_low}
-              isPositive={Decimal.create(quote.data?.q_low).gte(quote.data?.q_close ?? 0)}
-            />
-          </span>
+        <div className="flex items-center justify-between">
+          <span>最低价&nbsp;&nbsp;</span>
+          <span>{Decimal.create(quote.data?.q_close).toFixed(3)}</span>
         </div>
-        <div>
-          <span className="text-tertiary">昨收价&nbsp;&nbsp;</span>
-          <span>{Decimal.create(quote.data?.q_preday_close).toFixed(3)}</span>
-        </div>
-        <div>
-          <span className="text-tertiary">成交量&nbsp;&nbsp;</span>
-          <span>{quote.data?.volume}</span>
-        </div>
-        <div>
-          <span className="text-tertiary">成交额&nbsp;&nbsp;</span>
+        <div className="flex items-center justify-between">
+          <span>成交额&nbsp;&nbsp;</span>
           <span>{quote.data?.amount}</span>
         </div>
-        <div>
-          <span className="text-tertiary">总市值&nbsp;&nbsp;</span>
+        <div className="flex items-center justify-between">
+          <span>总市值&nbsp;&nbsp;</span>
           <span>{Decimal.create(stock?.marketValue).toShortCN(3)}</span>
         </div>
-        <div>
-          <span className="text-tertiary">换手率&nbsp;&nbsp;</span>
+        <div className="flex items-center justify-between">
+          <span>换手率&nbsp;&nbsp;</span>
           <span>{Decimal.create(stock?.turnOverRate).mul(100).toFixed(2)}%</span>
         </div>
-        <div>
-          <span className="text-tertiary">市盈率&nbsp;&nbsp;</span>
-          <span>{stock?.pe ? Decimal.create(stock.pe).toFixed(2) : '--'}</span>
-        </div>
-        <div>
-          <span className="text-tertiary">市净率&nbsp;&nbsp;</span>
-          <span>{stock?.pb ? Decimal.create(stock.pb).toFixed(2) : '--'}</span>
-        </div>
-        <div>
-          <span className="text-tertiary">52周高&nbsp;&nbsp;</span>
-          <span>
-            <NumSpan
-              value={quote.data?.q_year_high}
-              isPositive={Decimal.create(quote.data?.q_year_high).gte(quote.data?.q_close ?? 0)}
-            />
-          </span>
-        </div>
-        <div>
-          <span className="text-tertiary">52周低&nbsp;&nbsp;</span>
-          <span>
-            <NumSpan
-              value={quote.data?.q_year_low}
-              isPositive={Decimal.create(quote.data?.q_year_low).gte(quote.data?.q_close ?? 0)}
-            />
-          </span>
-        </div>
+        {
+          expanded ? (
+            <>
+              <div className="flex items-center justify-between">
+                <span>昨收价&nbsp;&nbsp;</span>
+                <span>{Decimal.create(quote.data?.q_preday_close).toFixed(3)}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span>成交量&nbsp;&nbsp;</span>
+                <span>{quote.data?.volume}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span>市盈率&nbsp;&nbsp;</span>
+                <span>{stock?.pe ? Decimal.create(stock.pe).toFixed(2) : '--'}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span>市净率&nbsp;&nbsp;</span>
+                <span>{stock?.pb ? Decimal.create(stock.pb).toFixed(2) : '--'}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span>52周高&nbsp;&nbsp;</span>
+                <span>{Decimal.create(quote.data?.q_year_high).toFixed(3)}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span>52周低&nbsp;&nbsp;</span>
+                <span>{Decimal.create(quote.data?.q_year_low).toFixed(3)}</span>
+              </div>
+            </>
+          ) : null
+        }
       </div>
-      {+bubble.value !== 0 ? (
+
+      {
+        <div className="w-full text-center">
+          <span className="bg-accent rounded-3xl w-6 h-3 inline-flex items-center justify-center cursor-pointer"
+            onClick={() => setExpanded(!expanded)}
+            onKeyDown={() => { }}
+          >
+            <JknIcon.Svg name="arrow-down" style={{ rotate: expanded ? '180deg' : '0deg' }} size={6} />
+          </span>
+        </div>
+      }
+      {/* TODO UI未设计泡沫估值 */}
+      {/* {+bubble.value !== 0 ? (
         <div className="flex h-12">
           <div className="w-1/2 flex items-center justify-center border-0 border-r border-b border-solid border-border text-stock-green h-full">
             估值泡沫
@@ -413,7 +395,7 @@ const StockQuote = () => {
             </span>
           </div>
         </div>
-      ) : null}
+      ) : null} */}
     </div>
   )
 }
@@ -428,49 +410,52 @@ const StockNews = () => {
   return (
     <>
       {newList.data ? (
-        <div className="flex p-2 w-full box-border">
-          <HoverCard openDelay={100}>
-            <HoverCardTrigger>
-              <JknIcon name="ic_notice" className="mr-2 mt-0.5" />
-            </HoverCardTrigger>
-            <HoverCardContent side="left" align="start" className="w-80 p-0">
-              <ScrollArea className="h-96">
-                <div className="">
-                  {newList.data?.event.map(item => (
-                    <div
-                      key={nanoid()}
-                      className={cn('flex-grow-0 flex-shrink-0 basis-full text-xs hover:bg-primary cursor-pointer')}
-                      onClick={() => item.url && window.open(item.url)}
-                      onKeyDown={() => {}}
-                    >
-                      <div className="flex p-2 w-full box-border">
-                        <JknIcon name="ic_notice" className="mr-2 mt-0.5" />
-                        {<span className="text-sm">{item.title}</span>}
+        <div className="p-2 w-full box-border bg-background">
+          <div className="bg-[#3d3152] flex w-full rounded-lg items-center px-2 py-1 box-border">
+            <HoverCard openDelay={100}>
+              <HoverCardTrigger>
+                <JknIcon name="ic_notice" className="mr-2 mt-0.5" />
+              </HoverCardTrigger>
+              <HoverCardContent side="left" align="start" className="w-80 p-0">
+                <ScrollArea className="h-96">
+                  <div className="">
+                    {newList.data?.event.map(item => (
+                      <div
+                        key={nanoid()}
+                        className={cn('flex-grow-0 flex-shrink-0 basis-full text-xs hover:bg-primary cursor-pointer')}
+                        onClick={() => item.url && window.open(item.url)}
+                        onKeyDown={() => { }}
+                      >
+                        <div className="flex p-2 w-full box-border">
+                          <JknIcon name="ic_notice" className="mr-2 mt-0.5" />
+                          {<span className="text-sm">{item.title}</span>}
+                        </div>
+                        <Separator />
                       </div>
-                      <Separator />
+                    ))}
+                  </div>
+                </ScrollArea>
+              </HoverCardContent>
+            </HoverCard>
+            <div className="flex-1">
+              <Carousel
+                plugins={[
+                  Autoplay({
+                    delay: 1000 * 5
+                  })
+                ]}
+                orientation="vertical"
+              >
+                <CarouselContent className="h-12">
+                  {newList.data?.event.map(item => (
+                    <div key={nanoid()} className="flex-grow-0 flex-shrink-0 basis-full flex items-center">
+                      {<span className="text-xs">{item.title}</span>}
                     </div>
                   ))}
-                </div>
-              </ScrollArea>
-            </HoverCardContent>
-          </HoverCard>
-          <div className="flex-1">
-            <Carousel
-              plugins={[
-                Autoplay({
-                  delay: 1000 * 5
-                })
-              ]}
-              orientation="vertical"
-            >
-              <CarouselContent className="h-12">
-                {newList.data?.event.map(item => (
-                  <div key={nanoid()} className="flex-grow-0 flex-shrink-0 basis-full">
-                    {<span className="text-sm">{item.title}</span>}
-                  </div>
-                ))}
-              </CarouselContent>
-            </Carousel>
+                </CarouselContent>
+              </Carousel>
+            </div>
+            <JknIcon.Svg name="arrow-right" size={8} />
           </div>
         </div>
       ) : null}
@@ -533,28 +518,24 @@ const StockRelated = () => {
   const columns = useMemo<JknRcTableProps['columns']>(
     () => [
       {
-        title: '股票',
+        title: '名称代码',
         dataIndex: 'symbol',
-        width: '22%',
         sort: true,
         align: 'left',
-        render: symbol => <span className="text-xs leading-8 my-1 inline-block">{symbol}</span>
+        render: symbol => <StockView code={symbol} iconSize={16} className="text-xs" />
       },
       {
         title: '现价',
         dataIndex: 'close',
         align: 'right',
-        width: '24%',
+        width: '30%',
         sort: true,
         render: (close, row) => (
-          <NumSpanSubscribe
+          <SubscribeSpan.PriceBlink
             className="text-xs"
-            code={row.symbol}
-            field="close"
-            blink
-            value={close}
-            isPositive={Decimal.create(row.price).gte(0)}
-            align="right"
+            symbol={row.symbol}
+            initValue={close}
+            showColor={false}
           />
         )
       },
@@ -562,40 +543,15 @@ const StockRelated = () => {
         title: '涨跌幅%',
         dataIndex: 'percent',
         align: 'right',
-        width: '29%',
+        width: '30%',
         sort: true,
         render: (percent, row) => (
-          <NumSpanSubscribe
+          <SubscribeSpan.PercentBlink
             className="text-xs"
-            code={row.symbol}
-            field="percent"
-            blink
-            block
+            symbol={row.symbol}
             decimal={2}
-            value={percent}
-            percent
-            isPositive={Decimal.create(row.percent).gte(0)}
-            symbol
-            align="right"
-          />
-        )
-      },
-      {
-        title: '总市值',
-        dataIndex: 'marketValue',
-        align: 'right',
-        width: '25%',
-        sort: true,
-        render: (marketValue, row) => (
-          <NumSpanSubscribe
-            className="text-xs"
-            code={row.symbol}
-            field={v => stockUtils.getSubscribeMarketValue(row, v)}
-            blink
-            align="right"
-            unit
-            decimal={2}
-            value={marketValue}
+            initValue={percent}
+            initDirection={Decimal.create(row.percent).gte(0)}
           />
         )
       }
@@ -612,12 +568,12 @@ const StockRelated = () => {
   const onRowClick = useTableRowClickToStockTrading('symbol')
 
   return (
-    <div className="flex-1 flex flex-col overflow-hidden">
-      <div className="flex justify-around items-center">
+    <div className="flex-1 flex flex-col overflow-hidden bg-background rounded h-full">
+      <div className="flex px-2">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button reset onClick={() => setMenuType('plates')}>
-              <span className="text-xs font-normal">
+              <span className="text-lg font-normal">
                 {plates?.find(item => item.id === plateId)?.name ? (
                   <span className={cn(menuType === 'plates' && 'text-primary')}>
                     {plates?.find(item => item.id === plateId)?.name}
@@ -721,6 +677,103 @@ const StockBrief = () => {
       <Separator />
       <div className="text-sm px-2">简介</div>
       <div className="text-foreground px-2">{brief?.description ?? '-'}</div>
+    </div>
+  )
+}
+
+
+const GoldenStockPool = () => {
+  const [type, setType] = useState('1')
+  const { token } = useToken()
+  const [list, { setList, onSort }] = useTableData<ReturnType<typeof stockUtils.toStockWithExt>>([], 'symbol')
+
+  const query = useQuery({
+    queryKey: [getStockCollects.cacheKey, type],
+    refetchInterval: 5 * 1000,
+    queryFn: () =>
+      getStockCollects({
+        cate_id: +type,
+        extend: [
+          'total_share',
+          'basic_index',
+          'day_basic',
+          'alarm_ai',
+          'alarm_all',
+          'financials',
+          'thumbs',
+          'stock_after',
+          'stock_before'
+        ],
+        limit: 300
+      }),
+    enabled: !!token
+  })
+
+  useEffect(() => {
+    const list =
+      query.data?.items.map(item =>
+        stockUtils.toStockWithExt(item.stock, { extend: item.extend, name: item.name, symbol: item.symbol })
+      ) ?? []
+    setList(list)
+  }, [query.data, setList])
+
+  useStockQuoteSubscribe(query.data?.items?.map(d => d.symbol) ?? [])
+
+
+  const columns: TableProps<ArrayItem<typeof list>>['columns'] = [
+    {
+      title: '名称代码',
+      dataIndex: 'name',
+      align: 'left',
+      sort: true,
+      render: (_name, row) => <StockView code={row.symbol} iconSize={16} className="text-xs" />
+    },
+    {
+      title: '现价',
+      dataIndex: 'close',
+      align: 'right',
+      width: '30%',
+      sort: true,
+      render: (close, row) => (
+        <SubscribeSpan.PriceBlink symbol={row.symbol} initValue={close} initDirection={stockUtils.isUp(row)} />
+      )
+    },
+    {
+      title: '涨跌幅',
+      dataIndex: 'percent',
+      align: 'right',
+      width: '30%',
+      sort: true,
+      render: (percent, row) => (
+        <SubscribeSpan.PercentBlink
+          showSign
+          symbol={row.symbol}
+          decimal={2}
+          initValue={percent}
+          initDirection={stockUtils.isUp(row)}
+        />
+      )
+    }
+  ]
+
+  const onRowClick = useTableRowClickToStockTrading('symbol')
+
+  return (
+    <div className="w-full h-full flex flex-col overflow-hidden bg-background rounded">
+      <div className="flex items-center px-3 py-3 border-b-[#1B1B1B]">
+        <CollectDropdownMenu activeKey={type} onChange={setType} />
+      </div>
+      <div className="flex-1 overflow-hidden">
+        <JknRcTable
+          isLoading={query.isLoading}
+          columns={columns}
+          data={list}
+          onSort={onSort}
+          rowKey="symbol"
+          className="w-full"
+          onRow={onRowClick}
+        />
+      </div>
     </div>
   )
 }

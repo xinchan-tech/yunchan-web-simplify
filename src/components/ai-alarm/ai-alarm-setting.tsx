@@ -12,6 +12,8 @@ import { JknIcon } from '../jkn/jkn-icon'
 import { Button } from '../ui/button'
 import { FormControl, FormField, FormItem, FormLabel } from '../ui/form'
 import { ToggleGroup, ToggleGroupItem } from '../ui/toggle-group'
+import { AlarmStockPicker } from "./alarm-stock-picker"
+import { Separator } from "../ui/separator"
 
 const formSchema = z.object({
   symbol: z.string({ message: '股票代码错误' }).min(1, '股票代码错误'),
@@ -22,6 +24,7 @@ const formSchema = z.object({
 
 interface AiAlarmSetting {
   code?: string
+  onClose?: () => void
 }
 
 const AiAlarmSetting = (props: AiAlarmSetting) => {
@@ -72,15 +75,15 @@ const AiAlarmSetting = (props: AiAlarmSetting) => {
   return (
     <div>
       <FormProvider {...form}>
-        <form className="space-y-4 px-8">
+        <form className="px-8 mt-4">
           <FormField
             control={form.control}
             name="symbol"
             render={({ field }) => (
-              <FormItem>
-                <FormLabel>一、选择股票</FormLabel>
+              <FormItem className="pb-4 flex items-center space-y-0">
+                <FormLabel className="w-32">股票名称</FormLabel>
                 <FormControl>
-                  <StockSelectInput {...field} />
+                  <AlarmStockPicker {...field} />
                 </FormControl>
               </FormItem>
             )}
@@ -90,8 +93,8 @@ const AiAlarmSetting = (props: AiAlarmSetting) => {
             control={form.control}
             name="stockCycle"
             render={({ field }) => (
-              <FormItem>
-                <FormLabel>二、报警周期</FormLabel>
+              <FormItem className="pb-4 flex items-start space-y-0">
+                <FormLabel className="w-32 flex-shrink-0">报警周期</FormLabel>
                 <FormControl>
                   <StockCycleSelect {...field} />
                 </FormControl>
@@ -99,12 +102,14 @@ const AiAlarmSetting = (props: AiAlarmSetting) => {
             )}
           />
 
+          <div className="text-xs text-tertiary">报警类型</div>
+          <Separator className="my-2 h-[1px] w-full" />
           <FormField
             control={form.control}
             name="categoryIds"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>三、报警类型</FormLabel>
+                <FormLabel />
                 <FormControl>
                   <AlarmsTypeSelect {...field} />
                 </FormControl>
@@ -116,8 +121,8 @@ const AiAlarmSetting = (props: AiAlarmSetting) => {
             control={form.control}
             name="categoryHdlyIds"
             render={({ field }) => (
-              <FormItem>
-                <FormLabel>四、底部策略</FormLabel>
+              <FormItem className="pb-4 flex items-start space-y-0">
+                <FormLabel className="w-32 flex-shrink-0">底部信号</FormLabel>
                 <FormControl>
                   <StockHdlySelect {...field} />
                 </FormControl>
@@ -126,7 +131,10 @@ const AiAlarmSetting = (props: AiAlarmSetting) => {
           />
         </form>
       </FormProvider>
-      <div className="text-center mt-6">
+      <div className="text-right mt-6 space-x-4 pr-8">
+        <Button className="w-24" variant="outline" onClick={props.onClose}>
+          取消
+        </Button>
         <Button className="w-24" loading={loading} onClick={onSubmit}>
           确定
         </Button>
@@ -148,7 +156,7 @@ const StockCycleSelect = forwardRef((props: StockCycleSelectProps, _) => {
   })
 
   return (
-    <ToggleGroup value={props.value} type="multiple" onValueChange={props.onChange}>
+    <ToggleGroup value={props.value} variant="outline" type="multiple" onValueChange={props.onChange}>
       {query.data?.stock_kline.map(item => (
         <ToggleGroupItem disabled={!item.authorized} className="w-20 relative" key={item.id} value={item.value}>
           {!item.authorized && <JknIcon name="ic_lock" className="absolute right-0 top-0 w-3 h-3" />}
@@ -200,7 +208,7 @@ const AlarmsTypeSelect = forwardRef((props: AlarmsTypeSelectProps, _) => {
   return (
     <>
       <div className="flex-1 flex flex-col">
-        <div className="py-3 ml-3">
+        {/* <div className="py-3 ml-3">
           {data?.children?.map(item => (
             <div
               key={item.id}
@@ -209,7 +217,7 @@ const AlarmsTypeSelect = forwardRef((props: AlarmsTypeSelectProps, _) => {
                 method?.id === item.id && 'bg-primary text-foreground'
               )}
               onClick={() => setMethod(item)}
-              onKeyDown={() => {}}
+              onKeyDown={() => { }}
             >
               {item.name}
               {method?.id === item.id && props.value?.length && props.value.length > 0 ? (
@@ -219,30 +227,28 @@ const AlarmsTypeSelect = forwardRef((props: AlarmsTypeSelectProps, _) => {
               ) : null}
             </div>
           ))}
-        </div>
-        <div className="py-3 border-0 border-t border-solid border-background">
+        </div> */}
+        <div className="py-3">
           {method?.children?.map(item => (
             <div key={item.id} className="flex mb-4">
               <div
-                className="flex-shrink-0 px-4 flex items-center text-sm"
+                className="flex-shrink-0 flex items-center text-sm w-32"
                 style={{
                   color: item.name === '多头策略' ? 'hsl(var(--stock-up-color))' : 'hsl(var(--stock-down-color))'
                 }}
               >
-                <JknIcon name={item.name === '多头策略' ? 'ic_price_up_green' : 'ic_price_down_red'} />
+                {/* <JknIcon name={item.name === '多头策略' ? 'ic_price_up_green' : 'ic_price_down_red'} /> */}
                 {item.name}
+                {
+                  item.name === '多头策略' ? '↑' : '↓'
+                }
               </div>
               <ToggleGroup
                 value={props.value}
                 onValueChange={v => _onValueChange(v, item.name)}
-                style={
-                  {
-                    '--toggle-active-bg':
-                      item.name === '多头策略' ? 'hsl(var(--stock-up-color))' : 'hsl(var(--stock-down-color))'
-                  } as CSSProperties
-                }
                 type="multiple"
-                className="flex-1 flex"
+                variant="outline"
+                className="flex-1 flex "
               >
                 {(item.children as unknown as StockCategory[])?.map(child =>
                   child.name !== '' ? (
@@ -280,14 +286,10 @@ const StockHdlySelect = forwardRef((props: StockHdlySelectProps, _) => {
 
   return (
     <div className="flex items-center">
-      <div className="ml-3 mr-6">
-        <JknIcon.Arrow direction="up" className="h-5 w-5" />
-        <span className="text-stock-up text-sm">底部信号</span>
-      </div>
       <ToggleGroup
-        activeColor="hsl(var(--stock-up-color))"
         value={props.value}
         type="multiple"
+        variant="outline"
         onValueChange={props.onChange}
       >
         {data?.children?.map(item => (

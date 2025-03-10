@@ -62,7 +62,7 @@ export const markIndicator: IndicatorTemplate<any, any> = {
   draw: params => {
     const { indicator, chart, ctx, xAxis, yAxis, bounding } = params
 
-    const Markoverlay = getFigureClass('mark-overlay')! as FigureConstructor<MarkOverlayAttrs>
+    const MarkOverlay = getFigureClass('mark-overlay')! as FigureConstructor<MarkOverlayAttrs>
 
     const { realFrom, realTo } = chart.getVisibleRange()
     const fromPixel = xAxis.convertToPixel(realFrom)
@@ -71,7 +71,7 @@ export const markIndicator: IndicatorTemplate<any, any> = {
       const xPixel = xAxis.convertTimestampToPixel(item.x)
       if (!inRange(xPixel, fromPixel, toPixel)) return
       const y1 = yAxis.convertToPixel(item.y)
-      new Markoverlay({
+      new MarkOverlay({
         name: 'mark-overlay',
         attrs: {
           x: xPixel,
