@@ -53,7 +53,7 @@ export default defineConfig({
         }
       },
       '/websocket': {
-        target: 'ws://web.mgjkn.com',
+        target: 'wss://web.mgjkn.com',
         ws: true
       },
       '/im-ws': {

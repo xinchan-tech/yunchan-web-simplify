@@ -1,7 +1,7 @@
 import type { StockChartInterval, StockRawRecord } from '@/api'
 import { JknChart } from '@/components'
 import { calcCoiling } from '@/utils/coiling'
-import { stockUtils } from '@/utils/stock'
+import { type StockSubscribeHandler, stockUtils } from '@/utils/stock'
 import { useMount, useUpdateEffect } from 'ahooks'
 import qs from 'qs'
 import { type ComponentRef, useCallback, useEffect, useRef, useState } from 'react'
@@ -11,6 +11,7 @@ import { chartManage, ChartType, useChartManage } from '../lib/store'
 import { renderUtils } from '../lib/utils'
 import { ChartContextMenu } from './chart-context-menu'
 import { BackTestBar } from "./back-test-bar"
+import { useStockBarSubscribe } from "@/hooks"
 
 interface MainChartProps {
   chartId: string
@@ -57,7 +58,10 @@ export const MainChart = (props: MainChartProps) => {
     []
   )
 
-  
+  const subscribeHandler: StockSubscribeHandler<'bar'> = (data) => {
+    
+  }
+  useStockBarSubscribe([symbol], subscribeHandler)
 
   /**
    * 初始化

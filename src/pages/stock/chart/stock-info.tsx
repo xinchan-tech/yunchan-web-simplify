@@ -280,7 +280,7 @@ const StockQuoteBar = withTooltip(
             symbol={symbol}
             value={props.time?.slice(5, 11).replace('-', '/')}
             formatter={v =>
-              dateUtils.toUsDay(v).format('MM/DD hh:mm')
+              dateUtils.toUsDay(v.record.time).format('MM/DD hh:mm')
             }
           />
         </span>

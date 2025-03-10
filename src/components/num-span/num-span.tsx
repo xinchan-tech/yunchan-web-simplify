@@ -285,6 +285,7 @@ export const SubscribeSpan = memo(
     }, [onChange])
 
     useEffect(() => {
+     
       if (!subscribe) return
       const unSubscribe = stockSubscribe.onQuoteTopic(symbol, data => {
         if (trading) {
