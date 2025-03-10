@@ -49,6 +49,8 @@ export const ChartToolBar = () => {
       <OverlayMarkPicker />
       <Separator orientation="vertical" className="h-2 w-[1px] bg-accent mx-1" />
       <AlarmPicker />
+      <Separator orientation="vertical" className="h-2 w-[1px] bg-accent mx-1" />
+      <BackTest />
     </div>
   )
 }
@@ -675,5 +677,19 @@ const AlarmPicker = () => {
         modal.context
       } */}
     </>
+  )
+}
+
+
+const BackTest = () => {
+  const mode = useChartManage(s => s.getActiveChart().mode)
+  const onChangeMode = () => {
+    chartManage.setMode(mode === 'normal' ? 'backTest' : 'normal')
+  }
+  return (
+    <div className="cursor-pointer hover:bg-accent h-full rounded px-3 box-border flex items-center text-sm py-2" onClick={onChangeMode} onKeyDown={() => { }}>
+      <JknIcon.Svg name="chart-back-test" size={20} />&nbsp;
+      <span>回测</span>
+    </div>
   )
 }

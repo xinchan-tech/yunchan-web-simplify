@@ -23,11 +23,12 @@ import {
   tradePointThreeTypeCoiling,
   tradePointTwoTypeCoiling
 } from './coiling'
-import { IconFigure, markOverlayFigure } from './figure'
+import { backTestLineFigure, backTestMarkFigure, IconFigure, markOverlayFigure } from './figure'
 import { compareIndicator, localIndicator } from './indicator'
 import { markIndicator } from './indicator/mark'
 import type { AxisPosition, Candlestick } from './types'
 import { ChartTypes, getStockColor, transformCandleColor, transformTextColor } from './utils'
+import { backTestIndicator, type BackTestRecord } from "./indicator/back-test"
 
 registerIndicator(penCoiling)
 registerIndicator(tradePointOneTypeCoiling)
@@ -39,6 +40,9 @@ registerIndicator(mainTrendCoiling)
 registerIndicator(localIndicator)
 registerIndicator(compareIndicator)
 registerIndicator(markIndicator)
+registerIndicator(backTestIndicator)
+registerFigure(backTestMarkFigure)
+registerFigure(backTestLineFigure)
 registerFigure(IconFigure)
 registerFigure(markOverlayFigure)
 
@@ -71,6 +75,9 @@ interface JknChartIns {
   createMarkOverlay: (symbol: string, type: string, mark: string) => string
   removeMarkOverlay: (indicatorId: string) => void
   setMarkOverlay: (mark: string) => void
+  createBackTestIndicator: (record: (Optional<BackTestRecord, 'index'>[])) => Nullable<string> | undefined
+  setBackTestIndicator: (record: (Optional<BackTestRecord, 'index'>[])) => boolean | undefined
+  removeBackTestIndicator: () => void
 }
 
 export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartProps, ref) => {
@@ -388,7 +395,40 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
     removeMarkOverlay: indicatorId => {
       chart.current?.removeIndicator({ id: indicatorId })
     },
-    setMarkOverlay: _mark => {}
+    setMarkOverlay: _mark => { },
+    createBackTestIndicator: (record) => {
+      const id = 'back-test-indicator'
+      if (chart.current?.getIndicators({ id: id }).length) {
+        const _indicator = chart.current?.getIndicators({ id: id })[0]
+        chart.current.overrideIndicator({
+          name: 'back-test-indicator',
+          id: id,
+          calcParams: [[..._indicator.calcParams[0] as any, ...record]],
+        })
+
+        return id
+      }
+      return chart.current?.createIndicator(
+        {
+          name: 'back-test-indicator',
+          id: 'back-test-indicator',
+          calcParams: [record],
+        },
+        true,
+        { id: ChartTypes.MAIN_PANE_ID }
+      )
+    },
+    setBackTestIndicator: (record) => {
+      const id = 'back-test-indicator'
+      return chart.current?.overrideIndicator({
+        name: 'back-test-indicator',
+        id: id,
+        calcParams: [record],
+      })
+    },
+    removeBackTestIndicator: () => {
+      chart.current?.removeIndicator({ id: 'back-test-indicator' })
+    }
   }))
 
   useEffect(() => {

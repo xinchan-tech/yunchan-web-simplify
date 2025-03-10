@@ -49,7 +49,8 @@ export const useCandlesticks = (symbol: string, interval: StockChartInterval) =>
 
   return {
     candlesticks: candlesticksQuery.data ?? [],
-    startAt
+    startAt,
+    refreshCandlesticks: candlesticksQuery.refetch
   }
 }
 

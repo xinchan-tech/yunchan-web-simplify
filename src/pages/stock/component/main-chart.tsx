@@ -10,6 +10,7 @@ import { fetchCandlesticks, useCandlesticks } from '../lib/request'
 import { chartManage, ChartType, useChartManage } from '../lib/store'
 import { renderUtils } from '../lib/utils'
 import { ChartContextMenu } from './chart-context-menu'
+import { BackTestBar } from "./back-test-bar"
 
 interface MainChartProps {
   chartId: string
@@ -20,12 +21,14 @@ const getSymbolByUrl = () => {
   return query.symbol as string
 }
 
+const convertToStock = (candlesticks: StockRawRecord[]) => candlesticks.map(c => stockUtils.toStock(c))
+
 export const MainChart = (props: MainChartProps) => {
   const [symbol, setSymbol] = useState(getSymbolByUrl())
   const activeChartId = useChartManage(s => s.activeChartId)
   const chartStore = useChartManage(s => s.chartStores[props.chartId])
   const chartImp = useRef<ComponentRef<typeof JknChart>>(null)
-  const { candlesticks, startAt } = useCandlesticks(symbol, chartStore.interval)
+  const { candlesticks, startAt, refreshCandlesticks } = useCandlesticks(symbol, chartStore.interval)
   const stockCache = useRef({
     compare: new Map(),
     mark: ''
@@ -38,7 +41,7 @@ export const MainChart = (props: MainChartProps) => {
       chartId
     }: { candlesticks: StockRawRecord[]; interval: StockChartInterval; chartId: string }) => {
       const _store = useChartManage.getState().chartStores[chartId]
-      const stockData = candlesticks.map(c => stockUtils.toStock(c))
+      const stockData = convertToStock(candlesticks)
 
       if (_store.coiling.length) {
         const r = await calcCoiling(candlesticks, interval)
@@ -191,6 +194,18 @@ export const MainChart = (props: MainChartProps) => {
     chartImp.current?.setChartType(chartStore.type === ChartType.Candle ? 'candle' : 'area')
   }, [chartStore.type])
 
+  useUpdateEffect(() => {
+    if (chartStore.mode === 'normal') {
+      refreshCandlesticks()
+      chartImp.current?.removeBackTestIndicator()
+    }
+  }, [chartStore.mode])
+
+
+  const onAddBackTestRecord = (record: any) => {
+    chartImp.current?.createBackTestIndicator([record])
+  }
+
   return (
     <ChartContextMenu
       index={0}
@@ -198,7 +213,21 @@ export const MainChart = (props: MainChartProps) => {
         throw new Error('Function not implemented.')
       }}
     >
-      <JknChart className="w-full h-full" ref={chartImp} />
+      <div className="flex-1 overflow-hidden">
+        <JknChart className="w-full" ref={chartImp} />
+      </div>
+      {
+        chartStore.mode === 'backTest' ? (
+          <div>
+            <BackTestBar
+              chartId={props.chartId}
+              candlesticks={candlesticks}
+              onChangeCandlesticks={(d) => chartImp.current?.applyNewData(convertToStock(d))}
+              onAddBackTestRecord={onAddBackTestRecord}
+            />
+          </div>
+        ) : null
+      }
     </ChartContextMenu>
   )
 }

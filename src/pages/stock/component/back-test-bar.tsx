@@ -11,32 +11,34 @@ import {
   Popover,
   PopoverContent,
   PopoverTrigger,
+  Separator,
   useModal
 } from '@/components'
 import { dateUtils } from '@/utils/date'
 import { stockUtils } from '@/utils/stock'
 import { cn } from '@/utils/style'
-import { useCounter, useUnmount, useUpdateEffect } from 'ahooks'
+import { useCounter, useUnmount } from 'ahooks'
 import dayjs from 'dayjs'
 import Decimal from 'decimal.js'
 import { memo, useRef, useState } from 'react'
 import { useImmer } from 'use-immer'
-import { kChartUtils, useKChartStore } from '../lib'
-import { chartEvent } from '../lib/event'
 import { renderUtils } from '../lib/utils'
+import { useChartManage } from "../lib"
+import { useLatestRef, useToast } from "@/hooks"
 
 const disabledDate = (d: Date, candlesticks: StockRawRecord[]) => {
+  if (!candlesticks.length) return true
   const day = dayjs(d)
-  // console.log(d, dayjs(d).format('YYYY-MM-DD HH:mm:ss'), !dateUtils.isMarketOpen(day))
   return (
     !dateUtils.isMarketOpen(day) || !dayjs().isAfter(d) || !day.isSameOrAfter(dateUtils.toUsDay(+candlesticks[0][0]!))
   )
 }
 
 interface BackTestBarProps {
+  chartId: string
   candlesticks: StockRawRecord[]
-  chartIndex: number
-  onRender: () => void
+  onChangeCandlesticks: (data: StockRawRecord[]) => void
+  onAddBackTestRecord: (record: { time: number; price: number; count: number; type: 'buy' | 'sell' }) => void
 }
 
 type TradeRecord = {
@@ -49,26 +51,23 @@ type TradeRecord = {
 }
 
 export const BackTestBar = memo((props: BackTestBarProps) => {
-  // const [startDate, setStartDate] = useState<string | undefined>(undefined)
   const [speed, setSpeed] = useState<number>(1)
   const [number, setNumber] = useState<number>(100)
-  const candlesticksRestore = useRef<StockRawRecord[]>(props.candlesticks)
+  const candlesticksRestore = useLatestRef<StockRawRecord[]>(props.candlesticks)
   //交易记录
   const [tradeRecord, setTradeRecord] = useImmer<TradeRecord>({ sell: [], buy: [] })
   const [timer, setTimer] = useState<number | null>(null)
   const [profit, setProfit] = useState<number>(0)
   const [positiveProfitCount, { inc: incPositiveProfitCount }] = useCounter(0)
   const [maxProfit, setMaxProfit] = useState<number>(0)
+  const klineCount = useRef<number>(0)
 
-  useUpdateEffect(() => {
-    candlesticksRestore.current = props.candlesticks
-  }, [props.candlesticks])
 
   const onDateChange = (date?: string) => {
     // setStartDate(date)
 
     if (!date) {
-      setCandlesticks(candlesticksRestore.current)
+      props.onChangeCandlesticks(candlesticksRestore.current)
     } else {
       const kline = renderUtils.findNearestTime(
         candlesticksRestore.current,
@@ -76,33 +75,35 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
       )
 
       if (kline) {
-        setCandlesticks(candlesticksRestore.current.slice(0, kline.index + 1))
+        props.onChangeCandlesticks(candlesticksRestore.current.slice(0, kline.index + 1))
+        klineCount.current = kline.index + 1
       }
     }
   }
 
   const toNextLine = () => {
-    const current = useKChartStore.getState().state[props.chartIndex].mainData.history
-    if (current.length === candlesticksRestore.current.length) {
+    if (klineCount.current === 0) {
+      toast({
+        description: '请先选择日期'
+      })
+
+      return
+    }
+
+    if (klineCount.current >= candlesticksRestore.current.length) {
       resultModel.modal.open()
       return
     }
-    setCandlesticks(candlesticksRestore.current.slice(0, current.length + 1))
+
+    props.onChangeCandlesticks(candlesticksRestore.current.slice(0, klineCount.current + 1))
+    klineCount.current++
   }
 
   const toLastKLine = () => {
-    const current = useKChartStore.getState().state[props.chartIndex].mainData.history
-    if (current.length === 0) return
-
+    if (klineCount.current === 0) return
     resultModel.modal.open()
-    setCandlesticks(candlesticksRestore.current.slice(0, current.length - 1))
-  }
-
-  const setCandlesticks = (data: StockRawRecord[]) => {
-    chartEvent.event.emit('backTestChange', {
-      index: props.chartIndex,
-      data: data.map(v => [v[0]?.toString(), ...v.slice(1)]) as any
-    })
+    props.onChangeCandlesticks(candlesticksRestore.current)
+    klineCount.current = 0
   }
 
   const startBackTest = () => {
@@ -110,10 +111,7 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
       () => {
         toNextLine()
 
-        if (
-          useKChartStore.getState().state[props.chartIndex].mainData.history.length ===
-          candlesticksRestore.current.length
-        ) {
+        if (klineCount.current >= candlesticksRestore.current.length) {
           window.clearInterval(timer!)
           setTimer(null)
         }
@@ -128,10 +126,20 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
     setTimer(null)
   }
 
+  const { toast } = useToast()
+
   const action = (type: 'buy' | 'sell') => {
     if (number <= 0) return
-    const stock =
-      candlesticksRestore.current[useKChartStore.getState().state[props.chartIndex].mainData.history.length - 1]
+
+    if (klineCount.current === 0) {
+      toast({
+        description: '请先选择日期'
+      })
+
+      return
+    }
+
+    const stock = candlesticksRestore.current[klineCount.current]
 
     tradeRecord[type].push({
       time: +stock[0]!,
@@ -140,13 +148,14 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
     })
     setTradeRecord({ ...tradeRecord })
 
-    kChartUtils.addBackTestMark({
-      index: props.chartIndex,
-      time: stock[0]!,
+    const record = {
+      time: stock[0]! as unknown as number,
       price: +stock[2]!,
       count: number,
-      type: type === 'buy' ? '买入' : '卖出'
-    })
+      type
+    }
+
+    props.onAddBackTestRecord(record)
 
     const result = calcProfit(tradeRecord)
     const diffProfit = result - profit
@@ -156,10 +165,6 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
     if (result > 0) {
       incPositiveProfitCount()
     }
-
-    setTimeout(() => {
-      props.onRender()
-    })
   }
 
   useUnmount(() => {
@@ -206,8 +211,15 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
 
   //平仓
   const closePosition = () => {
-    const stock =
-      candlesticksRestore.current[useKChartStore.getState().state[props.chartIndex].mainData.history.length - 1]
+    if (klineCount.current === 0) {
+      toast({
+        description: '请先选择日期'
+      })
+
+      return
+    }
+
+    const stock = candlesticksRestore.current[klineCount.current]
     const sellCount = tradeRecord.sell.reduce((prev, cur) => prev + cur.count, 0)
     const buyCount = tradeRecord.buy.reduce((prev, cur) => prev + cur.count, 0)
 
@@ -226,16 +238,11 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
     const diffProfit = result - profit
     setMaxProfit(Math.max(diffProfit, maxProfit))
     setProfit(result)
-
-    kChartUtils.addBackTestMark({
-      index: props.chartIndex,
-      time: stock[0]!,
+    props.onAddBackTestRecord({
+      time: +stock[0]!,
       price: +stock[2]!,
       count: diffCount,
-      type: diffCount > 0 ? '买入' : '卖出'
-    })
-    setTimeout(() => {
-      props.onRender()
+      type: diffCount > 0 ? 'buy' : 'sell'
     })
   }
 
@@ -245,8 +252,8 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
     footer: false,
     closeOnMaskClick: false,
     content: () => {
-      const symbol = useKChartStore.getState().state[props.chartIndex].symbol
-      const timeIndex = useKChartStore.getState().state[props.chartIndex].timeIndex
+      const symbol = useChartManage.getState().chartStores[props.chartId].symbol
+      const timeIndex = useChartManage.getState().chartStores[props.chartId].interval
       const total = tradeRecord.buy.length + tradeRecord.sell.length
 
       return (
@@ -291,55 +298,68 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
   })
 
   return (
-    <div className="h-8 box-border items-center flex text-xs justify-between px-2">
-      <div className="flex items-center space-x-2">
-        <span>开始时间：</span>
-        <JknDatePicker onChange={onDateChange} disabled={d => disabledDate(d, props.candlesticks)}>
-          {v => <div className="bg-primary rounded-sm px-3 py-1">{v ?? '请选择时间'}</div>}
-        </JknDatePicker>
-      </div>
-      <div className="flex items-center space-x-3">
-        {!timer ? (
-          <div
-            className="border border-solid border-border rounded-sm px-1 py-0.5 flex items-center"
-            onClick={startBackTest}
-            onKeyDown={() => {}}
-          >
-            <JknIcon name="ic_huice2" className="w-3 h-3" />
-            &nbsp;
-            <span>开始</span>
-          </div>
-        ) : (
-          <div
-            className="border border-solid border-border rounded-sm px-1 py-0.5 flex items-center"
-            onClick={stopBackTest}
-            onKeyDown={() => {}}
-          >
-            <JknIcon name="ic_huice3" className="w-3 h-3" />
-            &nbsp;
-            <span>暂停</span>
-          </div>
-        )}
-
-        <div className="border border-solid border-border rounded-sm px-1 py-0.5 flex items-center">
-          <BackTestSpeed speed={speed} onChange={setSpeed} />
+    <div className="h-8 box-border grid grid-cols-3 text-xs px-2 w-full">
+      <div />
+      <div className="flex items-center justify-center">
+        <div className="flex items-center space-x-2">
+          <JknDatePicker onChange={onDateChange} disabled={d => disabledDate(d, props.candlesticks ?? [])}>
+            {v => <div className="hover:bg-accent rounded-xs px-3 py-1 cursor-pointer "><JknIcon.Svg name="calendar-2" className="align-middle pb-1" size={14} />&nbsp;{v ?? '选择日期'}</div>}
+          </JknDatePicker>
         </div>
-
-        <JknIcon name="ic_huice4" className="w-3 h-3" onClick={toNextLine} />
-
-        <JknIcon name="ic_huice6" className="w-3 h-3" onClick={toLastKLine} />
+        <Separator orientation="vertical" className="h-4 w-[1px] mx-2" />
+        <div className="flex items-center space-x-3">
+          {!timer ? (
+            <div
+              className="border cursor-pointer hover:bg-accent px-1 py-1 flex items-center rounded-xs"
+              onClick={startBackTest}
+              onKeyDown={() => { }}
+            >
+              <JknIcon.Svg name="play" size={16} />
+            </div>
+          ) : (
+            <div
+              className="border cursor-pointer hover:bg-accent rounded-xs px-1 py-1 flex items-center"
+              onClick={stopBackTest}
+              onKeyDown={() => { }}
+            >
+              { /* TODO: 暂停ICON */}
+              <JknIcon name="ic_huice3" className="w-3 h-3" />
+              &nbsp;
+              <span>暂停</span>
+            </div>
+          )}
+          <div
+            className="border cursor-pointer hover:bg-accent px-1 py-1 flex items-center rounded-xs"
+            onClick={toNextLine}
+            onKeyDown={() => { }}
+          >
+            <JknIcon.Svg name="play-x1" size={16} />
+          </div>
+          <div className="border cursor-pointer hover:bg-accent rounded-xs px-1 py-1 flex items-center">
+            <BackTestSpeed speed={speed} onChange={setSpeed} />
+          </div>
+          <Separator orientation="vertical" className="h-4 w-[1px] mx-2" />
+          <div
+            className="border cursor-pointer hover:bg-accent px-1 py-1 flex items-center rounded-xs"
+            onClick={toLastKLine}
+            onKeyDown={() => { }}
+          >
+            <JknIcon.Svg name="play-x2" size={16} />
+          </div>
+        </div>
       </div>
 
-      <div className="flex items-center space-x-4">
+      <div className="flex items-center space-x-4 justify-end">
         <span>{Decimal.create(profit).toFixed(3)}</span>
-        <Button size="mini" variant="destructive" onClick={() => action('sell')}>
+        <Separator orientation="vertical" className="h-4 w-[1px] mx-2" />
+        <Button size="mini" variant="destructive" className="bg-[#F23645] w-[72px] box-border" onClick={() => action('sell')}>
           卖出
         </Button>
         <NumberInput value={number} onChange={setNumber} />
-        <Button size="mini" className="bg-[#00b058]" onClick={() => action('buy')}>
+        <Button size="mini" className="bg-[#22AB94] w-[72px] box-border text-white" onClick={() => action('buy')}>
           买入
         </Button>
-        <Button size="mini" className="bg-[#232323]" onClick={closePosition}>
+        <Button size="mini" variant="outline" className="w-[72px]" onClick={closePosition}>
           平仓
         </Button>
       </div>
@@ -363,7 +383,7 @@ const BackTestSpeed = (props: { speed: number; onChange: (v: number) => void }) 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <div className="w-10 text text-center cursor-pointer">
+        <div className="w-6 text text-center cursor-pointer">
           <span>x{props.speed}</span>
         </div>
       </DropdownMenuTrigger>
@@ -386,13 +406,13 @@ const NumberInput = (props: { value: number; onChange: (v: number) => void }) =>
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <div className="min-w-16 text text-center cursor-pointer border border-solid border-border rounded-sm px-1 py-0.5">
+        <div className="min-w-4 text text-center cursor-pointer bg-accent rounded-sm px-2 py-1">
           <div>{props.value}</div>
         </div>
       </PopoverTrigger>
       <PopoverContent className="w-52 text-sm">
         <div className="p-2">
-          <div className="text-center">数量</div>
+          <div className="text-left text-tertiary text-xs">数量</div>
           <Input
             className="border-border mt-2"
             size="sm"
@@ -400,69 +420,69 @@ const NumberInput = (props: { value: number; onChange: (v: number) => void }) =>
             onChange={e => props.onChange(Number(e.target.value))}
           />
         </div>
-        <div className="grid grid-cols-3 text-xs p-2 gap-3">
+        <div className="grid grid-cols-3 text-xs p-2 gap-1">
           <div
-            className="text-center border border-solid border-border rounded-sm leading-6 cursor-pointer"
-            onClick={() => props.onChange(props.value - 1)}
-            onKeyDown={() => {}}
-          >
-            -
-          </div>
-          <div
-            className="text-center border border-solid border-border rounded-sm leading-6 cursor-pointer"
-            onClick={() => props.onChange(0)}
-            onKeyDown={() => {}}
-          >
-            清零
-          </div>
-          <div
-            className="text-center border border-solid border-border rounded-sm leading-6 cursor-pointer"
+            className="text-center border border-solid border-border rounded-sm leading-6 cursor-pointer hover:bg-accent"
             onClick={() => props.onChange(props.value + 1)}
-            onKeyDown={() => {}}
-          >
-            +
-          </div>
-          <div
-            className="text-center border border-solid border-border rounded-sm leading-6 cursor-pointer"
-            onClick={() => props.onChange(props.value + 1)}
-            onKeyDown={() => {}}
+            onKeyDown={() => { }}
           >
             1
           </div>
           <div
-            className="text-center border border-solid border-border rounded-sm leading-6 cursor-pointer"
+            className="text-center border border-solid border-border rounded-sm leading-6 cursor-pointer hover:bg-accent"
             onClick={() => props.onChange(props.value + 5)}
-            onKeyDown={() => {}}
+            onKeyDown={() => { }}
           >
             5
           </div>
           <div
-            className="text-center border border-solid border-border rounded-sm leading-6 cursor-pointer"
+            className="text-center border border-solid border-border rounded-sm leading-6 cursor-pointer hover:bg-accent"
             onClick={() => props.onChange(props.value + 25)}
-            onKeyDown={() => {}}
+            onKeyDown={() => { }}
           >
             25
           </div>
           <div
-            className="text-center border border-solid border-border rounded-sm leading-6 cursor-pointer"
+            className="text-center border border-solid border-border rounded-sm leading-6 cursor-pointer hover:bg-accent"
             onClick={() => props.onChange(props.value + 100)}
-            onKeyDown={() => {}}
+            onKeyDown={() => { }}
           >
             100
           </div>
           <div
-            className="text-center border border-solid border-border rounded-sm leading-6 cursor-pointer"
+            className="text-center border border-solid border-border rounded-sm leading-6 cursor-pointer hover:bg-accent"
             onClick={() => props.onChange(props.value + 500)}
-            onKeyDown={() => {}}
+            onKeyDown={() => { }}
           >
             500
           </div>
           <div
-            className="text-center border border-solid border-border rounded-sm leading-6 cursor-pointer"
+            className="text-center border border-solid border-border rounded-sm leading-6 cursor-pointer hover:bg-accent"
             onClick={() => props.onChange(props.value + 1000)}
-            onKeyDown={() => {}}
+            onKeyDown={() => { }}
           >
             1000
+          </div>
+          <div
+            className="text-center border border-solid border-border rounded-sm leading-6 cursor-pointer hover:bg-accent"
+            onClick={() => props.onChange(0)}
+            onKeyDown={() => { }}
+          >
+            清零
+          </div>
+          <div
+            className="text-center border border-solid border-border rounded-sm leading-6 cursor-pointer hover:bg-accent"
+            onClick={() => props.onChange(props.value - 1)}
+            onKeyDown={() => { }}
+          >
+            -
+          </div>
+          <div
+            className="text-center border border-solid border-border rounded-sm leading-6 cursor-pointer hover:bg-accent"
+            onClick={() => props.onChange(props.value + 1)}
+            onKeyDown={() => { }}
+          >
+            +
           </div>
         </div>
       </PopoverContent>

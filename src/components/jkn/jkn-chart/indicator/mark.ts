@@ -1,7 +1,6 @@
 import { getStockTabData } from '@/api'
 import { dateUtils } from '@/utils/date'
 import { queryClient } from '@/utils/query-client'
-import dayjs from 'dayjs'
 import { type FigureConstructor, IndicatorSeries, type IndicatorTemplate, getFigureClass } from 'jkn-kline-chart'
 import { inRange } from 'radash'
 import type { MarkOverlayAttrs } from '../figure'
@@ -60,7 +59,7 @@ export const markIndicator: IndicatorTemplate<any, any> = {
     }
   },
   draw: params => {
-    const { indicator, chart, ctx, xAxis, yAxis, bounding } = params
+    const { indicator, chart, ctx, xAxis, yAxis } = params
 
     const MarkOverlay = getFigureClass('mark-overlay')! as FigureConstructor<MarkOverlayAttrs>
 

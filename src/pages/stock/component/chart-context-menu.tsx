@@ -37,32 +37,37 @@ export const ChartContextMenu = (props: PropsWithChildren<ChartContextMenuProps>
   // }
 
   return (
-    <ContextMenu>
-      <ContextMenuTrigger className={cn(`chart-item-${props.index + 1}`, 'overflow-hidden')}>
-        {props.children}
-      </ContextMenuTrigger>
-      <ContextMenuContent className="w-24 min-w-4 border border-solid border-dialog-border">
-        <ContextMenuSub>
-          <ContextMenuSubTrigger>主图坐标</ContextMenuSubTrigger>
-          <ContextMenuSubContent className="w-24 min-w-4 border border-solid border-dialog-border" sideOffset={10}>
-            {/* <ContextMenuItem onClick={_setYAxis({ right: 'price' })}>价格坐标</ContextMenuItem>
-            <ContextMenuItem onClick={_setYAxis({ right: 'percent' })}>涨幅坐标</ContextMenuItem>
-            <ContextMenuItem onClick={_setYAxis({ left: 'price', right: 'percent' })}>双边坐标</ContextMenuItem> */}
-          </ContextMenuSubContent>
-        </ContextMenuSub>
-        <ContextMenuSeparator />
-        <ContextMenuSub>
-          <ContextMenuSubTrigger>附图数量</ContextMenuSubTrigger>
-          <ContextMenuSubContent className="w-24 min-w-4 border border-solid border-dialog-border" sideOffset={10}>
-            {/* <ContextMenuItem onClick={onChangeSecondaryIndicators(0)}>0个窗口</ContextMenuItem>
-            <ContextMenuItem onClick={onChangeSecondaryIndicators(1)}>1个窗口</ContextMenuItem>
-            <ContextMenuItem onClick={onChangeSecondaryIndicators(2)}>2个窗口</ContextMenuItem>
-            <ContextMenuItem onClick={onChangeSecondaryIndicators(3)}>3个窗口</ContextMenuItem>
-            <ContextMenuItem onClick={onChangeSecondaryIndicators(4)}>4个窗口</ContextMenuItem>
-            <ContextMenuItem onClick={onChangeSecondaryIndicators(5)}>5个窗口</ContextMenuItem> */}
-          </ContextMenuSubContent>
-        </ContextMenuSub>
-      </ContextMenuContent>
-    </ContextMenu>
+    <div className="w-full h-full overflow-hidden flex flex-col">
+      {
+        props.children
+      }
+    </div>
+    // <ContextMenu>
+    //   <ContextMenuTrigger className={cn(`chart-item-${props.index + 1}`, 'overflow-hidden h-full')}>
+    //     {props.children}
+    //   </ContextMenuTrigger>
+    //   <ContextMenuContent className="w-24 min-w-4 border border-solid border-dialog-border">
+    //     <ContextMenuSub>
+    //       <ContextMenuSubTrigger>主图坐标</ContextMenuSubTrigger>
+    //       <ContextMenuSubContent className="w-24 min-w-4 border border-solid border-dialog-border" sideOffset={10}>
+    //         {/* <ContextMenuItem onClick={_setYAxis({ right: 'price' })}>价格坐标</ContextMenuItem>
+    //         <ContextMenuItem onClick={_setYAxis({ right: 'percent' })}>涨幅坐标</ContextMenuItem>
+    //         <ContextMenuItem onClick={_setYAxis({ left: 'price', right: 'percent' })}>双边坐标</ContextMenuItem> */}
+    //       </ContextMenuSubContent>
+    //     </ContextMenuSub>
+    //     <ContextMenuSeparator />
+    //     <ContextMenuSub>
+    //       <ContextMenuSubTrigger>附图数量</ContextMenuSubTrigger>
+    //       <ContextMenuSubContent className="w-24 min-w-4 border border-solid border-dialog-border" sideOffset={10}>
+    //         {/* <ContextMenuItem onClick={onChangeSecondaryIndicators(0)}>0个窗口</ContextMenuItem>
+    //         <ContextMenuItem onClick={onChangeSecondaryIndicators(1)}>1个窗口</ContextMenuItem>
+    //         <ContextMenuItem onClick={onChangeSecondaryIndicators(2)}>2个窗口</ContextMenuItem>
+    //         <ContextMenuItem onClick={onChangeSecondaryIndicators(3)}>3个窗口</ContextMenuItem>
+    //         <ContextMenuItem onClick={onChangeSecondaryIndicators(4)}>4个窗口</ContextMenuItem>
+    //         <ContextMenuItem onClick={onChangeSecondaryIndicators(5)}>5个窗口</ContextMenuItem> */}
+    //       </ContextMenuSubContent>
+    //     </ContextMenuSub>
+    //   </ContextMenuContent>
+    // </ContextMenu>
   )
 }

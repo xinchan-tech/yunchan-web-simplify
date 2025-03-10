@@ -71,6 +71,10 @@ export type ChartStore = {
    */
   symbol: string
   /**
+   * 模式
+   */
+  mode: 'normal' | 'backTest'
+  /**
    * 主图类型
    */
   type: ChartType
@@ -116,11 +120,6 @@ export type ChartStore = {
     left?: MainYAxis
     right: MainYAxis
   }
-
-  /**
-   * 回测模式
-   */
-  backTest: boolean
 }
 
 interface ChartManageStore {
@@ -151,6 +150,7 @@ export const createDefaultChartStore = (chartId: string, symbol?: string): Chart
     type: ChartType.Candle,
     interval: StockChartInterval.DAY,
     system: 'pro',
+    mode: 'normal',
     id: chartId,
     symbol: symbol ?? 'QQQ',
     /**
@@ -183,8 +183,7 @@ export const createDefaultChartStore = (chartId: string, symbol?: string): Chart
     overlayMark: undefined,
     yAxis: {
       right: MainYAxis.Price
-    },
-    backTest: false
+    }
   }
 }
 
@@ -369,6 +368,11 @@ export const chartManage = {
   removeMarkOverlay: (chartId?: string) => {
     chartManage.setStore(state => {
       state.overlayMark = undefined
+    }, chartId)
+  },
+  setMode: (mode: 'normal' | 'backTest', chartId?: string) => {
+    chartManage.setStore(state => {
+      state.mode = mode
     }, chartId)
   }
 }
