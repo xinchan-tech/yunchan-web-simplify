@@ -57,6 +57,8 @@ export const MainChart = (props: MainChartProps) => {
     []
   )
 
+  
+
   /**
    * 初始化
    */
@@ -102,8 +104,13 @@ export const MainChart = (props: MainChartProps) => {
   useEffect(() => {
     if (activeChartId !== props.chartId) return
 
-    const cancelSymbolEvent = chartEvent.on('coilingChange', ({ type, coiling }) => {
+    const cancelSymbolEvent = chartEvent.on('symbolChange', (symbol) => {
+      setSymbol(symbol)
+    })
+
+    const cancelCoilingEvent = chartEvent.on('coilingChange', ({ type, coiling }) => {
       if (type === 'add') {
+
         calcCoiling(candlesticks, chartStore.interval).then(r => {
           coiling.forEach(coiling => {
             chartImp.current?.setCoiling(coiling, r)
@@ -182,6 +189,7 @@ export const MainChart = (props: MainChartProps) => {
 
     return () => {
       cancelSymbolEvent()
+      cancelCoilingEvent()
       cancelIndicatorEvent()
       cancelSubIndicatorEvent()
       cancelStockCompareChange()

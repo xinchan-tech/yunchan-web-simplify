@@ -358,15 +358,18 @@ export const chartManage = {
     }, chartId)
   },
   setMarkOverlay: (mark: string, type: string, chartId?: string) => {
+    const m = {
+      mark,
+      type
+    }
+    chartEvent.get().emit('markOverlayChange', { type: 'add', params: m as any })
     chartManage.setStore(state => {
-      state.overlayMark = {
-        mark,
-        type
-      }
+      state.overlayMark = m
     }, chartId)
   },
   removeMarkOverlay: (chartId?: string) => {
     chartManage.setStore(state => {
+      chartEvent.get().emit('markOverlayChange', { type: 'remove', params: state.overlayMark as any })
       state.overlayMark = undefined
     }, chartId)
   },

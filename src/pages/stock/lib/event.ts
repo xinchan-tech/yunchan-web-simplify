@@ -1,6 +1,5 @@
 import mitt from 'mitt'
-import type { ChartStore, CoilingIndicatorId } from './ctx'
-import type { Indicator } from './store'
+import type { ChartStore, CoilingIndicatorId, Indicator } from './store'
 
 export type ChartEvents = {
   symbolChange: string
