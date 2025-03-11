@@ -53,6 +53,9 @@ module.exports = {
         },
         dialog: {
           border: 'hsl(var(--dialog-border))'
+        },
+        chat: {
+          background: 'var(--chat-background)',
         }
       },
       borderRadius: {

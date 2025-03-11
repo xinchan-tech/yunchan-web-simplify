@@ -147,27 +147,12 @@ const MsgCard = (props: { data: Message; children: string | ReactNode; historyMo
                     box-sizing: border-box;
                     display: flex;
                     align-items: center;
-                    margin-top: 20px;
-                }
-                .bubble :before {
-                    content: "";
-                    position: absolute;
-                    left: -10px;
-                    top: 0;
-                    display: inline-block;
-                    width: 10px;
-                    height: 40px;
-                    background-color: rgb(65, 65, 65);
-                    clip-path: polygon(0 10px, 10px 12px, 10px 26px);
+                    margin-top: 24px;
                 }
                 .bubble.right-bubble {
                      margin-right: 10px;
                 }
-                .bubble.right-bubble :before{
-                    right: -10px;
-                    left: auto;
-                    clip-path: polygon(10px 10px, 0px 12px, 0px 26px);
-                }
+
             
         `}
       </style>

@@ -54,7 +54,7 @@ const ChatAvatar = (props: {
         <img src={data.avatar} style={{ borderRadius: radius }} alt={data.name} />
       ) : (
         <div
-          className={cn('flex justify-center items-center', size === 'sm' ? 'text-sm' : 'text-lg font-semibold')}
+          className={cn('flex justify-center items-center', size === 'sm' ? 'text-sm' : 'text-2xl font-semibold')}
           style={{
             borderRadius: radius,
             backgroundColor: data && userIdToColor(data.uid)

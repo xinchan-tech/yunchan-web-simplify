@@ -258,10 +258,10 @@ export const dateUtils = {
     }
 
     if (d.isSame(dayjs(), 'year')) {
-      return d.format('MM-dd HH:mm')
+      return d.format('MM-DD HH:mm')
     }
 
-    return d.format('YYYY-MM-dd HH:mm')
+    return d.format('YYYY-MM-DD HH:mm')
   },
   timeEqual: (a: string | Dayjs | number, b: string | Dayjs | number) => {
     const _a = dateUtils.toUsDay(a)

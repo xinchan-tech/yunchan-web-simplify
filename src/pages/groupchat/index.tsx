@@ -325,7 +325,7 @@ const GroupChatPage = () => {
   const countDownTimer = useRef<number>()
   useEffect(() => {
     if (notAgreeNotice === true) {
-      countDownTimer.current = setInterval(() => {
+      countDownTimer.current = window.setInterval(() => {
         setCountdown(prev => {
           if (prev === 0) {
             clearInterval(countDownTimer.current)
@@ -402,10 +402,10 @@ const GroupChatPage = () => {
                 </div>
               </div>
             )}
-            <div className="group-chat-header justify-between flex h-[58px]">
+            <div className="group-chat-header justify-between flex h-10">
               <div className="group-title items-center pt-2 h-full">
-                <p className="mb-0 mt-0">{groupDetailData?.name}</p>
-                <p className="text-xs text-gray-400 mt-0 mb-0">{groupDetailData?.brief}</p>
+                <p className="m-0 text-sm">{groupDetailData?.name}</p>
+                {/* <p className="text-xs text-gray-400 mt-0 mb-0">{groupDetailData?.brief}</p> */}
               </div>
               <div className="h-full flex items-center mr-2">
                 <JknIcon
@@ -440,19 +440,18 @@ const GroupChatPage = () => {
       <style jsx>
         {`
           .agree-notice-content {
-            backdrop-filter: blur(10px);
-            background: rgba(0, 0, 0, 0.3); /* 半透明背景 */
+            background: var(--chart-background);
             z-index: 9999;
           }
           .group-chat-container {
             height: 100vh;
             min-width: 1000px;
+            background-color: var(--chart-background);
           }
           .group-chat-container div {
             box-sizing: border-box;
           }
           .group-chat-right {
-            background-color: rgb(43, 45, 49);
             height: 100%;
             flex: 1;
           }

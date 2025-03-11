@@ -11,6 +11,7 @@
 
   /**
    * Base theme colors
+   * TODO: HSL to HEX
    */
   :root {
     /** 股票绿色 */
@@ -50,11 +51,11 @@
       */
     --background: 0 0% 6%;
     --foreground: 0 0% 86%;
-    --muted: 0 0% 10%;
+    --muted: 0 0% 12%;
     --muted-foreground: 0 0% 100%;
     --accent: 0 0% 18%;
     --accent-foreground: 210 40% 98%;
-    --popover: var(--muted);
+    --popover: 0 0% 8%;
     --popover-foreground: var(--foreground);
     --border: 0 0% 24%;
     --input: 227 8% 34%;
@@ -74,6 +75,8 @@
     --text-tertiary: 0 0% 40%;
     --table: var(--muted);
     --table-header: 220 5% 12%;
+
+    --chat-background: #141414;
   }
 }
 

@@ -4,7 +4,7 @@ import { cn } from '@/utils/style'
 import { useEffect, useMemo, useState } from 'react'
 import WKSDK, { type Message, Channel, ChannelTypePerson, MessageStatus } from 'wukongimjssdk'
 import {
-  getTimeStringAutoShort2,
+  getTimeFormatStr,
   judgeIsUserInSyncChannelCache,
   setPersonChannelCache,
   setUserInSyncChannelCache
@@ -63,23 +63,23 @@ const MsgHead = (props: { message: Message; type: 'left' | 'right' }) => {
       } else {
         if (judgeIsUserInSyncChannelCache(message.fromUID)) {
           return
-        } else {
-          setUserInSyncChannelCache(message.fromUID, true)
-
-          setPersonChannelCache(message.fromUID).then(() => {
-            const temp = WKSDK.shared().channelManager.getChannelInfo(new Channel(message.fromUID, ChannelTypePerson))
-            if (temp) {
-              setChannelInfo({
-                name: temp.title,
-                avatar: temp.logo,
-                uid: temp.channel.channelID
-              })
-              updateForceUpdateAvatarId()
-            }
-
-            setUserInSyncChannelCache(message.fromUID, false)
-          })
         }
+
+        setUserInSyncChannelCache(message.fromUID, true)
+
+        setPersonChannelCache(message.fromUID).then(() => {
+          const temp = WKSDK.shared().channelManager.getChannelInfo(new Channel(message.fromUID, ChannelTypePerson))
+          if (temp) {
+            setChannelInfo({
+              name: temp.title,
+              avatar: temp.logo,
+              uid: temp.channel.channelID
+            })
+            updateForceUpdateAvatarId()
+          }
+
+          setUserInSyncChannelCache(message.fromUID, false)
+        })
       }
     }
   }, [message])
@@ -107,7 +107,7 @@ const MsgHead = (props: { message: Message; type: 'left' | 'right' }) => {
             {getTimeStringAutoShort2(message.timestamp * 1000, true)}
           </span>
         )} */}
-        <span className="ml-2 text-gray-400">{getTimeStringAutoShort2(message.timestamp * 1000, true)}</span>
+        <span className="ml-2 text-tertiary">{getTimeFormatStr(message.timestamp * 1000)}</span>
       </div>
       <ContextMenu>
         <ContextMenuTrigger asChild>
@@ -124,10 +124,11 @@ const MsgHead = (props: { message: Message; type: 'left' | 'right' }) => {
       <style jsx>
         {`
           .user-name {
-            font-size: 12px;
-            color: rgb(15, 132, 241);
+            font-size: 14px;
             min-width: 100px;
             top: 0;
+            display: flex;
+            align-items: center;
           }
           .left-name {
             left: 58px;

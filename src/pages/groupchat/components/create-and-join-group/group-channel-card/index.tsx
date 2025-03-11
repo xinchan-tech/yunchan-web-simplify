@@ -29,21 +29,28 @@ export const GroupTag = (props: {
         </div>
       )}
 
-      {taglist.map((Item, index) => {
+      {taglist.map((item, index) => {
         return (
-          <div key={Item + index} className="group-tag text-xs">
-            {Item}
+          // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
+          <div key={item + index} className="group-tag text-sm"
+            style={{
+              background: index === 0 ? 'rgba(34, 171, 148, 0.4)' : index === 1 ? 'rgba(41, 98, 255, 0.4)' : 'rgba(46, 46, 46, 1)',
+              color: index === 0 ? '#22AB94' : index === 1 ? '#2962FF' : '#B8B8B8'
+            }}
+          >
+            {item}
           </div>
         )
       })}
       <style jsx>{`
         .group-tag {
-          height: 18px;
+          height: 28px;
           display: flex;
           align-items: center;
-          padding: 0 6px;
-          border-radius: 4px;
-          background-color: rgb(35, 35, 35);
+          box-sizing: border-box;
+          padding: 1px 12px;
+          border-radius: 300px;
+          background-color: hsl(var(--accent));
           margin-right: 6px;
         }
       `}</style>
@@ -59,7 +66,7 @@ const GroupChannelCard = (props: {
   const { data } = props
 
   return (
-    <div className="flex justify-between  flex-shrink-0 card-container">
+    <div className="flex justify-between flex-shrink-0 card-container border-b-primary">
       <div className="flex flex-1">
         <div className="avatar-box">
           <ChatAvatar
@@ -68,45 +75,30 @@ const GroupChannelCard = (props: {
               avatar: data.avatar,
               uid: data.account
             }}
-            className="w-[60px] h-[60px]"
+            className="w-[64px] h-[64px]"
           />
         </div>
-        <div className="group-info ml-2">
-          <div className="mb-1 text-sm">{data.name}</div>
-          <GroupTag tags={data.tags} total={data.total_user} showMember />
-          {/* <div className="flex mb-1">
-            <div className="group-tag text-xs">
-              <JknIcon
-                name="ic_top_2"
-                className="mr-1"
-                style={{ width: "14px", height: "14px" }}
-              />
-              {data.total_user}
-            </div>
-            {taglist.map((Item, index) => {
-              return (
-                <div key={Item + index} className="group-tag text-xs">
-                  {Item}
-                </div>
-              );
-            })}
-          </div> */}
-          <div className="group-desc text-xs text-gray-600">社群简介：{data.brief}</div>
+        <div className="group-info ml-6">
+          <div className="mb-2 text-lg">{data.name}</div>
+          <GroupTag tags={data.tags} total={data.total_user} />
+          <div className="group-desc text-sm text-tertiary mt-2">{data.brief}</div>
+          <div className="group-desc text-sm mt-2">共{data.total_user}人</div>
         </div>
       </div>
       <div className="group-price">
-        <div className="flex w-full justify-center mb-2 text-gray-500 items-baseline">
-          <span className="text-lg font-bold">${data.price}/</span>
-          <span className="text-sm">月</span>
+        <div className="flex w-full justify-center mb-2  items-baseline">
+          <span className="text-2xl font-bold">${data.price}</span>
+          <span className="text-sm">/月</span>
         </div>
         <div className="flex w-full justify-center ">
           <Button
             size="sm"
+            className="text-foreground w-[108px] h-10 leading-10 text-sm"
             onClick={() => {
               typeof props.onJoin === 'function' && props.onJoin()
             }}
             style={{
-              backgroundColor: props.joinDisabled ? 'rgb(35,35,35)' : 'rgb(49,86,245)'
+              backgroundColor: props.joinDisabled ? '#575757' : '#2962FF'
             }}
             disabled={props.joinDisabled}
           >
@@ -117,7 +109,7 @@ const GroupChannelCard = (props: {
       <style jsx>
         {`
           .card-container {
-            padding: 10px 80px;
+            padding: 14px 40px;
             width: 100%;
             box-sizing: border-box;
           }
@@ -125,6 +117,7 @@ const GroupChannelCard = (props: {
             background-color: rgb(39, 40, 43);
           }
           .group-price {
+            margin-top: 40px;
             width: 150px;
           }
           .group-info {
@@ -132,8 +125,8 @@ const GroupChannelCard = (props: {
             flex: 1;
           }
           .avatar-box {
-            width: 60px;
-            height: 60px;
+            width: 64px;
+            height: 64px;
             border-radius: 50%;
             overflow: hidden;
           }

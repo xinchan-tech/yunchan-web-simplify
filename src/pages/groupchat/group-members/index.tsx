@@ -23,14 +23,14 @@ const GroupMembers = (props: { total: string | number }) => {
 
   return (
     <div className="h-full">
-      <div className="group-notice">
-        <div className="box-title flex items-center">群公告</div>
-        <div className="text-xs p-2" style={{ color: 'rgb(125,129,138)' }}>
+      <div className="group-notice p-2">
+        <div className="flex items-center text-base text-foreground">群公告</div>
+        <div className="group-notice-content text-tertiary text-sm" >
           {groupDetailData?.notice || ''}
         </div>
       </div>
-      <div className="group-members">
-        <div className="box-title flex items-center">活跃成员</div>
+      <div className="group-members p-2 box-border">
+        <div className="flex items-center text-base text-foreground">群成员({subscribers.length})</div>
         {fetchingSubscribers === true &&
           skeletonArr.map(idx => {
             return <Skeleton key={idx} style={{ background: '#555' }} className="mt-[6px] h-5" />
@@ -65,7 +65,7 @@ const GroupMembers = (props: { total: string | number }) => {
             border-bottom: 1px solid rgb(50, 50, 50);
           }
           .group-members {
-            height: calc(100% - 200px);
+            height: calc(100% - 220px);
             overflow-y: auto;
           }
           .box-title {
@@ -77,7 +77,6 @@ const GroupMembers = (props: { total: string | number }) => {
           .member-item {
             margin-top: 6px;
             height: 20px;
-            padding: 0 10px;
           }
 
           .member-avatar {
@@ -90,6 +89,13 @@ const GroupMembers = (props: { total: string | number }) => {
             margin-left: 6px;
             max-width: calc(100% - 50px);
             font-size: 14px;
+          }
+          .group-notice-content {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 9;
+            -webkit-box-orient: vertical;
           }
         }
       `}</style>

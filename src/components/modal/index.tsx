@@ -118,10 +118,10 @@ export const useModal = ({
           {isFunction(content) ? content({ ...modal, onOk: props.onOk }) : content}
           {footer === null ? null : footer === undefined ? (
             <DialogFooter className="m-4">
-              <Button variant="outline" onClick={() => toggleModalVisible()}>
+              <Button variant="outline" className="w-24 box-border" onClick={() => toggleModalVisible()}>
                 取消
               </Button>
-              <Button loading={confirmLoading} onClick={() => props.onOk?.()}>
+              <Button className="w-24 box-border " loading={confirmLoading} onClick={() => props.onOk?.()}>
                 确认
               </Button>
             </DialogFooter>

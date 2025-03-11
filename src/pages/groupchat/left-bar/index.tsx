@@ -1,4 +1,4 @@
-import { Button, JknIcon } from '@/components'
+import { Button, HoverCard, HoverCardTrigger, JknIcon, Label, RadioGroup, RadioGroupItem } from '@/components'
 import { useModal } from '@/components'
 import { useUser } from '@/store'
 import { cn } from '@/utils/style'
@@ -8,7 +8,9 @@ import { APP_TO_CHAT_REFRESH_USER, CHAT_TO_APP_REFRESH_USER } from '@/app'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { useEffect, useRef } from 'react'
 import WKSDK from 'wukongimjssdk'
-import JoinGroupContent from '../components/create-and-join-group/join-group-content'
+import { JoinGroupContent } from '../components/create-and-join-group/join-group-content'
+import { useGroupChatStoreNew } from "@/store/group-chat-new"
+import { useToast } from "@/hooks"
 
 const GroupChatLeftBar = (props: {
   indexTab: 'chat' | 'live'
@@ -17,24 +19,18 @@ const GroupChatLeftBar = (props: {
   const { user, setUser } = useUser()
 
   const tabs: Array<{
-    name: string
-    icon: string
-
+    icon: IconName
     value: 'chat' | 'live'
   }> = [
-    {
-      name: '消息',
-      icon: 'group_chat',
-
-      value: 'chat'
-    },
-    {
-      name: '图文直播',
-      icon: 'right_menu_5',
-
-      value: 'live'
-    }
-  ]
+      {
+        icon: 'group',
+        value: 'chat'
+      },
+      {
+        icon: 'live',
+        value: 'live'
+      }
+    ]
 
   const channel = useRef<BroadcastChannel>()
   useEffect(() => {
@@ -49,45 +45,20 @@ const GroupChatLeftBar = (props: {
     return () => {
       channel.current?.close()
     }
-  }, [])
+  }, [setUser])
+
+  const onChannelChange = () => {
+    if (user?.in_channel_status !== '1') return
+
+    changeGroupModal.modal.open()
+  }
 
   const settingModal = useModal({
     title: '设置',
-    footer: null,
     closeIcon: true,
-    content: (
-      <div className="p-5 min-h-[300px]">
-        <div className="flex h-[40px] items-center">
-          <div className="w-[100px] text-right">更换社群：</div>
-          <div className="h-full flex items-center">
-            <Button
-              size={'sm'}
-              disabled={user?.in_channel_status !== '1'}
-              onClick={() => {
-                changeGroupModal.modal.open()
-              }}
-            >
-              更换
-            </Button>
-            <TooltipProvider delayDuration={0}>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <span className="ml-4">
-                    <JknIcon name="ic_tip1" className="rounded-none" />
-                  </span>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <div className="w-[300px]">
-                    App会员免费赠送的社群,每次付费周期均可更换一次输入邀请码提交后可更换至对应的社群更换社群后将自动退出原来的社群
-                  </div>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          </div>
-        </div>
-      </div>
-    ),
-    className: 'w-[500px]'
+    content: <SettingForm onChannelChange={onChannelChange} />,
+    className: 'w-[500px]',
+    onOk: () => settingModal.modal.close()
   })
 
   const changeGroupModal = useModal({
@@ -112,7 +83,7 @@ const GroupChatLeftBar = (props: {
   })
 
   return (
-    <div className="w-[68px] left-bar-cont relative">
+    <div className="w-[64px] left-bar-cont relative">
       <div className="left-bar-item flex justify-center">
         <ChatAvatar
           radius="8px"
@@ -139,12 +110,11 @@ const GroupChatLeftBar = (props: {
                 }
               }}
               className={cn(
-                'w-12 h-12 flex flex-col justify-center items-center  mb-2',
+                'w-full h-16 flex flex-col justify-center items-center cursor-pointer hover:bg-accent',
                 props.indexTab === tab.value && 'activebar'
               )}
             >
-              <JknIcon className={cn(props.indexTab === tab.value && 'active-icon', 'rounded-none')} name={tab.icon} />
-              <div className="text-xs mt-1 title">{tab.name}</div>
+              <JknIcon.Svg name={tab.icon} />
             </div>
           )
         })}
@@ -161,8 +131,7 @@ const GroupChatLeftBar = (props: {
           }
         }}
       >
-        <JknIcon className="rounded-none" name="settings_shallow" />
-        <div className="text-center mt-2  text-xs text-[#989898]">设置</div>
+        <JknIcon.Svg name="setting" />
       </div>
       {settingModal.context}
       {changeGroupModal.context}
@@ -170,25 +139,16 @@ const GroupChatLeftBar = (props: {
         {`
            {
             .left-bar-cont {
-              padding: 20px 10px;
+              padding: 20px 0;
               width: 68px;
               height: 100%;
               box-sizing: border-box;
-              background-color: rgb(30, 32, 34);
             }
             .activebar {
-              border-radius: 8px;
-              background-color: rgb(53, 54, 55);
-              img {
-                filter: invert(50%) sepia(96%) saturate(6798%)
-                  hue-rotate(227deg) brightness(99%) contrast(94%);
-              }
+              background-color: hsl(var(--accent))
             }
             .title {
               color:  #989898
-            }
-            .activebar .title {
-              color: #6052ff;
             }
             .left-bar-item {
               width: 100%;
@@ -199,6 +159,89 @@ const GroupChatLeftBar = (props: {
           }
         `}
       </style>
+    </div>
+  )
+}
+
+interface SettingFormProps {
+  onChannelChange: () => void
+}
+
+const SettingForm = (props: SettingFormProps) => {
+  const timeFormat = useGroupChatStoreNew(s => s.timeFormat)
+  const setTimeFormat = useGroupChatStoreNew(s => s.setTimeFormat)
+  const { toast } = useToast()
+
+  const onTimeZoneChange = (value: string) => {
+    const timezone = value
+    const format = timezone === 'us' ? 'time' : timeFormat.format
+    setTimeFormat({ timezone, format })
+  }
+
+  const onFormatChange = (value: string) => {
+    const format = value
+    if (timeFormat.timezone === 'us' && format === 'ago') {
+      toast({
+        description: '美东时间只支持显示完整时间',
+      })
+
+      return
+    }
+    setTimeFormat({ timezone: timeFormat.timezone, format })
+  }
+
+  return (
+    <div className="border-t-primary min-h-[300px] px-4 box-border">
+      <div className="flex items-center justify-between py-4">
+        <span className="text-tertiary">社群设置</span>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div
+                className="bg-accent rounded px-4 py-2 cursor-pointer"
+                onClick={props.onChannelChange}
+                onKeyDown={() => { }}
+              >
+                更换社群
+              </div>
+            </TooltipTrigger>
+            <TooltipContent className="bg-accent">
+              <span className="inline-block w-[400px] text-tertiary text-xs">
+                App会员每次付费周期可更换一次社群，更换后将自动退出原来的社群
+              </span>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      </div>
+      <div className="flex items-start justify-between py-4">
+        <span className="text-tertiary">时间显示</span>
+        <div className="space-y-4">
+          <div>
+            <RadioGroup className="flex items-center space-x-4" value={timeFormat.timezone} onValueChange={onTimeZoneChange}>
+              <div className="flex items-center">
+                <RadioGroupItem value="local" id="chat-group-time-zone-local" />
+                <Label className="ml-2" htmlFor="chat-group-time-zone-local">本地时间</Label>
+              </div>
+              <div className="flex items-center">
+                <RadioGroupItem value="us" id="chat-group-time-zone-us" />
+                <Label className="ml-2" htmlFor="chat-group-time-zone-us">美东时间</Label>
+              </div>
+            </RadioGroup>
+          </div>
+          <div>
+            <RadioGroup className="flex items-center space-x-4" value={timeFormat.format} onValueChange={onFormatChange}>
+              <div className="flex items-center">
+                <RadioGroupItem value="ago" id="chat-group-time-format-ago" />
+                <Label className="ml-2" htmlFor="chat-group-time-format-ago">相对时间</Label>
+              </div>
+              <div className="flex items-center">
+                <RadioGroupItem value="time" id="chat-group-time-format-time" />
+                <Label className="ml-2" htmlFor="chat-group-time-format-time">完整时间</Label>
+              </div>
+            </RadioGroup>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }

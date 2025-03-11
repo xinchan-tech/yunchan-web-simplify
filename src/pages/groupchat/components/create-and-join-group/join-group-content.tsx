@@ -1,16 +1,17 @@
-import { useState } from 'react'
+import { type ComponentProps, forwardRef, type PropsWithChildren, useImperativeHandle, useRef, useState } from 'react'
 
 import { getGroupChannels, joinGroupByInviteCode } from '@/api'
 import type { GroupChannelItem, getGroupChannelsParams } from '@/api'
-import { Input } from '@/components'
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, Input, JknIcon, JknSearchInput } from '@/components'
 import FullScreenLoading from '@/components/loading'
 import { useToast } from '@/hooks'
 import { useGroupChatShortStore } from '@/store/group-chat-new'
 import { cn } from '@/utils/style'
 import { useQuery } from '@tanstack/react-query'
 import type { GroupData } from '../../group-channel'
-import JoinGroup from '../join-group'
+import { JoinGroup } from '../join-group'
 import GroupChannelCard from './group-channel-card'
+import { createPortal } from "react-dom"
 
 type GroupCategoryValue = '1' | '2' | '3'
 
@@ -19,13 +20,13 @@ type GroupCategory = {
   value: GroupCategoryValue
 }
 
-const JoinGroupContent = (props: { onSuccess: () => void; type?: string }) => {
+export const JoinGroupContent = (props: { onSuccess: () => void; type?: string }) => {
   const [currentCategory, setCurrentCategory] = useState<GroupCategoryValue>('1')
-  const [keywords, setKeywords] = useState('')
+  const [keywords, setKeywords] = useState<string>()
   const { conversationWraps } = useGroupChatShortStore()
   const [curGroupData, setCurGroupData] = useState<GroupData | null>(null)
   const { toast } = useToast()
-
+  console.log(111)
   const category: GroupCategory[] = [
     {
       label: '热门',
@@ -87,21 +88,17 @@ const JoinGroupContent = (props: { onSuccess: () => void; type?: string }) => {
 
   return (
     <div className="w-full h-full content-box">
-      {openJoinMask === true && curGroupData && (
-        <div className="mask">
-          <JoinGroup
-            data={curGroupData}
-            onSuccess={props.onSuccess}
-            type={props.type}
-            onClose={() => {
-              setOpenJoinMask(false)
-            }}
-          />
-        </div>
-      )}
       {(isFetching === true || changeGroupLoading === true) && <FullScreenLoading fullScreen={false} />}
       <div className="top-area">
-        <div className="flex justify-center">
+        <div className="flex items-center px-10">
+          <JknIcon name="hot-fire" />
+          <span>热门</span>
+          <JknSearchInput
+            rootClassName="border border-solid rounded-lg border-border text-tertiary w-[324px] ml-auto" className="placeholder:text-secondary" placeholder={props.type === 'change' ? '请输入邀请码' : '请输入群名称'}
+            onSearch={v => setKeywords(v)}
+          />
+        </div>
+        {/* <div className="flex justify-center">
           <div className=" border-dialog-border rounded-sm  bg-accent top-area-search  w-[600px]">
             <Input
               className="border-none placeholder:text-tertiary"
@@ -114,8 +111,8 @@ const JoinGroupContent = (props: { onSuccess: () => void; type?: string }) => {
               size={'sm'}
             />
           </div>
-        </div>
-        {props.type !== 'change' && (
+        </div> */}
+        {/* {props.type !== 'change' && (
           <div className="flex tag-conts">
             {category.map((item: GroupCategory) => (
               <div
@@ -135,7 +132,7 @@ const JoinGroupContent = (props: { onSuccess: () => void; type?: string }) => {
               </div>
             ))}
           </div>
-        )}
+        )} */}
       </div>
       <div className="bottom-area">
         {(data || []).map((channel: GroupChannelItem) => {
@@ -158,6 +155,18 @@ const JoinGroupContent = (props: { onSuccess: () => void; type?: string }) => {
         {/* <div className="flex justify-center mt-4 text-sm text-gray-600 cursor-pointer">
           加载更多
         </div> */}
+        {openJoinMask === true && curGroupData && (
+          <div className="mask">
+            <JoinGroup
+              data={curGroupData}
+              onSuccess={props.onSuccess}
+              type={props.type}
+              onClose={() => {
+                setOpenJoinMask(false)
+              }}
+            />
+          </div>
+        )}
       </div>
       <style jsx>{`
         .content-box {
@@ -167,7 +176,7 @@ const JoinGroupContent = (props: { onSuccess: () => void; type?: string }) => {
           line-height: 36px;
         }
         .top-area {
-          height: 120px;
+          height: 50px;
           background-color: rgb(20, 21, 25);
           border-bottom: 1px solid hsl(var(--border));
         }
@@ -191,16 +200,16 @@ const JoinGroupContent = (props: { onSuccess: () => void; type?: string }) => {
         .bottom-area {
           padding-top: 12px;
           padding-bottom: 20px;
-          height: 420px;
+          height: 570px;
           overflow-y: auto;
         }
         .mask {
-          position: absolute;
-          z-index: 100;
+          position: fixed;
+          z-index: 999999;
           left: 0;
-          right: 0;
-          bottom: 0;
           top: 0;
+          width: 100%;
+          height: 100%;
 
           background: rgba(0, 0, 0, 0.3); /* 半透明背景 */
 
@@ -211,4 +220,41 @@ const JoinGroupContent = (props: { onSuccess: () => void; type?: string }) => {
   )
 }
 
-export default JoinGroupContent
+interface JoinGroupContentModalProps extends PropsWithChildren<ComponentProps<typeof JoinGroupContent>> { }
+interface JoinGroupContentModalIns {
+  open: () => void
+}
+
+export const JoinGroupContentModal = forwardRef<JoinGroupContentModalIns, JoinGroupContentModalProps>((props, ref) => {
+  const divRef = useRef<HTMLDivElement>(null)
+
+  useImperativeHandle(ref, () => ({
+    open: () => {
+      divRef.current?.click()
+    }
+  }))
+
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <div ref={divRef}>{props.children}</div>
+      </DialogTrigger>
+      <DialogContent className="w-[800px] bg-chat-background" onPointerDownOutside={(e) => { e.stopPropagation(); e.stopImmediatePropagation() }}>
+        <DialogHeader className="bg-chat-background items-end !py-4 px-10">
+          <DialogTitle asChild className="bg-chat-background">
+            <DialogClose asChild className="w-6 h-6 !p-0 -z-0">
+              <span className="hover:bg-accent !leading-6 text-center cursor-pointer !rounded"><JknIcon.Svg name="close" size={12} /></span>
+            </DialogClose>
+          </DialogTitle>
+        </DialogHeader>
+        <DialogDescription className="text-center" />
+        {
+          <JoinGroupContent
+            onSuccess={props.onSuccess}
+            type={props.type}
+          />
+        }
+      </DialogContent>
+    </Dialog>
+  )
+})

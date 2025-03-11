@@ -12,6 +12,11 @@ interface GroupChatStore {
   setSelectedChannel: (payload: Channel | null) => void
   toChannel: Channel | null
   setToChannel: (payload: Channel) => void
+  timeFormat: {
+    timezone: string
+    format: string
+  }
+  setTimeFormat: (payload: { timezone: string; format: string }) => void
 }
 
 export const useGroupChatStoreNew = create<GroupChatStore>()(
@@ -24,6 +29,13 @@ export const useGroupChatStoreNew = create<GroupChatStore>()(
       toChannel: null,
       setToChannel(payload: Channel) {
         set({ toChannel: payload })
+      },
+      timeFormat: {
+        timezone: 'local',
+        format: 'ago'
+      },
+      setTimeFormat(payload: { timezone: string; format: string }) {
+        set({ timeFormat: payload })
       }
     }),
     {

@@ -41,7 +41,7 @@ const GroupChatMsgList = forwardRef((props, ref) => {
 
   const latestToChannel = useLatest(toChannel)
   const { user } = useUser()
-  const scrollDomRef = useRef<HTMLElement | null>(null)
+  const scrollDomRef = useRef<HTMLElement>(null)
   // const { incrementUnreadCount } = useScrollToBottomOnArrowClick(scrollDomRef);
   const jumpScrolling = useRef(false)
 
@@ -537,12 +537,12 @@ const GroupChatMsgList = forwardRef((props, ref) => {
   return (
     <div className="group-chat-msglist" style={{ height: `calc(100% - ${bottomHeight}px)` }}>
       {messageFetching === true && <FullScreenLoading />}
-      <MsgFilter
+      {/* <MsgFilter
         onFilterChange={type => setFilterType(type)}
         onKeywordFilter={word => {
           setFilterKeyWord(word)
         }}
-      />
+      /> */}
       <div
         style={{ height: 'calc(100% - 40px)' }}
         ref={scrollDomRef}
