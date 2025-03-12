@@ -107,6 +107,7 @@ const TopList = () => {
       sort: true,
       render: (_, row) => (
         <SubscribeSpan.PriceBlink
+          showColor={false}
           trading={
             type === IncreaseTopStatus.PRE_MARKET
               ? 'preMarket'
@@ -150,6 +151,7 @@ const TopList = () => {
       sort: true,
       render: (turnover, row) => (
         <SubscribeSpan.TurnoverBlink
+          showColor={false}
           trading={
             type === IncreaseTopStatus.PRE_MARKET
               ? 'preMarket'

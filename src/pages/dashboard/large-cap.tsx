@@ -185,6 +185,7 @@ const LargeCap = () => {
         {activeKey !== '大盘指数' && (
           <div className="absolute bottom-8 left-4 border border-solid border-border rounded p-0.5">
             <CapsuleTabs
+              className={cn('space-x-0 text-sm p-0')}
               type="text"
               activeKey={stockType.toString()}
               onChange={value => setStockType(+value as unknown as StockChartInterval)}
@@ -192,7 +193,7 @@ const LargeCap = () => {
             >
               <CapsuleTabs.Tab
                 className={cn(
-                  'rounded-sm py-1 text-tertiary leading-5',
+                  'rounded-sm w-[48px] h-[30px] p-0 flex items-center justify-center',
                   stockType === StockChartInterval.PRE_MARKET && '!bg-accent'
                 )}
                 value={StockChartInterval.PRE_MARKET.toString()}
@@ -200,7 +201,7 @@ const LargeCap = () => {
               />
               <CapsuleTabs.Tab
                 className={cn(
-                  'rounded-sm py-1 text-tertiary leading-5',
+                  'rounded-sm w-[48px] h-[30px] p-0 flex items-center justify-center',
                   stockType === StockChartInterval.INTRA_DAY && '!bg-accent'
                 )}
                 value={StockChartInterval.INTRA_DAY.toString()}
@@ -208,7 +209,7 @@ const LargeCap = () => {
               />
               <CapsuleTabs.Tab
                 className={cn(
-                  'rounded-sm py-1 text-tertiary leading-5',
+                  'rounded-sm w-[48px] h-[30px] p-0 flex items-center justify-center',
                   stockType === StockChartInterval.AFTER_HOURS && '!bg-accent'
                 )}
                 value={StockChartInterval.AFTER_HOURS.toString()}

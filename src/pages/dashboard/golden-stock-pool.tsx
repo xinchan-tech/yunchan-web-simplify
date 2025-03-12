@@ -66,7 +66,7 @@ const GoldenStockPool = () => {
       width: '17%',
       sort: true,
       render: (close, row) => (
-        <SubscribeSpan.PriceBlink symbol={row.symbol} initValue={close} initDirection={stockUtils.isUp(row)} />
+        <SubscribeSpan.PriceBlink showColor={false} symbol={row.symbol} initValue={close} initDirection={stockUtils.isUp(row)} />
       )
     },
     {
@@ -93,6 +93,7 @@ const GoldenStockPool = () => {
       sort: true,
       render: (turnover, row) => (
         <SubscribeSpan.TurnoverBlink
+        showColor={false}
           symbol={row.symbol}
           decimal={2}
           initValue={turnover}

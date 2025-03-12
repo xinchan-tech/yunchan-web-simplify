@@ -47,11 +47,12 @@ export const HotTop = () => {
         trigger: 'item',
         borderColor: '#3B3741',
         backgroundColor: '#3B3741',
+        position: 'top',
+        borderRadius: 12,
         formatter: (params: any) => {
           const [name, score, time] = params.data
           return `
-            <div class="flex flex-col" style="min-width: 100px">
-              <div class="text-lg text-center" style="color: #FFFFFF">${name}</div>
+            <div class="flex flex-col" style="min-width: 96px">
               <div class="text-lg text-center" style="color: #FFFFFF">${score}</div>
               <div class="text-xs text-center" style="color: #B7DBF9">热力值</div>
             </div>

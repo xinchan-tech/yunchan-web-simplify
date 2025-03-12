@@ -52,7 +52,7 @@ const StockSelect = ({ onChange, className, width, ...props }: StockSelectProps)
               className
             )}
           >
-            <JknIcon className="w-4 h-4" name="ic_search" />
+            <JknIcon.Svg className="w-4 h-4" color='#B8B8B8' name="search" />
             <Input
               value={keyword}
               onChange={e => setKeyword(e.target.value)}
