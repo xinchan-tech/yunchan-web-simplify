@@ -260,6 +260,7 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
       })
     },
     setChartType: type => {
+      console.log(chart.current, (type === 'area' ? 'area' : 'candle_solid'))
       chart.current?.setStyles({
         candle: {
           type: (type === 'area' ? 'area' : 'candle_solid') as CandleType
@@ -428,9 +429,7 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
       chart.current?.removeIndicator({ id: 'back-test-indicator' })
     },
     setDragEnable: enable => {
-      chart.current?.setStyles({
 
-      })
     },
     getChart: () => chart.current
   }))

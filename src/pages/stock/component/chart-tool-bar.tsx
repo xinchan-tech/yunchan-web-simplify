@@ -29,7 +29,7 @@ export const ChartToolBar = () => {
   const symbol = useSymbolQuery()
 
   return (
-    <div>
+    <div className="h-[64px]">
       <div className="flex items-center h-11 py-1 box-border w-full bg-background text-sm text-secondary px-4">
         <div className="flex items-center mr-2">
           <JknIcon.Stock symbol={symbol} />
@@ -206,7 +206,15 @@ export const PeriodSelect = memo(() => {
 
 export const ChartTypeSelect = memo(() => {
   const chartType = useChartManage(s => s.getActiveChart().type)
+  const interval = useChartManage(s => s.getActiveChart().interval)
 
+  const onChartTypeChange = (type: ChartType) => {
+    if (type === ChartType.Candle && renderUtils.isTimeIndexChart(interval)) {
+      return
+    }
+    chartManage.setType(type)
+    chartEvent.get().emit('chartTypeChange', type)
+  }
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -222,14 +230,14 @@ export const ChartTypeSelect = memo(() => {
       <DropdownMenuContent align="start" alignOffset={-10}>
         <DropdownMenuItem
           data-checked={chartType === ChartType.Area}
-          onClick={() => chartManage.setType(ChartType.Area)}
+          onClick={() => onChartTypeChange(ChartType.Area)}
         >
           <JknIcon.Svg name="chart-area" size={20} />
           折线线
         </DropdownMenuItem>
         <DropdownMenuItem
           data-checked={chartType === ChartType.Candle}
-          onClick={() => chartManage.setType(ChartType.Candle)}
+          onClick={() => onChartTypeChange(ChartType.Candle)}
         >
           <JknIcon.Svg name="chart-candle" size={20} />
           K线图

@@ -205,7 +205,7 @@ const drawLine: DrawFunc<LineShape> = (params, { color, width, type, data }) => 
         }))
       },
       styles: {
-        color: color,
+        color: color || '#fff',
         size: width || 1
       }
     }).draw(params.ctx)
