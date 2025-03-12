@@ -1,12 +1,12 @@
 import { getStockIndicators, getStockTabList, StockChartInterval, type StockIndicator } from '@/api'
 import {
+  CoilingIndicatorId,
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
   Input,
   JknIcon,
-  PriceAlarm,
   ScrollArea,
   Separator,
   StockAlarm,
@@ -15,7 +15,7 @@ import {
   useModal
 } from '@/components'
 import { stockUtils } from '@/utils/stock'
-import { memo, useEffect, useMemo, useRef, useState } from 'react'
+import { Fragment, memo, useEffect, useMemo, useRef, useState } from 'react'
 import { timeIndex, useSymbolQuery } from '../lib'
 import { ChartType, chartManage, useChartManage } from '../lib/store'
 import { renderUtils } from '../lib/utils'
@@ -23,35 +23,109 @@ import { useQuery } from "@tanstack/react-query"
 import { useAuthorized, useStockSearch } from "@/hooks"
 import { useLocalStorageState, useVirtualList } from "ahooks"
 import { cn } from "@/utils/style"
+import { chartEvent } from "../lib/event"
 
 export const ChartToolBar = () => {
   const symbol = useSymbolQuery()
 
   return (
-    <div className="flex items-center h-11 py-1 box-border w-full bg-background text-sm text-secondary px-4">
-      <div className="flex items-center mr-2">
-        <JknIcon.Stock symbol={symbol} />
-        &nbsp;
-        <span className="text-base text-foreground">{symbol}</span>
+    <div>
+      <div className="flex items-center h-11 py-1 box-border w-full bg-background text-sm text-secondary px-4">
+        <div className="flex items-center mr-2">
+          <JknIcon.Stock symbol={symbol} />
+          &nbsp;
+          <span className="text-base text-foreground">{symbol}</span>
+        </div>
+        <Separator orientation="vertical" className="h-2 w-[1px] bg-accent mx-1" />
+        <TimeShareSelect />
+        <Separator orientation="vertical" className="h-2 w-[1px] bg-accent mx-1" />
+        <PeriodSelect />
+        <Separator orientation="vertical" className="h-2 w-[1px] bg-accent mx-1" />
+        <ChartTypeSelect />
+        <Separator orientation="vertical" className="h-2 w-[1px] bg-accent mx-1" />
+        <IndicatorPicker />
+        <ViewModeSelect />
+        <Separator orientation="vertical" className="h-2 w-[1px] bg-accent mx-1" />
+        <StockPkPicker />
+        <Separator orientation="vertical" className="h-2 w-[1px] bg-accent mx-1" />
+        <OverlayMarkPicker />
+        <Separator orientation="vertical" className="h-2 w-[1px] bg-accent mx-1" />
+        <AlarmPicker />
+        <Separator orientation="vertical" className="h-2 w-[1px] bg-accent mx-1" />
+        <BackTest />
       </div>
-      <Separator orientation="vertical" className="h-2 w-[1px] bg-accent mx-1" />
-      <TimeShareSelect />
-      <Separator orientation="vertical" className="h-2 w-[1px] bg-accent mx-1" />
-      <PeriodSelect />
-      <Separator orientation="vertical" className="h-2 w-[1px] bg-accent mx-1" />
-      <ChartTypeSelect />
-      <Separator orientation="vertical" className="h-2 w-[1px] bg-accent mx-1" />
-      <IndicatorPicker />
-      <ViewModeSelect />
-      <Separator orientation="vertical" className="h-2 w-[1px] bg-accent mx-1" />
-      <StockPkPicker />
-      <Separator orientation="vertical" className="h-2 w-[1px] bg-accent mx-1" />
-      <OverlayMarkPicker />
-      <Separator orientation="vertical" className="h-2 w-[1px] bg-accent mx-1" />
-      <AlarmPicker />
-      <Separator orientation="vertical" className="h-2 w-[1px] bg-accent mx-1" />
-      <BackTest />
+      <div className="text-tertiary text-sm flex items-center px-4 space-x-4">
+        <CoilingBar />
+      </div>
     </div>
+  )
+}
+
+const CoilingBar = () => {
+  const system = useChartManage(s => s.getActiveChart().system)
+  const indicator = useQuery({
+    queryKey: [getStockIndicators.cacheKey],
+    queryFn: getStockIndicators
+  })
+
+  const coilingList = indicator.data?.main.find(i => i.name === '缠论系统')?.indicators.find(o => o.id === system)?.items
+  const coiling = useChartManage(s => s.getActiveChart().coiling)
+
+  if (!coiling) return null
+
+  const _onClickCoiling = (id: string) => {
+    if (coiling.includes(id as any)) {
+      chartManage.removeCoiling(id as any)
+    } else {
+      chartManage.addCoiling(id as any)
+    }
+  }
+
+  return (
+    <>
+      {
+        system ? (
+          coilingList?.map(c => {
+            const render = () => {
+              switch (c.id) {
+                case CoilingIndicatorId.PEN:
+                  return (
+                    <span className="cursor-pointer" onClick={() => _onClickCoiling(c.id)} onKeyDown={() => { }}>
+                      <JknIcon.Svg name="mins" size={12} className="mr-1" style={{ color: coiling.includes(c.id) ? '#E7C88D' : '#575757' }} />
+                      <span style={{ color: coiling.includes(c.id) ? '#808080' : '#575757' }}>{c.name}</span>
+                    </span>
+                  )
+                case CoilingIndicatorId.ONE_TYPE:
+                case CoilingIndicatorId.TWO_TYPE:
+                case CoilingIndicatorId.THREE_TYPE:
+                  return (
+                    <span className="cursor-pointer flex items-center" onClick={() => _onClickCoiling(c.id as any)} onKeyDown={() => { }}>
+                      <JknIcon.Checkbox checked={coiling.includes(c.id)} uncheckedIcon="chart-coiling-bs" checkedIcon="chart-coiling-bs-active" className="h-4 w-4 rounded mr-1" />
+                      <span style={{ color: coiling.includes(c.id) ? '#808080' : '#575757' }}>{c.name}</span>
+                    </span>
+                  )
+                case CoilingIndicatorId.PIVOT:
+                  return (
+                    <span className="cursor-pointer flex items-center" onClick={() => _onClickCoiling(c.id as any)} onKeyDown={() => { }}>
+                      <JknIcon.Svg name="poivts" size={16} style={{ color: coiling.includes(c.id) ? '#808080' : '#575757' }} />
+                      <span style={{ color: coiling.includes(c.id) ? '#808080' : '#575757' }}>{c.name}</span>
+                    </span>
+                  )
+                default:
+                  return null
+              }
+            }
+            return (
+              <Fragment key={c.id}>
+                {
+                  render()
+                }
+              </Fragment>
+            )
+          })
+        ) : null
+      }
+    </>
   )
 }
 
@@ -173,6 +247,14 @@ const IndicatorPicker = memo(() => {
     footer: false,
     closeIcon: true
   })
+
+  useEffect(() => {
+    const cancelEvent = chartEvent.get().on('showIndicatorSetting', () => {
+      modal.modal.open()
+    })
+
+    return cancelEvent
+  }, [modal])
 
   return (
     <>

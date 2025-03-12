@@ -13,30 +13,19 @@ import {
 } from 'jkn-kline-chart'
 import { uid } from 'radash'
 import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react'
-import {
-  CoilingIndicatorId,
-  mainTrendCoiling,
-  penCoiling,
-  pivotCoiling,
-  shortLineCoiling,
-  tradePointOneTypeCoiling,
-  tradePointThreeTypeCoiling,
-  tradePointTwoTypeCoiling
-} from './coiling'
 import { backTestLineFigure, backTestMarkFigure, IconFigure, markOverlayFigure } from './figure'
 import { compareIndicator, localIndicator } from './indicator'
 import { markIndicator } from './indicator/mark'
 import type { AxisPosition, Candlestick } from './types'
-import { ChartTypes, getStockColor, transformCandleColor, transformTextColor } from './utils'
+import { ChartTypes, getStockColor, isSameInterval, transformCandleColor, transformTextColor } from './utils'
 import { backTestIndicator, type BackTestRecord } from "./indicator/back-test"
+import { CoilingIndicatorId } from "./coiling-calc"
+import { coilingIndicator } from "./indicator/coiling"
+import dayjs from "dayjs"
 
-registerIndicator(penCoiling)
-registerIndicator(tradePointOneTypeCoiling)
-registerIndicator(tradePointTwoTypeCoiling)
-registerIndicator(tradePointThreeTypeCoiling)
-registerIndicator(pivotCoiling)
-registerIndicator(shortLineCoiling)
-registerIndicator(mainTrendCoiling)
+export { CoilingIndicatorId, ChartTypes }
+
+registerIndicator(coilingIndicator)
 registerIndicator(localIndicator)
 registerIndicator(compareIndicator)
 registerIndicator(markIndicator)
@@ -59,17 +48,20 @@ type IndicatorParams = {
 
 interface JknChartIns {
   applyNewData: Chart['applyNewData']
-  setCoiling: (coiling: CoilingIndicatorId, data: CoilingData) => void
+  appendCandlestick: (kline: Candlestick, interval: number) => void
+  isSameIntervalCandlestick: (kline: Candlestick, interval: number) => undefined | boolean
+  setCoiling: (coiling: CoilingIndicatorId[], interval: number) => void
+  removeCoiling: (coiling: CoilingIndicatorId[]) => void
   setLeftAxis: (show: boolean) => void
   setRightAxis: (type: 'percentage' | 'normal') => void
   setChartType: (type: 'area' | 'candle') => void
-  removeCoiling: (coiling: CoilingIndicatorId[]) => void
   removeAllCoiling: () => void
   createIndicator: (indicator: string, symbol: string, interval: StockChartInterval, name: string) => void
   removeIndicator: (indicator: string) => void
+  setIndicatorVisible: (indicatorId: string, visible: boolean) => void
   createSubIndicator: (params: IndicatorParams) => Nullable<string>
-  setSubIndicator: (paneId: string, params: IndicatorParams) => void
-  removeSubIndicator: (paneId: string) => void
+  setSubIndicator: (indicatorId: string, params: IndicatorParams) => void
+  removeSubIndicator: (indicatorId: string) => void
   createStockCompare: (candlesticks: number[], color: string) => string
   removeStockCompare: (indicatorId: string) => void
   createMarkOverlay: (symbol: string, type: string, mark: string) => string
@@ -78,12 +70,13 @@ interface JknChartIns {
   createBackTestIndicator: (record: (Optional<BackTestRecord, 'index'>[])) => Nullable<string> | undefined
   setBackTestIndicator: (record: (Optional<BackTestRecord, 'index'>[])) => boolean | undefined
   removeBackTestIndicator: () => void
+  setDragEnable: (enable: boolean) => void
+  getChart: () => Chart | null | undefined
 }
 
 export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartProps, ref) => {
   const domRef = useRef<HTMLDivElement>(null)
   const chart = useRef<Chart | null>()
-  const subIndicator = useRef<Map<string, { params: IndicatorParams; id: string }>>(new Map())
 
   useEffect(() => {
     const { up: upColor, down: downColor } = getStockColor()
@@ -113,7 +106,7 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
             noChangeWickColor: downColor
           },
           tooltip: {
-            showType: 'rect' as any,
+            expand: true,
             custom: ({ current }: { current: Candlestick }) => {
               let format = 'MM-DD HH:mm w'
 
@@ -125,28 +118,31 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
               const percent = (amount / current.prevClose) * 100
               const color = amount > 0 ? upColor : downColor
               return [
-                { title: time.format(format), value: '' },
-                { title: '开盘', value: current.open.toFixed(3) },
-                { title: '收盘', value: current.close.toFixed(3) },
-                { title: '最高', value: current.high.toFixed(3) },
-                { title: '最低', value: current.low.toFixed(3) },
-                { title: '涨跌额', value: { text: `${amount > 0 ? '+' : ''}${amount.toFixed(3)}`, color } },
-                { title: '涨跌幅', value: { text: `${percent > 0 ? '+' : ''}${percent.toFixed(2)}%`, color } },
-                { title: '成交量', value: current.volume ?? 0 }
+                { title: { text: time.format(format), color: '#808080' }, value: '' },
+                { title: { text: '开：', color: '#808080' }, value: { text: current.open.toFixed(3), color: '#808080' } },
+                { title: { text: '高：', color: '#808080' }, value: { text: current.high.toFixed(3), color: '#808080' } },
+                { title: { text: '低：', color: '#808080' }, value: { text: current.low.toFixed(3), color: '#808080' } },
+                { title: { text: '收：', color: '#808080' }, value: { text: current.close.toFixed(3), color: '#808080' } },
+                { title: { text: '涨跌额：', color: '#808080' }, value: { text: `${amount > 0 ? '+' : ''}${amount.toFixed(3)}`, color } },
+                { title: { text: '涨跌幅：', color: '#808080' }, value: { text: `${percent > 0 ? '+' : ''}${percent.toFixed(2)}%`, color } },
               ]
             },
-            rect: {
-              borderColor: '#353535',
-              color: '#202020'
-            },
             text: {
-              color: '#fff'
+              color: '#808080'
             }
           },
           priceMark: {
             last: {
               upColor: upColor,
               downColor: downColor
+            },
+            high: {
+              color: '#E7C88D',
+               textSize: 14
+            },
+            low: {
+              color: '#E7C88D',
+               textSize: 14
             }
           }
         },
@@ -219,6 +215,36 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
     applyNewData: data => {
       chart.current?.applyNewData(data)
     },
+    appendCandlestick: (candlestick, interval) => {
+      const lastData = chart.current?.getDataList().slice(-1)[0]
+      if (!lastData) return
+
+      const r = isSameInterval(lastData, candlestick, interval)
+
+      if (r === undefined) return
+
+      if(r) {
+        const _r = {
+          ...candlestick,
+          timestamp: lastData.timestamp
+        }
+
+        chart.current?.updateData(_r)
+      }else{
+        const _r = {
+          ...candlestick,
+          timestamp: dayjs(candlestick.timestamp).second(0).millisecond(0).valueOf()
+        }
+
+        chart.current?.updateData(_r)
+      }
+    },
+    isSameIntervalCandlestick: (candlestick, interval) => {
+      const lastData = chart.current?.getDataList().slice(-1)[0]
+      if (!lastData) return
+
+      return isSameInterval(lastData, candlestick, interval)
+    },
     setLeftAxis: show => {
       chart.current?.setPaneOptions({
         leftAxis: {
@@ -240,48 +266,13 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
         }
       })
     },
-    setCoiling: (coiling, data) => {
-      const hasIndicator = chart.current?.getIndicators({ id: `coiling-${coiling}` })
-      let indicator: { name: string; id: string; calcParams?: any[] } | undefined = undefined
-
-      if (CoilingIndicatorId.PEN === coiling) {
-        indicator = {
-          name: `coiling-${CoilingIndicatorId.PEN}`,
-          id: `coiling-${CoilingIndicatorId.PEN}`,
-          calcParams: [data.points, data.status]
-        }
-      } else if (
-        [CoilingIndicatorId.ONE_TYPE, CoilingIndicatorId.TWO_TYPE, CoilingIndicatorId.THREE_TYPE].includes(coiling)
-      ) {
-        indicator = {
-          name: `coiling-${coiling}`,
-          id: `coiling-${coiling}`,
-          calcParams:
-            coiling === CoilingIndicatorId.THREE_TYPE
-              ? [data.class_3_trade_points]
-              : coiling === CoilingIndicatorId.TWO_TYPE
-                ? [data.class_2_trade_points]
-                : [data.class_1_trade_points]
-        }
-      } else if (CoilingIndicatorId.PIVOT === coiling) {
-        indicator = {
-          name: `coiling-${CoilingIndicatorId.PIVOT}`,
-          id: `coiling-${CoilingIndicatorId.PIVOT}`,
-          calcParams: [data.pivots, data.expands]
-        }
-      } else if (CoilingIndicatorId.SHORT_LINE === coiling) {
-        indicator = {
-          name: `coiling-${CoilingIndicatorId.SHORT_LINE}`,
-          id: `coiling-${CoilingIndicatorId.SHORT_LINE}`
-        }
-      } else if (CoilingIndicatorId.MAIN === coiling) {
-        indicator = {
-          name: `coiling-${CoilingIndicatorId.MAIN}`,
-          id: `coiling-${CoilingIndicatorId.MAIN}`
-        }
+    setCoiling: (coilingIds, interval) => {
+      const hasIndicator = chart.current?.getIndicators({ id: 'coiling' })
+      const indicator = {
+        name: 'coiling',
+        id: 'coiling',
+        calcParams: [interval, coilingIds]
       }
-
-      if (!indicator) return
 
       if (hasIndicator?.length) {
         chart.current?.overrideIndicator(indicator)
@@ -290,8 +281,16 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
       }
     },
     removeCoiling: coiling => {
-      coiling.forEach(c => {
-        chart.current?.removeIndicator({ id: `coiling-${c}` })
+      const indicator = chart.current?.getIndicators({ id: 'coiling' })[0]
+
+      if (!indicator) return
+
+      const coilingIds = indicator.calcParams[1] as CoilingIndicatorId[]
+      const newCoiling = coilingIds.filter(c => !coiling.includes(c))
+      chart.current?.overrideIndicator({
+        name: 'coiling',
+        id: 'coiling',
+        calcParams: [indicator.calcParams[0], newCoiling]
       })
     },
     removeAllCoiling: () => {
@@ -318,7 +317,7 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
           name: 'local-indicator',
           id: indicator,
           calcParams: [indicator, symbol, interval],
-          extendData: { name }
+          extendData: { name, action: ['visible', 'delete'] }
         },
         true,
         { id: ChartTypes.MAIN_PANE_ID }
@@ -327,29 +326,30 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
     removeIndicator: indicator => {
       chart.current?.removeIndicator({ id: indicator })
     },
+    setIndicatorVisible: (indicatorId, visible) => {
+      console.log(visible)
+      chart.current?.overrideIndicator({
+        id: indicatorId,
+        visible,
+        name: "local-indicator"
+      })
+    },
     createSubIndicator(params) {
       if (!chart.current) return null
-      const iid = uid(8)
       const indicator = {
         name: 'local-indicator',
-        id: iid,
+        id: params.indicator,
         calcParams: [params.indicator, params.symbol, params.interval],
-        extendData: { name: params.name, indicatorId: params.indicator }
+        extendData: { name: params.name, indicatorId: params.indicator, action: ['delete'] }
       }
-      const paneId = chart.current?.createIndicator(indicator, false, {})
+      chart.current?.createIndicator(indicator, false, {})
 
-      if (paneId) {
-        subIndicator.current.set(paneId, {
-          params: params,
-          id: iid
-        })
-      }
-      return paneId
+      return params.indicator
     },
-    setSubIndicator(paneId, params) {
+    setSubIndicator(indicatorId, params) {
       if (!chart.current) return
 
-      const sub = subIndicator.current.get(paneId)
+      const sub = chart.current.getIndicators({ id: indicatorId })[0]
 
       if (!sub) return
 
@@ -360,10 +360,8 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
         extendData: { name: params.name, indicatorId: params.indicator }
       })
     },
-    removeSubIndicator(paneId) {
-      if (subIndicator.current.has(paneId)) {
-        chart.current?.removeIndicator({ paneId: paneId })
-      }
+    removeSubIndicator(indicatorId) {
+      chart.current?.removeIndicator({ id: indicatorId })
     },
     createStockCompare: (candlesticks, color) => {
       const indicator = uid(8)
@@ -428,7 +426,13 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
     },
     removeBackTestIndicator: () => {
       chart.current?.removeIndicator({ id: 'back-test-indicator' })
-    }
+    },
+    setDragEnable: enable => {
+      chart.current?.setStyles({
+
+      })
+    },
+    getChart: () => chart.current
   }))
 
   useEffect(() => {

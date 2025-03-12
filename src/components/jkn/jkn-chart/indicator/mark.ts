@@ -53,7 +53,7 @@ export const markIndicator: IndicatorTemplate<any, any> = {
   createTooltipDataSource: () => {
     return {
       name: '',
-      icons: [],
+      features: [],
       legends: [],
       calcParamsText: ''
     }

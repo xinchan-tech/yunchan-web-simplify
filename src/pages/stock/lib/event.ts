@@ -30,6 +30,7 @@ export type ChartEvents = {
       title: string
     }
   }
+  showIndicatorSetting: string
 }
 
 export const chartEvent = {

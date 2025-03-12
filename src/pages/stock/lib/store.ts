@@ -122,7 +122,7 @@ export type ChartStore = {
   }
 }
 
-interface ChartManageStore {
+export interface ChartManageStore {
   /**
    * 视图模式
    */
@@ -377,5 +377,25 @@ export const chartManage = {
     chartManage.setStore(state => {
       state.mode = mode
     }, chartId)
+  },
+  addCoiling: (coiling: CoilingIndicatorId, chartId?: string) => {
+    const _coiling = useChartManage.getState().chartStores[chartId ?? useChartManage.getState().activeChartId].coiling
+
+    if (_coiling.includes(coiling)) return
+
+    chartManage.setStore(state => {
+      state.coiling.push(coiling)
+    }, chartId)
+    chartEvent.get().emit('coilingChange', { type: 'add', coiling: [coiling] })
+  },
+  removeCoiling: (coiling: CoilingIndicatorId, chartId?: string) => {
+    const _coiling = useChartManage.getState().chartStores[chartId ?? useChartManage.getState().activeChartId].coiling
+
+    if (!_coiling.includes(coiling)) return
+
+    chartManage.setStore(state => {
+      state.coiling = state.coiling.filter(c => c !== coiling)
+    }, chartId)
+    chartEvent.get().emit('coilingChange', { type: 'remove', coiling: [coiling] })
   }
 }

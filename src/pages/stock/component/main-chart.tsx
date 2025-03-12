@@ -1,8 +1,8 @@
 import type { StockChartInterval, StockRawRecord } from '@/api'
-import { JknChart } from '@/components'
+import { ChartTypes, JknChart } from '@/components'
 import { calcCoiling } from '@/utils/coiling'
-import { type StockSubscribeHandler, stockUtils } from '@/utils/stock'
-import { useMount, useUpdateEffect } from 'ahooks'
+import { stockSubscribe, type StockSubscribeHandler, stockUtils } from '@/utils/stock'
+import { useMount, useUnmount, useUpdateEffect } from 'ahooks'
 import qs from 'qs'
 import { type ComponentRef, useCallback, useEffect, useRef, useState } from 'react'
 import { chartEvent } from '../lib/event'
@@ -12,6 +12,7 @@ import { renderUtils } from '../lib/utils'
 import { ChartContextMenu } from './chart-context-menu'
 import { BackTestBar } from "./back-test-bar"
 import { useStockBarSubscribe } from "@/hooks"
+import { useTime } from "@/store"
 
 interface MainChartProps {
   chartId: string
@@ -35,39 +36,57 @@ export const MainChart = (props: MainChartProps) => {
     mark: ''
   })
 
-  const render = useCallback(
-    async ({
-      candlesticks,
-      interval,
-      chartId
-    }: { candlesticks: StockRawRecord[]; interval: StockChartInterval; chartId: string }) => {
-      const _store = useChartManage.getState().chartStores[chartId]
-      const stockData = convertToStock(candlesticks)
+  useStockBarSubscribe([symbol], (data) => {
+    const trading = useTime.getState().getTrading()
+    if (!renderUtils.shouldUpdateChart(trading, chartStore.interval)) {
+      return
+    }
 
-      if (_store.coiling.length) {
-        const r = await calcCoiling(candlesticks, interval)
-        _store.coiling.forEach(coiling => {
-          chartImp.current?.setCoiling(coiling, r)
-        })
+    const record = stockUtils.toStock(data.rawRecord)
+    // 不用bar更新K线数据
+    if (!chartImp.current?.isSameIntervalCandlestick(record, chartStore.interval)) {
+      return
+    }
+
+    chartImp.current?.appendCandlestick(record, chartStore.interval)
+  })
+
+  useEffect(() => {
+    const trading = useTime.getState().getTrading()
+    console.log(trading)
+    if (!renderUtils.shouldUpdateChart(trading, chartStore.interval)) {
+      return
+    }
+    
+    const unSubscribe = stockSubscribe.onQuoteTopic(symbol, data => {
+      const chart = chartImp.current?.getChart()
+      const lastData = chart?.getDataList()?.slice(-1)[0]
+
+      if(!lastData) return
+
+      const newData = {
+        ...lastData,
+        close: data.record.close,
+        preClose: data.record.preClose
       }
 
-      chartImp.current?.setChartType(_store.type === ChartType.Candle ? 'candle' : 'area')
+      chartImp.current?.appendCandlestick(newData, chartStore.interval)
+    })
 
-      chartImp.current?.applyNewData(stockData)
-    },
-    []
-  )
-
-  const subscribeHandler: StockSubscribeHandler<'bar'> = (data) => {
-    
-  }
-  useStockBarSubscribe([symbol], subscribeHandler)
+    return unSubscribe
+  }, [chartStore.interval, symbol])
 
   /**
    * 初始化
    */
   useMount(() => {
     const _store = useChartManage.getState().chartStores[props.chartId]
+
+    const stockData = convertToStock(candlesticks)
+
+    chartImp.current?.applyNewData(stockData)
+
+    chartImp.current?.setChartType(_store.type === ChartType.Candle ? 'candle' : 'area')
 
     if (_store.mainIndicators.length) {
       _store.mainIndicators.forEach(indicator => {
@@ -92,16 +111,61 @@ export const MainChart = (props: MainChartProps) => {
       stockCache.current.mark =
         chartImp.current?.createMarkOverlay(symbol, _store.overlayMark.type, _store.overlayMark.mark) ?? ''
     }
+
+    const chart = chartImp.current?.getChart()
+
+    if (chart) {
+      chart.subscribeAction('onIndicatorActionClick' as any, (e: any) => {
+        console.log(e)
+        if (e.event === 'delete') {
+          if (e.paneId === ChartTypes.MAIN_PANE_ID) {
+            chartManage.removeMainIndicator(e.indicator.id, props.chartId)
+          } else {
+            chartManage.removeSecondaryIndicator(e.indicator.id, props.chartId)
+          }
+        } else if (e.event === 'invisible' || e.event === 'visible') {
+          chartImp.current?.setIndicatorVisible(e.indicator.id, e.event !== 'invisible')
+        } else if (e.event === 'click') {
+          chartEvent.get().emit('showIndicatorSetting', '')
+        }
+      })
+    }
   })
 
+  useUnmount(() => {
+    const chart = chartImp.current?.getChart()
+    chart?.unsubscribeAction('onIndicatorActionClick' as any)
+  })
+  /**
+   * 数据变化
+   */
   useEffect(() => {
     if (!candlesticks.length) {
       chartImp.current?.applyNewData([])
       return
     }
-    render({ candlesticks, interval: chartStore.interval, chartId: props.chartId })
-  }, [candlesticks, chartStore.interval, render, props.chartId])
 
+    const stockData = convertToStock(candlesticks)
+
+    chartImp.current?.applyNewData(stockData)
+  }, [candlesticks])
+
+  /**
+   * 周期变化
+   */
+  useEffect(() => {
+    if (renderUtils.isTimeIndexChart(chartStore.interval)) {
+      chartImp.current?.setChartType('area')
+    }
+
+  }, [chartStore.interval])
+
+  /**
+   * 缠论数据变化
+   */
+  useEffect(() => {
+    chartImp.current?.setCoiling(chartStore.coiling, useChartManage.getState().chartStores[props.chartId].interval)
+  }, [chartStore.coiling, props.chartId])
   /**
    * chart事件处理
    */
@@ -112,24 +176,15 @@ export const MainChart = (props: MainChartProps) => {
       setSymbol(symbol)
     })
 
-    const cancelCoilingEvent = chartEvent.on('coilingChange', ({ type, coiling }) => {
-      if (type === 'add') {
+    // const cancelCoilingEvent = chartEvent.on('coilingChange', ({ type, coiling }) => {
+    //   chartImp.current?.setCoiling(coiling, use)
+    // })
 
-        calcCoiling(candlesticks, chartStore.interval).then(r => {
-          coiling.forEach(coiling => {
-            chartImp.current?.setCoiling(coiling, r)
-          })
-        })
-      } else {
-        chartImp.current?.removeCoiling(coiling)
-      }
-    })
-
-    const cancelIntervalEvent = chartEvent.on('intervalChange', async (interval) => {
-      if (renderUtils.isTimeIndexChart(interval)) {
-        chartManage.setType(ChartType.Area, props.chartId)
-      }
-    })
+    // const cancelIntervalEvent = chartEvent.on('intervalChange', async (interval) => {
+    //   if (renderUtils.isTimeIndexChart(interval)) {
+    //     chartManage.setType(ChartType.Area, props.chartId)
+    //   }
+    // })
 
     const cancelIndicatorEvent = chartEvent.on('mainIndicatorChange', ({ type, indicator }) => {
       if (type === 'add') {
@@ -193,12 +248,12 @@ export const MainChart = (props: MainChartProps) => {
 
     return () => {
       cancelSymbolEvent()
-      cancelCoilingEvent()
+      // cancelCoilingEvent()
       cancelIndicatorEvent()
       cancelSubIndicatorEvent()
       cancelStockCompareChange()
       cancelMarkChange()
-      cancelIntervalEvent()
+      // cancelIntervalEvent()
     }
   }, [activeChartId, props.chartId, candlesticks, chartStore.interval, symbol, startAt])
 

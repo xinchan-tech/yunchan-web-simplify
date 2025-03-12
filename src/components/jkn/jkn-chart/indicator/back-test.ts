@@ -35,7 +35,7 @@ export const backTestIndicator: IndicatorTemplate<any, any> = {
   createTooltipDataSource: () => {
     return {
       name: '',
-      icons: [],
+      features: [],
       legends: [],
       calcParamsText: ''
     }

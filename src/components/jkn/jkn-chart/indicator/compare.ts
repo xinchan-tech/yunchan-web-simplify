@@ -27,7 +27,7 @@ export const compareIndicator: IndicatorTemplate<any, any> = {
   createTooltipDataSource: () => {
     return {
       name: '',
-      icons: [],
+      features: [],
       legends: [],
       calcParamsText: ''
     }

@@ -21,6 +21,7 @@ import { candlestickToRaw } from '../utils'
 
 type LocalIndicatorExtend = {
   name: string
+  action?: ('visible' | 'delete')[]
 }
 
 const isCoilingIndicator = (indicatorId: string) => {
@@ -85,7 +86,7 @@ export const localIndicator: IndicatorTemplate<IndicatorData, any, LocalIndicato
     const data = indicator.result.filter(d => d.name)
     return {
       name: (indicator.extendData as LocalIndicatorExtend).name,
-      icons: [],
+      features: [],
       legends: data.map((d, index, arr) => ({
         title: { text: `${d.name!}: `, color: d.color as string },
         value: {
@@ -95,7 +96,8 @@ export const localIndicator: IndicatorTemplate<IndicatorData, any, LocalIndicato
           color: d.color as string
         }
       })),
-      calcParamsText: ''
+      calcParamsText: '',
+      action: (indicator.extendData as LocalIndicatorExtend).action || []
     }
   },
   draw: params => {
