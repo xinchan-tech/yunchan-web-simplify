@@ -96,9 +96,8 @@ const TopList = () => {
       title: '名称代码',
       dataIndex: 'name',
       align: 'left',
-      width: '22%',
       sort: true,
-      render: (_, row) => <StockView code={row.symbol} name={row.name} />
+      render: (_, row) => <StockView className='h-[26px]' code={row.symbol} name={row.name} />
     },
     {
       title: `${type === IncreaseTopStatus.PRE_MARKET ? '盘前' : type === IncreaseTopStatus.AFTER_HOURS ? '盘后' : '现'}价`,
@@ -126,7 +125,6 @@ const TopList = () => {
       dataIndex: 'percent',
       align: 'right',
       sort: true,
-      width: 100,
       render: (percent, row) => (
         <SubscribeSpan.PercentBlink
           trading={
