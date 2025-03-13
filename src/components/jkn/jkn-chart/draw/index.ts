@@ -1,1 +1,7 @@
 export * from './draw-coiling'
+export * from './gradient'
+export * from './text'
+export * from './line'
+export * from './stickline'
+export * from './icon'
+export * from './band'

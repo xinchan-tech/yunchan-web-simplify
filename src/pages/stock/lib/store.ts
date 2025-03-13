@@ -306,6 +306,7 @@ export const chartManage = {
    * 设置主图类型
    */
   setType: (type: ChartType, chartId?: string) => {
+    chartEvent.get().emit('chartTypeChange', type)
     chartManage.setStore(state => {
       state.type = type
     }, chartId)

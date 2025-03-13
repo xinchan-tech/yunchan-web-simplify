@@ -283,7 +283,7 @@ export const MainChart = (props: MainChartProps) => {
       }}
     >
       <div className="flex-1 overflow-hidden">
-        <JknChart className="w-full" ref={chartImp} />
+        <JknChart className="w-full" showLogo ref={chartImp} />
       </div>
       {
         chartStore.mode === 'backTest' ? (

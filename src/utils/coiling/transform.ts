@@ -80,7 +80,17 @@ type IndicatorDataDrawText = IndicatorDataBase<'DRAWTEXT'> & {
  * color2: 颜色2
  */
 type IndicatorDataDrawGradient = IndicatorDataBase<'DRAWGRADIENT'> & {
-  drawData: [number, number, number, number, [number, number][], string, string][]
+  drawData: {
+    x1: number
+    y1: number
+    x2: number
+    y2: number
+    color: [string, string]
+    points: {
+      x: number
+      y: number
+    }[]
+  }[]
 }
 type IndicatorDataDrawNumber = IndicatorDataBase<'DRAWNUMBER'> & {
   drawData: {
@@ -202,18 +212,20 @@ export const drawStickLineTransform = (raw: IndicatorRawData) => {
   return raw
 }
 
-const drawGradientTransform = (drawData: ([number] | [number, string, string, string, string, number])[]) => {
+export const drawGradientTransform = (raw: IndicatorRawData) => {
+  if (raw.draw !== 'DRAWGRADIENT') return raw
+  const drawData = raw.draw_data as any
   if (drawData.length <= 0) {
-    return drawData
+    return raw
   }
 
-  const gradients: [number, number, number, number, [number, number][], string, string][] = []
+  const gradients: IndicatorDataDrawGradient['drawData'] = []
 
   Object.entries(drawData).forEach(([_, value]) => {
-    if (value.length < 2) {
+    if ((value as any[]).length < 2) {
       return
     }
-    const points: [number, number][] = []
+    const points: {x: number, y: number}[] = []
     const [x, y1, y2, color1, color2] = value as [number, string, string, string, string, number]
     let maxY = Number.NEGATIVE_INFINITY
     let minY = Number.POSITIVE_INFINITY
@@ -221,7 +233,7 @@ const drawGradientTransform = (drawData: ([number] | [number, string, string, st
 
     y1.split(',').forEach((y, i) => {
       const _y = Number.parseInt(y)
-      points.push([x + i, _y])
+      points.push({ x: i + x, y: _y })
       maxY = Math.max(maxY, _y)
       minY = Math.min(minY, _y)
       len++
@@ -231,15 +243,18 @@ const drawGradientTransform = (drawData: ([number] | [number, string, string, st
       const _y = Number.parseInt(y)
       maxY = Math.max(maxY, _y)
       minY = Math.min(minY, _y)
-      return [x + i, _y]
-    }) as [number, number][]
+      return { x: x + i, y: _y }
+    })
     y2Points.reverse()
     points.push(...y2Points)
 
-    gradients.push([x, x + len, minY, maxY, points, color1, color2])
+    // gradients.push([x, x + len, minY, maxY, points, color1, color2])
+    gradients.push({ x1: x, y1: minY, x2: x + len, y2: maxY, color: [color1, color2], points })
   })
 
-  return gradients
+  raw.draw_data = gradients
+
+  return raw
 }
 
 export const drawIconTransform = (raw: IndicatorRawData) => {

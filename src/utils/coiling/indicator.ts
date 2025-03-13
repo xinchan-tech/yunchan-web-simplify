@@ -6,6 +6,7 @@ import {
   type IndicatorData,
   type IndicatorRawData,
   drawBandTransform,
+  drawGradientTransform,
   drawIconTransform,
   drawLineTransform,
   drawNumberTransform,
@@ -31,7 +32,8 @@ const transformChain = chain(
   drawIconTransform,
   drawBandTransform,
   drawNumberTransform,
-  drawRectrelTransform
+  drawRectrelTransform,
+  drawGradientTransform
 )
 
 /*
@@ -70,23 +72,6 @@ export const calcIndicator = async (
       drawData: transformChain(item).draw_data as any,
       lineType: item.style_type || ('solid' as any)
     }
-
-    // if (item.draw === 'DRAWTEXT') {
-    //   r.drawData = drawTextTransform(data, item.draw_data)
-    // } else if (item.draw === 'STICKLINE') {
-    //   r.drawData = drawStickLineTransform(item.draw_data)
-    // } else if (item.draw === 'DRAWGRADIENT') {
-    //   r.drawData = drawGradientTransform(item.draw_data)
-    // } else if (item.draw === 'DRAWICON') {
-    //   r.drawData = drawIconTransform(data, item.draw_data)
-    // } else if (item.draw === 'DRAWBAND') {
-    //   r.drawData = drawBandTransform(data, item.draw_data)
-    // } else if (item.draw === 'DRAWNUMBER') {
-    //   r.drawData = drawNumberTransform(data, item.draw_data)
-    // } else if (item.draw === '') {
-    //   r.drawData = item.data as number[]
-    // }
-
     return r
   })
 }

@@ -735,7 +735,7 @@ const GoldenStockPool = () => {
       width: '30%',
       sort: true,
       render: (close, row) => (
-        <SubscribeSpan.PriceBlink symbol={row.symbol} initValue={close} initDirection={stockUtils.isUp(row)} />
+        <SubscribeSpan.PriceBlink className="text-xs" symbol={row.symbol} initValue={close} initDirection={stockUtils.isUp(row)} />
       )
     },
     {
@@ -746,6 +746,7 @@ const GoldenStockPool = () => {
       sort: true,
       render: (percent, row) => (
         <SubscribeSpan.PercentBlink
+          className="text-xs"
           showSign
           symbol={row.symbol}
           decimal={2}
@@ -763,7 +764,7 @@ const GoldenStockPool = () => {
       <div className="flex items-center px-3 py-3 border-b-[#1B1B1B]">
         <CollectDropdownMenu activeKey={type} onChange={setType} />
       </div>
-      <div className="flex-1 overflow-hidden">
+      <div className="flex-1 overflow-hidden ">
         <JknRcTable
           isLoading={query.isLoading}
           columns={columns}
