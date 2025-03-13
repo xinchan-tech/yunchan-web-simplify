@@ -10,7 +10,8 @@ import {
   init,
   registerFigure,
   registerIndicator,
-  registerOverlay
+  registerOverlay,
+  registerXAxis
 } from 'jkn-kline-chart'
 import { debounce, uid } from 'radash'
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react'
@@ -25,6 +26,7 @@ import { coilingIndicator } from "./indicator/coiling"
 import dayjs from "dayjs"
 import { LogoOverlay } from "./overlay"
 import { useMount, useUnmount } from "ahooks"
+import { fixedXAxis } from "./axis"
 
 export { CoilingIndicatorId, ChartTypes }
 
@@ -39,6 +41,7 @@ registerFigure(IconFigure)
 registerFigure(markOverlayFigure)
 registerFigure(LogoFigure)
 registerOverlay(LogoOverlay)
+registerXAxis(fixedXAxis)
 
 interface JknChartProps {
   className?: string
@@ -79,6 +82,7 @@ interface JknChartIns {
   removeBackTestIndicator: () => void
   setDragEnable: (enable: boolean) => void
   getChart: () => Chart | null | undefined
+  setFixedChart: (fixed: boolean) => void
 }
 
 export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartProps, ref) => {
@@ -445,7 +449,22 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
     setDragEnable: enable => {
 
     },
-    getChart: () => chart.current
+    getChart: () => chart.current,
+    setFixedChart: (fixed) => {
+      if(fixed){
+        // const r = chart.current?.setPaneOptions({
+        //   id: ChartTypes.MAIN_X_AXIS_ID,
+        //   axis: {
+        //     name: 'fixedXAxis',
+        //     scrollZoomEnabled: false,
+        //     createRange: ({chart, defaultRange}) => {
+        //       console.log(defaultRange)
+        //     }
+        //   }
+        // })
+        console.log(chart.current?.getPaneOptions(), ChartTypes.MAIN_X_AXIS_ID)
+      }
+    }
   }))
 
   useEffect(() => {

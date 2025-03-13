@@ -136,7 +136,7 @@ export const MainChart = (props: MainChartProps) => {
     }
 
     if(renderUtils.isTimeIndexChart(chartStore.interval)){
-      // chartImp.current?.setFixed(true)
+      chartImp.current?.setFixedChart(true)
     }
   })
 
@@ -157,16 +157,6 @@ export const MainChart = (props: MainChartProps) => {
 
     chartImp.current?.applyNewData(stockData)
   }, [candlesticks])
-
-  /**
-   * 周期变化
-   */
-  // useEffect(() => {
-  //   if (renderUtils.isTimeIndexChart(chartStore.interval)) {
-  //     chartImp.current?.setChartType('area')
-  //   }
-
-  // }, [chartStore.interval])
 
   /**
    * 缠论数据变化
