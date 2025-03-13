@@ -28,12 +28,14 @@ const StockView = ({ code, name, showName = false, iconSize = 24, className }: S
         )}
       </div>
       <div className="flex-1 overflow-hidden ">
-        <div className="text-foreground">{code}</div>
-        {showName ? (
-          <div className="w-full text-tertiary text-xs whitespace-nowrap text-ellipsis overflow-hidden">
-            {name || '--'}
-          </div>
-        ) : null}
+        <div className="flex items-center gap-2">
+          <div className="text-foreground shrink-0">{code}</div>
+          {showName ? (
+            <div className="text-tertiary text-xs whitespace-nowrap text-ellipsis overflow-hidden text-[#575757]">
+              {name || '--'}
+            </div>
+          ) : null}
+        </div>
       </div>
     </div>
   )

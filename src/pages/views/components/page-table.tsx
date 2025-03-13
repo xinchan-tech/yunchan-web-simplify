@@ -1,19 +1,15 @@
 import { type StockExtend, type UsStockColumn, getUsStocks } from '@/api'
 import {
-  AiAlarm,
   CollectStar,
-  JknCheckbox,
-  JknIcon,
   JknRcTable,
   type JknRcTableProps,
   StockView,
   SubscribeSpan
 } from '@/components'
-import { useCheckboxGroup, useStockQuoteSubscribe, useTableData, useTableRowClickToStockTrading } from '@/hooks'
+import { useStockQuoteSubscribe, useTableData, useTableRowClickToStockTrading } from '@/hooks'
 import { stockUtils } from '@/utils/stock'
 import { useInfiniteQuery } from '@tanstack/react-query'
 
-import Decimal from 'decimal.js'
 import { useEffect, useMemo } from 'react'
 import { useImmer } from 'use-immer'
 
@@ -75,8 +71,6 @@ const PageTable = (props: PageTableProps) => {
   })
 
   const [list, { setList, onSort }] = useTableData<TableDataType>([], 'symbol')
-
-  const { checked, onChange, setCheckedAll, getIsChecked } = useCheckboxGroup([])
 
   useEffect(() => {
     const r: TableDataType[] = []
@@ -150,23 +144,27 @@ const PageTable = (props: PageTableProps) => {
 
   const columns = useMemo<JknRcTableProps<TableDataType>['columns']>(
     () => [
-      { title: '序号', dataIndex: 'index', align: 'center', width: 60, render: (_, __, index) => index + 1 },
       {
-        title: '名称代码',
+        title: <span className="text-[14px]">名称代码</span>,
         dataIndex: 'name',
         align: 'left',
-        width: '12%',
+        width: '25%',
         sort: true,
-        render: (_, row) => <StockView name={row.name} code={row.symbol as string} />
+        render: (_, row) => <div className='flex items-center'>
+          <CollectStar checked={row.collect === 1} code={row.symbol} />
+          <span className="mr-4"/>
+          <StockView name={row.name} code={row.symbol as string} showName />
+        </div>
       },
       {
-        title: '现价',
+        title: <span className="text-[14px]">现价</span>,
         dataIndex: 'price',
-        align: 'right',
-        width: '8%',
+        align: 'left',
+        width: 125,
         sort: true,
         render: (_, row) => (
           <SubscribeSpan.PriceBlink
+            showColor={false}
             trading="intraDay"
             symbol={row.symbol}
             initValue={row.price}
@@ -176,13 +174,13 @@ const PageTable = (props: PageTableProps) => {
         )
       },
       {
-        title: '涨跌幅',
+        title: <span className="text-[14px]">涨跌幅</span>,
         dataIndex: 'percent',
-        align: 'right',
-        width: 120,
+        align: 'left',
+        width: 125,
         sort: true,
         render: (_, row) => (
-          <SubscribeSpan.PercentBlockBlink
+          <SubscribeSpan.PercentBlink
             showSign
             trading="intraDay"
             symbol={row.symbol}
@@ -194,10 +192,10 @@ const PageTable = (props: PageTableProps) => {
         )
       },
       {
-        title: '成交额',
+        title: <span className="text-[14px]">成交额</span>,
         dataIndex: 'amount',
-        align: 'right',
-        width: '8%',
+        align: 'left',
+        width: 125,
         sort: true,
         render: (_, row) => (
           <SubscribeSpan.TurnoverBlink
@@ -210,10 +208,10 @@ const PageTable = (props: PageTableProps) => {
         )
       },
       {
-        title: '总市值',
+        title: <span className="text-[14px]">总市值</span>,
         dataIndex: 'total',
-        align: 'right',
-        width: '8%',
+        align: 'left',
+        width: 125,
         sort: true,
         render: (_, row) => (
           <SubscribeSpan.MarketValueBlink
@@ -227,111 +225,13 @@ const PageTable = (props: PageTableProps) => {
         )
       },
       {
-        title: '所属行业',
+        title: <span className="text-[14px]">所属行业</span>,
         dataIndex: 'industry',
-        width: '8%',
         align: 'right',
         sort: true
-      },
-      {
-        title: '盘前涨跌幅',
-        dataIndex: 'prePercent',
-        width: '8%',
-        align: 'right',
-        sort: true,
-        render: (_, row) => (
-          <SubscribeSpan.Percent
-            showSign
-            trading="preMarket"
-            symbol={row.symbol}
-            decimal={2}
-            initValue={row.prePercent}
-            initDirection={row.prePercent > 0}
-            nanText="--"
-          />
-        )
-      },
-      {
-        title: '盘后涨跌幅',
-        dataIndex: 'afterPercent',
-        width: '8%',
-        align: 'right',
-        sort: true,
-        render: (_, row) => (
-          <SubscribeSpan.Percent
-            showSign
-            trading="afterHours"
-            symbol={row.symbol}
-            decimal={2}
-            initValue={row.afterPercent}
-            initDirection={row.afterPercent > 0}
-            nanText="--"
-          />
-        )
-      },
-      {
-        title: '换手率',
-        dataIndex: 'turnoverRate',
-        width: '8%',
-        align: 'right',
-        sort: true,
-        render: (_, row) => `${Decimal.create(row.turnoverRate).mul(100).toFixed(2)}%`
-      },
-      {
-        title: '市盈率',
-        dataIndex: 'pe',
-        width: '8%',
-        align: 'right',
-        sort: true,
-        render: (_, row) => `${Decimal.create(row.pe).lt(0) ? '亏损' : Decimal.create(row.pe).toFixed(2)}`
-      },
-      {
-        title: '市净率',
-        dataIndex: 'pb',
-        width: '8%',
-        align: 'right',
-        sort: true,
-        render: (_, row) => `${row.pb ? Decimal.create(row.pb).toFixed(2) : '--'}`
-      },
-      {
-        title: '+股票金池',
-        dataIndex: 'collect',
-        width: 80,
-        align: 'center',
-        render: (_, row) => <CollectStar checked={row.collect === 1} code={row.symbol} />
-      },
-      {
-        title: '+AI报警',
-        dataIndex: 't9',
-        width: 80,
-        align: 'center',
-        render: (_, row) => (
-          <AiAlarm code={row.symbol}>
-            <JknIcon className="rounded-none" name="ic_add" />
-          </AiAlarm>
-        )
-      },
-      {
-        title: (
-          <CollectStar.Batch
-            checked={checked}
-            allCheckLength={list.length}
-            onCheckChange={v => setCheckedAll(v ? list.map(o => o.symbol) : [])}
-            onUpdate={() => {
-              query.refetch()
-              setCheckedAll([])
-            }}
-          />
-        ),
-        dataIndex: 'checked',
-        align: 'center',
-        width: 60,
-        render: (_, row) => (
-          <JknCheckbox checked={getIsChecked(row.symbol)} onCheckedChange={v => onChange(row.symbol, v)} />
-        )
       }
     ],
-    [checked, list, getIsChecked, onChange, setCheckedAll, query.refetch]
+    [list, query.refetch]
   )
 
   const onRowClick = useTableRowClickToStockTrading('symbol')
