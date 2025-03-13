@@ -27,7 +27,7 @@ const _CapsuleTabs = ({
   activeColor
 }: PropsWithChildren<CapsuleTabsProps>) => {
   return (
-    <div className={cn('flex items-center flex-wrap capsule-tabs space-x-4', className)}>
+    <div className={cn('flex items-center flex-wrap capsule-tabs space-x-3', className)}>
       <CapsuleTabsContext.Provider value={{ value: activeKey, onChange, type, activeColor }}>
         {children}
       </CapsuleTabsContext.Provider>
@@ -44,25 +44,30 @@ interface TabItemProps {
 
 const TabItem = ({ value, label, disabled, className }: TabItemProps) => {
   const context = useContext(CapsuleTabsContext)
+  const isActive = value === context.value
 
   return (
     <div
       className={cn(
-        'items-center justify-center rounded-xl cursor-pointer py-3.5 transition-all duration-200 text-tertiary capsule-tab-item relative after:hidden',
-        className
+        'flex h-[30px] p-[4px] items-center justify-center rounded-md cursor-pointer transition-all duration-200 text-tertiary capsule-tab-item relative after:hidden',
+        className,
       )}
       data-checked={value === context.value}
       data-type={context.type}
       style={{
-        background: value === context.value && context.type === 'default' ? 'hsl(var(--active-color))' : 'transparent',
-        color: value === context.value && context.type === 'text' ? (context.activeColor || 'hsl(var(--foreground))') : '',
+        background: isActive && context.type === 'default' ? 'hsl(var(--accent))' : 'transparent',
+        color: isActive && context.type === 'default' ? (context.activeColor || 'hsl(var(--foreground))') : '',
+        // 激活状态下的模拟文字加粗效果
+        textShadow: isActive ? '0 0 0.65px currentColor, 0 0 0.65px currentColor' : 'none',
       }}
       onClick={() => {
         !disabled && context.onChange?.(value)
       }}
       onKeyDown={() => { }}
     >
-      {label}
+      <div className="relative">
+        {label}
+      </div>
     </div>
   )
 }
