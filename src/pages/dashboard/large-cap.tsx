@@ -189,7 +189,6 @@ const LargeCap = () => {
               type="text"
               activeKey={stockType.toString()}
               onChange={value => setStockType(+value as unknown as StockChartInterval)}
-              activeColor="#DBDBDB"
             >
               <CapsuleTabs.Tab
                 className={cn(

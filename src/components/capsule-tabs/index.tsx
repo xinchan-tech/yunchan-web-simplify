@@ -55,8 +55,8 @@ const TabItem = ({ value, label, disabled, className }: TabItemProps) => {
       data-checked={value === context.value}
       data-type={context.type}
       style={{
-        background: isActive && context.type === 'default' ? 'hsl(var(--accent))' : 'transparent',
-        color: isActive && context.type === 'default' ? (context.activeColor || 'hsl(var(--foreground))') : '',
+        background: isActive ? 'hsl(var(--accent))' : 'transparent',
+        color: isActive ? (context.activeColor || 'hsl(var(--foreground))') : '',
         // 激活状态下的模拟文字加粗效果
         textShadow: isActive ? '0 0 0.65px currentColor, 0 0 0.65px currentColor' : 'none',
       }}
