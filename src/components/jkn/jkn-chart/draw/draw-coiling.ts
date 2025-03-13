@@ -1,13 +1,20 @@
+import type { StockRawRecord } from '@/api'
+import type { IndicatorData } from '@/utils/coiling'
+import type { IndicatorDataType } from '@/utils/coiling/transform'
 import {
   type CircleAttrs,
   type FigureConstructor,
   getFigureClass,
+  type IndicatorDrawParams,
+  type LineAttrs,
   type PolygonStyle,
   PolygonType,
-  type IndicatorDrawParams
+  type TextAttrs,
+  type TextStyle
 } from 'jkn-kline-chart'
-import type { DrawFunc } from '../types'
+import { inRange } from 'radash'
 import type { CoilingCalcResult } from '../coiling-calc'
+import type { DrawFunc } from '../types'
 
 type DrawCoilingFunc = DrawFunc<CoilingCalcResult>
 
@@ -260,4 +267,66 @@ export const drawCoilingMA: DrawCoilingMAFunc = ({ ctx, xAxis, yAxis, indicator 
   })
 
   return true
+}
+
+type HorizonLineShape = {
+  data: number[]
+  color: string
+}
+type DrawHorizonLineFunc = (params: IndicatorDrawParams<any, any, any>, data: HorizonLineShape) => void
+
+export const drawHorizonLine: DrawHorizonLineFunc = (params, { data, color }) => {
+  const Line = getFigureClass('line')! as FigureConstructor<LineAttrs>
+
+  const { xAxis, yAxis } = params
+  const { realFrom, realTo } = params.chart.getVisibleRange()
+  new Line({
+    name: 'horizon-line',
+    attrs: {
+      coordinates: data.slice(realFrom, realTo).map((y, x) => ({
+        x: xAxis.convertToPixel(x),
+        y: yAxis.convertToPixel(y)
+      }))
+    },
+    styles: {
+      color
+    }
+  }).draw(params.ctx)
+}
+
+type HDLYLabelShape = {
+  data: IndicatorDataType<'HDLY_LABEL'>['drawData']
+  color: string
+}
+type DrawHDLYLabelFunc = (params: IndicatorDrawParams<any, any, any>, data: HDLYLabelShape) => void
+export const drawHDLYLabel: DrawHDLYLabelFunc = (params, { data, color }) => {
+  const text = getFigureClass('text')! as FigureConstructor<TextAttrs, TextStyle>
+
+  const { xAxis, yAxis } = params
+  const range = params.chart.getVisibleRange()
+  data.forEach(item => {
+    if (!inRange(item.x, range.realFrom, range.realTo)) {
+      return
+    }
+    new text({
+      name: 'hdly-label',
+      attrs: {
+        x: xAxis.convertToPixel(item.x),
+        y: yAxis.convertToPixel(item.y) + 4,
+        text: item.text,
+        align: 'center',
+        baseline: 'middle'
+      },
+      styles: {
+        color: color,
+        backgroundColor: item.color,
+        paddingBottom: 4,
+        paddingLeft: 4,
+        paddingRight: 4,
+        paddingTop: 4,
+        borderRadius: 4,
+        size: 12
+      } as TextStyle
+    }).draw(params.ctx)
+  })
 }

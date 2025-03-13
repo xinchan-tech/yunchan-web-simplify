@@ -213,7 +213,6 @@ export const ChartTypeSelect = memo(() => {
       return
     }
     chartManage.setType(type)
-    chartEvent.get().emit('chartTypeChange', type)
   }
   return (
     <DropdownMenu>

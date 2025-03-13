@@ -9,11 +9,12 @@ import {
   dispose,
   init,
   registerFigure,
-  registerIndicator
+  registerIndicator,
+  registerOverlay
 } from 'jkn-kline-chart'
-import { uid } from 'radash'
+import { debounce, uid } from 'radash'
 import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react'
-import { backTestLineFigure, backTestMarkFigure, IconFigure, markOverlayFigure } from './figure'
+import { backTestLineFigure, backTestMarkFigure, IconFigure, LogoFigure, markOverlayFigure } from './figure'
 import { compareIndicator, localIndicator } from './indicator'
 import { markIndicator } from './indicator/mark'
 import type { AxisPosition, Candlestick } from './types'
@@ -22,6 +23,8 @@ import { backTestIndicator, type BackTestRecord } from "./indicator/back-test"
 import { CoilingIndicatorId } from "./coiling-calc"
 import { coilingIndicator } from "./indicator/coiling"
 import dayjs from "dayjs"
+import { LogoOverlay } from "./overlay"
+import { useMount, useUnmount } from "ahooks"
 
 export { CoilingIndicatorId, ChartTypes }
 
@@ -34,9 +37,12 @@ registerFigure(backTestMarkFigure)
 registerFigure(backTestLineFigure)
 registerFigure(IconFigure)
 registerFigure(markOverlayFigure)
+registerFigure(LogoFigure)
+registerOverlay(LogoOverlay)
 
 interface JknChartProps {
   className?: string
+  showLogo?: boolean
 }
 
 type IndicatorParams = {
@@ -78,7 +84,7 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
   const domRef = useRef<HTMLDivElement>(null)
   const chart = useRef<Chart | null>()
 
-  useEffect(() => {
+  useMount(() => {
     const { up: upColor, down: downColor } = getStockColor()
     const ele = domRef.current
     if (!ele) return
@@ -204,12 +210,18 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
       ],
       timezone: 'America/New_York'
     })
-
-    return () => {
-      domRef.current && dispose(domRef.current)
-      chart.current = null
+    if(props.showLogo){
+      chart.current?.createOverlay({
+        name: 'logoOverlay',
+        paneId: ChartTypes.MAIN_PANE_ID
+      })
     }
-  }, [])
+  })
+
+  useUnmount(() => {
+    domRef.current && dispose(domRef.current)
+    chart.current = null
+  })
 
   useImperativeHandle(ref, () => ({
     applyNewData: data => {
@@ -260,7 +272,6 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
       })
     },
     setChartType: type => {
-      console.log(chart.current, (type === 'area' ? 'area' : 'candle_solid'))
       chart.current?.setStyles({
         candle: {
           type: (type === 'area' ? 'area' : 'candle_solid') as CandleType
@@ -436,9 +447,9 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
 
   useEffect(() => {
     // 重置大小
-    const sizeObserver = new ResizeObserver(() => {
+    const sizeObserver = new ResizeObserver(debounce({ delay: 20 },() => {
       chart.current?.resize()
-    })
+    }))
 
     sizeObserver.observe(domRef.current!)
 
@@ -449,3 +460,4 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
 
   return <div className={cn('w-full h-full', props.className)} ref={domRef} />
 })
+
