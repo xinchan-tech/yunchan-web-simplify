@@ -12,7 +12,7 @@ const Views = () => {
 
   return (
     <div className="h-full w-full overflow-hidden flex justify-center bg-black">
-      <div className="h-full overflow-hidden flex flex-col w-[918px] pt-[40px]">
+      <div className="h-full overflow-hidden flex flex-col min-w-[918px] w-[60%] max-w-[1400px] pt-[40px]">
         <div className="flex items-center flex-shrink-0">
           <CapsuleTabs activeKey={activeKey} onChange={setActiveKey}>
             <CapsuleTabs.Tab label="全部美股" value="all" />
