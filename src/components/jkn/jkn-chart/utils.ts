@@ -3,7 +3,8 @@ import { useConfig } from '@/store'
 import type { Candlestick } from './types'
 
 export enum ChartTypes {
-  MAIN_PANE_ID = 'candle_pane'
+  MAIN_PANE_ID = 'candle_pane',
+  MAIN_X_AXIS_ID = 'candle_xAxis'
 }
 
 export const transformTextColor = (text: string, startData: Candlestick) => {

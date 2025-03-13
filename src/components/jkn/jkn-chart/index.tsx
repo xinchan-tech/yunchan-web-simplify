@@ -10,10 +10,11 @@ import {
   init,
   registerFigure,
   registerIndicator,
-  registerOverlay
+  registerOverlay,
+  registerXAxis
 } from 'jkn-kline-chart'
 import { debounce, uid } from 'radash'
-import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react'
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import { backTestLineFigure, backTestMarkFigure, IconFigure, LogoFigure, markOverlayFigure } from './figure'
 import { compareIndicator, localIndicator } from './indicator'
 import { markIndicator } from './indicator/mark'
@@ -25,6 +26,7 @@ import { coilingIndicator } from "./indicator/coiling"
 import dayjs from "dayjs"
 import { LogoOverlay } from "./overlay"
 import { useMount, useUnmount } from "ahooks"
+import { fixedXAxis } from "./axis"
 
 export { CoilingIndicatorId, ChartTypes }
 
@@ -39,6 +41,7 @@ registerFigure(IconFigure)
 registerFigure(markOverlayFigure)
 registerFigure(LogoFigure)
 registerOverlay(LogoOverlay)
+registerXAxis(fixedXAxis)
 
 interface JknChartProps {
   className?: string
@@ -50,6 +53,7 @@ type IndicatorParams = {
   symbol: string
   interval: StockChartInterval
   name: string
+  isRemote?: boolean
 }
 
 interface JknChartIns {
@@ -62,7 +66,7 @@ interface JknChartIns {
   setRightAxis: (type: 'percentage' | 'normal') => void
   setChartType: (type: 'area' | 'candle') => void
   removeAllCoiling: () => void
-  createIndicator: (indicator: string, symbol: string, interval: StockChartInterval, name: string) => void
+  createIndicator: (params: IndicatorParams) => void
   removeIndicator: (indicator: string) => void
   setIndicatorVisible: (indicatorId: string, visible: boolean) => void
   createSubIndicator: (params: IndicatorParams) => Nullable<string>
@@ -78,10 +82,12 @@ interface JknChartIns {
   removeBackTestIndicator: () => void
   setDragEnable: (enable: boolean) => void
   getChart: () => Chart | null | undefined
+  setFixedChart: (fixed: boolean) => void
 }
 
 export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartProps, ref) => {
   const domRef = useRef<HTMLDivElement>(null)
+  
   const chart = useRef<Chart | null>()
 
   useMount(() => {
@@ -144,11 +150,11 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
             },
             high: {
               color: '#E7C88D',
-               textSize: 14
+              textSize: 14
             },
             low: {
               color: '#E7C88D',
-               textSize: 14
+              textSize: 14
             }
           }
         },
@@ -210,10 +216,11 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
       ],
       timezone: 'America/New_York'
     })
-    if(props.showLogo){
+    if (props.showLogo) {
       chart.current?.createOverlay({
         name: 'logoOverlay',
-        paneId: ChartTypes.MAIN_PANE_ID
+        paneId: ChartTypes.MAIN_PANE_ID,
+        points: [{ dataIndex: 0, value: 0 }]
       })
     }
   })
@@ -235,14 +242,14 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
 
       if (r === undefined) return
 
-      if(r) {
+      if (r) {
         const _r = {
           ...candlestick,
           timestamp: lastData.timestamp
         }
 
         chart.current?.updateData(_r)
-      }else{
+      } else {
         const _r = {
           ...candlestick,
           timestamp: dayjs(candlestick.timestamp).second(0).millisecond(0).valueOf()
@@ -319,7 +326,7 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
         chart.current?.removeIndicator({ id: `coiling-${c}` })
       })
     },
-    createIndicator: (indicator, symbol, interval, name) => {
+    createIndicator: ({ indicator, symbol, interval, name, isRemote }) => {
       const formula = useIndicator.getState().formula
 
       if (!formula[indicator]) return
@@ -329,7 +336,7 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
           name: 'local-indicator',
           id: indicator,
           calcParams: [indicator, symbol, interval],
-          extendData: { name, action: ['visible', 'delete'] }
+          extendData: { name, action: ['visible', 'delete'], isRemote }
         },
         true,
         { id: ChartTypes.MAIN_PANE_ID }
@@ -352,7 +359,7 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
         name: 'local-indicator',
         id: params.indicator,
         calcParams: [params.indicator, params.symbol, params.interval],
-        extendData: { name: params.name, indicatorId: params.indicator, action: ['delete'] }
+        extendData: { name: params.name, indicatorId: params.indicator, action: ['delete'], isRemote: params.isRemote }
       }
       chart.current?.createIndicator(indicator, false, {})
 
@@ -442,12 +449,27 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
     setDragEnable: enable => {
 
     },
-    getChart: () => chart.current
+    getChart: () => chart.current,
+    setFixedChart: (fixed) => {
+      if(fixed){
+        // const r = chart.current?.setPaneOptions({
+        //   id: ChartTypes.MAIN_X_AXIS_ID,
+        //   axis: {
+        //     name: 'fixedXAxis',
+        //     scrollZoomEnabled: false,
+        //     createRange: ({chart, defaultRange}) => {
+        //       console.log(defaultRange)
+        //     }
+        //   }
+        // })
+        console.log(chart.current?.getPaneOptions(), ChartTypes.MAIN_X_AXIS_ID)
+      }
+    }
   }))
 
   useEffect(() => {
     // 重置大小
-    const sizeObserver = new ResizeObserver(debounce({ delay: 20 },() => {
+    const sizeObserver = new ResizeObserver(debounce({ delay: 20 }, () => {
       chart.current?.resize()
     }))
 
