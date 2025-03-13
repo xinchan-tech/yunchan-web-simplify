@@ -1,11 +1,12 @@
 import mitt from 'mitt'
-import type { ChartStore, CoilingIndicatorId, Indicator } from './store'
+import type { ChartStore, ChartType, CoilingIndicatorId, Indicator } from './store'
 
 export type ChartEvents = {
   symbolChange: string
   activeChange: ChartStore
   intervalChange: number
   systemChange: string | undefined
+  chartTypeChange: ChartType
   coilingChange: {
     type: 'add' | 'remove'
     coiling: CoilingIndicatorId[]
@@ -30,6 +31,7 @@ export type ChartEvents = {
       title: string
     }
   }
+  showIndicatorSetting: string
 }
 
 export const chartEvent = {

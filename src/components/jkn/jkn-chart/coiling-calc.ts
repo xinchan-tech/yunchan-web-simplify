@@ -2,6 +2,42 @@ import { colorUtil } from '@/utils/style'
 import type { Candlestick } from './types'
 import { candlestickToRaw } from './utils'
 
+export enum CoilingIndicatorId {
+  PEN = '1',
+  ONE_TYPE = '227',
+  TWO_TYPE = '228',
+  THREE_TYPE = '229',
+  /**
+   * 中枢
+   */
+  PIVOT = '2',
+  PIVOT_PRICE = '230',
+  PIVOT_NUM = '231',
+  /**
+   * 反转点
+   */
+  REVERSAL = '232',
+  /**
+   * 重叠
+   */
+  OVERLAP = '233',
+  /**
+   * 短线
+   */
+  SHORT_LINE = '234',
+  /**
+   * 主力
+   */
+  MAIN = '235'
+}
+
+export type CoilingCalcResult = CoilingData & {
+  pivotsResult: ReturnType<typeof calcCoilingPivots>
+  expandsResult: ReturnType<typeof calcCoilingPivotsExpands>
+  tradePointsResult: [ReturnType<typeof calcTradePoints>, ReturnType<typeof calcTradePoints>, ReturnType<typeof calcTradePoints>]
+  maResult: Record<string, ReturnType<typeof calculateMA>>
+}
+
 const SEGMENT_NUM_LIMIT = 7
 /**
  * 获取中枢数据
@@ -112,12 +148,12 @@ export const calcTradePoints = (coiling: CoilingData['class_1_trade_points']) =>
 
     if (v.buy) {
       color = v.large
-        ? colorUtil.rgbaToString(colorUtil.argbToRGBA('FF185EFF'))
-        : colorUtil.rgbaToString(colorUtil.argbToRGBA('FF00B050'))
+        ? '#22AB94'
+        : '#2962FF'
     } else {
       color = v.large
-        ? colorUtil.rgbaToString(colorUtil.argbToRGBA('FFF323C5'))
-        : colorUtil.rgbaToString(colorUtil.argbToRGBA('FFFE1818'))
+        ? '#F23645'
+        : '#9C27B0'
     }
 
     return {
@@ -159,7 +195,7 @@ export const calculateMA = (dayCount: number, candlesticks: Candlestick[]) => {
  */
 export const calculateMABatch = (dayCounts: number[], candlesticks: Candlestick[]) => {
   const result: Record<string, Array<number | null>> = {}
-  console.log('start')
+
   for (let i = 0; i < candlesticks.length; i++) {
     dayCounts.forEach(dayCount => {
       if (i < dayCount) {
@@ -181,6 +217,6 @@ export const calculateMABatch = (dayCounts: number[], candlesticks: Candlestick[
       result[dayCount].push(+(sum / dayCount).toFixed(3))
     })
   }
-  console.log(result)
+
   return result
 }

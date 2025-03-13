@@ -1,5 +1,6 @@
 import { type StockSubscribeHandler, type SubscribeActionType, stockSubscribe } from '@/utils/stock'
 import { useEffect, useRef } from 'react'
+import { useLatestRef } from './use-latest-ref'
 
 const useStockSubscribe = (action: SubscribeActionType, symbols: string[]) => {
   useEffect(() => {
@@ -36,11 +37,11 @@ export const useStockQuoteSubscribe = (symbols: string[], handler?: StockSubscri
 export const useStockBarSubscribe = (symbols: string[], handler: StockSubscribeHandler<'bar'>) => {
   useStockSubscribe('bar', symbols)
 
-  useEffect(() => {
-    stockSubscribe.on('bar', handler)
+  const renderFn = useLatestRef(handler)
 
-    return () => {
-      stockSubscribe.off('bar', handler)
-    }
-  }, [handler])
+  useEffect(() => {
+    const cancel = stockSubscribe.on('bar', renderFn.current)
+
+    return cancel
+  }, [renderFn])
 }

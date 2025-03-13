@@ -1,6 +1,5 @@
 import type { StockRawRecord } from '@/api'
 import { useConfig } from '@/store'
-import { KLineData } from 'jkn-kline-chart'
 import type { Candlestick } from './types'
 
 export enum ChartTypes {
@@ -79,4 +78,22 @@ export const findEqualTime = (data: Candlestick[], time: number) => {
   }
 
   return undefined
+}
+
+/**
+ * 新数据是否是相同时间段
+ * @param src 
+ * @param target
+ * @param interval 分钟数
+ * 
+ * @returns 返回undefined表示是错误数据, 返回true表示是相同时间段, 返回false表示不是相同时间段
+ */
+export const isSameInterval = (src: Candlestick, target: Candlestick, interval: number) => {
+  const maxTime = src.timestamp + interval * 60 * 1000
+
+  if(target.timestamp < src.timestamp) {
+    return undefined
+  }
+
+  return target.timestamp < maxTime
 }
