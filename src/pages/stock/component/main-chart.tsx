@@ -136,7 +136,7 @@ export const MainChart = (props: MainChartProps) => {
     }
 
     if(renderUtils.isTimeIndexChart(chartStore.interval)){
-      chartImp.current?.setFixed(true)
+      // chartImp.current?.setFixed(true)
     }
   })
 
@@ -191,7 +191,7 @@ export const MainChart = (props: MainChartProps) => {
     const cancelIntervalEvent = chartEvent.on('intervalChange', async (interval) => {
       if (renderUtils.isTimeIndexChart(interval)) {
         chartManage.setType(ChartType.Area, props.chartId)
-        chartImp.current?.setFixed(true)
+        // chartImp.current?.setFixed(true)
       }
     })
 

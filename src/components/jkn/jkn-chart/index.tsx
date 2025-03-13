@@ -79,7 +79,6 @@ interface JknChartIns {
   removeBackTestIndicator: () => void
   setDragEnable: (enable: boolean) => void
   getChart: () => Chart | null | undefined
-  setFixed: (fixed: boolean) => void
 }
 
 export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartProps, ref) => {
@@ -446,16 +445,7 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
     setDragEnable: enable => {
 
     },
-    getChart: () => chart.current,
-    setFixed: (fixed: boolean) => {
-      if(fixed){
-        // chart?.current?.setMaxOffsetLeftDistance(10)
-        // // chart?.current?.zoomAtDataIndex(0.1, 0)
-        // chart?.current?.scrollToDataIndex(0)
-        // chart?.current?.setZoomEnabled(false)
-        // chart?.current?.setScrollEnabled(false)
-      }
-    }
+    getChart: () => chart.current
   }))
 
   useEffect(() => {
