@@ -20,7 +20,7 @@ const StockView = ({ code, name, showName = false, iconSize = 24, className }: S
       className={cn('overflow-hidden flex items-center w-full', className)}
       onDoubleClick={() => router.navigate(`/stock/trading?symbol=${code}`)}
     >
-      <div>
+      <div className='flex items-center'>
         {stock?.[0] ? (
           <JknIcon stock={stock?.[0]} className="mr-3" style={{ width: iconSize, height: iconSize }} />
         ) : (

@@ -2,7 +2,7 @@
 
 $dark-table-header-background: transparent;
 $dark-table-border-color: #1B1B1B;
-$dark-table-row-hover: rgba(41, 98, 255, 0.3);
+$dark-table-row-hover: #1B1B1B;
 $dark-table-body-background: transparent;
 
 .rc-table-tbody-virtual {
@@ -40,19 +40,6 @@ $dark-table-body-background: transparent;
 
   .rc-table-row:hover{
     background: $dark-table-row-hover;
-
-    .rc-table-cell{
-      position: relative;
-      &:first-child::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 4px;
-        height: 100%;
-        background: #2962ff;
-      }
-    }
   }
 
   .rc-table-row {
@@ -70,11 +57,11 @@ $dark-table-body-background: transparent;
 
 
 .rc-table th {
-  padding: 10px 8px;
+  padding: 20px 10px;
   font-weight: normal;
   background: $dark-table-header-background;
   color: #B4B4B4;
-  font-size: 12px;
+  font-size: 14px;
   line-height: 21px;
 }
 .rc-table td {
@@ -95,7 +82,14 @@ $dark-table-body-background: transparent;
   // transition: box-shadow 0.3s;
 }
 
-
+.rc-table-row {
+  .rc-table-cell:first-child {
+    padding-left: 10px;
+  }
+  .rc-table-cell:last-child {
+    padding-right: 10px;
+  }
+}
 
 .rc-table-rtl.rc-table th,
 .rc-table-rtl.rc-table td {

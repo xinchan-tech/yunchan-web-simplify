@@ -76,16 +76,16 @@ const SectorTable = (props: SectorTableProps) => {
         title: <span className="text-[14px]">板块名称</span>,
         dataIndex: 'name',
         align: 'left',
-        width: '35%',
+        width: '40%',
         sort: true,
-        render: name => <span className="inline-block leading-8 my-1">{name}</span>
+        render: name => <span className="inline-block h-[33px]">{name}</span>
       },
       {
         title: <span className="text-[14px]">涨跌幅</span>,
         dataIndex: 'change',
         sort: true,
         align: 'left',
-        width: 125,
+        width: '30%',
         render: (_, row) => (
           <SubscribeSpan.PercentBlink
             subscribe={false}
@@ -104,8 +104,9 @@ const SectorTable = (props: SectorTableProps) => {
         dataIndex: 'amount',
         sort: true,
         align: 'right',
+        width: '30%',
         render: (_, row) => (
-          <span className="inline-block h-8 leading-8">
+          <span className='inline-block leading-6'>
             {Decimal.create(row.amount).toShortCN()}
           </span>
         )

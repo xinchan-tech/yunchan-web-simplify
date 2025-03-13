@@ -148,9 +148,8 @@ const PageTable = (props: PageTableProps) => {
         title: <span className="text-[14px]">名称代码</span>,
         dataIndex: 'name',
         align: 'left',
-        width: '25%',
         sort: true,
-        render: (_, row) => <div className='flex items-center'>
+        render: (_, row) => <div className='flex items-center h-[33px]'>
           <CollectStar checked={row.collect === 1} code={row.symbol} />
           <span className="mr-4"/>
           <StockView name={row.name} code={row.symbol as string} showName />
@@ -160,7 +159,7 @@ const PageTable = (props: PageTableProps) => {
         title: <span className="text-[14px]">现价</span>,
         dataIndex: 'price',
         align: 'left',
-        width: 125,
+        width: '13%',
         sort: true,
         render: (_, row) => (
           <SubscribeSpan.PriceBlink
@@ -177,7 +176,7 @@ const PageTable = (props: PageTableProps) => {
         title: <span className="text-[14px]">涨跌幅</span>,
         dataIndex: 'percent',
         align: 'left',
-        width: 125,
+        width: '13%',
         sort: true,
         render: (_, row) => (
           <SubscribeSpan.PercentBlink
@@ -195,7 +194,7 @@ const PageTable = (props: PageTableProps) => {
         title: <span className="text-[14px]">成交额</span>,
         dataIndex: 'amount',
         align: 'left',
-        width: 125,
+        width: '13%',
         sort: true,
         render: (_, row) => (
           <SubscribeSpan.TurnoverBlink
@@ -211,7 +210,7 @@ const PageTable = (props: PageTableProps) => {
         title: <span className="text-[14px]">总市值</span>,
         dataIndex: 'total',
         align: 'left',
-        width: 125,
+        width: '13%',
         sort: true,
         render: (_, row) => (
           <SubscribeSpan.MarketValueBlink
@@ -228,6 +227,7 @@ const PageTable = (props: PageTableProps) => {
         title: <span className="text-[14px]">所属行业</span>,
         dataIndex: 'industry',
         align: 'right',
+        width: '15%',
         sort: true
       }
     ],
