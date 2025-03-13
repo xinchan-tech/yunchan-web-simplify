@@ -16,10 +16,12 @@ import {
   drawText
 } from '../draw'
 import { candlestickToRaw } from '../utils'
+import { getStockIndicatorData } from "@/api"
 
 type LocalIndicatorExtend = {
   name: string
   action?: ('visible' | 'delete')[]
+  isRemote?: boolean
 }
 
 const isCoilingIndicator = (indicatorId: string) => {
@@ -66,9 +68,27 @@ export const localIndicator: IndicatorTemplate<IndicatorData, any, LocalIndicato
       return []
     }
 
+    if(indicator.extendData?.isRemote) {
+      const r = await getStockIndicatorData({
+        symbol,
+        id: indicatorId,
+        cycle: interval,
+        db_type: "system"
+      })
+      
+      return r.result.map(item => ({
+        draw: item.draw as any,
+        name: item.name,
+        drawData: item.data,
+        color: item.style?.color ?? '#fff',
+        lineType: item.style?.style_type as any,
+        width: item.style?.linethick ?? 1
+      }))
+    }
+
     if (!formula[indicatorId]) return []
 
-    const r = await calcIndicator(
+    return await calcIndicator(
       {
         formula: aesDecrypt(formula[indicatorId]),
         symbal: symbol,
@@ -77,8 +97,6 @@ export const localIndicator: IndicatorTemplate<IndicatorData, any, LocalIndicato
       rawData,
       interval
     )
-
-    return r
   },
   createTooltipDataSource: ({ indicator, crosshair }) => {
     const data = indicator.result.filter(d => d.name)

@@ -1,6 +1,6 @@
 import { StockChartInterval, type StockRawRecord } from '@/api'
 import type { StockTrading } from '@/utils/stock'
-import type { ChartManageStore } from "./store"
+import type { ChartManageStore, Indicator } from "./store"
 
 export const renderUtils = {
   getViewMode: (s: ChartManageStore['viewMode']) => {
@@ -36,6 +36,14 @@ export const renderUtils = {
   isLocalIndicator: (indicatorId: string) => {
     return indicatorId === '9' || indicatorId === '10'
   },
+
+  /**
+   * 是否是远程指标
+   */
+  isRemoteIndicator: (indicator: Indicator) => {
+    return indicator.calcType === 'svr_policy'
+  },
+
   /**
    * 获取刻度间隔
    */

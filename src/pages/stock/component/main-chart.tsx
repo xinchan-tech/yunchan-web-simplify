@@ -89,7 +89,13 @@ export const MainChart = (props: MainChartProps) => {
 
     if (_store.mainIndicators.length) {
       _store.mainIndicators.forEach(indicator => {
-        chartImp.current?.createIndicator(indicator.id, symbol, chartStore.interval, indicator.name)
+        chartImp.current?.createIndicator({
+          indicator: indicator.id,
+          symbol,
+          interval: chartStore.interval,
+          name: indicator.name,
+          isRemote: renderUtils.isRemoteIndicator(indicator)
+        })
       })
     }
 
@@ -99,7 +105,8 @@ export const MainChart = (props: MainChartProps) => {
           indicator: indicator.id,
           symbol,
           interval: chartStore.interval,
-          name: indicator.name
+          name: indicator.name,
+          isRemote: renderUtils.isRemoteIndicator(indicator)
         })
       })
     }
@@ -126,6 +133,10 @@ export const MainChart = (props: MainChartProps) => {
           chartEvent.get().emit('showIndicatorSetting', '')
         }
       })
+    }
+
+    if(renderUtils.isTimeIndexChart(chartStore.interval)){
+      chartImp.current?.setFixed(true)
     }
   })
 
@@ -180,6 +191,7 @@ export const MainChart = (props: MainChartProps) => {
     const cancelIntervalEvent = chartEvent.on('intervalChange', async (interval) => {
       if (renderUtils.isTimeIndexChart(interval)) {
         chartManage.setType(ChartType.Area, props.chartId)
+        chartImp.current?.setFixed(true)
       }
     })
 
@@ -189,7 +201,14 @@ export const MainChart = (props: MainChartProps) => {
 
     const cancelIndicatorEvent = chartEvent.on('mainIndicatorChange', ({ type, indicator }) => {
       if (type === 'add') {
-        chartImp.current?.createIndicator(indicator.id, symbol, chartStore.interval, indicator.name)
+        console.log(indicator)
+        chartImp.current?.createIndicator({
+          indicator: indicator.id,
+          symbol,
+          interval: chartStore.interval,
+          name: indicator.name,
+          isRemote: renderUtils.isRemoteIndicator(indicator)
+        })
       } else {
         chartImp.current?.removeIndicator(indicator.id)
       }
@@ -201,7 +220,8 @@ export const MainChart = (props: MainChartProps) => {
           indicator: indicator.id,
           symbol,
           interval: chartStore.interval,
-          name: indicator.name
+          name: indicator.name,
+          isRemote: renderUtils.isRemoteIndicator(indicator)
         })
       } else {
         chartImp.current?.removeSubIndicator(indicator.id)
