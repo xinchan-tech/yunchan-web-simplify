@@ -50,6 +50,9 @@ const Views = () => {
         }
         .stock-views .rc-table td {
           border: none;
+          height: 50px;
+          padding-top: 0;
+          padding-bottom: 0;
         }
       `}
       </style>

@@ -27,7 +27,7 @@ const _CapsuleTabs = ({
   activeColor
 }: PropsWithChildren<CapsuleTabsProps>) => {
   return (
-    <div className={cn('flex items-center flex-wrap capsule-tabs space-x-3', className)}>
+    <div className={cn('flex items-center flex-wrap capsule-tabs space-x-5', className)}>
       <CapsuleTabsContext.Provider value={{ value: activeKey, onChange, type, activeColor }}>
         {children}
       </CapsuleTabsContext.Provider>

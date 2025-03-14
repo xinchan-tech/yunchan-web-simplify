@@ -145,7 +145,7 @@ const PageTable = (props: PageTableProps) => {
   const columns = useMemo<JknRcTableProps<TableDataType>['columns']>(
     () => [
       {
-        title: <span className="text-[14px]">名称代码</span>,
+        title: '名称代码',
         dataIndex: 'name',
         align: 'left',
         sort: true,
@@ -156,7 +156,7 @@ const PageTable = (props: PageTableProps) => {
         </div>
       },
       {
-        title: <span className="text-[14px]">现价</span>,
+        title: '现价',
         dataIndex: 'price',
         align: 'left',
         width: '13%',
@@ -173,7 +173,7 @@ const PageTable = (props: PageTableProps) => {
         )
       },
       {
-        title: <span className="text-[14px]">涨跌幅</span>,
+        title: '涨跌幅',
         dataIndex: 'percent',
         align: 'left',
         width: '13%',
@@ -191,7 +191,7 @@ const PageTable = (props: PageTableProps) => {
         )
       },
       {
-        title: <span className="text-[14px]">成交额</span>,
+        title: '成交额',
         dataIndex: 'amount',
         align: 'left',
         width: '13%',
@@ -207,7 +207,7 @@ const PageTable = (props: PageTableProps) => {
         )
       },
       {
-        title: <span className="text-[14px]">总市值</span>,
+        title: '总市值',
         dataIndex: 'total',
         align: 'left',
         width: '13%',
@@ -224,11 +224,12 @@ const PageTable = (props: PageTableProps) => {
         )
       },
       {
-        title: <span className="text-[14px]">所属行业</span>,
+        title: '所属行业',
         dataIndex: 'industry',
         align: 'right',
         width: '15%',
-        sort: true
+        sort: true,
+        render: (_, row) => <span className="text-[14px]">{row.industry}</span>
       }
     ],
     [list, query.refetch]

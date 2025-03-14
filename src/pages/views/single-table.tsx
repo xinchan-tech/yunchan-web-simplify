@@ -164,18 +164,18 @@ const SingleTable = (props: SingleTableProps) => {
   const columns = useMemo<JknRcTableProps<TableDataType>['columns']>(
     () => [
       {
-        title: <span className="text-[14px]">名称代码</span>,
+        title: '名称代码',
         dataIndex: 'name',
         align: 'left',
         sort: true,
-        render: (_, row) => <div className='flex items-center h-[33px]'>
+        render: (_, row) => <div className='flex items-center'>
           <CollectStar checked={row.collect === 1} code={row.symbol} />
           <span className="mr-3"/>
           <StockView name={row.name} code={row.symbol as string} showName />
         </div>
       },
       {
-        title: <span className="text-[14px]">现价</span>,
+        title: '现价',
         dataIndex: 'price',
         align: 'left',
         width: '13%',
@@ -193,7 +193,7 @@ const SingleTable = (props: SingleTableProps) => {
         )
       },
       {
-        title: <span className="text-[14px]">涨跌幅</span>,
+        title: '涨跌幅',
         dataIndex: 'percent',
         align: 'left',
         width: '13%',
@@ -212,7 +212,7 @@ const SingleTable = (props: SingleTableProps) => {
         )
       },
       {
-        title: <span className="text-[14px]">成交额</span>,
+        title: '成交额',
         dataIndex: 'amount',
         align: 'left',
         width: '13%',
@@ -228,7 +228,7 @@ const SingleTable = (props: SingleTableProps) => {
         )
       },
       {
-        title: <span className="text-[14px]">总市值</span>,
+        title: '总市值',
         dataIndex: 'total',
         align: 'left',
         width: '13%',
@@ -245,11 +245,12 @@ const SingleTable = (props: SingleTableProps) => {
         )
       },
       {
-        title: <span className="text-[14px]">所属行业</span>,
+        title: '所属行业',
         dataIndex: 'industry',
         align: 'right',
         width: '15%',
-        sort: true
+        sort: true,
+        render: (_, row) => <span className="text-[14px]">{row.industry}</span>
       },
     ],
     [list, query.refetch]

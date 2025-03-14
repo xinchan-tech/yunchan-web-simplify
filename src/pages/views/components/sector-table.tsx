@@ -73,7 +73,7 @@ const SectorTable = (props: SectorTableProps) => {
   const columns = useMemo<JknRcTableProps<PlateDataType>['columns']>(
     () => [
       {
-        title: <span className="text-[14px]">板块名称</span>,
+        title: '板块名称',
         dataIndex: 'name',
         align: 'left',
         width: '40%',
@@ -81,7 +81,7 @@ const SectorTable = (props: SectorTableProps) => {
         render: name => <span className="inline-block h-[33px]">{name}</span>
       },
       {
-        title: <span className="text-[14px]">涨跌幅</span>,
+        title: '涨跌幅',
         dataIndex: 'change',
         sort: true,
         align: 'left',
@@ -100,7 +100,7 @@ const SectorTable = (props: SectorTableProps) => {
         )
       },
       {
-        title: <span className="text-[14px]">成交额</span>,
+        title: '成交额',
         dataIndex: 'amount',
         sort: true,
         align: 'right',
