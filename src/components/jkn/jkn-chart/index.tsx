@@ -498,6 +498,7 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
         })
       } else {
         chart.current?.setXAxisTick(-1)
+        chart.current?.setOffsetRightDistance(80)
         chart.current?.setStyles({
           candle: {
             area: {
