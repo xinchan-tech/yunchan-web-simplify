@@ -233,6 +233,9 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
       ],
       timezone: 'America/New_York'
     })
+
+    chart.current?.setPrecision({price: 3})
+
     if (props.showLogo) {
       chart.current?.createOverlay({
         name: 'logoOverlay',
