@@ -170,7 +170,7 @@ const PushPage = () => {
         align: "left",
         sort: true,
         render: (_, row) => (
-          <div className="flex items-center h-[33px]">
+          <div className="flex items-center">
             <CollectStar checked={row.collect === 1} code={row.symbol} />
             <span className="mr-3"/>
             <StockView name={row.name} code={row.symbol as string} showName />
@@ -200,7 +200,6 @@ const PushPage = () => {
         sort: true,
         render: (percent, row) => (
           <SubscribeSpan.PercentBlink
-            showColor={false}
             symbol={row.symbol}
             decimal={2}
             initValue={percent}
@@ -251,21 +250,40 @@ const PushPage = () => {
         width: "15%",
         sort: true,
         render: (v, row) =>
-          Array.from({ length: v }).map((_, i) => (
-            // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
-            <JknIcon
-              key={i}
-              name={
-                activeType === StockPushType.STOCK_KING
-                  ? row.warning === "0"
-                    ? "ic_fire_green"
-                    : "ic_flash"
-                  : row.bull === "1"
-                  ? "ic_fire_green"
-                  : "ic_fire_red"
-              }
-            />
-          )),
+          Array.from({ length: v }).map((_, i) => {
+            return activeType === "JRGW" ? (
+              <JknIcon
+                className="w-[14px] h-[14px]"
+                key={i}
+                name={"ic_fire_red"}
+              />
+            ) : (
+              <div
+                key={i}
+                className="w-[10px] h-[16px]"
+                style={{
+                  backgroundColor: row.bull === "1" ? "#22AB94" : "#F23645",
+                  marginRight: i < v - 1 ? "2px" : "2px",
+                  display: "inline-block"
+                }}
+              />
+            );
+          }).concat(
+            // 当色块不够5个时，从右侧补足到5个，补上的色块颜色为 #2E2E2E
+            activeType !== "JRGW" && v < 5
+              ? Array.from({ length: 5 - v }).map((_, i) => (
+                  <div
+                    key={`placeholder-${i}`}
+                    className="w-[10px] h-[16px]"
+                    style={{
+                      backgroundColor: "#2E2E2E",
+                      marginRight: i < 5 - v - 1 ? "2px" : "2px",
+                      display: "inline-block"
+                    }}
+                  />
+                ))
+              : []
+          ),
       },
     ];
     return common;
@@ -325,6 +343,9 @@ const PushPage = () => {
         }
         .stock-push .rc-table td {
           border: none;
+          height: 50px;
+          padding-top: 0;
+          padding-bottom: 0;
         }
       `}
       </style>
