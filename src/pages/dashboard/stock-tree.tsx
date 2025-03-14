@@ -141,7 +141,8 @@ const StockTree = () => {
   const queryPlate = useQuery({
     queryKey: [getPlateList.cacheKey, type],
     queryFn: () => getPlateList(type === 'industry-heatmap' ? 1 : 2),
-    enabled: type === 'industry-heatmap' || type === 'etf-heatmap'
+    enabled: type === 'industry-heatmap' || type === 'etf-heatmap',
+    select: d => d.slice(0,40)
   })
 
   const dataPlate = useMemo(() => {
@@ -216,25 +217,17 @@ const StockTree = () => {
               <JknIcon.Svg name="arrow-down" size={12} />
             </div>
           </DropdownMenuTrigger>
-          <DropdownMenuContent>
+          <DropdownMenuContent className="w-24">
             <DropdownMenuItem onClick={() => setType('industry')}>{t('stockTree.industry')}</DropdownMenuItem>
             <DropdownMenuItem onClick={() => setType('concept')}>{t('stockTree.concept')}</DropdownMenuItem>
             <DropdownMenuItem onClick={() => setType('bull')}>{t('stockTree.bull')}</DropdownMenuItem>
             <DropdownMenuItem onClick={() => setType('etf')}>{t('stockTree.etf')}</DropdownMenuItem>
             <DropdownMenuItem onClick={() => setType('industry-heatmap')}>
-              {t('stockTree.industryHeatmap')}
+              {t('stockTree.industry-heatmap')}
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setType('etf-heatmap')}>{t('stockTree.etfHeatmap')}</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setType('etf-heatmap')}>{t('stockTree.etf-heatmap')}</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-        {/* <CapsuleTabs activeKey={type} onChange={v => setType(v as unknown as StockTreeType)}>
-          <CapsuleTabs.Tab value="industry" label={t('stockTree.industry')} />
-          <CapsuleTabs.Tab value="concept" label={t('stockTree.concept')} />
-          <CapsuleTabs.Tab value="bull" label={t('stockTree.bull')} />
-          <CapsuleTabs.Tab value="etf" label={t('stockTree.etf')} />
-          <CapsuleTabs.Tab value="industry-heatmap" label={t('stockTree.industryHeatmap')} />
-          <CapsuleTabs.Tab value="etf-heatmap" label={t('stockTree.etfHeatmap')} />
-        </CapsuleTabs> */}
         <div className="ml-auto">
           <SimpleCheck value={filter} onChange={setFilter} />
         </div>

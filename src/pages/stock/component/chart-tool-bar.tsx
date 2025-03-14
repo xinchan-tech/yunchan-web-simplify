@@ -7,6 +7,7 @@ import {
   DropdownMenuTrigger,
   Input,
   JknIcon,
+  JknSearchInput,
   ScrollArea,
   Separator,
   StockAlarm,
@@ -24,6 +25,7 @@ import { useAuthorized, useStockSearch } from "@/hooks"
 import { useLocalStorageState, useVirtualList } from "ahooks"
 import { cn } from "@/utils/style"
 import { chartEvent } from "../lib/event"
+import { IndicatorParamsForm } from "./indicator-param-form"
 
 export const ChartToolBar = () => {
   const symbol = useSymbolQuery()
@@ -232,7 +234,7 @@ export const ChartTypeSelect = memo(() => {
           onClick={() => onChartTypeChange(ChartType.Area)}
         >
           <JknIcon.Svg name="chart-area" size={20} />
-          折线线
+          折线图
         </DropdownMenuItem>
         <DropdownMenuItem
           data-checked={chartType === ChartType.Candle}
@@ -247,8 +249,13 @@ export const ChartTypeSelect = memo(() => {
 })
 
 const IndicatorPicker = memo(() => {
+  const paramsForm = useModal({
+    content: <IndicatorParamsForm />,
+    title: '指标参数',
+  })
+
   const modal = useModal({
-    content: <IndicatorModal />,
+    content: <IndicatorModal onClickParams={() => paramsForm.modal.open()} />,
     title: '指标策略',
     className: 'w-[667px]',
     footer: false,
@@ -263,6 +270,8 @@ const IndicatorPicker = memo(() => {
     return cancelEvent
   }, [modal])
 
+
+
   return (
     <>
       <div className="cursor-pointer hover:bg-accent h-full rounded px-3 flex items-center" onClick={() => modal.modal.open()} onKeyDown={() => { }}>
@@ -273,11 +282,14 @@ const IndicatorPicker = memo(() => {
       {
         modal.context
       }
+      {
+        paramsForm.context
+      }
     </>
   )
 })
 
-export const IndicatorModal = () => {
+export const IndicatorModal = (props: {onClickParams: () => void}) => {
   const indicator = useQuery({
     queryKey: [getStockIndicators.cacheKey],
     queryFn: getStockIndicators
@@ -288,6 +300,10 @@ export const IndicatorModal = () => {
   const mainIndicators = useChartManage(s => s.getActiveChart().mainIndicators)
   const secondaryIndicators = useChartManage(s => s.getActiveChart().secondaryIndicators)
   const system = useChartManage(s => s.getActiveChart().system)
+
+  const onSearch = (keyword?: string) => {
+    setSearch(keyword ?? '')
+  }
 
   const indicators = useMemo(() => {
     if (!indicator.data) return []
@@ -359,11 +375,12 @@ export const IndicatorModal = () => {
   }, [mainIndicators, secondaryIndicators, system])
 
 
+
   return (
     <div className="h-[500px] flex flex-col text-secondary text-sm">
-      <div className="border-b-primary flex items-center px-4">
-        <JknIcon.Svg name="search" size={20} className="text-secondary" />
-        <Input placeholder="搜索" className="border-none placeholder:text-tertiary text-secondary" />
+      <div className="border-b-primary flex items-center pr-4 pl-2">
+        <JknSearchInput onSearch={onSearch} placeholder="搜索" className="h-8 placeholder:text-tertiary" rootClassName="text-tertiary flex-1" />
+        <JknIcon.Svg name="setting" size={16} className="text-tertiary cursor-pointer" onClick={() => props.onClickParams()} />
       </div>
       <div className="flex-1 overflow-hidden flex">
         <div className="border-r-primary w-[160px] h-full flex-shrink-0 py-2">

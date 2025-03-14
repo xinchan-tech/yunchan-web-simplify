@@ -242,7 +242,7 @@ const App = () => {
             width: 100vw;
             box-sizing: border-box;
             display: flex;
-            min-width: 1425px;
+            min-width: 1024px;
             min-height: 810px;
             color: hsl(var(--text));
           }

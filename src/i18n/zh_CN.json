@@ -27,8 +27,8 @@
     "concept": "概念个股",
     "bull": "牛股热图",
     "etf": "ETF热图",
-    "industryHeatmap": "行业热图",
-    "etfHeatmap": "概念热图",
+    "industry-heatmap": "行业热图",
+    "etf-heatmap": "概念热图",
     "today": "今日热点",
     "week": "本周热点",
     "month": "本月热点"
