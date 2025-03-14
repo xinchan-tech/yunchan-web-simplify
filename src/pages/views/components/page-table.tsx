@@ -151,7 +151,7 @@ const PageTable = (props: PageTableProps) => {
         sort: true,
         render: (_, row) => <div className='flex items-center h-[33px]'>
           <CollectStar checked={row.collect === 1} code={row.symbol} />
-          <span className="mr-4"/>
+          <span className="mr-3"/>
           <StockView name={row.name} code={row.symbol as string} showName />
         </div>
       },
@@ -238,6 +238,7 @@ const PageTable = (props: PageTableProps) => {
 
   return (
     <JknRcTable
+      headerHeight={48}
       isLoading={query.isLoading}
       columns={columns}
       rowKey="symbol"

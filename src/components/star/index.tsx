@@ -14,7 +14,7 @@ const Star = (props: StarProps) => {
 
   return (
     <span onFocus={() => {}} onMouseOver={() => setHover(true)} onMouseLeave={() => setHover(false)}>
-      <JknIcon name={icon} className="w-5 h-5 flex items-center" />
+      <JknIcon name={icon} className="w-4 h-4 flex items-center" />
     </span>
   )
 }

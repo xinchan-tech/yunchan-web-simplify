@@ -21,7 +21,7 @@ export interface JknRcTableProps<T = any> extends TableProps<T> {
 }
 
 const _JknRcTable = <T extends DefaultRecordType = any>({
-  headerHeight = 30,
+  headerHeight = 42,
   columns,
   emptyText,
   isLoading,
@@ -130,7 +130,7 @@ const _JknRcTable = <T extends DefaultRecordType = any>({
               </div>
             ) : emptyText ? (
               emptyText
-            ) : null
+            ) : '没有更多的数据'
           }
           getContainerWidth={(ele, width) => {
             // Minus border
@@ -152,7 +152,7 @@ const _JknRcTable = <T extends DefaultRecordType = any>({
               </div>
             ) : emptyText ? (
               emptyText
-            ) : null
+            ) : '没有更多的数据'
           }
           {...props}
         />

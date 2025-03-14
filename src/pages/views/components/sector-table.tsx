@@ -117,6 +117,7 @@ const SectorTable = (props: SectorTableProps) => {
 
   return (
     <JknRcTable
+      headerHeight={48}
       rowKey="id"
       columns={columns}
       data={list}
