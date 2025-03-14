@@ -39,6 +39,7 @@ type TableDataType = Stock & {
   id: string;
   percent?: number;
   marketValue?: number;
+  collect?: number;
 };
 
 const getLastTime = () => {
@@ -78,6 +79,7 @@ const getTableList = async (type: string, date?: string) => {
       stock.marketValue = stockUtils.getMarketValue(stock);
       stock.bull = item.bull;
       stock.create_time = item.create_time;
+      stock.collect = item.extend?.collect ?? 0;
 
       return stock;
     });
@@ -103,6 +105,7 @@ const getTableList = async (type: string, date?: string) => {
       stock.marketValue = stockUtils.getMarketValue(stock);
       stock.bull = item.bull.toString();
       stock.create_time = item.datetime.toString();
+      stock.collect = item.extend?.collect ?? 0;
 
       return stock;
     });
@@ -153,6 +156,7 @@ const PushPage = () => {
     // } else {
     //   setList([])
     // }
+
     setList(query.data ?? []);
   }, [query.data, setList]);
 
@@ -167,7 +171,7 @@ const PushPage = () => {
         sort: true,
         render: (_, row) => (
           <div className="flex items-center h-[33px]">
-            <CollectStar checked={false} code={row.symbol} />
+            <CollectStar checked={row.collect === 1} code={row.symbol} />
             <span className="mr-3"/>
             <StockView name={row.name} code={row.symbol as string} showName />
           </div>
