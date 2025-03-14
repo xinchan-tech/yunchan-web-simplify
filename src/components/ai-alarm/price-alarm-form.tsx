@@ -1,4 +1,4 @@
-import { AiAlarmSetting, CapsuleTabs } from '@/components'
+import { AiAlarmSetting, CapsuleTabs, Tabs, TabsList, TabsTrigger } from '@/components'
 import { useState } from 'react'
 import { PriceAlarmSetting } from './price-alarm-setting'
 
@@ -13,10 +13,16 @@ const PriceAlarmForm = (props: PriceAlarmFormProps) => {
   return (
     <div className="h-[640px] overflow-hidden w-full flex flex-col">
       <div className="border-0 border-b border-solid border-border flex items-center px-4">
-        <CapsuleTabs activeKey={active} onChange={setActive} type="text">
-          <CapsuleTabs.Tab label="股价报警" value="1" />
-          <CapsuleTabs.Tab label="AI报警" value="2" />
-        </CapsuleTabs>
+        <Tabs value={active} onValueChange={setActive} >
+          <TabsList variant="line">
+            <TabsTrigger value="1" asChild>
+              <span>价格报警</span>
+            </TabsTrigger>
+            <TabsTrigger value="2" asChild>
+              <span>AI报警</span>
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
       </div>
       <div className="flex-1 overflow-hidden">
         {{

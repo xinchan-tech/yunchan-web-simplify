@@ -1,15 +1,4 @@
-import {
-  ContextMenu,
-  ContextMenuContent,
-  ContextMenuItem,
-  ContextMenuSeparator,
-  ContextMenuSub,
-  ContextMenuSubContent,
-  ContextMenuSubTrigger,
-  ContextMenuTrigger
-} from '@/components'
-import { cn } from '@/utils/style'
-import { nanoid } from 'nanoid'
+
 import type { PropsWithChildren } from 'react'
 
 interface ChartContextMenuProps {

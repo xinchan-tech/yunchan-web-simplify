@@ -38,7 +38,7 @@ export const drawStickLine: DrawTextFunc = (params, { data, color }) => {
         styles: {
           color: item.empty === 1 ? 'transparent' : _color,
           borderColor: item.empty === 0 ? 'transparent' : _color,
-          borderSize: 1,
+          borderSize: 2,
           style: item.empty === 1 ? 'stroke' : 'fill',
           lineGradient: lineGradient
         }

@@ -1,7 +1,7 @@
-import type { StockChartInterval } from '@/api'
+import { StockChartInterval } from '@/api'
 import { useIndicator } from '@/store'
 import { dateUtils } from '@/utils/date'
-import { cn } from '@/utils/style'
+import { cn, colorUtil } from '@/utils/style'
 import {
   type CandleType,
   type Chart,
@@ -19,14 +19,14 @@ import { backTestLineFigure, backTestMarkFigure, IconFigure, LogoFigure, markOve
 import { compareIndicator, localIndicator } from './indicator'
 import { markIndicator } from './indicator/mark'
 import type { AxisPosition, Candlestick } from './types'
-import { ChartTypes, getStockColor, isSameInterval, transformCandleColor, transformTextColor } from './utils'
+import { ChartTypes, getStockColor, getTickNumberByTrading, isSameInterval, transformCandleColor, transformTextColor } from './utils'
 import { backTestIndicator, type BackTestRecord } from "./indicator/back-test"
 import { CoilingIndicatorId } from "./coiling-calc"
 import { coilingIndicator } from "./indicator/coiling"
 import dayjs from "dayjs"
 import { LogoOverlay } from "./overlay"
 import { useMount, useUnmount } from "ahooks"
-import { fixedXAxis } from "./axis"
+import { stockUtils, type StockTrading } from "@/utils/stock"
 
 export { CoilingIndicatorId, ChartTypes }
 
@@ -41,7 +41,6 @@ registerFigure(IconFigure)
 registerFigure(markOverlayFigure)
 registerFigure(LogoFigure)
 registerOverlay(LogoOverlay)
-registerXAxis(fixedXAxis)
 
 interface JknChartProps {
   className?: string
@@ -82,12 +81,23 @@ interface JknChartIns {
   removeBackTestIndicator: () => void
   setDragEnable: (enable: boolean) => void
   getChart: () => Chart | null | undefined
-  setFixedChart: (fixed: boolean) => void
+  setTimeShareChart: (interval?: StockChartInterval) => void
+}
+
+const DEFAULT_AREA_BG_COLOR = {
+  color: '#1677FF',
+  bg: [{
+    offset: 0,
+    color: colorUtil.rgbaToString(colorUtil.hexToRGBA('#1677FF', 0.01))
+  }, {
+    offset: 1,
+    color: colorUtil.rgbaToString(colorUtil.hexToRGBA('#1677FF', 0.2))
+  }],
 }
 
 export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartProps, ref) => {
   const domRef = useRef<HTMLDivElement>(null)
-  
+
   const chart = useRef<Chart | null>()
 
   useMount(() => {
@@ -116,6 +126,13 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
             noChangeBorderColor: downColor,
             noChangeColor: downColor,
             noChangeWickColor: downColor
+          },
+          area: {
+            point: {
+              show: false
+            },
+            lineColor: DEFAULT_AREA_BG_COLOR.color,
+            backgroundColor: DEFAULT_AREA_BG_COLOR.bg
           },
           tooltip: {
             expand: true,
@@ -450,19 +467,46 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
 
     },
     getChart: () => chart.current,
-    setFixedChart: (fixed) => {
-      if(fixed){
-        // const r = chart.current?.setPaneOptions({
-        //   id: ChartTypes.MAIN_X_AXIS_ID,
-        //   axis: {
-        //     name: 'fixedXAxis',
-        //     scrollZoomEnabled: false,
-        //     createRange: ({chart, defaultRange}) => {
-        //       console.log(defaultRange)
-        //     }
-        //   }
-        // })
-        console.log(chart.current?.getPaneOptions(), ChartTypes.MAIN_X_AXIS_ID)
+    setTimeShareChart: (interval) => {
+      const { up: upColor, down: downColor } = getStockColor()
+      if (interval !== undefined) {
+        if (![StockChartInterval.AFTER_HOURS, StockChartInterval.PRE_MARKET, StockChartInterval.INTRA_DAY, StockChartInterval.FIVE_DAY].includes(interval)) return
+
+        const count = StockChartInterval.FIVE_DAY === interval ? 1950 : getTickNumberByTrading(stockUtils.intervalToTrading(interval)!)
+        
+        chart.current?.setXAxisTick(count)
+        console.log(count)
+        chart.current?.setStyles({
+          candle: {
+            type: 'area' as CandleType,
+            area: {
+              lineColor: (dataList) => {
+                const last = dataList.slice(-1)[0]
+                if (!last) return ''
+                return last.close > last.prevClose ? upColor : downColor
+              },
+              backgroundColor: (data) => {
+                const last = data.slice(-1)[0]
+                if (!last) return []
+                return [
+                  { offset: 0, color: colorUtil.rgbaToString(colorUtil.hexToRGBA(last.close > last.prevClose ? upColor : downColor, 0.01)) },
+                  { offset: 1, color: colorUtil.rgbaToString(colorUtil.hexToRGBA(last.close > last.prevClose ? upColor : downColor, 0.2)) }
+                ]
+              },
+            }
+          }
+        })
+      } else {
+        chart.current?.setXAxisTick(-1)
+        chart.current?.setOffsetRightDistance(80)
+        chart.current?.setStyles({
+          candle: {
+            area: {
+              lineColor: DEFAULT_AREA_BG_COLOR.color,
+              backgroundColor: DEFAULT_AREA_BG_COLOR.bg
+            }
+          }
+        })
       }
     }
   }))

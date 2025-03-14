@@ -26,9 +26,6 @@ import {
   JknIcon,
   JknRcTable,
   type JknRcTableProps,
-  NumSpan,
-  NumSpanSubscribe,
-  PriceAlarm,
   ScrollArea,
   Separator,
   StockView,
@@ -48,10 +45,8 @@ import { memo, useCallback, useEffect, useMemo, useState } from 'react'
 import { stockBaseCodeInfoExtend, useSymbolQuery } from '../lib'
 import { dateUtils } from "@/utils/date"
 import type { TableProps } from "rc-table"
-export const StockInfo = () => {
-  // const [active] = useState<'quote' | 'news'>('quote')
-  const code = useSymbolQuery()
 
+const StockInfo = () => {
   return (
     <div className="h-full flex flex-col overflow-hidden rounded-xs ml-1">
       <div className="flex-1 flex flex-col overflow-hidden">
@@ -71,6 +66,8 @@ export const StockInfo = () => {
     </div>
   )
 }
+
+export default StockInfo
 
 type StockBaseInfoData = {
   name: string

@@ -1,7 +1,7 @@
 import { Input, type InputProps } from "@/components/ui/input"
 import { usePropValue } from "@/hooks"
 import { cn } from "@/utils/style"
-import { type KeyboardEventHandler, useCallback } from "react"
+import { type KeyboardEventHandler, type MouseEventHandler, useCallback } from "react"
 import { JknIcon } from "../jkn-icon"
 
 interface JknSearchInputProps extends InputProps {
@@ -12,6 +12,7 @@ interface JknSearchInputProps extends InputProps {
 
 export const JknSearchInput = ({ onSearch, className, rootClassName, value, ...inputProps }: JknSearchInputProps) => {
   const [innerValue, setInnerValue] = usePropValue<string>((value) as string)
+  
 
   const handleBlur = useCallback(() => {
     if (onSearch) {
@@ -26,7 +27,9 @@ export const JknSearchInput = ({ onSearch, className, rootClassName, value, ...i
 
   }, [handleBlur])
 
-  const onClear = useCallback(() => {
+  const onClear: MouseEventHandler<HTMLSpanElement> = useCallback((e) => {
+    e.stopPropagation()
+    e.preventDefault()
     setInnerValue('')
     if (onSearch) {
       onSearch('')

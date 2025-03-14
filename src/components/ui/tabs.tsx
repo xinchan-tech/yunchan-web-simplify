@@ -9,7 +9,8 @@ const tabsVariants = cva(
   {
     variants: {
       variant: {
-        default: 'border border-solid border-border '
+        default: 'border border-solid border-border',
+        line: 'relative space-x-4'
       },
       size: {
         sm: 'h-7',
@@ -25,11 +26,12 @@ const tabsVariants = cva(
 )
 
 const tabsItemVariants = cva(
-  'inline-flex items-center cursor-pointer justify-center whitespace-nowrap rounded px-6 py-1 text-sm ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50  data-[state=active]:text-foreground',
+  'inline-flex items-center cursor-pointer justify-center whitespace-nowrap px-6 py-1 text-sm ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50  data-[state=active]:text-foreground',
   {
     variants: {
       variant: {
-        default: 'bg-transparent data-[state=active]:bg-accent data-[state=active]:font-medium'
+        default: 'bg-transparent data-[state=active]:bg-accent data-[state=active]:font-medium rounded',
+        line: 'text-tertiary data-[state=active]:font-medium data-[state=active]:text-foreground px-1 tabs-item-line inline-block relative'
       }
     },
     defaultVariants: {

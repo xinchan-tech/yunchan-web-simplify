@@ -4,20 +4,29 @@ import { useQueryParams } from '@/hooks'
 import { stockUtils } from '@/utils/stock'
 import { useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
-import { stockBaseCodeInfoExtend } from '../lib'
 import { FinanceComparison } from './finance-comparison'
 import { FinanceCore } from './finance-core'
 import { FinanceStatistics } from './finance-statistics'
 import { FinanceStatisticsCate } from './finance-statistics-cate'
 import { FinanceValuation } from './finance-valuation'
-
-export const Finance = () => {
+const stockBaseCodeInfoExtend = [
+  'collect',
+  'alarm_ai',
+  'alarm_all',
+  'day_basic',
+  'total_share',
+  'financials',
+  'bubble',
+  'stock_before',
+  'stock_after'
+]
+const Finance = () => {
   const [queryParams] = useQueryParams<{ symbol: string }>()
   const { symbol } = queryParams ?? 'QQQ'
 
   const stockBaseInfo = useQuery({
     queryKey: [getStockBaseCodeInfo.cacheKey, symbol, stockBaseCodeInfoExtend],
-    queryFn: () => getStockBaseCodeInfo({ symbol, extend: stockBaseCodeInfoExtend }),
+    queryFn: () => getStockBaseCodeInfo({ symbol, extend: stockBaseCodeInfoExtend as any }),
     enabled: !!symbol,
     select: data => stockUtils.toStockWithExt(data.stock, { extend: data.extend })
   })
@@ -46,3 +55,5 @@ export const Finance = () => {
     </div>
   )
 }
+
+export default Finance

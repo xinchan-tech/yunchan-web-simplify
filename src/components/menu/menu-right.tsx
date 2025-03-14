@@ -33,7 +33,7 @@ const MenuRight = () => {
     {
       icon: <JknIcon.Svg name="stock" size={20} />,
       title: '个股盘口',
-      path: '/stock/trading'
+      path: '/stock'
     },
     {
       icon: <JknIcon.Svg name="push" size={20} />,
@@ -43,8 +43,13 @@ const MenuRight = () => {
     {
       icon: <JknIcon.Svg name="financial" size={20} />,
       title: '财务估值',
-      path: '/stock/finance'
+      path: '/finance'
     },
+    // {
+    //   icon: <JknIcon.Svg name="alarm" size={20} />,
+    //   title: 'AI报警',
+    //   path: '/stock/alarm'
+    // },
     {
       icon: <JknIcon.Svg name="group" size={20} />,
       title: "讨论社群",

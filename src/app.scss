@@ -274,3 +274,16 @@ span[data-direction-sign="true"][data-direction="up"]::before {
   border-radius: 30px;
   background: currentColor;
 }
+
+.tabs-item-line {
+  &[data-state="active"]::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    border-radius: 30px;
+    background: currentColor;
+  }
+}
