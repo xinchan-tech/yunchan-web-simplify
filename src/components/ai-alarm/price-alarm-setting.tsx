@@ -129,7 +129,7 @@ export const PriceAlarmSetting = (props: PriceAlarmSetting) => {
             name="frequency"
             render={({ field }) => (
               <FormItem className="pb-4 flex space-y-0">
-                <FormLabel className="w-32">三、触发频率</FormLabel>
+                <FormLabel className="w-32">触发频率</FormLabel>
                 <FormControl >
                   <FrequencySelect {...field} />
                 </FormControl>
@@ -138,7 +138,7 @@ export const PriceAlarmSetting = (props: PriceAlarmSetting) => {
           />
         </form>
       </FormProvider>
-      <div className="text-right mt-8 space-x-2">
+      <div className="text-right mt-8 space-x-2 px-8">
         <Button className="w-24" variant="outline" onClick={() => props.onClose?.()}>
           取消
         </Button>

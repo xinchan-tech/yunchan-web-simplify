@@ -131,7 +131,7 @@ const AiAlarmSetting = (props: AiAlarmSetting) => {
           />
         </form>
       </FormProvider>
-      <div className="text-right mt-6 space-x-4 pr-8">
+      <div className="text-right mt-6 space-x-4 px-8">
         <Button className="w-24" variant="outline" onClick={props.onClose}>
           取消
         </Button>

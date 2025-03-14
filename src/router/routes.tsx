@@ -15,11 +15,29 @@ export const routes: RouteObject[] = [
         }
       },
       {
-        path: '/stock/:type',
+        path: '/stock',
         Component: lazy(() => import('@/pages/stock')),
-        handle: {
-          title: '个股盘口'
-        }
+        children: [
+          {
+            index: true,
+            Component: lazy(() => import('@/pages/stock/info')),
+            handle: {
+              title: '个股盘口'
+            }
+          },
+          {
+
+            path: '/stock/alarm',
+            Component: lazy(() => import('@/pages/stock-alarm')),
+            handle: {
+              title: '股票报警'
+            }
+          }
+          // Component: lazy(() => import('@/pages/stock')),
+          // handle: {
+          //   title: '个股盘口'
+          // }
+        ]
       },
       {
         path: '/golden',
@@ -77,13 +95,13 @@ export const routes: RouteObject[] = [
           title: '系统设置'
         }
       },
-      {
-        path: '/stock/:type',
-        Component: lazy(() => import('@/pages/stock')),
-        handle: {
-          title: '个股盘口'
-        }
-      },
+      // {
+      //   path: '/stock/:type',
+      //   Component: lazy(() => import('@/pages/stock')),
+      //   handle: {
+      //     title: '个股盘口'
+      //   }
+      // },
 
       {
         path: '/push',
@@ -98,6 +116,14 @@ export const routes: RouteObject[] = [
         Component: lazy(() => import('@/pages/mall')),
         handle: {
           title: '特色商城'
+        }
+      },
+
+      {
+        path: '/finance',
+        Component: lazy(() => import('@/pages/finance')),
+        handle: {
+          title: '财务估值'
         }
       }
     ]
