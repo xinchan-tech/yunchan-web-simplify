@@ -2,7 +2,7 @@ import { Button, Input, JknSearchInput, useModal } from '@/components'
 import { useChatNoticeStore, useGroupChatShortStore, useGroupChatStoreNew } from '@/store/group-chat-new'
 import { cn } from '@/utils/style'
 import { useLatest } from 'ahooks'
-import { memo, type ReactNode, useCallback, useEffect, useRef, useState } from 'react'
+import { memo, type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import WKSDK, {
   ConnectStatus,
   ConversationAction,
@@ -17,12 +17,12 @@ import { useShallow } from 'zustand/react/shallow'
 import { ConversationWrap } from '../ConversationWrap'
 import APIClient from '../Service/APIClient'
 
-import { getGroupChannels } from '@/api'
+import { getChatNameAndAvatar, getGroupChannels } from '@/api'
 // import { useQuery } from "@tanstack/react-query";
 import ChatAvatar from '../components/chat-avatar'
 
 import { JknIcon, Skeleton } from '@/components'
-import { useQuery } from '@tanstack/react-query'
+import { useQueries, useQuery } from '@tanstack/react-query'
 import {
   groupToChannelInfo,
   judgeIsExpireGroupCache,
@@ -170,6 +170,38 @@ const GroupChannel = (props: {
       return r.sort((a, b) => a.timestamp - b.timestamp)
     }
   })
+
+  const messageUserFrom = useMemo(() => {
+    const userIds = new Set<string>()
+    channel.data?.forEach(conversation => {
+      userIds.add(conversation.lastMessage?.fromUID || '')
+    })
+
+    return Array.from(userIds).filter(Boolean)
+  }, [channel.data])
+
+  const userInfos = useQueries({
+    queries: messageUserFrom.map(uid => ({
+      queryKey: [getChatNameAndAvatar.cacheKey, uid],
+      queryFn: () => getChatNameAndAvatar({type: '1', id: uid}),
+      enabled: chatState === ConnectStatus.Connected,
+    })),
+    combine: (results) => {
+      return results.map(r => r.data)
+    }
+  })
+
+  const channelList = useMemo(() => {
+    const userMap: Record<string, ArrayItem<typeof userInfos>> = {}
+
+    userInfos.forEach(user => {
+      if (user) {
+        userMap[user.name] = user
+      }
+    })
+
+    
+  }, [channel.data, userInfos]);
 
 
 

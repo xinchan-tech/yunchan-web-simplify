@@ -12,6 +12,8 @@ import { ChartContextMenu } from './chart-context-menu'
 import { BackTestBar } from "./back-test-bar"
 import { useStockBarSubscribe } from "@/hooks"
 import { useTime } from "@/store"
+import dayjs from "dayjs"
+import { dateUtils } from "@/utils/date"
 
 interface MainChartProps {
   chartId: string
@@ -43,7 +45,7 @@ export const MainChart = (props: MainChartProps) => {
 
     const record = stockUtils.toStock(data.rawRecord)
     // 不用bar更新K线数据
-    if (!chartImp.current?.isSameIntervalCandlestick(record, chartStore.interval)) {
+    if (chartImp.current?.isSameIntervalCandlestick(record, chartStore.interval)) {
       return
     }
 
