@@ -38,8 +38,47 @@ export const getGroupChannels = async (params: getGroupChannelsParams) => {
 
 getGroupChannels.cacheKey = 'groupChannels:channels'
 
-export const syncRecentConversation = async params => {
-  const r = await request.post('/conversations/sync', params).then(r => r.data)
+type SyncRecentConversationParams = {
+  uid: string
+  msg_count: number
+}
+
+type SyncRecentConversationResult = {
+  channel_id: string
+  channel_type: number
+  last_client_msg_no: string
+  last_msg_seq: number
+  offset_msg_seq: number
+  readed_to_msg_seq: number
+  recents: {
+    header: {
+      no_persist: number
+      red_dot: number
+      sync_once: number
+    }
+    setting: number
+    message_id: number
+    message_idstr: string
+    client_msg_no: string
+    client_seq?: number
+    message_seq: number
+    from_uid: string
+    channel_id: string
+    channel_type: number
+    expire: number
+    timestamp: number
+    payload: string
+    revoke?: number
+    message_extra?: string
+    stream_no?: string
+  }[]
+  timestamp: number
+  unread: number
+  version: number
+}
+
+export const syncRecentConversation = async (params: SyncRecentConversationParams) => {
+  const r = await request.post<SyncRecentConversationResult[]>('/conversations/sync', params).then(r => r.data)
   return r
 }
 

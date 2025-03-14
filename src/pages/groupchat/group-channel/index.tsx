@@ -2,7 +2,7 @@ import { Button, Input, JknSearchInput, useModal } from '@/components'
 import { useChatNoticeStore, useGroupChatShortStore, useGroupChatStoreNew } from '@/store/group-chat-new'
 import { cn } from '@/utils/style'
 import { useLatest } from 'ahooks'
-import { type ReactNode, useCallback, useEffect, useRef, useState } from 'react'
+import { memo, type ReactNode, useCallback, useEffect, useRef, useState } from 'react'
 import WKSDK, {
   ConnectStatus,
   ConversationAction,
@@ -34,6 +34,7 @@ import {
 import CreateGroup from '../components/create-and-join-group'
 import UpdateGroupInfo from './updateGroupInfo'
 import { JoinGroupContentModal } from "../components/create-and-join-group/join-group-content"
+import { useChatStore } from "@/store"
 
 export type GroupData = {
   id: string
@@ -156,6 +157,22 @@ const GroupChannel = (props: {
     closeIcon: true
   })
 
+  /**
+   * 新逻辑
+   */
+  const chatState = useChatStore(s => s.state)
+
+  const channel = useQuery({
+    queryKey: ['conversation-sync'],
+    queryFn: WKSDK.shared().conversationManager.sync,
+    enabled: chatState === ConnectStatus.Connected,
+    select: r => {
+      return r.sort((a, b) => a.timestamp - b.timestamp)
+    }
+  })
+
+
+
   // 监听连接状态
   const firstInitFlag = useRef(true)
   const [fetchingConversation, setFetchingConversation] = useState(false)
@@ -241,46 +258,34 @@ const GroupChannel = (props: {
     // }
   }
 
-  const lastContent = (conversationWrap: ConversationWrap) => {
-    if (!conversationWrap.lastMessage) {
-      return
+  const parseLastMessage = (message: Conversation) => {
+    if (!message) {
+      return ''
     }
 
     let mention: ReactNode | string = ''
     let head: ReactNode | string
     let content: ReactNode | string
-    const draft = conversationWrap.remoteExtra.draft
-    if (draft && draft !== '') {
-      head = draft
-    }
+    // const draft = message.remoteExtra.draft
+    // if (draft && draft !== '') {
+    //   head = draft
+    // }
 
-    if (conversationWrap.isMentionMe === true) {
+    if (message.isMentionMe === true) {
       mention = <span style={{ color: 'red' }}>[有人@我]</span>
     }
-    if (conversationWrap.lastMessage) {
-      const channelInfo = WKSDK.shared().channelManager.getChannelInfo(
-        new Channel(conversationWrap.lastMessage.fromUID, ChannelTypePerson)
-      )
+    if (message.lastMessage) {
+      const channelInfo = WKSDK.shared().channelManager.getChannelInfo(message.channel)
+      console.log(channelInfo)
       if (channelInfo) {
         head = `${channelInfo.title}：`
-      } else {
-        // 没有就缓存下
-        const uid = conversationWrap.lastMessage.fromUID
-        if (judgeIsUserInSyncChannelCache(uid) !== true) {
-          setUserInSyncChannelCache(uid, true)
-          setPersonChannelCache(conversationWrap.lastMessage.fromUID).then(() => {
-            setUserInSyncChannelCache(uid, false)
-            updateForceUpdateAvatarId()
-          })
-        }
       }
 
-      content = conversationWrap.lastMessage.content.conversationDigest || ''
-      if (conversationWrap.lastMessage.content instanceof CMDContent) {
-        if (conversationWrap.lastMessage.content.cmd === 'messageRevoke') {
+      content = message.lastMessage.content.conversationDigest || ''
+      if (message.lastMessage.content instanceof CMDContent) {
+        if (message.lastMessage.content.cmd === 'messageRevoke') {
           content = '撤回了一条消息'
         } else {
-          // content = "加入了群聊";
           content = '[系统消息]'
         }
       }
@@ -429,87 +434,60 @@ const GroupChannel = (props: {
   return (
     <div className="w-[180px] h-full border-0 border-x border-solid border-border bg-[#161616]">
       <div className="group-filter flex items-center justify-between px-1 pb-3 pt-5">
-        <JknSearchInput size="mini" onSearch={setChannelSearchKeyword} rootClassName="bg-accent px-2 py-0.5 w-full text-tertiary"  className="text-secondary placeholder:text-tertiary" placeholder="搜索" />
+        <JknSearchInput size="mini" onSearch={setChannelSearchKeyword} rootClassName="bg-accent px-2 py-0.5 w-full text-tertiary" className="text-secondary placeholder:text-tertiary" placeholder="搜索" />
         <CreateGroup />
       </div>
       <div className="group-list">
-        {!conversationWraps &&
-          Array.from({
-            length: 10
-          }).map((_, i) => <Skeleton style={{ background: '#555' }} key={`${i}channel`} className="h-[76px] mb-2" />)}
-        {conversationWraps &&
-          goodConversations.map((item: ConversationWrap) => {
-            return (
-              <div
-                key={item.channel.channelID}
+        {
+          channel.isLoading ? (
+            <ChannelSkeleton />
+          ) : (
+            channel.data?.map(c => (
+              <div key={c.channel.channelID}
                 className={cn(
                   'flex conversation-card',
-                  item.channel.channelID === selectedChannel?.channelID && !readyToJoinGroup && 'actived'
+                  c.channel.channelID === selectedChannel?.channelID && !readyToJoinGroup && 'actived'
                 )}
-                onClick={() => {
-                  setReadyToJoinGroup(null)
-                  handleSelectChannel(item.channel, item)
-                }}
-                onKeyDown={event => {
-                  if (event.key === 'Enter' || event.key === ' ') {
-                    // Enter or Space key
-                    setReadyToJoinGroup(null)
-                    handleSelectChannel(item.channel, item)
-                  }
-                }}
               >
                 <div className="group-avatar rounded-md flex items-center text-ellipsis justify-center relative">
                   <ChatAvatar
                     radius="4px"
                     className="w-[30px] h-[30px]"
                     data={{
-                      name: item.channelInfo?.title || '',
-                      uid: item.channel.channelID,
-                      avatar: item.channelInfo?.logo || ''
+                      name: c.channelInfo?.title || '',
+                      uid: c.channel.channelID,
+                      avatar: c.channelInfo?.logo || ''
                     }}
                   />
-                  {item.unread > 0 && (
-                    <div className="absolute h-[12px] box-border  unread min-w-6">
-                      {item.unread > 99 ? '99+' : item.unread}
+                  {c.unread > 0 ? (
+                    <div className="absolute h-[14px] box-border unread min-w-5 text-xs">
+                      {c.unread > 99 ? '99+' : c.unread}
                     </div>
-                  )}
+                  ) : null}
                 </div>
                 <div className="group-data flex-1">
                   <div className="group-title flex  justify-between">
                     <div className="flex items-baseline">
                       <div
-                        title={item.channelInfo?.title || ''}
+                        title={c.channelInfo?.title || ''}
                         className="overflow-hidden whitespace-nowrap text-ellipsis w-full text-sm"
                       >
-                        {item.channelInfo?.title || ''}
+                        {c.channelInfo?.title || ''}
                       </div>
-                      <span className="text-xs ml-1 text-gray-400">({item.total_user})</span>
                     </div>
-                    {/* <div
-                      onClick={e => {
-                        e.stopPropagation()
-                        setEditChannel(item)
-                        updateGroupInfoModal.modal.open()
-                      }}
-                      onKeyDown={() => {
-                        setEditChannel(item)
-                        updateGroupInfoModal.modal.open()
-                      }}
-                      className="oper-icons"
-                    >
-                      <JknIcon name="settings_shallow" className="rounded-none" />
-                    </div> */}
                   </div>
                   <div className="group-last-msg flex justify-between">
                     <div className="flex-1 overflow-hidden whitespace-nowrap text-ellipsis w-full text-xs text-tertiary">
-                      {lastContent(item)}
+                      {
+                        parseLastMessage(c)
+                      }
                     </div>
-                    {/* <div className="max-w-30 text-xs">{item.timestampString || ''}</div> */}
                   </div>
                 </div>
               </div>
-            )
-          })}
+            ))
+          )
+        }
       </div>
       {updateGroupInfoModal.context}
       {inviteToGroupModal.context}
@@ -523,8 +501,8 @@ const GroupChannel = (props: {
             background-color: rgb(218, 50, 50);
             border-radius: 8px;
             border: 1px solid #fff;
-            font-size: 14px;
-            line-height: 16px;
+            font-size: 12px;
+            line-height: 14px;
             text-align: center;
             padding: 0 4px;
             top: 0;
@@ -567,4 +545,10 @@ const GroupChannel = (props: {
   )
 }
 
+const ChannelSkeleton = memo(() => Array.from({
+  length: 10
+}).map((_, i) => (
+  // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
+  <Skeleton style={{ background: '#555' }} key={`${i}channel`} className="h-[76px] mb-2" />
+)))
 export default GroupChannel

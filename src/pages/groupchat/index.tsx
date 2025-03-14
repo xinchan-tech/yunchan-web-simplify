@@ -1,7 +1,7 @@
 import GroupChannel from './group-channel'
 import GroupChatLeftBar from './left-bar'
 
-import { useToken, useUser } from '@/store'
+import { chatConstants, useChatStore, useToken, useUser } from '@/store'
 import { createContext, useEffect, useRef, useState } from 'react'
 import WKSDK, {
   type ConnectStatusListener,
@@ -32,6 +32,8 @@ import APIClient from './Service/APIClient'
 import { judgeHasReadGroupNotice, setAgreedGroupInCache } from './chat-utils'
 import ChatInfoDrawer from './components/chat-info-drawer'
 import TextImgLive from './text-img-live'
+import { connectStatusListener } from "./lib/event"
+import { initImDataSource } from "./lib/datasource"
 
 export type ReplyFn = (option: {
   message?: Message
@@ -43,16 +45,15 @@ export const GroupChatContext = createContext<{
   handleRevoke: (message: Message) => void
   syncSubscriber: (channel: Channel) => Promise<void>
 }>({
-  handleReply: () => {},
-  handleRevoke: () => {},
-  syncSubscriber: async () => {}
+  handleReply: () => { },
+  handleRevoke: () => { },
+  syncSubscriber: async () => { }
 })
 
 const wsUrlPrefix = `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${window.location.host}`
 
 const subscriberCache: Map<string, Subscriber[]> = new Map()
 
-let connectStatusListener!: ConnectStatusListener
 
 let cmdListener!: (message: Message) => void
 
@@ -146,51 +147,48 @@ const GroupChatPage = () => {
     }
   }
 
-  // 连接IM
-  const connectIM = (addr: string) => {
-    const config = WKSDK.shared().config
-
-    if (!user?.username || !token) {
-      return
-    }
-    config.uid = user.username
-    config.token = token
-    config.addr = addr
-    config.deviceFlag = 5
-    WKSDK.shared().config = config
-
-    // 监听连接状态
-    connectStatusListener = status => {
-      console.log(status, 'status')
-    }
-
-    WKSDK.shared().connectManager.addConnectStatusListener(connectStatusListener)
-
-    WKSDK.shared().chatManager.addCMDListener(cmdListener)
-    WKSDK.shared().connect()
-  }
 
   // 阅读公告倒计时
   const [countdown, setCountdown] = useState(COUNT_DOWN_NUM)
 
   useEffect(() => {
-    connectIM(`${wsUrlPrefix}/im-ws`)
+    if (!token || !user?.username) {
+      return
+    }
 
-    const channel = new BroadcastChannel('chat-channel')
+    const localConfig = useChatStore.getState().config
+    const channel = new BroadcastChannel(chatConstants.broadcastChannelId)
+
+    if (!user?.username || !token) {
+      return
+    }
+
+    WKSDK.shared().config.uid = user.username
+    WKSDK.shared().config.token = token
+    WKSDK.shared().config.addr = localConfig.addr
+    WKSDK.shared().config.deviceFlag = localConfig.deviceFlag
+
+    /**
+     * 监听事件
+     */
+    WKSDK.shared().connectManager.addConnectStatusListener(connectStatusListener)
+    WKSDK.shared().chatManager.addCMDListener(cmdListener)
 
     channel.onmessage = event => {
       if (event.data.type === 'logout') {
         window.close()
       }
     }
-
+    initImDataSource()
+    WKSDK.shared().connectManager.connect()
     return () => {
-      WKSDK.shared().connectManager.removeConnectStatusListener(connectStatusListener)
       channel.close()
+      WKSDK.shared().connectManager.removeConnectStatusListener(connectStatusListener)
       WKSDK.shared().chatManager.removeCMDListener(cmdListener)
       WKSDK.shared().disconnect()
     }
-  }, [])
+
+  }, [token, user?.username])
 
   const syncSubscriber = async (channel: Channel) => {
     setFetchingSubscribers(true)

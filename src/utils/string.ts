@@ -63,3 +63,13 @@ export const base64Decode = (str: string): string => {
     throw e
   }
 }
+
+export const stringToUint8Array = (str: string): Uint8Array => {
+  const newStr = unescape(encodeURIComponent(str))
+  const arr = []
+  for (let i = 0, j = newStr.length; i < j; ++i) {
+    arr.push(newStr.charCodeAt(i))
+  }
+  const tmpUint8Array = new Uint8Array(arr)
+  return tmpUint8Array
+}
