@@ -186,7 +186,7 @@ const App = () => {
           </div> */}
           <div className="flex items-center h-full space-x-2xl ml-auto">
             <HeaderMall />
-            <HeaderService />
+            {/* <HeaderService /> */}
           </div>
         </div>
 

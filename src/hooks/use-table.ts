@@ -87,7 +87,7 @@ export const useTableRowClickToStockTrading = (symbolField: string) => {
   return useCallback(
     (record: any) => {
       return {
-        onDoubleClick: () => router.navigate(`/stock/trading?symbol=${record[symbolField]}`)
+        onDoubleClick: () => router.navigate(`/stock?symbol=${record[symbolField]}`)
       }
     },
     [symbolField]
