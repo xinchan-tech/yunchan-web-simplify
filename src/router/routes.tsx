@@ -32,11 +32,15 @@ export const routes: RouteObject[] = [
             handle: {
               title: '股票报警'
             }
+          },
+          {
+
+            path: '/stock/*',
+            Component: lazy(() => import('@/pages/stock/info')),
+            handle: {
+              title: '个股盘口'
+            }
           }
-          // Component: lazy(() => import('@/pages/stock')),
-          // handle: {
-          //   title: '个股盘口'
-          // }
         ]
       },
       {
