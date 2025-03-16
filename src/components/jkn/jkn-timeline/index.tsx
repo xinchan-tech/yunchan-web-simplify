@@ -8,6 +8,7 @@ import { cn } from '@/utils/style';
  * @property {string} [className] - 自定义样式类名
  * @property {JknTimelineItem[]} items - 时间轴项数组
  * @property {ReactNode | string} [dot] - 自定义时间轴点的节点或颜色，默认为圆点
+ * @property {number} [dotFirstPaddingTop] - 第一个时间轴点的顶部内边距，默认为0px
  * @property {number} [tailWidth] - 轨迹线宽度，默认为1px
  * @property {number} [tailMarginRight] - 轨迹线右侧间距，默认为20px
  * @property {number} [itemPaddingBottom] - 时间轴项内容区域的底部内边距，默认为20px
@@ -19,6 +20,7 @@ export interface JknTimelineProps {
   className?: string;
   items: JknTimelineItem[];
   dot?: ReactNode | string;
+  dotFirstPaddingTop?: number;
   tailWidth?: number;
   tailMarginRight?: number;
   itemPaddingBottom?: number;
@@ -139,6 +141,7 @@ export const JknTimeline: React.FC<JknTimelineProps> = ({
   className,
   items,
   dot,
+  dotFirstPaddingTop = 0,
   tailWidth = 1,
   itemPaddingBottom = 20,
   loading = false,
@@ -202,6 +205,7 @@ export const JknTimeline: React.FC<JknTimelineProps> = ({
                   <div className="flex items-center justify-center"
                     style={{
                       marginLeft: `${tailWidth/2}px`,
+                      paddingTop: `${index === 0 ? dotFirstPaddingTop : 0}px`,
                     }}
                   >
                     {getDot(item.dot, itemTailColor) || getDot(dot, getDefaultDotColor)}

@@ -29,9 +29,10 @@ interface EconomicDateGroup {
 /**
  * 财经数据内容组件
  * @param {EconomicDateGroup} group - 日期分组数据
+ * @param {boolean} isFirst - 是否为时间轴中的第一个数据
  * @returns {React.ReactNode} 财经数据内容组件
  */
-const EconomicContent: React.FC<{ group: EconomicDateGroup }> = ({ group }) => {
+const EconomicContent: React.FC<{ group: EconomicDateGroup; isFirst?: boolean }> = ({ group, isFirst = false }) => {
   const isCurrentOrFuture = dayjs(group.date).isSameOrAfter(dayjs(), 'day');
   
   // 根据日期状态设置颜色
@@ -43,8 +44,8 @@ const EconomicContent: React.FC<{ group: EconomicDateGroup }> = ({ group }) => {
   
   return (
     <div>
-      {/* 日期 */}
-      <div className="text-2xl mt-[-10px]" style={{ color: colors.date }}>
+      {/* 日期 - 当为第一个数据项时不使用mt-[-10px]样式 */}
+      <div className={`text-2xl ${isFirst ? '' : 'mt-[-10px]'}`} style={{ color: colors.date }}>
         {dayjs(group.date).format("MM-DD W")}
       </div>
       <div>
@@ -157,13 +158,13 @@ const EconomicTimeline: React.FC = () => {
 
   // 将财经数据转换为时间轴数据
   const timelineItems = useMemo(() => {
-    return EconomicData.map(group => {
+    return EconomicData.map((group, index) => {
       const isCurrentOrFuture = dayjs(group.date).isSameOrAfter(dayjs(), 'day');
       const primaryColor = 'hsl(var(--primary))';
       
       // 基础配置项
       const itemConfig = {
-        content: <EconomicContent group={group} />
+        content: <EconomicContent group={group} isFirst={index === 0} />
       };
       
       // 只有当日期大于等于今天时，才设置轴点颜色为主色
@@ -172,10 +173,10 @@ const EconomicTimeline: React.FC = () => {
   }, [EconomicData]);
 
   return (
-    <div className="h-full">
+    <div className="h-full mt-10">
       <JknTimeline
-        className="pt-2 mt-8"
-        items={timelineItems} 
+        items={timelineItems}
+        dotFirstPaddingTop={10}
         tailWidth={1}
         tailMarginRight={60}
         itemPaddingBottom={40}
