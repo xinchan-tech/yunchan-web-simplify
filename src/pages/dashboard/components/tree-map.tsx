@@ -143,7 +143,7 @@ const TreeMap = (props: TreeMapProps) => {
       .attr('height', d => d.y1 - d.y0)
       .attr('fill', d => d.data.color ?? 'transport')
       .on('dblclick', (_, d) => {
-        router.navigate(`/stock/trading?symbol=${d.data.name}`)
+        router.navigate(`/stock?symbol=${d.data.name}`)
       })
   }
 

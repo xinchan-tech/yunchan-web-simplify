@@ -26,6 +26,7 @@ const convertToStock = (candlesticks: StockRawRecord[]) => candlesticks.map(c =>
 
 export const MainChart = (props: MainChartProps) => {
   const [symbol, setSymbol] = useState(getSymbolByUrl())
+  const trading = useTime(s => s.getTrading())
   const activeChartId = useChartManage(s => s.activeChartId)
   const chartStore = useChartManage(s => s.chartStores[props.chartId])
   const chartImp = useRef<ComponentRef<typeof JknChart>>(null)
@@ -35,24 +36,29 @@ export const MainChart = (props: MainChartProps) => {
     mark: ''
   })
 
-  useStockBarSubscribe([symbol], (data) => {
-    const trading = useTime.getState().getTrading()
+  useStockBarSubscribe([`${symbol}@${stockUtils.intervalToPeriod(chartStore.interval)}`], (data) => {
     if (!renderUtils.shouldUpdateChart(trading, chartStore.interval)) {
       return
     }
 
     const record = stockUtils.toStock(data.rawRecord)
-    // 不用bar更新K线数据
-    if (!chartImp.current?.isSameIntervalCandlestick(record, chartStore.interval)) {
-      return
+    const chart = chartImp.current?.getChart()
+    const lastData = chart?.getDataList()?.slice(-1)[0]
+  
+    if (chartImp.current?.isSameIntervalCandlestick(record, chartStore.interval)) {
+      chartImp.current?.appendCandlestick({
+        ...record,
+        quote: lastData?.quote
+      }, chartStore.interval)
+    }else{
+      chartImp.current?.appendCandlestick({
+        ...record,
+        quote: record.close
+      }, chartStore.interval)
     }
-
-    chartImp.current?.appendCandlestick(record, chartStore.interval)
   })
 
   useEffect(() => {
-    const trading = useTime.getState().getTrading()
-
     if (!renderUtils.shouldUpdateChart(trading, chartStore.interval)) {
       return
     }
@@ -65,15 +71,14 @@ export const MainChart = (props: MainChartProps) => {
 
       const newData = {
         ...lastData,
-        close: data.record.close,
-        preClose: data.record.preClose
+        quote: data.record.close
       }
 
       chartImp.current?.appendCandlestick(newData, chartStore.interval)
     })
 
     return unSubscribe
-  }, [chartStore.interval, symbol])
+  }, [chartStore.interval, symbol, trading])
 
   /**
    * 初始化

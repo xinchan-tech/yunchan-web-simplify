@@ -2,7 +2,7 @@ import { Button, Input, JknSearchInput, useModal } from '@/components'
 import { useChatNoticeStore, useGroupChatShortStore, useGroupChatStoreNew } from '@/store/group-chat-new'
 import { cn } from '@/utils/style'
 import { useLatest } from 'ahooks'
-import { memo, type ReactNode, useCallback, useEffect, useRef, useState } from 'react'
+import { memo, type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import WKSDK, {
   ConnectStatus,
   ConversationAction,
@@ -17,12 +17,12 @@ import { useShallow } from 'zustand/react/shallow'
 import { ConversationWrap } from '../ConversationWrap'
 import APIClient from '../Service/APIClient'
 
-import { getGroupChannels } from '@/api'
+import { getChatNameAndAvatar, getGroupChannels } from '@/api'
 // import { useQuery } from "@tanstack/react-query";
 import ChatAvatar from '../components/chat-avatar'
 
 import { JknIcon, Skeleton } from '@/components'
-import { useQuery } from '@tanstack/react-query'
+import { useQueries, useQuery } from '@tanstack/react-query'
 import {
   groupToChannelInfo,
   judgeIsExpireGroupCache,
@@ -171,6 +171,25 @@ const GroupChannel = (props: {
     }
   })
 
+  const messageUserFrom = useMemo(() => {
+    const userIds = new Set<string>()
+    channel.data?.forEach(conversation => {
+      userIds.add(conversation.lastMessage?.fromUID || '')
+    })
+
+    return Array.from(userIds).filter(Boolean)
+  }, [channel.data])
+
+  const userInfos = useQueries({
+    queries: messageUserFrom.map(uid => ({
+      queryKey: [getChatNameAndAvatar.cacheKey, uid],
+      queryFn: () => getChatNameAndAvatar({type: '1', id: uid}).then(r => ({...r, uid})),
+      enabled: chatState === ConnectStatus.Connected,
+    })),
+    combine: (results) => {
+      return results.map(r => r.data)
+    }
+  })
 
 
   // 监听连接状态
@@ -263,6 +282,14 @@ const GroupChannel = (props: {
       return ''
     }
 
+    const userMap = new Map<string, ArrayItem<typeof userInfos>>()
+
+    userInfos.forEach(info => {
+      if(info){
+        userMap.set(info.uid, info)
+      }
+    })
+
     let mention: ReactNode | string = ''
     let head: ReactNode | string
     let content: ReactNode | string
@@ -275,12 +302,12 @@ const GroupChannel = (props: {
       mention = <span style={{ color: 'red' }}>[有人@我]</span>
     }
     if (message.lastMessage) {
-      const channelInfo = WKSDK.shared().channelManager.getChannelInfo(message.channel)
-      console.log(channelInfo)
-      if (channelInfo) {
-        head = `${channelInfo.title}：`
-      }
+      const userInfo = userMap.get(message.lastMessage.fromUID)
 
+      if(userInfo){
+        head = `${userInfo.name}: `
+      }
+      
       content = message.lastMessage.content.conversationDigest || ''
       if (message.lastMessage.content instanceof CMDContent) {
         if (message.lastMessage.content.cmd === 'messageRevoke') {
@@ -292,10 +319,10 @@ const GroupChannel = (props: {
     }
 
     return (
-      <span>
+      <span className="inline-block whitespace-nowrap w-full overflow-hidden text-ellipsis">
         {mention}
         {head}
-        {content}
+        {content}1231231
       </span>
     )
   }
@@ -371,29 +398,29 @@ const GroupChannel = (props: {
 
 
 
-  const [goodConversations, setGoodConversations] = useState<ConversationWrap[]>([])
+  // const [goodConversations, setGoodConversations] = useState<ConversationWrap[]>([])
 
-  useEffect(() => {
-    const filterConversations: ConversationWrap[] = []
+  // useEffect(() => {
+  //   const filterConversations: ConversationWrap[] = []
 
-    if (Array.isArray(data) && Array.isArray(conversationWraps)) {
-      data.forEach(item => {
-        WKSDK.shared().channelManager.setChannleInfoForCache(toChannelInfo(item))
+  //   if (Array.isArray(data) && Array.isArray(conversationWraps)) {
+  //     data.forEach(item => {
+  //       WKSDK.shared().channelManager.setChannleInfoForCache(toChannelInfo(item))
 
-        const joinedChannel = conversationWraps.find(con => con.channel.channelID === item.account)
-        if (joinedChannel) {
-          joinedChannel.total_user = item.total_user
-          if (joinedChannel.timestamp === 0) {
-            setExpireGroupInCache(joinedChannel.channel.channelID, true)
-          }
+  //       const joinedChannel = conversationWraps.find(con => con.channel.channelID === item.account)
+  //       if (joinedChannel) {
+  //         joinedChannel.total_user = item.total_user
+  //         if (joinedChannel.timestamp === 0) {
+  //           setExpireGroupInCache(joinedChannel.channel.channelID, true)
+  //         }
 
-          filterConversations.push(joinedChannel)
-        }
-      })
-    }
+  //         filterConversations.push(joinedChannel)
+  //       }
+  //     })
+  //   }
 
-    setGoodConversations(filterConversations)
-  }, [data, conversationWraps, toChannelInfo])
+  //   setGoodConversations(filterConversations)
+  // }, [data, conversationWraps, toChannelInfo])
 
   const [inviteCode, setInviteCode] = useState('')
 
@@ -445,7 +472,7 @@ const GroupChannel = (props: {
             channel.data?.map(c => (
               <div key={c.channel.channelID}
                 className={cn(
-                  'flex conversation-card',
+                  'flex conversation-card overflow-hidden cursor-pointer',
                   c.channel.channelID === selectedChannel?.channelID && !readyToJoinGroup && 'actived'
                 )}
               >
@@ -465,7 +492,7 @@ const GroupChannel = (props: {
                     </div>
                   ) : null}
                 </div>
-                <div className="group-data flex-1">
+                <div className="group-data flex-1 overflow-hidden">
                   <div className="group-title flex  justify-between">
                     <div className="flex items-baseline">
                       <div

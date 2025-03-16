@@ -112,6 +112,7 @@ export const getChatNameAndAvatar = async (params: {
   const resp = await request.get<{ name: string; avatar: string }>('/im/avatars', { params }).then(r => r.data)
   return resp
 }
+getChatNameAndAvatar.cacheKey = 'groupChannels:getChatNameAndAvatar'
 
 export const revokeMessageService = async (params: {
   msg_id: number | string
