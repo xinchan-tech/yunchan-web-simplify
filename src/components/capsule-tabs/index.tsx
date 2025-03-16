@@ -49,7 +49,7 @@ const TabItem = ({ value, label, disabled, className }: TabItemProps) => {
   return (
     <div
       className={cn(
-        'flex h-[30px] p-[4px] items-center justify-center rounded-md cursor-pointer transition-all duration-200 text-tertiary capsule-tab-item relative after:hidden',
+        'flex h-[30px] p-[4px] items-center justify-center rounded-sm cursor-pointer transition-all duration-200 text-tertiary capsule-tab-item relative after:hidden',
         className,
       )}
       data-checked={value === context.value}

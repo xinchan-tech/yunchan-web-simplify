@@ -88,7 +88,7 @@ const StockFinancials = () => {
         name: lastStock.name,
         code: lastStock.symbol,
         id,
-        date: `a${date} ${time}`,
+        date: `${date.substring(5, 10)} ${time}`,
         price: lastStock?.close || undefined,
         percent: lastStock?.percent && lastStock.percent,
         turnover: lastStock?.turnover || undefined,
@@ -106,32 +106,29 @@ const StockFinancials = () => {
 
   const columns: JknRcTableProps<TableDataType>['columns'] = useMemo(
     () => [
-      { title: '序号', dataIndex: 'rank', render: (_: any, __, index) => index + 1, align: 'center', width: 80 },
       {
         title: '名称代码',
         dataIndex: 'code',
         align: 'left',
         sort: true,
-        width: '16%',
-        render: (_: any, row) => <StockView name={row.name} code={row.code as string} />
+        render: (_, row) => (
+          <div className="flex items-center h-[33px]">
+            <CollectStar checked={row.collect === 1} code={row.code} />
+            <span className="mr-3"/>
+            <StockView name={row.name} code={row.code as string} showName />
+          </div>
+        ),
       },
-      {
-        title: '财报发布',
-        dataIndex: 'date',
-        align: 'right',
-        width: '12%',
-        sort: true,
-        render: (_: any, row) => `${row.date.slice(1)}`
-      },
+
       {
         title: '现价',
-        size: 80,
         dataIndex: 'price',
         align: 'right',
-        width: 120,
+        width: '13%',
         sort: true,
         render: (_: any, row) => (
           <SubscribeSpan.Price
+            showColor={false}
             symbol=""
             subscribe={false}
             initValue={row.price}
@@ -145,10 +142,10 @@ const StockFinancials = () => {
         title: '涨跌幅',
         dataIndex: 'percent',
         align: 'right',
-        width: 90,
+        width: '13%',
         sort: true,
         render: (_: any, row) => (
-          <SubscribeSpan.PercentBlock
+          <SubscribeSpan.PercentBlink
             symbol=""
             subscribe={false}
             decimal={2}
@@ -162,7 +159,7 @@ const StockFinancials = () => {
         title: '成交额',
         dataIndex: 'turnover',
         align: 'right',
-        width: 120,
+        width: '13%',
         sort: true,
         render: (_: any, row) => Decimal.create(row.turnover).toShortCN(3)
       },
@@ -170,90 +167,18 @@ const StockFinancials = () => {
         title: '总市值',
         dataIndex: 'total',
         align: 'right',
-        width: 120,
+        width: '13%',
         sort: true,
         render: (_: any, row) => Decimal.create(row.total).toShortCN(3)
       },
       {
-        title: '所属行业',
-        enableSorting: false,
-        dataIndex: 'industry',
+        title: '财报时间',
+        dataIndex: 'date',
         align: 'right',
-        width: '16%',
-        sort: true
-      },
-      {
-        title: '盘前涨跌幅',
-        dataIndex: 'prePercent',
-        align: 'right',
-        width: 90,
+        width: '15%',
         sort: true,
-        render: (_: any, row) => (
-          <SubscribeSpan.PercentBlock
-            symbol=""
-            subscribe={false}
-            decimal={2}
-            initValue={row.prePercent}
-            initDirection={row.prePercent ? row.prePercent > 0 : false}
-            nanText="--"
-          />
-        )
+        render: (_: any, row) => <span className="text-[#808080]">{row.date}</span>
       },
-      {
-        title: '盘后涨跌幅',
-        dataIndex: 'afterPercent',
-        align: 'right',
-        width: 90,
-        sort: true,
-        render: (_: any, row) => (
-          <SubscribeSpan.PercentBlock
-            symbol=""
-            subscribe={false}
-            decimal={2}
-            initValue={row.afterPercent}
-            initDirection={row.afterPercent ? row.afterPercent > 0 : false}
-            nanText="--"
-          />
-        )
-      },
-      {
-        title: '+股票金池',
-        dataIndex: 'collect',
-        width: 80,
-        align: 'center',
-        render: (_, row) => <CollectStar checked={row.collect === 1} code={row.code} />
-      },
-      {
-        title: '+AI报警',
-        size: 80,
-        enableSorting: false,
-        dataIndex: 't9',
-        align: 'center',
-        width: 80,
-        render: (_: any, row) => (
-          <AiAlarm code={row.code as string}>
-            <JknIcon className="rounded-none" name="ic_add" />
-          </AiAlarm>
-        )
-      },
-      {
-        title: (
-          <CollectStar.Batch
-            checked={checked}
-            onCheckChange={v => setCheckedAll(v ? data.map(o => o.code) : [])}
-            onUpdate={() => {
-              query.refetch()
-              setCheckedAll([])
-            }}
-          />
-        ),
-        dataIndex: 'checked',
-        align: 'center',
-        width: 60,
-        render: (_, row) => (
-          <JknCheckbox checked={getIsChecked(row.code)} onCheckedChange={v => onChange(row.code, v)} />
-        )
-      }
     ],
     [checked, data, getIsChecked, onChange, setCheckedAll, query.refetch]
   )
@@ -261,27 +186,19 @@ const StockFinancials = () => {
   const onRowClick = useTableRowClickToStockTrading('id')
 
   return (
-    <div className="h-full flex flex-col">
-      <div className="py-1">
-        <CapsuleTabs type="text" activeKey={active} onChange={setActive}>
-          {dates.map(date => (
-            <CapsuleTabs.Tab key={date} label={dayjs(date).format('M月D日 W')} value={date} />
-          ))}
-          <JknDatePicker onChange={date => date && setActive(date)}>
-            {(date, action) => (
-              <span className="inline-block w-24" onClick={action.open} onKeyDown={() => {}}>
-                <CapsuleTabs.Tab
-                  disabled
-                  label={active === date ? (date ?? '自定义') : '自定义'}
-                  value={date ?? 'manual'}
-                />
-              </span>
-            )}
-          </JknDatePicker>
-        </CapsuleTabs>
+    <div className="h-full flex flex-col stock-calendar">
+      <div className="flex items-center pt-5 pl-2">
+        <JknDatePicker onChange={(v) => v && setActive(v)}>
+          <div className="h-[30px] min-w-[120px] px-1 flex items-center justify-between border border-solid border-[#2E2E2E] rounded-sm cursor-pointer">
+            <span className="text-[#808080]">{dayjs(active).format("MM-DD W")}</span>
+            <JknIcon.Svg name="arrow-down" size={12} className="ml-3" color="#808080" />
+          </div>
+        </JknDatePicker>
       </div>
+      
       <div className="flex-1 overflow-hidden">
         <JknRcTable
+          headerHeight={48}
           onSort={onSort}
           isLoading={query.isLoading}
           onRow={onRowClick}
@@ -290,6 +207,21 @@ const StockFinancials = () => {
           data={data}
         />
       </div>
+
+      <style jsx global>{`
+        .stock-calendar .rc-table th {
+          padding-top: 20px;
+          padding-bottom: 20px;
+          border: none;
+        }
+        .stock-calendar .rc-table td {
+          border: none;
+          height: 50px;
+          padding-top: 0;
+          padding-bottom: 0;
+        }
+      `}
+      </style>
     </div>
   )
 }

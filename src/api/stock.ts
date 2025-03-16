@@ -1134,6 +1134,9 @@ type GetStockEconomicResult = {
      */
     next_time: string
   }[]
+  current: number;
+  next: number;
+  total_pages: number;
 }
 
 /**
