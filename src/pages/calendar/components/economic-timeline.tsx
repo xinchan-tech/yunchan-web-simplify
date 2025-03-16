@@ -174,7 +174,7 @@ const EconomicTimeline: React.FC = () => {
   return (
     <div className="h-full">
       <JknTimeline
-        className="pt-10"
+        className="pt-2 mt-8"
         items={timelineItems} 
         tailWidth={1}
         tailMarginRight={60}
