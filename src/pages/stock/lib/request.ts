@@ -1,9 +1,8 @@
-import { StockChartInterval, getStockChartQuote, getStockChartV2, getStockTabData } from '@/api'
+import { StockChartInterval, type StockRawRecord, getStockChartQuote, getStockChartV2, getStockTabData } from '@/api'
 import { dateUtils } from '@/utils/date'
 import { queryClient } from '@/utils/query-client'
 import { stockUtils } from '@/utils/stock'
 import { useQuery } from '@tanstack/react-query'
-import { symbol } from 'd3'
 import { useRef } from 'react'
 import { renderUtils } from './utils'
 
@@ -47,7 +46,7 @@ export const useCandlesticks = (symbol: string, interval: StockChartInterval) =>
           v[2],
           v[3],
           ...v.slice(5)
-        ]))
+        ]) as StockRawRecord[]) 
       }
 
       // 返回的是开高低收，转换成开收高低
@@ -58,7 +57,7 @@ export const useCandlesticks = (symbol: string, interval: StockChartInterval) =>
         v[2],
         v[3],
         ...v.slice(5)
-      ]))
+      ]) as StockRawRecord[])
     }
   })
 
