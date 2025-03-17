@@ -16,7 +16,7 @@ export const useToken = create<TokenStore>()(
     }),
     {
       name: 'token',
-      storage: createJSONStorage(() => sessionStorage)
+      storage: createJSONStorage(() => localStorage)
     }
   )
 )

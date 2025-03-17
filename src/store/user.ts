@@ -57,7 +57,7 @@ export const useUser = create<UserStore>()(
     }),
     {
       name: 'user',
-      storage: createJSONStorage(() => sessionStorage)
+      storage: createJSONStorage(() => localStorage)
     }
   )
 )
