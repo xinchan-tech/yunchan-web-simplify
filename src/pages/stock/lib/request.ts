@@ -40,7 +40,14 @@ export const useCandlesticks = (symbol: string, interval: StockChartInterval) =>
           period: stockUtils.intervalToPeriod(interval),
           start_at: startAt.current,
           time_format: 'int'
-        }).then(r => r.data.list)
+        }).then(r => r.data.list.map(v => [
+          v[0],
+          v[1],
+          v[4],
+          v[2],
+          v[3],
+          ...v.slice(5)
+        ]))
       }
 
       // 返回的是开高低收，转换成开收高低
@@ -50,7 +57,7 @@ export const useCandlesticks = (symbol: string, interval: StockChartInterval) =>
         v[4],
         v[2],
         v[3],
-        v.slice(5)
+        ...v.slice(5)
       ]))
     }
   })
