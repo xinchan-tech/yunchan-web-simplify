@@ -47,9 +47,9 @@ export const useCandlesticks = (symbol: string, interval: StockChartInterval) =>
       return getStockChartQuote(symbol, interval, 'int').then(r => r.list.map(v => [
         v[0],
         v[1],
-        v[3],
-        v[2],
         v[4],
+        v[2],
+        v[3],
         v.slice(5)
       ]))
     }
