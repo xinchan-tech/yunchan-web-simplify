@@ -11,6 +11,10 @@
     border-right: 1px solid hsl(var(--border));
   }
 
+  .border-l-primary {
+    border-left: 1px solid hsl(var(--border));
+  }
+
   .border-style-secondary {
     @apply border border-solid border-secondary;
   }

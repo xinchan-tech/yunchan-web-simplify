@@ -1,4 +1,4 @@
-import { getGroupChannels } from '@/api'
+import { getChatChannels } from '@/api'
 import { Button, JknAvatar, JknIcon } from '@/components'
 import { useToast } from '@/hooks'
 import { colorUtil } from '@/utils/style'
@@ -23,8 +23,8 @@ export const GroupPage = (props: GroupPageProps) => {
     limit: 100
   }
   const channels = useQuery({
-    queryKey: [getGroupChannels.cacheKey, params],
-    queryFn: () => getGroupChannels(params as any)
+    queryKey: [getChatChannels.cacheKey, params],
+    queryFn: () => getChatChannels(params as any)
   })
 
   const getPrice = (id: string) => {

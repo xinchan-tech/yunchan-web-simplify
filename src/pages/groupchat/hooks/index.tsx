@@ -1,11 +1,11 @@
 import {
   bindInviteCode,
-  type forbiddenServicePyload,
-  getGroupChannels,
+  type channelForbiddenParams,
+  getChatChannels,
   joinGroupByInviteCode,
-  setGroupManagerService,
+  setChannelManager,
   type setManagerServicePayload,
-  setMemberForbiddenService,
+  setMemberForbidden,
 } from "@/api"
 import { Button, ContextMenuContent, ContextMenuItem, Input } from "@/components"
 import { useModal } from "@/components"
@@ -52,7 +52,7 @@ export const useMemberSetting = () => {
         data.type = "0"
       }
       try {
-        const resp = await setGroupManagerService(data)
+        const resp = await setChannelManager(data)
         if (resp && resp.status === 1) {
           toast({
             description:
@@ -79,7 +79,7 @@ export const useMemberSetting = () => {
 
   const handleLahei = async (item: Subscriber) => {
     if (groupDetailData) {
-      const data: forbiddenServicePyload = {
+      const data: channelForbiddenParams = {
         channelId: groupDetailData.account,
         uids: [item.uid],
         forbidden: "0",
@@ -93,7 +93,7 @@ export const useMemberSetting = () => {
         }
       }
       try {
-        const resp = await setMemberForbiddenService(data)
+        const resp = await setMemberForbidden(data)
 
         if (resp) {
           if (resp.status === 1) {
@@ -278,7 +278,7 @@ export const useJoinGroupByInviteCode = (options?: {
       // bindInviteCode(inviteCode)
       //   .then(r => {
       //     if (r.data === true) {
-      //       return getGroupChannels({
+      //       return getChatChannels({
       //         type: '1',
       //         re_code: inviteCode
       //       })

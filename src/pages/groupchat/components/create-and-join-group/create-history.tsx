@@ -4,7 +4,7 @@ import { useModal } from '@/components'
 import { useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
 import CreateGroupForm from './create-group-form'
-// import { getGroupDetailService } from "@/api/group-chat";
+// import { getChannelDetail } from "@/api/group-chat";
 
 const statusData: Record<string, { text: string; color: string }> = {
   '0': {

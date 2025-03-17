@@ -1,4 +1,4 @@
-import { type EditGroupPayload, editGroupService, getGroupDetailService, getGroupMembersService } from '@/api'
+import { type EditGroupPayload, editGroupService, getChannelDetail, getChannelMembers } from '@/api'
 import { useQuery } from '@tanstack/react-query'
 
 import { Textarea, useModal } from '@/components'
@@ -19,18 +19,18 @@ const UpdateGroupInfo = (props: {
 }) => {
   const options = {
     queryFn: () => {
-      return getGroupDetailService(props.group.channelID)
+      return getChannelDetail(props.group.channelID)
     },
-    queryKey: [getGroupDetailService.key]
+    queryKey: [getChannelDetail.key]
   }
   const queryDetail = useQuery(options)
   const [previewAvatar, setPreviewAvatar] = useState('')
 
   const groipMemberOptions = {
     queryFn: () => {
-      return getGroupMembersService(props.group.channelID, props.total)
+      return getChannelMembers(props.group.channelID, props.total)
     },
-    queryKey: [getGroupMembersService.key]
+    queryKey: [getChannelMembers.key]
   }
   const { toast } = useToast()
   const memberDetail = useQuery(groipMemberOptions)

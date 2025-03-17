@@ -43,7 +43,10 @@ export const useCandlesticks = (symbol: string, interval: StockChartInterval) =>
         }).then(r => r.data.list)
       }
 
-      return getStockChartQuote(symbol, interval, 'int').then(r => r.list)
+      // 返回的是开收高低，转换成开高低收
+      return getStockChartQuote(symbol, interval, 'int').then(r =>
+        r.list.map(v => [v[0], v[1], v[3], v[2], v[4], ...v.slice(5)])
+      )
     }
   })
 

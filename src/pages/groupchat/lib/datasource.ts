@@ -1,4 +1,4 @@
-import { getChatNameAndAvatar, getGroupMembersService, syncRecentConversation } from '@/api'
+import { getChatNameAndAvatar, getChannelMembers, syncChannelMessages, syncRecentConversation } from '@/api'
 import { Buffer } from 'buffer'
 import to from 'await-to-js'
 import WKSDK, {
@@ -10,12 +10,15 @@ import WKSDK, {
   Message,
   MessageExtra,
   MessageStatus,
+  type PullMode,
   Setting,
   Subscriber
 } from 'wukongimjssdk'
-import { chatManager } from "@/store"
-import { ChatChannelState } from "@/store/chat/types"
-import { stringToUint8Array } from "@/utils/string"
+import { chatManager } from '@/store'
+import { ChatChannelState } from '@/store/chat/types'
+import { stringToUint8Array } from '@/utils/string'
+import { messageTransform } from './transform'
+import { ChatSubscriber, SubscriberType } from "./modal"
 
 /**
  * 请求频道资料数据源
@@ -64,9 +67,9 @@ const initChannelInfoDataSource = () => {
  */
 const initSyncSubscribersDataSource = () => {
   WKSDK.shared().config.provider.syncSubscribersCallback = async (channel: Channel) => {
-    const subscribers: Subscriber[] = []
+    const subscribers: ChatSubscriber[] = []
 
-    const [err, res] = await to(getGroupMembersService(channel.channelID))
+    const [err, res] = await to(getChannelMembers(channel.channelID))
 
     if (err) {
       console.log(err)
@@ -74,11 +77,14 @@ const initSyncSubscribersDataSource = () => {
     }
 
     res.items?.forEach(member => {
-      const subscriber = new Subscriber()
+      const subscriber = new ChatSubscriber()
       subscriber.uid = member.username
       subscriber.name = member.realname
       subscriber.orgData = member
       subscriber.avatar = member.avatar
+      subscriber.channel = channel
+      subscriber.userType = member.type as SubscriberType
+      subscriber.forbidden = member.forbidden === '1'
       subscribers.push(subscriber)
     })
 
@@ -128,7 +134,6 @@ const initSyncConversationsDataSource = () => {
           message.timestamp = lastRecord.timestamp
           message.status = MessageStatus.Normal
 
-
           const decodedBuffer = Buffer.from(lastRecord.payload, 'base64')
           const jsonStr = decodedBuffer.toString('utf8')
           const contentObj = JSON.parse(jsonStr)
@@ -136,7 +141,7 @@ const initSyncConversationsDataSource = () => {
 
           messageContent.decode(stringToUint8Array(JSON.stringify(contentObj)))
           message.content = messageContent
-          console.log(contentObj, messageContent)
+
           conversation.lastMessage = message
 
           if (lastRecord.message_extra) {
@@ -156,8 +161,48 @@ const initSyncConversationsDataSource = () => {
   }
 }
 
+/**
+ * 同步频道消息数据源
+ */
+const initSyncMessagesDataSource = () => {
+  WKSDK.shared().config.provider.syncMessagesCallback = async (
+    channel: Channel,
+    opts: {
+      startMessageSeq: number
+      endMessageSeq: number
+      limit: number
+      pullMode: PullMode
+      remoteJump?: boolean
+    }
+  ) => {
+    const [err, res] = await to(
+      syncChannelMessages({ ...opts, channelId: channel.channelID, channelType: channel.channelType })
+    )
+
+    if (err) {
+      console.log(err)
+      return []
+    }
+
+    const r = new Array<Message>()
+    try {
+      if (res) {
+        res.forEach((msg: any) => {
+          r.push(messageTransform(msg))
+        })
+      }
+    } catch (e) {
+      console.error(e)
+    }
+
+    return r
+  }
+}
+
+
 export const initImDataSource = () => {
   initChannelInfoDataSource()
   initSyncSubscribersDataSource()
   initSyncConversationsDataSource()
+  initSyncMessagesDataSource()
 }

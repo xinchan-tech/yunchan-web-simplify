@@ -1,7 +1,7 @@
 import {
   checkMallProductOrderStatus,
   createMallProductOrder,
-  getGroupDetailService,
+  getChannelDetail,
   getMallProducts,
   getPaymentTypes,
   joinGroupService
@@ -310,7 +310,7 @@ const CashierPage = () => {
   }
 
   const buyGroupProduct = async () => {
-    const channelInfo = await getGroupDetailService(productId)
+    const channelInfo = await getChannelDetail(productId)
 
     const product = channelInfo.products.find(p => p.type === model.replace('model_', ''))
 

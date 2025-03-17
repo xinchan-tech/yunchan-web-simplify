@@ -34,6 +34,7 @@ import ChatInfoDrawer from './components/chat-info-drawer'
 import TextImgLive from './text-img-live'
 import { connectStatusListener } from "./lib/event"
 import { initImDataSource } from "./lib/datasource"
+import { ChatRoom } from "./chat-room"
 
 export type ReplyFn = (option: {
   message?: Message
@@ -230,20 +231,20 @@ const GroupChatPage = () => {
   }
 
   // // 初始化群聊列表和消息
-  const onInitChannel = (list: ConversationWrap[]) => {
-    const firstChannel = list.find(item => item.channel.channelID === selectedChannel?.channelID)?.channel
-    if (firstChannel) {
-      handleChannelSelect(firstChannel)
-      getGroupDetailData(firstChannel.channelID)
-      // 进来自动清理未读
-      const conversation = WKSDK.shared().conversationManager.findConversation(firstChannel)
-      if (conversation && conversation.unread > 0) {
-        APIClient.shared.clearUnread(firstChannel)
-        conversation.unread = 0
-        WKSDK.shared().conversationManager.notifyConversationListeners(conversation, ConversationAction.update)
-      }
-    }
-  }
+  // const onInitChannel = (list: ConversationWrap[]) => {
+  //   const firstChannel = list.find(item => item.channel.channelID === selectedChannel?.channelID)?.channel
+  //   if (firstChannel) {
+  //     handleChannelSelect(firstChannel)
+  //     getGroupDetailData(firstChannel.channelID)
+  //     // 进来自动清理未读
+  //     const conversation = WKSDK.shared().conversationManager.findConversation(firstChannel)
+  //     if (conversation && conversation.unread > 0) {
+  //       APIClient.shared.clearUnread(firstChannel)
+  //       conversation.unread = 0
+  //       WKSDK.shared().conversationManager.notifyConversationListeners(conversation, ConversationAction.update)
+  //     }
+  //   }
+  // }
 
   // 引用
   // 回复
@@ -367,15 +368,14 @@ const GroupChatPage = () => {
           />
 
           <GroupChannel
-            onInitChannel={onInitChannel}
-            onSelectChannel={(channel: Channel, conversation: ConversationWrap) => {
+            onSelectChannel={(channel: Channel) => {
               handleChannelSelect(channel)
-              setTotal(conversation.total_user)
             }}
           />
 
           <div className="group-chat-right relative">
-            {notAgreeNotice === true && (
+            <ChatRoom />
+            {/* {notAgreeNotice === true && (
               <div className="flex flex-wrap content-center agree-notice-content absolute left-0 top-0 bottom-0 right-0 w-full h-full">
                 <div className="flex mt-10 justify-center w-full">请先阅读群公告</div>
                 <div
@@ -399,11 +399,10 @@ const GroupChatPage = () => {
                   </Button>
                 </div>
               </div>
-            )}
-            <div className="group-chat-header justify-between flex h-10">
+            )} */}
+            {/* <div className="group-chat-header justify-between flex h-10">
               <div className="group-title items-center pt-2 h-full">
                 <p className="m-0 text-sm">{groupDetailData?.name}</p>
-                {/* <p className="text-xs text-gray-400 mt-0 mb-0">{groupDetailData?.brief}</p> */}
               </div>
               <div className="h-full flex items-center mr-2">
                 <JknIcon
@@ -414,8 +413,8 @@ const GroupChatPage = () => {
                   }}
                 />
               </div>
-            </div>
-            <div className="flex" style={{ height: 'calc(100% - 58px)' }}>
+            </div> */}
+            {/* <div className="flex" style={{ height: 'calc(100% - 58px)' }}>
               <div className="group-msg-panel">
                 <GroupChatMsgList ref={msgListRef} />
                 <GroupChatInput
@@ -430,7 +429,7 @@ const GroupChatPage = () => {
               <div className="w-[220px] group-member-panel">
                 <GroupMembers total={total} />
               </div>
-            </div>
+            </div> */}
           </div>
         </GroupChatContext.Provider>
       )}

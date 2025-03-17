@@ -1,7 +1,7 @@
 import { type ComponentProps, forwardRef, type PropsWithChildren, useImperativeHandle, useRef, useState } from 'react'
 
-import { getGroupChannels, joinGroupByInviteCode } from '@/api'
-import type { GroupChannelItem, getGroupChannelsParams } from '@/api'
+import { getChatChannels, joinGroupByInviteCode } from '@/api'
+import type { GroupChannelItem, getChatChannelsParams } from '@/api'
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, Input, JknIcon, JknSearchInput } from '@/components'
 import FullScreenLoading from '@/components/loading'
 import { useToast } from '@/hooks'
@@ -35,9 +35,9 @@ export const JoinGroupContent = (props: { onSuccess: () => void; type?: string }
   ]
 
   const option = {
-    queryKey: [getGroupChannels.cacheKey, currentCategory, keywords],
+    queryKey: [getChatChannels.cacheKey, currentCategory, keywords],
     queryFn: () => {
-      let params: getGroupChannelsParams = {
+      let params: getChatChannelsParams = {
         type: currentCategory,
         keywords
       }
@@ -51,7 +51,7 @@ export const JoinGroupContent = (props: { onSuccess: () => void; type?: string }
           re_code: keywords
         }
       }
-      return getGroupChannels(params)
+      return getChatChannels(params)
     }
   }
   const [openJoinMask, setOpenJoinMask] = useState(false)

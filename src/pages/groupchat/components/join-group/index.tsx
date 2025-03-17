@@ -1,4 +1,4 @@
-import { getGroupDetailService, getPaymentTypesService, joinGroupService, loopUpdatePaymentStatus } from '@/api'
+import { getChannelDetail, getPaymentTypesService, joinGroupService, loopUpdatePaymentStatus } from '@/api'
 import { Button, JknIcon } from '@/components'
 import QrCode from 'react-qr-code'
 import type { GroupData } from '../../group-channel'
@@ -17,7 +17,7 @@ import { createPortal } from "react-dom"
 import { GroupTag } from "../create-and-join-group/group-channel-card"
 import Decimal from "decimal.js"
 
-const getDiscountByYearCompareMonth = (product: Awaited<ReturnType<typeof getGroupDetailService>>['products']) => {
+const getDiscountByYearCompareMonth = (product: Awaited<ReturnType<typeof getChannelDetail>>['products']) => {
   const monthPrice = product.find(item => item.unit === '月')?.price
   const yearPrice = product.find(item => item.unit === '年')?.price
 
@@ -43,8 +43,8 @@ export const JoinGroup = (props: {
   }
 
   const options2 = {
-    queryFn: () => getGroupDetailService(data.account),
-    queryKey: [getGroupDetailService.key]
+    queryFn: () => getChannelDetail(data.account),
+    queryKey: [getChannelDetail.key]
   }
 
   const { data: payMethods, isFetching: isFetchingPayMethods } = useQuery(options)

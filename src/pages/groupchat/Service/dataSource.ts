@@ -12,7 +12,7 @@ import {
   WKSDK
 } from 'wukongimjssdk'
 
-import { type GroupMemberResult, getGroupMembersService, syncRecentConversation } from '@/api'
+import { type GroupMemberResult, getChannelMembers, syncRecentConversation } from '@/api'
 import request from '@/utils/request'
 import { judgeIsExpireGroupCache, userToChannelInfo } from '../chat-utils'
 import cacheManager, { LocalCacheManager } from '../messageCache'
@@ -169,7 +169,7 @@ export function initDataSource() {
       // } else {
 
       // }
-      resp = await getGroupMembersService(channel.channelID, limit || 100)
+      resp = await getChannelMembers(channel.channelID, limit || 100)
       if (Array.isArray(resp.items) && resp.items.length > 0) {
         resp.items.forEach(man => {
           const member = new Subscriber()

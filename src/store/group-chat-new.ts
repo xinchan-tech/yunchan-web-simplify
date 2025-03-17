@@ -1,4 +1,4 @@
-import { type GroupDetailData, getGroupDetailService } from '@/api'
+import { type GroupDetailData, getChannelDetail } from '@/api'
 import type { ConversationWrap } from '@/pages/groupchat/ConversationWrap'
 import type { GroupData } from '@/pages/groupchat/group-channel'
 import type { Channel, Message, Subscriber } from 'wukongimjssdk'
@@ -134,7 +134,7 @@ export const useGroupChatShortStore = create<GroupChatShortStore>((set, get) => 
       groupDetailData: null
     })
     try {
-      const resp = await getGroupDetailService(id)
+      const resp = await getChannelDetail(id)
       set({
         groupDetailData: resp,
         groupDetailFetching: false

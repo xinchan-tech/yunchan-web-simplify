@@ -1,20 +1,47 @@
 import { create } from 'zustand'
-import { ChatChannelState, chatConstants, type ChatStore } from './types'
-import { ConnectStatus } from 'wukongimjssdk'
+import { ChatChannelState, chatConstants, ChatMessageType, type ChatStore } from './types'
+import { Channel, ChannelInfo, ConnectStatus } from 'wukongimjssdk'
+import { createJSONStorage, persist } from 'zustand/middleware'
 
 const wsUrlPrefix = `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${window.location.host}`
 
-const useChatStore = create<ChatStore>(() => ({
-  state: ConnectStatus.Disconnect,
-  config: {
-    addr: `${wsUrlPrefix}/im-ws`,
-    deviceFlag: 5
-  },
-  channel: {
-    state: ChatChannelState.Fetching,
-    data: []
-  }
-}))
+const useChatStore = create<ChatStore>()(
+  persist(
+    _get => ({
+      state: ConnectStatus.Disconnect,
+      config: {
+        addr: `${wsUrlPrefix}/im-ws`,
+        deviceFlag: 5
+      },
+      channel: {
+        state: ChatChannelState.Fetching,
+        data: []
+      },
+      lastChannel: undefined,
+      usersExpanded: true
+    }),
+    {
+      name: 'chat-store',
+      storage: createJSONStorage(() => localStorage, {
+        reviver: (key, value) => {
+          if (key === 'lastChannel' && value) {
+            const _channelObj = JSON.parse(value as string) as Channel
+            return new Channel(_channelObj.channelID, _channelObj.channelType)
+          }
+          return value
+        },
+      }),
+      partialize: state => ({
+        config: {
+          addr: `${wsUrlPrefix}/im-ws`,
+          deviceFlag: 5
+        },
+        lastChannel: JSON.stringify(state.lastChannel),
+        usersExpanded: state.usersExpanded
+      })
+    }
+  )
+)
 
 export { useChatStore }
 
@@ -49,6 +76,15 @@ export const chatManager = {
       }
     })
   },
+  setLastChannelId: (channel: Channel) => {
+    useChatStore.setState({
+      lastChannel: channel
+    })
+  },
+  setUsersExpanded: (expanded: boolean) => {
+    useChatStore.setState({
+      usersExpanded: expanded
+    })
+  }
 }
-
-export { chatConstants }
+export { chatConstants, ChatMessageType }
