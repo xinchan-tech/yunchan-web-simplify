@@ -94,7 +94,7 @@ export const useModal = ({
         <DialogContent className={cn('w-[680px]', className)} onPointerDownOutside={onPointerDownOutside}>
           <DialogHeader>
             <DialogTitle asChild>
-              <div className="px-4 flex items-center">
+              <div className="px-8 flex items-center pt-5 pb-[15px] border-solid border-x-0 border-t-0 border-b border-[#3D3D3D]">
                 {innerTitle && (
                   <div className="text-xl">
                     {innerTitle}
