@@ -214,11 +214,6 @@ body {
   }
 }
 
-@for $i from 1 through 10 {
-  .chart-item-#{$i} {
-    grid-area: chart-#{$i}
-  }
-}
 
 input[type="number"]::-webkit-outer-spin-button,
 input[type="number"]::-webkit-inner-spin-button {

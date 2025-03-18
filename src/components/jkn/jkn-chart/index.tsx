@@ -478,7 +478,7 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
         const count = StockChartInterval.FIVE_DAY === interval ? 1950 : getTickNumberByTrading(stockUtils.intervalToTrading(interval)!)
         
         chart.current?.setXAxisTick(count)
-        console.log(count)
+
         chart.current?.setStyles({
           candle: {
             type: 'area' as CandleType,

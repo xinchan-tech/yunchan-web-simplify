@@ -21,7 +21,7 @@ import { timeIndex, useSymbolQuery } from '../lib'
 import { ChartType, chartManage, useChartManage } from '../lib/store'
 import { renderUtils } from '../lib/utils'
 import { useQuery } from "@tanstack/react-query"
-import { useAuthorized, useStockSearch } from "@/hooks"
+import { useAuthorized, useStockSearch, useToast } from "@/hooks"
 import { useLocalStorageState, useVirtualList } from "ahooks"
 import { cn } from "@/utils/style"
 import { chartEvent } from "../lib/event"
@@ -252,6 +252,7 @@ const IndicatorPicker = memo(() => {
   const paramsForm = useModal({
     content: <IndicatorParamsForm />,
     title: '指标参数',
+    footer: null
   })
 
   const modal = useModal({
@@ -289,7 +290,7 @@ const IndicatorPicker = memo(() => {
   )
 })
 
-export const IndicatorModal = (props: {onClickParams: () => void}) => {
+export const IndicatorModal = (props: { onClickParams: () => void }) => {
   const indicator = useQuery({
     queryKey: [getStockIndicators.cacheKey],
     queryFn: getStockIndicators
@@ -789,7 +790,14 @@ const AlarmPicker = () => {
 
 const BackTest = () => {
   const mode = useChartManage(s => s.getActiveChart().mode)
+  const interval = useChartManage(s => s.getActiveChart().interval)
+  const [auth, toast] = useAuthorized('backTestTime')
   const onChangeMode = () => {
+    const time = auth()
+    if (!time || interval < time) {
+      toast()
+      return
+    }
     chartManage.setMode(mode === 'normal' ? 'backTest' : 'normal')
   }
   return (

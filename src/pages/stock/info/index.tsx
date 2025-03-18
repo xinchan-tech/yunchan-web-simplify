@@ -732,7 +732,7 @@ const GoldenStockPool = () => {
       width: '30%',
       sort: true,
       render: (close, row) => (
-        <SubscribeSpan.PriceBlink className="text-xs" symbol={row.symbol} initValue={close} initDirection={stockUtils.isUp(row)} />
+        <SubscribeSpan.PriceBlink className="text-xs" symbol={row.symbol} initValue={close} initDirection={stockUtils.isUp(row)} showColor={false}  />
       )
     },
     {
