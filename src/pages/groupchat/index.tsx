@@ -21,7 +21,7 @@ import { useShallow } from 'zustand/react/shallow'
 
 import GroupMembers from './group-members'
 
-import { loginImService, revokeMessageService } from '@/api'
+import { loginImService, revokeMessage } from '@/api'
 
 import { Button, JknIcon, Toaster } from '@/components'
 import type { ConversationWrap } from './ConversationWrap'
@@ -280,7 +280,7 @@ const GroupChatPage = () => {
 
   // 撤回
   const handleRevoke: (message: Message) => void = async (message: Message) => {
-    await revokeMessageService({ msg_id: message.messageID })
+    await revokeMessage({ msg_id: message.messageID })
     // const newConversations =
     //   await WKSDK.shared().config.provider.syncConversationsCallback();
     // const newWarps = newConversations.map((item) => new ConversationWrap(item));
@@ -373,7 +373,7 @@ const GroupChatPage = () => {
             }}
           />
 
-          <div className="group-chat-right relative">
+          <div className="group-chat-right relative flex-1 overflow-hidden">
             <ChatRoom />
             {/* {notAgreeNotice === true && (
               <div className="flex flex-wrap content-center agree-notice-content absolute left-0 top-0 bottom-0 right-0 w-full h-full">

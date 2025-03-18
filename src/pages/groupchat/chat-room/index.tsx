@@ -63,7 +63,7 @@ export const ChatRoom = () => {
   }
 
   return (
-    <div className="w-full h-full overflow-hidden">
+    <div className="flex-1 h-full overflow-hidden">
       <div className="chat-room-title h-10">
         <div className="group-chat-header justify-between flex h-10">
           <div className="leading-10 border h-full bg-[#141414] border-b-primary w-full text-sm px-4">
@@ -71,8 +71,8 @@ export const ChatRoom = () => {
           </div>
         </div>
       </div>
-      <div className="chat-room-main h-[calc(100%-40px)] bg-[#0a0a0a] flex w-full overflow-hidden">
-        <div className="chat-room-content h-full flex-1">
+      <div className="chat-room-main h-[calc(100%-40px)] bg-[#0a0a0a] flex overflow-hidden flex-1">
+        <div className="chat-room-content h-full w-full overflow-hidden">
           <div className="chat-room-message h-[calc(100%-180px)] overflow-hidden border-b-primary">
             <ChatMessageList />
           </div>

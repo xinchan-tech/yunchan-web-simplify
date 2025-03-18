@@ -299,3 +299,9 @@ span[data-direction-sign="true"][data-direction="up"]::before {
     color: #8CABFF;
   }
 }
+
+.chat-message-scroll-list {
+  .scroll-area-viewport > div {
+    display: block !important;
+  }
+}

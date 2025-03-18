@@ -1,6 +1,6 @@
 import { chatManager } from '@/store'
 import mitt from "mitt"
-import { ConnectStatus, type ConnectStatusListener } from 'wukongimjssdk'
+import { ConnectStatus, type Message, type ConnectStatusListener } from 'wukongimjssdk'
 
 export const connectStatusListener: ConnectStatusListener = (status, reasonCode, connectInfo) => {
   chatManager.setState(status)
@@ -18,6 +18,18 @@ export type ChatEvent = {
       name: string
     },
     channelId: string
+  },
+  revokeMessage: {
+    channelId: string
+    message: Message
+  },
+  replyMessage: {
+    channelId: string
+    message: Message
+  },
+  copyMessage: {
+    channelId: string
+    message: Message
   }
 }
 

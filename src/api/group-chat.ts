@@ -12,18 +12,6 @@ export const getChatNameAndAvatar = async (params: {
 }
 getChatNameAndAvatar.cacheKey = 'groupChannels:getChatNameAndAvatar'
 
-export const revokeMessageService = async (params: {
-  msg_id: number | string
-}) => {
-  const r = await request
-    .post('/message/revoke', params, {
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded'
-      }
-    })
-    .then(r => r.data)
-  return r
-}
 
 
 // 加入群
