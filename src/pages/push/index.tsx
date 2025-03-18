@@ -318,7 +318,7 @@ const PushPage = () => {
             <JknDatePicker onChange={(v) => v && setDate(v)}>
               <Button variant="outline" className="h-8 px-2 text-base border-[#2E2E2E] text-[#808080]">
                 {dayjs(date).format("MM-DD W")}
-                <JknIcon.Svg name="arrow-down" size={8} className="" color="#808080" />
+                <JknIcon.Svg name="arrow-down" size={8} color="#808080" />
               </Button>
             </JknDatePicker>
           </div>

@@ -1,39 +1,10 @@
 import type { getMallProducts } from '@/api'
-import { CheckIcon, Cross2Icon } from '@radix-ui/react-icons'
 import React from 'react'
+import { CheckIcon, CloseIcon } from './components/mall-icon';
 
 interface IntroPageProps {
   intro: Awaited<ReturnType<typeof getMallProducts>>['intro']
 }
-
-/**
- * 自定义勾选图标组件
- * @param props 组件属性
- * @param props.color 图标颜色，默认为 #C0B8AA
- * @param props.className 自定义类名
- */
-const CheckIcon = ({ color = "#C0B8AA", className = "" }: { color?: string, className?: string }) => {
-  return (
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
-      <path d="M15.2526 6.47432L8.99481 12.7322L4.99998 8.73732" stroke={color} strokeLinecap="round" strokeLinejoin="round"/>
-    </svg>
-  );
-};
-
-/**
- * 自定义关闭图标组件
- * @param props 组件属性
- * @param props.color 图标颜色，默认为 #C0B8AA
- * @param props.className 自定义类名
- */
-const CloseIcon = ({ color = "#C0B8AA", className = "" }: { color?: string, className?: string }) => {
-  return (
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
-      <path d="M6 14.4854L14.4853 6.00007" stroke={color} strokeLinecap="round"/>
-      <path d="M6 6L14.4853 14.4853" stroke={color} strokeLinecap="round"/>
-    </svg>
-  );
-};
 
 /**
  * 方案介绍页面组件
@@ -62,7 +33,7 @@ export const IntroPage = (props: IntroPageProps) => {
               )}
               
               {/* 分类下的每个项目 */}
-              {category.items.map((item, item_index) => (
+              {category.items.map((item) => (
                 <React.Fragment key={item.title}>
                   <div className="contents group">
                     {cate_index === 0 ? (

@@ -1,6 +1,7 @@
 import { getStockFinancials } from '@/api'
 import {
   AiAlarm,
+  Button,
   CapsuleTabs,
   CollectStar,
   JknCheckbox,
@@ -189,10 +190,10 @@ const StockFinancials = () => {
     <div className="h-full flex flex-col stock-calendar">
       <div className="flex items-center pt-5 pl-2">
         <JknDatePicker onChange={(v) => v && setActive(v)}>
-          <div className="h-[30px] min-w-[120px] px-1 flex items-center justify-between border border-solid border-[#2E2E2E] rounded-sm cursor-pointer">
-            <span className="text-[#808080]">{dayjs(active).format("MM-DD W")}</span>
-            <JknIcon.Svg name="arrow-down" size={12} className="ml-3" color="#808080" />
-          </div>
+          <Button variant="outline" className="h-8 px-2 text-base border-[#2E2E2E] text-[#808080]">
+            {dayjs(active).format("MM-DD W")}
+            <JknIcon.Svg name="arrow-down" size={8} color="#808080" />
+          </Button>
         </JknDatePicker>
       </div>
       
