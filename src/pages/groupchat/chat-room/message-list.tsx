@@ -163,7 +163,7 @@ interface ChatMessageRowMenuProps {
 const ChatMessageRowMenu = (props: PropsWithChildren<ChatMessageRowMenuProps>) => {
   const { message, children } = props
 
-  const subscriber = WKSDK.shared().channelManager.getSubscribeOfMe(message.channel) as ChatSubscriber
+  const subscriber = WKSDK.shared().channelManager.getSubscribeOfMe(message.channel) as Undefinable<ChatSubscriber>
 
   const onCopyMessage = () => {
     chatEvent.emit('copyMessage', {channelId: message.channel.channelID, message})
@@ -190,7 +190,7 @@ const ChatMessageRowMenu = (props: PropsWithChildren<ChatMessageRowMenuProps>) =
           <span>回复</span>
         </ContextMenuItem>
         {
-          subscriber.isChannelManager || subscriber.isChannelOwner || subscriber.uid === message.fromUID ? (
+          subscriber?.isChannelManager || subscriber?.isChannelOwner || subscriber?.uid === message.fromUID ? (
             <ContextMenuItem onClick={onRevokeMessage}>
               <span>撤回</span>
             </ContextMenuItem>

@@ -8,6 +8,8 @@ import StarterKit from '@tiptap/starter-kit'
 import Image from '@tiptap/extension-image'
 import { type ChatEvent, chatEvent } from "../../lib/event"
 import { useImmer } from "use-immer"
+import { isMessageText } from "../../lib/modal"
+import { ChatMessageType } from "@/store"
 
 interface ChatInputProps {
   channelId?: string
@@ -76,10 +78,9 @@ export const ChatInput = forwardRef<ChatInputInstance, ChatInputProps>((props, r
   }))
 
   const onSubmit = () => {
-  
     const content = editor?.getJSON() as JSONContent
-    console.log(content)
     props.onSubmit?.(content, mentionList.map(item => item.uid))
+    setMentionList([])
   }
 
 
@@ -112,11 +113,28 @@ export const ChatInput = forwardRef<ChatInputInstance, ChatInputProps>((props, r
 
     chatEvent.on('mentionUser', mentionHandler)
 
+
+    const copyHandler = ({channelId, message}: ChatEvent['copyMessage']) => {
+      if (channelId !== props.channelId) return
+    
+      console.log(message)
+      if(message.contentType === ChatMessageType.Text) {
+        editor?.commands.insertContent(message.content.text)
+      }else if(message.contentType === ChatMessageType.Image){
+        editor?.commands.setImage({ src: message.content.remoteUrl })
+      }
+
+      editor?.commands.focus()
+    }
+
+    chatEvent.on('copyMessage', copyHandler)
+
     return () => {
       chatEvent.off('mentionUser', mentionHandler)
+      chatEvent.off('copyMessage', copyHandler)
       setMentionList([])
     }
-  }, [props.channelId, setMentionList])
+  }, [props.channelId, setMentionList, editor])
 
   return (
     <div className="chat-room-input h-[180px] relative">

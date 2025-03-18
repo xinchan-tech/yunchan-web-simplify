@@ -1,4 +1,4 @@
-import { Subscriber } from 'wukongimjssdk'
+import { MessageText, Subscriber } from 'wukongimjssdk'
 
 export enum SubscriberType {
   ChannelOwner = '2',
@@ -19,4 +19,8 @@ export class ChatSubscriber extends Subscriber {
     return this.userType === SubscriberType.ChannelManager
   }
   
+}
+
+export const isMessageText = (message: any): message is MessageText => {
+  return message instanceof MessageText
 }
