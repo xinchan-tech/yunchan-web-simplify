@@ -78,7 +78,7 @@ const SectorTable = (props: SectorTableProps) => {
         align: 'left',
         width: '33.3%',
         sort: true,
-        render: name => <div className="border-solid border-yellow-100"><span className="inline-block h-[33px]">{name}</span></div>
+        render: name => <span className="inline-block h-[33px]">{name}</span>
       },
       {
         title: '涨跌幅',
@@ -87,7 +87,6 @@ const SectorTable = (props: SectorTableProps) => {
         align: 'left',
         width: '33.3%',
         render: (_, row) => (
-          <div className="border-solid border-yellow-100">
           <SubscribeSpan.PercentBlink
             subscribe={false}
             showSign
@@ -98,7 +97,6 @@ const SectorTable = (props: SectorTableProps) => {
             zeroText="0.00%"
             nanText="--"
           />
-          </div>
         )
       },
       {
@@ -108,11 +106,9 @@ const SectorTable = (props: SectorTableProps) => {
         align: 'right',
         width: '33.3%',
         render: (_, row) => (
-          <div className="border-solid border-yellow-100">
           <span className='inline-block leading-6'>
             {Decimal.create(row.amount).toShortCN()}
           </span>
-          </div>
         )
       },
     ],
