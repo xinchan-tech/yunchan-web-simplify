@@ -120,6 +120,7 @@ const GoldenPool = () => {
         ),
         dataIndex: "name",
         align: "left",
+        width: "23.5%",
         sort: true,
         render: (_, row) => <div className='flex items-center h-[33px]'>
           <div className="flex justify-center items-center">
@@ -138,7 +139,7 @@ const GoldenPool = () => {
         title: '现价',
         dataIndex: "close",
         align: "left",
-        width: '13%',
+        width: '11.2%',
         sort: true,
         render: (_, row) => (
           <SubscribeSpan.PriceBlink
@@ -154,7 +155,7 @@ const GoldenPool = () => {
         title: '涨跌幅',
         dataIndex: "percent",
         align: "left",
-        width: '13%',
+        width: '11.2%',
         sort: true,
         render: (_, row) => (
           <SubscribeSpan.PercentBlink
@@ -169,7 +170,7 @@ const GoldenPool = () => {
         title: '成交额',
         dataIndex: "turnover",
         align: "left",
-        width: '13%',
+        width: '11.2%',
         sort: true,
         render: (_, row) => (
           <SubscribeSpan.TurnoverBlink
@@ -184,7 +185,7 @@ const GoldenPool = () => {
         title: '总市值',
         dataIndex: "marketValue",
         align: "left",
-        width: '13%',
+        width: '19.5%',
         sort: true,
         render: (_, row) => (
           <SubscribeSpan.MarketValue
@@ -200,22 +201,21 @@ const GoldenPool = () => {
         title: '所属行业',
         dataIndex: "industry",
         align: "left",
-        width: '15%',
         sort: true,
         render: (_, row) => <span className="text-[14px]">{row.industry}</span>
       },
       {
         title: (
-          <div className="w-full text-center">
-            <JknCheckbox checked={isAllChecked} onCheckedChange={handleCheckAll} />
+          <div className="flex items-center justify-end pr-1">
+            <JknCheckbox className="w-5 h-5" checked={isAllChecked} onCheckedChange={handleCheckAll} />
           </div>
         ),
         dataIndex: 'check',
         align: 'right',
         width: '5%',
         render: (_, row) => (
-          <div className="w-full text-center">
-            <JknCheckbox checked={isChecked(row.symbol)} onCheckedChange={v => onCheckChange(row.symbol, v)} />
+          <div className="flex items-center justify-end pr-1">
+            <JknCheckbox className="w-5 h-5" checked={isChecked(row.symbol)} onCheckedChange={v => onCheckChange(row.symbol, v)} />
           </div>
         )
       }
@@ -276,9 +276,9 @@ const GoldenPool = () => {
 
   return (
     <div className="h-full w-full overflow-hidden flex justify-center bg-black">
-      <div className="h-full overflow-hidden flex flex-col min-w-[918px] w-[60%] max-w-[1400px] pt-[40px] golden-pool">
+      <div className="h-full overflow-hidden flex flex-col w-[1114px] pt-[40px] golden-pool">
         <div className="flex items-center justify-center flex-shrink-0">
-          <div className="flex-1 overflow-x-auto">
+          <div className="flex-1 overflow-x-auto pl-2">
             <CollectCapsuleTabs
               activeKey={activeStockCollectCate}
               onChange={onActiveStockChange}
