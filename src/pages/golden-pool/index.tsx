@@ -14,6 +14,7 @@ import {
   type StockExtend,
   getStockCollects,
   getStockCollectCates,
+  moveStockCollectBatch,
 } from "@/api";
 import { stockUtils } from "@/utils/stock";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -27,7 +28,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import to from "await-to-js";
-import { addStockCollect } from "@/api";
 
 const baseExtends: StockExtend[] = [
   "total_share",
@@ -38,13 +38,15 @@ const baseExtends: StockExtend[] = [
   "financials",
 ];
 
-type TableDataType = ReturnType<typeof stockUtils.toStockWithExt>;
+type TableDataType = ReturnType<typeof stockUtils.toStockWithExt> & {
+  id: string
+};
 
 const GoldenPool = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [activeStockCollectCate, setActiveStockCollectCate] = useState("1");
-  const [stockSymbols, setStockSymbols] = useState<string[]>([]);
+  const [collectIds, setCollectIds] = useState<string[]>([]);
 
   const { checked, onChange: onCheckChange, setCheckedAll, getIsChecked: isChecked } = useCheckboxGroup(
     []
@@ -70,36 +72,37 @@ const GoldenPool = () => {
           name: o.name,
           symbol: o.symbol,
         }),
-        collect: 1
+        collect: 1,
+        id: o.id
       })
     ) ?? [];
     
     setList(stockList);
     
-    // 更新 checked 数组，使其包含表格中所有的 symbol 集合
+    // 更新 checked 数组，使其包含表格中所有的 collect_id 集合
     if (stockList.length > 0) {
-      const allSymbols = stockList.map(item => item.symbol);
-      setStockSymbols(allSymbols);
+      const allCollectIds = stockList.map(item => item.id);
+      setCollectIds(allCollectIds);
     }
-  }, [collects.data, setList, setStockSymbols]);
+  }, [collects.data, setList, setCollectIds]);
 
   const onActiveStockChange = (v: string) => {
     setActiveStockCollectCate(v);
   };
 
   const isAllChecked = useMemo(() => {
-    return stockSymbols.length > 0 && stockSymbols.every(symbol => isChecked(symbol));
-  }, [stockSymbols, isChecked]);
+    return collectIds.length > 0 && collectIds.every(id => isChecked(id));
+  }, [collectIds, isChecked]);
 
   const handleCheckAll = useCallback((checked: boolean) => {
     if (checked) {
-      // 全选：传入所有 symbol
-      setCheckedAll(stockSymbols);
+      // 全选：传入所有 collect_id
+      setCheckedAll(collectIds);
     } else {
       // 取消全选：传入空数组
       setCheckedAll([]);
     }
-  }, [stockSymbols, setCheckedAll]);
+  }, [collectIds, setCheckedAll]);
 
   const columns: JknRcTableProps<TableDataType>["columns"] = useMemo(
     () => [
@@ -107,7 +110,7 @@ const GoldenPool = () => {
         title: (
           <div className="inline-flex items-center whitespace-nowrap">
             <span className="inline-flex items-center">
-              <GoldenPoolStar.Batch cateId={+activeStockCollectCate} checked={true} checkedChildren={stockSymbols} onUpdate={() => {
+              <GoldenPoolStar.Batch cateId={+activeStockCollectCate} checked={true} checkedChildren={collectIds} onUpdate={() => {
                 // 同时刷新表格数据和 Tab 标题数据
                 collects.refetch();
                 // 刷新收藏分类数据，更新 Tab 标题
@@ -215,14 +218,14 @@ const GoldenPool = () => {
         width: '5%',
         render: (_, row) => (
           <div className="flex items-center justify-end pr-1">
-            <JknCheckbox className="w-5 h-5" checked={isChecked(row.symbol)} onCheckedChange={v => onCheckChange(row.symbol, v)} />
+            <JknCheckbox className="w-5 h-5" checked={isChecked(row.id)} onCheckedChange={v => onCheckChange(row.id, v)} />
           </div>
         )
       }
     ],
     [
       activeStockCollectCate,
-      stockSymbols,
+      collectIds,
       list,
       collects.refetch,
       isAllChecked,
@@ -244,8 +247,8 @@ const GoldenPool = () => {
         return;
       }
 
-      const [err] = await to(addStockCollect({
-        symbols: checked,
+      const [err] = await to(moveStockCollectBatch({
+        collect_ids: checked,
         cate_ids: [Number(cateId)],
       }));
 

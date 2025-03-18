@@ -637,6 +637,23 @@ export const removeStockCollect = (params: { symbols: string[]; cate_ids: number
 }
 
 /**
+ * 移动到其他金池
+ * @param params.collect_ids 金池股票id
+ * @param params.cate_ids 目标金池分类id
+ */
+export const moveStockCollectBatch = (params: { collect_ids: string[]; cate_ids: number[] }) => {
+  const form = new URLSearchParams()
+  for (const c of params.collect_ids) {
+    form.append('collect_ids[]', c)
+  }
+
+  for (const c of params.cate_ids) {
+    form.append('cate_ids[]', c.toString())
+  }
+  return request.post<void>('/stock-svc/collect/stocks/move', form).then(r => r.data)
+}
+
+/**
  * 股票：symbol
  * 现价：'close',
  * 成交额： 'amount',
