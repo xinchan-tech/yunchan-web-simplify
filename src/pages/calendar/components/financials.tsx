@@ -110,6 +110,7 @@ const StockFinancials = () => {
         title: '名称代码',
         dataIndex: 'code',
         align: 'left',
+        width: '25%',
         sort: true,
         render: (_, row) => (
           <div className="flex items-center h-[33px]">
@@ -123,8 +124,8 @@ const StockFinancials = () => {
       {
         title: '现价',
         dataIndex: 'price',
-        align: 'right',
-        width: '13%',
+        align: 'left',
+        width: '13.5%',
         sort: true,
         render: (_: any, row) => (
           <SubscribeSpan.Price
@@ -141,7 +142,7 @@ const StockFinancials = () => {
       {
         title: '涨跌幅',
         dataIndex: 'percent',
-        align: 'right',
+        align: 'left',
         width: '13%',
         sort: true,
         render: (_: any, row) => (
@@ -158,16 +159,16 @@ const StockFinancials = () => {
       {
         title: '成交额',
         dataIndex: 'turnover',
-        align: 'right',
-        width: '13%',
+        align: 'left',
+        width: '13.5%',
         sort: true,
         render: (_: any, row) => Decimal.create(row.turnover).toShortCN(3)
       },
       {
         title: '总市值',
         dataIndex: 'total',
-        align: 'right',
-        width: '13%',
+        align: 'left',
+        width: '13.5%',
         sort: true,
         render: (_: any, row) => Decimal.create(row.total).toShortCN(3)
       },
@@ -175,7 +176,6 @@ const StockFinancials = () => {
         title: '财报时间',
         dataIndex: 'date',
         align: 'right',
-        width: '15%',
         sort: true,
         render: (_: any, row) => <span className="text-[#808080]">{row.date}</span>
       },

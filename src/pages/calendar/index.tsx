@@ -10,7 +10,7 @@ const StockCalendar = () => {
   const [active, setActive] = useState('financials')
   return (
     <div className="h-full w-full overflow-hidden flex justify-center bg-black">
-      <div className="h-full overflow-hidden flex flex-col min-w-[918px] w-[60%] max-w-[1400px] pt-[40px] stock-views">
+      <div className="h-full overflow-hidden flex flex-col w-[918px] pt-[40px] stock-views">
         <div className="flex items-center flex-shrink-0 pl-2">
           <CapsuleTabs activeKey={active} onChange={setActive}>
             <CapsuleTabs.Tab value="financials" label="财报个股" />

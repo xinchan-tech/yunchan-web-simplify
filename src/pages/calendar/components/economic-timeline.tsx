@@ -45,16 +45,16 @@ const EconomicContent: React.FC<{ group: EconomicDateGroup; isFirst?: boolean }>
   return (
     <div>
       {/* 日期 - 当为第一个数据项时不使用mt-[-10px]样式 */}
-      <div className={`text-2xl ${isFirst ? '' : 'mt-[-10px]'}`} style={{ color: colors.date }}>
+      <div className={`text-xl ${isFirst ? '' : 'mt-[-8px]'}`} style={{ color: colors.date }}>
         {dayjs(group.date).format("MM-DD W")}
       </div>
       <div>
         {group.items.map((item, index) => (
           <div key={index} className="py-5">
             {/* 标题 */}
-            <div className="text-xl" style={{ color: colors.title }}>{item.title}</div>
+            <div className="text-base" style={{ color: colors.title }}>{item.title}</div>
             {/* 发布时间 */}
-            <div className="text-base mt-[10px]" style={{ color: colors.time }}>{dayjs(item.publishTime).format('HH:mm')}</div>
+            <div className="text-sm mt-[10px]" style={{ color: colors.time }}>{dayjs(item.publishTime).format('HH:mm')}</div>
           </div>
         ))}
       </div>
@@ -176,7 +176,7 @@ const EconomicTimeline: React.FC = () => {
     <div className="h-full mt-10">
       <JknTimeline
         items={timelineItems}
-        dotFirstPaddingTop={10}
+        dotFirstPaddingTop={8}
         tailWidth={1}
         tailMarginRight={60}
         itemPaddingBottom={40}
