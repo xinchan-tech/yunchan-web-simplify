@@ -169,6 +169,7 @@ const PushPage = () => {
         title: "名称代码",
         dataIndex: "symbol",
         align: "left",
+        width: "25%",
         sort: true,
         render: (_, row) => (
           <div className="flex items-center">
@@ -182,7 +183,7 @@ const PushPage = () => {
         title: "现价",
         dataIndex: "close",
         align: "left",
-        width: "13%",
+        width: "13.5%",
         sort: true,
         render: (v, row) => (
           <SubscribeSpan.PriceBlink
@@ -197,7 +198,7 @@ const PushPage = () => {
         title: "涨跌幅%",
         dataIndex: "percent",
         align: "left",
-        width: "13%",
+        width: "13.5%",
         sort: true,
         render: (percent, row) => (
           <SubscribeSpan.PercentBlink
@@ -212,7 +213,7 @@ const PushPage = () => {
         title: "成交额",
         dataIndex: "turnover",
         align: "left",
-        width: "13%",
+        width: "13.5%",
         sort: true,
         render: (turnover, row) => (
           <SubscribeSpan.TurnoverBlink
@@ -228,7 +229,7 @@ const PushPage = () => {
         title: "总市值",
         dataIndex: "marketValue",
         align: "left",
-        width: "13%",
+        width: "13.5%",
         sort: true,
         render: (marketValue, row) => (
           <SubscribeSpan.MarketValueBlink
@@ -248,7 +249,6 @@ const PushPage = () => {
         }`,
         dataIndex: "star",
         align: "right",
-        width: "15%",
         sort: true,
         render: (v, row) =>
           Array.from({ length: v }).map((_, i) => {
@@ -294,7 +294,7 @@ const PushPage = () => {
 
   return (
     <div className="h-full w-full overflow-hidden flex justify-center bg-black">
-      <div className="h-full overflow-hidden flex flex-col min-w-[918px] w-[60%] max-w-[1400px] pt-[40px] stock-push">
+      <div className="h-full overflow-hidden flex flex-col w-[918px] pt-[40px] stock-push">
         <div className="flex items-center flex-shrink-0 pl-2">
           <CapsuleTabs
             activeKey={activeType}
@@ -316,12 +316,10 @@ const PushPage = () => {
         {activeType === "JRGW" ? (
           <div className="flex items-center pt-5 pl-2">
             <JknDatePicker onChange={(v) => v && setDate(v)}>
-              <Button variant="outline" className="h-8 px-2 border-[#2E2E2E] text-[#808080]">
+              <Button variant="outline" className="h-8 px-2 text-base border-[#2E2E2E] text-[#808080]">
                 {dayjs(date).format("MM-DD W")}
                 <JknIcon.Svg name="arrow-down" size={8} className="" color="#808080" />
               </Button>
-
-              
             </JknDatePicker>
           </div>
         ) : null}
