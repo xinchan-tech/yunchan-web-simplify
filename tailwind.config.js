@@ -2,6 +2,9 @@
 module.exports = {
   content: ['./src/**/*.{html,js,ts,jsx,tsx}'],
   theme: {
+    fontFamily: {
+      pingfang: ['PingFang SC', 'sans-serif']
+    },
     extend: {
       textColor: {
         secondary: 'hsl(var(--text-secondary))',
