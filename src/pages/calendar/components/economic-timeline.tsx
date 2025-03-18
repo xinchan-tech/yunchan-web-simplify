@@ -1,8 +1,8 @@
-import React, { useMemo, useState, useCallback, useEffect } from 'react';
-import { JknTimeline } from '@/components';
-import { getStockEconomic } from '@/api';
-import { useQuery } from '@tanstack/react-query';
-import dayjs from 'dayjs';
+import React, { useMemo, useState, useCallback, useEffect } from 'react'
+import { JknTimeline } from '@/components'
+import { getStockEconomic } from '@/api'
+import { useQuery } from '@tanstack/react-query'
+import dayjs from 'dayjs'
 
 /**
  * 财经数据项接口
@@ -11,8 +11,8 @@ import dayjs from 'dayjs';
  * @property {string} publishTime - 发布时间
  */
 interface EconomicDataItem {
-  title: string;
-  publishTime: string;
+  title: string
+  publishTime: string
 }
 
 /**
@@ -22,8 +22,8 @@ interface EconomicDataItem {
  * @property {EconomicDataItem[]} items - 该日期下的财经数据项
  */
 interface EconomicDateGroup {
-  date: string;
-  items: EconomicDataItem[];
+  date: string
+  items: EconomicDataItem[]
 }
 
 /**
@@ -33,15 +33,15 @@ interface EconomicDateGroup {
  * @returns {React.ReactNode} 财经数据内容组件
  */
 const EconomicContent: React.FC<{ group: EconomicDateGroup; isFirst?: boolean }> = ({ group, isFirst = false }) => {
-  const isCurrentOrFuture = dayjs(group.date).isSameOrAfter(dayjs(), 'day');
-  
+  const isCurrentOrFuture = dayjs(group.date).isSameOrAfter(dayjs(), 'day')
+
   // 根据日期状态设置颜色
   const colors = {
     date: isCurrentOrFuture ? "#FFFFFF" : "#575757",
     title: isCurrentOrFuture ? "#DBDBDB" : "#575757",
     time: isCurrentOrFuture ? "#808080" : "#575757"
-  };
-  
+  }
+
   return (
     <div>
       {/* 日期 - 当为第一个数据项时不使用mt-[-10px]样式 */}
@@ -50,6 +50,7 @@ const EconomicContent: React.FC<{ group: EconomicDateGroup; isFirst?: boolean }>
       </div>
       <div>
         {group.items.map((item, index) => (
+          // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
           <div key={index} className="py-5">
             {/* 标题 */}
             <div className="text-base" style={{ color: colors.title }}>{item.title}</div>
@@ -59,8 +60,8 @@ const EconomicContent: React.FC<{ group: EconomicDateGroup; isFirst?: boolean }>
         ))}
       </div>
     </div>
-  );
-};
+  )
+}
 
 /**
  * 财经时间轴组件
@@ -69,15 +70,15 @@ const EconomicContent: React.FC<{ group: EconomicDateGroup; isFirst?: boolean }>
  */
 const EconomicTimeline: React.FC = () => {
   // 分页状态管理
-  const [page, setPage] = useState<number>(1);
-  const [hasMore, setHasMore] = useState<boolean>(true);
-  const limit = 50; // 每页数据条数
-  
+  const [page, setPage] = useState<number>(1)
+  const [hasMore, setHasMore] = useState<boolean>(true)
+  const limit = 50 // 每页数据条数
+
   // 用于存储所有已加载的数据项
-  const [allItems, setAllItems] = useState<any[]>([]);
+  const [allItems, setAllItems] = useState<any[]>([])
 
   // 是否按升序排序
-  const isAscending = false;
+  const isAscending = false
 
   // 使用 React Query 获取财经数据
   const { data, isFetching } = useQuery({
@@ -88,7 +89,7 @@ const EconomicTimeline: React.FC = () => {
       type: 1,
       sort: isAscending ? 'ASC' : 'DESC'
     })
-  });
+  })
 
   // 更新累积数据并检查是否还有更多数据可加载
   useEffect(() => {
@@ -101,41 +102,41 @@ const EconomicTimeline: React.FC = () => {
             newItem => !prevItems.some(
               existingItem => existingItem.id === newItem.id
             )
-          );
-          
-          return [...prevItems, ...newItems];
-        });
+          )
+
+          return [...prevItems, ...newItems]
+        })
       }
-      
+
       // 检查是否还有更多数据可加载
-      setHasMore(data.current < data.total_pages);
+      setHasMore(data.current < data.total_pages)
     }
-  }, [data]);
+  }, [data])
 
   // 加载更多数据的回调函数
   const handleLoadMore = useCallback(() => {
     if (!isFetching && hasMore) {
-      setPage(prevPage => prevPage + 1);
+      setPage(prevPage => prevPage + 1)
     }
-  }, [isFetching, hasMore]);
+  }, [isFetching, hasMore])
 
   // 将接口数据按日期分组并转换为组件所需格式
   const EconomicData = useMemo(() => {
-    if (!allItems.length) return [];
+    if (!allItems.length) return []
 
     // 按日期分组
-    const groupedByDate: Record<string, any[]> = {};
-    
+    const groupedByDate: Record<string, any[]> = {}
+
     allItems.forEach(item => {
       // 提取日期部分 (YYYY-MM-DD)
-      const dateStr = item.date.split(' ')[0];
-      
+      const dateStr = item.date.split(' ')[0]
+
       if (!groupedByDate[dateStr]) {
-        groupedByDate[dateStr] = [];
+        groupedByDate[dateStr] = []
       }
-      
-      groupedByDate[dateStr].push(item);
-    });
+
+      groupedByDate[dateStr].push(item)
+    })
 
     // 转换为组件所需的格式并按日期升序排序
     return Object.keys(groupedByDate)
@@ -146,31 +147,31 @@ const EconomicTimeline: React.FC = () => {
           .map(item => ({
             title: item.title,
             publishTime: item.date,
-          }));
-        
+          }))
+
         return {
           date: dateStr,
           items,
-        };
+        }
       })
-      .sort((a, b) => (new Date(a.date).getTime() - new Date(b.date).getTime()) * (isAscending ? 1 : -1));
-  }, [allItems]);
+      .sort((a, b) => (new Date(a.date).getTime() - new Date(b.date).getTime()) * (isAscending ? 1 : -1))
+  }, [allItems])
 
   // 将财经数据转换为时间轴数据
   const timelineItems = useMemo(() => {
     return EconomicData.map((group, index) => {
-      const isCurrentOrFuture = dayjs(group.date).isSameOrAfter(dayjs(), 'day');
-      const primaryColor = 'hsl(var(--primary))';
-      
+      const isCurrentOrFuture = dayjs(group.date).isSameOrAfter(dayjs(), 'day')
+      const primaryColor = 'hsl(var(--primary))'
+
       // 基础配置项
       const itemConfig = {
         content: <EconomicContent group={group} isFirst={index === 0} />
-      };
-      
+      }
+
       // 只有当日期大于等于今天时，才设置轴点颜色为主色
-      return isCurrentOrFuture ? { ...itemConfig, dot: primaryColor } : itemConfig;
-    });
-  }, [EconomicData]);
+      return isCurrentOrFuture ? { ...itemConfig, dot: primaryColor } : itemConfig
+    })
+  }, [EconomicData])
 
   return (
     <div className="h-full mt-10">
@@ -185,7 +186,7 @@ const EconomicTimeline: React.FC = () => {
         loadMoreThreshold={100}
       />
     </div>
-  );
-};
+  )
+}
 
-export default EconomicTimeline;
+export default EconomicTimeline

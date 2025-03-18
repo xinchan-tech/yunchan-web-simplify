@@ -4,6 +4,7 @@ import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
 import { chartEvent } from './event'
 import { renderUtils } from './utils'
+import { appEvent } from "@/utils/event"
 
 type ViewMode =
   | 'single'
@@ -219,6 +220,11 @@ export const chartManage = {
       })
     })
   },
+  setActiveChart: (chartId: string) => {
+    useChartManage.setState({
+      activeChartId: chartId
+    })
+  },
   /**
    * 设置分时
    */
@@ -287,6 +293,12 @@ export const chartManage = {
    *
    */
   addSecondaryIndicator: (indicator: Indicator, chartId?: string) => {
+    const secondary = useChartManage.getState().getActiveChart().secondaryIndicators
+
+    if(secondary.length >= 5){
+      appEvent.emit('toast', {message: '最多只能添加5个附图指标'} )
+      return
+    }
     chartManage.setStore(state => {
       if (state.secondaryIndicators.find(i => i.id === indicator.id)) return
       state.secondaryIndicators.push(indicator)
@@ -324,7 +336,8 @@ export const chartManage = {
 
     if (currentModeCount === targetModeCount) {
       useChartManage.setState({
-        viewMode
+        viewMode,
+        activeChartId: 'chart-0'
       })
       return
     }

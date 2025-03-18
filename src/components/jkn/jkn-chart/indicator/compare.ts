@@ -15,7 +15,6 @@ export const compareIndicator: IndicatorTemplate<any, any> = {
   calcParams: [[], '#FF0000'],
   calc: (_dataList, indicator) => {
     const validIndex = indicator.calcParams[0].findIndex((x: number) => x !== null)
-    console.log(indicator.calcParams)
     return [
       {
         validIndex,
