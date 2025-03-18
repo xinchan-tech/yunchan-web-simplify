@@ -149,6 +149,7 @@ const PageTable = (props: PageTableProps) => {
         dataIndex: 'name',
         align: 'left',
         sort: true,
+        width: '28.5%',
         render: (_, row) => <div className='flex items-center h-[33px]'>
           <CollectStar checked={row.collect === 1} code={row.symbol} />
           <span className="mr-3"/>
@@ -159,7 +160,7 @@ const PageTable = (props: PageTableProps) => {
         title: '现价',
         dataIndex: 'price',
         align: 'left',
-        width: '13%',
+        width: '13.5%',
         sort: true,
         render: (_, row) => (
           <SubscribeSpan.PriceBlink
@@ -176,7 +177,7 @@ const PageTable = (props: PageTableProps) => {
         title: '涨跌幅',
         dataIndex: 'percent',
         align: 'left',
-        width: '13%',
+        width: '13.5%',
         sort: true,
         render: (_, row) => (
           <SubscribeSpan.PercentBlink
@@ -194,7 +195,7 @@ const PageTable = (props: PageTableProps) => {
         title: '成交额',
         dataIndex: 'amount',
         align: 'left',
-        width: '13%',
+        width: '13.5%',
         sort: true,
         render: (_, row) => (
           <SubscribeSpan.TurnoverBlink
@@ -210,9 +211,10 @@ const PageTable = (props: PageTableProps) => {
         title: '总市值',
         dataIndex: 'total',
         align: 'left',
-        width: '13%',
+        width: '15%',
         sort: true,
         render: (_, row) => (
+          <div className=''>
           <SubscribeSpan.MarketValueBlink
             trading="intraDay"
             symbol={row.symbol}
@@ -221,15 +223,15 @@ const PageTable = (props: PageTableProps) => {
             totalShare={row.totalShare ?? 0}
             showColor={false}
           />
+          </div>
         )
       },
       {
         title: '所属行业',
         dataIndex: 'industry',
         align: 'right',
-        width: '15%',
         sort: true,
-        render: (_, row) => <span className="text-[14px]">{row.industry}</span>
+        render: (_, row) => <div className="text-[14px]">{row.industry}</div>
       }
     ],
     [list, query.refetch]

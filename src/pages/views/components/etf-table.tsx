@@ -1,11 +1,4 @@
-import {
-  type StockExtend,
-  type UsStockColumn,
-  getChineseStocks,
-  getIndexGapAmplitude,
-  getIndexRecommends,
-  getUsStocks
-} from '@/api'
+import { type StockExtend, type UsStockColumn, getUsStocks } from '@/api'
 import {
   CollectStar,
   JknRcTable,
@@ -13,14 +6,14 @@ import {
   StockView,
   SubscribeSpan
 } from '@/components'
-import {  useStockQuoteSubscribe, useTableData, useTableRowClickToStockTrading } from '@/hooks'
+import { useStockQuoteSubscribe, useTableData, useTableRowClickToStockTrading } from '@/hooks'
 import { stockUtils } from '@/utils/stock'
-import { useQuery } from '@tanstack/react-query'
+import { useInfiniteQuery } from '@tanstack/react-query'
 
 import { useEffect, useMemo } from 'react'
 import { useImmer } from 'use-immer'
 
-interface SingleTableProps {
+interface PageTableProps {
   type?: string
 }
 
@@ -51,44 +44,30 @@ type TableDataType = {
   totalShare?: number
 }
 //单表格
-const SingleTable = (props: SingleTableProps) => {
+const EtfTable = (props: PageTableProps) => {
   const [sort, setSort] = useImmer<{ column: UsStockColumn; order: 'asc' | 'desc' }>({
     column: 'total_mv',
     order: 'desc'
   })
-  const QueryFn = () => {
+  const queryFn = (page: number) => {
     const extend: StockExtend[] = ['basic_index', 'stock_before', 'stock_after', 'total_share', 'collect', 'financials']
-    if (!props.type || ['all', 'ixic', 'spx', 'dji', 'etf'].includes(props.type)) {
-      return getUsStocks({
-        type: props.type === 'all' ? undefined : props.type,
-        column: sort.column,
-        limit: 50,
-        page: 1,
-        order: sort.order,
-        extend
-      }).then(r => r.items)
-    }
-
-    if (['china'].includes(props.type)) {
-      return getChineseStocks(extend)
-    }
-
-    if (['yesterday_bear', 'yesterday_bull', 'short_amp_up', 'short_amp_d', 'release'].includes(props.type)) {
-      return getIndexRecommends(props.type, extend)
-    }
-
-    if (props.type === 'gap') {
-      return getIndexGapAmplitude(extend)
-    }
-
-    return getUsStocks({ type: props.type, column: 'total_mv', limit: 50, page: 1, order: 'desc', extend }).then(
-      r => r.items
-    )
+    return getUsStocks({
+      type: props.type === 'all' ? undefined : props.type,
+      column: sort.column,
+      limit: 50,
+      page,
+      order: sort.order,
+      extend
+    })
   }
 
-  const query = useQuery({
-    queryKey: ['stock-table-view', props.type, sort],
-    queryFn: () => QueryFn()
+  const query = useInfiniteQuery({
+    queryKey: [getUsStocks.cacheKey, props.type, sort],
+    queryFn: params => queryFn(params.pageParam),
+    initialPageParam: 1,
+    getNextPageParam: lastPage => {
+      return lastPage.last < lastPage.current ? undefined : lastPage.current + 1
+    }
   })
 
   const [list, { setList, onSort }] = useTableData<TableDataType>([], 'symbol')
@@ -96,12 +75,14 @@ const SingleTable = (props: SingleTableProps) => {
   useEffect(() => {
     const r: TableDataType[] = []
 
-    if (!query.data) {
+    if (!query.data?.pages) {
       setList([])
       return
     }
 
-    for (const item of query.data) {
+    const allPage = query.data.pages.flatMap(o => o.items)
+
+    for (const item of allPage) {
       // const [lastData, beforeData, afterData] = stockUtils.toStock(item)
       const lastData = stockUtils.toStock(item.stock, { extend: item.extend })
 
@@ -159,7 +140,7 @@ const SingleTable = (props: SingleTableProps) => {
     }
   }
 
-  useStockQuoteSubscribe(query.data?.map(o => o.symbol) ?? [])
+  useStockQuoteSubscribe(query.data?.pages.flatMap(o => o.items).map(item => item.symbol) ?? [])
 
   const columns = useMemo<JknRcTableProps<TableDataType>['columns']>(
     () => [
@@ -167,9 +148,9 @@ const SingleTable = (props: SingleTableProps) => {
         title: '名称代码',
         dataIndex: 'name',
         align: 'left',
-        width: '28.5%',
         sort: true,
-        render: (_, row) => <div className='flex items-center'>
+        width: '28.5%',
+        render: (_, row) => <div className='flex items-center h-[33px]'>
           <CollectStar checked={row.collect === 1} code={row.symbol} />
           <span className="mr-3"/>
           <StockView name={row.name} code={row.symbol as string} showName />
@@ -186,7 +167,6 @@ const SingleTable = (props: SingleTableProps) => {
             showColor={false}
             trading="intraDay"
             symbol={row.symbol}
-            zeroText="--"
             initValue={row.price}
             decimal={2}
             initDirection={row.isUp}
@@ -208,7 +188,6 @@ const SingleTable = (props: SingleTableProps) => {
             initValue={row.percent}
             initDirection={row.isUp}
             zeroText="0.00%"
-            nanText="--"
           />
         )
       },
@@ -231,26 +210,20 @@ const SingleTable = (props: SingleTableProps) => {
       {
         title: '总市值',
         dataIndex: 'total',
-        align: 'left',
-        width: '15%',
+        align: 'right',
         sort: true,
         render: (_, row) => (
+          <div className=''>
           <SubscribeSpan.MarketValueBlink
-            showColor={false}
             trading="intraDay"
             symbol={row.symbol}
             initValue={row.total}
             decimal={2}
             totalShare={row.totalShare ?? 0}
+            showColor={false}
           />
+          </div>
         )
-      },
-      {
-        title: '所属行业',
-        dataIndex: 'industry',
-        align: 'right',
-        sort: true,
-        render: (_, row) => <span className="text-[14px]">{row.industry}</span>
       },
     ],
     [list, query.refetch]
@@ -267,11 +240,13 @@ const SingleTable = (props: SingleTableProps) => {
       data={list}
       onSort={onSortChange}
       onRow={onRowClick}
-      infiniteScroll={{ enabled: true }}
+      infiniteScroll={{
+        enabled: true,
+        fetchMore: () => !query.isFetchingNextPage && query.fetchNextPage(),
+        hasMore: query.hasNextPage
+      }}
     />
-    // <JknTable.Virtualizer rowHeight={35.5} onEvent={onTableEvent} loading={query.isLoading} manualSorting rowKey="symbol" onSortingChange={onSortChange} columns={columns} data={data}>
-    // </JknTable.Virtualizer>
   )
 }
 
-export default SingleTable
+export default EtfTable

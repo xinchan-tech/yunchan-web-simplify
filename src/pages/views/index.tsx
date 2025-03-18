@@ -3,6 +3,7 @@ import { useState } from "react";
 import PageTable from "./components/page-table";
 import SectorTable from "./components/sector-table";
 import SingleTable from "./single-table";
+import EtfTable from "./components/etf-table";
 
 /**
  * 视图组件：展示不同类型的股票数据
@@ -12,7 +13,7 @@ const Views = () => {
 
   return (
     <div className="h-full w-full overflow-hidden flex justify-center bg-black">
-      <div className="h-full overflow-hidden flex flex-col min-w-[918px] w-[60%] max-w-[1400px] pt-[40px] stock-views">
+      <div className="h-full overflow-hidden flex flex-col w-[918px] pt-[40px] stock-views">
         <div className="flex items-center flex-shrink-0 pl-2">
           <CapsuleTabs activeKey={activeKey} onChange={setActiveKey}>
             <CapsuleTabs.Tab label="全部美股" value="all" />
@@ -33,10 +34,12 @@ const Views = () => {
         </div>
         <div className="flex-1 overflow-hidden">
           {!activeKey ||
-          ["all", "ixic", "spx", "dji", "etf"].includes(activeKey) ? (
+          ["all", "ixic", "spx", "dji"].includes(activeKey) ? (
             <PageTable type={activeKey} />
           ) : ["industry", "concept"].includes(activeKey) ? (
             <SectorTable type={activeKey === "industry" ? 1 : 2} />
+          ) : activeKey === 'etf' ? (
+            <EtfTable type={activeKey} />
           ) : (
             <SingleTable type={activeKey} />
           )}
