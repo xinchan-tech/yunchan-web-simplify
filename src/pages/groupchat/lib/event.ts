@@ -11,7 +11,7 @@ export const connectStatusListener: ConnectStatusListener = (status, reasonCode,
 }
 
 
-type ChatEvent = {
+export type ChatEvent = {
   mentionUser: {
     userInfo: {
       uid: string
@@ -22,3 +22,4 @@ type ChatEvent = {
 }
 
 export const chatEvent = mitt<ChatEvent>()
+

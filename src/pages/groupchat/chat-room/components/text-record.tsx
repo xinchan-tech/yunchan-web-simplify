@@ -1,17 +1,24 @@
 import { getChatNameAndAvatar } from "@/api"
-import { ChatMessageType } from "@/store"
+import { ChatMessageType, useStockList } from "@/store"
 import { useQueries, useQuery } from "@tanstack/react-query"
 import type { ReactNode } from "react"
-import { WKSDK, type Message } from "wukongimjssdk"
+import { type MessageText, WKSDK, type Message } from "wukongimjssdk"
+
+type TextSegment = {
+  text: string
+  type: 'text' | 'stock' | 'hyperlink',
+  startIndex: number
+  endIndex: number
+}
 
 interface TextRecordProps {
   message: Message,
-
 }
 
 export const TextRecord = (props: TextRecordProps) => {
   const { message } = props
-  const mentions = message.content.mentions?.uids as any[]
+  const content = message.content as MessageText
+  const mentions = content.mention?.uids
 
   const mentionUser = useQueries({
     queries: mentions?.map(mention => ({
@@ -37,14 +44,19 @@ export const TextRecord = (props: TextRecordProps) => {
 
   const getNormalText = (text: string) => {
     const segments: ReactNode[] = []
-
-    text.split('\n').forEach((line, index) => {
+    text.split('\n').forEach((line, index, arr) => {
       segments.push(
-        // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
-        <span key={line + index}>
-          {line}
-          <br />
-        </span>
+
+        <>
+          {/* biome-ignore lint/security/noDangerouslySetInnerHtml: <explanation> */}
+          {/* biome-ignore lint/security/noDangerouslySetInnerHtmlWithChildren: <explanation> */}
+          {/* biome-ignore lint/suspicious/noArrayIndexKey: <explanation> */}
+          <span className="chat-text-item" key={line + index} dangerouslySetInnerHTML={{ __html: stockCodeParse(hyperlinkParse(line)) }} >
+          </span>
+          {
+            index !== arr.length - 1 && <br />
+          }
+        </>
       )
     })
 
@@ -54,7 +66,7 @@ export const TextRecord = (props: TextRecordProps) => {
         if (name) {
           segments.push(
             // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
-            <span key={mention + index} className="bg-[#FFC440]">
+            <span key={mention + index} className="text-[#FFC440]">
               &nbsp;
               @{name}
             </span>
@@ -62,51 +74,44 @@ export const TextRecord = (props: TextRecordProps) => {
         }
       })
     }
+
+    return segments
   }
 
   return (
     <>
-      123
       {
-        message.remoteExtra.revoke ? (
-          <RevokeTextRecord revoker={message.remoteExtra.revoker} sender={message.fromUID} onReEdit={() => { }} />
-        ) : (
-          getNormalText(message.content.text)
-        )
+        getNormalText(message.content.text)
       }
     </>
   )
 }
 
-interface RevokeTextRecordProps {
-  revoker?: string
-  sender?: string
-  onReEdit: () => void
+/**
+ * 超链接解析
+ */
+const hyperlinkParse = (raw: string) => {
+  const reg = /((http|https):\/\/)?([\w-]+\.)+[\w-]+(\/[\w- ./?%&=]*)?/g
+
+
+  return raw.replace(reg, (url) => {
+    return `<a href="${url}" target="_blank">&nbsp;${url}&nbsp;</a>`
+  })
+
 }
 
-const RevokeTextRecord = ({ revoker, sender }: RevokeTextRecordProps) => {
-  const revokerInfo = useQuery({
-    queryKey: [getChatNameAndAvatar.cacheKey, revoker],
-    queryFn: () => getChatNameAndAvatar({ type: '1', id: revoker! })
-  })
-  const uid = WKSDK.shared().config.uid
-  return (
-    <div className="text-center">
-      {
-        revoker === uid ? (
-          <span>你 撤回了一条消息</span>
-        ) : (
-          <span>{revokerInfo.data?.name ?? ''} 撤回了一条消息</span>
-        )
-      }
+/**
+ * 股票代码解析
+ * $开头
+ */
+const stockCodeParse = (raw: string) => {
+  const reg = /\$[A-Za-z0-9]{1,6}/g
 
-      {
-        revoker === uid && sender === uid ? (
-          <span className="text-xs cursor-pointer text-primary ml-2">
-            重新编辑
-          </span>
-        ) : null
-      }
-    </div>
-  )
+  return raw.replace(reg, (code) => {
+    const stockMap = useStockList.getState().listMap
+    if (stockMap[code.slice(1)]) {
+      return `<span class="text-[#8CABFF] cursor-pointer">${code}</span>`
+    }
+    return code
+  })
 }

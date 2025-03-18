@@ -15,6 +15,7 @@ type JknInfiniteAreaInstance = {
   scrollTo: (position: number) => void
   scrollToBottom: () => void
   scrollToTop: () => void
+  isOnLimit: () => boolean
 }
 
 const getScrollViewId = (container: HTMLDivElement | null) => {
@@ -27,6 +28,7 @@ export const JknInfiniteArea = forwardRef<JknInfiniteAreaInstance, PropsWithChil
     const container = useRef<HTMLDivElement>(null)
     const fetchFn = useLatestRef(fetchMore)
     const hasMoreRef = useLatestRef(hasMore)
+    const isLimit = useRef(true)
 
     useEffect(() => {
       const loadMoreNode = container.current?.querySelector(`.jkn-infinite-load-${direction}[data-load-more="${uid}"]`)
@@ -34,8 +36,9 @@ export const JknInfiniteArea = forwardRef<JknInfiniteAreaInstance, PropsWithChil
       if (!loadMoreNode) return
 
       const observer = new IntersectionObserver(([entry]) => {
+        isLimit.current = entry.isIntersecting
+
         if (entry.isIntersecting && hasMoreRef.current) {
-          console.log(entry)
           fetchFn.current?.()
         }
       })
@@ -64,7 +67,8 @@ export const JknInfiniteArea = forwardRef<JknInfiniteAreaInstance, PropsWithChil
         container.current?.scrollTo({
           top: 0
         })
-      }
+      },
+      isOnLimit: () => isLimit.current
     }))
 
     return (

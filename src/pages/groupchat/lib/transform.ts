@@ -29,8 +29,8 @@ export const messageTransform = (msg: any) => {
   const decodedBuffer = Buffer.from(msg.payload, 'base64')
   const jsonStr = decodedBuffer.toString('utf8')
   const contentObj = JSON.parse(jsonStr)
-  const messageContent = WKSDK.shared().getMessageContent(contentObj.type)
 
+  const messageContent = WKSDK.shared().getMessageContent(contentObj.type)
   messageContent.decode(stringToUint8Array(JSON.stringify(contentObj)))
   message.content = messageContent
 

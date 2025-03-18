@@ -10,15 +10,16 @@ import WKSDK, {
   Message,
   MessageExtra,
   MessageStatus,
+  type MessageTask,
   type PullMode,
-  Setting,
-  Subscriber
+  Setting
 } from 'wukongimjssdk'
 import { chatManager } from '@/store'
 import { ChatChannelState } from '@/store/chat/types'
 import { stringToUint8Array } from '@/utils/string'
 import { messageTransform } from './transform'
-import { ChatSubscriber, SubscriberType } from "./modal"
+import { ChatSubscriber, type SubscriberType } from './modal'
+import { MediaMessageUploadTask } from './upload-task'
 
 /**
  * 请求频道资料数据源
@@ -112,10 +113,14 @@ const initSyncConversationsDataSource = () => {
     if (res) {
       res.forEach(v => {
         const conversation = new Conversation()
-
         conversation.channel = new Channel(v.channel_id, v.channel_type)
         conversation.unread = v.unread || 0
         conversation.timestamp = v.timestamp || 0
+        const channelInfo = new ChannelInfo()
+        channelInfo.title = v.channel_name
+        channelInfo.logo = v.channel_avatar
+        channelInfo.channel = conversation.channel
+        WKSDK.shared().channelManager.setChannleInfoForCache(channelInfo)
 
         if (v.recents.length) {
           const message = new Message()
@@ -199,10 +204,19 @@ const initSyncMessagesDataSource = () => {
   }
 }
 
+/**
+ * 文件上传数据源
+ */
+const initFileUploadDataSource = () => {
+  WKSDK.shared().config.provider.messageUploadTaskCallback = (message: Message): MessageTask => {
+    return new MediaMessageUploadTask(message)
+  }
+}
 
 export const initImDataSource = () => {
   initChannelInfoDataSource()
   initSyncSubscribersDataSource()
   initSyncConversationsDataSource()
   initSyncMessagesDataSource()
+  initFileUploadDataSource()
 }

@@ -97,12 +97,12 @@ export const ChannelMembers = ({ owner }: ChannelMembersProps) => {
 
 
   return (
-    <div className="chat-room-users h-full flex flex-col">
+    <div className="chat-room-users h-full flex flex-col overflow-hidden">
       <div className="chat-room-users-title p-2 flex items-center">
         <div className="text">群成员</div>
         <div className="text-xs text-tertiary bg-accent rounded-xl px-1 min-w-4 text-center ml-1">{members.data?.length}</div>
       </div>
-      <ScrollArea className="chat-room-users-list flex-1 overflow-y-auto">
+      <ScrollArea className="chat-room-users-list flex-1">
         {members.data?.map(member => (
           <ContextMenu key={member.uid}>
             <ContextMenuTrigger asChild>
@@ -115,8 +115,8 @@ export const ChannelMembers = ({ owner }: ChannelMembersProps) => {
               </div>
             </ContextMenuTrigger>
             <ContextMenuContent>
-              <ContextMenuItem>
-                <div className="text-xs text-secondary" onClick={() => onReplayUser(member)} onKeyDown={() => { }}>回复用户</div>
+              <ContextMenuItem onClick={() => onReplayUser(member)} >
+                <div className="text-xs text-secondary" onKeyDown={() => { }}>回复用户</div>
               </ContextMenuItem>
               {
                 hasManageAuth(member) && (

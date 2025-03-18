@@ -51,7 +51,7 @@ const ChatAvatar = (props: {
   return (
     <div className={cn('chat-avatar', size === 'sm' ? 'w-5 h-5' : 'w-10 h-10', className)}>
       {data?.avatar ? (
-        <img src={data.avatar} style={{ borderRadius: radius }} alt={data.name} />
+        <img src={data.avatar} style={{ borderRadius: radius }} alt={''} />
       ) : (
         <div
           className={cn('flex justify-center items-center', size === 'sm' ? 'text-sm' : 'text-2xl font-semibold')}

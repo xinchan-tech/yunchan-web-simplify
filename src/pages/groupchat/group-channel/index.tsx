@@ -146,7 +146,7 @@ const GroupChannel = (props: {
 
     if (action === ConversationAction.add || action === ConversationAction.update) {
       const _channels = queryClient.getQueryData<NonNullable<typeof conversations.data>>(_channelQueryKey)
-      console.log('updateRender', _channels, ['conversation-sync', channelSearchKeyword])
+      // console.log('updateRender', _channels, ['conversation-sync', channelSearchKeyword])
       if (_channels) {
 
         const _channel = _channels.find(c => c.channel.channelID === conversation.channel.channelID)

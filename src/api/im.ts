@@ -47,6 +47,8 @@ type SyncRecentConversationParams = {
 type SyncRecentConversationResult = {
   channel_id: string
   channel_type: number
+  channel_avatar: string
+  channel_name: string
   last_client_msg_no: string
   last_msg_seq: number
   offset_msg_seq: number

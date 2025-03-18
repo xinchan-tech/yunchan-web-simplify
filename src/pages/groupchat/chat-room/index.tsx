@@ -1,11 +1,12 @@
 import { getChannelDetail, getChatChannels, getChatNameAndAvatar } from "@/api"
+import { JknIcon } from "@/components"
 import { useChatStore } from "@/store"
 import { useQuery } from "@tanstack/react-query"
-import { ChannelInfo, ConnectStatus, WKSDK } from "wukongimjssdk"
-import { ChatMessageList } from "./message-list"
-import { JknIcon } from "@/components"
-import { ChatInput } from "./components/chat-input"
+import type { JSONContent } from "@tiptap/react"
+import { ChannelInfo, ConnectStatus, Mention, MessageImage, MessageText, WKSDK } from "wukongimjssdk"
 import { ChannelMembers } from "./channel-members"
+import { ChatInput } from "./components/chat-input"
+import { ChatMessageList } from "./message-list"
 
 
 export const ChatRoom = () => {
@@ -26,6 +27,41 @@ export const ChatRoom = () => {
     enabled: !!channel
   })
 
+  const onSubmit = (content?: JSONContent, mentions?: string[]) => {
+    if(!content?.content?.length) return
+    let _mentions = mentions
+    content.content.forEach(item => {
+      if(item.type === 'paragraph'){
+        const message = new MessageText(item.content?.map(i => i.type === 'hardBreak' ? '\n': i.text).join(''))
+        console.log(message)
+        if(_mentions?.length){
+          message.mention = new Mention()
+          message.mention.uids = _mentions
+
+          _mentions = []
+        }
+
+        WKSDK.shared().chatManager.send(message, channel!)
+      }else if(item.type === 'image'){
+        const message = new MessageImage() 
+        fetch(item.attrs!.src).then(res => res.blob()).then(blob => {
+          const type = blob.type
+          const name = `image.${type.split('/')[1]}`
+          const file = new File([blob], name, { type })
+          message.file = file
+          const image = new window.Image()
+          image.src = item.attrs!.src
+          image.onload = () => {
+            message.width = image.width
+            message.height = image.height
+            WKSDK.shared().chatManager.send(message, channel!)
+          }
+        })
+     
+      }
+    })
+  }
+
   return (
     <div className="w-full h-full overflow-hidden">
       <div className="chat-room-title h-10">
@@ -40,16 +76,16 @@ export const ChatRoom = () => {
           <div className="chat-room-message h-[calc(100%-180px)] overflow-hidden border-b-primary">
             <ChatMessageList />
           </div>
-          <ChatInput />
+          <ChatInput onSubmit={onSubmit} channelId={channel?.channelID} />
         </div>
-        <div className="chat-room-right w-[188px] border-l-primary">
-          <div className="chat-room-notice p-2 box-border h-[164px] border-b-primary flex flex-col">
+        <div className="chat-room-right w-[188px] border-l-primary flex flex-col">
+          <div className="chat-room-notice p-2 box-border h-[164px] flex-shrink-0 border-b-primary flex flex-col">
             <div className="chat-room-notice-title text-sm py-1">公告</div>
             <div className="chat-room-notice-content text-xs text-tertiary leading-5">
               {channelDetail.data?.notice}
             </div>
           </div>
-          <div className="chat-room-users">
+          <div className="chat-room-users flex-1 overflow-hidden">
             <ChannelMembers owner={channelDetail.data?.owner ?? ''} />
           </div>
         </div>

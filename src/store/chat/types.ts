@@ -12,7 +12,10 @@ export enum ChatMessageType {
   File = 5,
   Location = 6,
   Custom = 7,
-  Notification = 8
+  Notification = 8,
+
+
+  RevokeMessage = 99
 }
 
 export interface ChatConfig {

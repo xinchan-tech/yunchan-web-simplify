@@ -75,7 +75,6 @@
     --text-tertiary: 0 0% 40%;
     --table: var(--muted);
     --table-header: 220 5% 12%;
-
     --chat-background: #141414;
   }
 }
@@ -285,5 +284,23 @@ span[data-direction-sign="true"][data-direction="up"]::before {
     height: 4px;
     border-radius: 30px;
     background: currentColor;
+  }
+}
+
+.tiptap.ProseMirror {
+  p {
+    margin: 0;
+  }
+}
+
+.chat-text-item {
+
+  a,
+  a:link,
+  a:visited,
+  a:hover,
+  a:active {
+    text-decoration: none;
+    color: #8CABFF;
   }
 }
