@@ -98,7 +98,7 @@ const PublicizeItem = ({
   const publicizeName = publicize[1];
 
   return (
-    <div className="flex items-center  space-x-2 text-base pingfang-font">
+    <div className="flex items-center  space-x-2 text-base font-pingfang">
       <div className="flex items-center justify-center">
       {isDisabled ? (
         <CloseIcon />
@@ -234,7 +234,7 @@ export const BasicPage = (props: BasicPageProps) => {
                     <span className={cn("price-text", isActive && "text-[#F5E1CF]")}>
                       ${product[props.type as keyof typeof product]}
                     </span>
-                    <span className="text-base text-[#575757] pingfang-font">
+                    <span className="text-base text-[#575757] font-pingfang">
                       /{unit}
                     </span>
                   </div>
@@ -250,7 +250,7 @@ export const BasicPage = (props: BasicPageProps) => {
                     block
                     size="lg"
                     className={cn(
-                      "w-[240px] h-12 rounded-[8px] pingfang-font text-xl bg-transparent border-[#666666] border border-solid",
+                      "w-[240px] h-12 rounded-[8px] font-pingfang text-xl bg-transparent border-[#666666] border border-solid",
                       !isActive && "hover:bg-[#3a3a3a] "
                     )}
                     style={{
@@ -340,11 +340,6 @@ export const BasicPage = (props: BasicPageProps) => {
             background-clip: text;
             color: transparent;
             font-weight: 500;
-          }
-
-          /* 平方字体 */
-          .pingfang-font {
-            font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
           }
         `}
       </style>

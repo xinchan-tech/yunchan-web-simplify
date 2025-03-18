@@ -47,7 +47,7 @@ export const IntroPage = (props: IntroPageProps) => {
   return (
     <>
       <div className='w-[1150px] mb-12'>
-        <div className="grid text-[#808080] pingfang-font" style={{ 
+        <div className="grid text-[#808080] font-pingfang" style={{ 
           gridTemplateColumns: `minmax(240px, 1fr) repeat(${columnCount - 1}, 180px)`,
           gap: '20px'
         }}>
@@ -56,7 +56,7 @@ export const IntroPage = (props: IntroPageProps) => {
             <React.Fragment key={category.id}>
               {/* 分类标题行 */}
               {category.title !== ' ' && (
-                <div className="col-span-full rounded-sm my-5 bg-[#1B1B1B] text-[#DBDBDB] font-bold pingfang-font py-[14px] px-[10px]">
+                <div className="col-span-full rounded-sm my-5 bg-[#1B1B1B] text-[#DBDBDB] font-bold font-pingfang py-[14px] px-[10px]">
                   {category.title}
                 </div>
               )}
@@ -66,7 +66,7 @@ export const IntroPage = (props: IntroPageProps) => {
                 <React.Fragment key={item.title}>
                   <div className="contents group">
                     {cate_index === 0 ? (
-                      <div className="h-10 text-[28px] text-[#DBDBDB] font-bold pingfang-font flex items-center">
+                      <div className="h-10 text-[28px] text-[#DBDBDB] font-bold font-pingfang flex items-center">
                         方案比较
                       </div>
                     ): (
@@ -99,18 +99,6 @@ export const IntroPage = (props: IntroPageProps) => {
           ))}
         </div>
       </div>
-      
-      <style jsx>
-      {`
-        /* 导入 Heebo 字体 */
-        @import url("https://fonts.googleapis.com/css2?family=Heebo:wght@700&display=swap");
-
-        /* 平方字体 */
-        .pingfang-font {
-          font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
-        }
-      `}
-    </style>
   </>
   )
 }
