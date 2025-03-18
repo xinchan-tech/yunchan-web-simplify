@@ -16,11 +16,10 @@ import {
   RadioGroupItem,
   ScrollArea,
   Skeleton,
-  ToggleGroup,
-  ToggleGroupItem,
   useFormModal,
   useModal
 } from '@/components'
+import { Switch } from '@/components/ui/switch'
 import { useToast, useZForm } from '@/hooks'
 import { useToken } from '@/store'
 import { appEvent } from '@/utils/event'
@@ -31,7 +30,7 @@ import to from 'await-to-js'
 import copy from 'copy-to-clipboard'
 import QRCode from 'qrcode'
 import qs from 'qs'
-import { type CSSProperties, useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useFormContext } from 'react-hook-form'
 import { z } from 'zod'
 import { BasicPage } from './basic-page'
@@ -39,17 +38,12 @@ import { GroupPage } from './group-page'
 import { IncrementPage } from './increment-page'
 import { IntroPage } from './intro-page'
 
-const subscribeTypes = [
-  { name: '按月订阅', type: 'model_month' },
-  { name: '按年订阅', type: 'model_year' }
-]
-
 const versions = [
   // { name: '旗舰达人', value: 'basic' },
   // { name: '量化精英', value: 'plus' },
   // { name: '聊天社群', value: 'group' },
   { name: '特色软件', value: 'packages' },
-  { name: '增值包', value: 'increment' }
+  // { name: '增值包', value: 'increment' }
 ]
 
 type Version = 'group' | 'increment' | 'packages'
@@ -141,45 +135,47 @@ const MallPage = () => {
   }
 
   return (
-    <div className="flex flex-col items-center h-full overflow-auto w-full pb-10 box-border">
-      <ToggleGroup
-        type="single"
-        variant="outline"
-        value={version}
-        onValueChange={(v: typeof version) => setVersion(v)}
-        className="my-12 gap-0"
-      >
-        {versions.map((v, index) => (
-          <ToggleGroupItem
+    <div className="flex flex-col items-center h-full overflow-auto w-full box-border bg-[#0B0404]">
+      <div className="text-center text-[64px] font-bold mt-10">美股软件 服务方案</div>
+      <div className="flex items-center justify-center mt-10 rounded-[6px] border border-solid p-[2px]">
+        {versions.map((v) => (
+          <button
             key={v.value}
             className={cn(
-              'w-32 rounded-none',
-              index === 0 && 'rounded-l-3xl',
-              index === versions.length - 1 && 'rounded-r-3xl'
+              'w-32 h-10 text-center border border-solid text-[#DBDBDB] transition-all cursor-pointer',
+              v.value === version 
+                ? 'rounded-sm bg-[#1A1A1A] border-[#1A1A1A]'
+                : 'bg-transparent border-none'
             )}
-            value={v.value}
-            title={v.name}
+            onClick={() => setVersion(v.value as Version)}
           >
             {v.name}
-          </ToggleGroupItem>
+          </button>
         ))}
-      </ToggleGroup>
-      <div className="text-center text-4xl font-bold">美股会员服务-投资的方案</div>
-      <div className="my-8">
-        <RadioGroup className="flex space-x-8" value={subscribeType} onValueChange={value => setSubscribeType(value)}>
-          {subscribeTypes.map(st => (
-            <div className="flex items-center space-x-2" key={st.type}>
-              <RadioGroupItem
-                value={st.type}
-                id={`mall-product-${st.type}`}
-                style={{ '--foreground': 'var(--primary)' } as CSSProperties}
-              />
-              <Label htmlFor={`mall-product-${st.type}`}>{st.name}</Label>
-            </div>
-          ))}
-        </RadioGroup>
       </div>
-      <div>
+      <div className="my-10">
+        <div className="flex items-center space-x-[10px]">
+          <span className={cn(
+            "text-sm",
+            subscribeType === 'model_month' ? 'text-white font-medium' : 'text-[#DBDBDB]'
+          )}>
+            月
+          </span>
+          <Switch 
+            checked={subscribeType === 'model_year'} 
+            onCheckedChange={(checked) => {
+              setSubscribeType(checked ? 'model_year' : 'model_month');
+            }}
+          />
+          <span className={cn(
+            "text-sm",
+            subscribeType === 'model_year' ? 'text-white font-medium' : 'text-[#DBDBDB]'
+          )}>
+            年
+          </span>
+        </div>
+      </div>
+      <div className="mt-5">
         {{
           // basic: (
           //   <BasicPage
@@ -217,7 +213,7 @@ const MallPage = () => {
         }[version] ?? null}
       </div>
       {['basic', 'plus', 'increment', 'packages'].includes(version) ? (
-        <div className="mt-8">
+        <div className="mt-16">
           <IntroPage intro={products.data?.intro ?? []} />
         </div>
       ) : null}
