@@ -1180,6 +1180,22 @@ type GetStockEconomicDetailResult = {
 }
 
 /**
+ * 日历事件（财经日历）按时间汇总
+ */
+export const getCalendarEvents = () => {
+  return request.get<GetCalendarEventsResult[]>('/stock-svc/calendar/events').then(r => r.data)
+}
+getCalendarEvents.cacheKey = 'calendar:events'
+
+type GetCalendarEventsResult = {
+  name: string,
+  values: {
+    title: string
+    datetime: string
+  }[]
+}
+
+/**
  * 经济数据详情
  */
 export const getStockEconomicDetail = (key: string) => {
