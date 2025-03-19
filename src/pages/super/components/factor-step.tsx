@@ -1,90 +1,98 @@
-import type { StockCategory } from '@/api'
-import { JknIcon, ToggleGroup, ToggleGroupItem } from '@/components'
-import { useAuthorized } from '@/hooks'
-import { appEvent } from '@/utils/event'
-import { useMount, useUnmount } from 'ahooks'
-import { type CSSProperties, useContext, useRef, useState } from 'react'
-import { SuperStockContext } from '../ctx'
+import type { StockCategory } from "@/api";
+import { JknIcon, ToggleGroup, ToggleGroupItem } from "@/components";
+import { useAuthorized } from "@/hooks";
+import { appEvent } from "@/utils/event";
+import { useMount, useUnmount } from "ahooks";
+import { useContext, useRef, useState } from "react";
+import { SuperStockContext } from "../ctx";
+import { cn } from "@/utils/style";
 
 const FactorStep = () => {
-  const ctx = useContext(SuperStockContext)
-  const data = ctx.data?.technology?.children?.factor.children as unknown as StockCategory[]
+  const ctx = useContext(SuperStockContext);
+  const data = ctx.data?.technology?.children?.factor
+    .children as unknown as StockCategory[];
 
-  const [selection, setSelection] = useState<string[]>([])
-  const result = useRef<string[]>([])
+  const [selection, setSelection] = useState<string[]>([]);
+  const result = useRef<string[]>([]);
   useMount(() => {
     ctx.register(
-      'category_ids_ext',
+      "category_ids_ext",
       10,
       () => [...result.current],
       () => true
-    )
-  })
+    );
+  });
 
   useUnmount(() => {
-    ctx.unregister('category_ids_ext')
-    result.current = []
-    setSelection([])
-  })
+    ctx.unregister("category_ids_ext");
+    result.current = [];
+    setSelection([]);
+  });
 
   //TODO 临时方案 待优化
   useMount(() => {
-    appEvent.on('cleanPickerStockFactor', () => {
-      result.current = []
-      setSelection([])
-    })
-  })
+    appEvent.on("cleanPickerStockFactor", () => {
+      result.current = [];
+      setSelection([]);
+    });
+  });
 
   useUnmount(() => {
-    appEvent.off('cleanPickerStockFactor')
-  })
+    appEvent.off("cleanPickerStockFactor");
+  });
 
   const _onValueChange = (e: string[]) => {
-    appEvent.emit('cleanPickerStockMethod')
+    appEvent.emit("cleanPickerStockMethod");
 
-    result.current = e
-    setSelection(e)
-  }
+    result.current = e;
+    setSelection(e);
+  };
 
-  const [_, toastNotAuth] = useAuthorized()
+  const [_, toastNotAuth] = useAuthorized();
 
   return (
-    <div className="min-h-24 flex border-0 border-b border-solid border-background items-stretch">
-      <div className="w-36 px-4 flex items-center flex-shrink-0  border-t-0 border border-solid border-background">
-        第四步：叠加策略
+    <div className="mt-8 w-full">
+      <div className="w-full text-[18px] text-[#B8B8B8] font-[500]">
+        叠加策略
       </div>
-      <div className="flex-1 flex items-stretch py-2">
-        <div className="flex-shrink-0 px-4 flex items-center text-sm text-stock-up">
-          <JknIcon name="ic_price_up_green" />
-          底部信号
+      <div className="w-full pt-5 pb-8 flex flex-col">
+        <div className="flex flex-row mt-5">
+          <div className="w-[132px] text-base font-[500] flex-shrink-0 flex-grow-0 text-[#B8B8B8]">
+            <div className="flex flex-row">底部策略</div>
+          </div>
+          <ToggleGroup
+            className="flex-grow grid grid-cols-2 gap-[10px]"
+            type="multiple"
+            value={selection}
+            onValueChange={_onValueChange}
+          >
+            {data?.map((child) =>
+              child.name !== "" ? (
+                <div
+                  key={child.id}
+                  onClick={() => !child.authorized && toastNotAuth()}
+                  onKeyUp={() => {}}
+                >
+                  <ToggleGroupItem
+                    disabled={!child.authorized}
+                    value={child.id}
+                    className={cn(
+                      "w-full py-5 px-[14px] rounded-sm border border-[#2E2E2E] bg-transparent relative",
+                      "data-[state=on]:bg-transparent",
+                      "data-[state=on]:text-[#DBDBDB] data-[state=on]:border-[#DBDBDB]",
+                    )}
+                  >
+                    {!child.authorized && (<JknIcon name="ic_lock" className="absolute right-0 top-0 w-3 h-3 rounded-none" />)}
+                    {child.name}
+                  </ToggleGroupItem>
+                </div>
+              ) : null
+            )}
+          </ToggleGroup>
         </div>
-        <ToggleGroup
-          style={
-            {
-              '--toggle-active-bg': 'hsl(var(--stock-up-color))'
-            } as CSSProperties
-          }
-          type="multiple"
-          value={selection}
-          className="flex-1 flex"
-          onValueChange={_onValueChange}
-        >
-          {data?.map(child =>
-            child.name !== '' ? (
-              <div key={child.id} onClick={() => !child.authorized && toastNotAuth()} onKeyUp={() => {}}>
-                <ToggleGroupItem disabled={!child.authorized} className="w-36 h-full relative" value={child.id}>
-                  {!child.authorized && (
-                    <JknIcon name="ic_lock" className="absolute right-0 top-0 w-3 h-3 rounded-none" />
-                  )}
-                  {child.name}
-                </ToggleGroupItem>
-              </div>
-            ) : null
-          )}
-        </ToggleGroup>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default FactorStep
+export default FactorStep;

@@ -6,6 +6,28 @@ import { useMount, useUnmount } from 'ahooks'
 import { type CSSProperties, useContext, useEffect, useRef, useState } from 'react'
 import { SuperStockContext } from '../ctx'
 
+/**
+ * 自定义多头策略图标组件
+ */
+export const BullArrow = () => {
+  return (
+    <svg width="10" height="16" viewBox="0 0 10 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M5.35355 2.64645C5.15829 2.45118 4.84171 2.45118 4.64645 2.64645L1.46447 5.82843C1.2692 6.02369 1.2692 6.34027 1.46447 6.53553C1.65973 6.7308 1.97631 6.7308 2.17157 6.53553L5 3.70711L7.82843 6.53553C8.02369 6.7308 8.34027 6.7308 8.53553 6.53553C8.7308 6.34027 8.7308 6.02369 8.53553 5.82843L5.35355 2.64645ZM4.5 13C4.5 13.2761 4.72386 13.5 5 13.5C5.27614 13.5 5.5 13.2761 5.5 13L4.5 13ZM4.5 3L4.5 13L5.5 13L5.5 3L4.5 3Z" fill="#22AB94"/>
+    </svg>
+  );
+};
+
+/**
+ * 自定义空头策略图标组件
+ */
+export const BearArrow = () => {
+  return (
+    <svg width="10" height="16" viewBox="0 0 10 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M4.64645 13.3536C4.84171 13.5488 5.15829 13.5488 5.35355 13.3536L8.53553 10.1716C8.7308 9.97631 8.7308 9.65973 8.53553 9.46447C8.34027 9.2692 8.02369 9.2692 7.82843 9.46447L5 12.2929L2.17157 9.46447C1.97631 9.2692 1.65973 9.2692 1.46447 9.46447C1.2692 9.65973 1.2692 9.97631 1.46447 10.1716L4.64645 13.3536ZM5.5 3C5.5 2.72386 5.27614 2.5 5 2.5C4.72386 2.5 4.5 2.72386 4.5 3L5.5 3ZM5.5 13L5.5 3L4.5 3L4.5 13L5.5 13Z" fill="#F23645"/>
+    </svg>
+  );
+};
+
 const MethodStep = () => {
   const ctx = useContext(SuperStockContext)
   const [method, setMethod] = useState<StockCategory>()
@@ -84,72 +106,53 @@ const MethodStep = () => {
   })
 
   return (
-    <div className="min-h-64 flex  border-0 border-b border-solid border-background items-stretch">
-      <div className="w-36 px-4 flex items-center flex-shrink-0 border border-t-0 border-solid border-background">
-        第三步：选股方式
+    <div className="mt-8 w-full">
+      <div className="w-full pb-5 text-[18px] text-[#B8B8B8] font-[500]">
+        选股方式
       </div>
-      <div className="flex-1 flex flex-col">
-        <div className="py-3 ml-3">
-          {data?.map(item => (
-            <div
-              key={item.id}
-              className={cn(
-                'h-10 leading-10 w-40 mb-2 text-center rounded-sm text-secondary transition-all cursor-pointer bg-accent relative',
-                method?.id === item.id && 'bg-primary text-foreground'
-              )}
-              onClick={() => setMethod(item)}
-              onKeyDown={() => {}}
+      <div className="w-full pt-5 pb-8 flex flex-col border-x-0 border-y border-solid border-[#2E2E2E]">
+        {children.map(item => (
+          <div className='flex flex-row mt-5'>
+            <div className='w-[132px] text-base font-[500] flex-shrink-0 flex-grow-0'
+              style={{
+                color: item.name === '多头策略' ? '#22AB94' : '#D61B5F'
+              }}
             >
-              {item.name}
-              {value.length > 0 ? (
-                <span className="absolute -right-2 -top-2 w-4 h-4 leading-4 rounded-full text-xs text-white bg-[#ff4757]">
-                  {value.length}
-                </span>
-              ) : null}
-            </div>
-          ))}
-        </div>
-        <div className="py-3 border-0 border-t border-solid border-background">
-          {children.map(item => (
-            <div key={item.id} className="flex mb-4">
-              <div
-                className="flex-shrink-0 px-4 flex items-center text-sm"
-                style={{
-                  color: item.name === '多头策略' ? 'hsl(var(--stock-up-color))' : 'hsl(var(--stock-down-color))'
-                }}
-              >
-                <JknIcon name={item.name === '多头策略' ? 'ic_price_up_green' : 'ic_price_down_red'} />
-                {item.name}
+              <div className='flex flex-row'>
+                <span>{item.name}</span>
+                <span className='mt-1'>{item.name === '多头策略' ? <BullArrow /> : <BearArrow />}</span>
               </div>
-              <ToggleGroup
-                value={value}
-                onValueChange={v => _onValueChange(v, item.id)}
-                style={
-                  {
-                    '--toggle-active-bg':
-                      item.name === '多头策略' ? 'hsl(var(--stock-up-color))' : 'hsl(var(--stock-down-color))'
-                  } as CSSProperties
-                }
-                type="multiple"
-                className="flex-1 flex"
-              >
-                {(item.children as unknown as StockCategory[])?.map(child =>
-                  child.name !== '' ? (
-                    <ToggleGroupItem
-                      disabled={!child.authorized}
-                      className="w-36 relative"
-                      key={child.id}
-                      value={child.id}
-                    >
-                      {!child.authorized && <JknIcon name="ic_lock" className="absolute right-0 top-0 w-3 h-3" />}
-                      {child.name}
-                    </ToggleGroupItem>
-                  ) : null
-                )}
-              </ToggleGroup>
             </div>
-          ))}
-        </div>
+            <ToggleGroup
+              className="flex-grow grid grid-cols-6 gap-[10px]"
+              type="multiple"
+              hoverColor='#2E2E2E'
+              value={value}
+              onValueChange={v => _onValueChange(v, item.id)}
+            >
+              {(item.children as unknown as StockCategory[])?.map(child =>
+                child.name !== '' ? (
+                  <ToggleGroupItem
+                    disabled={!child.authorized}
+                    key={child.id}
+                    value={child.id}
+                    data-item-name={item.name}
+                    className={cn(
+                      "w-full py-5 px-[14px] rounded-sm border border-[#2E2E2E] bg-transparent relative",
+                      "data-[state=on]:bg-transparent",
+                      "data-[state=on]:text-[#22AB94] data-[state=on]:border-[#22AB94]",
+                      "data-[state=on]:[&:not([data-item-name='多头策略'])]:text-[#D61B5F]",
+                      "data-[state=on]:[&:not([data-item-name='多头策略'])]:border-[#D61B5F]"
+                    )}
+                  >
+                    {!child.authorized && <JknIcon name="ic_lock" className="absolute right-0 top-0 w-3 h-3" />}
+                    {child.name}
+                  </ToggleGroupItem>
+                ) : null
+              )}
+            </ToggleGroup>
+          </div>
+        ))}
       </div>
     </div>
   )
