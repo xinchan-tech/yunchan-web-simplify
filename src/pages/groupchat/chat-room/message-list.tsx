@@ -1,18 +1,19 @@
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger, JknInfiniteArea } from "@/components"
-import { ChatMessageType, useChatStore } from "@/store"
+import { ChatCmdType, chatConstants, ChatMessageType, useChatStore } from "@/store"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
-import WKSDK, { CMDContent, ConnectStatus, Message, PullMode } from "wukongimjssdk"
+import WKSDK, { type CMDContent, ConnectStatus, type Message, PullMode, type Reply, Subscriber } from "wukongimjssdk"
 import { TextRecord } from "./components/text-record"
 import ChatAvatar from "../components/chat-avatar"
-import { useEffect, useRef, type ComponentRef, type PropsWithChildren } from "react"
+import { useCallback, useEffect, useRef, useState, type ComponentRef, type PropsWithChildren } from "react"
 import { getTimeFormatStr } from "../chat-utils"
-import { useMessageListener, useMessageRevokeListener } from "../lib/hooks"
+import { useCMDListener, useMessageListener, useSubscribesListener } from "../lib/hooks"
 import { useUpdate } from "ahooks"
 import { RevokeRecord } from "./components/revoke-record"
 import { ImageRecord } from "./components/image-record"
-import { ChatSubscriber } from "../lib/modal"
+import type { ChatSubscriber } from "../lib/model"
 import { chatEvent } from "../lib/event"
 import { revokeMessage } from "@/api"
+import { fetchUserInChannel, isChannelManager, isChannelOwner } from "../lib/utils"
 
 export const ChatMessageList = () => {
   const channel = useChatStore(state => state.lastChannel)
@@ -26,9 +27,30 @@ export const ChatMessageList = () => {
       return WKSDK.shared().chatManager.syncMessages(channel!, {
         startMessageSeq: 0,
         endMessageSeq: 0,
-        limit: 40,
+        limit: 400,
         pullMode: PullMode.Down,
       })
+    },
+    select: (data) => {
+      const revokeMessage: Message[] = []
+      const normalMessage: Message[] = []
+
+      data.forEach((msg) => {
+        if (msg.contentType === ChatMessageType.Cmd && msg.content.cmd === ChatCmdType.MessageRevoke) {
+          revokeMessage.push(msg)
+        } else {
+          normalMessage.push(msg)
+        }
+      })
+
+      revokeMessage.forEach(item => {
+        const index = normalMessage.findIndex(msg => msg.messageID === item.content.param.message_id)
+        if (index !== -1) {
+          normalMessage.splice(index, 1, item)
+        }
+      })
+
+      return normalMessage
     },
     enabled: !!channel && state === ConnectStatus.Connected,
   })
@@ -45,14 +67,19 @@ export const ChatMessageList = () => {
     if (message.channel.channelID !== channel?.channelID) return
 
     const isOnBottom = scrollRef.current?.isOnLimit()
-
-    queryClient.setQueryData<typeof messages.data>(['syncMessages', channel?.channelID], (oldData) => {
-      if (!oldData) return
-      return [
-        ...oldData,
-        message
-      ]
+    console.log(message)
+    fetchUserInChannel(message.channel, message.fromUID).then(r => {
+      queryClient.setQueryData<typeof messages.data>(['syncMessages', channel?.channelID], (oldData) => {
+        if (!oldData) return
+        message.remoteExtra.extra.fromName = r.name
+        message.remoteExtra.extra.fromAvatar = r.avatar
+        return [
+          ...oldData,
+          message
+        ]
+      })
     })
+
 
     if (isOnBottom) {
       setTimeout(() => {
@@ -61,22 +88,40 @@ export const ChatMessageList = () => {
     }
   })
 
-  useMessageRevokeListener((cmd) => {
+  useCMDListener((cmd) => {
+    const content = cmd.content as CMDContent
+    if (content.cmd !== ChatCmdType.MessageRevoke) return
     const message = messages.data?.find(msg => msg.messageID === cmd.content.param.message_id)
     if (!message) return
 
     queryClient.setQueryData<typeof messages.data>(['syncMessages', channel?.channelID], (oldData) => {
       if (!oldData) return
-      return oldData.map(msg => {
-        if (msg.messageID === message.messageID) {
-          return cmd
-        }
-        return msg
-      })
+      return [
+        ...oldData,
+        cmd
+      ]
     })
 
     update()
   })
+
+  useEffect(() => {
+    const node = document.querySelector('.chat-message-scroll-list')
+    const stockSpanClick = (e: any) => {
+      const target = e.target as HTMLSpanElement
+      if (target.tagName === 'SPAN' && target.getAttribute('data-stock-code')) {
+        const channel = new BroadcastChannel(chatConstants.broadcastChannelId)
+        channel.postMessage({ type: 'chat_stock_jump', payload: target.getAttribute('data-stock-code') })
+      }
+    }
+
+    node?.addEventListener('click', stockSpanClick)
+
+    return () => {
+      node?.removeEventListener('click', stockSpanClick)
+    }
+  }, [])
+
 
   return (
     <JknInfiniteArea className="w-full h-full chat-message-scroll-list" ref={scrollRef}>
@@ -84,7 +129,7 @@ export const ChatMessageList = () => {
         <ChatMessageRow key={msg.messageID} message={msg}>
           {{
             [ChatMessageType.Text]: <TextRecord message={msg} />,
-            [ChatMessageType.RevokeMessage]: <RevokeRecord onReEdit={() => { }} />,
+            [ChatMessageType.Cmd]: <RevokeRecord onReEdit={() => { }} />,
             [ChatMessageType.Image]: <ImageRecord message={msg} />,
           }[msg.contentType] ?? null}
         </ChatMessageRow>
@@ -112,7 +157,7 @@ const ChatMessageRow = ({ message, children }: PropsWithChildren<ChatMessageRowP
 
   const isSelfMessage = message.fromUID === uid
 
-  if (message.contentType === ChatMessageType.RevokeMessage) {
+  if (message.contentType === ChatMessageType.Cmd) {
     return (
       <div className="py-1.5 text-xs text-tertiary text-center">
         {children}
@@ -122,82 +167,124 @@ const ChatMessageRow = ({ message, children }: PropsWithChildren<ChatMessageRowP
 
   if (isSelfMessage) {
     return (
-    <div className="py-3 px-4 flex justify-end items-start box-border">
-      <ChatMessageRowMenu message={message}>
+      <div className="py-3 px-4 flex justify-end items-start box-border">
         <div className="mr-2.5 flex flex-col items-end overflow-hidden" style={{ maxWidth: '50%' }}>
-          <div>
+          <div className="flex items-start mb-1.5">
             <span className="text-tertiary text-xs">&nbsp;{getTimeFormatStr(message.timestamp * 1000)}</span>
           </div>
-          <div className="bg-[#586EAC] rounded p-2.5 text-sm min-h-8 box-border w-full overflow-hidden whitespace-normal break-words leading-tight">
-            {children}
-          </div>
+          <ChatMessageRowMenu message={message} fromName={fromName}>
+            <div className="bg-[#586EAC] rounded p-2.5 text-sm min-h-8 box-border max-w-full overflow-hidden whitespace-normal break-words leading-tight">
+              {children}
+            </div>
+          </ChatMessageRowMenu>
+          {
+            message.content.reply as Reply ? <ReplyMessage reply={message.content.reply as Reply} /> : null
+          }
         </div>
-        </ChatMessageRowMenu>
-        <ChatAvatar data={{ name: fromName, avatar: fromAvatar, uid: message.fromUID }} radius="4" />
+
+        <ChatAvatar.User shape="square" src={fromAvatar} uid={message.fromUID} />
       </div>
     )
   }
 
   return (
-    <div className="py-3 px-4 flex items-start box-border" style={{ maxWidth: '50%' }}>
-      <ChatAvatar data={{ name: fromName, avatar: fromAvatar, uid: message.fromUID }} />
-      <ChatMessageRowMenu message={message}>
-        <div className="ml-2.5 flex flex-col items-start" style={{ maxWidth: '50%' }}>
-          <div>
-            <span className="text-sm">{fromName}</span>
-            <span className="text-tertiary text-xs">&nbsp;{getTimeFormatStr(message.timestamp * 1000)}</span>
-          </div>
-          <div className="bg-[#2C2C2C] rounded p-2.5 text-sm min-h-8 box-border w-full overflow-hidden whitespace-normal break-words leading-tight">
+    <div className="py-3 px-4 flex items-start box-border">
+      <ChatAvatar.User shape="square" src={fromAvatar} uid={message.fromUID} />
+      <div className="ml-2.5 flex flex-col items-start" style={{ maxWidth: '50%' }}>
+        <div className="text-sm leading-[14px] flex items-start mb-1.5">
+          <span >{fromName}</span>
+          <span className="text-tertiary text-xs">&nbsp;{getTimeFormatStr(message.timestamp * 1000)}</span>
+        </div>
+        <ChatMessageRowMenu message={message} fromName={fromName}>
+          <div className="bg-[#2C2C2C] rounded p-2.5 text-sm min-h-8 box-border max-w-full overflow-hidden whitespace-normal break-words leading-tight">
             {children}
           </div>
-        </div>
-      </ChatMessageRowMenu>
+        </ChatMessageRowMenu>
+        {
+
+        }
+        {
+          message.content.reply as Reply ? <ReplyMessage reply={message.content.reply as Reply} /> : null
+        }
+      </div>
+
     </div>
   )
 }
 
 interface ChatMessageRowMenuProps {
   message: Message
+  fromName: string
+  subscriber?: Subscriber
 }
 
 const ChatMessageRowMenu = (props: PropsWithChildren<ChatMessageRowMenuProps>) => {
   const { message, children } = props
+  const [subscriber, setSubscriber] = useState<Nullable<Subscriber>>(WKSDK.shared().channelManager.getSubscribeOfMe(message.channel))
 
-  const subscriber = WKSDK.shared().channelManager.getSubscribeOfMe(message.channel) as Undefinable<ChatSubscriber>
-
-  const onCopyMessage = () => {
-    chatEvent.emit('copyMessage', {channelId: message.channel.channelID, message})
-  }
+  useSubscribesListener(message.channel, useCallback(() => {
+    const s = WKSDK.shared().channelManager.getSubscribeOfMe(message.channel)
+    setSubscriber(s)
+  }, [message.channel]))
+  // const onCopyMessage = () => {
+  //   chatEvent.emit('copyMessage', { channelId: message.channel.channelID, message })
+  // }
 
   const onRevokeMessage = () => {
     revokeMessage({ msg_id: message.messageID })
   }
 
   const onReplyMessage = () => {
-    chatEvent.emit('replyMessage', {channelId: message.channel.channelID, message})
+    chatEvent.emit('replyMessage', { channelId: message.channel.channelID, message, fromName: props.fromName })
+  }
+
+  const onMentions = () => {
+    chatEvent.emit('mentionUser', {
+      userInfo: {
+        uid: message.fromUID,
+        name: props.fromName
+      },
+      channelId: message.channel.channelID
+    })
   }
 
   return (
     <ContextMenu>
       <ContextMenuTrigger asChild>
-       {children}
+        {children}
       </ContextMenuTrigger>
       <ContextMenuContent>
-        <ContextMenuItem onClick={onCopyMessage}>
-          <span>复制</span>
-        </ContextMenuItem>
-        <ContextMenuItem onClick={onReplyMessage}>
+        <ContextMenuItem onClick={onMentions} >
           <span>回复</span>
         </ContextMenuItem>
+        <ContextMenuItem onClick={onReplyMessage}>
+          <span>引用</span>
+        </ContextMenuItem>
         {
-          subscriber?.isChannelManager || subscriber?.isChannelOwner || subscriber?.uid === message.fromUID ? (
+          isChannelManager(subscriber!) || isChannelOwner(subscriber!) || subscriber?.uid === message.fromUID ? (
             <ContextMenuItem onClick={onRevokeMessage}>
               <span>撤回</span>
             </ContextMenuItem>
-          ): null
+          ) : null
         }
-        
       </ContextMenuContent>
     </ContextMenu>
+  )
+}
+
+interface ReplyMessageProps {
+  reply?: Reply
+}
+
+const ReplyMessage = ({ reply }: ReplyMessageProps) => {
+  return (
+    <div className="bg-[#1c1d1f] p-1 box-border mt-1 rounded text-xs flex items-start max-w-full">
+      <div>{reply?.fromName}: &nbsp;</div>
+      {reply?.content?.contentType ? {
+        [ChatMessageType.Text]: <div className="max-w-48">{(reply?.content as any).text}</div>,
+        [ChatMessageType.Image]: <div className="w-48 h-48"><img className="w-full h-full" src={(reply?.content as any).remoteUrl} alt="" /></div>,
+      }[reply?.content?.contentType] ?? null : null
+      }
+    </div>
   )
 }

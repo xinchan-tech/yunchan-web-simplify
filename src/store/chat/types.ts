@@ -15,7 +15,12 @@ export enum ChatMessageType {
   Notification = 8,
 
 
-  RevokeMessage = 99
+  Cmd = 99
+}
+
+export enum ChatCmdType {
+  MessageRevoke = 'messageRevoke',
+  ChannelUpdate = 'channelUpdate',
 }
 
 export interface ChatConfig {
@@ -33,9 +38,6 @@ export interface ChatStore {
   state: ConnectStatus
   config: ChatConfig
   lastChannel?: Channel
+  lastChannelReady: boolean
   usersExpanded: boolean
-  channel: {
-    state: ChatChannelState
-    data: Conversation[]
-  }
 }

@@ -1,6 +1,6 @@
 import { chatManager } from '@/store'
 import mitt from "mitt"
-import { ConnectStatus, type Message, type ConnectStatusListener } from 'wukongimjssdk'
+import { ConnectStatus, type ConnectStatusListener, type Message, type Subscriber } from 'wukongimjssdk'
 
 export const connectStatusListener: ConnectStatusListener = (status, reasonCode, connectInfo) => {
   chatManager.setState(status)
@@ -26,10 +26,15 @@ export type ChatEvent = {
   replyMessage: {
     channelId: string
     message: Message
+    fromName: string
   },
   copyMessage: {
     channelId: string
     message: Message
+  },
+  updateMe: {
+    channelId: string
+    subscribe: Subscriber
   }
 }
 

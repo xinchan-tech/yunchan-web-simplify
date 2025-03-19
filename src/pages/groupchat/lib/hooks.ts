@@ -1,7 +1,11 @@
 import { useLatestRef } from '@/hooks'
-import { ChatMessageType } from '@/store'
 import { useEffect } from 'react'
-import WKSDK, { type CMDContent, type MessageListener } from 'wukongimjssdk'
+import WKSDK, {
+  type Channel,
+  type SubscriberChangeListener,
+  type CMDContent,
+  type MessageListener
+} from 'wukongimjssdk'
 
 export const useMessageListener = (cb: MessageListener) => {
   const lastFn = useLatestRef(cb)
@@ -25,21 +29,26 @@ export const useCMDListener = (cb: MessageListener) => {
       console.log('cmd listener', message)
       lastFn.current(message)
     }
-
+ 
     WKSDK.shared().chatManager.addCMDListener(listener)
-
     return () => {
       WKSDK.shared().chatManager.removeCMDListener(listener)
     }
   }, [lastFn])
 }
 
-export const useMessageRevokeListener = (cb: MessageListener) => {
-  return useCMDListener(me => {
-    const cmdContent = me.content as CMDContent
-
-    if (cmdContent.contentType === ChatMessageType.RevokeMessage) {
-      cb(me)
+export const useSubscribesListener = (channel: Undefinable<Channel>, cb: SubscriberChangeListener) => {
+  const lastFn = useLatestRef(cb)
+  useEffect(() => {
+    if (!channel) return
+    const listener: SubscriberChangeListener = message => {
+      lastFn.current(message)
     }
-  })
+
+    WKSDK.shared().channelManager.addSubscriberChangeListener(listener)
+
+    return () => {
+      WKSDK.shared().channelManager.removeSubscriberChangeListener(listener)
+    }
+  }, [lastFn, channel])
 }

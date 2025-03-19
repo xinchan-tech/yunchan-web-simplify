@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { ChatChannelState, chatConstants, ChatMessageType, type ChatStore } from './types'
+import { type ChatChannelState, chatConstants, ChatMessageType, type ChatStore, ChatCmdType } from './types'
 import { Channel, ChannelInfo, ConnectStatus } from 'wukongimjssdk'
 import { createJSONStorage, persist } from 'zustand/middleware'
 
@@ -13,11 +13,8 @@ const useChatStore = create<ChatStore>()(
         addr: `${wsUrlPrefix}/im-ws`,
         deviceFlag: 5
       },
-      channel: {
-        state: ChatChannelState.Fetching,
-        data: []
-      },
       lastChannel: undefined,
+      lastChannelReady: false,
       usersExpanded: true
     }),
     {
@@ -29,7 +26,7 @@ const useChatStore = create<ChatStore>()(
             return new Channel(_channelObj.channelID, _channelObj.channelType)
           }
           return value
-        },
+        }
       }),
       partialize: state => ({
         config: {
@@ -60,22 +57,6 @@ export const chatManager = {
       state
     })
   },
-  setChannelState: (state: ChatChannelState) => {
-    useChatStore.setState({
-      channel: {
-        ...useChatStore.getState().channel,
-        state
-      }
-    })
-  },
-  setChannelData: (data: ChatStore['channel']['data']) => {
-    useChatStore.setState({
-      channel: {
-        ...useChatStore.getState().channel,
-        data
-      }
-    })
-  },
   setLastChannelId: (channel: Channel) => {
     useChatStore.setState({
       lastChannel: channel
@@ -85,6 +66,11 @@ export const chatManager = {
     useChatStore.setState({
       usersExpanded: expanded
     })
+  },
+  setLastChannelReady: (ready: boolean) => {
+    useChatStore.setState({
+      lastChannelReady: ready
+    })
   }
 }
-export { chatConstants, ChatMessageType }
+export { chatConstants, ChatMessageType, ChatCmdType }

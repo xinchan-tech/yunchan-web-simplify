@@ -1,5 +1,5 @@
 import { getChannelMembers, setChannelManager, setMemberForbidden } from "@/api"
-import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger, JknIcon, ScrollArea } from "@/components"
+import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger, JknIcon, ScrollArea, Skeleton } from "@/components"
 import { useChatStore, useUser } from "@/store"
 import { useQuery } from "@tanstack/react-query"
 import WKSDK, { type Subscriber } from "wukongimjssdk"
@@ -7,7 +7,10 @@ import ChatAvatar from "../components/chat-avatar"
 import { chatEvent } from "../lib/event"
 import to from "await-to-js"
 import { useToast } from "@/hooks"
-import type { ChatSubscriber } from "../lib/modal"
+import { useSubscribesListener } from "../lib/hooks"
+import { useCallback, useEffect } from "react"
+import { hasForbidden, isChannelManager, isChannelOwner } from "../lib/utils"
+import { nanoid } from "nanoid"
 
 interface ChannelMembersProps {
   owner: string
@@ -15,13 +18,14 @@ interface ChannelMembersProps {
 
 export const ChannelMembers = ({ owner }: ChannelMembersProps) => {
   const channel = useChatStore(s => s.lastChannel)
+  const channelReady = useChatStore(s => s.lastChannelReady)
   const username = useUser(s => s.user?.username)
   const { toast } = useToast()
 
   const members = useQuery({
     queryKey: [getChannelMembers.cacheKey, channel?.channelID],
-    queryFn: () => WKSDK.shared().channelManager.syncSubscribes(channel!).then(() => WKSDK.shared().channelManager.getSubscribes(channel!) as ChatSubscriber[]),
-    enabled: !!channel
+    queryFn: () => WKSDK.shared().channelManager.syncSubscribes(channel!).then(() => WKSDK.shared().channelManager.getSubscribes(channel!)),
+    enabled: !!channel && channelReady
   })
 
   const onReplayUser = (member: { name: string, uid: string }) => {
@@ -59,18 +63,17 @@ export const ChannelMembers = ({ owner }: ChannelMembersProps) => {
       description: params.type === "1" ? "设置管理员操作成功" : "取消管理员操作成功"
     })
 
-    WKSDK.shared().channelManager.notifySubscribeChangeListeners(channel!)
     members.refetch()
   }
 
-  const onChangeMemberForbiddenAuth = async (member: ChatSubscriber) => {
+  const onChangeMemberForbiddenAuth = async (member: Subscriber) => {
     const params = {
       channelId: channel!.channelID,
       uids: [member.uid],
       forbidden: member.orgData?.forbidden === '0' ? '1' : '0' as '0' | '1'
     }
 
-    if (member.isChannelManager) {
+    if (isChannelManager(member)) {
       toast({
         description: '请先取消对方管理员权限再拉黑'
       })
@@ -91,9 +94,27 @@ export const ChannelMembers = ({ owner }: ChannelMembersProps) => {
       description: params.forbidden === "1" ? "禁言操作成功" : "取消禁言操作成功"
     })
 
-    WKSDK.shared().channelManager.notifySubscribeChangeListeners(channel!)
     members.refetch()
+    // members.refetch()
   }
+
+  useSubscribesListener(channel, useCallback((c) => {
+    if (c.isEqual(channel!)) {
+      // members.refetch()
+    }
+  }, [channel]))
+
+  useEffect(() => {
+    if (members.data) {
+      const self = WKSDK.shared().channelManager.getSubscribeOfMe(channel!)
+
+      if (!self) {
+        return
+      }
+
+      chatEvent.emit('updateMe', { channelId: channel!.channelID, subscribe: self })
+    }
+  }, [members.data, channel])
 
 
   return (
@@ -103,43 +124,67 @@ export const ChannelMembers = ({ owner }: ChannelMembersProps) => {
         <div className="text-xs text-tertiary bg-accent rounded-xl px-1 min-w-4 text-center ml-1">{members.data?.length}</div>
       </div>
       <ScrollArea className="chat-room-users-list flex-1">
-        {members.data?.map(member => (
-          <ContextMenu key={member.uid}>
-            <ContextMenuTrigger asChild>
-              <div className="chat-room-users-item flex items-center p-2 box-border hover:bg-accent">
-                <ChatAvatar data={{ avatar: member.avatar, name: member.name, uid: member.uid }} className="h-6 w-6" size="sm" />
-                <div className="text-xs leading-6 ml-2 mr-1">{member.name}</div>
-                {member.isChannelOwner && <JknIcon name="owner" />}
-                {member.forbidden && <JknIcon name="forbidden" />}
-                {member.isChannelManager && <JknIcon name="manager" />}
-              </div>
-            </ContextMenuTrigger>
-            <ContextMenuContent>
-              <ContextMenuItem onClick={() => onReplayUser(member)} >
-                <div className="text-xs text-secondary" onKeyDown={() => { }}>回复用户</div>
-              </ContextMenuItem>
-              {
-                hasManageAuth(member) && (
-                  <ContextMenuItem>
-                    <div className="text-xs text-secondary" onClick={() => onChangeMemberManageAuth(member)} onKeyDown={() => { }}>
-                      {member.orgData?.type === '1' ? '取消管理员' : '设为管理员'}
+        {
+          !channelReady ? null :
+            members.isLoading ? (
+              <MemberSkeleton />
+            ) : (
+              members.data?.map(member => (
+                <ContextMenu key={member.uid}>
+                  <ContextMenuTrigger asChild>
+                    <div className="chat-room-users-item flex items-center p-2 box-border hover:bg-accent w-full overflow-hidden">
+                      <ChatAvatar data={{ avatar: member.avatar, name: member.name, uid: member.uid }} className="h-6 w-6" size="sm" />
+                      <div className="text-xs leading-6 ml-2 mr-1 flex-1 overflow-hidden text-ellipsis whitespace-nowrap">{member.name}</div>
+                      <div className="">
+                        {isChannelOwner(member) && <JknIcon name="owner" />}
+                        {hasForbidden(member) && <JknIcon name="forbidden" />}
+                        {isChannelManager(member) && <JknIcon name="manager" />}
+                      </div>
                     </div>
-                  </ContextMenuItem>
-                )
-              }
-              {
-                hasForbiddenAuth(member) && (
-                  <ContextMenuItem>
-                    <div className="text-xs text-secondary" onClick={() => { onChangeMemberForbiddenAuth(member) }} onKeyDown={() => { }}>
-                      {member.orgData?.forbidden === '0' ? '添加黑名单' : '解除黑名单'}
-                    </div>
-                  </ContextMenuItem>
-                )
-              }
-            </ContextMenuContent>
-          </ContextMenu>
-        ))}
+                  </ContextMenuTrigger>
+                  <ContextMenuContent>
+                    <ContextMenuItem onClick={() => onReplayUser(member)} >
+                      <div className="text-xs text-secondary" onKeyDown={() => { }}>回复用户</div>
+                    </ContextMenuItem>
+                    {
+                      hasManageAuth(member) && (
+                        <ContextMenuItem onClick={() => onChangeMemberManageAuth(member)}>
+                          <div className="text-xs text-secondary" onKeyDown={() => { }}>
+                            {member.orgData?.type === '1' ? '取消管理员' : '设为管理员'}
+                          </div>
+                        </ContextMenuItem>
+                      )
+                    }
+                    {
+                      hasForbiddenAuth(member) && (
+                        <ContextMenuItem onClick={() => { onChangeMemberForbiddenAuth(member) }}>
+                          <div className="text-xs text-secondary" onKeyDown={() => { }}>
+                            {member.orgData?.forbidden === '0' ? '添加黑名单' : '解除黑名单'}
+                          </div>
+                        </ContextMenuItem>
+                      )
+                    }
+                  </ContextMenuContent>
+                </ContextMenu>
+              ))
+            )
+        }
       </ScrollArea>
     </div>
+  )
+}
+
+const MemberSkeleton = () => {
+  return (
+    <>
+      {
+        Array.from({ length: 5 }, (_) => (
+          <div key={nanoid()} className="flex items-center space-y-2">
+            <Skeleton animation={false} className="h-6 w-6 mr-1 rounded-full" />
+            <Skeleton animation={false} className="h-6 w-24 ml-2" />
+          </div>
+        ))
+      }
+    </>
   )
 }

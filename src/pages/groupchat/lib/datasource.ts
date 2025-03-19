@@ -1,5 +1,11 @@
-import { getChatNameAndAvatar, getChannelMembers, syncChannelMessages, syncRecentConversation } from '@/api'
 import { Buffer } from 'buffer'
+import {
+  getChannelMembers,
+  getChatNameAndAvatar,
+  syncChannelMessages,
+  syncRecentConversation
+} from '@/api'
+import { stringToUint8Array } from '@/utils/string'
 import to from 'await-to-js'
 import WKSDK, {
   Channel,
@@ -12,13 +18,10 @@ import WKSDK, {
   MessageStatus,
   type MessageTask,
   type PullMode,
-  Setting
+  Setting,
+  Subscriber
 } from 'wukongimjssdk'
-import { chatManager } from '@/store'
-import { ChatChannelState } from '@/store/chat/types'
-import { stringToUint8Array } from '@/utils/string'
 import { messageTransform } from './transform'
-import { ChatSubscriber, type SubscriberType } from './modal'
 import { MediaMessageUploadTask } from './upload-task'
 
 /**
@@ -28,34 +31,41 @@ const initChannelInfoDataSource = () => {
   WKSDK.shared().config.provider.channelInfoCallback = async (channel: Channel) => {
     const channelInfo = new ChannelInfo()
 
-    const params = {
-      type: channel.channelType === ChannelTypeGroup ? '2' : '1',
-      id: channel.channelID
-    }
+    try {
+      const params = {
+        type: channel.channelType === ChannelTypeGroup ? '2' : '1',
+        id: channel.channelID
+      }
 
     const [err, res] = await to(getChatNameAndAvatar(params))
 
-    if (err) {
-      console.log(err)
-      return channelInfo
-    }
+      if (err) {
+        console.log(err)
+        return channelInfo
+      }
 
-    if (channel.channelType === ChannelTypePerson) {
-      channelInfo.title = res?.name || channel.channelID
-      channelInfo.logo = res?.avatar
-      channelInfo.mute = false
-      channelInfo.top = false
-      channelInfo.orgData = {}
-      channelInfo.online = false
-      channelInfo.lastOffline = 0
-      channelInfo.channel = channel
-    } else {
-      channelInfo.title = res?.name || channel.channelID
-      channelInfo.logo = res?.avatar
-      channelInfo.mute = false
-      channelInfo.top = false
-      channelInfo.orgData = {}
-      channelInfo.channel = channel
+
+      if (channel.channelType === ChannelTypePerson) {
+        channelInfo.title = res.name || channel.channelID
+        channelInfo.logo = res.avatar
+        channelInfo.mute = false
+        channelInfo.top = false
+        channelInfo.orgData = {}
+        channelInfo.online = false
+        channelInfo.lastOffline = 0
+        channelInfo.channel = channel
+      } else {
+        channelInfo.title = res.name || channel.channelID
+        channelInfo.logo = res.avatar
+        channelInfo.mute = false
+        channelInfo.top = false
+        channelInfo.orgData = {}
+        channelInfo.channel = channel
+      }
+
+      // channelInfo.detail = detail
+    } catch (error) {
+      console.error(error)
     }
 
     return channelInfo
@@ -68,27 +78,26 @@ const initChannelInfoDataSource = () => {
  */
 const initSyncSubscribersDataSource = () => {
   WKSDK.shared().config.provider.syncSubscribersCallback = async (channel: Channel) => {
-    const subscribers: ChatSubscriber[] = []
+    const subscribers: Subscriber[] = []
 
-    const [err, res] = await to(getChannelMembers(channel.channelID))
+    const [err, res] = await to(getChannelMembers(channel.channelID, 100))
 
     if (err) {
-      console.log(err)
       return subscribers
     }
 
     res.items?.forEach(member => {
-      const subscriber = new ChatSubscriber()
+      const subscriber = new Subscriber()
       subscriber.uid = member.username
       subscriber.name = member.realname
       subscriber.orgData = member
       subscriber.avatar = member.avatar
       subscriber.channel = channel
-      subscriber.userType = member.type as SubscriberType
-      subscriber.forbidden = member.forbidden === '1'
+      // subscriber.userType = member.type as SubscriberType
+      // subscriber.forbidden = member.forbidden === '1'
       subscribers.push(subscriber)
     })
-
+    
     return subscribers
   }
 }
@@ -99,16 +108,12 @@ const initSyncSubscribersDataSource = () => {
 const initSyncConversationsDataSource = () => {
   WKSDK.shared().config.provider.syncConversationsCallback = async () => {
     const resultConversations: Conversation[] = []
-    chatManager.setChannelState(ChatChannelState.Fetching)
     const [err, res] = await to(syncRecentConversation({ uid: WKSDK.shared().config.uid!, msg_count: 20 }))
 
     if (err) {
       console.log(err)
-      chatManager.setChannelState(ChatChannelState.Fetching)
       return resultConversations
     }
-
-    chatManager.setChannelState(ChatChannelState.Fetched)
 
     if (res) {
       res.forEach(v => {
