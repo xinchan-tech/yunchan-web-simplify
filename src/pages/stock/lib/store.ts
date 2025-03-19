@@ -313,7 +313,6 @@ export const chartManage = {
       state.secondaryIndicators = state.secondaryIndicators.filter(indicator => indicator.id !== indicatorId)
     }, chartId)
   },
-
   /**
    * 设置主图类型
    */
@@ -365,10 +364,17 @@ export const chartManage = {
     chartManage.setStore(state => {
       state.overlayStock.push({ symbol, name })
     }, chartId)
+    chartEvent.get().emit('stockCompareChange', { type: 'add', symbol })
   },
   removeStockOverlay: (symbol: string, chartId?: string) => {
     chartManage.setStore(state => {
       state.overlayStock = state.overlayStock.filter(stock => stock.symbol !== symbol)
+    }, chartId)
+    chartEvent.get().emit('stockCompareChange', { type: 'remove', symbol })
+  },
+  cleanStockOverlay: (chartId?: string) => {
+    chartManage.setStore(state => {
+      state.overlayStock = []
     }, chartId)
   },
   setMarkOverlay: (mark: string, type: string, chartId?: string) => {

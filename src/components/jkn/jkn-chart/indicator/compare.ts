@@ -45,15 +45,13 @@ export const compareIndicator: IndicatorTemplate<any, any> = {
     const base = dataList[validFrom].close
     const k = base / result.data[validFrom]
 
-    // const validIndex = res.findIndex(item => item !== null)
-
     new Line({
       name: 'line',
       attrs: {
         coordinates: result.data.map((item, index) => {
           return {
             x: xAxis.convertToPixel(index),
-            y: item ? yAxis.convertToPixel(item! * k) : item
+            y: item ? yAxis.convertToPixel(item! * k) : 0
           }
         })
       },

@@ -87,9 +87,8 @@ const TreeMap = (props: TreeMapProps) => {
     const resizeObserver = new ResizeObserver(
       debounce({ delay: 20 }, entries => {
         const { width, height } = entries[0].contentRect
-
         chartRef.current?.attr('width', width).attr('height', height)
-        if (sizeRef.current.width === width && sizeRef.current.height === height) {
+        if (sizeRef.current.width !== width || sizeRef.current.height !== height) {
           sizeRef.current.width = width
           sizeRef.current.height = height
           render(props.data)

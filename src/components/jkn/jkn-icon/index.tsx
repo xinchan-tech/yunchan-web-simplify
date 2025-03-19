@@ -98,13 +98,14 @@ const ArrowIcon = memo(({ direction, ...props }: ArrowIconProps) => {
 
 interface JknSvgIconProps extends HtmlHTMLAttributes<SVGElement> {
   name: IconName
+  title?: string
   size?: number
 }
 
-const JknSvgIcon = ({ name, size = 24, ...props }: JknSvgIconProps) => {
+const JknSvgIcon = ({ name, title, size = 24, ...props }: JknSvgIconProps) => {
   return (
     <svg width={size} height={size} {...props}>
-      <title>{name}</title>
+      <title>{title}</title>
       <use xlinkHref={`#icon-${name}`} />
     </svg>
   )

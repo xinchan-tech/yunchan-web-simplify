@@ -80,8 +80,10 @@
 
 @for $i from 1 through 10 {
      .chart-item-#{$i} {
+          overflow: hidden;
           grid-area: chart-#{$i};
           border: 1px solid transparent;
+
           &.active {
                border: 1px solid #3156f5;
           }

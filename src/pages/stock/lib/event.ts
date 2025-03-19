@@ -32,6 +32,7 @@ export type ChartEvents = {
     }
   }
   showIndicatorSetting: string
+  yAxisChange: ChartStore['yAxis']
 }
 
 export const chartEvent = {

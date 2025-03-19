@@ -1,7 +1,6 @@
 import { cn } from '@/utils/style'
 import { useEffect, useMemo } from 'react'
-import { useNavigate } from 'react-router'
-import { ChartToolBar, IndicatorModal } from '../component/chart-tool-bar'
+import { ChartToolBar } from '../component/chart-tool-bar'
 import { MainChart } from '../component/main-chart'
 import { useSymbolQuery } from '../lib'
 import { chartEvent } from '../lib/event'

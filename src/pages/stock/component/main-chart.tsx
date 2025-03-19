@@ -6,7 +6,7 @@ import qs from 'qs'
 import { type ComponentRef, useEffect, useRef, useState } from 'react'
 import { chartEvent } from '../lib/event'
 import { fetchCandlesticks, useCandlesticks } from '../lib/request'
-import { chartManage, ChartType, useChartManage } from '../lib/store'
+import { chartManage, ChartType, MainYAxis, useChartManage } from '../lib/store'
 import { renderUtils } from '../lib/utils'
 import { ChartContextMenu } from './chart-context-menu'
 import { BackTestBar } from "./back-test-bar"
@@ -37,6 +37,7 @@ export const MainChart = (props: MainChartProps) => {
   })
 
   useStockBarSubscribe([`${symbol}@${stockUtils.intervalToPeriod(chartStore.interval)}`], (data) => {
+    const trading = useTime.getState().getTrading()
     if (!renderUtils.shouldUpdateChart(trading, chartStore.interval)) {
       return
     }
@@ -59,11 +60,13 @@ export const MainChart = (props: MainChartProps) => {
   })
 
   useEffect(() => {
-    if (!renderUtils.shouldUpdateChart(trading, chartStore.interval)) {
-      return
-    }
-
     const unSubscribe = stockSubscribe.onQuoteTopic(symbol, data => {
+      const trading = useTime.getState().getTrading()
+
+      if (!renderUtils.shouldUpdateChart(trading, chartStore.interval)) {
+        return
+      }
+
       const chart = chartImp.current?.getChart()
       const lastData = chart?.getDataList()?.slice(-1)[0]
 
@@ -78,12 +81,13 @@ export const MainChart = (props: MainChartProps) => {
     })
 
     return unSubscribe
-  }, [chartStore.interval, symbol, trading])
+  }, [chartStore.interval, symbol])
 
   /**
    * 初始化
    */
   useMount(() => {
+    chartManage.cleanStockOverlay()
     const _store = useChartManage.getState().chartStores[props.chartId]
 
     const stockData = convertToStock(candlesticks)
@@ -125,7 +129,6 @@ export const MainChart = (props: MainChartProps) => {
 
     if (chart) {
       chart.subscribeAction('onIndicatorActionClick' as any, (e: any) => {
-        console.log(e)
         if (e.event === 'delete') {
           if (e.paneId === ChartTypes.MAIN_PANE_ID) {
             chartManage.removeMainIndicator(e.indicator.id, props.chartId)
@@ -242,7 +245,7 @@ export const MainChart = (props: MainChartProps) => {
               .fill(null)
               .concat(r.data.list.map(c => c[2]))
 
-            stockCache.current.compare.set(symbol, chartImp.current?.createStockCompare(compareCandlesticks, 'blue'))
+            stockCache.current.compare.set(symbol, chartImp.current?.createStockCompare(symbol, compareCandlesticks, 'blue'))
           })
         }
       } else {
@@ -264,6 +267,11 @@ export const MainChart = (props: MainChartProps) => {
       }
     })
 
+    const cancelYAxisChange = chartEvent.on('yAxisChange', (type) => {
+      chartImp.current?.setLeftAxis(!!type.left)
+      chartImp.current?.setRightAxis(type.right === MainYAxis.Percentage ? 'percentage' : 'normal')
+    })
+
     return () => {
       cancelSymbolEvent()
       // cancelCoilingEvent()
@@ -273,6 +281,7 @@ export const MainChart = (props: MainChartProps) => {
       cancelStockCompareChange()
       cancelMarkChange()
       cancelIntervalEvent()
+      cancelYAxisChange()
     }
   }, [activeChartId, props.chartId, candlesticks, chartStore.interval, symbol, startAt])
 
@@ -295,9 +304,6 @@ export const MainChart = (props: MainChartProps) => {
   return (
     <ChartContextMenu
       index={0}
-      onChangeSecondaryCount={(count: number): void => {
-        throw new Error('Function not implemented.')
-      }}
     >
       <div className="flex-1 overflow-hidden">
         <JknChart className="w-full" showLogo ref={chartImp} />

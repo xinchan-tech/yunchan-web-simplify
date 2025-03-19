@@ -143,7 +143,7 @@ export const StockAlarm = (props: PropsWithChildren<AiAlarmProps>) => {
                     className={cn(
                       'box-border rounded cursor-pointer flex items-center justify-center ml-auto w-5 h-5 hover:bg-accent',
                     )}
-                    onClick={setVisibleFalse}
+                    onClick={setFalse}
                     onKeyDown={() => { }}
                   >
                     <JknIcon.Svg name="close" className="w-3 h-3" />

@@ -23,6 +23,7 @@ import { useMutation, useQuery } from '@tanstack/react-query'
 import { useRequest, useUnmount } from 'ahooks'
 import to from 'await-to-js'
 import copy from 'copy-to-clipboard'
+import dayjs from "dayjs"
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useFormContext } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
@@ -238,6 +239,10 @@ const UserCenter = (props: UserCenterProps) => {
               <div>{t('package name')}：</div>
               <div>{authorized?.name}</div>
             </div>
+            <div>
+              <div>到期时间：</div>
+              <div>{authorized?.expire_time ? dayjs(+authorized.expire_time * 1000).format('YYYY-MM-DD') : '-'}</div>
+            </div>
             {/* <div><div>{t('expiration date')}：</div><div>{authorized?.expire_time ? dayjs(+authorized.expire_time * 1000).format('YYYY-MM-DD') : '-'}</div></div> */}
           </div>
         </div>
@@ -267,13 +272,17 @@ const UserCenter = (props: UserCenterProps) => {
           </div>
         </div>
         <div className="flex justify-center items-center my-6">
-          <div className="text-center w-28">
-            <div className="text-sm text-tertiary mb-3">累计转化</div>
-            <div className="text-4xl font-bold">{user?.total_inv}</div>
+        <div className="text-center w-28">
+            <div className="text-sm text-tertiary mb-3">点击</div>
+            <div className="text-4xl font-bold">{user?.total_points}</div>
           </div>
           <div className="text-center w-28">
-            <div className="text-sm text-tertiary mb-3">累计点击</div>
+            <div className="text-sm text-tertiary mb-3">注册</div>
             <div className="text-4xl font-bold">{user?.total_points}</div>
+          </div>
+          <div className="text-center w-28">
+            <div className="text-sm text-tertiary mb-3">转化</div>
+            <div className="text-4xl font-bold">{user?.total_inv}</div>
           </div>
           <Separator orientation="vertical" className="h-16 bg-accent mx-4" />
           <div className="text-center w-28">

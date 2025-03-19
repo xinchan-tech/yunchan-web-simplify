@@ -71,8 +71,8 @@ interface JknChartIns {
   createSubIndicator: (params: IndicatorParams) => Nullable<string>
   setSubIndicator: (indicatorId: string, params: IndicatorParams) => void
   removeSubIndicator: (indicatorId: string) => void
-  createStockCompare: (candlesticks: number[], color: string) => string
-  removeStockCompare: (indicatorId: string) => void
+  createStockCompare: (symbol: string, candlesticks: number[], color: string) => string
+  removeStockCompare: (symbol: string) => void
   createMarkOverlay: (symbol: string, type: string, mark: string) => string
   removeMarkOverlay: (indicatorId: string) => void
   setMarkOverlay: (mark: string) => void
@@ -163,7 +163,8 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
           priceMark: {
             last: {
               upColor: upColor,
-              downColor: downColor
+              downColor: downColor,
+              noChangeColor: downColor
             },
             high: {
               color: '#E7C88D',
@@ -222,10 +223,16 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
           type: 'candle' as LayoutChildType,
           options: {
             axis: {
+              gap: {
+                top: 40
+              },
               position: 'right' as AxisPosition,
               name: 'normal'
             },
             leftAxis: {
+              gap: {
+                top: 40
+              },
               position: 'right' as AxisPosition
             }
           }
@@ -235,6 +242,7 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
     })
 
     chart.current?.setPrecision({price: 3})
+    chart.current?.setMaxOffsetLeftDistance(0)
 
     if (props.showLogo) {
       chart.current?.createOverlay({
@@ -402,12 +410,12 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
     removeSubIndicator(indicatorId) {
       chart.current?.removeIndicator({ id: indicatorId })
     },
-    createStockCompare: (candlesticks, color) => {
+    createStockCompare: (symbol, candlesticks, color) => {
       const indicator = uid(8)
       chart.current?.createIndicator(
         {
           name: 'compare-indicator',
-          id: indicator,
+          id: `compare-${symbol}`,
           calcParams: [candlesticks, color]
         },
         true,
@@ -416,8 +424,8 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
 
       return indicator
     },
-    removeStockCompare: indicatorId => {
-      chart.current?.removeIndicator({ id: indicatorId })
+    removeStockCompare: symbol => {
+      chart.current?.removeIndicator({ id: `compare-${symbol}` })
     },
     createMarkOverlay: (symbol, type, mark) => {
       return chart.current?.createIndicator(
@@ -476,7 +484,7 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
         if (![StockChartInterval.AFTER_HOURS, StockChartInterval.PRE_MARKET, StockChartInterval.INTRA_DAY, StockChartInterval.FIVE_DAY].includes(interval)) return
 
         const count = StockChartInterval.FIVE_DAY === interval ? 1950 : getTickNumberByTrading(stockUtils.intervalToTrading(interval)!)
-        
+        chart.current?.setLeftMinVisibleBarCount(2)
         chart.current?.setXAxisTick(count)
 
         chart.current?.setStyles({
@@ -502,6 +510,7 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
       } else {
         chart.current?.setXAxisTick(-1)
         chart.current?.setOffsetRightDistance(80)
+        chart.current?.setMaxOffsetLeftDistance(0)
         chart.current?.setStyles({
           candle: {
             area: {
