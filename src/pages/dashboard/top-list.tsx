@@ -41,6 +41,7 @@ const TopList = () => {
   const { t } = useTranslation()
   const { isToday } = useTime()
   const [list, { setList, onSort }] = useTableData<TableDataType>([], 'symbol')
+  const [selectedRowKey, setSelectedRowKey] = useState<String>();
 
   const query = useQuery({
     queryKey: [getIncreaseTop.cacheKey, type],
@@ -217,7 +218,19 @@ const TopList = () => {
     return d.isValid() ? ` ${d.format('MM-DD')} ${dateToWeek(d)} ` : date
   }
 
-  const onRowClick = useTableRowClickToStockTrading('symbol')
+  const onRowClick = (record: TableDataType) => {
+    return {
+      onClick: () => {
+        setSelectedRowKey(record.symbol)
+        console.log('record', record)
+      },
+      ...useTableRowClickToStockTrading('symbol')
+    }
+  }
+
+  const rowClassName = (record: TableDataType) => {
+    return selectedRowKey === record.symbol ? 'selected-row' : '';
+  };
 
   const tabs = [
     { key: IncreaseTopStatus.PRE_MARKET.toString(), label: `${t('stockChart.before')}热门` },
@@ -311,8 +324,11 @@ const TopList = () => {
           data={list}
           onSort={onSort}
           onRow={onRowClick}
+          rowClassName={rowClassName}
         />
       </div>
+
+
     </div>
   )
 }

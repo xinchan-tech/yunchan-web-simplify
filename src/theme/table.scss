@@ -44,7 +44,30 @@ $dark-table-body-background: transparent;
 
   .rc-table-row {
     background: $dark-table-body-background;
+
+    &.selected-row{
+      background-color: rgba(41, 98, 255, 0.3);
+      .rc-table-cell{
+        position: relative;
+        &:first-child::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 6px;
+          height: 100%;
+          background: #2962ff;
+        }
+      }
+    }
+
   }
+
+
+  .rc-table-row:hover{
+    background: $dark-table-row-hover;
+  }
+
 }
 .rc-table-rtl {
   direction: rtl;
@@ -53,8 +76,6 @@ $dark-table-body-background: transparent;
   width: 100%;
   border-spacing: 0px;
 }
-
-
 
 .rc-table th {
   padding: 10px 10px;
