@@ -3,9 +3,7 @@ import { cn } from '@/utils/style';
 import { Button } from '@/components/ui/button';
 import { ArrowLeftIcon, ArrowRightIcon, CheckIcon } from '@radix-ui/react-icons';
 import useEmblaCarousel, { type UseEmblaCarouselType } from 'embla-carousel-react';
-import { Checkbox } from '@/components/ui/checkbox';
 import Decimal from 'decimal.js';
-import { JknIcon } from '@/components/jkn/jkn-icon';
 import { SelectCheckIcon } from './super-icon';
 
 /**
@@ -304,10 +302,19 @@ const EconomicDataItem: React.FC<EconomicDataItemProps> = ({
     onCheckChange?.();
   };
 
+  // 使用正则表达式匹配数值部分（包括小数）
+  const text = Decimal.create(item.amount).toShortCN(3);
+  const numberMatch = text.match(/^\d+(\.\d+)?/);
+  const numberPart = numberMatch ? numberMatch[0] : '';
+
+  // 使用正则表达式匹配中文部分
+  const chineseMatch = text.match(/[\u4e00-\u9fa5]+/);
+  const chinesePart = chineseMatch ? chineseMatch[0] : '';
+
   return (
     <div 
       className={cn(
-        'min-w-0 shrink-0 grow-0 basis-[230px] cursor-pointer transition-all duration-200'
+        'min-w-0 shrink-0 grow-0 basis-[230px] cursor-pointer transition-all duration-200 select-none'
       )}
     >
       <div className="flex flex-col justify-between h-[100px] w-[220px] px-5 py-[10px] bg-[#1F1F1F] rounded-[10px] box-border border border-solid border-[#B8B8B8B]"
@@ -326,8 +333,8 @@ const EconomicDataItem: React.FC<EconomicDataItemProps> = ({
           <div>
             <div className="text-xs text-[#575757]">成交额</div>
             <div>
-              <span className='text-base text-[#DBDBDB]'>{Decimal.create(item.amount).toShortCN(3)}</span>
-              <span className='text-xs text-[#575757]'>亿</span>
+              <span className='text-base text-[#DBDBDB]'>{numberPart}</span>
+              <span className='ml-0.5 text-xs text-[#B8B8B8]'>{chinesePart}</span>
             </div>
           </div>
           <div className="flex flex-col items-end">
