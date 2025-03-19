@@ -1,3 +1,5 @@
+import React, { useState, useEffect, MouseEventHandler, FC, ReactNode, memo, PropsWithChildren, useRef } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   Button,
   Input,
@@ -5,10 +7,10 @@ import {
   JknIcon,
   JknRcTable,
   JknRcTableProps,
-  Popover,
-  PopoverClose,
-  PopoverContent,
-  PopoverTrigger,
+  Dialog,
+  DialogContent,
+  DialogClose,
+  DialogTrigger,
   useModal,
 } from "@/components";
 import { useToast } from "@/hooks";
@@ -16,15 +18,12 @@ import {
   getStockCollectCates,
   removeStockCollectCate,
   updateStockCollectCate,
+  addStockCollectCate,
 } from "@/api";
 import { useQuery } from "@tanstack/react-query";
 import to from "await-to-js";
 import dayjs from "dayjs";
-import React, { useEffect } from "react";
-import { memo, PropsWithChildren, useRef, useState, MouseEventHandler } from "react";
-import { useQueryClient } from '@tanstack/react-query';
-import { useAuthorized } from '@/hooks';
-import { addStockCollectCate } from '@/api';
+import { useAuthorized } from "@/hooks";
 
 /**
  * 金池管理器组件
@@ -170,30 +169,31 @@ const GoldenPoolTable = () => {
 
 /**
  * 金池名称编辑组件
- *
- * @param props - 组件属性
- * @param props.id - 金池ID
- * @param props.onUpdate - 更新回调函数
- * @param props.children - 子元素
- * @returns 金池名称编辑组件
+ * 用于新建或重命名金池
+ * @param props 组件属性
+ * @returns 组件
  */
-export const GoldenPoolNameEdit = (
-  props: PropsWithChildren<{ id?: string; onUpdate: () => void; sideOffset?: number; alignOffset?: number }>
-) => {
+export const GoldenPoolNameEdit: FC<{
+  id?: string;
+  name?: string;
+  onUpdate: () => void;
+  children: ReactNode;
+  sideOffset?: number;
+  alignOffset?: number;
+}> = (props) => {
+  const [name, setName] = useState(props.name || "");
+  const [open, setOpen] = useState(false);
   const { toast } = useToast();
-  const [name, setName] = useState("");
   const queryClient = useQueryClient();
   const [auth, toastNotAuth] = useAuthorized('stockPoolNum');
   
   // 获取金池列表
   const collects = useQuery({
     queryKey: [getStockCollectCates.cacheKey],
-    queryFn: () => getStockCollectCates()
+    queryFn: () => getStockCollectCates(),
   });
 
-  /**
-   * 当编辑现有金池时，设置默认名称
-   */
+  // 当编辑现有金池时，设置默认名称
   useEffect(() => {
     if (props.id && collects.data) {
       // 查找对应ID的金池
@@ -209,47 +209,41 @@ export const GoldenPoolNameEdit = (
   }, [props.id, collects.data]);
 
   /**
-   * 添加金池
-   * 
-   * 根据是否传入id决定是新建金池还是修改金池名称
+   * 处理确认操作
+   * 新建或更新金池
    */
   const onAction = async () => {
-    if (!name) return;
-
-    if (props.id) {
-      // 修改金池名称
-      const [err] = await to(updateStockCollectCate({ id: props.id, name }));
-      
-      if (err) {
-        toast({ description: err.message });
-        return;
-      }
-      
-      toast({ description: "修改成功" });
-    } else {
-      // 新建金池
-      // 检查用户权限
-      const max = auth();
-      if (!max || max <= (collects.data?.length ?? 0)) {
-        toastNotAuth();
-        return;
-      }
-      
-      // 添加金池
-      const [err] = await to(addStockCollectCate(name));
-      
-      if (err) {
-        toast({ description: err.message });
-        return;
-      }
-      
-      toast({ description: "添加成功" });
+    if (!name) {
+      toast({
+        title: "请输入金池名称",
+        variant: "destructive",
+      });
+      return;
     }
-    
-    // 刷新金池列表
-    queryClient.invalidateQueries({
-      queryKey: [getStockCollectCates.cacheKey]
+
+    const [err] = await to(
+      props.id
+        ? updateStockCollectCate({
+            id: props.id,
+            name,
+          })
+        : addStockCollectCate(name)
+    );
+
+    if (err) {
+      toast({
+        title: err.message || "操作失败",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    toast({
+      title: props.id ? "重命名成功" : "新建成功",
     });
+
+    // 关闭对话框
+    setOpen(false);
     
     // 调用更新回调
     props.onUpdate();
@@ -269,21 +263,25 @@ export const GoldenPoolNameEdit = (
         return;
       }
     }
+    
+    // 打开对话框
+    setOpen(true);
+    
+    // 阻止事件冒泡，防止触发父组件的点击事件
+    e.stopPropagation();
   };
 
   return (
-    <Popover>
-      <PopoverTrigger asChild>
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
         <Button reset className="inline">
           <div onClick={handleClick} onKeyDown={() => {}}>
             {props.children}
           </div>
         </Button>
-      </PopoverTrigger>
-      <PopoverContent 
-        className="w-[300px] text-center rounded-2xl bg-[#1F1F1F] border-[#2E2E2E]" 
-        sideOffset={props.sideOffset} 
-        alignOffset={props.alignOffset}
+      </DialogTrigger>
+      <DialogContent 
+        className="w-[300px] text-center rounded-2xl bg-[#1F1F1F] border-[#2E2E2E]"
       >
         <div className="text-center py-5">{props.id ? "重命名" : "新建金池"}</div>
         <div className="mt-5 px-4">
@@ -295,7 +293,7 @@ export const GoldenPoolNameEdit = (
             onChange={(e) => setName(e.target.value)}
           />
           <div className="flex justify-between mt-[10px] mb-5">
-            <PopoverClose asChild>
+            <DialogClose asChild>
               <Button 
                 size="sm" 
                 variant="outline" 
@@ -303,35 +301,17 @@ export const GoldenPoolNameEdit = (
               >
                 取消
               </Button>
-            </PopoverClose>
-            <PopoverClose asChild>
-              <Button 
-                size="sm" 
-                className="w-[120px] h-9" 
-                onClick={onAction}
-              >
-                确定
-              </Button>
-            </PopoverClose>
+            </DialogClose>
+            <Button 
+              size="sm" 
+              className="w-[120px] h-9" 
+              onClick={onAction}
+            >
+              确定
+            </Button>
           </div>
         </div>
-      </PopoverContent>
-    </Popover>
+      </DialogContent>
+    </Dialog>
   );
 };
-
-/**
- * 金池批量操作组件属性接口
- */
-export interface GoldenPoolBatchProps {
-  /** 选中的股票代码列表 */
-  checked: string[];
-  /** 是否全选 */
-  maxChecked?: boolean;
-  /** 选中状态变化回调 */
-  onCheckedChange?: (checked: boolean) => void;
-  /** 当前激活的金池 */
-  activeStock: string;
-  /** 更新回调 */
-  onUpdate?: () => void;
-}

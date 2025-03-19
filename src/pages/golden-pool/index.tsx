@@ -304,7 +304,10 @@ const GoldenPool = () => {
                 <GoldenPoolNameEdit onUpdate={() => {
                   queryClient.invalidateQueries({ queryKey: [getStockCollectCates.cacheKey] });
                 }}>
-                  <DropdownMenuItem>
+                  <DropdownMenuItem onSelect={(e) => {
+                    // 阻止 DropdownMenu 的默认关闭行为
+                    e.preventDefault();
+                  }}>
                     <span>新建分组</span>
                   </DropdownMenuItem>
                 </GoldenPoolNameEdit>
