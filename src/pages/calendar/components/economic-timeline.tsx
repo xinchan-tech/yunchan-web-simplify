@@ -1,6 +1,6 @@
-import React, { useMemo, useState, useCallback, useEffect } from 'react'
+import React, { useMemo } from 'react'
 import { JknTimeline } from '@/components'
-import { getStockEconomic } from '@/api'
+import { getCalendarEvents } from '@/api'
 import { useQuery } from '@tanstack/react-query'
 import dayjs from 'dayjs'
 
@@ -69,93 +69,36 @@ const EconomicContent: React.FC<{ group: EconomicDateGroup; isFirst?: boolean }>
  * @returns {React.ReactNode} 财经时间轴组件
  */
 const EconomicTimeline: React.FC = () => {
-  // 分页状态管理
-  const [page, setPage] = useState<number>(1)
-  const [hasMore, setHasMore] = useState<boolean>(true)
-  const limit = 50 // 每页数据条数
-
-  // 用于存储所有已加载的数据项
-  const [allItems, setAllItems] = useState<any[]>([])
-
-  // 是否按升序排序
-  const isAscending = false
-
-  // 使用 React Query 获取财经数据
-  const { data, isFetching } = useQuery({
-    queryKey: [getStockEconomic.cacheKey, page],
-    queryFn: () => getStockEconomic({
-      limit,
-      page,
-      type: 1,
-      sort: isAscending ? 'ASC' : 'DESC'
-    })
+  // 使用 React Query 获取财经日历事件数据
+  const { data, isLoading } = useQuery({
+    queryKey: [getCalendarEvents.cacheKey],
+    queryFn: () => getCalendarEvents()
   })
 
-  // 更新累积数据并检查是否还有更多数据可加载
-  useEffect(() => {
-    if (data) {
-      // 将新数据追加到累积数据中
-      if (data.items && data.items.length > 0) {
-        // 确保不重复添加数据
-        setAllItems(prevItems => {
-          const newItems = data.items.filter(
-            newItem => !prevItems.some(
-              existingItem => existingItem.id === newItem.id
-            )
-          )
-
-          return [...prevItems, ...newItems]
-        })
-      }
-
-      // 检查是否还有更多数据可加载
-      setHasMore(data.current < data.total_pages)
-    }
-  }, [data])
-
-  // 加载更多数据的回调函数
-  const handleLoadMore = useCallback(() => {
-    if (!isFetching && hasMore) {
-      setPage(prevPage => prevPage + 1)
-    }
-  }, [isFetching, hasMore])
-
-  // 将接口数据按日期分组并转换为组件所需格式
+  // 将接口数据转换为组件所需格式
   const EconomicData = useMemo(() => {
-    if (!allItems.length) return []
+    if (!data || !data.length) return []
 
-    // 按日期分组
-    const groupedByDate: Record<string, any[]> = {}
+    // 直接将接口返回的数据转换为组件所需格式
+    return data.map(eventGroup => {
+      // 提取日期（假设所有values中的事件都在同一天）
+      // 如果values为空，则使用当前日期
+      const date = eventGroup.values.length > 0 
+        ? eventGroup.values[0].datetime.split(' ')[0] 
+        : dayjs().format('YYYY-MM-DD')
 
-    allItems.forEach(item => {
-      // 提取日期部分 (YYYY-MM-DD)
-      const dateStr = item.date.split(' ')[0]
+      // 转换为组件所需的数据项格式
+      const items: EconomicDataItem[] = eventGroup.values.map(event => ({
+        title: event.title,
+        publishTime: event.datetime
+      }))
 
-      if (!groupedByDate[dateStr]) {
-        groupedByDate[dateStr] = []
+      return {
+        date,
+        items,
       }
-
-      groupedByDate[dateStr].push(item)
     })
-
-    // 转换为组件所需的格式并按日期升序排序
-    return Object.keys(groupedByDate)
-      .map(dateStr => {
-        // 转换为组件所需的数据项格式
-        const items: EconomicDataItem[] = groupedByDate[dateStr]
-          .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-          .map(item => ({
-            title: item.title,
-            publishTime: item.date,
-          }))
-
-        return {
-          date: dateStr,
-          items,
-        }
-      })
-      .sort((a, b) => (new Date(a.date).getTime() - new Date(b.date).getTime()) * (isAscending ? 1 : -1))
-  }, [allItems])
+  }, [data])
 
   // 将财经数据转换为时间轴数据
   const timelineItems = useMemo(() => {
@@ -181,9 +124,7 @@ const EconomicTimeline: React.FC = () => {
         tailWidth={1}
         tailMarginRight={60}
         itemPaddingBottom={40}
-        loading={isFetching}
-        onLoadMore={handleLoadMore}
-        loadMoreThreshold={100}
+        loading={isLoading}
       />
     </div>
   )
