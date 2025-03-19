@@ -110,7 +110,7 @@ const stockCodeParse = (raw: string) => {
   return raw.replace(reg, (code) => {
     const stockMap = useStockList.getState().listMap
     if (stockMap[code.slice(1)]) {
-      return `<span class="text-[#8CABFF] cursor-pointer">${code}</span>`
+      return `<span class="text-[#8CABFF] cursor-pointer" data-stock-code="${code.slice(1)}">${code}</span>`
     }
     return code
   })

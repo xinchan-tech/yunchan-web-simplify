@@ -23,7 +23,7 @@ import {
 import { HeaderMall } from './components/header/mall'
 import { useJoinGroupByInviteCode } from "./pages/groupchat/hooks"
 import { router, routes } from './router'
-import { useConfig, useToken, useUser } from './store'
+import { chatConstants, useConfig, useToken, useUser } from './store'
 import LogoTitle from '@/assets/image/logo-title.png'
 
 export const CHAT_STOCK_JUMP = 'chat_stock_jump'
@@ -123,13 +123,12 @@ const App = () => {
   const navigate = useNavigate()
   const channel = useRef<BroadcastChannel>()
   useEffect(() => {
-    channel.current = new BroadcastChannel('chat-channel')
+    channel.current = new BroadcastChannel(chatConstants.broadcastChannelId)
 
     channel.current.onmessage = event => {
       if (event.data.type === CHAT_STOCK_JUMP) {
         if (event.data.payload) {
-          navigate(`/app/stock/trading?symbol=${event.data.payload}`)
-          navigate(`/stock/trading?symbol=${event.data.payload}`)
+          navigate(`/stock?symbol=${event.data.payload}`)
         }
       } else if (event.data.type === CHAT_TO_APP_REFRESH_USER) {
         refreshUser()

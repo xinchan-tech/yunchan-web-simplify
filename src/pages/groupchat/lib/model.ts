@@ -1,4 +1,5 @@
-import { MessageText, Subscriber } from 'wukongimjssdk'
+import type { getChannelDetail } from "@/api"
+import { ChannelInfo, MessageText, Subscriber } from 'wukongimjssdk'
 
 export enum SubscriberType {
   ChannelOwner = '2',
@@ -23,4 +24,8 @@ export class ChatSubscriber extends Subscriber {
 
 export const isMessageText = (message: any): message is MessageText => {
   return message instanceof MessageText
+}
+
+export class ChatChannelInfo extends ChannelInfo {
+  public detail: Awaited<ReturnType<typeof getChannelDetail>> | null = null
 }

@@ -1,4 +1,9 @@
-import { cn } from '@/utils/style'
+import { getChatNameAndAvatar } from "@/api"
+import { useChatStore } from "@/store"
+import { cn, colorUtil } from '@/utils/style'
+import { useQuery } from "@tanstack/react-query"
+import { useEffect, useState } from "react"
+import WKSDK from "wukongimjssdk"
 
 function userIdToColor(userId: string) {
   if (!userId) {
@@ -20,7 +25,7 @@ function userIdToColor(userId: string) {
   return `#${toHex(r)}${toHex(g)}${toHex(b)}`
 }
 
-const ChatAvatar = (props: {
+const _ChatAvatar = (props: {
   data: {
     name: string
     avatar: string
@@ -76,5 +81,95 @@ const ChatAvatar = (props: {
     </div>
   )
 }
+
+interface UserAvatarProps {
+  shape: 'circle' | 'square' | number
+  src: string
+  className?: string
+  uid: string
+  size?: string
+}
+
+const userCache = new Map<string, string>()
+
+const UserAvatar = (props: UserAvatarProps) => {
+  const { shape, src, uid, className, size = 33 } = props
+  const [avatar, setAvatar] = useState<string>(src)
+  const [name, setName] = useState<string>(uid)
+
+  const fetchAvatar = useQuery({
+    queryKey: [getChatNameAndAvatar.cacheKey, uid],
+    queryFn: () => getChatNameAndAvatar({ type: '1', id: uid }),
+    enabled: false
+  })
+
+  useEffect(() => {
+    if (src) {
+      setAvatar(src)
+    } else {
+      const channel = useChatStore.getState().lastChannel
+      if (channel) {
+        const subscribes = WKSDK.shared().channelManager.getSubscribes(channel)
+
+        const user = subscribes.find(sub => sub.uid === uid)
+
+        if (user) {
+          if(user.avatar){
+            setAvatar(user.avatar)
+            userCache.set(uid, user.avatar)
+            return
+          }
+
+          setName(user.name)
+          return
+        }
+      }
+
+      const cachedAvatar = userCache.get(uid)
+
+      if (cachedAvatar) {
+        setAvatar(cachedAvatar)
+        return
+      }
+
+      fetchAvatar.refetch().then(r => {
+        if (r.data) {
+          if(r.data.avatar){
+            setAvatar(r.data.avatar)
+            userCache.set(uid, r.data.avatar)
+          }else{
+            setName(r.data.name)
+          }
+        }
+      })
+    }
+  }, [src, uid, fetchAvatar.refetch])
+
+  const borderRadius = shape === 'circle' ? '50%' : shape === 'square' ? '4px' : `${shape ?? 0}px`
+
+  const styles = {
+    borderRadius, backgroundColor: colorUtil.stringToColor(name, 'hex'), width: size, height: size, display: 'flex', justifyContent: 'center', alignItems: 'center', color: '#fff'
+  }
+
+  if (!avatar) {
+    return (
+      <div className={cn(className)} style={styles}>
+        {
+          name.slice(0, 1).toUpperCase()
+        }
+      </div>
+    )
+  }
+
+  return (
+    <div className={cn(className)} style={styles}>
+      <img className="w-full" src={avatar} alt={avatar} />
+    </div>
+  )
+}
+
+const ChatAvatar = _ChatAvatar as typeof _ChatAvatar & { User: typeof UserAvatar }
+
+ChatAvatar.User = UserAvatar
 
 export default ChatAvatar

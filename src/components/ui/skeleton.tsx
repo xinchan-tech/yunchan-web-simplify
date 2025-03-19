@@ -1,7 +1,11 @@
 import { cn } from '@/utils/style'
 import { nanoid } from 'nanoid'
 
-function Skeleton({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
+/**
+ * 
+ */
+
+function Skeleton({ className, animation = true, ...props }: React.HTMLAttributes<HTMLDivElement> & { animation?: boolean }) {
   /**
    * 随机100 - 10的长度变化
    */
@@ -16,26 +20,26 @@ function Skeleton({ className, ...props }: React.HTMLAttributes<HTMLDivElement>)
     <>
       <div
         className={cn('animate-pulse rounded-md bg-primary/10 bg-[#2c2d30]', className)}
-        id={skeletonId}
+        id={animation ? skeletonId : undefined}
         style={{}}
         {...props}
       />
       <style jsx>
         {`
-          #${skeletonId} {
-            animation: skeleton-${skeletonId}-width 3s infinite;
-          }
-          @keyframes skeleton-${skeletonId}-width {
-            0%, 100% {
-              width: ${randomMin}%;
-              opacity: 1;
+            #${skeletonId} {
+              animation: skeleton-${skeletonId}-width 3s infinite;
             }
-            50% {
-              width: ${randomMax}%;
-              opacity: 0.5;
+            @keyframes skeleton-${skeletonId}-width {
+              0%, 100% {
+                width: ${randomMin}%;
+                opacity: 1;
+              }
+              50% {
+                width: ${randomMax}%;
+                opacity: 0.5;
+              }
             }
-          }
-        `}
+          `}
       </style>
     </>
   )
