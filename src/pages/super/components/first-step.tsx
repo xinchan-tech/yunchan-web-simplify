@@ -30,7 +30,7 @@ import { type Stock, stockUtils } from "@/utils/stock";
 import { useQuery } from "@tanstack/react-query";
 import { useMount, useUnmount, useUpdateEffect } from "ahooks";
 import Decimal from "decimal.js";
-import { CSSProperties, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { SuperStockContext } from "../ctx";
 import { CrownIcon, StockTrendIcon } from "./super-icon";
 import { cn } from "@/utils/style";

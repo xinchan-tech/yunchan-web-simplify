@@ -117,13 +117,6 @@ export const BasicPage = (props: BasicPageProps) => {
   const hasChinaIp = useConfig((s) => s.ip === "CN");
   const { toast } = useToast();
   const [activeProductId, setActiveProductId] = useState<string | null>(null);
-  
-  // 默认选中最后一个产品
-  useEffect(() => {
-    if (props.basic.length > 0) {
-      setActiveProductId(props.basic[props.basic.length - 1].id);
-    }
-  }, [props.basic]);
 
   /**
    * 处理购买操作
@@ -168,7 +161,8 @@ export const BasicPage = (props: BasicPageProps) => {
                 "relative w-[280px] p-[1px] rounded-2xl box-border space-y-[10px] transition-all duration-300",
                 isActive ? "active-card" : "default-card"
               )}
-              onClick={() => setActiveProductId(product.id)}
+              onMouseOver={() => setActiveProductId(product.id)}
+              onMouseLeave={() => setActiveProductId(null)}
             >
               <div
                 className="py-10 px-5 rounded-2xl text-center cursor-pointer"
