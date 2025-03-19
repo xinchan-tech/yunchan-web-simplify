@@ -28,12 +28,12 @@ import {
 } from "@/hooks";
 import { type Stock, stockUtils } from "@/utils/stock";
 import { useQuery } from "@tanstack/react-query";
-import { useMount, useUnmount, useUpdateEffect } from "ahooks";
-import Decimal from "decimal.js";
-import { useContext, useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useMemo, useRef, useState } from "react";
+import { useMount, useUnmount } from "ahooks";
 import { SuperStockContext } from "../ctx";
 import { CrownIcon, StockTrendIcon } from "./super-icon";
 import { cn } from "@/utils/style";
+import { SuperCarousel } from "./super-carousel";
 
 const baseExtends: StockExtend[] = [
   "total_share",
@@ -61,13 +61,13 @@ const FirstStep = () => {
         {
           {
             // 特色榜单
-            FeaturedRanking: <FeaturedRanking />,
+            FeaturedRanking: <FeaturedRankingPanel />,
             // 股票金池
-            GoldenPool: <GoldenPoolTabContent />,
+            GoldenPool: <GoldenPoolPanel />,
             // 行业板块
-            IndustrySector: <Plate type={1} />,
+            IndustrySector: <SectorPanel type={1} />,
             // 概念板块
-            ConceptSector: <Plate type={2} />,
+            ConceptSector: <SectorPanel type={2} />,
           }[type]
         }
       </div>
@@ -153,7 +153,7 @@ const DropdownSelector = ({
 /**
  * 特色榜单
  */
-const FeaturedRanking = () => {
+const FeaturedRankingPanel = () => {
   const ctx = useContext(SuperStockContext);
   const data = (ctx.data?.stock_range?.children?.t_recommend.from_datas ??
     []) as unknown as {
@@ -225,7 +225,7 @@ const FeaturedRanking = () => {
               value={child.value}
               disabled={!child.authorized}
               className={cn(
-                "w-full h-16 rounded-sm border border-[#2E2E2E] bg-transparent relative",
+                "w-full h-16 rounded-sm border border-[#2E2E2E] bg-transparent relative group",
                 "data-[state=on]:bg-transparent",
                 "data-[state=on]:text-[#DBDBDB] data-[state=on]:border-[#DBDBDB]",
               )}
@@ -248,15 +248,18 @@ const FeaturedRanking = () => {
                     borderWidth: "0px 16px 16px",
                     borderStyle: "none solid solid",
                     borderColor: "transparent transparent #f23645",
-                  transform: "rotate(45deg)",
-                }}
-              >
-                推荐
-              </div>
+                    transform: "rotate(45deg)",
+                  }}
+                  className="opacity-60 group-hover:opacity-100 group-data-[state=on]:opacity-100"
+                >
+                  推荐
+                </div>
               )}
               <div className="flex items-center gap-[2px]">
-                {getIcon(child.name)}
-                {child.name}
+                <span className="flex items-center opacity-60 group-hover:opacity-100 group-data-[state=on]:opacity-100">
+                  {getIcon(child.name)}
+                </span>
+                <span>{child.name}</span>
               </div>
             </ToggleGroupItem>
           </div>
@@ -266,12 +269,10 @@ const FeaturedRanking = () => {
   );
 };
 
-
-
-
-
-
-const GoldenPoolTabContent = () => {
+/**
+ * 股票金池
+ */
+const GoldenPoolPanel = () => {
   const [cateId, setCateId] = useState(1);
 
   return (
@@ -485,59 +486,26 @@ const GoldenPoolList = (props: GoldenPoolListProps) => {
   );
 };
 
-
-
-//板块组件
-const Plate = (props: { type: 1 | 2 }) => {
-  const [activePlate, setActivePlate] = useState<string>();
-
-  const plate = useQuery({
+/**
+ * 行业板块 / 概念板块
+ * @param props 
+ * @param props.type 1: 行业板块, 2: 概念板块
+ * @returns 
+ */
+const SectorPanel = (props: {type: 1 | 2}) => {
+  // 获取板块数据
+  const plateQuery = useQuery({
     queryKey: [getPlateList.cacheKey, props.type],
     queryFn: () => getPlateList(props.type),
     placeholderData: [],
   });
 
-  useUpdateEffect(() => {
-    setActivePlate(undefined);
-    if (plate.data && plate.data.length > 0) {
-      setActivePlate(plate.data[0].id);
-    }
-  }, [plate.data]);
-
-  const onClickPlate = (row: PlateDataType) => {
-    setActivePlate(row.id);
-  };
-
-  return (
-    <div className="flex overflow-hidden h-full">
-      <div className="w-[40%] h-full">
-        <PlateList data={plate.data ?? []} onRowClick={onClickPlate} />
-      </div>
-      <div className="w-[60%] h-full">
-        <PlateStocks plateId={activePlate ? +activePlate : undefined} />
-      </div>
-    </div>
-  );
-};
-
-type PlateDataType = {
-  amount: number;
-  change: number;
-  hot_rise: number;
-  id: string;
-  name: string;
-};
-
-interface PlateListProps {
-  data: PlateDataType[];
-  onRowClick: (row: PlateDataType) => void;
-}
-
-const PlateList = (props: PlateListProps) => {
-  const { checked, toggle, getIsChecked } = useCheckboxGroup([]);
+  // 状态管理
+  const [selectedPlateIds, setSelectedPlateIds] = useState<string[]>([]);
   const ctx = useContext(SuperStockContext);
   const selection = useRef<string[]>([]);
 
+  // 注册到上下文
   useMount(() => {
     ctx.register(
       "sectors",
@@ -547,245 +515,54 @@ const PlateList = (props: PlateListProps) => {
     );
   });
 
+  // 组件卸载时清理
   useUnmount(() => {
     ctx.unregister("sectors");
     selection.current = [];
   });
 
+  // 同步选中状态到引用
   useEffect(() => {
-    selection.current = checked;
-  }, [checked]);
+    selection.current = selectedPlateIds;
+  }, [selectedPlateIds]);
 
-  const [list, { onSort, setList }] = useTableData<PlateDataType>(props.data);
+  // 处理选中状态变化
+  const handleSelectionChange = (ids: string[]) => {
+    setSelectedPlateIds(ids);
+  };
 
-  useUpdateEffect(() => {
-    setList(props.data);
-  }, [props.data]);
-
-  const columns = useMemo<JknRcTableProps<PlateDataType>["columns"]>(
-    () => [
-      {
-        title: <JknIcon name="checkbox_mult_nor_dis" className="w-4 h-4" />,
-        dataIndex: "select",
-        id: "select",
-        align: "center",
-        width: 30,
-        render: (_, row) => (
-          <div className="flex items-center justify-center w-full">
-            <JknIcon.Checkbox
-              checked={getIsChecked(row.id)}
-              className="rounded-none"
-              checkedIcon="checkbox_mult_sel"
-              uncheckedIcon="checkbox_mult_nor"
-            />
-          </div>
-        ),
-      },
-      {
-        title: "序号",
-        align: "left",
-        dataIndex: "index",
-        width: 40,
-        render: (_, __, index) => index + 1,
-      },
-      {
-        title: "行业",
-        align: "left",
-        dataIndex: "name",
-        render: (_, row) => (
-          <div className="w-full overflow-hidden text-ellipsis whitespace-nowrap">
-            {row.name}
-          </div>
-        ),
-      },
-      {
-        title: "涨跌幅",
-        dataIndex: "change",
-        sort: true,
-        width: 90,
-        align: "center",
-        render: (_, row) => (
-          <SubscribeSpan.PercentBlock
-            subscribe={false}
-            symbol=""
-            initValue={row.change / 100}
-            initDirection={row.change > 0}
-          />
-        ),
-      },
-      {
-        title: "成交额",
-        dataIndex: "amount",
-        sort: true,
-        align: "right",
-        width: 120,
-        render: (_, row) => Decimal.create(row.amount).toShortCN(3),
-      },
-    ],
-    [getIsChecked]
-  );
-  return (
-    <JknRcTable
-      rowKey="id"
-      onRow={(r) => ({
-        onClick: () => {
-          toggle(r.id);
-          props.onRowClick?.(r);
-        },
-      })}
-      data={list}
-      columns={columns}
-      onSort={onSort}
-    />
-  );
-};
-
-interface PlateStocksProps {
-  plateId?: number;
-}
-
-export type PlateStockTableDataType = {
-  code: string;
-  name: string;
-  price?: number;
-  // 涨跌幅
-  percent?: number;
-  // 成交额
-  amount?: number;
-  // 总市值
-  total?: number;
-  // 换手率
-  turnoverRate?: number;
-  // 市盈率
-  pe?: number;
-  // 市净率
-  pb?: number;
-  collect: 1 | 0;
-};
-const PlateStocks = (props: PlateStocksProps) => {
-  const plateStocks = useQuery({
-    queryKey: [getPlateStocks.cacheKey, props.plateId],
-    queryFn: () =>
-      getPlateStocks(props.plateId!, [
-        "basic_index",
-        "stock_before",
-        "stock_after",
-        "total_share",
-      ]),
-    enabled: !!props.plateId,
-  });
-
-  const [list, { setList, onSort }] = useTableData<Stock>([], "symbol");
-
-  useEffect(() => {
-    setList(
-      plateStocks.data?.map((o) => {
-        const s = stockUtils.toStock(o.stock, {
-          extend: o.extend,
-          name: o.name,
-          symbol: o.symbol,
-        });
-
-        return {
-          ...s,
-          percent: stockUtils.getPercent(s),
-          marketValue: stockUtils.getMarketValue(s),
-        };
-      }) ?? []
-    );
-  }, [plateStocks.data, setList]);
-
-  const columns = useMemo<JknRcTableProps<ArrayItem<typeof list>>["columns"]>(
-    () => [
-      {
-        title: "序号",
-        dataIndex: "index",
-        align: "center",
-        width: 60,
-        render: (_, __, index) => index + 1,
-      },
-      {
-        title: "名称代码",
-        dataIndex: "name",
-        align: "left",
-        sort: true,
-        render: (name, row) => <StockView name={name} code={row.symbol} />,
-      },
-      {
-        title: "现价",
-        dataIndex: "close",
-        align: "right",
-        sort: true,
-        render: (close, row) => (
-          <SubscribeSpan.PriceBlink
-            symbol={row.symbol}
-            initValue={close}
-            decimal={3}
-            initDirection={stockUtils.isUp(row)}
-          />
-        ),
-      },
-      {
-        title: "涨跌幅",
-        dataIndex: "percent",
-        align: "right",
-        width: 90,
-        sort: true,
-        render: (percent, row) => (
-          <SubscribeSpan.PercentBlockBlink
-            symbol={row.symbol}
-            showSign
-            decimal={2}
-            initValue={percent}
-            initDirection={stockUtils.isUp(row)}
-          />
-        ),
-      },
-      {
-        title: "成交额",
-        dataIndex: "turnover",
-        align: "right",
-        sort: true,
-        render: (turnover, row) => (
-          <SubscribeSpan.TurnoverBlink
-            showColor={false}
-            symbol={row.symbol}
-            decimal={2}
-            initValue={turnover}
-          />
-        ),
-      },
-      {
-        title: "总市值",
-        dataIndex: "marketValue",
-        align: "right",
-        sort: true,
-        render: (marketValue, row) => (
-          <SubscribeSpan.MarketValueBlink
-            showColor={false}
-            totalShare={row.totalShare ?? 0}
-            symbol={row.symbol}
-            decimal={2}
-            initValue={marketValue}
-          />
-        ),
-      },
-    ],
-    []
-  );
-
-  const onRowClick = useTableRowClickToStockTrading("symbol");
+  // 将 PlateDataType 转换为 StockDataItem
+  const convertToEconomicData = useMemo(() => {
+    if (!plateQuery.data) return [];
+    
+    return plateQuery.data.map(item => ({
+      id: item.id,
+      name: item.name,
+      amount: item.amount,
+      percent: item.change,
+    }));
+  }, [plateQuery.data, selectedPlateIds]);
 
   return (
-    <JknRcTable
-      rowKey="symbol"
-      isLoading={plateStocks.isLoading}
-      onRow={onRowClick}
-      onSort={onSort}
-      columns={columns}
-      data={list}
-    />
+    <div className="flex flex-col h-full">
+      {/* 走马灯组件 */}
+      {plateQuery.data && plateQuery.data.length > 0 ? (
+        <SuperCarousel
+          items={convertToEconomicData}
+          preloadPages={2}
+          selectedIds={selectedPlateIds}
+          onSelectionChange={handleSelectionChange}
+        />
+      ) : (
+        <div className="flex items-center justify-center h-20 rounded-md">
+          <span className="#DBDBDB">
+            {plateQuery.isLoading ? '加载中...' : '暂无数据'}
+          </span>
+        </div>
+      )}
+    </div>
   );
 };
+
 
 export default FirstStep;

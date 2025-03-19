@@ -3,7 +3,7 @@ import { JknIcon, ToggleGroup, ToggleGroupItem } from '@/components'
 import { appEvent } from '@/utils/event'
 import { cn } from '@/utils/style'
 import { useMount, useUnmount } from 'ahooks'
-import { type CSSProperties, useContext, useEffect, useRef, useState } from 'react'
+import { useContext, useEffect, useRef, useState } from 'react'
 import { SuperStockContext } from '../ctx'
 
 /**

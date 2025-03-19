@@ -25,3 +25,19 @@ export const StockTrendIcon = ({ color = "#575757", className = "" }: { color?: 
     </svg>
   );
 };
+
+/**
+ * 自定义勾选图标组件
+ * @param props 组件属性
+ * @param props.color 图标颜色，默认为 #575757
+ * @param props.className 自定义类名
+ */
+export const SelectCheckIcon = ({ color = "#575757", className = "" }: { color?: string, className?: string }) => {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+      <circle cx="8" cy="8" r="8" fill={color}/>
+      <path d="M11.2438 6.74383L7.72753 10.2601L5.4837 8.0163" stroke="white" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  );
+};
+
