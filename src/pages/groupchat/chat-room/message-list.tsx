@@ -1,12 +1,12 @@
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger, JknInfiniteArea } from "@/components"
 import { ChatCmdType, chatConstants, ChatMessageType, useChatStore } from "@/store"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
-import WKSDK, { type CMDContent, ConnectStatus, type Message, PullMode, type Reply, Subscriber } from "wukongimjssdk"
+import WKSDK, { type CMDContent, ConnectStatus, type Message, MessageStatus, PullMode, type Reply, Subscriber } from "wukongimjssdk"
 import { TextRecord } from "./components/text-record"
 import ChatAvatar from "../components/chat-avatar"
 import { useCallback, useEffect, useRef, useState, type ComponentRef, type PropsWithChildren } from "react"
 import { getTimeFormatStr } from "../chat-utils"
-import { useCMDListener, useMessageListener, useSubscribesListener } from "../lib/hooks"
+import { useCMDListener, useMessageListener, useMessageStatusListener, useSubscribesListener } from "../lib/hooks"
 import { useUpdate } from "ahooks"
 import { RevokeRecord } from "./components/revoke-record"
 import { ImageRecord } from "./components/image-record"
@@ -67,7 +67,7 @@ export const ChatMessageList = () => {
     if (message.channel.channelID !== channel?.channelID) return
 
     const isOnBottom = scrollRef.current?.isOnLimit()
-    console.log(message)
+    console.log(message, message.status)
     fetchUserInChannel(message.channel, message.fromUID).then(r => {
       queryClient.setQueryData<typeof messages.data>(['syncMessages', channel?.channelID], (oldData) => {
         if (!oldData) return
@@ -125,6 +125,7 @@ export const ChatMessageList = () => {
 
   return (
     <JknInfiniteArea className="w-full h-full chat-message-scroll-list" ref={scrollRef}>
+      
       {messages.data?.map((msg) => (
         <ChatMessageRow key={msg.messageID} message={msg}>
           {{
@@ -144,8 +145,17 @@ interface ChatMessageRowProps {
 
 const ChatMessageRow = ({ message, children }: PropsWithChildren<ChatMessageRowProps>) => {
   const uid = WKSDK.shared().config.uid
+  const update = useUpdate()
 
   const { fromName, fromAvatar } = message.remoteExtra.extra || {}
+
+  useMessageStatusListener(message, (msg) => {
+    if(message.clientSeq === msg.clientSeq){
+      message.status = msg.reasonCode === 1 ? MessageStatus.Normal : MessageStatus.Fail
+      message.messageID = msg.messageID.toString()
+      update()
+    }
+  })
 
   if (message.remoteExtra.revoke) {
     return (

@@ -1,9 +1,9 @@
 import { cn } from "@/utils/style"
 import { router } from "@/router"
 import { ReactNode, useEffect, useState } from "react"
-import { useToken, useUser } from "@/store"
+import { useConfig, useToken, useUser } from "@/store"
 import { useAuthorized, useToast } from "@/hooks"
-import { JknIcon } from ".."
+import { JknAlert, JknIcon } from ".."
 
 type MenuItem = {
   icon: IconName | ReactNode
@@ -95,8 +95,15 @@ const MenuRight = () => {
                 })
                 return
               }
-
+              
               if (user?.permission && user.permission.chat === true) {
+                if (useConfig.getState().ip === 'CN'){
+                  JknAlert.info({
+                    content: '根据中国大陆地区相关政策要求，此项功能暂不面向中国大陆地区用户开放，感谢理解！Due to regulatory requirements in Mainland China, This feature is not available in Mainland China.Thanks for your understanding​',
+                    title: '服务不可用'
+                  })
+                  return
+                }
                 window.open(
                   `${window.location.origin}/chat`,
                   "whatever",

@@ -1,10 +1,14 @@
 import { useLatestRef } from '@/hooks'
+import { ChatMessageType } from "@/store"
 import { useEffect } from 'react'
 import WKSDK, {
   type Channel,
   type SubscriberChangeListener,
   type CMDContent,
-  type MessageListener
+  type MessageListener,
+  MessageStatusListener,
+  Message,
+  MessageStatus
 } from 'wukongimjssdk'
 
 export const useMessageListener = (cb: MessageListener) => {
@@ -37,6 +41,10 @@ export const useCMDListener = (cb: MessageListener) => {
   }, [lastFn])
 }
 
+/**
+ * 调用WKSDK.shared().channelManager.syncSubscribes后触发
+ * 这时候subscribes已经同步完成
+ */
 export const useSubscribesListener = (channel: Undefinable<Channel>, cb: SubscriberChangeListener) => {
   const lastFn = useLatestRef(cb)
   useEffect(() => {
@@ -51,4 +59,21 @@ export const useSubscribesListener = (channel: Undefinable<Channel>, cb: Subscri
       WKSDK.shared().channelManager.removeSubscriberChangeListener(listener)
     }
   }, [lastFn, channel])
+}
+
+export const useMessageStatusListener = (message: Message, cb: MessageStatusListener) => {
+  const lastFn = useLatestRef(cb)
+  useEffect(() => {
+    if(message.contentType === ChatMessageType.Cmd) return
+    if(message.status !== MessageStatus.Wait) return
+    const listener: MessageStatusListener = message => {
+      lastFn.current(message)
+    }
+
+    WKSDK.shared().chatManager.addMessageStatusListener(listener)
+
+    return () => {
+      WKSDK.shared().chatManager.removeMessageStatusListener(listener)
+    }
+  }, [lastFn, message])
 }
