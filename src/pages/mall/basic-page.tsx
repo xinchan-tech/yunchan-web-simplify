@@ -50,13 +50,14 @@ const PublicizeItem = ({
 }) => {
   const isDisabled = publicize[0] === 0;
   const publicizeName = publicize[1];
+  const isChannelActive = isActive && isChannel;
 
   return (
     <div className="flex items-center  space-x-2 text-base font-pingfang">
       <div className="flex items-center justify-center">
       {isDisabled ? (
         <CloseIcon />
-      ) : isChannel ? (
+      ) : isChannelActive ? (
         <GradientCheckIcon />
       ) : (
         <CheckIcon color={isActive ? "#FADFB0" : "#C0B8AA"} />
@@ -80,7 +81,7 @@ const PublicizeItem = ({
                 <JknIcon.Svg name="explain" className="w-5 h-5" color="#3D3D3D" />
               </span>
             </HoverCardTrigger>
-            <HoverCardContent className="p-0 w-[520px]">
+            <HoverCardContent className="p-0 w-[520px] hover-card-content">
               <div className="flex ">
                 <div className="flex-1 border-0 border-r border-solid border-accent">
                   <div className="bg-accent">主图</div>
@@ -268,12 +269,13 @@ export const BasicPage = (props: BasicPageProps) => {
             background: linear-gradient(to bottom, #e7c88d, #0b0404);
             box-shadow: 0 10px 15px rgba(0, 0, 0, 0.3);
             transform: translateY(-20px);
+            z-index: 10; /* 添加z-index确保active卡片在其他卡片之上 */
           }
 
           /* 价格文本样式 */
           .price-text {
             font-family: "Heebo", sans-serif;
-            font-weight: 700;
+            font-weight: 600;
           }
 
           /* 推荐标签渐变背景 */
@@ -294,6 +296,11 @@ export const BasicPage = (props: BasicPageProps) => {
             background-clip: text;
             color: transparent;
             font-weight: 500;
+          }
+
+          /* 添加HoverCard内容的z-index样式 */
+          :global(.hover-card-content) {
+            z-index: 50 !important; /* 确保HoverCard内容始终在最上层 */
           }
         `}
       </style>
