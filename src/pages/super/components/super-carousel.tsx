@@ -1,10 +1,11 @@
 import * as React from 'react';
 import { cn } from '@/utils/style';
 import { Button } from '@/components/ui/button';
-import { ArrowLeftIcon, ArrowRightIcon, CheckIcon } from '@radix-ui/react-icons';
+import { ArrowLeftIcon, ArrowRightIcon } from '@radix-ui/react-icons';
 import useEmblaCarousel, { type UseEmblaCarouselType } from 'embla-carousel-react';
 import Decimal from 'decimal.js';
 import { SelectCheckIcon } from './super-icon';
+import { JknIcon } from '@/components/jkn/jkn-icon';
 
 /**
  * 经济数据项类型定义
@@ -194,6 +195,47 @@ export const SuperCarousel: React.FC<
     };
   }, [api, onSelect]);
 
+  // 添加鼠标滚轮事件处理
+  React.useEffect(() => {
+    if (!api || !carouselRef) return;
+    
+    /**
+     * 处理鼠标滚轮事件
+     * @param e - 鼠标滚轮事件对象
+     */
+    const handleWheel = (e: Event) => {
+      // 将事件转换为WheelEvent类型
+      const wheelEvent = e as WheelEvent;
+      
+      // 阻止默认滚动行为
+      wheelEvent.preventDefault();
+      
+      // 根据滚轮方向决定滚动方向
+      // deltaY > 0 表示向下滚动，对应走马灯向右滚动
+      // deltaY < 0 表示向上滚动，对应走马灯向左滚动
+      if (wheelEvent.deltaY > 0) {
+        api.scrollNext();
+      } else {
+        api.scrollPrev();
+      }
+    };
+    
+    // 获取走马灯容器元素
+    const containerElement = document.querySelector('[aria-roledescription="carousel"] .overflow-hidden');
+    
+    // 添加鼠标滚轮事件监听器
+    if (containerElement) {
+      containerElement.addEventListener('wheel', handleWheel, { passive: false });
+    }
+    
+    // 清理函数，移除事件监听器
+    return () => {
+      if (containerElement) {
+        containerElement.removeEventListener('wheel', handleWheel);
+      }
+    };
+  }, [api, carouselRef]);
+
   // 预加载逻辑
   React.useEffect(() => {
     if (!api || !onLoadMore) return;
@@ -252,10 +294,10 @@ export const SuperCarousel: React.FC<
           <Button
             variant="ghost"
             size="icon"
-            className="absolute left-0 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-black/20 hover:bg-black/30 z-10"
+            className="absolute left-[-19px] top-1/2 -translate-y-1/2 h-[38px] w-[38px] rounded-full bg-[#2E2E2E] hover:bg-[#2E2E2E]/70 z-10"
             onClick={scrollPrev}
           >
-            <ArrowLeftIcon className="h-4 w-4 text-white" />
+            <JknIcon.Svg name="arrow-left" className="h-4 w-4 text-white" />
             <span className="sr-only">上一页</span>
           </Button>
         )}
@@ -264,10 +306,10 @@ export const SuperCarousel: React.FC<
           <Button
             variant="ghost"
             size="icon"
-            className="absolute right-0 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-black/20 hover:bg-black/30 z-10"
+            className="absolute right-[-19px] top-1/2 -translate-y-1/2 h-[38px] w-[38px] rounded-full bg-[#2E2E2E] hover:bg-[#2E2E2E]/70 z-10"
             onClick={scrollNext}
           >
-            <ArrowRightIcon className="h-4 w-4 text-white" />
+            <JknIcon.Svg name="arrow-right" className="h-4 w-4 text-white" />
             <span className="sr-only">下一页</span>
           </Button>
         )}
@@ -321,7 +363,7 @@ const EconomicDataItem: React.FC<EconomicDataItemProps> = ({
         onClick={handleCheckboxClick}
       >
         <div className="flex flex-row items-center justify-between">
-          <span className="text-base text-[#DBDBDB]">{item.name}</span>
+          <span className="text-base text-[#DBDBDB] truncate">{item.name}</span>
           <span className='w-4 h-4'>
             {isChecked && (
               <SelectCheckIcon color="#089981" />
