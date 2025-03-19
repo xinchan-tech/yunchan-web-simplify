@@ -248,7 +248,7 @@ const GoldenPool = () => {
       }
 
       const [err] = await to(moveStockCollectBatch({
-        collect_ids: checked,
+        collect_ids: checked.map(id => Number(id)),
         cate_ids: [Number(cateId)],
       }));
 
