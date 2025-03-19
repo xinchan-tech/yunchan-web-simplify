@@ -359,7 +359,9 @@ const EconomicDataItem: React.FC<EconomicDataItemProps> = ({
         'min-w-0 shrink-0 grow-0 basis-[230px] cursor-pointer transition-all duration-200 select-none'
       )}
     >
-      <div className="flex flex-col justify-between h-[100px] w-[220px] px-5 py-[10px] bg-[#1F1F1F] rounded-[10px] box-border border border-solid border-[#B8B8B8B]"
+      <div className={cn("flex flex-col justify-between h-[100px] w-[220px] px-5 py-[10px] bg-[#1F1F1F] rounded-[10px] box-border border border-solid ",
+        isChecked ? 'border-[#089981]' : 'border-[#B8B8B8B]'
+      )}
         onClick={handleCheckboxClick}
       >
         <div className="flex flex-row items-center justify-between">
