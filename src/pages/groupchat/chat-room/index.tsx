@@ -51,8 +51,8 @@ export const ChatRoom = () => {
       noticeModal.modal.close()
     }} />,
     className: 'w-[476px]',
-    footer: null
-
+    footer: null,
+    closeOnMaskClick: false
   })
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>

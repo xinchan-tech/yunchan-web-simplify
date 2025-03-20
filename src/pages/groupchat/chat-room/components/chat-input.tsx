@@ -13,6 +13,7 @@ import { ChatCmdType, ChatMessageType } from "@/store"
 import { useCMDListener, useSubscribesListener } from "../../lib/hooks"
 import { WKSDK, type Channel, type CMDContent } from "wukongimjssdk"
 import { hasForbidden } from "../../lib/utils"
+import { useMount } from "ahooks"
 
 interface ChatInputProps {
   channel?: Channel
@@ -165,13 +166,15 @@ export const ChatInput = forwardRef<ChatInputInstance, ChatInputProps>((props, r
   useSubscribesListener(props.channel, useCallback((channel) => {
     if (!props.channel!.isEqual(channel)) return
     const me = WKSDK.shared().channelManager.getSubscribeOfMe(channel)
-
-    if (!me || hasForbidden(me)) {
+    if(!me){
+      editor?.setEditable(true)
+      return
+    }
+    if (hasForbidden(me)) {
       editor?.commands.clearContent()
       editor?.setEditable(false)
     } else {
       editor?.setEditable(true)
-
     }
   }, [props.channel, editor]))
 
@@ -179,6 +182,28 @@ export const ChatInput = forwardRef<ChatInputInstance, ChatInputProps>((props, r
   useEffect(() => {
     editor?.commands.clearContent()
   }, [editor])
+
+  useEffect(() => {
+    if(!props.channel) {
+      editor?.setEditable(true)
+      return
+    }
+
+    const me = WKSDK.shared().channelManager.getSubscribeOfMe(props.channel)
+
+    if(!me){
+      editor?.setEditable(true)
+      return
+    }
+
+    if (hasForbidden(me)) {
+      editor?.commands.clearContent()
+      editor?.setEditable(false)
+    } else {
+      editor?.setEditable(true)
+    }
+    
+  }, [props.channel, editor])
 
   return (
     <div className="chat-room-input h-[180px] relative">
