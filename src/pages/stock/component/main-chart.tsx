@@ -13,6 +13,7 @@ import { BackTestBar } from "./back-test-bar"
 import { useStockBarSubscribe } from "@/hooks"
 import { useTime } from "@/store"
 import { colorUtil } from "@/utils/style"
+import { dateUtils } from "@/utils/date"
 
 interface MainChartProps {
   chartId: string
@@ -39,11 +40,17 @@ export const MainChart = (props: MainChartProps) => {
 
   useStockBarSubscribe([`${symbol}@${stockUtils.intervalToPeriod(chartStore.interval)}`], (data) => {
     const trading = useTime.getState().getTrading()
+    
+    const record = stockUtils.toStock(data.rawRecord)
+    // console.log('stock bar subscribe ********************')
+    // console.log(dateUtils.toUsDay(data.rawRecord[0]! as unknown as number).format('YYYY-MM-DD HH:mm:ss'))
+    // console.log(trading, renderUtils.shouldUpdateChart(trading, chartStore.interval), chartImp.current?.isSameIntervalCandlestick(record, chartStore.interval))
+    // console.log(data)
+    // console.log('stock bar subscribe end ********************')
     if (!renderUtils.shouldUpdateChart(trading, chartStore.interval)) {
       return
     }
 
-    const record = stockUtils.toStock(data.rawRecord)
     const chart = chartImp.current?.getChart()
     const lastData = chart?.getDataList()?.slice(-1)[0]
 

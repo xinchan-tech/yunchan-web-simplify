@@ -1,5 +1,5 @@
 import { StockChartInterval, getLargeCapIndexes, getStockChartQuote } from '@/api'
-import { CapsuleTabs, JknIcon, SubscribeSpan } from '@/components'
+import { CapsuleTabs, JknIcon, StockSelect, SubscribeSpan } from '@/components'
 import { useStockQuoteSubscribe } from '@/hooks'
 import { useConfig, useTime } from '@/store'
 import { getTradingPeriod } from '@/utils/date'
@@ -138,6 +138,9 @@ const LargeCap = () => {
 
   return (
     <div className="h-full flex flex-col">
+      <div className="text-right pt-2 px-2 box-border w-full flex justify-end">
+        <StockSelect className="rounded-[300px] py-[2px] px-3" />
+      </div>
       <ScrollContainer onNextStock={onNextStock} onPrevStock={onPreStock}>
         {/* <div className=""> */}
         {stocks.map(stock => (

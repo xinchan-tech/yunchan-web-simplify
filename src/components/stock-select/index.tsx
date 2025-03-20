@@ -59,7 +59,7 @@ const StockSelect = ({ onChange, className, width, ...props }: StockSelectProps)
               className="border-none placeholder:text-tertiary"
               size="sm"
               onClick={() => setTrue()}
-              placeholder="请输入股票代码"
+              placeholder="搜索股票"
               {...props}
             />
           </div>
