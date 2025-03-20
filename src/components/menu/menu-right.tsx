@@ -32,27 +32,27 @@ const MenuRight = () => {
   const menus: MenuItem[] = [
     {
       icon: <JknIcon.Svg name="stock" size={20} />,
-      title: '个股盘口',
+      title: '图表',
       path: '/stock'
     },
     {
       icon: <JknIcon.Svg name="push" size={20} />,
-      title: '特色推送',
+      title: '榜单',
       path: '/push'
     },
     {
       icon: <JknIcon.Svg name="financial" size={20} />,
-      title: '财务估值',
+      title: '财务',
       path: '/finance'
     },
     {
       icon: <JknIcon.Svg name="alarm" size={20} />,
-      title: 'AI报警',
+      title: '警报',
       path: '/stock/alarm'
     },
     {
       icon: <JknIcon.Svg name="group" size={20} />,
-      title: "讨论社群",
+      title: "群聊",
       path: "/chat-group",
     },
   ]
@@ -83,51 +83,54 @@ const MenuRight = () => {
   }
 
   return (
-    <div className="px-0.5 box-border space-y-1.5 py-[20px] flex flex-col items-center">
+    <div className="px-0.5 box-border space-y-2.5 py-[20px] flex h-full flex-col items-center">
       {menus.map(item => (
-        <div
-          key={item.title}
-          onClick={() => {
-            if (item.path === "/chat-group") {
-              if (!token) {
-                toast({
-                  title: "请先登录",
-                })
-                return
-              }
-              
-              if (user?.permission && user.permission.chat === true) {
-                if (useConfig.getState().ip === 'CN'){
-                  JknAlert.info({
-                    content: '根据中国大陆地区相关政策要求，此项功能暂不面向中国大陆地区用户开放，感谢理解！Due to regulatory requirements in Mainland China, This feature is not available in Mainland China.Thanks for your understanding​',
-                    title: '服务不可用'
+        <div className="text-center" key={item.title}>
+          <div
+            onClick={() => {
+              if (item.path === "/chat-group") {
+                if (!token) {
+                  toast({
+                    title: "请先登录",
                   })
                   return
                 }
-                window.open(
-                  `${window.location.origin}/chat`,
-                  "whatever",
-                  "hideit,height=750,width=1000,resizable=yes,scrollbars=yes,status=no,location=no"
-                )
+
+                if (user?.permission && user.permission.chat === true) {
+                  if (useConfig.getState().ip === 'CN') {
+                    JknAlert.info({
+                      content: '根据中国大陆地区相关政策要求，此项功能暂不面向中国大陆地区用户开放，感谢理解！Due to regulatory requirements in Mainland China, This feature is not available in Mainland China.Thanks for your understanding​',
+                      title: '服务不可用'
+                    })
+                    return
+                  }
+                  window.open(
+                    `${window.location.origin}/chat`,
+                    "whatever",
+                    "hideit,height=750,width=1000,resizable=yes,scrollbars=yes,status=no,location=no"
+                  )
+                } else {
+                  onNav("/mall")
+                }
               } else {
-                onNav("/mall")
+                onNav(item.path)
               }
-            } else {
-              onNav(item.path)
-            }
-          }}
-          onKeyDown={() => { }}
-          className={cn("flex flex-col items-center cursor-pointer hover:bg-accent w-8 h-8 justify-center rounded-xs", pathname === item.path && 'bg-primary/30')}
-        >
-          <div className={cn('inline-block h-[20px]', pathname === item.path ? 'text-primary' : '')}>
-            {
-              item.icon
-            }
+            }}
+            onKeyDown={() => { }}
+            className={cn("flex flex-col items-center cursor-pointer hover:bg-accent w-8 h-8 justify-center rounded-xs", pathname === item.path && 'bg-primary/30')}
+          >
+            <div className={cn('inline-block h-[20px]', pathname === item.path ? 'text-primary' : '')}>
+              {
+                item.icon
+              }
+            </div>
           </div>
-          {/* <div className={cn('w-8 text-center text-sm text-[#555555]', pathname === item.path && 'active-text')}>
+          <span className="text-sm">
             {item.title}
-          </div> */}
-          <style jsx>{`
+          </span>
+        </div>
+      ))}
+      <style jsx>{`
              {
               .active-icon {
                 filter: invert(50%) sepia(96%) saturate(6798%)
@@ -139,8 +142,6 @@ const MenuRight = () => {
               }
             }
           `}</style>
-        </div>
-      ))}
     </div>
   )
 }

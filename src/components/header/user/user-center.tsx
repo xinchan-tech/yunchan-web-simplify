@@ -1,4 +1,4 @@
-import { bindInviteCode, logout } from '@/api'
+import { bindInviteCode } from '@/api'
 import { getUser, updateUser } from '@/api/user'
 import UserDefaultPng from '@/assets/icon/user_default.png'
 import {
@@ -8,7 +8,6 @@ import {
   FormItem,
   FormLabel,
   Input,
-  JknAlert,
   JknAvatar,
   Popover,
   PopoverContent,
@@ -17,10 +16,10 @@ import {
 } from '@/components'
 import { useFormModal, useModal } from '@/components/modal'
 import { useToast, useZForm } from '@/hooks'
-import { parseUserPermission, useToken, useUser } from '@/store'
+import { parseUserPermission, useUser } from '@/store'
 import { uploadUtils } from '@/utils/oss'
 import { useMutation, useQuery } from '@tanstack/react-query'
-import { useRequest, useUnmount } from 'ahooks'
+import { useUnmount } from 'ahooks'
 import to from 'await-to-js'
 import copy from 'copy-to-clipboard'
 import dayjs from "dayjs"
@@ -29,20 +28,18 @@ import { useFormContext } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import { z } from 'zod'
 
-interface UserCenterProps {
-  onLogout: () => void
-}
+// interface UserCenterProps {
+//   onLogout: () => void
+// }
 
 const userFormSchema = z.object({
   realname: z.string().optional()
 })
 
-const UserCenter = (props: UserCenterProps) => {
+const UserCenter = () => {
   const form = useZForm(userFormSchema, { realname: '' })
   const user = useUser(s => s.user)
   const setUser = useUser(s => s.setUser)
-  const reset = useUser(s => s.reset)
-  const removeToken = useToken(s => s.removeToken)
 
   const { t } = useTranslation()
   const query = useQuery({
@@ -53,7 +50,6 @@ const UserCenter = (props: UserCenterProps) => {
       })
   })
 
-  const logoutQuery = useRequest(logout, { manual: true })
   const { toast } = useToast()
 
   const authorized = useMemo(() => {
@@ -89,31 +85,6 @@ const UserCenter = (props: UserCenterProps) => {
     }
   })
 
-  const onLogout = async () => {
-    JknAlert.confirm({
-      title: '退出登录',
-      content: '确定要退出登录吗？',
-      onAction: async status => {
-        if (status === 'confirm') {
-          const [err] = await to(logoutQuery.runAsync())
-
-          if (err) {
-            toast({
-              description: err.message
-            })
-            return
-          }
-
-          reset()
-          removeToken()
-          props.onLogout()
-          if (window.location.pathname !== '/') {
-            window.location.href = '/'
-          }
-        }
-      }
-    })
-  }
   const [inviteCode, setInviteCode] = useState('')
 
   const bindInviteCodeMutation = useMutation({
@@ -196,7 +167,7 @@ const UserCenter = (props: UserCenterProps) => {
               <span
                 className="text-xs text-tertiary text-gray-5 cursor-pointer"
                 onClick={() => edit.open()}
-                onKeyDown={() => {}}
+                onKeyDown={() => { }}
               >
                 &emsp;{t('edit')}
               </span>
@@ -209,7 +180,7 @@ const UserCenter = (props: UserCenterProps) => {
               <span
                 className="text-xs text-tertiary text-gray-5 cursor-pointer"
                 onClick={avatarForm.modal.open}
-                onKeyDown={() => {}}
+                onKeyDown={() => { }}
               >
                 &emsp;&nbsp;&nbsp;{t('edit')}
               </span>
@@ -242,7 +213,7 @@ const UserCenter = (props: UserCenterProps) => {
             <div className="bg-accent rounded-sm px-4 py-0.5">{user?.re_code}</div>
             <span
               className="ml-4 text-primary cursor-pointer"
-              onKeyDown={() => {}}
+              onKeyDown={() => { }}
               onClick={() => {
                 if (user?.share_url) {
                   copy(user.share_url)
@@ -257,7 +228,7 @@ const UserCenter = (props: UserCenterProps) => {
           </div>
         </div>
         <div className="flex justify-center items-center my-6">
-        <div className="text-center w-28">
+          <div className="text-center w-28">
             <div className="text-sm text-tertiary mb-3">点击</div>
             <div className="text-4xl font-bold">{user?.total_points}</div>
           </div>
@@ -274,12 +245,6 @@ const UserCenter = (props: UserCenterProps) => {
             <div className="text-sm text-tertiary mb-3">当前积分</div>
             <div className="text-4xl font-bold">{user?.points}</div>
           </div>
-        </div>
-
-        <div className="text-right" onClick={onLogout} onKeyDown={() => {}}>
-          <Button variant="outline" className="border-border">
-            退出登录
-          </Button>
         </div>
         {edit.context}
         {avatarForm.context}

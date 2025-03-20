@@ -3,7 +3,7 @@ import { router } from '@/router'
 import { useToken } from '@/store'
 import { cn } from '@/utils/style'
 import { Settings } from 'lucide-react'
-import { type ReactNode, useEffect, useMemo, useState } from 'react'
+import { Fragment, type ReactNode, useEffect, useMemo, useState } from 'react'
 import { JknIcon } from '../jkn/jkn-icon'
 
 type MenuItem = {
@@ -36,44 +36,44 @@ const Menu = () => {
       },
       {
         icon: <JknIcon.Svg name="views" size={20} />,
-        title: '行情浏览',
+        title: '行情',
         path: '/views'
       },
       {
         icon: <JknIcon.Svg name="pool" size={20} />,
-        title: '股票金池',
+        title: '自选',
         path: '/golden'
       },
       {
         icon: <JknIcon.Svg name="picker" size={20} />,
-        title: '超级选股',
+        title: '选股',
         path: '/super'
       },
-      {
-        icon: <JknIcon.Svg name="ai-alarm" size={20} />,
-        title: 'AI报警',
-        path: '/alarm'
-      },
+      // {
+      //   icon: <JknIcon.Svg name="ai-alarm" size={20} />,
+      //   title: 'AI报警',
+      //   path: '/alarm'
+      // },
       {
         icon: <JknIcon.Svg name="calendar" size={20} />,
-        title: '股票日历',
+        title: '日历',
         path: '/calendar'
       },
       {
         icon: <JknIcon.Svg name="message" size={20} />,
-        title: '消息中心',
+        title: '消息',
         path: '/message'
       },
-      {
-        icon: <JknIcon.Svg name="shout" size={20} />,
-        title: '大V快评',
-        path: '/shout'
-      },
-      {
-        icon: <Settings className="text-[#3c3c3c]" />,
-        title: '设置',
-        path: '/setting'
-      }
+      // {
+      //   icon: <JknIcon.Svg name="shout" size={20} />,
+      //   title: '大V快评',
+      //   path: '/shout'
+      // },
+      // {
+      //   icon: <Settings className="text-[#3c3c3c]" />,
+      //   title: '设置',
+      //   path: '/setting'
+      // }
     ],
     []
   )
@@ -98,19 +98,23 @@ const Menu = () => {
 
   // return router.navigate(...args)
   return (
-    <div className="h-full flex flex-col items-center w-full px-0.5 box-border space-y-1.5 py-[20px]">
+    <div className="h-full flex flex-col items-center w-full px-0.5 box-border space-y-2.5 mt-1">
       {menus.map(item => (
-        <div
-          key={item.title}
-          onClick={() => onNav(item.path)}
-          onKeyDown={() => {}}
-          className={cn(
-            'flex flex-col items-center cursor-pointer hover:bg-accent w-8 h-8 justify-center rounded-xs',
-            item.title === '设置' ? '!mt-auto' : '',
-            pathname === item.path && 'bg-primary/30'
-          )}
-        >
-          <div className={cn('inline-block h-[20px]', pathname === item.path ? 'text-primary' : '')}>{item.icon}</div>
+        <div className="text-center" key={item.title}>
+          <div
+
+            onClick={() => onNav(item.path)}
+            onKeyDown={() => { }}
+            className={cn(
+              'flex flex-col items-center cursor-pointer hover:bg-accent w-8 h-8 justify-center rounded-xs',
+              pathname === item.path && 'bg-primary/30'
+            )}
+          >
+            <div className={cn('inline-block h-[20px]', pathname === item.path ? 'text-primary' : '')}>{item.icon}</div>
+          </div>
+          <span className="text-sm">
+            {item.title}
+          </span>
         </div>
       ))}
       <style jsx>{`
