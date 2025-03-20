@@ -215,7 +215,7 @@ const App = () => {
             box-sizing: border-box;
             display: flex;
             min-width: 1024px;
-            min-height: 810px;
+            min-height: 720px;
             color: hsl(var(--text));
           }
 

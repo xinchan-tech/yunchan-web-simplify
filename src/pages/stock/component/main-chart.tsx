@@ -12,6 +12,7 @@ import { ChartContextMenu } from './chart-context-menu'
 import { BackTestBar } from "./back-test-bar"
 import { useStockBarSubscribe } from "@/hooks"
 import { useTime } from "@/store"
+import { colorUtil } from "@/utils/style"
 
 interface MainChartProps {
   chartId: string
@@ -45,13 +46,13 @@ export const MainChart = (props: MainChartProps) => {
     const record = stockUtils.toStock(data.rawRecord)
     const chart = chartImp.current?.getChart()
     const lastData = chart?.getDataList()?.slice(-1)[0]
-  
+
     if (chartImp.current?.isSameIntervalCandlestick(record, chartStore.interval)) {
       chartImp.current?.appendCandlestick({
         ...record,
         quote: lastData?.quote
       }, chartStore.interval)
-    }else{
+    } else {
       chartImp.current?.appendCandlestick({
         ...record,
         quote: record.close
@@ -143,7 +144,7 @@ export const MainChart = (props: MainChartProps) => {
       })
     }
 
-    if(renderUtils.isTimeIndexChart(chartStore.interval)){
+    if (renderUtils.isTimeIndexChart(chartStore.interval)) {
       chartImp.current?.setTimeShareChart(chartStore.interval)
     }
   })
@@ -190,7 +191,7 @@ export const MainChart = (props: MainChartProps) => {
       if (renderUtils.isTimeIndexChart(interval)) {
         chartManage.setType(ChartType.Area, props.chartId)
         chartImp.current?.setTimeShareChart(interval)
-      }else{
+      } else {
         chartImp.current?.setTimeShareChart()
       }
       chartManage.setMode('normal')
@@ -245,8 +246,8 @@ export const MainChart = (props: MainChartProps) => {
             const compareCandlesticks = new Array(startInCandlesticksIndex!.index)
               .fill(null)
               .concat(r.data.list.map(c => c[2]))
-
-            stockCache.current.compare.set(symbol, chartImp.current?.createStockCompare(symbol, compareCandlesticks, 'blue'))
+            const color = colorUtil.colorPalette[stockCache.current.compare.size]
+            stockCache.current.compare.set(symbol, chartImp.current?.createStockCompare(symbol, compareCandlesticks, color))
           })
         }
       } else {

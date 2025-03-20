@@ -1,8 +1,8 @@
 import type * as React from 'react'
 import { DayPicker } from 'react-day-picker'
-
 import { buttonVariants } from '@/components/ui/button'
 import { cn } from '@/utils/style'
+import { zhCN } from 'date-fns/locale'
 import { ChevronLeftIcon, ChevronRightIcon } from '@radix-ui/react-icons'
 
 export type CalendarProps = React.ComponentProps<typeof DayPicker>
@@ -10,6 +10,7 @@ export type CalendarProps = React.ComponentProps<typeof DayPicker>
 function Calendar({ className, classNames, showOutsideDays = true, ...props }: CalendarProps) {
   return (
     <DayPicker
+      locale={zhCN}
       showOutsideDays={showOutsideDays}
       className={cn('p-3', className)}
       classNames={{

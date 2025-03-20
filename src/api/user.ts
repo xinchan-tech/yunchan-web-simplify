@@ -1,6 +1,7 @@
 import request from '@/utils/request'
 
 export type UserResult = {
+  alarm_email?: string
   /**
    * 已授权的指标列表
    */
@@ -104,6 +105,7 @@ getUser.cacheKey = 'user:info'
 type UpdateUserParams = {
   avatar?: string
   nickname?: string
+  alarm_email?: string
 }
 
 export const updateUser = (params: UpdateUserParams) => {
