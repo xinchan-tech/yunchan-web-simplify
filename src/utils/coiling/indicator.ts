@@ -61,8 +61,6 @@ export const calcIndicator = async (
     status: number
   }
 
-  console.log(result)
-
   return result.data.map(item => {
     const r: IndicatorData = {
       name: item.name,

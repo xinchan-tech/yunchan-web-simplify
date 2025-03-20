@@ -7,6 +7,7 @@ import { router } from '@/router'
 import { getStringWidth } from '@/utils/string'
 import Decimal from 'decimal.js'
 import { debounce } from 'radash'
+import { useLatestRef } from "@/hooks"
 
 type TreeMapData = {
   name: string
@@ -64,6 +65,7 @@ const TreeMap = (props: TreeMapProps) => {
   const chartDomRef = useRef<HTMLDivElement>(null)
   const tipRef = useRef<HTMLDivElement>(null)
   const sizeRef = useRef<{ width: number; height: number }>({ width: 0, height: 0 })
+  const dataRef = useLatestRef(props.data)
 
   useMount(() => {
     if (!chartDomRef.current) {
@@ -91,7 +93,7 @@ const TreeMap = (props: TreeMapProps) => {
         if (sizeRef.current.width !== width || sizeRef.current.height !== height) {
           sizeRef.current.width = width
           sizeRef.current.height = height
-          render(props.data)
+          render(dataRef.current)
         }
       })
     )
@@ -101,7 +103,7 @@ const TreeMap = (props: TreeMapProps) => {
     return () => {
       resizeObserver.disconnect()
     }
-  }, [props.data])
+  }, [props.data, dataRef])
 
   const render = (data: TreeMapData[]) => {
     if (!chartDomRef.current) {

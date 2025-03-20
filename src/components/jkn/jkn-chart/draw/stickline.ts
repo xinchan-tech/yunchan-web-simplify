@@ -9,8 +9,8 @@ type StickLineShape = {
   color: string | string[]
   data: IndicatorDataType<'STICKLINE'>['drawData']
 }
-type DrawTextFunc = (params: IndicatorDrawParams<any, any, any>, data: StickLineShape) => void
-export const drawStickLine: DrawTextFunc = (params, { data, color }) => {
+type DrawStockLineFunc = (params: IndicatorDrawParams<any, any, any>, data: StickLineShape) => void
+export const drawStickLine: DrawStockLineFunc = (params, { data, color }) => {
   const Rect = getFigureClass('rect')!
   const { xAxis, yAxis, chart, ctx } = params
   const { realFrom, realTo } = chart.getVisibleRange()
@@ -21,7 +21,8 @@ export const drawStickLine: DrawTextFunc = (params, { data, color }) => {
     _color = color[0]
     lineGradient = color.map((c, i) => [i / (color.length - 1), c])
   }
-
+  if(!data) return false
+  if(!Array.isArray(data)) return false
   data.forEach(item => {
     if (inRange(item.x, realFrom, realTo)) {
       const y = yAxis.convertToPixel(item.y1)

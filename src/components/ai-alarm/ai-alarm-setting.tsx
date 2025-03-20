@@ -1,8 +1,8 @@
-import { type StockCategory, addAlarm, getAlarmTypes } from '@/api'
+import { type StockCategory, addAlarm, getAlarmConditionsList, getAlarmTypes } from '@/api'
 import { useToast, useZForm } from '@/hooks'
 import StockSelectInput from '@/pages/alarm/components/stock-select-input'
 import { cn } from '@/utils/style'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useBoolean, useUpdateEffect } from 'ahooks'
 import to from 'await-to-js'
 import { type CSSProperties, forwardRef, useEffect, useMemo, useState } from 'react'
@@ -37,6 +37,7 @@ const AiAlarmSetting = (props: AiAlarmSetting) => {
   const [loading, { toggle }] = useBoolean(false)
 
   const { toast } = useToast()
+  const queryClient = useQueryClient()
 
   const onSubmit = async () => {
     const valid = await form.trigger()
@@ -70,6 +71,9 @@ const AiAlarmSetting = (props: AiAlarmSetting) => {
 
     toast({ description: '添加成功' })
     toggle()
+    queryClient.refetchQueries({
+      queryKey: [getAlarmConditionsList.cacheKey],
+    })
   }
 
   return (

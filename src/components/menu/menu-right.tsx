@@ -45,11 +45,11 @@ const MenuRight = () => {
       title: '财务估值',
       path: '/finance'
     },
-    // {
-    //   icon: <JknIcon.Svg name="alarm" size={20} />,
-    //   title: 'AI报警',
-    //   path: '/stock/alarm'
-    // },
+    {
+      icon: <JknIcon.Svg name="alarm" size={20} />,
+      title: 'AI报警',
+      path: '/stock/alarm'
+    },
     {
       icon: <JknIcon.Svg name="group" size={20} />,
       title: "讨论社群",

@@ -49,6 +49,8 @@ export type UserResult = {
   show_invite: 0 | 1
   total_inv: number
   total_points: number
+  transaction: number
+  inv_click: number
   points: number
   buy_inchannel_status: number
 

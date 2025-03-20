@@ -182,3 +182,93 @@ export const getAlarmLogs = async (params: GetAlarmLogsParams) => {
   return request.get<GetAlarmLogsResult>('/alarm/logs', { params }).then(r => r.data)
 }
 getAlarmLogs.cacheKey = 'alarms:logs'
+
+type GetAlarmConditionsListParams = {
+  page: number
+  limit: number
+}
+
+type AlarmBaseType = {
+  create_time: string
+  id: string
+  stock_cycle: number
+  symbol: string
+}
+
+type AlarmAIType = AlarmBaseType & {
+  type: AlarmType.AI
+  condition: {
+    bull: string
+    category_hdly_ids?: string[]
+    category_hdly_names?: string[]
+    category_ids: number[]
+    category_names: string[]
+    frequency: 0 | 1
+  }
+}
+
+type PriceAlarmType = AlarmBaseType & {
+  type: AlarmType.PRICE
+  condition: {
+    frequency: number
+    is_email: 0 | 1
+    price: number
+    trigger: PriceAlarmTrigger
+  }
+}
+
+type GetAlarmConditionsListResult = AlarmAIType | PriceAlarmType
+
+/**
+ * 报警列表
+ */
+export const getAlarmConditionsList = async (params: GetAlarmConditionsListParams) => {
+  return request.get<Page<GetAlarmConditionsListResult>>('/stock-svc/alarm/conditions', { params }).then(r => r.data)
+}
+getAlarmConditionsList.cacheKey = 'alarms:conditions:list'
+
+/**
+ * 删除报警条件
+ */
+export const deleteAlarmCondition = async (ids: string[]) => {
+  return request.delete('/stock-svc/alarm/conditions', { data: { ids } }).then(r => r.data)
+}
+
+type BaseAlarmRecord = {
+  symbol: string
+  stock_cycle: number
+  id: string
+  alarm_time: number
+}
+
+type AiAlarmRecord = BaseAlarmRecord & {
+  type: AlarmType.AI
+  condition: {
+    bull: '0' | '1'
+    hdly?: string
+    indicators?: string
+    score: {
+      indicators: number
+      hdly: number
+    }
+    score_total: number
+    frequency: number
+  }
+}
+
+type PriceAlarmRecord = BaseAlarmRecord & {
+  type: AlarmType.PRICE
+  condition: {
+    trigger: PriceAlarmTrigger
+    price: number
+    frequency: number
+  }
+}
+
+/**
+ * 触发报警日志列表
+ */
+export const getAlarmLogsList = async (params: GetAlarmLogsParams) => {
+  return request.get<Page<PriceAlarmRecord | AiAlarmRecord>>('/stock-svc/alarm/logs', { params }).then(r => r.data)
+}
+getAlarmLogsList.cacheKey = 'stock-svc:alarms:logs'

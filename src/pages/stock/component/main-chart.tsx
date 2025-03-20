@@ -193,6 +193,7 @@ export const MainChart = (props: MainChartProps) => {
       }else{
         chartImp.current?.setTimeShareChart()
       }
+      chartManage.setMode('normal')
     })
 
     const cancelCharTypeEvent = chartEvent.on('chartTypeChange', (type) => {

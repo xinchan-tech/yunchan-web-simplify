@@ -1,7 +1,7 @@
 import GroupChannel from './group-channel'
 import GroupChatLeftBar from './left-bar'
 
-import { chatConstants, useChatStore, useToken, useUser } from '@/store'
+import { chatConstants, chatManager, useChatStore, useToken, useUser } from '@/store'
 import { createContext, useEffect, useRef, useState } from 'react'
 import WKSDK, {
   type ConnectStatusListener,
@@ -157,7 +157,7 @@ const GroupChatPage = () => {
       return
     }
 
-    const localConfig = useChatStore.getState().config
+    const localConfig = chatManager.getWsConfig()
     const channel = new BroadcastChannel(chatConstants.broadcastChannelId)
 
     if (!user?.username || !token) {

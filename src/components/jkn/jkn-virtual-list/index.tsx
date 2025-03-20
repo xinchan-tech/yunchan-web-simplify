@@ -1,6 +1,7 @@
-import { ScrollArea } from "@/components"
+import { JknInfiniteArea, ScrollArea } from "@/components"
+import { useVirtualizer } from "@tanstack/react-virtual"
 import { useVirtualList } from "ahooks"
-import { type ReactNode, useRef } from "react"
+import { type ComponentProps, type ComponentRef, type ReactNode, useRef } from "react"
 
 interface JknVirtualListProps<T> {
   data: T[]
@@ -32,5 +33,50 @@ export const JknVirtualList = <T,>({ data, itemHeight, renderItem, overscan = 20
         )}
       </div>
     </ScrollArea>
+  )
+}
+
+interface JknVirtualInfiniteProps<T> extends JknVirtualListProps<T>, ComponentProps<typeof JknInfiniteArea> {
+
+}
+
+export const JknVirtualInfinite = <T,>({ data, itemHeight, renderItem, overscan = 20, className, rowKey, onScroll, ...props }: JknVirtualInfiniteProps<T>) => {
+  const containerRef = useRef<ComponentRef<typeof JknInfiniteArea>>(null)
+  const wrapperRef = useRef<HTMLDivElement>(null)
+
+  const virtualizer = useVirtualizer({
+    count: data.length,
+    getScrollElement: () => containerRef.current?.getContainer()?.querySelector('[data-radix-scroll-area-viewport]') ?? null,
+    estimateSize: () => itemHeight,
+    enabled: true
+  })
+
+  return (
+    <JknInfiniteArea ref={containerRef} className={className} {...props}>
+      <div style={{ height: virtualizer.getTotalSize(), position: 'relative', width: '100%' }}>
+        <div
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            transform: `translateY(${virtualizer.getVirtualItems()[0]?.start ?? 0}px)`,
+          }}
+        >
+          {
+            virtualizer.getVirtualItems().map(row => {
+              return (
+                <div key={row.key}
+                  data-index={row.index}
+                  ref={virtualizer.measureElement}
+                >
+                  {renderItem(data[row.index], row.index)}
+                </div>
+              )
+            })
+          }
+        </div>
+      </div>
+    </JknInfiniteArea>
   )
 }

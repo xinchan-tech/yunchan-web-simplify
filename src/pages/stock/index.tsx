@@ -42,7 +42,7 @@ const StockPage = () => {
       <div
         id="stock-trading-right-container"
         data-width={rightVisible}
-        className="order-2 w-[300px] data-[width=hide]:hidden h-full flex-shrink-0"
+        className="order-2 w-[360px] data-[width=hide]:hidden h-full flex-shrink-0"
       >
         <Outlet />
       </div>

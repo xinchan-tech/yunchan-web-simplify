@@ -1,7 +1,7 @@
-import { addAlarm, getStockBaseCodeInfo } from '@/api'
+import { addAlarm, getAlarmConditionsList, getStockBaseCodeInfo } from '@/api'
 import { useStockSearch, useToast, useZForm } from '@/hooks'
 import { stockUtils } from '@/utils/stock'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import to from 'await-to-js'
 import Decimal from 'decimal.js'
 import { nanoid } from 'nanoid'
@@ -41,6 +41,7 @@ export const PriceAlarmSetting = (props: PriceAlarmSetting) => {
   })
 
   const { toast } = useToast()
+  const queryClient = useQueryClient()
 
   const onSubmit = async () => {
     const valid = await form.trigger()
@@ -75,6 +76,9 @@ export const PriceAlarmSetting = (props: PriceAlarmSetting) => {
     }
 
     toast({ description: '添加成功' })
+    queryClient.refetchQueries({
+      queryKey: [getAlarmConditionsList.cacheKey],
+    })
   }
 
   return (

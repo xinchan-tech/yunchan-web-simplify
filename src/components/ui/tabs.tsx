@@ -10,7 +10,8 @@ const tabsVariants = cva(
     variants: {
       variant: {
         default: 'border border-solid border-border',
-        line: 'relative space-x-4'
+        line: 'relative space-x-4',
+        flat: 'text-foreground bg-accent border-none p-0.5 box-border'
       },
       size: {
         sm: 'h-7',
@@ -31,7 +32,8 @@ const tabsItemVariants = cva(
     variants: {
       variant: {
         default: 'bg-transparent data-[state=active]:bg-accent data-[state=active]:font-medium rounded',
-        line: 'text-tertiary data-[state=active]:font-medium data-[state=active]:text-foreground px-1 tabs-item-line inline-block relative'
+        line: 'text-tertiary data-[state=active]:font-medium data-[state=active]:text-foreground px-1 tabs-item-line inline-block relative',
+        flat: 'bg-transparent data-[state=active]:bg-background rounded'
       }
     },
     defaultVariants: {
@@ -70,7 +72,7 @@ const TabsTrigger = React.forwardRef<
   const ctx = React.useContext(TabsContext)
   const { variant } = ctx
   return (
-  
+
     <TabsPrimitive.Trigger
       ref={ref}
       className={cn(

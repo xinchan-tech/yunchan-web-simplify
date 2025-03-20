@@ -113,21 +113,6 @@ const UserCenter = (props: UserCenterProps) => {
         }
       }
     })
-    // const [err] = await to(logoutQuery.runAsync())
-
-    // if (err) {
-    //   toast({
-    //     description: err.message
-    //   })
-    //   return
-    // }
-
-    // reset()
-    // removeToken()
-    // props.onLogout()
-    // if (window.location.pathname !== '/') {
-    //   window.location.href = '/'
-    // }
   }
   const [inviteCode, setInviteCode] = useState('')
 
@@ -278,11 +263,11 @@ const UserCenter = (props: UserCenterProps) => {
           </div>
           <div className="text-center w-28">
             <div className="text-sm text-tertiary mb-3">注册</div>
-            <div className="text-4xl font-bold">{user?.total_points}</div>
+            <div className="text-4xl font-bold">{user?.total_inv}</div>
           </div>
           <div className="text-center w-28">
             <div className="text-sm text-tertiary mb-3">转化</div>
-            <div className="text-4xl font-bold">{user?.total_inv}</div>
+            <div className="text-4xl font-bold">{user?.transaction}</div>
           </div>
           <Separator orientation="vertical" className="h-16 bg-accent mx-4" />
           <div className="text-center w-28">

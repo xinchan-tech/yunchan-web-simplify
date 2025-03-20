@@ -16,6 +16,12 @@ declare type PageResult<T> = {
   total_pages: number
 }
 
+declare type Page<T> = {
+  items: Nullable<T[]>
+  total_items: number
+  total_pages: number
+}
+
 declare type NormalizedRecord<T = any> = Record<string, T>
 
 declare type ArrayItem<T> = T extends Array<infer U> ? U : never

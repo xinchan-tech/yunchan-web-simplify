@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { type ChatChannelState, chatConstants, ChatMessageType, type ChatStore, ChatCmdType } from './types'
 import { Channel, ChannelInfo, ConnectStatus } from 'wukongimjssdk'
 import { createJSONStorage, persist } from 'zustand/middleware'
+import { useConfig } from "../config"
 
 const wsUrlPrefix = `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${window.location.host}`
 
@@ -43,15 +44,17 @@ const useChatStore = create<ChatStore>()(
 export { useChatStore }
 
 export const chatManager = {
-  // setConfig: (config: Required<Pick<ChatConfig, 'uid' | 'token'>>) => {
-  //   useChatStore.setState({
-  //     config: {
-  //       ...useChatStore.getState().config,
-  //       uid: config.uid,
-  //       token: config.token
-  //     }
-  //   })
-  // },
+  getWsConfig: () => {
+    const debug = useConfig.getState().debug
+
+    const wsConfig = {...useChatStore.getState().config}
+
+    if(debug){
+      wsConfig.addr = wsConfig.addr.replace('im-ws', 'im-ws-test')
+    }
+
+    return wsConfig
+  },
   setState: (state: ConnectStatus) => {
     useChatStore.setState({
       state
