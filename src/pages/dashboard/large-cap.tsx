@@ -139,7 +139,7 @@ const LargeCap = () => {
   return (
     <div className="h-full flex flex-col">
       <div className="text-right pt-2 px-2 box-border w-full flex justify-end">
-        <StockSelect className="rounded-[300px] py-[2px] px-3" />
+        <StockSelect className="rounded-[300px] py-[2px] px-3" onChange={(s) => navigate(`/stock?symbol=${s}`)} />
       </div>
       <ScrollContainer onNextStock={onNextStock} onPrevStock={onPreStock}>
         {/* <div className=""> */}
