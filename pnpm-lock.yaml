@@ -4,9 +4,6 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
-overrides:
-  jkn-kline-chart: link:../../../server/nodejs/node_global/5/node_modules/jkn-kline-chart
-
 importers:
 
   .:
@@ -369,9 +366,6 @@ importers:
       compression-webpack-plugin:
         specifier: ^11.1.0
         version: 11.1.0(webpack@5.97.1(esbuild@0.23.1))
-      jkn-kline-chart:
-        specifier: link:../../../server/nodejs/node_global/5/node_modules/jkn-kline-chart
-        version: link:../../../server/nodejs/node_global/5/node_modules/jkn-kline-chart
       release-it:
         specifier: ^17.11.0
         version: 17.11.0(typescript@5.7.2)

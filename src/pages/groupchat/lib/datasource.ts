@@ -70,7 +70,7 @@ const initSyncSubscribersDataSource = () => {
     const subscribers: Subscriber[] = []
 
     const [err, res] = await to(getChannelMembers(channel.channelID, 100))
-    console.log(res)
+
     if (err) {
       console.error(err)
       return subscribers

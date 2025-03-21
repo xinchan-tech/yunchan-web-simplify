@@ -3,7 +3,7 @@ import { useModal } from "@/components"
 import { chatManager, useChatStore } from "@/store"
 import { useQuery } from "@tanstack/react-query"
 import type { JSONContent } from "@tiptap/react"
-import { ConnectStatus, Mention, MessageImage, MessageText, WKSDK } from "wukongimjssdk"
+import { ConnectStatus, Mention, MessageImage, MessageText, Reaction, Reply, WKSDK } from "wukongimjssdk"
 import { ChannelMembers } from "./channel-members"
 import { ChatInput } from "./components/chat-input"
 import { ChatMessageList } from "./message-list"
@@ -59,19 +59,29 @@ export const ChatRoom = () => {
     }
   }, [channelDetail])
 
-  const onSubmit = (content?: JSONContent, mentions?: string[]) => {
+  const onSubmit = (content?: JSONContent, extra?: {mentions?: string[], reply?: Reply}) => {
     if (!content?.content?.length) return
-    let _mentions = mentions
+    let _mentions = extra?.mentions
+    let reply = extra?.reply as Reply | null
     content.content.forEach(item => {
       if (item.type === 'paragraph') {
         if (!item.content?.length) return
         const message = new MessageText(item.content?.map(i => i.type === 'hardBreak' ? '\n' : i.text).join(''))
         if (_mentions?.length) {
-          28
           message.mention = new Mention()
           message.mention.uids = _mentions
 
           _mentions = []
+        }
+
+        if (reply) {
+          message.reply = reply
+          reply = null
+        }
+
+        if (reply) {
+          message.reply = reply
+          reply = null
         }
 
         WKSDK.shared().chatManager.send(message, channel!)

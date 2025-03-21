@@ -1,36 +1,66 @@
-import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger, JknInfiniteArea } from "@/components"
+import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger, JknVirtualInfinite } from "@/components"
 import { ChatCmdType, chatConstants, ChatMessageType, useChatStore } from "@/store"
-import { useQuery, useQueryClient } from "@tanstack/react-query"
-import WKSDK, { type CMDContent, ConnectStatus, type Message, MessageStatus, PullMode, type Reply, type Subscriber } from "wukongimjssdk"
+import { useInfiniteQuery } from "@tanstack/react-query"
+import WKSDK, { type CMDContent, type Message, MessageStatus, PullMode, type Reply, type Subscriber } from "wukongimjssdk"
 import { TextRecord } from "./components/text-record"
 import ChatAvatar from "../components/chat-avatar"
-import { useCallback, useEffect, useRef, useState, type ComponentRef, type PropsWithChildren } from "react"
+import { useCallback, useEffect, useState, type PropsWithChildren } from "react"
 import { getTimeFormatStr } from "../chat-utils"
 import { useCMDListener, useMessageListener, useMessageStatusListener, useSubscribesListener } from "../lib/hooks"
-import { useUpdate } from "ahooks"
+import { useUpdate, useUpdateEffect } from "ahooks"
 import { RevokeRecord } from "./components/revoke-record"
 import { ImageRecord } from "./components/image-record"
 import { chatEvent } from "../lib/event"
 import { revokeMessage } from "@/api"
-import { fetchUserInChannel, isChannelManager, isChannelOwner } from "../lib/utils"
+import { isChannelManager, isChannelOwner } from "../lib/utils"
+import { messageCache } from "../cache"
 
-export const ChatMessageList = () => {
+const mergePrevMessages = (oldData: Message[], newData: Message[]) => {
+  const oldDataFirst = oldData[0]
+  if(!oldDataFirst) return [...newData]
+  const prev = newData.filter(msg => msg.messageSeq < oldDataFirst.messageSeq)
+
+  return [...prev, ...oldData]
+}
+
+const useMessages = () => {
+  const [messages, setMessages] = useState<Message[]>([])
   const channel = useChatStore(state => state.lastChannel)
-  const state = useChatStore(s => s.state)
-  const queryClient = useQueryClient()
-  const scrollRef = useRef<ComponentRef<typeof JknInfiniteArea>>(null)
-  const update = useUpdate()
-  const messages = useQuery({
+
+  useEffect(() => {
+    if (!channel) return
+
+    messageCache.getMessages(channel).then(r => {
+      console.log(r)
+      setMessages(r)
+    })
+  }, [channel])
+
+  const messagesQuery = useInfiniteQuery({
     queryKey: ['syncMessages', channel?.channelID],
-    queryFn: async () => {
+    queryFn: async ({pageParam}) => {
       return WKSDK.shared().chatManager.syncMessages(channel!, {
-        startMessageSeq: 0,
+        startMessageSeq: pageParam || 0,
         endMessageSeq: 0,
-        limit: 400,
+        limit: 40,
         pullMode: PullMode.Down,
       })
     },
-    select: (data) => {
+    initialPageParam: 0,
+    getNextPageParam: () => undefined,
+    getPreviousPageParam: (firstPage) => {
+      const last = firstPage[0]
+
+      if(!last) return undefined
+
+      if(last.messageSeq >= 1){
+        return last.messageSeq - 1
+      }
+      return undefined
+    },
+    select: (res) => {
+      const data = res.pages.flat()
+
       const revokeMessage: Message[] = []
       const normalMessage: Message[] = []
 
@@ -51,57 +81,61 @@ export const ChatMessageList = () => {
 
       return normalMessage
     },
-    enabled: !!channel && state === ConnectStatus.Connected,
+    enabled: !!channel,
   })
 
-  useEffect(() => {
-    if (!messages.isLoading) {
-      setTimeout(() => {
-        scrollRef.current?.scrollToBottom()
-      }, 100)
-    }
-  }, [messages.isLoading])
+  useUpdateEffect(() => {
+    setMessages(s => {
+      const r = mergePrevMessages(s, messagesQuery.data ?? [])
+
+      messageCache.updateBatch(r.slice(-40), channel)
+
+      return r
+    })
+  }, [messagesQuery.data, channel])
+  
+  const appendMessage = (msg: Message) => {
+    setMessages(s => {
+      const r = [...s, msg]
+      messageCache.updateBatch(r.slice(-40), channel)
+      return r
+    })
+  }
+
+  const revokeMessage = (cmd: Message) => {
+    const content = cmd.content as CMDContent
+    if (content.cmd !== ChatCmdType.MessageRevoke) return
+    const message = messages.find(msg => msg.messageID === cmd.content.param.message_id)
+    if (!message) return
+
+    message.content = content
+    const r = [...messages]
+    setMessages(r)
+    messageCache.updateBatch(r.slice(-40), channel)
+  }
+
+  return {
+    messages,
+    fetchPreviousPage: messagesQuery.fetchPreviousPage,
+    hasMore: messagesQuery.hasPreviousPage,
+    appendMessage,
+    revokeMessage
+  }
+}
+
+export const ChatMessageList = () => {
+  const channel = useChatStore(state => state.lastChannel)
+  
+  const { messages, fetchPreviousPage, hasMore, appendMessage, revokeMessage } = useMessages()
 
   useMessageListener((message) => {
     if (message.channel.channelID !== channel?.channelID) return
 
-    const isOnBottom = scrollRef.current?.isOnLimit()
-
-    fetchUserInChannel(message.channel, message.fromUID).then(r => {
-      queryClient.setQueryData<typeof messages.data>(['syncMessages', channel?.channelID], (oldData) => {
-        if (!oldData) return
-        message.remoteExtra.extra.fromName = r.name
-        message.remoteExtra.extra.fromAvatar = r.avatar
-        return [
-          ...oldData,
-          message
-        ]
-      })
-    })
-
-
-    if (isOnBottom) {
-      setTimeout(() => {
-        scrollRef.current?.scrollToBottom()
-      }, 100)
-    }
+    appendMessage(message)
   })
 
   useCMDListener((cmd) => {
-    const content = cmd.content as CMDContent
-    if (content.cmd !== ChatCmdType.MessageRevoke) return
-    const message = messages.data?.find(msg => msg.messageID === cmd.content.param.message_id)
-    if (!message) return
-
-    queryClient.setQueryData<typeof messages.data>(['syncMessages', channel?.channelID], (oldData) => {
-      if (!oldData) return
-      return [
-        ...oldData,
-        cmd
-      ]
-    })
-
-    update()
+    revokeMessage(cmd)
   })
 
   useEffect(() => {
@@ -123,18 +157,25 @@ export const ChatMessageList = () => {
 
 
   return (
-    <JknInfiniteArea className="w-full h-full chat-message-scroll-list" ref={scrollRef}>
-
-      {messages.data?.map((msg) => (
+    <JknVirtualInfinite className="w-full h-full chat-message-scroll-list"
+      itemHeight={44}
+      rowKey="messageID"
+      data={messages ?? []}
+      autoBottom
+      hasMore={hasMore}
+      direction="up"
+      fetchMore={fetchPreviousPage}
+      renderItem={msg => (
         <ChatMessageRow key={msg.messageID} message={msg}>
-          {{
-            [ChatMessageType.Text]: <TextRecord message={msg} />,
-            [ChatMessageType.Cmd]: <RevokeRecord onReEdit={() => { }} revoker={msg.fromUID} channel={msg.channel} />,
-            [ChatMessageType.Image]: <ImageRecord message={msg} />,
-          }[msg.contentType] ?? null}
-        </ChatMessageRow>
-      ))}
-    </JknInfiniteArea>
+        {{
+          [ChatMessageType.Text]: <TextRecord message={msg} />,
+          [ChatMessageType.Cmd]: <RevokeRecord onReEdit={() => { }} revoker={msg.fromUID} channel={msg.channel} />,
+          [ChatMessageType.Image]: <ImageRecord message={msg} />,
+        }[msg.contentType] ?? null}
+      </ChatMessageRow>
+      )}
+    >
+    </JknVirtualInfinite>
   )
 }
 

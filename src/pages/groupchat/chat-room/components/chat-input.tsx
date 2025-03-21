@@ -8,16 +8,17 @@ import StarterKit from '@tiptap/starter-kit'
 import Image from '@tiptap/extension-image'
 import { type ChatEvent, chatEvent } from "../../lib/event"
 import { useImmer } from "use-immer"
-import { isMessageText } from "../../lib/model"
-import { ChatCmdType, ChatMessageType } from "@/store"
-import { useCMDListener, useSubscribesListener } from "../../lib/hooks"
-import { WKSDK, type Channel, type CMDContent } from "wukongimjssdk"
+import { ChatMessageType } from "@/store"
+import { useSubscribesListener } from "../../lib/hooks"
+import { Reaction, Reply, WKSDK, type Channel } from "wukongimjssdk"
 import { hasForbidden } from "../../lib/utils"
-import { useMount } from "ahooks"
 
 interface ChatInputProps {
   channel?: Channel
-  onSubmit?: (text?: JSONContent, mentions?: string[]) => void
+  onSubmit?: (text?: JSONContent, extra?: {
+    reply?: Reply,
+    mentions?: string[]
+  }) => void
 }
 
 interface ChatInputInstance {
@@ -28,7 +29,7 @@ const extensions = [StarterKit, Image]
 
 export const ChatInput = forwardRef<ChatInputInstance, ChatInputProps>((props, ref) => {
   const [mentionList, setMentionList] = useImmer<{ name: string; uid: string }[]>([])
-  const [replyMessage, setReplyMessage] = useImmer<Nullable<{ name: string; text: string }>>(null)
+  const [replyMessage, setReplyMessage] = useImmer<Nullable<{ name: string; text: string , uid: string}>>(null)
 
   const editor = useEditor({
     extensions,
@@ -88,7 +89,20 @@ export const ChatInput = forwardRef<ChatInputInstance, ChatInputProps>((props, r
   const onSubmit = () => {
     if (!editor?.isEditable) return false
     const content = editor?.getJSON() as JSONContent
-    props.onSubmit?.(content, mentionList.map(item => item.uid))
+    const extra = {
+      reply: undefined as Undefinable<Reply>,
+      mentions: mentionList.map(item => item.uid)
+    }
+
+    const self = WKSDK.shared().channelManager.getSubscribeOfMe(props.channel!)!
+
+    if(replyMessage){
+      const reply = new Reply()
+      reply.fromUID = self.uid
+      reply.fromName = self.name
+      extra.reply = reply
+    }
+    props.onSubmit?.(content, extra)
     setMentionList([])
   }
 
@@ -146,9 +160,9 @@ export const ChatInput = forwardRef<ChatInputInstance, ChatInputProps>((props, r
       setMentionList([])
 
       if (message.contentType === ChatMessageType.Text) {
-        setReplyMessage({ name: fromName, text: message.content.text })
+        setReplyMessage({ name: fromName, text: message.content.text, uid: message.fromUID })
       } else if (message.contentType === ChatMessageType.Image) {
-        setReplyMessage({ name: fromName, text: '[图片]' })
+        setReplyMessage({ name: fromName, text: '[图片]', uid: message.fromUID })
       }
 
       editor?.commands.focus()
@@ -225,7 +239,7 @@ export const ChatInput = forwardRef<ChatInputInstance, ChatInputProps>((props, r
       {
         replyMessage ? (
           <div className="flex items-center absolute text-sm left-0 -top-8 h-8 box-border px-3 leading-8 border-t-primary right-0 bg-[#0a0a0a]">
-            <JknIcon.Svg name="close" className="cursor-pointer" size={12} onClick={() => setMentionList([])} />
+            <JknIcon.Svg name="close" className="cursor-pointer" size={12} onClick={() => setReplyMessage(null)} />
             <span>&nbsp;&nbsp;{replyMessage.name}: &nbsp;&nbsp;</span>
             <div className="flex items-center space-x-4" >
               {replyMessage.text}

@@ -87,7 +87,7 @@ export const MessageTransform = {
     return messageExtra
   },
   addContentObj: (message: Message) => {
-    if (message.content.contentObj) return
+    if (message.content.contentObj) return message
     if (message.contentType === ChatMessageType.Text) {
       message.content.contentObj = {
         content: message.content.text,
@@ -111,6 +111,48 @@ export const MessageTransform = {
         type: message.contentType
       }
     }
+
+    return message
+  },
+  fromJson: (msg: Message) => {
+    const message = new Message()
+    message.messageID = msg.messageID
+    message.header = msg.header
+    message.setting = msg.setting
+    const messageExtra = new MessageExtra()
+
+    messageExtra.messageID = msg.remoteExtra.messageID
+    messageExtra.messageSeq = msg.remoteExtra.messageSeq
+    messageExtra.readed = msg.remoteExtra.readed
+    messageExtra.readedAt = msg.remoteExtra.readedAt
+    messageExtra.readedCount = msg.remoteExtra.readedCount
+    messageExtra.unreadCount = msg.remoteExtra.unreadCount
+    messageExtra.revoke = msg.remoteExtra.revoke
+    messageExtra.revoker = msg.remoteExtra.revoker
+    messageExtra.contentEditData = msg.remoteExtra.contentEditData
+    messageExtra.contentEdit = msg.remoteExtra.contentEdit
+    messageExtra.editedAt = msg.remoteExtra.editedAt
+    messageExtra.isEdit = msg.remoteExtra.isEdit
+    messageExtra.extra = msg.remoteExtra.extra
+    messageExtra.extraVersion = msg.remoteExtra.extraVersion
+
+    message.remoteExtra = messageExtra
+
+    message.clientSeq = msg.clientSeq
+    message.messageSeq = msg.messageSeq
+    message.channel = new Channel(msg.channel.channelID, msg.channel.channelType)
+    message.clientMsgNo = msg.clientMsgNo
+    message.streamNo = msg.streamNo
+    message.fromUID = msg.fromUID
+    message.timestamp = msg.timestamp
+    message.status = msg.status
+    message.remoteExtra.extra = msg.remoteExtra.extra
+
+    const content = WKSDK.shared().getMessageContent(msg.content.contentObj.type)
+    content.decode(stringToUint8Array(JSON.stringify(msg.content.contentObj)))
+    message.content = content
+
+    message.isDeleted = msg.isDeleted
 
     return message
   }
