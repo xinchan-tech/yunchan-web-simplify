@@ -11,6 +11,7 @@ import {
   ScrollArea,
   Separator,
   StockAlarm,
+  StockSelect,
   ToggleGroup,
   ToggleGroupItem,
   useModal
@@ -26,9 +27,11 @@ import { useLocalStorageState, useVirtualList } from "ahooks"
 import { cn } from "@/utils/style"
 import { chartEvent } from "../lib/event"
 import { IndicatorParamsForm } from "./indicator-param-form"
+import { useNavigate } from "react-router"
 
 export const ChartToolBar = () => {
   const symbol = useSymbolQuery()
+  const navigate = useNavigate()
 
   return (
     <div className="h-[64px]">
@@ -55,6 +58,9 @@ export const ChartToolBar = () => {
         <AlarmPicker />
         <Separator orientation="vertical" className="h-2 w-[1px] bg-accent mx-1" />
         <BackTest />
+        <div className="ml-auto">
+          <StockSelect className="rounded-[300px]"  onChange={v => navigate(`/stock?symbol=${v}`)}/>
+        </div>
       </div>
       <div className="text-tertiary text-sm flex items-center px-4 space-x-4">
         <CoilingBar />

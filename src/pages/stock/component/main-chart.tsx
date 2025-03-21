@@ -11,7 +11,7 @@ import { renderUtils } from '../lib/utils'
 import { ChartContextMenu } from './chart-context-menu'
 import { BackTestBar } from "./back-test-bar"
 import { useStockBarSubscribe } from "@/hooks"
-import { useTime } from "@/store"
+import { chatManager, useTime } from "@/store"
 import { colorUtil } from "@/utils/style"
 import { dateUtils } from "@/utils/date"
 
@@ -40,30 +40,30 @@ export const MainChart = (props: MainChartProps) => {
 
   useStockBarSubscribe([`${symbol}@${stockUtils.intervalToPeriod(chartStore.interval)}`], (data) => {
     const trading = useTime.getState().getTrading()
-    
+    const interval = useChartManage.getState().chartStores[props.chartId].interval
     const record = stockUtils.toStock(data.rawRecord)
     // console.log('stock bar subscribe ********************')
     // console.log(dateUtils.toUsDay(data.rawRecord[0]! as unknown as number).format('YYYY-MM-DD HH:mm:ss'))
     // console.log(trading, renderUtils.shouldUpdateChart(trading, chartStore.interval), chartImp.current?.isSameIntervalCandlestick(record, chartStore.interval))
     // console.log(data)
     // console.log('stock bar subscribe end ********************')
-    if (!renderUtils.shouldUpdateChart(trading, chartStore.interval)) {
+    if (!renderUtils.shouldUpdateChart(trading, interval)) {
       return
     }
 
     const chart = chartImp.current?.getChart()
     const lastData = chart?.getDataList()?.slice(-1)[0]
 
-    if (chartImp.current?.isSameIntervalCandlestick(record, chartStore.interval)) {
+    if (chartImp.current?.isSameIntervalCandlestick(record, interval)) {
       chartImp.current?.appendCandlestick({
         ...record,
         quote: lastData?.quote
-      }, chartStore.interval)
+      }, interval)
     } else {
       chartImp.current?.appendCandlestick({
         ...record,
         quote: record.close
-      }, chartStore.interval)
+      }, interval)
     }
   })
 
