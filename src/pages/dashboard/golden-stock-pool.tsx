@@ -122,8 +122,8 @@ const GoldenStockPool = () => {
   const onRowClick = useTableRowClickToStockTrading('symbol')
 
   return (
-    <div className="w-full h-full flex flex-col overflow-hidden">
-      <div className="flex items-center px-3 py-3 border-b-default">
+    <div className="w-full h-full flex flex-col overflow-hidden font-pingfang">
+      <div className="flex items-center border-b-default">
         <CollectDropdownMenu activeKey={type} onChange={setType} />
       </div>
       <div className="flex-1 overflow-hidden">

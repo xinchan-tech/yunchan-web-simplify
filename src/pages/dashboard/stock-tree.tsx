@@ -208,11 +208,11 @@ const StockTree = () => {
   }, [queryStock.data, filter])
 
   return (
-    <div className="h-full flex flex-col">
-      <div className="p-3 h-[40px] box-border flex items-center border-b-default">
+    <div className="h-full flex flex-col font-pingfang">
+      <div className="p-3 h-[45px] box-border flex items-center border-b-default">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <div className="flex items-center space-x-2 text-sm">
+            <div className="flex items-center space-x-2 text-lg">
               <div>{t(`stockTree.${type}`)}</div>
               <JknIcon.Svg name="arrow-down" size={12} />
             </div>

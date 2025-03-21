@@ -96,7 +96,7 @@ export const CollectDropdownMenu = memo(({ onChange, ...props }: CollectDropdown
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-2 px-3 py-2.5 text-lg font-bold font-pingfang">
           <span>
             {activeCollect?.name ?? '-'}({activeCollect?.total ?? 0})
           </span>

@@ -114,7 +114,7 @@ export const HotTop = () => {
   }, [tops.data, chart])
 
   return (
-    <div className="w-full h-full overflow-hidden flex flex-col">
+    <div className="w-full h-full overflow-hidden flex flex-col font-pingfang">
       <div className="text-lg px-4 my-5">热力Top榜单</div>
       <div className="flex-1 relative">
         <div className="w-full h-full" ref={dom} />
