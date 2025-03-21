@@ -38,7 +38,7 @@ const SettingPage = () => {
   }
 
   return (
-    <div className="h-full bg-muted text-sm">
+    <ScrollArea className="h-full bg-muted text-sm">
       <div className="mx-auto h-full w-[800px] relative">
         <div className="absolute border border-solid border-border translate-x-[-100%] -ml-10 top-10">
           <div className="py-4 px-8 cursor-pointer" onClick={() => onScrollTo('系统设置')} onKeyDown={() => { }}>
@@ -58,7 +58,7 @@ const SettingPage = () => {
             版本信息
           </div>
         </div>
-        <ScrollArea className="h-full">
+        <div>
           <div
             data-label="系统设置"
             className="mt-12 text-lg border-0 border-b border-solid border-dialog-border mb-8 pb-2"
@@ -322,9 +322,9 @@ const SettingPage = () => {
               </div>
             </div>
           </SettingItem>
-        </ScrollArea>
+        </div>
       </div>
-    </div>
+    </ScrollArea>
   )
 }
 

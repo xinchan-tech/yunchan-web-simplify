@@ -1,27 +1,17 @@
-import { Buffer } from 'buffer'
-import {
-  getChannelMembers,
-  getChatNameAndAvatar,
-  syncChannelMessages,
-  syncRecentConversation
-} from '@/api'
-import { stringToUint8Array } from '@/utils/string'
+import { getChannelMembers, getChatNameAndAvatar, syncChannelMessages, syncRecentConversation } from '@/api'
 import to from 'await-to-js'
 import WKSDK, {
-  Channel,
+  type Channel,
   ChannelInfo,
   ChannelTypeGroup,
   ChannelTypePerson,
-  Conversation,
-  Message,
-  MessageExtra,
-  MessageStatus,
+  type Conversation,
+  type Message,
   type MessageTask,
   type PullMode,
-  Setting,
   Subscriber
 } from 'wukongimjssdk'
-import { messageTransform } from './transform'
+import { ConversationTransform, MessageTransform } from './transform'
 import { MediaMessageUploadTask } from './upload-task'
 
 /**
@@ -37,13 +27,12 @@ const initChannelInfoDataSource = () => {
         id: channel.channelID
       }
 
-    const [err, res] = await to(getChatNameAndAvatar(params))
+      const [err, res] = await to(getChatNameAndAvatar(params))
 
       if (err) {
         console.log(err)
         return channelInfo
       }
-
 
       if (channel.channelType === ChannelTypePerson) {
         channelInfo.title = res.name || channel.channelID
@@ -81,8 +70,9 @@ const initSyncSubscribersDataSource = () => {
     const subscribers: Subscriber[] = []
 
     const [err, res] = await to(getChannelMembers(channel.channelID, 100))
-
+    console.log(res)
     if (err) {
+      console.error(err)
       return subscribers
     }
 
@@ -97,7 +87,7 @@ const initSyncSubscribersDataSource = () => {
       // subscriber.forbidden = member.forbidden === '1'
       subscribers.push(subscriber)
     })
-    
+
     return subscribers
   }
 }
@@ -109,7 +99,7 @@ const initSyncConversationsDataSource = () => {
   WKSDK.shared().config.provider.syncConversationsCallback = async () => {
     const resultConversations: Conversation[] = []
     const [err, res] = await to(syncRecentConversation({ uid: WKSDK.shared().config.uid!, msg_count: 20 }))
-
+ 
     if (err) {
       console.log(err)
       return resultConversations
@@ -117,50 +107,7 @@ const initSyncConversationsDataSource = () => {
 
     if (res) {
       res.forEach(v => {
-        const conversation = new Conversation()
-        conversation.channel = new Channel(v.channel_id, v.channel_type)
-        conversation.unread = v.unread || 0
-        conversation.timestamp = v.timestamp || 0
-        const channelInfo = new ChannelInfo()
-        channelInfo.title = v.channel_name
-        channelInfo.logo = v.channel_avatar
-        channelInfo.channel = conversation.channel
-        WKSDK.shared().channelManager.setChannleInfoForCache(channelInfo)
-
-        if (v.recents.length) {
-          const message = new Message()
-          const lastRecord = v.recents[0]
-
-          message.messageID = lastRecord.message_idstr
-          message.header.reddot = lastRecord.header.red_dot === 1
-          message.setting = Setting.fromUint8(lastRecord.setting)
-          message.remoteExtra.revoke = lastRecord.revoke === 1
-          message.clientSeq = lastRecord.client_seq || 0
-          message.channel = new Channel(lastRecord.channel_id, lastRecord.channel_type)
-          message.messageSeq = lastRecord.message_seq
-          message.clientMsgNo = lastRecord.client_msg_no || ''
-          message.streamNo = lastRecord.stream_no ?? ''
-          message.fromUID = lastRecord.from_uid || ''
-          message.timestamp = lastRecord.timestamp
-          message.status = MessageStatus.Normal
-
-          const decodedBuffer = Buffer.from(lastRecord.payload, 'base64')
-          const jsonStr = decodedBuffer.toString('utf8')
-          const contentObj = JSON.parse(jsonStr)
-          const messageContent = WKSDK.shared().getMessageContent(contentObj.type)
-
-          messageContent.decode(stringToUint8Array(JSON.stringify(contentObj)))
-          message.content = messageContent
-
-          conversation.lastMessage = message
-
-          if (lastRecord.message_extra) {
-            const messageExtra = new MessageExtra()
-            // messageExtra.messageID = lastRecord.message_idstr
-            message.remoteExtra = messageExtra
-          }
-        }
-
+        const conversation = ConversationTransform.toConversation(v)
         resultConversations.push(conversation)
       })
     }
@@ -198,7 +145,7 @@ const initSyncMessagesDataSource = () => {
     try {
       if (res) {
         res.forEach((msg: any) => {
-          r.push(messageTransform(msg))
+          r.push(MessageTransform.toMessage(msg))
         })
       }
     } catch (e) {

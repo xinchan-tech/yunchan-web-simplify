@@ -246,61 +246,6 @@ const GroupChatPage = () => {
   //   }
   // }
 
-  // 引用
-  // 回复
-  const handleReply: ReplyFn = option => {
-    // @ 人
-    const doMention = (id: string) => {
-      const channelInfo = WKSDK.shared().channelManager.getChannelInfo(new Channel(id, ChannelTypePerson))
-      let name = ''
-      if (channelInfo) {
-        name = channelInfo.title
-      }
-      // 现在只@一个人
-      const curMention = {
-        name: channelInfo?.title || '',
-        uid: id
-      }
-      setMentions([curMention])
-    }
-
-    if (option?.message) {
-      if (option.message?.fromUID !== user?.username) {
-      }
-
-      // 回复的情况加一下@的人
-      if (option.isQuote !== true) {
-        doMention(option.message.fromUID)
-      }
-      setReplyMessage(option.message)
-    } else if (option.quickReplyUserId) {
-      doMention(option.quickReplyUserId)
-    }
-  }
-
-  // 撤回
-  const handleRevoke: (message: Message) => void = async (message: Message) => {
-    await revokeMessage({ msg_id: message.messageID })
-    // const newConversations =
-    //   await WKSDK.shared().config.provider.syncConversationsCallback();
-    // const newWarps = newConversations.map((item) => new ConversationWrap(item));
-
-    // setConversationWraps(newWarps);
-
-    // let conversation = WKSDK.shared().conversationManager.findConversation(
-    //   message.channel
-    // );
-
-    // if (conversation) {
-
-    //   WKSDK.shared().conversationManager.notifyConversationListeners(
-    //     conversation,
-    //     ConversationAction.update
-    //   );
-    // }
-  }
-
-  const [total, setTotal] = useState<string | number>(0)
 
   useEffect(() => {
     window.document.title = '讨论社群'
@@ -313,33 +258,7 @@ const GroupChatPage = () => {
       </div>
     )
   }
-  const [notAgreeNotice, setnotAgreeNotice] = useState<boolean>(false)
-  useEffect(() => {
-    if (groupDetailData) {
-      const payload = !judgeHasReadGroupNotice(groupDetailData.account)
-      setnotAgreeNotice(payload)
-    }
-  }, [groupDetailData])
 
-  const countDownTimer = useRef<number>()
-  useEffect(() => {
-    if (notAgreeNotice === true) {
-      countDownTimer.current = window.setInterval(() => {
-        setCountdown(prev => {
-          if (prev === 0) {
-            clearInterval(countDownTimer.current)
-          }
-          return prev - 1
-        })
-      }, 1000)
-    } else {
-      clearInterval(countDownTimer.current)
-      setCountdown(COUNT_DOWN_NUM)
-    }
-    return () => {
-      clearInterval(countDownTimer.current)
-    }
-  }, [notAgreeNotice])
 
   const [openDrawer, setOpenDrawer] = useState(false)
 
@@ -356,7 +275,7 @@ const GroupChatPage = () => {
       {indexTab === 'live' ? (
         <TextImgLive />
       ) : (
-        <GroupChatContext.Provider value={{ handleReply, handleRevoke, syncSubscriber }}>
+        <>
           <ChatInfoDrawer
             isOpen={openDrawer}
             position="right"
@@ -375,31 +294,7 @@ const GroupChatPage = () => {
 
           <div className="group-chat-right relative flex-1 overflow-hidden">
             <ChatRoom />
-            {/* {notAgreeNotice === true && (
-              <div className="flex flex-wrap content-center agree-notice-content absolute left-0 top-0 bottom-0 right-0 w-full h-full">
-                <div className="flex mt-10 justify-center w-full">请先阅读群公告</div>
-                <div
-                  className="p-4 w-full mt-5 mr-10 ml-10 rounded-lg bg-slate-900 text-gray-400 h-[200px] overflow-y-auto "
-                  style={{ 'wordWrap': 'break-word' }}
-                >
-                  {groupDetailData?.notice || ''}
-                </div>
 
-                <div className="flex mt-4 justify-center w-full">
-                  <Button
-                    disabled={countdown > 0}
-                    onClick={() => {
-                      if (groupDetailData) {
-                        setAgreedGroupInCache(groupDetailData.account, true)
-                        setnotAgreeNotice(false)
-                      }
-                    }}
-                  >
-                    我已阅读{countdown > 0 ? `(${countdown})` : ''}
-                  </Button>
-                </div>
-              </div>
-            )} */}
             {/* <div className="group-chat-header justify-between flex h-10">
               <div className="group-title items-center pt-2 h-full">
                 <p className="m-0 text-sm">{groupDetailData?.name}</p>
@@ -431,7 +326,7 @@ const GroupChatPage = () => {
               </div>
             </div> */}
           </div>
-        </GroupChatContext.Provider>
+        </>
       )}
 
       <style jsx>

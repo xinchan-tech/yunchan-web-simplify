@@ -7,7 +7,7 @@ import { ConnectStatus, Mention, MessageImage, MessageText, WKSDK } from "wukong
 import { ChannelMembers } from "./channel-members"
 import { ChatInput } from "./components/chat-input"
 import { ChatMessageList } from "./message-list"
-import { useCountDown, useLocalStorageState } from "ahooks"
+import { useCountDown } from "ahooks"
 import { useEffect } from "react"
 
 
@@ -24,7 +24,7 @@ export const ChatRoom = () => {
           getChannelDetail(channel!.channelID)
         ]
       )
-  
+
       return {
         channelInfo,
         channelDetail
@@ -42,6 +42,7 @@ export const ChatRoom = () => {
   const noticeModal = useModal({
     content: <ChatRoomNotice notice={channelDetail?.notice ?? ''} onConfirm={() => {
       readChannelNotice(channel!.channelID)
+      channelQuery.refetch()
       noticeModal.modal.close()
     }} />,
     className: 'w-[476px]',
@@ -51,8 +52,10 @@ export const ChatRoom = () => {
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
   useEffect(() => {
-    if(channelDetail?.is_notice_read !== 1){
-      noticeModal.modal.open()
+    if (channelDetail) {
+      if (channelDetail.is_notice_read !== 1) {
+        noticeModal.modal.open()
+      }
     }
   }, [channelDetail])
 

@@ -1,6 +1,7 @@
 import { WKSDK, type Channel, type Subscriber } from 'wukongimjssdk'
 import { SubscriberType } from './model'
 import { getChatNameAndAvatar } from '@/api'
+import { subscriberCache } from '../cache'
 
 export const isChannelOwner = (subscriber?: Subscriber) => {
   return subscriber?.orgData?.type === SubscriberType.ChannelOwner
@@ -28,7 +29,7 @@ export const fetchUserInChannel = async (channel: Channel, userId: string) => {
     }
   }
 
-  const userFromCache = userCache.get(userId)
+  const userFromCache = await subscriberCache.get(channel.channelID, userId)
 
   if (userFromCache) {
     return userFromCache

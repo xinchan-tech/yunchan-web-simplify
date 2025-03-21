@@ -1,8 +1,8 @@
 import { Button, Input, JknSearchInput, useModal } from '@/components'
 import { useChatNoticeStore, useGroupChatShortStore, useGroupChatStoreNew } from '@/store/group-chat-new'
 import { cn } from '@/utils/style'
-import { useLatest, useUpdate } from 'ahooks'
-import { memo, type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useLatest, useUpdate, useUpdateEffect } from 'ahooks'
+import { type ReactNode, memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import WKSDK, {
   ConnectStatus,
   ConversationAction,
@@ -16,25 +16,19 @@ import WKSDK, {
 import { useShallow } from 'zustand/react/shallow'
 import APIClient from '../Service/APIClient'
 
-import { cleanUnreadConversation, getChatNameAndAvatar, getChatChannels } from '@/api'
+import { cleanUnreadConversation, getChatChannels, getChatNameAndAvatar } from '@/api'
 // import { useQuery } from "@tanstack/react-query";
 import ChatAvatar from '../components/chat-avatar'
 
 import { JknIcon, Skeleton } from '@/components'
+import { useLatestRef } from "@/hooks"
+import { ChatCmdType, chatManager, ChatMessageType, useChatStore } from "@/store"
 import { useQueries, useQuery, useQueryClient } from '@tanstack/react-query'
-import {
-  groupToChannelInfo,
-  judgeIsExpireGroupCache,
-  judgeIsUserInSyncChannelCache,
-  setExpireGroupInCache,
-  setPersonChannelCache,
-  setUserInSyncChannelCache
-} from '../chat-utils'
 import CreateGroup from '../components/create-and-join-group'
 import UpdateGroupInfo from './updateGroupInfo'
-import { JoinGroupContentModal } from "../components/create-and-join-group/join-group-content"
-import { chatManager, useChatStore } from "@/store"
-import { useLatestRef } from "@/hooks"
+import { useImmer } from "use-immer"
+import { conversationCache } from "../cache"
+import { UsernameSpan } from "../components/username-span"
 
 export type GroupData = {
   id: string
@@ -55,45 +49,24 @@ export type GroupData = {
   }[]
 }
 
+const useConversationWithCache = () => {
+  const [conversations, setConversations] = useImmer<Conversation[]>([])
+
+  useEffect(() => {
+    conversationCache.getConversations().then(convs => {
+      convs?.sort((a, b) => b.timestamp - a.timestamp)
+      setConversations(convs ?? [])
+    })
+  }, [setConversations])
+
+  return [conversations, setConversations] as const
+}
+
+
 const GroupChannel = (props: {
   onSelectChannel: (c: Channel) => void
 }) => {
 
-
-  
-
-  // const [editChannel, setEditChannel] = useState<ConversationWrap>()
-  // 修改社群
-  // const updateGroupInfoModal = useModal({
-  //   content: (
-  //     <>
-  //       {editChannel && (
-  //         <UpdateGroupInfo
-  //           group={editChannel.channel}
-  //           onSuccess={params => {
-  //             // refetch();
-  //             const target = data?.find(item => item.account === params.account)
-  //             if (target) {
-  //               if (params.avatar) {
-  //                 target.avatar = params.avatar
-  //               }
-  //               if (params.name) {
-  //                 target.name = params.name
-  //               }
-  //               WKSDK.shared().channelManager.setChannleInfoForCache(toChannelInfo({ ...target }))
-  //             }
-  //           }}
-  //           total={Number(editChannel.total_user)}
-  //         />
-  //       )}
-  //     </>
-  //   ),
-  //   title: '社群信息',
-  //   footer: null,
-  //   className: 'w-[700px]',
-  //   closeIcon: true
-  // })
-  
   /**
    * 新逻辑
    */
@@ -104,8 +77,9 @@ const GroupChannel = (props: {
   const updateRender = useUpdate()
   const lastChannel = useChatStore(s => s.lastChannel)
   const selectionChannel = useLatestRef<Channel>(lastChannel!)
+  const [conversations, setConversations] = useConversationWithCache()
 
-  const conversations = useQuery({
+  const conversationsQuery = useQuery({
     queryKey: channelQueryKey,
     queryFn: () => WKSDK.shared().conversationManager.sync({}),
     enabled: chatState === ConnectStatus.Connected,
@@ -114,30 +88,14 @@ const GroupChannel = (props: {
       if (channelSearchKeyword) {
         return r.filter(c => c.channelInfo?.title?.includes(channelSearchKeyword))
       }
-
       return r
     }
   })
 
-  const messageUserFrom = useMemo(() => {
-    const userIds = new Set<string>()
-    conversations.data?.forEach(conversation => {
-      userIds.add(conversation.lastMessage?.fromUID || '')
-    })
-
-    return Array.from(userIds).filter(Boolean)
-  }, [conversations.data])
-
-  const userInfos = useQueries({
-    queries: messageUserFrom.map(uid => ({
-      queryKey: [getChatNameAndAvatar.cacheKey, uid],
-      queryFn: () => getChatNameAndAvatar({ type: '1', id: uid }).then(r => ({ ...r, uid })),
-      enabled: chatState === ConnectStatus.Connected,
-    })),
-    combine: (results) => {
-      return results.map(r => r.data)
-    }
-  })
+  useUpdateEffect(() => {
+    setConversations(conversationsQuery.data ?? [])
+    conversationCache.updateBatch(conversationsQuery.data ?? [])
+  }, [conversationsQuery.data])
 
   // 监听最近会话列表的变化
   const conversationListener = useCallback((conversation: Conversation, action: ConversationAction) => {
@@ -145,31 +103,28 @@ const GroupChannel = (props: {
     const _channelQueryKey = ['conversation-sync', channelSearchKeyword]
 
     if (action === ConversationAction.add || action === ConversationAction.update) {
-      const _channels = queryClient.getQueryData<NonNullable<typeof conversations.data>>(_channelQueryKey)
+      const _channels = queryClient.getQueryData<NonNullable<typeof conversations>>(_channelQueryKey)
       // console.log('updateRender', _channels, ['conversation-sync', channelSearchKeyword])
       if (_channels) {
-
         const _channel = _channels.find(c => c.channel.channelID === conversation.channel.channelID)
         if (_channel) {
-          if (_channel === conversation) {
-            updateRender()
-
-          } else {
-            queryClient.setQueryData<NonNullable<typeof conversations.data>>(_channelQueryKey, oldData => {
-              return oldData?.map(item => {
-                return item.channel.channelID === conversation.channel.channelID ? conversation : item
-              })
+          queryClient.setQueryData<NonNullable<typeof conversations>>(_channelQueryKey, oldData => {
+            const r = oldData?.map(item => {
+              return item.channel.channelID === conversation.channel.channelID ? conversation : item
             })
-          }
+            conversationCache.updateBatch(r ?? [])
+            return r
+          })
+          updateRender()
         } else {
-          queryClient.setQueryData<NonNullable<typeof conversations.data>>(_channelQueryKey, c => ([
+          queryClient.setQueryData<NonNullable<typeof conversations>>(_channelQueryKey, c => ([
             conversation,
             ...(c ?? [])
           ]))
         }
       }
     } else if (action === ConversationAction.remove) {
-      queryClient.setQueryData<NonNullable<typeof conversations.data>>(_channelQueryKey, oldData => {
+      queryClient.setQueryData<NonNullable<typeof conversations>>(_channelQueryKey, oldData => {
         return oldData?.filter(item => item.channel.channelID !== conversation.channel.channelID)
       })
     }
@@ -187,55 +142,55 @@ const GroupChannel = (props: {
     // }
   }
 
-  const parseLastMessage = (message: Conversation) => {
-    if (!message) {
-      return ''
-    }
+  // const parseLastMessage = (message: Conversation) => {
+  //   if (!message) {
+  //     return ''
+  //   }
 
-    const userMap = new Map<string, ArrayItem<typeof userInfos>>()
+  //   const userMap = new Map<string, ArrayItem<typeof userInfos>>()
 
-    userInfos.forEach(info => {
-      if (info) {
-        userMap.set(info.uid, info)
-      }
-    })
+  //   userInfos.forEach(info => {
+  //     if (info) {
+  //       userMap.set(info.uid, info)
+  //     }
+  //   })
 
-    let mention: ReactNode | string = ''
-    let head: ReactNode | string
-    let content: ReactNode | string
-    // const draft = message.remoteExtra.draft
-    // if (draft && draft !== '') {
-    //   head = draft
-    // }
+  //   let mention: ReactNode | string = ''
+  //   let head: ReactNode | string
+  //   let content: ReactNode | string
+  //   const draft = message.remoteExtra.draft
+  //   if (draft && draft !== '') {
+  //     head = draft
+  //   }
 
-    if (message.isMentionMe === true) {
-      mention = <span style={{ color: 'red' }}>[有人@我]</span>
-    }
-    if (message.lastMessage) {
-      const userInfo = userMap.get(message.lastMessage.fromUID)
+  //   if (message.isMentionMe === true) {
+  //     mention = <span style={{ color: 'red' }}>[有人@我]</span>
+  //   }
+  //   if (message.lastMessage) {
+  //     // const userInfo = userMap.get(message.lastMessage.fromUID)
 
-      if (userInfo) {
-        head = `${userInfo.name}: `
-      }
+  //     if (userInfo) {
+  //       head = `${userInfo.name}: `
+  //     }
 
-      content = message.lastMessage.content.conversationDigest || ''
-      if (message.lastMessage.content instanceof CMDContent) {
-        if (message.lastMessage.content.cmd === 'messageRevoke') {
-          content = '撤回了一条消息'
-        } else {
-          content = '[系统消息]'
-        }
-      }
-    }
+  //     content = message.lastMessage.content.text || ''
+  //     if (message.lastMessage.content instanceof CMDContent) {
+  //       if (message.lastMessage.content.cmd === 'messageRevoke') {
+  //         content = '撤回了一条消息'
+  //       } else {
+  //         content = '[系统消息]'
+  //       }
+  //     }
+  //   }
 
-    return (
-      <span className="inline-block whitespace-nowrap w-full overflow-hidden text-ellipsis">
-        {mention}
-        {head}
-        {content}
-      </span>
-    )
-  }
+  //   return (
+  //     <span className="inline-block whitespace-nowrap w-full overflow-hidden text-ellipsis">
+  //       {mention}
+  //       {head}
+  //       {content}
+  //     </span>
+  //   )
+  // }
 
   useEffect(() => {
     // WKSDK.shared().connectManager.addConnectStatusListener(connectStatusListener) // 监听连接状态
@@ -267,8 +222,6 @@ const GroupChannel = (props: {
       WKSDK.shared().conversationManager.notifyConversationListeners(conversation, ConversationAction.update)
       cleanUnreadConversation(conversation.channel)
     }
-
-
   }
 
   const [inviteCode, setInviteCode] = useState('')
@@ -315,56 +268,64 @@ const GroupChannel = (props: {
       </div>
       <div className="group-list">
         {
-          conversations.isLoading ? (
-            <ChannelSkeleton />
-          ) : (
-            conversations.data?.map(c => (
-              <div key={c.channel.channelID}
-                className={cn(
-                  'flex conversation-card overflow-hidden cursor-pointer',
-                  c.channel.channelID === lastChannel?.channelID && 'actived'
-                )}
-                onClick={() => onChannelSelect(c)}
-                onKeyDown={() => { }}
-              >
-                <div className="group-avatar rounded-md flex items-center text-ellipsis justify-center relative">
-                  <ChatAvatar
-                    radius="4px"
-                    className="w-[30px] h-[30px]"
-                    data={{
-                      name: c.channelInfo?.title || '',
-                      uid: c.channel.channelID,
-                      avatar: c.channelInfo?.logo || ''
-                    }}
-                  />
-                  {c.unread > 0 ? (
-                    <div className="absolute h-[14px] box-border unread min-w-5 text-xs">
-                      {c.unread > 99 ? '99+' : c.unread}
-                    </div>
-                  ) : null}
-                </div>
-                <div className="group-data flex-1 overflow-hidden">
-                  <div className="group-title flex  justify-between">
-                    <div className="flex items-baseline">
-                      <div
-                        title={c.channelInfo?.title || ''}
-                        className="overflow-hidden whitespace-nowrap text-ellipsis w-full text-sm"
-                      >
-                        {c.channelInfo?.title || ''}
-                      </div>
+          conversations.map(c => (
+            <div key={c.channel.channelID}
+              className={cn(
+                'flex conversation-card overflow-hidden cursor-pointer',
+                c.channel.channelID === lastChannel?.channelID && 'actived'
+              )}
+              onClick={() => onChannelSelect(c)}
+              onKeyDown={() => { }}
+            >
+              <div className="group-avatar rounded-md flex items-center text-ellipsis justify-center relative">
+                <ChatAvatar
+                  radius="4px"
+                  className="w-[30px] h-[30px]"
+                  data={{
+                    name: c.channelInfo?.title || '',
+                    uid: c.channel.channelID,
+                    avatar: c.channelInfo?.logo || ''
+                  }}
+                />
+                {c.unread > 0 ? (
+                  <div className="absolute h-[14px] box-border unread min-w-5 text-xs">
+                    {c.unread > 99 ? '99+' : c.unread}
+                  </div>
+                ) : null}
+              </div>
+              <div className="group-data flex-1 overflow-hidden">
+                <div className="group-title flex  justify-between">
+                  <div className="flex items-baseline">
+                    <div
+                      title={c.channelInfo?.title || ''}
+                      className="overflow-hidden whitespace-nowrap text-ellipsis w-full text-sm"
+                    >
+                      {c.channelInfo?.title || ''}
                     </div>
                   </div>
-                  <div className="group-last-msg flex justify-between">
-                    <div className="flex-1 overflow-hidden whitespace-nowrap text-ellipsis w-full text-xs text-tertiary">
+                </div>
+                <div className="group-last-msg flex justify-between">
+                  <div className="flex-1 overflow-hidden whitespace-nowrap text-ellipsis w-full text-xs text-tertiary">
+                    <span className="inline-block line-clamp-1">
                       {
-                        parseLastMessage(c)
+                        c.isMentionMe ? (
+                          <span style={{ color: 'red' }}>[有人@我]</span>
+                        ) : null
                       }
-                    </div>
+                      <UsernameSpan uid={c.lastMessage?.fromUID!} channel={c.channel!} colon />
+                      {
+                        c.lastMessage?.contentType === ChatMessageType.Cmd ?
+                          c.lastMessage.content.cmd === ChatCmdType.MessageRevoke ?
+                            '撤回了一条消息' : '[系统消息]' : c.lastMessage?.contentType === ChatMessageType.Image ?
+                            '[图片]' : c.lastMessage?.content.text || ''
+
+                      }
+                    </span>
                   </div>
                 </div>
               </div>
-            ))
-          )
+            </div>
+          ))
         }
       </div>
       {/* {updateGroupInfoModal.context} */}

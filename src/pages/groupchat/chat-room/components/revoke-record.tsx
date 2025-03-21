@@ -1,17 +1,19 @@
-import { getChatNameAndAvatar } from "@/api"
 import { useQuery } from "@tanstack/react-query"
-import WKSDK from "wukongimjssdk"
+import WKSDK, { type Channel } from "wukongimjssdk"
+import { fetchUserInChannel } from "../../lib/utils"
 
 interface RevokeTextRecordProps {
   revoker?: string
   sender?: string
+  channel?: Channel
   onReEdit: () => void
 }
 
-export const RevokeRecord = ({ revoker, sender }: RevokeTextRecordProps) => {
+export const RevokeRecord = ({ revoker, sender, channel }: RevokeTextRecordProps) => {
   const revokerInfo = useQuery({
-    queryKey: [getChatNameAndAvatar.cacheKey, revoker],
-    queryFn: () => getChatNameAndAvatar({ type: '1', id: revoker! })
+    queryKey: ['get-revoke-record-user', revoker, channel?.channelID],
+    queryFn: () => fetchUserInChannel(channel!, revoker!),
+    enabled: !!channel
   })
   const uid = WKSDK.shared().config.uid
   return (

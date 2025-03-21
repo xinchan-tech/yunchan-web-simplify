@@ -66,7 +66,7 @@ export const ChatMessageList = () => {
     if (message.channel.channelID !== channel?.channelID) return
 
     const isOnBottom = scrollRef.current?.isOnLimit()
-    console.log(message, message.status)
+
     fetchUserInChannel(message.channel, message.fromUID).then(r => {
       queryClient.setQueryData<typeof messages.data>(['syncMessages', channel?.channelID], (oldData) => {
         if (!oldData) return
@@ -124,12 +124,12 @@ export const ChatMessageList = () => {
 
   return (
     <JknInfiniteArea className="w-full h-full chat-message-scroll-list" ref={scrollRef}>
-      
+
       {messages.data?.map((msg) => (
         <ChatMessageRow key={msg.messageID} message={msg}>
           {{
             [ChatMessageType.Text]: <TextRecord message={msg} />,
-            [ChatMessageType.Cmd]: <RevokeRecord onReEdit={() => { }} />,
+            [ChatMessageType.Cmd]: <RevokeRecord onReEdit={() => { }} revoker={msg.fromUID} channel={msg.channel} />,
             [ChatMessageType.Image]: <ImageRecord message={msg} />,
           }[msg.contentType] ?? null}
         </ChatMessageRow>
@@ -149,7 +149,7 @@ const ChatMessageRow = ({ message, children }: PropsWithChildren<ChatMessageRowP
   const { fromName, fromAvatar } = message.remoteExtra.extra || {}
 
   useMessageStatusListener(message, (msg) => {
-    if(message.clientSeq === msg.clientSeq){
+    if (message.clientSeq === msg.clientSeq) {
       message.status = msg.reasonCode === 1 ? MessageStatus.Normal : MessageStatus.Fail
       message.messageID = msg.messageID.toString()
       update()
