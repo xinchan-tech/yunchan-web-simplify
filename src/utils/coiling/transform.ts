@@ -43,7 +43,7 @@ type IndicatorDataBase<T extends DrawFunc> = {
   color: string | string[]
   width: number
   name?: string
-  lineType: 'POINTDOT' | 'SOLID' | 'DASH' | ''
+  lineType: 'POINTDOT' | 'SOLID' | 'DASH' | 'CIRCLEDOT' | 'DOTLINE' | ''
 }
 
 type IndicatorDataLine = IndicatorDataBase<''> & {

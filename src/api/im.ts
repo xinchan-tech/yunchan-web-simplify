@@ -174,6 +174,10 @@ export interface GroupDetailData {
   chat_type: '0' | '1' | '2'
   blacklist: Array<{ uid: string; realname: string }>
   owner?: string
+  /**
+   * 是否已读
+   */
+  is_notice_read: 0 | 1
 }
 
 /**
@@ -279,4 +283,9 @@ export const revokeMessage = async (params: {
     })
     .then(r => r.data)
   return r
+}
+
+
+export const readChannelNotice = (channelId: string) => {
+  return request.post(`/channel/${channelId}/readNotice`).then(r => r.data)
 }

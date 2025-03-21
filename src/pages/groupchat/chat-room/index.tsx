@@ -1,4 +1,4 @@
-import { getChannelDetail, getChatNameAndAvatar } from "@/api"
+import { getChannelDetail, getChatNameAndAvatar, readChannelNotice } from "@/api"
 import { useModal } from "@/components"
 import { chatManager, useChatStore } from "@/store"
 import { useQuery } from "@tanstack/react-query"
@@ -14,9 +14,6 @@ import { useEffect } from "react"
 export const ChatRoom = () => {
   const channel = useChatStore(state => state.lastChannel)
   const state = useChatStore(s => s.state)
-  const [readNotice, setReadNotice] = useLocalStorageState<Record<string, boolean>>('readNotice', {
-    defaultValue: {}
-  })
 
   const channelQuery = useQuery({
     queryKey: [getChatNameAndAvatar.cacheKey, channel?.channelID],
@@ -44,10 +41,7 @@ export const ChatRoom = () => {
 
   const noticeModal = useModal({
     content: <ChatRoomNotice notice={channelDetail?.notice ?? ''} onConfirm={() => {
-      setReadNotice({
-        ...readNotice,
-        [channel!.channelID]: true
-      })
+      readChannelNotice(channel!.channelID)
       noticeModal.modal.close()
     }} />,
     className: 'w-[476px]',
@@ -57,10 +51,10 @@ export const ChatRoom = () => {
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
   useEffect(() => {
-    if (channel && !readNotice?.[channel.channelID] && channelDetail) {
+    if(channelDetail?.is_notice_read !== 1){
       noticeModal.modal.open()
     }
-  }, [channelDetail, channel, readNotice])
+  }, [channelDetail])
 
   const onSubmit = (content?: JSONContent, mentions?: string[]) => {
     if (!content?.content?.length) return

@@ -8,7 +8,7 @@ import to from "await-to-js"
 import { useState } from 'react'
 
 const StockAlarmPage = () => {
-  const [activeTab, setActiveTab] = useState<'list' | 'log'>('log')
+  const [activeTab, setActiveTab] = useState<'list' | 'log'>('list')
   return (
     <div className="rounded-xs bg-background h-full overflow-hidden ml-1 w-[calc(100%-4px)]">
       <div className="text-center h-full py-5 box-border">
@@ -288,6 +288,9 @@ const AlarmRecordItem = ({ symbol, data, onDelete, checked, onClick }: AlarmReco
         {
           data.condition.frequency === 1 ? '持续提醒' : '仅提醒一次'
         }
+        {/* {
+          data.alarm_time
+        } */}
       </div>
       <style jsx>
         {

@@ -484,7 +484,7 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
         if (![StockChartInterval.AFTER_HOURS, StockChartInterval.PRE_MARKET, StockChartInterval.INTRA_DAY, StockChartInterval.FIVE_DAY].includes(interval)) return
 
         const count = StockChartInterval.FIVE_DAY === interval ? 1950 : getTickNumberByTrading(stockUtils.intervalToTrading(interval)!)
-        chart.current?.setLeftMinVisibleBarCount(2)
+        chart.current?.setLeftMinVisibleBarCount(1)
         chart.current?.setXAxisTick(count)
 
         chart.current?.setStyles({
@@ -508,6 +508,7 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
           }
         })
       } else {
+
         chart.current?.setXAxisTick(-1)
         chart.current?.setOffsetRightDistance(80)
         chart.current?.setMaxOffsetLeftDistance(0)

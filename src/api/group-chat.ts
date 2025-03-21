@@ -1,5 +1,5 @@
 import request from '@/utils/request'
-import { User } from "./im"
+import type { User } from "./im"
 
 
 
