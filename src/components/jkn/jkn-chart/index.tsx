@@ -253,7 +253,6 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
     })
 
     chart.current?.setPrecision({ price: 3 })
-    chart.current?.setMaxOffsetLeftDistance(0)
 
     if (props.showLogo) {
       chart.current?.createOverlay({
@@ -522,7 +521,6 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
 
         chart.current?.setXAxisTick(-1)
         chart.current?.setOffsetRightDistance(80)
-        chart.current?.setMaxOffsetLeftDistance(0)
         chart.current?.setStyles({
           candle: {
             area: {
