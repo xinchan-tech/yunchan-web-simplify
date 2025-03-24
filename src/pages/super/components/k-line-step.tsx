@@ -63,6 +63,7 @@ const SecondaryStep = () => {
             className="flex-grow grid grid-cols-9 gap-[10px]"
             type="multiple"
             value={value}
+            hoverColor="#2E2E2E"
             onValueChange={_onValueChange}
           >
             {data.map((item) => (

@@ -47,7 +47,7 @@ export const CollectCapsuleTabs = ({ onChange, ...props }: CollectCapsuleTabsPro
   const collects = useQuery({
     queryKey: [getStockCollectCates.cacheKey],
     queryFn: () => getStockCollectCates(),
-    initialData: [{ id: '1', name: '股票金池', create_time: '', active: 1, total: '0' }],
+    initialData: [{ id: '1', name: '自选', create_time: '', active: 1, total: '0' }],
     enabled: !!token
   })
   const queryClient = useQueryClient()
@@ -56,7 +56,7 @@ export const CollectCapsuleTabs = ({ onChange, ...props }: CollectCapsuleTabsPro
     if (!token) {
       queryClient.setQueryData(
         [getStockCollectCates.cacheKey],
-        [{ id: '1', name: '股票金池', create_time: '', active: 1, total: '0' }]
+        [{ id: '1', name: '自选', create_time: '', active: 1, total: '0' }]
       )
     }
   }, [token, queryClient.setQueryData])

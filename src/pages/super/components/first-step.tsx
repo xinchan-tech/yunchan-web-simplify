@@ -288,6 +288,7 @@ const GoldenPoolPanel = () => {
             className="flex-grow grid grid-cols-4 gap-[10px]"
             type="multiple"
             value={value}
+            hoverColor="#2E2E2E"
             onValueChange={_onValueChange}
           >
             {collects.data?.map((item) => (

@@ -156,45 +156,50 @@ const SuperStock = () => {
             </div>
           </div>
         ) : (
-          <ScrollArea className="bg-muted h-full w-full">
-            <div className="w-[994] mx-auto">
-              <div className="flex justify-center mt-3">
-                <SuperStockTypeTab type={type} onChange={setType} />
-              </div>
-              <div className="px-10 py-5 mb-10">
-                <FirstStep />
-                {(type === SuperStockType.Tech || type === SuperStockType.Super) && (
-                  <>
-                    <KLineType />
-                    <MethodStep />
-                    <FactorStep />
-                  </>
-                )}
-                {(type === SuperStockType.Basic || type === SuperStockType.Super) && (
-                  <>
-                    <MarketCap />
-                    <FinanceStep />
-                    <PeriodStep />
-                    <BubbleStep />
-                    <CompareStep />
-                  </>
-                )}
-                <div className="flex items-center justify-end mt-2">
-                  <Button className="w-32 h-10 rounded-sm bg-[#2962FF] text-[#DBDBDB] hover:opacity-80" onClick={onSubmit}>
-                    确定
-                  </Button>
+          <div className="h-full w-full">
+            <ScrollArea className="bg-muted h-full w-full">
+              <div className="w-[994] mx-auto">
+                <div className="flex justify-center mt-3">
+                  <SuperStockTypeTab type={type} onChange={setType} />
                 </div>
-              </div>
-              {loading && (
-                <div className="fixed left-0 right-0 bottom-0 top-0 bg-background/45 flex items-center justify-center">
-                  <div className="w-60 bg-background/95 p-12 flex flex-col items-center">
-                    <JknIcon className="w-48 h-48" name="load" />
-                    <div className="text-center mt-4">拼命选股中</div>
+                <div className="px-10 py-5 mb-10">
+                  <FirstStep />
+                  {(type === SuperStockType.Tech || type === SuperStockType.Super) && (
+                    <>
+                      <KLineType />
+                      <MethodStep />
+                      <FactorStep />
+                    </>
+                  )}
+                  {(type === SuperStockType.Basic || type === SuperStockType.Super) && (
+                    <>
+                      <MarketCap />
+                      <FinanceStep />
+                      <PeriodStep />
+                      <BubbleStep />
+                      <CompareStep />
+                    </>
+                  )}
+                  
+                </div>
+                {loading && (
+                  <div className="fixed left-0 right-0 bottom-0 top-0 bg-background/45 flex items-center justify-center">
+                    <div className="w-60 bg-background/95 p-12 flex flex-col items-center">
+                      <JknIcon className="w-48 h-48" name="load" />
+                      <div className="text-center mt-4">拼命选股中</div>
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
+            </ScrollArea>
+            <div className="w-[994] mx-auto relative">
+              <div className="absolute right-10 bottom-[10px] items-center justify-end mt-2">
+                <Button className="w-32 h-10 rounded-sm bg-[#2962FF] text-[#DBDBDB] hover:opacity-80" onClick={onSubmit}>
+                  确定
+                </Button>
+              </div>
             </div>
-          </ScrollArea>
+          </div>
         )}
       </SuperStockContext.Provider>
     </div>

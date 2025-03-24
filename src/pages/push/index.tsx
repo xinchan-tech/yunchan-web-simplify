@@ -261,7 +261,7 @@ const PushPage = () => {
             ) : (
               <div
                 key={i}
-                className="w-[10px] h-[16px]"
+                className="w-[10px] h-[16px] rounded-[1px]"
                 style={{
                   backgroundColor: row.bull === "1" ? "#22AB94" : "#F23645",
                   marginRight: i < v - 1 ? "2px" : "2px",

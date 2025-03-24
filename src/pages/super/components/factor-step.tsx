@@ -64,6 +64,7 @@ const FactorStep = () => {
             className="flex-grow grid grid-cols-2 gap-[10px]"
             type="multiple"
             value={selection}
+            hoverColor="#2E2E2E"
             onValueChange={_onValueChange}
           >
             {data?.map((child) =>
