@@ -1015,6 +1015,7 @@ type GetStockSelectionResult = {
   stock: StockRawRecord
   stock_cycle: number
   symbol: string
+  score_total: number
 }
 
 /**

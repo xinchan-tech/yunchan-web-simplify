@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { type FC, useState } from 'react'
 import { JknIcon } from '../jkn/jkn-icon'
+import StarRect from './rect'
 
 interface StarProps {
   className?: string
@@ -13,10 +14,13 @@ const Star = (props: StarProps) => {
   const icon: IconName = props.checked ? 'ic_star_on' : hover ? 'ic_star_hover' : 'ic_star_off'
 
   return (
-    <span onFocus={() => {}} onMouseOver={() => setHover(true)} onMouseLeave={() => setHover(false)}>
+    <span onFocus={() => { }} onMouseOver={() => setHover(true)} onMouseLeave={() => setHover(false)}>
       <JknIcon name={icon} className="w-4 h-4 flex items-center" />
     </span>
   )
 }
 
-export default Star
+
+Star.Rect = StarRect
+
+export default Star as FC<StarProps> & { Rect: typeof StarRect }

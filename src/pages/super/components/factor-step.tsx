@@ -61,7 +61,7 @@ const FactorStep = () => {
             <div className="flex flex-row">底部策略</div>
           </div>
           <ToggleGroup
-            className="flex-grow grid grid-cols-2 gap-[10px]"
+            className="flex-grow grid grid-cols-3 gap-[10px]"
             type="multiple"
             value={selection}
             hoverColor="#2E2E2E"
@@ -78,7 +78,7 @@ const FactorStep = () => {
                     disabled={!child.authorized}
                     value={child.id}
                     className={cn(
-                      "w-full py-5 px-[14px] rounded-sm border border-[#2E2E2E] bg-transparent relative",
+                      "w-full py-5 px-[14px] box-border rounded-sm border border-[#2E2E2E] bg-transparent relative",
                       "data-[state=on]:bg-transparent",
                       "data-[state=on]:text-[#DBDBDB] data-[state=on]:border-[#DBDBDB]",
                     )}

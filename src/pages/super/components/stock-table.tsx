@@ -6,10 +6,12 @@ import {
   JknIcon,
   JknRcTable,
   type JknRcTableProps,
+  Star,
   StockView,
   SubscribeSpan
 } from '@/components'
 import { useCheckboxGroup, useTableData, useTableRowClickToStockTrading } from '@/hooks'
+import { useConfig } from "@/store"
 import { stockUtils } from '@/utils/stock'
 import { cn } from '@/utils/style'
 import { nanoid } from 'nanoid'
@@ -29,6 +31,7 @@ type TableDataType = {
   industry?: string
   prePercent: number
   afterPercent: number
+  score_total: number
   collect: 1 | 0
   key: string
   bull: string
@@ -69,6 +72,7 @@ const StockTable = (props: StockTableProps) => {
           symbol: lastData.symbol,
           name: lastData.name,
           close: lastData.close,
+          score_total: item.score_total,
           percent: stockUtils.getPercentUnsafe(lastData),
           total: stockUtils.getMarketValue(lastData),
           amount: lastData.turnover,
@@ -82,23 +86,25 @@ const StockTable = (props: StockTableProps) => {
     )
   }, [props.data, setList])
 
-  const { checked, onChange, setCheckedAll, getIsChecked } = useCheckboxGroup([])
-
   const columns: JknRcTableProps<TableDataType>['columns'] = useMemo(
     () => [
-      { title: '序号', dataIndex: 'index', width: 40, align: 'center', render: (_, row) => row.index + 1 },
       {
         title: '名称代码',
         dataIndex: 'name',
         width: 120,
         align: 'left',
         sort: true,
-        render: (name, row) => <StockView name={name} code={row.symbol} />
+        render: (name, row) => (
+          <div className="flex items-center space-x-2">
+            <CollectStar onUpdate={props.onUpdate} checked={row.collect === 1} code={row.symbol} />
+            <StockView name={name} code={row.symbol} />
+          </div>
+        )
       },
       {
         title: '周期',
         dataIndex: 'stock_cycle',
-        width: 40,
+        width: 50,
         align: 'right',
         sort: true,
         render: stock_cycle => `${stock_cycle}分`
@@ -126,10 +132,18 @@ const StockTable = (props: StockTableProps) => {
       {
         title: '底部类型',
         dataIndex: 'bottom',
-        width: 60,
+        width: 70,
         align: 'center',
         sort: true,
         render: bottom => <span>{bottom ? <span className="text-stock-up">{bottom}</span> : '--'}</span>
+      },
+      {
+        title: '信号强度',
+        dataIndex: 'score_total',
+        align: 'right',
+        width: 90,
+        sort: true,
+        render: score => <Star.Rect total={score} count={score} activeColor={useConfig.getState().getStockColor(true, 'hex')} />
       },
       {
         title: '现价',
@@ -154,10 +168,11 @@ const StockTable = (props: StockTableProps) => {
         align: 'right',
         sort: true,
         render: (percent, row) => (
-          <SubscribeSpan.PercentBlockBlink
+          <SubscribeSpan.PercentBlink
             trading="intraDay"
             symbol={row.symbol}
             decimal={2}
+            showSign
             initValue={percent}
             initDirection={(row.percent ?? 0) >= 0}
             nanText="--"
@@ -202,84 +217,66 @@ const StockTable = (props: StockTableProps) => {
         width: 120,
         align: 'right'
       },
-      {
-        title: '盘前涨跌幅',
-        dataIndex: 'prePercent',
-        width: '15%',
-        align: 'right',
-        sort: true,
-        render: (prePercent, row) => (
-          <SubscribeSpan.PercentBlink
-            trading="preMarket"
-            symbol={row.symbol}
-            showSign
-            decimal={2}
-            initValue={prePercent}
-            initDirection={(prePercent ?? 0) > 0}
-            nanText="--"
-          />
-        )
-      },
-      {
-        title: '盘后涨跌幅',
-        dataIndex: 'afterPercent',
-        width: '15%',
-        align: 'right',
-        sort: true,
-        render: (afterPercent, row) => (
-          <SubscribeSpan.PercentBlink
-            trading="afterHours"
-            showSign
-            symbol={row.symbol}
-            decimal={2}
-            initValue={afterPercent}
-            initDirection={(afterPercent ?? 0) > 0}
-            nanText="--"
-          />
-        )
-      },
-      {
-        title: '+股票金池',
-        dataIndex: 'collect',
-        width: 60,
-        align: 'center',
-        render: (collect, row) => (
-          <div>
-            <CollectStar onUpdate={props.onUpdate} checked={collect} code={row.symbol} />
-          </div>
-        )
-      },
-      {
-        title: '+AI报警',
-        dataIndex: 't9',
-        width: 50,
-        align: 'center',
-        render: (_, row) => (
-          <AiAlarm code={row.symbol}>
-            <JknIcon className="rounded-none" name="ic_add" />
-          </AiAlarm>
-        )
-      },
-      {
-        title: (
-          <CollectStar.Batch
-            checked={checked}
-            onCheckChange={v => setCheckedAll(v ? list.map(o => o.symbol) : [])}
-            onUpdate={() => {
-              setCheckedAll([])
-            }}
-          />
-        ),
-        dataIndex: 'check',
-        id: 'select',
-        width: 60,
-        align: 'center',
-        render: (_, row) => (
-          <JknCheckbox checked={getIsChecked(row.symbol)} onCheckedChange={v => onChange(row.symbol, v)} />
-        )
-      }
+      // {
+      //   title: '盘前涨跌幅',
+      //   dataIndex: 'prePercent',
+      //   width: 120,
+      //   align: 'right',
+      //   sort: true,
+      //   render: (prePercent, row) => (
+      //     <SubscribeSpan.PercentBlink
+      //       trading="preMarket"
+      //       symbol={row.symbol}
+      //       showSign
+      //       decimal={2}
+      //       initValue={prePercent}
+      //       initDirection={(prePercent ?? 0) > 0}
+      //       nanText="--"
+      //     />
+      //   )
+      // },
+      // {
+      //   title: '盘后涨跌幅',
+      //   dataIndex: 'afterPercent',
+      //   width: 120,
+      //   align: 'right',
+      //   sort: true,
+      //   render: (afterPercent, row) => (
+      //     <SubscribeSpan.PercentBlink
+      //       trading="afterHours"
+      //       showSign
+      //       symbol={row.symbol}
+      //       decimal={2}
+      //       initValue={afterPercent}
+      //       initDirection={(afterPercent ?? 0) > 0}
+      //       nanText="--"
+      //     />
+      //   )
+      // },
+      // {
+      //   title: '+股票金池',
+      //   dataIndex: 'collect',
+      //   width: 80,
+      //   align: 'center',
+      //   render: (collect, row) => (
+      //     <div>
+      //       <CollectStar onUpdate={props.onUpdate} checked={collect} code={row.symbol} />
+      //     </div>
+      //   )
+      // },
+      // {
+      //   title: '+AI报警',
+      //   dataIndex: 't9',
+      //   width: 50,
+      //   align: 'center',
+      //   render: (_, row) => (
+      //     <AiAlarm code={row.symbol}>
+      //       <JknIcon className="rounded-none" name="ic_add" />
+      //     </AiAlarm>
+      //   )
+      // }
     ],
-    [checked, list, getIsChecked, onChange, setCheckedAll, props.onUpdate]
+    [props.onUpdate]
   )
 
   const onRowClick = useTableRowClickToStockTrading('symbol')

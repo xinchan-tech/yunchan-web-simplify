@@ -1,33 +1,33 @@
 import {
+  type StockExtend,
+  getStockCollectCates,
+  getStockCollects,
+  moveStockCollectBatch,
+} from "@/api"
+import {
+  Button,
   CollectCapsuleTabs,
   JknCheckbox,
+  JknIcon,
   JknRcTable,
-  JknRcTableProps,
+  type JknRcTableProps,
   StockView,
   SubscribeSpan,
-  Button,
-  JknIcon,
-} from "@/components";
-import GoldenPoolStar from "@/pages/golden-pool/components/golden-pool-star";
-import { GoldenPoolManager, GoldenPoolNameEdit } from "@/pages/golden-pool/components/golden-pool-manager";
-import {
-  type StockExtend,
-  getStockCollects,
-  getStockCollectCates,
-  moveStockCollectBatch,
-} from "@/api";
-import { stockUtils } from "@/utils/stock";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { useCheckboxGroup, useTableData, useTableRowClickToStockTrading, useToast } from "@/hooks";
+} from "@/components"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import to from "await-to-js";
+} from "@/components/ui/dropdown-menu"
+import { useCheckboxGroup, useTableData, useTableRowClickToStockTrading, useToast } from "@/hooks"
+import { GoldenPoolManager, GoldenPoolNameEdit } from "@/pages/golden-pool/components/golden-pool-manager"
+import GoldenPoolStar from "@/pages/golden-pool/components/golden-pool-star"
+import { stockUtils } from "@/utils/stock"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
+import to from "await-to-js"
+import { useCallback, useEffect, useMemo, useState } from "react"
 
 const baseExtends: StockExtend[] = [
   "total_share",
@@ -36,21 +36,21 @@ const baseExtends: StockExtend[] = [
   "alarm_ai",
   "alarm_all",
   "financials",
-];
+]
 
 type TableDataType = ReturnType<typeof stockUtils.toStockWithExt> & {
   id: string
-};
+}
 
 const GoldenPool = () => {
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const [activeStockCollectCate, setActiveStockCollectCate] = useState("1");
-  const [collectIds, setCollectIds] = useState<string[]>([]);
+  const { toast } = useToast()
+  const queryClient = useQueryClient()
+  const [activeStockCollectCate, setActiveStockCollectCate] = useState("1")
+  const [collectIds, setCollectIds] = useState<string[]>([])
 
   const { checked, onChange: onCheckChange, setCheckedAll, getIsChecked: isChecked } = useCheckboxGroup(
     []
-  );
+  )
 
   const collects = useQuery({
     queryKey: [getStockCollects.cacheKey, activeStockCollectCate],
@@ -60,49 +60,49 @@ const GoldenPool = () => {
         limit: 300,
         extend: baseExtends,
       }),
-  });
+  })
 
-  const [list, { setList, onSort }] = useTableData<TableDataType>([], "symbol");
+  const [list, { setList, onSort }] = useTableData<TableDataType>([], "symbol")
 
   useEffect(() => {
     const stockList = collects.data?.items.map((o) =>
-      ({
-        ...stockUtils.toStockWithExt(o.stock, {
-          extend: o.extend,
-          name: o.name,
-          symbol: o.symbol,
-        }),
-        collect: 1,
-        id: o.id
-      })
-    ) ?? [];
-    
-    setList(stockList);
-    
+    ({
+      ...stockUtils.toStockWithExt(o.stock, {
+        extend: o.extend,
+        name: o.name,
+        symbol: o.symbol,
+      }),
+      collect: 1,
+      id: o.id
+    })
+    ) ?? []
+
+    setList(stockList)
+
     // 更新 checked 数组，使其包含表格中所有的 collect_id 集合
     if (stockList.length > 0) {
-      const allCollectIds = stockList.map(item => item.id);
-      setCollectIds(allCollectIds);
+      const allCollectIds = stockList.map(item => item.id)
+      setCollectIds(allCollectIds)
     }
-  }, [collects.data, setList, setCollectIds]);
+  }, [collects.data, setList])
 
   const onActiveStockChange = (v: string) => {
-    setActiveStockCollectCate(v);
-  };
+    setActiveStockCollectCate(v)
+  }
 
   const isAllChecked = useMemo(() => {
-    return collectIds.length > 0 && collectIds.every(id => isChecked(id));
-  }, [collectIds, isChecked]);
+    return collectIds.length > 0 && collectIds.every(id => isChecked(id))
+  }, [collectIds, isChecked])
 
   const handleCheckAll = useCallback((checked: boolean) => {
     if (checked) {
       // 全选：传入所有 collect_id
-      setCheckedAll(collectIds);
+      setCheckedAll(collectIds)
     } else {
       // 取消全选：传入空数组
-      setCheckedAll([]);
+      setCheckedAll([])
     }
-  }, [collectIds, setCheckedAll]);
+  }, [collectIds, setCheckedAll])
 
   const columns: JknRcTableProps<TableDataType>["columns"] = useMemo(
     () => [
@@ -112,12 +112,12 @@ const GoldenPool = () => {
             <span className="inline-flex items-center">
               <GoldenPoolStar.Batch cateId={+activeStockCollectCate} checked={true} checkedChildren={collectIds} onUpdate={() => {
                 // 同时刷新表格数据和 Tab 标题数据
-                collects.refetch();
+                collects.refetch()
                 // 刷新收藏分类数据，更新 Tab 标题
-                queryClient.invalidateQueries({ queryKey: [getStockCollectCates.cacheKey] });
+                queryClient.invalidateQueries({ queryKey: [getStockCollectCates.cacheKey] })
               }} />
             </span>
-            <span className="mr-3"/>
+            <span className="mr-3" />
             <span className="inline-flex items-center">名称代码</span>
           </div>
         ),
@@ -129,12 +129,12 @@ const GoldenPool = () => {
           <div className="flex justify-center items-center">
             <GoldenPoolStar cateId={+activeStockCollectCate} checked={true} code={row.symbol} onUpdate={() => {
               // 同时刷新表格数据和 Tab 标题数据
-              collects.refetch();
+              collects.refetch()
               // 刷新收藏分类数据，更新 Tab 标题
-              queryClient.invalidateQueries({ queryKey: [getStockCollectCates.cacheKey] });
+              queryClient.invalidateQueries({ queryKey: [getStockCollectCates.cacheKey] })
             }} />
           </div>
-          <span className="mr-3"/>
+          <span className="mr-3" />
           <StockView name={row.name} code={row.symbol as string} showName />
         </div>
       },
@@ -177,7 +177,7 @@ const GoldenPool = () => {
         sort: true,
         render: (_, row) => (
           <SubscribeSpan.TurnoverBlink
-          showColor={false}
+            showColor={false}
             symbol={row.symbol}
             decimal={2}
             initValue={row.turnover}
@@ -192,7 +192,7 @@ const GoldenPool = () => {
         sort: true,
         render: (_, row) => (
           <SubscribeSpan.MarketValue
-          showColor={false}
+            showColor={false}
             symbol={row.symbol}
             decimal={2}
             initValue={stockUtils.getMarketValue(row)}
@@ -226,44 +226,46 @@ const GoldenPool = () => {
     [
       activeStockCollectCate,
       collectIds,
-      list,
       collects.refetch,
       isAllChecked,
-      checked,
+      isChecked,
+      onCheckChange,
+      queryClient.invalidateQueries,
+      handleCheckAll
     ]
-  );
+  )
 
-  const onRowClick = useTableRowClickToStockTrading("symbol");
+  const onRowClick = useTableRowClickToStockTrading("symbol")
 
   const GoldenPoolCateList = ({ checked, onUpdate }: { checked: string[]; onUpdate: () => void }) => {
     const cates = useQuery({
       queryKey: [getStockCollectCates.cacheKey],
       queryFn: () => getStockCollectCates(),
-    });
+    })
 
     const moveToGoldenPool = async (cateId: string) => {
       if (checked.length === 0) {
-        toast({ description: "请先选择股票" });
-        return;
+        toast({ description: "请先选择股票" })
+        return
       }
 
       const [err] = await to(moveStockCollectBatch({
         collect_ids: checked.map(id => Number(id)),
         cate_ids: [Number(cateId)],
-      }));
+      }))
 
       if (err) {
-        toast({ description: err.message });
-        return;
+        toast({ description: err.message })
+        return
       }
 
-      toast({ description: "移动成功" });
-      
-      onUpdate?.();
-    };
+      toast({ description: "移动成功" })
+
+      onUpdate?.()
+    }
 
     if (cates.isLoading || !cates.data) {
-      return null;
+      return null
     }
 
     return (
@@ -274,12 +276,12 @@ const GoldenPool = () => {
           </DropdownMenuItem>
         ))}
       </>
-    );
-  };
+    )
+  }
 
   return (
     <div className="h-full w-full overflow-hidden flex justify-center bg-black">
-      <div className="h-full overflow-hidden flex flex-col w-[1114px] pt-[40px] golden-pool">
+      <div className="h-full overflow-hidden flex flex-col w-table pt-[40px] golden-pool">
         <div className="flex items-center justify-center flex-shrink-0">
           <div className="flex-1 overflow-x-auto pl-2">
             <CollectCapsuleTabs
@@ -300,13 +302,13 @@ const GoldenPool = () => {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-40 bg-[#1F1F1F] text-[#B8B8B8] [&>*:hover]:bg-[#2E2E2E]">
-              <div className="relative" onClick={(e) => e.stopPropagation()}>
+              <div className="relative" onClick={(e) => e.stopPropagation()} onKeyDown={() => { }}>
                 <GoldenPoolNameEdit onUpdate={() => {
-                  queryClient.invalidateQueries({ queryKey: [getStockCollectCates.cacheKey] });
+                  queryClient.invalidateQueries({ queryKey: [getStockCollectCates.cacheKey] })
                 }}>
                   <DropdownMenuItem onSelect={(e) => {
                     // 阻止 DropdownMenu 的默认关闭行为
-                    e.preventDefault();
+                    e.preventDefault()
                   }}>
                     <span>新建分组</span>
                   </DropdownMenuItem>
@@ -314,8 +316,8 @@ const GoldenPool = () => {
               </div>
               <DropdownMenuSeparator className="bg-[#2E2E2E]" />
               <GoldenPoolCateList checked={checked} onUpdate={() => {
-                collects.refetch();
-                queryClient.invalidateQueries({ queryKey: [getStockCollectCates.cacheKey] });
+                collects.refetch()
+                queryClient.invalidateQueries({ queryKey: [getStockCollectCates.cacheKey] })
               }} />
             </DropdownMenuContent>
           </DropdownMenu>
@@ -350,7 +352,7 @@ const GoldenPool = () => {
         </style>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default GoldenPool;
+export default GoldenPool

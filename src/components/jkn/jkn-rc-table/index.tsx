@@ -7,11 +7,13 @@ import type { DefaultRecordType } from 'rc-table/lib/interface'
 import { type ReactNode, memo, useCallback, useMemo, useRef } from 'react'
 import { useImmer } from 'use-immer'
 import { withSort } from '../jkn-icon/with-sort'
+import { isNumber, isString } from "radash"
 
 export interface JknRcTableProps<T = any> extends TableProps<T> {
   headerHeight?: number
   isLoading?: boolean
   virtual?: boolean
+  designWidth?: number
   onSort?: (columnKey: keyof T, order: 'asc' | 'desc' | undefined) => void
   infiniteScroll?: {
     enabled?: boolean
@@ -27,6 +29,7 @@ const _JknRcTable = <T extends DefaultRecordType = any>({
   isLoading,
   virtual,
   infiniteScroll,
+  designWidth,
   ...props
 }: JknRcTableProps<T>) => {
   // const [size, dom] = useDomSize<HTMLDivElement>()
@@ -34,6 +37,10 @@ const _JknRcTable = <T extends DefaultRecordType = any>({
     columnKey: undefined,
     order: undefined
   })
+  const [container, setContainer] = useImmer({ width: 0, height: headerHeight })
+  const dom = useRef<HTMLDivElement>(null)
+  const hasMore = useLatestRef(infiniteScroll?.hasMore)
+  const fetchMore = useLatestRef(infiniteScroll?.fetchMore)
 
   const onSort = useCallback(
     (columnKey: keyof T, order: 'asc' | 'desc' | undefined) => {
@@ -48,8 +55,26 @@ const _JknRcTable = <T extends DefaultRecordType = any>({
 
   const _columns = useMemo(() => {
     if (!columns) return columns
-
+    const width = dom.current?.getBoundingClientRect().width
     return columns.map(column => {
+      if (designWidth && width) {
+
+        columns.forEach((item: any) => {
+          if (item.children) return
+
+          if (item.width) {
+            if (isNumber(item.width)) {
+              item.width = item.width / designWidth * width
+            } else if (isString(item.width)) {
+              if (item.width.endsWith('%')) {
+                item.width = Number(item.width.replace('%', '')) / 100 * width
+              } else if (item.width.endsWith('px')) {
+                item.width = Number(item.width.replace('px', ''))
+              }
+            }
+          }
+        })
+      }
       if ((column as any).sort && !(column as any).children) {
         return {
           ...column,
@@ -66,12 +91,9 @@ const _JknRcTable = <T extends DefaultRecordType = any>({
       }
       return column
     })
-  }, [columns, sort, onSort])
+  }, [columns, sort, onSort, designWidth])
 
-  const [container, setContainer] = useImmer({ width: 0, height: headerHeight })
-  const dom = useRef<HTMLDivElement>(null)
-  const hasMore = useLatestRef(infiniteScroll?.hasMore)
-  const fetchMore = useLatestRef(infiniteScroll?.fetchMore)
+
 
   const observerRef = useRef<IntersectionObserver | null>(null)
 
