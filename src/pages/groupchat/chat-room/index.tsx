@@ -23,7 +23,7 @@ export const ChatRoom = () => {
   })
 
   const channelInfo = channelQuery.data
-  const channelDetail = getChannelDetailFromChannel(channel!)
+  const channelDetail = getChannelDetailFromChannel(channel)
 
 
   useEffect(() => {

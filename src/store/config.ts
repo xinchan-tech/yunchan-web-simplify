@@ -41,7 +41,7 @@ interface ConfigStore {
     alarmTips: '1' | '0'
     alarmShow: '1' | '0'
     // 缺口设置
-    gapShow: '1' | '0'
+    gapShow: string
   }
   setSetting: (setting: Partial<ConfigStore['setting']>) => void
   getStockColor: (up?: boolean, format?: 'hex' | 'hsl') => string

@@ -1,5 +1,5 @@
 import { updateUser } from "@/api"
-import { Button, Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, Input, JknIcon, Label, RadioGroup, RadioGroupItem, ScrollArea, Textarea } from '@/components'
+import { Button, Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, Input, JknIcon, Label, RadioGroup, RadioGroupItem, ScrollArea, Textarea } from '@/components'
 import { useToast } from '@/hooks'
 import { useConfig, useUser } from '@/store'
 import { cn } from '@/utils/style'
@@ -207,20 +207,27 @@ const SettingPage = () => {
             </SettingItem>
 
             <SettingItem label="缺口设置">
-              <RadioGroup
-                className="flex space-x-8"
-                value={config.setting.gapShow}
-                onValueChange={value => config.setSetting({ gapShow: value as typeof config.setting.gapShow })}
-              >
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="1" id="gapShow-enabled" />
-                  <Label htmlFor="gapShow-enabled">显示缺口</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="0" id="gapShow-disabled" />
-                  <Label htmlFor="gapShow-disabled">不显示</Label>
-                </div>
-              </RadioGroup>
+              <div className="flex items-center space-x-8">
+                显示
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <div className="flex items-center rounded bg-accent px-2 mx-2">
+                      <span className="w-3 text-center">{config.setting.gapShow}</span>
+                      <JknIcon.Svg name="arrow-down" className="w-4 h-4" />
+                    </div>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent>
+                    {
+                      [1, 2, 3, 4, 5].map((item) => (
+                        <DropdownMenuItem key={item} onClick={() => config.setSetting({ gapShow: item.toString() })}>
+                          {item}
+                        </DropdownMenuItem>
+                      ))
+                    }
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                个
+              </div>
             </SettingItem>
 
             <SettingItem label="报警邮箱">

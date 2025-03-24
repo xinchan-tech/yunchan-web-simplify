@@ -15,7 +15,7 @@ import {
 import { debounce, uid } from 'radash'
 import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react'
 import { backTestLineFigure, backTestMarkFigure, IconFigure, LogoFigure, markOverlayFigure } from './figure'
-import { compareIndicator, localIndicator } from './indicator'
+import { compareIndicator, gapIndicator, localIndicator } from './indicator'
 import { markIndicator } from './indicator/mark'
 import type { AxisPosition, Candlestick } from './types'
 import { ChartTypes, getStockColor, getTickNumberByTrading, isSameInterval, transformCandleColor, transformTextColor } from './utils'
@@ -34,6 +34,7 @@ registerIndicator(localIndicator)
 registerIndicator(compareIndicator)
 registerIndicator(markIndicator)
 registerIndicator(backTestIndicator)
+registerIndicator(gapIndicator)
 registerFigure(backTestMarkFigure)
 registerFigure(backTestLineFigure)
 registerFigure(IconFigure)
@@ -81,6 +82,9 @@ interface JknChartIns {
   setDragEnable: (enable: boolean) => void
   getChart: () => Chart | null | undefined
   setTimeShareChart: (interval?: StockChartInterval) => void
+  createGapIndicator: (count: number) => void
+  removeGapIndicator: () => void
+  setGapIndicator: (count: number) => void
 }
 
 const DEFAULT_AREA_BG_COLOR = {
@@ -172,7 +176,7 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
                 if (lastData.quote) {
                   const prev = (lastData.prevQuote as number) ?? lastData.prevClose
 
-                  return prev > lastData.close ? upColor : downColor
+                  return lastData.quote > prev ? upColor : downColor
                 }
 
                 return lastData.close > lastData.prevClose ? upColor : downColor
@@ -528,6 +532,27 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
           }
         })
       }
+    },
+    createGapIndicator: (count) => {
+      chart.current?.createIndicator(
+        {
+          name: 'gap-indicator',
+          id: 'gap-indicator',
+          calcParams: [count]
+        },
+        true,
+        { id: ChartTypes.MAIN_PANE_ID }
+      )
+    },
+    removeGapIndicator: () => {
+      chart.current?.removeIndicator({ id: 'gap-indicator' })
+    },
+    setGapIndicator: (count) => {
+      chart.current?.overrideIndicator({
+        name: 'gap-indicator',
+        id: 'gap-indicator',
+        calcParams: [count]
+      })
     }
   }))
 

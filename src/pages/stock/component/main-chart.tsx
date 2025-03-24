@@ -11,7 +11,7 @@ import { renderUtils } from '../lib/utils'
 import { ChartContextMenu } from './chart-context-menu'
 import { BackTestBar } from "./back-test-bar"
 import { useStockBarSubscribe } from "@/hooks"
-import { chatManager, useTime } from "@/store"
+import { chatManager, useConfig, useTime } from "@/store"
 import { colorUtil } from "@/utils/style"
 import { dateUtils } from "@/utils/date"
 
@@ -28,6 +28,7 @@ const convertToStock = (candlesticks: StockRawRecord[]) => candlesticks.map(c =>
 
 export const MainChart = (props: MainChartProps) => {
   const [symbol, setSymbol] = useState(getSymbolByUrl())
+  const gapShow = useConfig(s => s.setting.gapShow)
   const trading = useTime(s => s.getTrading())
   const activeChartId = useChartManage(s => s.activeChartId)
   const chartStore = useChartManage(s => s.chartStores[props.chartId])
@@ -156,6 +157,10 @@ export const MainChart = (props: MainChartProps) => {
 
     if (renderUtils.isTimeIndexChart(chartStore.interval)) {
       chartImp.current?.setTimeShareChart(chartStore.interval)
+    }
+
+    if(Number.parseInt(gapShow) > 0){
+      chartImp.current?.createGapIndicator(Number.parseInt(gapShow))
     }
   })
 
