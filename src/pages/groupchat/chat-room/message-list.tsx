@@ -4,7 +4,7 @@ import { useInfiniteQuery } from "@tanstack/react-query"
 import WKSDK, { type CMDContent, type Message, MessageStatus, PullMode, type Reply, type Subscriber } from "wukongimjssdk"
 import { TextRecord } from "./components/text-record"
 import ChatAvatar from "../components/chat-avatar"
-import { useCallback, useEffect, useState, type PropsWithChildren } from "react"
+import { type ComponentRef, useCallback, useEffect, useRef, useState, type PropsWithChildren } from "react"
 import { getTimeFormatStr } from "../chat-utils"
 import { useCMDListener, useMessageListener, useMessageStatusListener, useSubscribesListener } from "../lib/hooks"
 import { useUpdate, useUpdateEffect } from "ahooks"
@@ -14,12 +14,13 @@ import { chatEvent } from "../lib/event"
 import { revokeMessage } from "@/api"
 import { isChannelManager, isChannelOwner } from "../lib/utils"
 import { messageCache } from "../cache"
+import { useLatestRef } from "@/hooks"
+import { UsernameSpan } from "../components/username-span"
 
 const mergePrevMessages = (oldData: Message[], newData: Message[]) => {
   const oldDataFirst = oldData[0]
-  if(!oldDataFirst) return [...newData]
+  if (!oldDataFirst) return [...newData]
   const prev = newData.filter(msg => msg.messageSeq < oldDataFirst.messageSeq)
-
   return [...prev, ...oldData]
 }
 
@@ -31,29 +32,31 @@ const useMessages = () => {
     if (!channel) return
 
     messageCache.getMessages(channel).then(r => {
-      console.log(r)
       setMessages(r)
+      chatEvent.emit('messageInit', null)
     })
   }, [channel])
 
   const messagesQuery = useInfiniteQuery({
     queryKey: ['syncMessages', channel?.channelID],
-    queryFn: async ({pageParam}) => {
-      return WKSDK.shared().chatManager.syncMessages(channel!, {
+    queryFn: async ({ pageParam }) => {
+      const r = await WKSDK.shared().chatManager.syncMessages(channel!, {
         startMessageSeq: pageParam || 0,
         endMessageSeq: 0,
         limit: 40,
         pullMode: PullMode.Down,
       })
+
+      return r
     },
     initialPageParam: 0,
     getNextPageParam: () => undefined,
     getPreviousPageParam: (firstPage) => {
       const last = firstPage[0]
 
-      if(!last) return undefined
+      if (!last) return undefined
 
-      if(last.messageSeq >= 1){
+      if (last.messageSeq >= 1) {
         return last.messageSeq - 1
       }
       return undefined
@@ -75,29 +78,48 @@ const useMessages = () => {
       revokeMessage.forEach(item => {
         const index = normalMessage.findIndex(msg => msg.messageID === item.content.param.message_id)
         if (index !== -1) {
-          normalMessage.splice(index, 1, item)
+          normalMessage[index].content = item.content
         }
       })
 
-      return normalMessage
+      return {
+        messages: normalMessage,
+        page: res.pageParams
+      }
     },
     enabled: !!channel,
   })
 
   useUpdateEffect(() => {
+    const data = messagesQuery.data?.messages ?? []
+    const pageParam = messagesQuery.data?.page ?? []
+
     setMessages(s => {
-      const r = mergePrevMessages(s, messagesQuery.data ?? [])
+      if (pageParam.length <= 1) {
+        setTimeout(() => {
+          chatEvent.emit('messageInit', null)
+        })
+        messageCache.updateBatch(data.slice(-40), channel)
+        return data
+      }
 
+      setTimeout(() => {
+        chatEvent.emit('messageFetchMoreDone', null)
+      })
+
+      const r = mergePrevMessages(s, messagesQuery.data?.messages ?? [])
       messageCache.updateBatch(r.slice(-40), channel)
-
       return r
     })
   }, [messagesQuery.data, channel])
-  
+
   const appendMessage = (msg: Message) => {
     setMessages(s => {
       const r = [...s, msg]
-      messageCache.updateBatch(r.slice(-40), channel)
+      if (!msg.messageID) {
+        messageCache.updateBatch(r.slice(-40), channel)
+      }
+
       return r
     })
   }
@@ -114,9 +136,14 @@ const useMessages = () => {
     messageCache.updateBatch(r.slice(-40), channel)
   }
 
+  const fetchPreviousPage = () => {
+    messagesQuery.fetchPreviousPage()
+    chatEvent.emit('messageFetchMore', null)
+  }
+
   return {
     messages,
-    fetchPreviousPage: messagesQuery.fetchPreviousPage,
+    fetchPreviousPage: fetchPreviousPage,
     hasMore: messagesQuery.hasPreviousPage,
     appendMessage,
     revokeMessage
@@ -125,17 +152,20 @@ const useMessages = () => {
 
 export const ChatMessageList = () => {
   const channel = useChatStore(state => state.lastChannel)
-  
+  const fetchMoreIndex = useRef<string>()
   const { messages, fetchPreviousPage, hasMore, appendMessage, revokeMessage } = useMessages()
+  const messagesLast = useLatestRef(messages)
+  const scrollRef = useRef<ComponentRef<typeof JknVirtualInfinite>>(null)
 
   useMessageListener((message) => {
     if (message.channel.channelID !== channel?.channelID) return
-
+    chatEvent.emit('messageUpdate', null)
     appendMessage(message)
   })
 
   useCMDListener((cmd) => {
     revokeMessage(cmd)
+    chatEvent.emit('messageUpdate', null)
   })
 
   useEffect(() => {
@@ -155,24 +185,82 @@ export const ChatMessageList = () => {
     }
   }, [])
 
+  const _onMessageSend = (message: Message) => {
+    if (message.status === MessageStatus.Normal) {
+      messageCache.updateBatch(messages.slice(-40), channel)
+    }
+  }
+
+  useEffect(() => {
+    const fetchMoreHandler = () => {
+      const items = scrollRef.current?.getVirtualItems()
+      if (items?.length) {
+        fetchMoreIndex.current = messages[items[0].index]?.messageID
+      }
+    }
+
+    const fetchMoreDoneHandler = () => {
+      setTimeout(() => {
+        const index = messagesLast.current.findIndex(msg => msg.messageID === fetchMoreIndex.current)
+        if (index !== -1) {
+          scrollRef.current?.scrollToIndex(index)
+        }
+      })
+    }
+
+    chatEvent.on('messageFetchMore', fetchMoreHandler)
+
+    chatEvent.on('messageFetchMoreDone', fetchMoreDoneHandler)
+
+    const updateHandler = () => {
+      if (messagesLast.current.length) {
+        setTimeout(() => {
+          const items = scrollRef.current?.getVirtualItems()
+
+          if (items?.length) {
+            scrollRef.current?.scrollToIndex(items[items.length - 1].index + 1)
+          }
+        })
+      }
+    }
+
+    chatEvent.on('messageUpdate', updateHandler)
+
+    const initHandler = () => {
+      if (messagesLast.current.length) {
+        setTimeout(() => {
+          scrollRef.current?.scrollToIndex(messagesLast.current.length)
+        })
+      }
+    }
+    chatEvent.on('messageInit', initHandler)
+
+    return () => {
+      chatEvent.off('messageFetchMore', fetchMoreHandler)
+      chatEvent.off('messageFetchMoreDone', fetchMoreDoneHandler)
+      chatEvent.off('messageUpdate', updateHandler)
+      chatEvent.off('messageInit', initHandler)
+    }
+  }, [messages, messagesLast])
+
 
   return (
     <JknVirtualInfinite className="w-full h-full chat-message-scroll-list"
       itemHeight={44}
+      ref={scrollRef}
       rowKey="messageID"
       data={messages ?? []}
-      autoBottom
       hasMore={hasMore}
       direction="up"
       fetchMore={fetchPreviousPage}
-      renderItem={msg => (
-        <ChatMessageRow key={msg.messageID} message={msg}>
-        {{
-          [ChatMessageType.Text]: <TextRecord message={msg} />,
-          [ChatMessageType.Cmd]: <RevokeRecord onReEdit={() => { }} revoker={msg.fromUID} channel={msg.channel} />,
-          [ChatMessageType.Image]: <ImageRecord message={msg} />,
-        }[msg.contentType] ?? null}
-      </ChatMessageRow>
+      renderItem={(msg: Message) => (
+        <ChatMessageRow key={msg.messageID} message={msg} onMessageSend={_onMessageSend}>
+          {{
+            [ChatMessageType.Text]: <TextRecord message={msg} />,
+            [ChatMessageType.Cmd]: <RevokeRecord onReEdit={() => { }} revoker={msg.fromUID} channel={msg.channel} />,
+            [ChatMessageType.Image]: <ImageRecord message={msg} />,
+          }[msg.contentType] ?? null}
+        </ChatMessageRow>
       )}
     >
     </JknVirtualInfinite>
@@ -181,9 +269,10 @@ export const ChatMessageList = () => {
 
 interface ChatMessageRowProps {
   message: Message
+  onMessageSend: (message: Message) => void
 }
 
-const ChatMessageRow = ({ message, children }: PropsWithChildren<ChatMessageRowProps>) => {
+const ChatMessageRow = ({ message, children, onMessageSend }: PropsWithChildren<ChatMessageRowProps>) => {
   const uid = WKSDK.shared().config.uid
   const update = useUpdate()
 
@@ -193,6 +282,9 @@ const ChatMessageRow = ({ message, children }: PropsWithChildren<ChatMessageRowP
     if (message.clientSeq === msg.clientSeq) {
       message.status = msg.reasonCode === 1 ? MessageStatus.Normal : MessageStatus.Fail
       message.messageID = msg.messageID.toString()
+      if (message.status === MessageStatus.Normal) {
+        onMessageSend(message)
+      }
       update()
     }
   })
@@ -227,9 +319,18 @@ const ChatMessageRow = ({ message, children }: PropsWithChildren<ChatMessageRowP
               {children}
             </div>
           </ChatMessageRowMenu>
-          {
-            message.content.reply as Reply ? <ReplyMessage reply={message.content.reply as Reply} /> : null
-          }
+          <div className="flex items-center space-x-1">
+            {
+              message.content.reply as Reply ? <ReplyMessage reply={message.content.reply as Reply} /> : null
+            }
+            <span className="text-xs text-tertiary scale-90 mt-1">
+              {
+                message.status === MessageStatus.Fail ? '发送失败' :
+                  message.status === MessageStatus.Wait ? '发送中...' :
+                    message.status === MessageStatus.Normal ? '已发送' : null
+              }
+            </span>
+          </div>
         </div>
 
         <ChatAvatar.User shape="square" src={fromAvatar} uid={message.fromUID} />
@@ -242,7 +343,7 @@ const ChatMessageRow = ({ message, children }: PropsWithChildren<ChatMessageRowP
       <ChatAvatar.User shape="square" src={fromAvatar} uid={message.fromUID} />
       <div className="ml-2.5 flex flex-col items-start" style={{ maxWidth: '50%' }}>
         <div className="text-sm leading-[14px] flex items-start mb-1.5">
-          <span >{fromName}</span>
+          <UsernameSpan uid={message.fromUID} name={fromName} channel={message.channel} />
           <span className="text-tertiary text-xs">&nbsp;{getTimeFormatStr(message.timestamp * 1000)}</span>
         </div>
         <ChatMessageRowMenu message={message} fromName={fromName}>

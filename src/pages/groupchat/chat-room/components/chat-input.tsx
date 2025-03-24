@@ -10,7 +10,7 @@ import { type ChatEvent, chatEvent } from "../../lib/event"
 import { useImmer } from "use-immer"
 import { ChatMessageType } from "@/store"
 import { useSubscribesListener } from "../../lib/hooks"
-import { Reaction, Reply, WKSDK, type Channel } from "wukongimjssdk"
+import { Reply, WKSDK, type Channel, type MessageContent } from "wukongimjssdk"
 import { hasForbidden } from "../../lib/utils"
 
 interface ChatInputProps {
@@ -29,7 +29,7 @@ const extensions = [StarterKit, Image]
 
 export const ChatInput = forwardRef<ChatInputInstance, ChatInputProps>((props, ref) => {
   const [mentionList, setMentionList] = useImmer<{ name: string; uid: string }[]>([])
-  const [replyMessage, setReplyMessage] = useImmer<Nullable<{ name: string; text: string , uid: string}>>(null)
+  const [replyMessage, setReplyMessage] = useImmer<Nullable<{ name: string; text: string, uid: string, content: MessageContent }>>(null)
 
   const editor = useEditor({
     extensions,
@@ -96,14 +96,16 @@ export const ChatInput = forwardRef<ChatInputInstance, ChatInputProps>((props, r
 
     const self = WKSDK.shared().channelManager.getSubscribeOfMe(props.channel!)!
 
-    if(replyMessage){
+    if (replyMessage) {
       const reply = new Reply()
       reply.fromUID = self.uid
       reply.fromName = self.name
       extra.reply = reply
+      reply.content = replyMessage.content
     }
     props.onSubmit?.(content, extra)
     setMentionList([])
+    setReplyMessage(null)
   }
 
 
@@ -160,9 +162,9 @@ export const ChatInput = forwardRef<ChatInputInstance, ChatInputProps>((props, r
       setMentionList([])
 
       if (message.contentType === ChatMessageType.Text) {
-        setReplyMessage({ name: fromName, text: message.content.text, uid: message.fromUID })
+        setReplyMessage({ name: fromName, text: message.content.text, uid: message.fromUID, content: message.content })
       } else if (message.contentType === ChatMessageType.Image) {
-        setReplyMessage({ name: fromName, text: '[图片]', uid: message.fromUID })
+        setReplyMessage({ name: fromName, text: '[图片]', uid: message.fromUID, content: message.content })
       }
 
       editor?.commands.focus()
@@ -180,7 +182,7 @@ export const ChatInput = forwardRef<ChatInputInstance, ChatInputProps>((props, r
   useSubscribesListener(props.channel, useCallback((channel) => {
     if (!props.channel!.isEqual(channel)) return
     const me = WKSDK.shared().channelManager.getSubscribeOfMe(channel)
-    if(!me){
+    if (!me) {
       editor?.setEditable(true)
       return
     }
@@ -198,14 +200,14 @@ export const ChatInput = forwardRef<ChatInputInstance, ChatInputProps>((props, r
   }, [editor])
 
   useEffect(() => {
-    if(!props.channel) {
+    if (!props.channel) {
       editor?.setEditable(true)
       return
     }
 
     const me = WKSDK.shared().channelManager.getSubscribeOfMe(props.channel)
 
-    if(!me){
+    if (!me) {
       editor?.setEditable(true)
       return
     }
@@ -216,7 +218,7 @@ export const ChatInput = forwardRef<ChatInputInstance, ChatInputProps>((props, r
     } else {
       editor?.setEditable(true)
     }
-    
+
   }, [props.channel, editor])
 
   return (

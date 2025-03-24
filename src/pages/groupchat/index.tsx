@@ -1,40 +1,26 @@
 import GroupChannel from './group-channel'
 import GroupChatLeftBar from './left-bar'
 
-import { chatConstants, chatManager, useChatStore, useToken, useUser } from '@/store'
+import { chatConstants, chatManager, useToken, useUser } from '@/store'
 import { createContext, useEffect, useRef, useState } from 'react'
 import WKSDK, {
-  type ConnectStatusListener,
-  type Message,
-  Channel,
-  type Subscriber,
-  ChannelTypePerson,
-  type CMDContent,
-  ConversationAction,
-  ChannelTypeGroup
+  type Channel,
+  type Message
 } from 'wukongimjssdk'
-import GroupChatInput from './group-chat-input'
-import GroupChatMsgList from './group-chat-msglist'
 
-import { useGroupChatShortStore, useGroupChatStoreNew } from '@/store/group-chat-new'
-import { useShallow } from 'zustand/react/shallow'
+import { useGroupChatStoreNew } from '@/store/group-chat-new'
 
-import GroupMembers from './group-members'
 
-import { loginImService, revokeMessage } from '@/api'
+import { loginImService } from '@/api'
 
-import { Button, JknIcon, Toaster } from '@/components'
-import type { ConversationWrap } from './ConversationWrap'
+import { Toaster } from '@/components'
 
-import { useLatest, useMount } from 'ahooks'
-import { ChevronRight } from 'lucide-react'
-import APIClient from './Service/APIClient'
-import { judgeHasReadGroupNotice, setAgreedGroupInCache } from './chat-utils'
-import ChatInfoDrawer from './components/chat-info-drawer'
-import TextImgLive from './text-img-live'
-import { connectStatusListener } from "./lib/event"
-import { initImDataSource } from "./lib/datasource"
+import { useMount } from 'ahooks'
 import { ChatRoom } from "./chat-room"
+import ChatInfoDrawer from './components/chat-info-drawer'
+import { initImDataSource } from "./lib/datasource"
+import { connectStatusListener } from "./lib/event"
+import TextImgLive from './text-img-live'
 
 export type ReplyFn = (option: {
   message?: Message
@@ -51,12 +37,7 @@ export const GroupChatContext = createContext<{
   syncSubscriber: async () => { }
 })
 
-const wsUrlPrefix = `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${window.location.host}`
 
-const subscriberCache: Map<string, Subscriber[]> = new Map()
-
-
-let cmdListener!: (message: Message) => void
 
 const COUNT_DOWN_NUM = 10
 
@@ -78,75 +59,75 @@ const GroupChatPage = () => {
     }
   })
 
-  const {
-    setSubscribers,
-    setFetchingSubscribers,
-    setReplyMessage,
-    setInputValue,
-    setLocatedMessageId,
-    setMessages,
-    getGroupDetailData,
-    groupDetailData,
-    setMentions
-  } = useGroupChatShortStore(
-    useShallow(state => {
-      return {
-        conversationWraps: state.conversationWraps,
-        subscribers: state.subscribers,
-        setSubscribers: state.setSubscribers,
-        setFetchingSubscribers: state.setFetchingSubscribers,
-        setReplyMessage: state.setReplyMessage,
-        setInputValue: state.setInputValue,
-        setLocatedMessageId: state.setLocatedMessageId,
-        setMessages: state.setMessages,
-        getGroupDetailData: state.getGroupDetailData,
-        groupDetailData: state.groupDetailData,
+  // const {
+  //   setSubscribers,
+  //   setFetchingSubscribers,
+  //   setReplyMessage,
+  //   setInputValue,
+  //   setLocatedMessageId,
+  //   setMessages,
+  //   getGroupDetailData,
+  //   groupDetailData,
+  //   setMentions
+  // } = useGroupChatShortStore(
+  //   useShallow(state => {
+  //     return {
+  //       conversationWraps: state.conversationWraps,
+  //       subscribers: state.subscribers,
+  //       setSubscribers: state.setSubscribers,
+  //       setFetchingSubscribers: state.setFetchingSubscribers,
+  //       setReplyMessage: state.setReplyMessage,
+  //       setInputValue: state.setInputValue,
+  //       setLocatedMessageId: state.setLocatedMessageId,
+  //       setMessages: state.setMessages,
+  //       getGroupDetailData: state.getGroupDetailData,
+  //       groupDetailData: state.groupDetailData,
 
-        setMentions: state.setMentions
-      }
-    })
-  )
+  //       setMentions: state.setMentions
+  //     }
+  //   })
+  // )
 
   // 输入框实例
-  const messageInputRef = useRef()
+  // const messageInputRef = useRef()
   //
 
-  // 监听cmd消息
-  cmdListener = (msg: Message) => {
-    console.log('收到CMD：', msg)
-    const cmdContent = msg.content as CMDContent
-    if (msgListRef.current) {
-      const temp = [...msgListRef.current.getMessagesRef()]
-      temp.push(msg)
-      setMessages(temp)
-    }
-    if (cmdContent.cmd === 'messageRevoke') {
-      // WKSDK.shared()
-      //   .config.provider.syncConversationsCallback()
-      //   .then((newConversations) => {
-      //     const newWarps = newConversations.map(
-      //       (item) => new ConversationWrap(item)
-      //     );
-      //     setConversationWraps(newWarps);
-      //   });
-    } else if (cmdContent.cmd === 'channelUpdate') {
-      // 编辑群时也调用这个方法更新
-      WKSDK.shared().channelManager.fetchChannelInfo(new Channel(msg.channel.channelID, ChannelTypeGroup))
-      // 修改了群公告，群权限后触发
-      getGroupDetailData(msg.channel.channelID)
-      // 有人加群后也触发updatechannel
-      syncSubscriber(msg.channel)
-    } else if (cmdContent.cmd === 'forbidden') {
-      // 修改了禁言后重新同步群成员
-      syncSubscriber(msg.channel)
-    }
-    const channel = msg.channel
-    const conversation = WKSDK.shared().conversationManager.findConversation(channel)
+  // // 监听cmd消息
+  // cmdListener = (msg: Message) => {
+  //   console.log('收到CMD：', msg)
+  //   const cmdContent = msg.content as CMDContent
+  //   if (msgListRef.current) {
+  //     const temp = [...msgListRef.current.getMessagesRef()]
+  //     temp.push(msg)
+  //     setMessages(temp)
+  //   }
+  //   if (cmdContent.cmd === 'messageRevoke') {
+  //     // WKSDK.shared()
+  //     //   .config.provider.syncConversationsCallback()
+  //     //   .then((newConversations) => {
+  //     //     const newWarps = newConversations.map(
+  //     //       (item) => new ConversationWrap(item)
+  //     //     );
+  //     //     setConversationWraps(newWarps);
+  //     //   });
+  //   } else if (cmdContent.cmd === 'channelUpdate') {
+  //     // 编辑群时也调用这个方法更新
+  //     WKSDK.shared().channelManager.fetchChannelInfo(new Channel(msg.channel.channelID, ChannelTypeGroup))
+  //     // 修改了群公告，群权限后触发
+  //     getGroupDetailData(msg.channel.channelID)
+  //     // 有人加群后也触发updatechannel
+  //     syncSubscriber(msg.channel)
+  //   } else if (cmdContent.cmd === 'forbidden') {
+  //     // 修改了禁言后重新同步群成员
+  //     syncSubscriber(msg.channel)
+  //   }
+  //   const channel = msg.channel
+  //   const conversation = WKSDK.shared().conversationManager.findConversation(channel)
 
-    if (conversation) {
-      WKSDK.shared().conversationManager.notifyConversationListeners(conversation, ConversationAction.update)
-    }
-  }
+  //   if (conversation) {
+  //     WKSDK.shared().conversationManager.notifyConversationListeners(conversation, ConversationAction.update)
+  //   }
+  // }
 
 
   // 阅读公告倒计时
@@ -173,7 +154,7 @@ const GroupChatPage = () => {
      * 监听事件
      */
     WKSDK.shared().connectManager.addConnectStatusListener(connectStatusListener)
-    WKSDK.shared().chatManager.addCMDListener(cmdListener)
+    // WKSDK.shared().chatManager.addCMDListener(cmdListener)
 
     channel.onmessage = event => {
       if (event.data.type === 'logout') {
@@ -185,49 +166,45 @@ const GroupChatPage = () => {
     return () => {
       channel.close()
       WKSDK.shared().connectManager.removeConnectStatusListener(connectStatusListener)
-      WKSDK.shared().chatManager.removeCMDListener(cmdListener)
+      // WKSDK.shared().chatManager.removeCMDListener(cmdListener)
       WKSDK.shared().disconnect()
     }
 
   }, [token, user?.username])
 
-  const syncSubscriber = async (channel: Channel) => {
-    setFetchingSubscribers(true)
-    try {
-      await WKSDK.shared().channelManager.syncSubscribes(channel) // 同步订阅者
-      setFetchingSubscribers(false)
-    } catch (err) {
-      setFetchingSubscribers(false)
-    }
-    const members: Subscriber[] = WKSDK.shared().channelManager.getSubscribes(channel)
-    subscriberCache.set(channel.channelID, members)
-    setSubscribers(members)
-  }
+  // const syncSubscriber = async (channel: Channel) => {
+  //   setFetchingSubscribers(true)
+  //   try {
+  //     await WKSDK.shared().channelManager.syncSubscribes(channel) // 同步订阅者
+  //     setFetchingSubscribers(false)
+  //   } catch (err) {
+  //     setFetchingSubscribers(false)
+  //   }
+  //   const members: Subscriber[] = WKSDK.shared().channelManager.getSubscribes(channel)
+  //   subscriberCache.set(channel.channelID, members)
+  //   setSubscribers(members)
+  // }
 
-  // 群成员
+  // // 群成员
 
   const handleChannelSelect = (channel: Channel) => {
-    setLocatedMessageId('')
+    // setLocatedMessageId('')
 
-    if (subscriberCache.has(channel.channelID)) {
-      const members = subscriberCache.get(channel.channelID) || []
-      setSubscribers(members)
-      if (msgListRef.current) {
-        msgListRef.current.pullLast(channel, true)
-      }
-    } else {
-      syncSubscriber(channel).finally(() => {
-        // 查完群员之后缓存了人员头像昵称再拉消息，优化性能
-        if (msgListRef.current) {
-          msgListRef.current.pullLast(channel, true)
-        }
-      })
-    }
+    // if (subscriberCache.has(channel.channelID)) {
+    //   const members = subscriberCache.get(channel.channelID) || []
+    //   setSubscribers(members)
+    //   if (msgListRef.current) {
+    //     msgListRef.current.pullLast(channel, true)
+    //   }
+    // } else {
+    //   syncSubscriber(channel).finally(() => {
+    //     // 查完群员之后缓存了人员头像昵称再拉消息，优化性能
+    //     if (msgListRef.current) {
+    //       msgListRef.current.pullLast(channel, true)
+    //     }
+    //   })
+    // }
 
-    // 输入框和回复内容重置
-    setReplyMessage(null)
-    setMentions([])
-    setInputValue('')
   }
 
   // // 初始化群聊列表和消息

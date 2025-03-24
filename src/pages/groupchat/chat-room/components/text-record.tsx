@@ -1,8 +1,9 @@
 import { getChatNameAndAvatar } from "@/api"
 import { ChatMessageType, useStockList } from "@/store"
 import { useQueries, useQuery } from "@tanstack/react-query"
-import type { ReactNode } from "react"
+import { Fragment, type ReactNode } from "react"
 import { type MessageText, WKSDK, type Message } from "wukongimjssdk"
+import { UsernameSpan } from "../../components/username-span"
 
 type TextSegment = {
   text: string
@@ -20,22 +21,22 @@ export const TextRecord = (props: TextRecordProps) => {
   const content = message.content as MessageText
   const mentions = content.mention?.uids
 
-  const mentionUser = useQueries({
-    queries: mentions?.map(mention => ({
-      queryKey: [getChatNameAndAvatar.cacheKey, mention],
-      queryFn: () => getChatNameAndAvatar({ type: '1', id: mention })
-    })) ?? [],
-    combine: (results) => {
-      const _map: Record<string, string> = {}
+  // const mentionUser = useQueries({
+  //   queries: mentions?.map(mention => ({
+  //     queryKey: [getChatNameAndAvatar.cacheKey, mention],
+  //     queryFn: () => getChatNameAndAvatar({ type: '1', id: mention })
+  //   })) ?? [],
+  //   combine: (results) => {
+  //     const _map: Record<string, string> = {}
 
-      results.forEach((result, index) => {
-        if (result.data) {
-          _map[mentions![index]] = result.data.name
-        }
-      })
-      return _map
-    }
-  })
+  //     results.forEach((result, index) => {
+  //       if (result.data) {
+  //         _map[mentions![index]] = result.data.name
+  //       }
+  //     })
+  //     return _map
+  //   }
+  // })
 
   if (message.contentType !== ChatMessageType.Text) {
     return null
@@ -47,7 +48,7 @@ export const TextRecord = (props: TextRecordProps) => {
     text.split('\n').forEach((line, index, arr) => {
       segments.push(
 
-        <>
+        <Fragment key={`${line + index + message.messageID}fragment`}>
           {/* biome-ignore lint/security/noDangerouslySetInnerHtml: <explanation> */}
           {/* biome-ignore lint/security/noDangerouslySetInnerHtmlWithChildren: <explanation> */}
           {/* biome-ignore lint/suspicious/noArrayIndexKey: <explanation> */}
@@ -56,22 +57,21 @@ export const TextRecord = (props: TextRecordProps) => {
           {
             index !== arr.length - 1 && <br />
           }
-        </>
+        </Fragment>
       )
     })
 
     if (mentions?.length) {
       mentions.forEach((mention, index) => {
-        const name = mentionUser[mention]
-        if (name) {
-          segments.push(
-            // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
-            <span key={mention + index} className="text-[#FFC440]">
+        segments.push(
+          // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
+          <span key={mention + index + message.messageID} className="text-[#FFC440]">
+            <span>&nbsp;@</span>
+            <UsernameSpan uid={mention} channel={message.channel} >
               &nbsp;
-              @{name}
-            </span>
-          )
-        }
+            </UsernameSpan>
+          </span>
+        )
       })
     }
 

@@ -1,34 +1,32 @@
 import { Button, Input, JknSearchInput, useModal } from '@/components'
-import { useChatNoticeStore, useGroupChatShortStore, useGroupChatStoreNew } from '@/store/group-chat-new'
 import { cn } from '@/utils/style'
-import { useLatest, useUpdate, useUpdateEffect } from 'ahooks'
-import { type ReactNode, memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useUpdate, useUpdateEffect } from 'ahooks'
+import { memo, useCallback, useEffect, useState } from 'react'
 import WKSDK, {
-  ConnectStatus,
-  ConversationAction,
-  type Conversation,
   type Channel,
   type ChannelInfo,
-  ChannelTypeGroup,
-  CMDContent,
-  ChannelTypePerson
+  type CMDContent,
+  ConnectStatus,
+  type Conversation,
+  ConversationAction
 } from 'wukongimjssdk'
-import { useShallow } from 'zustand/react/shallow'
-import APIClient from '../Service/APIClient'
 
-import { cleanUnreadConversation, getChatChannels, getChatNameAndAvatar } from '@/api'
+import { cleanUnreadConversation } from '@/api'
 // import { useQuery } from "@tanstack/react-query";
 import ChatAvatar from '../components/chat-avatar'
 
-import { JknIcon, Skeleton } from '@/components'
+import { Skeleton } from '@/components'
 import { useLatestRef } from "@/hooks"
-import { ChatCmdType, chatManager, ChatMessageType, useChatStore } from "@/store"
-import { useQueries, useQuery, useQueryClient } from '@tanstack/react-query'
-import CreateGroup from '../components/create-and-join-group'
-import UpdateGroupInfo from './updateGroupInfo'
+import { ChatCmdType, ChatMessageType, chatManager, useChatStore } from "@/store"
+import { dateUtils } from "@/utils/date"
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import dayjs from "dayjs"
 import { useImmer } from "use-immer"
 import { conversationCache } from "../cache"
+import { getTimeFormatStr } from "../chat-utils"
+import CreateGroup from '../components/create-and-join-group'
 import { UsernameSpan } from "../components/username-span"
+import { useCMDListener } from "../lib/hooks"
 
 export type GroupData = {
   id: string
@@ -104,10 +102,14 @@ const GroupChannel = (props: {
 
     if (action === ConversationAction.add || action === ConversationAction.update) {
       const _channels = queryClient.getQueryData<NonNullable<typeof conversations>>(_channelQueryKey)
-      // console.log('updateRender', _channels, ['conversation-sync', channelSearchKeyword])
       if (_channels) {
         const _channel = _channels.find(c => c.channel.channelID === conversation.channel.channelID)
         if (_channel) {
+          if (useChatStore.getState().lastChannel?.isEqual(conversation.channel)) {
+            conversation.unread = 0
+          }
+          conversation.reloadIsMentionMe()
+
           queryClient.setQueryData<NonNullable<typeof conversations>>(_channelQueryKey, oldData => {
             const r = oldData?.map(item => {
               return item.channel.channelID === conversation.channel.channelID ? conversation : item
@@ -130,67 +132,17 @@ const GroupChannel = (props: {
     }
   }, [queryClient, updateRender, channelSearchKeyword])
 
-  // 强制刷新会话
-  const channelInfoListener = (channelInfo: ChannelInfo) => {
-    // if (latestConversation.current.length > 0) {
-    //   const temp = [...latestConversation.current]
-    //   const idx = latestConversation.current.findIndex(c => c.channel.channelID === channelInfo.channel.channelID);
-    //   if(idx >= 0) {
-    //     temp[idx].reloadIsMentionMe()
-    //     setConversationWraps(temp);
-    //   }
-    // }
-  }
-
-  // const parseLastMessage = (message: Conversation) => {
-  //   if (!message) {
-  //     return ''
-  //   }
-
-  //   const userMap = new Map<string, ArrayItem<typeof userInfos>>()
-
-  //   userInfos.forEach(info => {
-  //     if (info) {
-  //       userMap.set(info.uid, info)
-  //     }
-  //   })
-
-  //   let mention: ReactNode | string = ''
-  //   let head: ReactNode | string
-  //   let content: ReactNode | string
-  //   const draft = message.remoteExtra.draft
-  //   if (draft && draft !== '') {
-  //     head = draft
-  //   }
-
-  //   if (message.isMentionMe === true) {
-  //     mention = <span style={{ color: 'red' }}>[有人@我]</span>
-  //   }
-  //   if (message.lastMessage) {
-  //     // const userInfo = userMap.get(message.lastMessage.fromUID)
-
-  //     if (userInfo) {
-  //       head = `${userInfo.name}: `
-  //     }
-
-  //     content = message.lastMessage.content.text || ''
-  //     if (message.lastMessage.content instanceof CMDContent) {
-  //       if (message.lastMessage.content.cmd === 'messageRevoke') {
-  //         content = '撤回了一条消息'
-  //       } else {
-  //         content = '[系统消息]'
-  //       }
-  //     }
-  //   }
-
-  //   return (
-  //     <span className="inline-block whitespace-nowrap w-full overflow-hidden text-ellipsis">
-  //       {mention}
-  //       {head}
-  //       {content}
-  //     </span>
-  //   )
-  // }
+  useCMDListener((cmd) => {
+    const content = cmd.content as CMDContent
+    if (content.cmd === ChatCmdType.MessageRevoke) {
+      const conversation = conversations.find(c => c.channel.getChannelKey() === cmd.channel.getChannelKey())
+      if (conversation) {
+        conversation.lastMessage = cmd
+        conversation.reloadIsMentionMe()
+        conversationCache.updateOrSave(conversation)
+      }
+    }
+  })
 
   useEffect(() => {
     // WKSDK.shared().connectManager.addConnectStatusListener(connectStatusListener) // 监听连接状态
@@ -260,9 +212,38 @@ const GroupChannel = (props: {
     inviteToGroupModal.modal.close()
   }
 
+  const statusInfo: Record<ConnectStatus, { color: string, text: string }> = {
+    [ConnectStatus.Disconnect]: {
+      color: 'red',
+      text: '未连接'
+    },
+    [ConnectStatus.Connecting]: {
+      color: 'yellow',
+      text: '连接中'
+    },
+    [ConnectStatus.Connected]: {
+      color: 'green',
+      text: '已连接'
+    },
+    [ConnectStatus.ConnectFail]: {
+      color: 'red',
+      text: '连接失败'
+    },
+    [ConnectStatus.ConnectKick]: {
+      color: 'red',
+      text: '被踢'
+    }
+  }
+
   return (
     <div className="w-[180px] h-full border-0 border-x border-solid border-border bg-[#161616]">
-      <div className="group-filter flex items-center justify-between px-1 pb-3 pt-5">
+      <div className="flex items-center text-xs text-tertiary px-2 py-1">
+        <span className="size-2 rounded-full mr-2" style={{ background: statusInfo[chatState].color }} />
+        <span>
+          {statusInfo[chatState].text}
+        </span>
+      </div>
+      <div className="group-filter flex items-center justify-between px-1 pb-3">
         <JknSearchInput size="mini" onSearch={setChannelSearchKeyword} rootClassName="bg-accent px-2 py-0.5 w-full text-tertiary" className="text-secondary placeholder:text-tertiary" placeholder="搜索" />
         <CreateGroup />
       </div>
@@ -304,23 +285,25 @@ const GroupChannel = (props: {
                     </div>
                   </div>
                 </div>
-                <div className="group-last-msg flex justify-between">
-                  <div className="flex-1 overflow-hidden whitespace-nowrap text-ellipsis w-full text-xs text-tertiary">
-                    <span className="inline-block line-clamp-1">
-                      {
-                        c.isMentionMe ? (
-                          <span style={{ color: 'red' }}>[有人@我]</span>
-                        ) : null
-                      }
-                      <UsernameSpan uid={c.lastMessage?.fromUID!} channel={c.channel!} colon />
-                      {
-                        c.lastMessage?.contentType === ChatMessageType.Cmd ?
-                          c.lastMessage.content.cmd === ChatCmdType.MessageRevoke ?
-                            '撤回了一条消息' : '[系统消息]' : c.lastMessage?.contentType === ChatMessageType.Image ?
-                            '[图片]' : c.lastMessage?.content.text || ''
-
-                      }
-                    </span>
+                <div className="group-last-msg flex justify-between items-center">
+                  <div className="flex-1 text-xs text-tertiary line-clamp-1">
+                    {
+                      c.isMentionMe ? (
+                        <span style={{ color: 'red' }}>[有人@我]</span>
+                      ) : null
+                    }
+                    <UsernameSpan uid={c.lastMessage?.fromUID!} channel={c.channel!} colon />
+                    {
+                      c.lastMessage?.contentType === ChatMessageType.Cmd ?
+                        c.lastMessage.content.cmd === ChatCmdType.MessageRevoke ?
+                          '撤回了一条消息' : '[系统消息]' : c.lastMessage?.contentType === ChatMessageType.Image ?
+                          '[图片]' : c.lastMessage?.content.text || ''
+                    }
+                  </div>
+                  <div className="text-xs text-tertiary">
+                    {
+                      c.lastMessage?.timestamp ? dateUtils.dateAgo(dayjs(c.lastMessage.timestamp * 1000)) : null
+                    }
                   </div>
                 </div>
               </div>

@@ -1,7 +1,7 @@
 import { JknInfiniteArea, ScrollArea } from "@/components"
-import { useVirtualizer } from "@tanstack/react-virtual"
+import { useVirtualizer, type VirtualItem } from "@tanstack/react-virtual"
 import { useVirtualList } from "ahooks"
-import { type ComponentProps, type ComponentRef, type ReactNode, useEffect, useLayoutEffect, useRef } from "react"
+import { type ComponentProps, type ComponentRef, type ForwardedRef, forwardRef, type ReactNode, useImperativeHandle, useLayoutEffect, useRef } from "react"
 
 interface JknVirtualListProps<T> {
   data: T[]
@@ -40,7 +40,12 @@ interface JknVirtualInfiniteProps<T> extends JknVirtualListProps<T>, ComponentPr
   autoBottom?: boolean
 }
 
-export const JknVirtualInfinite = <T,>({ data, itemHeight, renderItem, overscan = 20, className, rowKey, onScroll, autoBottom, ...props }: JknVirtualInfiniteProps<T>) => {
+interface JknVirtualInfiniteIns {
+  scrollToIndex: (index: number) => void
+  getVirtualItems: () => VirtualItem[]
+}
+
+export const JknVirtualInfinite = forwardRef<JknVirtualInfiniteIns, JknVirtualInfiniteProps<any>>(({ data, itemHeight, renderItem, overscan = 20, className, rowKey, onScroll, autoBottom, ...props } , ref) => {
   const containerRef = useRef<ComponentRef<typeof JknInfiniteArea>>(null)
 
 
@@ -50,20 +55,25 @@ export const JknVirtualInfinite = <T,>({ data, itemHeight, renderItem, overscan 
     estimateSize: () => itemHeight,
     enabled: true
   })
-  
+
   useLayoutEffect(() => {
-    if(autoBottom){
+    if (autoBottom) {
       const items = virtualizer.getVirtualItems()
       const currentLastItems = items[items.length - 1]?.index
       const firstItems = items[0]?.index
-      if(firstItems === 0){
+      if (firstItems === 0) {
         virtualizer.scrollToIndex(data.length - 1)
       }
-      if(data.length > 0 && currentLastItems >= data.length - 2){
+      if (data.length > 0 && currentLastItems >= data.length - 2) {
         virtualizer.scrollToIndex(data.length - 1)
       }
     }
   }, [data, virtualizer.scrollToIndex, autoBottom, virtualizer.getVirtualItems])
+
+  useImperativeHandle(ref, () => ({
+    scrollToIndex: virtualizer.scrollToIndex,
+    getVirtualItems: virtualizer.getVirtualItems
+  }), [virtualizer.scrollToIndex, virtualizer.getVirtualItems])
 
   return (
     <JknInfiniteArea ref={containerRef} className={className} {...props}>
@@ -93,4 +103,4 @@ export const JknVirtualInfinite = <T,>({ data, itemHeight, renderItem, overscan 
       </div>
     </JknInfiniteArea>
   )
-}
+})

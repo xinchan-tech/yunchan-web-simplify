@@ -6,13 +6,15 @@ import type { Channel } from "wukongimjssdk"
 interface UsernameSpanProps extends HTMLAttributes<HTMLSpanElement> {
   uid: string
   channel: Channel
+  name?: string
   colon?: boolean
 }
 
-export const UsernameSpan = ({ uid, channel, colon, ...props }: UsernameSpanProps) => {
-  const [userName, setUserName] = useState<string | null>('')
+export const UsernameSpan = ({ uid, channel, colon, name, ...props }: UsernameSpanProps) => {
+  const [userName, setUserName] = useState<string | null>(name || '')
 
   useMount(() => {
+    if (name) return
     fetchUserInChannel(channel, uid).then(s => setUserName(s.name))
   })
 

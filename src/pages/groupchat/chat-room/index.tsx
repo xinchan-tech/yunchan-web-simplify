@@ -3,12 +3,13 @@ import { useModal } from "@/components"
 import { chatManager, useChatStore } from "@/store"
 import { useQuery } from "@tanstack/react-query"
 import type { JSONContent } from "@tiptap/react"
-import { ConnectStatus, Mention, MessageImage, MessageText, Reaction, Reply, WKSDK } from "wukongimjssdk"
+import { ConnectStatus, Mention, MessageImage, MessageText, type Reply, WKSDK } from "wukongimjssdk"
 import { ChannelMembers } from "./channel-members"
 import { ChatInput } from "./components/chat-input"
 import { ChatMessageList } from "./message-list"
 import { useCountDown } from "ahooks"
 import { useEffect } from "react"
+import { getChannelDetailFromChannel } from "../lib/utils"
 
 
 export const ChatRoom = () => {
@@ -17,23 +18,13 @@ export const ChatRoom = () => {
 
   const channelQuery = useQuery({
     queryKey: [getChatNameAndAvatar.cacheKey, channel?.channelID],
-    queryFn: async () => {
-      const [channelInfo, channelDetail] = await Promise.all(
-        [
-          WKSDK.shared().channelManager.fetchChannelInfo(channel!).then(() => WKSDK.shared().channelManager.getChannelInfo(channel!)),
-          getChannelDetail(channel!.channelID)
-        ]
-      )
-
-      return {
-        channelInfo,
-        channelDetail
-      }
-    },
+    queryFn: async () => WKSDK.shared().channelManager.fetchChannelInfo(channel!).then(() => WKSDK.shared().channelManager.getChannelInfo(channel!)),
     enabled: !!channel && state === ConnectStatus.Connected,
   })
 
-  const { channelInfo, channelDetail } = channelQuery.data ?? {}
+  const channelInfo = channelQuery.data
+  const channelDetail = getChannelDetailFromChannel(channel!)
+
 
   useEffect(() => {
     chatManager.setLastChannelReady(!channelQuery.isLoading && state === ConnectStatus.Connected)
@@ -59,7 +50,7 @@ export const ChatRoom = () => {
     }
   }, [channelDetail])
 
-  const onSubmit = (content?: JSONContent, extra?: {mentions?: string[], reply?: Reply}) => {
+  const onSubmit = (content?: JSONContent, extra?: { mentions?: string[], reply?: Reply }) => {
     if (!content?.content?.length) return
     let _mentions = extra?.mentions
     let reply = extra?.reply as Reply | null

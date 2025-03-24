@@ -1,7 +1,8 @@
-import { WKSDK, type Channel, type Subscriber } from 'wukongimjssdk'
+import { type Channel, type Message, WKSDK, type Subscriber } from 'wukongimjssdk'
 import { SubscriberType } from './model'
-import { getChatNameAndAvatar } from '@/api'
+import { type getChannelDetail, getChatNameAndAvatar } from '@/api'
 import { subscriberCache } from '../cache'
+import { queryClient } from '@/utils/query-client'
 
 export const isChannelOwner = (subscriber?: Subscriber) => {
   return subscriber?.orgData?.type === SubscriberType.ChannelOwner
@@ -35,7 +36,10 @@ export const fetchUserInChannel = async (channel: Channel, userId: string) => {
     return userFromCache
   }
 
-  const r = await getChatNameAndAvatar({ type: '1', id: userId })
+  const r = await queryClient.ensureQueryData({
+    queryKey: [getChatNameAndAvatar.cacheKey, { type: 'user', id: userId }],
+    queryFn: () => getChatNameAndAvatar({ type: 'user', id: userId })
+  })
 
   userCache.set(userId, { name: r.name, avatar: r.avatar })
 
@@ -43,4 +47,25 @@ export const fetchUserInChannel = async (channel: Channel, userId: string) => {
     name: r.name,
     avatar: r.avatar
   }
+}
+
+export const getUserNameAndAvatarFromMessage = async (message: Message) => {
+  const { fromName, fromAvatar } = message.remoteExtra.extra || {}
+
+  if (fromName && fromAvatar) {
+    return {
+      name: fromName,
+      avatar: fromAvatar
+    }
+  }
+
+  return await fetchUserInChannel(message.channel, message.fromUID)
+}
+
+export const getChannelDetailFromChannel = (channel: Channel) => {
+  const info = WKSDK.shared().channelManager.getChannelInfo(channel)
+
+  if(!info) return
+
+  return info.orgData as Awaited<ReturnType<typeof getChannelDetail>>
 }

@@ -1,4 +1,10 @@
-import { getChannelMembers, getChatNameAndAvatar, syncChannelMessages, syncRecentConversation } from '@/api'
+import {
+  getChannelDetail,
+  getChannelMembers,
+  getChatNameAndAvatar,
+  syncChannelMessages,
+  syncRecentConversation
+} from '@/api'
 import to from 'await-to-js'
 import WKSDK, {
   type Channel,
@@ -27,12 +33,14 @@ const initChannelInfoDataSource = () => {
         id: channel.channelID
       }
 
-      const [err, res] = await to(getChatNameAndAvatar(params))
+      const [err, r] = await to(Promise.all([getChatNameAndAvatar(params), getChannelDetail(channel.channelID)]))
 
       if (err) {
-        console.log(err)
+        console.error(err)
         return channelInfo
       }
+
+      const [res, detail] = r
 
       if (channel.channelType === ChannelTypePerson) {
         channelInfo.title = res.name || channel.channelID
@@ -52,7 +60,7 @@ const initChannelInfoDataSource = () => {
         channelInfo.channel = channel
       }
 
-      // channelInfo.detail = detail
+      channelInfo.orgData = detail
     } catch (error) {
       console.error(error)
     }
@@ -99,7 +107,7 @@ const initSyncConversationsDataSource = () => {
   WKSDK.shared().config.provider.syncConversationsCallback = async () => {
     const resultConversations: Conversation[] = []
     const [err, res] = await to(syncRecentConversation({ uid: WKSDK.shared().config.uid!, msg_count: 20 }))
- 
+
     if (err) {
       console.log(err)
       return resultConversations
@@ -111,8 +119,6 @@ const initSyncConversationsDataSource = () => {
         resultConversations.push(conversation)
       })
     }
-
-    console.log(resultConversations, 'resultConversations')
 
     return resultConversations
   }
