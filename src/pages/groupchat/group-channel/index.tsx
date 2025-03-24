@@ -135,7 +135,7 @@ const GroupChannel = (props: {
   useCMDListener((cmd) => {
     const content = cmd.content as CMDContent
     if (content.cmd === ChatCmdType.MessageRevoke) {
-      const conversation = conversations.find(c => c.channel.getChannelKey() === cmd.channel.getChannelKey())
+      const conversation = conversations.find(c => c.channel.channelID === cmd.channel.channelID)
       if (conversation) {
         conversation.lastMessage = cmd
         conversation.reloadIsMentionMe()
