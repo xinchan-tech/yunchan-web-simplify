@@ -57,12 +57,14 @@ export const MainChart = (props: MainChartProps) => {
     if (chartImp.current?.isSameIntervalCandlestick(record, interval)) {
       chartImp.current?.appendCandlestick({
         ...record,
-        quote: lastData?.quote
+        quote: lastData?.quote,
+        prevQuote: lastData?.prevQuote
       }, interval)
     } else {
       chartImp.current?.appendCandlestick({
         ...record,
-        quote: record.close
+        quote: record.close,
+        prevQuote: record.prevClose
       }, interval)
     }
   })
@@ -82,7 +84,8 @@ export const MainChart = (props: MainChartProps) => {
 
       const newData = {
         ...lastData,
-        quote: data.record.close
+        quote: data.record.close,
+        prevQuote: data.record.preClose
       }
 
       chartImp.current?.appendCandlestick(newData, chartStore.interval)

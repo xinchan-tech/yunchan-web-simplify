@@ -62,6 +62,8 @@ export const calcIndicator = async (
     status: number
   }
 
+  console.log(JSON.parse(JSON.stringify(result)))
+
   return result.data.map(item => {
     const r: IndicatorData = {
       name: item.name,

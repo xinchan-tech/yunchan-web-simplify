@@ -163,7 +163,21 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
             last: {
               upColor: upColor,
               downColor: downColor,
-              noChangeColor: downColor
+              noChangeColor: downColor,
+              color: (data) => {
+                const lastData = data[data.length - 1]
+                
+                if (!lastData) return downColor
+
+                if (lastData.quote) {
+                  const prev = (lastData.prevQuote as number) ?? lastData.prevClose
+
+                  return prev > lastData.close ? upColor : downColor
+                }
+
+                return lastData.close > lastData.prevClose ? upColor : downColor
+
+              },
             },
             high: {
               color: '#E7C88D',
