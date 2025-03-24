@@ -33,7 +33,7 @@ export const drawGradient: DrawGradientFunc = (params, data) => {
     if(x1Pixel > realToPixel || x2Pixel < realFromPixel) return
 
     const gradient = params.ctx.createLinearGradient(middleX, y1Pixel, middleX, y2Pixel)
-    polygon.color.forEach((color, i) => {
+    polygon.color.reverse().forEach((color, i) => {
       gradient.addColorStop(i / (polygon.color.length - 1), color)
     })
 

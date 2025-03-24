@@ -10,11 +10,10 @@ import {
   init,
   registerFigure,
   registerIndicator,
-  registerOverlay,
-  registerXAxis
+  registerOverlay
 } from 'jkn-kline-chart'
 import { debounce, uid } from 'radash'
-import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react'
+import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react'
 import { backTestLineFigure, backTestMarkFigure, IconFigure, LogoFigure, markOverlayFigure } from './figure'
 import { compareIndicator, localIndicator } from './indicator'
 import { markIndicator } from './indicator/mark'
@@ -26,7 +25,7 @@ import { coilingIndicator } from "./indicator/coiling"
 import dayjs from "dayjs"
 import { LogoOverlay } from "./overlay"
 import { useMount, useUnmount } from "ahooks"
-import { stockUtils, type StockTrading } from "@/utils/stock"
+import { stockUtils } from "@/utils/stock"
 
 export { CoilingIndicatorId, ChartTypes }
 
@@ -223,16 +222,10 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
           type: 'candle' as LayoutChildType,
           options: {
             axis: {
-              gap: {
-                top: 40
-              },
               position: 'right' as AxisPosition,
               name: 'normal'
             },
             leftAxis: {
-              gap: {
-                top: 40
-              },
               position: 'right' as AxisPosition
             }
           }
@@ -241,7 +234,7 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
       timezone: 'America/New_York'
     })
 
-    chart.current?.setPrecision({price: 3})
+    chart.current?.setPrecision({ price: 3 })
     chart.current?.setMaxOffsetLeftDistance(0)
 
     if (props.showLogo) {

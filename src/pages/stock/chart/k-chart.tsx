@@ -1,11 +1,11 @@
 import { cn } from '@/utils/style'
 import { useEffect, useMemo } from 'react'
-import { ChartToolBar } from '../component/chart-tool-bar'
 import { MainChart } from '../component/main-chart'
 import { useSymbolQuery } from '../lib'
 import { chartEvent } from '../lib/event'
 import { chartManage, useChartManage } from '../lib/store'
 import { renderUtils } from '../lib/utils'
+import { CoilingBar } from "../component/chart-tool-bar"
 
 interface KChartProps {
   onChangeLeftSide: () => void
@@ -37,7 +37,9 @@ export const KChart = (props: KChartProps) => {
 
   return (
     <div className="h-full overflow-hidden flex flex-col bg-background">
-      <ChartToolBar />
+      <div className="text-tertiary text-sm flex items-center px-4 space-x-4 pt-1">
+        <CoilingBar />
+      </div>
       <div className={cn('flex-1 overflow-hidden main-chart', `main-chart-${viewMode}`)}>
         {Array.from({ length: chartCount }).map((_, index, arr) => (
           // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>

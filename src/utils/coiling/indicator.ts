@@ -44,6 +44,7 @@ export const calcIndicator = async (
   data: StockRawRecord[],
   interval: number
 ) => {
+
   const module = await getPolicyModule()
   console.log(module.libversion())
   const rawData = data.map((item: StockRawRecord) => {

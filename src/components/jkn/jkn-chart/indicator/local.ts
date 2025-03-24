@@ -87,7 +87,6 @@ export const localIndicator: IndicatorTemplate<IndicatorData, any, LocalIndicato
     }
 
     if (!formula[indicatorId]) return []
-
     return await calcIndicator(
       {
         formula: aesDecrypt(formula[indicatorId]),

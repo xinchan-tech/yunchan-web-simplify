@@ -34,7 +34,7 @@ export const ChartToolBar = () => {
   const navigate = useNavigate()
 
   return (
-    <div className="h-[64px]">
+    <div className="">
       <div className="flex items-center h-11 py-1 box-border w-full bg-background text-sm text-secondary px-4">
         <div className="flex items-center mr-2">
           <JknIcon.Stock symbol={symbol} />
@@ -58,18 +58,12 @@ export const ChartToolBar = () => {
         <AlarmPicker />
         <Separator orientation="vertical" className="h-2 w-[1px] bg-accent mx-1" />
         <BackTest />
-        <div className="ml-auto">
-          <StockSelect className="rounded-[300px]"  onChange={v => navigate(`/stock?symbol=${v}`)}/>
-        </div>
-      </div>
-      <div className="text-tertiary text-sm flex items-center px-4 space-x-4">
-        <CoilingBar />
       </div>
     </div>
   )
 }
 
-const CoilingBar = () => {
+export const CoilingBar = () => {
   const system = useChartManage(s => s.getActiveChart().system)
   const indicator = useQuery({
     queryKey: [getStockIndicators.cacheKey],

@@ -7,7 +7,7 @@ import { useMount, useUpdateEffect } from 'ahooks'
 import { uid } from 'radash'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Outlet, useNavigate } from 'react-router'
+import { Outlet, useLocation, useNavigate } from 'react-router'
 import {
   AiAlarmNotice,
   Footer,
@@ -15,12 +15,14 @@ import {
   JknAlert,
   Menu,
   MenuRight,
+  StockSelect,
   Toaster
 } from './components'
 
 import { useJoinGroupByInviteCode } from "./pages/groupchat/hooks"
 import { router, routes } from './router'
 import { chatConstants, useConfig, useToken, useUser } from './store'
+import { ChartToolBar } from "./pages/stock/component/chart-tool-bar"
 
 export const CHAT_STOCK_JUMP = 'chat_stock_jump'
 export const CHAT_TO_APP_REFRESH_USER = 'chat_to_app_refresh_user'
@@ -39,6 +41,7 @@ const App = () => {
   const setUser = useUser(s => s.setUser)
   const notLogin = useRef(0)
   const queryClient = useQueryClient()
+  const path = useLocation()
 
   const configQuery = useQuery({
     queryKey: ['system:config'],
@@ -151,10 +154,6 @@ const App = () => {
   }, [navigate])
 
 
-
-
-
-
   return (
     <div className="container-layout dark">
       <Toaster />
@@ -162,10 +161,20 @@ const App = () => {
         inviteModal.contenxt
       }
       <div className="flex flex-col h-full overflow-hidden w-full">
+        <div className="box-border px-2.5 flex items-center h-11">
+          <HeaderUser />
+          {
+            path.pathname.startsWith('/stock') ? (
+              <ChartToolBar />
+            ) : null
+          }
+          <div className="ml-auto">
+            <StockSelect className="rounded-[300px] px-3 bg-[#1F1F1F]" onChange={(s) => navigate(`/stock?symbol=${s}`)} />
+          </div>
+        </div>
         <div className="flex-1 overflow-hidden flex bg-accent">
           <div className="w-[40px] flex-shrink-0 bg-accent pt-1">
             <div className="h-full bg-background w-full  flex flex-col items-center rounded-tr-xs pt-4">
-              <HeaderUser />
               <Menu />
             </div>
           </div>
@@ -190,19 +199,6 @@ const App = () => {
           </div>
         </div>
       </div>
-
-      {/* 
-      <div className="main overflow-hidden">
-
-        <div className="float-right bg-background h-full sider">
-          <div className="flex flex-col items-center h-full">
-
-          </div>
-        </div>
-        <div className="content overflow-hidden">
-
-        </div>
-      </div> */}
 
       <style jsx>
         {`
@@ -250,7 +246,7 @@ const App = () => {
           }
         `}
       </style>
-    </div>
+    </div >
   )
 }
 

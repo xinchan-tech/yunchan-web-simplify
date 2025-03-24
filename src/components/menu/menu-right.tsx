@@ -83,7 +83,7 @@ const MenuRight = () => {
   }
 
   return (
-    <div className="px-0.5 box-border space-y-2.5 py-[20px] flex h-full flex-col items-center">
+    <div className="px-0.5 box-border space-y-2.5 py-[20px] flex h-full flex-col items-center text-secondary">
       {menus.map(item => (
         <div className="text-center" key={item.title}>
           <div
@@ -117,7 +117,7 @@ const MenuRight = () => {
               }
             }}
             onKeyDown={() => { }}
-            className={cn("flex flex-col items-center cursor-pointer hover:bg-accent w-8 h-8 justify-center rounded-xs", pathname === item.path && 'bg-primary/30')}
+            className={cn("flex flex-col items-center cursor-pointer hover:bg-accent w-8 h-6 justify-center rounded-xs", pathname === item.path && 'bg-primary/30')}
           >
             <div className={cn('inline-block h-[20px]', pathname === item.path ? 'text-primary' : '')}>
               {
@@ -125,7 +125,7 @@ const MenuRight = () => {
               }
             </div>
           </div>
-          <span className="text-sm">
+          <span className={cn('text-xs leading-none', pathname === item.path ? 'text-primary' : '')}>
             {item.title}
           </span>
         </div>

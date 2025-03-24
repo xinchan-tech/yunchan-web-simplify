@@ -90,7 +90,11 @@ export const HeaderSetting = () => {
       <Popover open={visible} onOpenChange={toggle}>
         <PopoverTrigger asChild>
           <span>
-            <JknIcon.Svg size={24} name="more" />
+            {
+              token ? (
+                <JknAvatar src={user?.avatar} title={user?.realname} className="w-6 h-6" />
+              ) : <JknIcon.Svg size={24} name="more" />
+            }
           </span>
         </PopoverTrigger>
         <PopoverContent align="start" side="right" sideOffset={10} className="w-[260px]">
