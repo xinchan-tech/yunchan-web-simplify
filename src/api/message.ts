@@ -84,3 +84,10 @@ getChatRecords.cacheKey = 'chat:records'
 export const markAsRead = (cateId: string) => {
   return request.post<void>('/chat/setIsRead', { uid: cateId }).then(r => r.data)
 }
+
+/**
+ * 标记系统已读
+ */
+export const markSystemAsRead = (cateId: string) => {
+  return request.post<void>('/log/setIsRead', { uid: cateId }).then(r => r.data)
+}

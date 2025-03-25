@@ -3,6 +3,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import type { RsbuildPlugin } from '@rsbuild/core'
 import packageJson from '../package.json'
+import dayjs from 'dayjs'
 
 export type ReleaseTagOptions = {
   outFile?: boolean
@@ -16,7 +17,7 @@ export const pluginReleaseTag = (options: ReleaseTagOptions): RsbuildPlugin => (
     if (process.env.NODE_ENV === 'production') {
       const gitVersion = execSync('git rev-parse --short HEAD').toString().trim()
       const gitBranch = execSync('git rev-parse --abbrev-ref HEAD').toString().trim()
-      const date = new Date().toISOString().split('T')[0].replace(/-/g, '')
+      const date = dayjs().format('YYYYMMDDHHmmss')
       const gitAuthor = execSync('git log -1 --pretty=format:"%an"').toString().trim()
       version = `${gitBranch}.${gitVersion}.${gitAuthor}.${date}`
     }

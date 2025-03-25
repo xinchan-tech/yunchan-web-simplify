@@ -153,13 +153,18 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
 
     const stock = candlesticksRestore.current[currentKline.current]
 
-    tradeRecord[type].push({
+    // tradeRecord[type].push({
+    //   index: currentKline.current,
+    //   time: +stock[0]!,
+    //   price: +stock[2]!,
+    //   count: number
+    // })
+    setTradeRecord(s => s[type].push({
       index: currentKline.current,
       time: +stock[0]!,
       price: +stock[2]!,
       count: number
-    })
-    setTradeRecord({ ...tradeRecord })
+    }))
 
     const record = {
       index: currentKline.current,
@@ -241,13 +246,15 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
 
     if (diffCount === 0) return
 
-    tradeRecord[diffCount > 0 ? 'buy' : 'sell'].push({
-      index: currentKline.current,
-      time: +stock[0]!,
-      price: +stock[2]!,
-      count: number
+
+    setTradeRecord(s => {
+      s[diffCount > 0 ? 'buy' : 'sell'].push({
+        index: currentKline.current,
+        time: +stock[0]!,
+        price: +stock[2]!,
+        count: number
+      })
     })
-    setTradeRecord({ ...tradeRecord })
 
     const result = calcProfit(tradeRecord)
     const diffProfit = result - profit

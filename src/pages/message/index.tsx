@@ -1,5 +1,5 @@
-import { getChatContacts, getChatRecords, getNoticeList, getNoticeTypes, markAsRead } from '@/api'
-import { JknAvatar, JknIcon, ScrollArea } from '@/components'
+import { getChatContacts, getChatRecords, getNoticeList, getNoticeTypes, markAsRead, markSystemAsRead } from '@/api'
+import { JknAvatar, JknIcon, JknInfiniteArea, JknVirtualInfinite, ScrollArea } from '@/components'
 import { useWsChat } from '@/hooks'
 import { useUser } from '@/store'
 import { dateToWeek, dateUtils } from '@/utils/date'
@@ -8,7 +8,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import dayjs from 'dayjs'
 import { produce } from 'immer'
 import { uid } from 'radash'
-import { type ComponentRef, useEffect, useMemo, useRef, useState } from 'react'
+import { type ComponentRef, type ReactNode, useEffect, useMemo, useRef, useState } from 'react'
 import { MessageInput } from './components/message-input'
 
 const formatTime = (date: string) => {
@@ -28,6 +28,7 @@ const MessageCenter = () => {
     queryKey: queryKey,
     queryFn: () => getNoticeTypes()
   })
+  const [select, setSelect] = useState<Nullable<ArrayItem<typeof types.data>>>(null)
 
   const chatsQueryKey = [getChatContacts.cacheKey]
   const chats = useQuery({
@@ -65,6 +66,37 @@ const MessageCenter = () => {
     }
   })
 
+  const markMessageReadMutation = useMutation({
+    mutationFn: (id: string) => {
+      return markSystemAsRead(id)
+    },
+    onMutate: async id => {
+      queryClient.cancelQueries({ queryKey: queryKey })
+
+      const previousValue = queryClient.getQueryData(queryKey)
+
+      queryClient.setQueryData<typeof types.data>(
+        queryKey,
+        produce(draft => {
+          draft?.forEach(item => {
+            if (item.id === id) {
+              item.unread = 0
+            }
+          })
+        })
+      )
+
+      return { previousValue }
+    },
+    onError: (__, _, context: any) => {
+      queryClient.setQueryData(queryKey, context.previousValue)
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: queryKey })
+    }
+  })
+
+
   useWsChat(msg => {
     const fromUid = msg.data.from_uid
 
@@ -93,8 +125,9 @@ const MessageCenter = () => {
               setActive(item.uid)
               setType('chat')
               markAsReadMutation.mutate(item.uid)
+              setSelect(null)
             }}
-            onKeyDown={() => {}}
+            onKeyDown={() => { }}
             className={cn(
               'flex py-4 hover:bg-[#3a3a3a] cursor-pointer transition-all px-2 items-center border-0 border-b border-solid border-border',
               item.uid === active && type === 'chat' && 'bg-[#3a3a3a]'
@@ -109,10 +142,10 @@ const MessageCenter = () => {
                     {item.unread}
                   </span>
                 )}
-                <span className="ml-auto text-tertiary text-xs">{formatTime(item.create_time)}</span>
+                <span className="ml-auto text-tertiary text-xs">{item.create_time ? formatTime(item.create_time) : '-'}</span>
               </div>
               <div className="mt-1 w-full text-ellipsis overflow-hidden whitespace-nowrap text-tertiary text-xs">
-                {item.message}
+                {item.message || '-'}
               </div>
             </div>
           </div>
@@ -123,8 +156,10 @@ const MessageCenter = () => {
             onClick={() => {
               setActive(item.id)
               setType('notice')
+              markMessageReadMutation.mutate(item.id)
+              setSelect(item)
             }}
-            onKeyDown={() => {}}
+            onKeyDown={() => { }}
             className={cn(
               'flex py-4 hover:bg-[#3a3a3a] cursor-pointer transition-all px-2 items-center border-0 border-b border-solid border-border',
               item.id === active && type === 'notice' && 'bg-[#3a3a3a]'
@@ -154,7 +189,7 @@ const MessageCenter = () => {
         {type === 'chat' ? (
           <ChatMessageContent msgKey={active} />
         ) : (
-          <SystemMessageContent msgKey={active} name={types.data?.find(item => item.id === active)?.name} />
+          <SystemMessageContent msgKey={active} name={types.data?.find(item => item.id === active)?.name} avatar={select ? <JknAvatar className="mr-3" src={select.avatar} title={select.name ?? ''} /> : null} />
         )}
       </div>
     </div>
@@ -368,6 +403,7 @@ const ChatMessageContent = (props: MessageContentProps) => {
 interface SystemMessageContentProps {
   msgKey?: string
   name?: string
+  avatar: ReactNode
 }
 
 type SystemMessageType = Awaited<ReturnType<typeof getNoticeList>>['items']
@@ -384,42 +420,38 @@ const SystemMessageContent = (props: SystemMessageContentProps) => {
     return r
   }, [notices.data])
 
-  const scrollRef = useRef<ComponentRef<typeof ScrollArea>>(null)
-
-  useEffect(() => {
-    if (notices.data) {
-      scrollRef.current?.querySelector('div[data-radix-scroll-area-viewport]')?.scrollTo({
-        top: 99999
-      })
-    }
-  }, [notices.data])
-
   return (
     <div className="h-full overflow-hidden w-full">
-      <div className="w-full h-full overflow-y-auto">
-        <div className="space-y-8">
-          {data?.map(msg => (
-            <div key={msg.id} className="space-y-4">
-              <div className="text-center flex items-center justify-center text-tertiary mt-4 text-sm">
-                <div className="w-1/5 h-0 border-0 border-b border-solid border-b-border mr-2" />
-                <JknIcon name="ic_us" className="w-3 h-3 mr-2" />
-                美东时间&nbsp;
-                {dateUtils.toUsDay(msg.create_time).format('MM-DD w HH:mm')}
-                <div className="w-1/5 h-0 border-0 border-b border-solid border-b-border ml-2" />
-              </div>
-              <div className="flex items-center max-w-[60%] overflow-hidden">
-                <div className="flex items-start text-black w-full">
-                  <JknAvatar className="mr-3" src={props.name} title={props.name ?? ''} />
-                  <div className="bg-stock-green rounded py-2 px-2 relative message-content-right text-base w-full overflow-hidden box-border">
-                    <div className="font-bold">{msg.title}</div>
-                    <pre style={{ whiteSpace: 'pre-wrap', wordWrap: 'break-word' }}>{msg.content}</pre>
-                  </div>
+      <JknVirtualInfinite
+        data={data ?? []}
+        rowKey="id"
+        itemHeight={120}
+        autoBottom
+        renderItem={(msg: ArrayItem<typeof data>) => (
+          <div key={msg.id} className="space-y-4 mb-2">
+            <div className="text-center flex items-center justify-center text-tertiary mt-4 text-sm">
+              <div className="w-1/5 h-0 border-0 border-b border-solid border-b-border mr-2" />
+              <JknIcon name="ic_us" className="w-3 h-3 mr-2" />
+              美东时间&nbsp;
+              {dateUtils.toUsDay(msg.create_time).format('MM-DD w HH:mm')}
+              <div className="w-1/5 h-0 border-0 border-b border-solid border-b-border ml-2" />
+            </div>
+            <div className="flex items-center w-fit max-w-[960px] overflow-hidden">
+              <div className="flex items-start text-black w-full box-border pl-4">
+                {
+                  props.avatar
+                }
+                <div className="bg-stock-green rounded py-2 px-2 box-border relative message-content-right text-base w-full overflow-hidden">
+                  <div className="font-bold">{msg.title}</div>
+                  <pre style={{ whiteSpace: 'pre-wrap', wordWrap: 'break-word' }}>{msg.content}</pre>
                 </div>
               </div>
             </div>
-          ))}
-        </div>
-      </div>
+          </div>
+        )}
+        className="w-full h-full">
+
+      </JknVirtualInfinite>
       <style jsx>
         {`
         .message-content-right::after {
