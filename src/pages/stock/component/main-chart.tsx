@@ -159,7 +159,7 @@ export const MainChart = (props: MainChartProps) => {
       chartImp.current?.setTimeShareChart(chartStore.interval)
     }
 
-    if(Number.parseInt(gapShow) > 0){
+    if (Number.parseInt(gapShow) > 0) {
       chartImp.current?.createGapIndicator(Number.parseInt(gapShow))
     }
   })
@@ -318,6 +318,10 @@ export const MainChart = (props: MainChartProps) => {
     chartImp.current?.createBackTestIndicator([record])
   }
 
+  const onNextBackTestLine = (candlestick: StockRawRecord) => {
+    chartImp.current?.appendCandlestick(stockUtils.toStock(candlestick), chartStore.interval)
+  }
+
   return (
     <ChartContextMenu
       index={0}
@@ -331,6 +335,7 @@ export const MainChart = (props: MainChartProps) => {
             <BackTestBar
               chartId={props.chartId}
               candlesticks={candlesticks}
+              onNextCandlesticks={onNextBackTestLine}
               onChangeCandlesticks={(d) => chartImp.current?.applyNewData(convertToStock(d))}
               onAddBackTestRecord={onAddBackTestRecord}
             />

@@ -37,12 +37,14 @@ const disabledDate = (d: Date, candlesticks: StockRawRecord[]) => {
 interface BackTestBarProps {
   chartId: string
   candlesticks: StockRawRecord[]
+  onNextCandlesticks: (candlestick: StockRawRecord) => void
   onChangeCandlesticks: (data: StockRawRecord[]) => void
-  onAddBackTestRecord: (record: { time: number; price: number; count: number; type: 'buy' | 'sell' }) => void
+  onAddBackTestRecord: (record: { time: number; price: number; count: number; type: 'buy' | 'sell', index: number }) => void
 }
 
 type TradeRecord = {
   sell: {
+    index: number
     time: number
     price: number
     count: number
@@ -60,7 +62,8 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
   const [profit, setProfit] = useState<number>(0)
   const [positiveProfitCount, { inc: incPositiveProfitCount }] = useCounter(0)
   const [maxProfit, setMaxProfit] = useState<number>(0)
-  const klineCount = useRef<number>(0)
+  const currentKline = useRef<number>(-1)
+  // const klineCount = useRef<number>(0)
 
 
   const onDateChange = (date?: string) => {
@@ -68,6 +71,7 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
 
     if (!date) {
       props.onChangeCandlesticks(candlesticksRestore.current)
+      currentKline.current = -1
     } else {
       const kline = renderUtils.findNearestTime(
         candlesticksRestore.current,
@@ -76,42 +80,50 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
 
       if (kline) {
         props.onChangeCandlesticks(candlesticksRestore.current.slice(0, kline.index + 1))
-        klineCount.current = kline.index + 1
+        currentKline.current = kline.index
       }
     }
   }
 
   const toNextLine = () => {
-    if (klineCount.current === 0) {
+    if (currentKline.current === -1) {
       toast({
         description: '请先选择日期'
       })
 
-      return
+      return false
     }
 
-    if (klineCount.current >= candlesticksRestore.current.length) {
+    if (currentKline.current >= candlesticksRestore.current.length) {
       resultModel.modal.open()
-      return
+      return false
     }
 
-    props.onChangeCandlesticks(candlesticksRestore.current.slice(0, klineCount.current + 1))
-    klineCount.current++
+    const next = candlesticksRestore.current[currentKline.current + 1]
+
+    if (!next) {
+      toast({
+        description: '已到最新数据'
+      })
+      return false
+    }
+    props.onNextCandlesticks(next)
+    currentKline.current++
+
+    return true
   }
 
   const toLastKLine = () => {
-    if (klineCount.current === 0) return
+    if (currentKline.current === -1) return
     resultModel.modal.open()
     props.onChangeCandlesticks(candlesticksRestore.current)
-    klineCount.current = 0
+    currentKline.current = -1
   }
 
   const startBackTest = () => {
     const timer = window.setInterval(
       () => {
-        toNextLine()
-
-        if (klineCount.current >= candlesticksRestore.current.length) {
+        if (!toNextLine()) {
           window.clearInterval(timer!)
           setTimer(null)
         }
@@ -131,7 +143,7 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
   const action = (type: 'buy' | 'sell') => {
     if (number <= 0) return
 
-    if (klineCount.current === 0) {
+    if (currentKline.current === -1) {
       toast({
         description: '请先选择日期'
       })
@@ -139,9 +151,10 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
       return
     }
 
-    const stock = candlesticksRestore.current[klineCount.current]
+    const stock = candlesticksRestore.current[currentKline.current]
 
     tradeRecord[type].push({
+      index: currentKline.current,
       time: +stock[0]!,
       price: +stock[2]!,
       count: number
@@ -149,6 +162,7 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
     setTradeRecord({ ...tradeRecord })
 
     const record = {
+      index: currentKline.current,
       time: stock[0]! as unknown as number,
       price: +stock[2]!,
       count: number,
@@ -211,7 +225,7 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
 
   //平仓
   const closePosition = () => {
-    if (klineCount.current === 0) {
+    if (currentKline.current === -1) {
       toast({
         description: '请先选择日期'
       })
@@ -219,7 +233,7 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
       return
     }
 
-    const stock = candlesticksRestore.current[klineCount.current]
+    const stock = candlesticksRestore.current[currentKline.current]
     const sellCount = tradeRecord.sell.reduce((prev, cur) => prev + cur.count, 0)
     const buyCount = tradeRecord.buy.reduce((prev, cur) => prev + cur.count, 0)
 
@@ -228,6 +242,7 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
     if (diffCount === 0) return
 
     tradeRecord[diffCount > 0 ? 'buy' : 'sell'].push({
+      index: currentKline.current,
       time: +stock[0]!,
       price: +stock[2]!,
       count: number
@@ -239,9 +254,10 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
     setMaxProfit(Math.max(diffProfit, maxProfit))
     setProfit(result)
     props.onAddBackTestRecord({
+      index: currentKline.current,
       time: +stock[0]!,
       price: +stock[2]!,
-      count: diffCount,
+      count: Math.abs(diffCount),
       type: diffCount > 0 ? 'buy' : 'sell'
     })
   }
@@ -350,7 +366,7 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
       </div>
 
       <div className="flex items-center space-x-4 justify-end">
-        <span>{Decimal.create(profit).toFixed(3)}</span>
+        <span data-direction={profit > 0 ? 'up' : 'down'} data-direction-sign>{Decimal.create(profit).toFixed(3)}</span>
         <Separator orientation="vertical" className="h-4 w-[1px] mx-2" />
         <Button size="mini" variant="destructive" className="bg-[#F23645] w-[72px] box-border" onClick={() => action('sell')}>
           卖出

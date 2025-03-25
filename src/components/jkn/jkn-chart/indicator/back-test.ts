@@ -8,6 +8,7 @@ export type BackTestRecord = {
   count: number
   type: 'buy' | 'sell'
   index: number
+  num: number
 }
 
 export const backTestIndicator: IndicatorTemplate<any, any> = {
@@ -26,7 +27,7 @@ export const backTestIndicator: IndicatorTemplate<any, any> = {
         timeMap[key] = 0
       }
 
-      item.index = timeMap[key]
+      item.num = timeMap[key]
       timeMap[key]++
     })
 
@@ -49,6 +50,7 @@ export const backTestIndicator: IndicatorTemplate<any, any> = {
     const { realFrom, realTo } = chart.getVisibleRange()
     const fromPixel = xAxis.convertToPixel(realFrom)
     const toPixel = xAxis.convertToPixel(realTo)
+    const data = chart.getDataList()
 
     let totalCount = 0
     let totalPrice = 0
@@ -68,18 +70,21 @@ export const backTestIndicator: IndicatorTemplate<any, any> = {
       }
 
       const xPixel = xAxis.convertTimestampToPixel(item.time * 1000)
-      if (!inRange(xPixel, fromPixel, toPixel)) return
-      const y1 = yAxis.convertToPixel(item.price)
+
+      const d = data[item.index]
+      if (!inRange(xPixel, fromPixel, toPixel) || !d) return
+      const base = item.type === 'buy' ? d.low : d.high
+      const y1 = yAxis.convertToPixel(base)
       new BackTestMark({
         name: 'back-test-mark',
         attrs: {
           x: xPixel,
           y1: y1,
-          y2: y1 + (item.type === 'buy' ? 1 : -1) * ((item.type === 'buy' ? 100 : 300) + item.index * 50),
+          y2: y1 + (item.type === 'buy' ? 1 : -1) * ((item.type === 'buy' ? 100 : 200) + item.num * 50),
           type: item.type,
           price: item.price,
           count: item.count,
-          line: item.index === 0
+          line: item.num === 0
         },
         styles: {
           color: item.type === 'buy' ? upColor : downColor
@@ -94,7 +99,7 @@ export const backTestIndicator: IndicatorTemplate<any, any> = {
       const lastPrice = lastStock.close * totalDiff
       const totalDiffPrice = totalSellPrice - totalBuyPrice
       const totalProfit = totalDiff < 0 ? 0 : lastPrice + totalDiffPrice
-      console.log(totalDiff)
+
       const BackTestLine = getFigureClass('back-test-line')! as FigureConstructor<BackTestLineAttrs, BackTestLineStyles>
 
       new BackTestLine({

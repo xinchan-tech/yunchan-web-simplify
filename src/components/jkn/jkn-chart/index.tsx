@@ -76,8 +76,8 @@ interface JknChartIns {
   createMarkOverlay: (symbol: string, type: string, mark: string) => string
   removeMarkOverlay: (indicatorId: string) => void
   setMarkOverlay: (mark: string) => void
-  createBackTestIndicator: (record: (Optional<BackTestRecord, 'index'>[])) => Nullable<string> | undefined
-  setBackTestIndicator: (record: (Optional<BackTestRecord, 'index'>[])) => boolean | undefined
+  createBackTestIndicator: (record: (Optional<BackTestRecord, 'num'>[])) => Nullable<string> | undefined
+  setBackTestIndicator: (record: (Optional<BackTestRecord, 'num'>[])) => boolean | undefined
   removeBackTestIndicator: () => void
   setDragEnable: (enable: boolean) => void
   getChart: () => Chart | null | undefined
