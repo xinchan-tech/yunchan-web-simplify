@@ -61,6 +61,9 @@ export const drawLine: DrawLineFunc = (params, { color, width, type, data }) => 
       }
     })
   } else {
+    if(type === 'NODRAW'){
+      return true
+    }
     new Line({
       name: 'line',
       attrs: {

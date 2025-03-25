@@ -134,6 +134,8 @@ const App = () => {
       }
     }
     const handler = () => {
+      useToken.getState().removeToken()
+      useUser.getState().reset()
       if (notLogin.current === 0 && window.location.pathname !== '/app') {
         notLogin.current = 1
         JknAlert.info({
@@ -145,11 +147,11 @@ const App = () => {
         })
       }
     }
-    appEvent.on('not-login', handler)
+    appEvent.on('logout', handler)
 
     return () => {
       channel.current?.close()
-      appEvent.off('not-login', handler)
+      appEvent.off('logout', handler)
     }
   }, [navigate])
 

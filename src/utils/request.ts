@@ -1,4 +1,4 @@
-import { useConfig, useToken, useUser } from '@/store'
+import { useConfig, useToken } from '@/store'
 import axios from 'axios'
 import { appEvent } from './event'
 
@@ -24,9 +24,7 @@ request.interceptors.request.use(config => {
 request.interceptors.response.use(
   response => {
     if (response.data.status === 401) {
-      appEvent.emit('not-login')
-      useToken.getState().removeToken()
-      useUser.getState().reset()
+      appEvent.emit('logout')
     }
 
     if (response.data.status !== 1) {

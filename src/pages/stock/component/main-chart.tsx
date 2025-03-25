@@ -23,7 +23,10 @@ const getSymbolByUrl = () => {
   return query.symbol as string
 }
 
-const convertToStock = (candlesticks: StockRawRecord[]) => candlesticks.map(c => stockUtils.toStock(c))
+const convertToStock = (candlesticks: StockRawRecord[]) => candlesticks.map(c => {
+  c[6] = c[6]! / 10000
+  return stockUtils.toStock(c)
+})
 
 export const MainChart = (props: MainChartProps) => {
   const [symbol, setSymbol] = useState(getSymbolByUrl())

@@ -21,6 +21,7 @@ import ChatInfoDrawer from './components/chat-info-drawer'
 import { initImDataSource } from "./lib/datasource"
 import { connectStatusListener } from "./lib/event"
 import TextImgLive from './text-img-live'
+import { appEvent } from "@/utils/event"
 
 export type ReplyFn = (option: {
   message?: Message
@@ -42,7 +43,7 @@ export const GroupChatContext = createContext<{
 const COUNT_DOWN_NUM = 10
 
 const GroupChatPage = () => {
-  const { token } = useToken()
+  const token = useToken(s => s.token)
   const { user } = useUser()
   const loginStatus = useRef(false)
 
@@ -58,6 +59,18 @@ const GroupChatPage = () => {
       })
     }
   })
+
+  useEffect(() => {
+    const handler = () => {
+      useToken.getState().removeToken()
+      useUser.getState().reset()
+    }
+    appEvent.on('logout', handler)
+
+    return () => {
+      appEvent.off('logout', handler)
+    }
+  }, [])
 
   // const {
   //   setSubscribers,
@@ -228,6 +241,8 @@ const GroupChatPage = () => {
     window.document.title = '讨论社群'
   }, [])
 
+  const [openDrawer, setOpenDrawer] = useState(false)
+
   if (!token) {
     return (
       <div style={{ height: '100vh' }} className="w-full flex items-center justify-center">
@@ -235,9 +250,6 @@ const GroupChatPage = () => {
       </div>
     )
   }
-
-
-  const [openDrawer, setOpenDrawer] = useState(false)
 
   return (
     <div className="group-chat-container flex">

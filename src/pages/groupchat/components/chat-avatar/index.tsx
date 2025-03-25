@@ -96,12 +96,6 @@ const UserAvatar = (props: UserAvatarProps) => {
   const [avatar, setAvatar] = useState<string>(src)
   const [name, setName] = useState<string>(uid)
 
-  const fetchAvatar = useQuery({
-    queryKey: [getChatNameAndAvatar.cacheKey, uid],
-    queryFn: () => getChatNameAndAvatar({ type: '1', id: uid }),
-    enabled: false
-  })
-
   useEffect(() => {
     if (src) {
       setAvatar(src)

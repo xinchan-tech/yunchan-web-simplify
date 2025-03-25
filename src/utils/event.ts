@@ -1,9 +1,15 @@
 import mitt from 'mitt'
 
-type EventType = 'login' | 'toast' | 'cleanPickerStockMethod' | 'cleanPickerStockFactor' | 'not-login'
+type Events = {
+  login: unknown
+  toast: { message: string }
+  cleanPickerStockMethod: unknown
+  cleanPickerStockFactor: unknown
+  logout: unknown
+}
 
-type Events = Record<EventType, any>
-
+// useToken.getState().removeToken()
+// useUser.getState().reset()
 const appEvent = mitt<Events>()
 
 export { appEvent }
