@@ -35,7 +35,7 @@ const _CollectStar = memo((props: CollectStarProps) => {
       </HoverCardTrigger>
       <HoverCardPortal>
         <HoverCardContent
-          sideOffset={props.sideOffset ?? -10}
+          sideOffset={props.sideOffset ?? 10}
           alignOffset={props.alignOffset ?? -50}
           align={props.align ?? 'start'}
           side={props.side ?? 'left'}

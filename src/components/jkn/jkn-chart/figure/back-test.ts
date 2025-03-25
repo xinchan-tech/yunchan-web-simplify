@@ -1,4 +1,4 @@
-import type { FigureTemplate } from "jkn-kline-chart"
+import type { FigureTemplate } from 'jkn-kline-chart'
 
 export type BackTestMarkAttrs = {
   x: number
@@ -44,6 +44,21 @@ const drawRoundedRect = (
   ctx.fill()
 }
 
+const getText = (type: string) => {
+  switch (type) {
+    case 'buy':
+      return '买入'
+    case 'sell':
+      return '卖出'
+    case 'buyToZero':
+      return '平仓买入'
+    case 'sellToZero':
+      return '平仓卖出'
+    default:
+      return ''
+  }
+}
+
 export const backTestMarkFigure: FigureTemplate<BackTestMarkAttrs, BackTestMarkStyles> = {
   name: 'back-test-mark',
   draw: (ctx, attrs, styles) => {
@@ -51,7 +66,7 @@ export const backTestMarkFigure: FigureTemplate<BackTestMarkAttrs, BackTestMarkS
     const { color } = styles
     const fontSize = 12
     ctx.font = `${fontSize}px Arial`
-    const title = `${type === 'buy' ? '买入' : '卖出'} ${count}`
+    const title = `${getText(type)} ${count}`
     const priceText = `$ ${price.toFixed(3)}`
     const maxWidth = Math.max(ctx.measureText(title).width, ctx.measureText(priceText).width)
     const padding = [5, 10, 5, 10]
@@ -105,7 +120,6 @@ export const backTestLineFigure: FigureTemplate<BackTestLineAttrs, BackTestLineS
   name: 'back-test-line',
   draw: (ctx, attrs, styles) => {
     const { x1, x2, y, price, count, profit } = attrs
-    console.log(x1, x2)
     const { color } = styles
     const fontSize = 14
     ctx.font = `${fontSize}px Arial`
@@ -143,8 +157,6 @@ export const backTestLineFigure: FigureTemplate<BackTestLineAttrs, BackTestLineS
     ctx.fillText(leftText, x1 + padding[3], y - height / 2 + padding[0])
     ctx.fillStyle = color
     ctx.fillText(rightText, x1 + ctx.measureText(leftText).width + padding[1] + padding[3], y - height / 2 + padding[0])
-
-
 
     ctx.restore()
   },

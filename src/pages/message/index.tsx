@@ -222,7 +222,7 @@ const ChatMessageContent = (props: MessageContentProps) => {
     if (fromUid !== props.msgKey) return
 
     queryClient.cancelQueries({ queryKey: [getChatRecords.cacheKey, props.msgKey] })
-
+   
     queryClient.setQueryData<typeof chats.data>(
       [getChatRecords.cacheKey, props.msgKey],
       produce(draft => {
@@ -254,10 +254,10 @@ const ChatMessageContent = (props: MessageContentProps) => {
     for (const msg of r) {
       if (res.length === 0) {
         res.push([msg])
+        continue
       }
 
       const lastMsg = res[res.length - 1]
-
       //如果在十分钟内，分为一组
       if (lastMsg.length > 0 && +msg.create_time * 1000 - +lastMsg[0].create_time * 1000 <= 2 * 60 * 1000) {
         lastMsg.push(msg)

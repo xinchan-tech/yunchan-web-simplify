@@ -55,6 +55,7 @@ export const localIndicator: IndicatorTemplate<IndicatorData, any, LocalIndicato
   calc: async (dataList, indicator) => {
     const [indicatorId, symbol, interval] = indicator.calcParams as [string, string, number]
     const formula = useIndicator.getState().formula
+    if(!dataList.length) return []
     const rawData = dataList.map(candlestickToRaw)
 
     if (isCoilingIndicator(indicatorId)) {

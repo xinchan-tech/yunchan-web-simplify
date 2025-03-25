@@ -14,7 +14,7 @@ const Star = (props: StarProps) => {
   const icon: IconName = props.checked ? 'ic_star_on' : hover ? 'ic_star_hover' : 'ic_star_off'
 
   return (
-    <span onFocus={() => { }} onMouseOver={() => setHover(true)} onMouseLeave={() => setHover(false)}>
+    <span onClick={() => props.onChange?.(!props.checked)} onKeyDown={() => { }} onFocus={() => { }} onMouseOver={() => setHover(true)} onMouseLeave={() => setHover(false)}>
       <JknIcon name={icon} className="w-4 h-4 flex items-center" />
     </span>
   )

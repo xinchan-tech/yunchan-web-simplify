@@ -81,7 +81,7 @@ const PublicizeItem = ({
                 <JknIcon.Svg name="explain" className="w-5 h-5" color="#3D3D3D" />
               </span>
             </HoverCardTrigger>
-            <HoverCardContent className="p-0 w-[520px] hover-card-content">
+            <HoverCardContent className="p-0 w-fit hover-card-content">
               <div className="flex ">
                 <div className="flex-1 border-0 border-r border-solid border-accent">
                   <div className="bg-accent">主图</div>
@@ -157,6 +157,7 @@ export const BasicPage = (props: BasicPageProps) => {
           return (
             <div
               key={product.id}
+              onFocus={() => {}}
               className={cn(
                 "relative w-[280px] p-[1px] rounded-2xl box-border space-y-[10px] transition-all duration-300",
                 isActive ? "active-card" : "default-card"

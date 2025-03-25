@@ -11,9 +11,8 @@ import { renderUtils } from '../lib/utils'
 import { ChartContextMenu } from './chart-context-menu'
 import { BackTestBar } from "./back-test-bar"
 import { useStockBarSubscribe } from "@/hooks"
-import { chatManager, useConfig, useTime } from "@/store"
+import { useConfig, useTime } from "@/store"
 import { colorUtil } from "@/utils/style"
-import { dateUtils } from "@/utils/date"
 
 interface MainChartProps {
   chartId: string

@@ -4,6 +4,7 @@ import path from 'node:path'
 import type { RsbuildPlugin } from '@rsbuild/core'
 import packageJson from '../package.json'
 import dayjs from 'dayjs'
+const c = require('ansi-colors')
 
 export type ReleaseTagOptions = {
   outFile?: boolean
@@ -48,6 +49,8 @@ export const pluginReleaseTag = (options: ReleaseTagOptions): RsbuildPlugin => (
             2
           )
         )
+
+        console.log(c.green(`Release tag file generated: dist/release-tag.json from ${version}`))
       }
     })
   }

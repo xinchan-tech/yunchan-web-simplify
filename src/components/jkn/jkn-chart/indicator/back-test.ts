@@ -6,10 +6,12 @@ export type BackTestRecord = {
   time: number
   price: number
   count: number
-  type: 'buy' | 'sell'
+  type: 'buy' | 'sell' | 'buyToZero' | 'sellToZero'
   index: number
   num: number
 }
+
+const isBuyRecord = (record: BackTestRecord) => record.type === 'buy' || record.type === 'buyToZero'
 
 export const backTestIndicator: IndicatorTemplate<any, any> = {
   name: 'back-test-indicator',
@@ -61,9 +63,9 @@ export const backTestIndicator: IndicatorTemplate<any, any> = {
     result.forEach(item => {
       totalCount += item.count
       totalPrice += item.price * item.count
-      totalDiff += item.type === 'buy' ? item.count : -item.count
+      totalDiff += isBuyRecord(item) ? item.count : -item.count
 
-      if (item.type === 'buy') {
+      if (isBuyRecord(item)) {
         totalBuyPrice += item.price * item.count
       } else {
         totalSellPrice += item.price * item.count
@@ -73,25 +75,24 @@ export const backTestIndicator: IndicatorTemplate<any, any> = {
 
       const d = data[item.index]
       if (!inRange(xPixel, fromPixel, toPixel) || !d) return
-      const base = item.type === 'buy' ? d.low : d.high
+      const base = isBuyRecord(item) ? d.low : d.high
       const y1 = yAxis.convertToPixel(base)
       new BackTestMark({
         name: 'back-test-mark',
         attrs: {
           x: xPixel,
           y1: y1,
-          y2: y1 + (item.type === 'buy' ? 1 : -1) * ((item.type === 'buy' ? 100 : 200) + item.num * 50),
+          y2: y1 + (isBuyRecord(item) ? 1 : -1) * ((isBuyRecord(item) ? 100 : 200) + item.num * 50),
           type: item.type,
           price: item.price,
           count: item.count,
           line: item.num === 0
         },
         styles: {
-          color: item.type === 'buy' ? upColor : downColor
+          color: isBuyRecord(item) ? upColor : downColor
         }
       }).draw(ctx)
     })
-
 
     if (totalDiff !== 0) {
       const avgPrice = totalPrice / totalCount

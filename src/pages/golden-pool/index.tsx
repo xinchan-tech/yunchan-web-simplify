@@ -3,14 +3,17 @@ import {
   getStockCollectCates,
   getStockCollects,
   moveStockCollectBatch,
+  removeStockCollect,
 } from "@/api"
 import {
   Button,
   CollectCapsuleTabs,
+  JknAlert,
   JknCheckbox,
   JknIcon,
   JknRcTable,
   type JknRcTableProps,
+  Star,
   StockView,
   SubscribeSpan,
 } from "@/components"
@@ -21,9 +24,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { useCheckboxGroup, useTableData, useTableRowClickToStockTrading, useToast } from "@/hooks"
+import { useCheckboxGroup, useOptimisticUpdate, useTableData, useTableRowClickToStockTrading, useToast } from "@/hooks"
 import { GoldenPoolManager, GoldenPoolNameEdit } from "@/pages/golden-pool/components/golden-pool-manager"
-import GoldenPoolStar from "@/pages/golden-pool/components/golden-pool-star"
 import { stockUtils } from "@/utils/stock"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import to from "await-to-js"
@@ -104,18 +106,45 @@ const GoldenPool = () => {
     }
   }, [collectIds, setCheckedAll])
 
+
+  const removeFav = useOptimisticUpdate({
+    cacheKey: [getStockCollects.cacheKey, activeStockCollectCate],
+    action: (code: string[]) => {
+      return removeStockCollect({
+        symbols: code,
+        cate_ids: [+activeStockCollectCate || 1]
+      })
+    },
+    onOptimisticUpdate: (code: string[], draft: NonNullable<typeof collects.data>) => {
+      draft.items = draft.items.filter(item => !code.some(c => c === item.symbol))
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [getStockCollectCates.cacheKey] })
+    }
+  })
+
+  const handleRemoveFav = useCallback((symbol: string[]) => {
+    JknAlert.confirm({
+      content: '确认取消该股票收藏？',
+      onAction: async (action) => {
+        if (action === 'confirm') {
+          removeFav.mutate(symbol)
+        }
+        return true
+      }
+    })
+
+  }, [removeFav.mutate])
+
+
+
   const columns: JknRcTableProps<TableDataType>["columns"] = useMemo(
     () => [
       {
         title: (
           <div className="inline-flex items-center whitespace-nowrap">
             <span className="inline-flex items-center">
-              <GoldenPoolStar.Batch cateId={+activeStockCollectCate} checked={true} checkedChildren={collectIds} onUpdate={() => {
-                // 同时刷新表格数据和 Tab 标题数据
-                collects.refetch()
-                // 刷新收藏分类数据，更新 Tab 标题
-                queryClient.invalidateQueries({ queryKey: [getStockCollectCates.cacheKey] })
-              }} />
+              <Star checked={true} onChange={() => handleRemoveFav(list.map(item => item.symbol))} />
             </span>
             <span className="mr-3" />
             <span className="inline-flex items-center">名称代码</span>
@@ -127,12 +156,7 @@ const GoldenPool = () => {
         sort: true,
         render: (_, row) => <div className='flex items-center h-[33px]'>
           <div className="flex justify-center items-center">
-            <GoldenPoolStar cateId={+activeStockCollectCate} checked={true} code={row.symbol} onUpdate={() => {
-              // 同时刷新表格数据和 Tab 标题数据
-              collects.refetch()
-              // 刷新收藏分类数据，更新 Tab 标题
-              queryClient.invalidateQueries({ queryKey: [getStockCollectCates.cacheKey] })
-            }} />
+            <Star checked={true} onChange={() => handleRemoveFav([row.symbol])} />
           </div>
           <span className="mr-3" />
           <StockView name={row.name} code={row.symbol as string} showName />
@@ -224,13 +248,11 @@ const GoldenPool = () => {
       }
     ],
     [
-      activeStockCollectCate,
-      collectIds,
-      collects.refetch,
       isAllChecked,
+      handleRemoveFav,
       isChecked,
+      list,
       onCheckChange,
-      queryClient.invalidateQueries,
       handleCheckAll
     ]
   )

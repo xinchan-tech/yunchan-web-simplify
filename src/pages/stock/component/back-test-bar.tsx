@@ -39,7 +39,7 @@ interface BackTestBarProps {
   candlesticks: StockRawRecord[]
   onNextCandlesticks: (candlestick: StockRawRecord) => void
   onChangeCandlesticks: (data: StockRawRecord[]) => void
-  onAddBackTestRecord: (record: { time: number; price: number; count: number; type: 'buy' | 'sell', index: number }) => void
+  onAddBackTestRecord: (record: { time: number; price: number; count: number; type: 'buy' | 'sell' | 'sellToZero' | 'buyToZero', index: number }) => void
 }
 
 type TradeRecord = {
@@ -57,7 +57,7 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
   const [number, setNumber] = useState<number>(100)
   const candlesticksRestore = useLatestRef<StockRawRecord[]>(props.candlesticks)
   //交易记录
-  const [tradeRecord, setTradeRecord] = useImmer<TradeRecord>({ sell: [], buy: [] })
+  const [tradeRecord, setTradeRecord] = useState<TradeRecord>({ sell: [], buy: [] })
   const [timer, setTimer] = useState<number | null>(null)
   const [profit, setProfit] = useState<number>(0)
   const [positiveProfitCount, { inc: incPositiveProfitCount }] = useCounter(0)
@@ -81,6 +81,10 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
       if (kline) {
         props.onChangeCandlesticks(candlesticksRestore.current.slice(0, kline.index + 1))
         currentKline.current = kline.index
+        setTradeRecord({ buy: [], sell: [] })
+        window.clearInterval(timer!)
+        setProfit(0)
+        setTimer(null)
       }
     }
   }
@@ -153,18 +157,7 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
 
     const stock = candlesticksRestore.current[currentKline.current]
 
-    // tradeRecord[type].push({
-    //   index: currentKline.current,
-    //   time: +stock[0]!,
-    //   price: +stock[2]!,
-    //   count: number
-    // })
-    setTradeRecord(s => s[type].push({
-      index: currentKline.current,
-      time: +stock[0]!,
-      price: +stock[2]!,
-      count: number
-    }))
+    const _tradeRecord = { ...tradeRecord }
 
     const record = {
       index: currentKline.current,
@@ -174,9 +167,13 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
       type
     }
 
+    _tradeRecord[type].push(record)
+
+    setTradeRecord(_tradeRecord)
+
     props.onAddBackTestRecord(record)
 
-    const result = calcProfit(tradeRecord)
+    const result = calcProfit(_tradeRecord)
     const diffProfit = result - profit
     setMaxProfit(Math.max(diffProfit, maxProfit))
     setProfit(result)
@@ -188,6 +185,7 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
 
   useUnmount(() => {
     setTimer(null)
+    window.clearInterval(timer!)
     setTradeRecord({ buy: [], sell: [] })
   })
 
@@ -227,7 +225,7 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
 
     return shellPrice - buyPrice
   }
-
+  console.log(tradeRecord)
   //平仓
   const closePosition = () => {
     if (currentKline.current === -1) {
@@ -246,27 +244,34 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
 
     if (diffCount === 0) return
 
+    const _tradeRecord = { ...tradeRecord }
 
-    setTradeRecord(s => {
-      s[diffCount > 0 ? 'buy' : 'sell'].push({
-        index: currentKline.current,
-        time: +stock[0]!,
-        price: +stock[2]!,
-        count: number
-      })
-    })
-
-    const result = calcProfit(tradeRecord)
-    const diffProfit = result - profit
-    setMaxProfit(Math.max(diffProfit, maxProfit))
-    setProfit(result)
-    props.onAddBackTestRecord({
+    const record = {
       index: currentKline.current,
       time: +stock[0]!,
       price: +stock[2]!,
       count: Math.abs(diffCount),
-      type: diffCount > 0 ? 'buy' : 'sell'
-    })
+      type: diffCount > 0 ? 'buyToZero' : 'sellToZero'
+    }
+
+    _tradeRecord[buyCount > sellCount ? 'sell' : 'buy'].push(record)
+
+    setTradeRecord(_tradeRecord)
+
+    // setTradeRecord(s => {
+    //   s[diffCount > 0 ? 'buy' : 'sell'].push({
+    //     index: currentKline.current,
+    //     time: +stock[0]!,
+    //     price: +stock[2]!,
+    //     count: Math.abs(diffCount)
+    //   })
+    // })
+
+    const result = calcProfit(_tradeRecord)
+    const diffProfit = result - profit
+    setMaxProfit(Math.max(diffProfit, maxProfit))
+    setProfit(result)
+    props.onAddBackTestRecord(record as any)
   }
 
   const resultModel = useModal({
