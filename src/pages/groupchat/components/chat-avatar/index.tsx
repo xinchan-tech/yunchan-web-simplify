@@ -4,6 +4,7 @@ import { cn, colorUtil } from '@/utils/style'
 import { useQuery } from "@tanstack/react-query"
 import { useEffect, useState } from "react"
 import WKSDK from "wukongimjssdk"
+import { fetchUserInChannel } from "../../lib/utils"
 
 function userIdToColor(userId: string) {
   if (!userId) {
@@ -90,8 +91,6 @@ interface UserAvatarProps {
   size?: string
 }
 
-const userCache = new Map<string, string>()
-
 const UserAvatar = (props: UserAvatarProps) => {
   const { shape, src, uid, className, size = 33 } = props
   const [avatar, setAvatar] = useState<string>(src)
@@ -107,43 +106,29 @@ const UserAvatar = (props: UserAvatarProps) => {
     if (src) {
       setAvatar(src)
     } else {
+
       const channel = useChatStore.getState().lastChannel
       if (channel) {
-        const subscribes = WKSDK.shared().channelManager.getSubscribes(channel)
-
-        const user = subscribes.find(sub => sub.uid === uid)
-
-        if (user) {
-          if(user.avatar){
-            setAvatar(user.avatar)
-            userCache.set(uid, user.avatar)
-            return
+        fetchUserInChannel(channel, uid).then(r => {
+          if (r.avatar) {
+            setAvatar(r.avatar)
+          } else {
+            setName(r.name)
           }
-
-          setName(user.name)
-          return
-        }
+        })
       }
 
-      const cachedAvatar = userCache.get(uid)
-
-      if (cachedAvatar) {
-        setAvatar(cachedAvatar)
-        return
-      }
-
-      fetchAvatar.refetch().then(r => {
-        if (r.data) {
-          if(r.data.avatar){
-            setAvatar(r.data.avatar)
-            userCache.set(uid, r.data.avatar)
-          }else{
-            setName(r.data.name)
-          }
-        }
-      })
+      // fetchAvatar.refetch().then(r => {
+      //   if (r.data) {
+      //     if (r.data.avatar) {
+      //       setAvatar(r.data.avatar)
+      //     } else {
+      //       setName(r.data.name)
+      //     }
+      //   }
+      // })
     }
-  }, [src, uid, fetchAvatar.refetch])
+  }, [src, uid])
 
   const borderRadius = shape === 'circle' ? '50%' : shape === 'square' ? '4px' : `${shape ?? 0}px`
 
