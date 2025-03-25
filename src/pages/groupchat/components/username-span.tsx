@@ -15,7 +15,9 @@ export const UsernameSpan = ({ uid, channel, colon, name, ...props }: UsernameSp
 
   useMount(() => {
     if (name) return
-    fetchUserInChannel(channel, uid).then(s => setUserName(s.name))
+    fetchUserInChannel(channel, uid).then(s => {
+      setUserName(s.name)
+    })
   })
 
   return <span {...props}>{userName}{colon && userName ? ': ' : ''}</span>

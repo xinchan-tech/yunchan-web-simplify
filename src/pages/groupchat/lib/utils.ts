@@ -23,7 +23,7 @@ export const fetchUserInChannel = async (channel: Channel, userId: string) => {
 
   const subscriber = subscribes.find(subscriber => subscriber.uid === userId)
 
-  if (subscriber) {
+  if (subscriber?.name) {
     return {
       name: subscriber.name,
       avatar: subscriber.avatar
@@ -37,8 +37,8 @@ export const fetchUserInChannel = async (channel: Channel, userId: string) => {
   }
 
   const r = await queryClient.ensureQueryData({
-    queryKey: [getChatNameAndAvatar.cacheKey, { type: 'user', id: userId }],
-    queryFn: () => getChatNameAndAvatar({ type: 'user', id: userId })
+    queryKey: [getChatNameAndAvatar.cacheKey, { type: '1', id: userId }],
+    queryFn: () => getChatNameAndAvatar({ type: '1', id: userId })
   })
 
   userCache.set(userId, { name: r.name, avatar: r.avatar })
@@ -48,6 +48,7 @@ export const fetchUserInChannel = async (channel: Channel, userId: string) => {
     avatar: r.avatar
   }
 }
+
 
 export const getUserNameAndAvatarFromMessage = async (message: Message) => {
   const { fromName, fromAvatar } = message.remoteExtra.extra || {}

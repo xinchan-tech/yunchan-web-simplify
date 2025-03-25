@@ -10,11 +10,13 @@ interface RevokeTextRecordProps {
 }
 
 export const RevokeRecord = ({ revoker, sender, channel }: RevokeTextRecordProps) => {
+
   const revokerInfo = useQuery({
     queryKey: ['get-revoke-record-user', revoker, channel?.channelID],
     queryFn: () => fetchUserInChannel(channel!, revoker!),
     enabled: !!channel
   })
+  // console.log(revokerInfo.data, channel, revoker)
   const uid = WKSDK.shared().config.uid
   return (
     <div className="text-center">
