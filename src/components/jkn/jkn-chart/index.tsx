@@ -26,6 +26,9 @@ import dayjs from "dayjs"
 import { LogoOverlay } from "./overlay"
 import { useMount, useUnmount } from "ahooks"
 import { stockUtils } from "@/utils/stock"
+import { VerticalLineOverlay } from "./overlay/line"
+import { SplitIndicator } from "./indicator/split"
+import Decimal from "decimal.js"
 
 export { CoilingIndicatorId, ChartTypes }
 
@@ -35,12 +38,14 @@ registerIndicator(compareIndicator)
 registerIndicator(markIndicator)
 registerIndicator(backTestIndicator)
 registerIndicator(gapIndicator)
+registerIndicator(SplitIndicator)
 registerFigure(backTestMarkFigure)
 registerFigure(backTestLineFigure)
 registerFigure(IconFigure)
 registerFigure(markOverlayFigure)
 registerFigure(LogoFigure)
 registerOverlay(LogoOverlay)
+registerOverlay(VerticalLineOverlay)
 
 interface JknChartProps {
   className?: string
@@ -170,7 +175,7 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
               noChangeColor: downColor,
               color: (data) => {
                 const lastData = data[data.length - 1]
-                
+
                 if (!lastData) return downColor
 
                 if (lastData.quote) {
@@ -490,35 +495,91 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
     getChart: () => chart.current,
     setTimeShareChart: (interval) => {
       const { up: upColor, down: downColor } = getStockColor()
+      const splitId = 'split-indicator-large-cap'
       if (interval !== undefined) {
-        if (![StockChartInterval.AFTER_HOURS, StockChartInterval.PRE_MARKET, StockChartInterval.INTRA_DAY, StockChartInterval.FIVE_DAY].includes(interval)) return
+        if (![StockChartInterval.AFTER_HOURS, StockChartInterval.PRE_MARKET, StockChartInterval.INTRA_DAY].includes(interval)) return
+        const PRE_NUMBER = 330
+        const POST_NUMBER = 390
+        const AFTER_NUMBER = 240
+        const count = PRE_NUMBER + POST_NUMBER + AFTER_NUMBER
 
-        const count = StockChartInterval.FIVE_DAY === interval ? 1950 : getTickNumberByTrading(stockUtils.intervalToTrading(interval)!)
         chart.current?.setLeftMinVisibleBarCount(1)
         chart.current?.setXAxisTick(count)
+
+        chart.current?.createIndicator({
+          name: 'split-indicator',
+          id: splitId,
+          calcParams: [[PRE_NUMBER / (PRE_NUMBER + POST_NUMBER + AFTER_NUMBER), (PRE_NUMBER + POST_NUMBER) / (PRE_NUMBER + POST_NUMBER + AFTER_NUMBER)]],
+        }, true, {
+          id: ChartTypes.MAIN_PANE_ID
+        })
 
         chart.current?.setStyles({
           candle: {
             type: 'area' as CandleType,
             area: {
-              lineColor: (dataList) => {
-                const last = dataList.slice(-1)[0]
-                if (!last) return ''
-                return last.close > last.prevClose ? upColor : downColor
-              },
-              backgroundColor: (data) => {
-                const last = data.slice(-1)[0]
-                if (!last) return []
+              lineColor: data => {
+                const postData = data.slice(0, POST_NUMBER + PRE_NUMBER).pop()
+                const lastData = data[data.length]
+
+                const lastColor = Decimal.create(lastData?.close).gt(lastData?.prevClose ?? 0) ? upColor : downColor
+                const preColor = data.length > PRE_NUMBER ? '#50535E' : lastColor
+
+                const afterColor = data.length >= POST_NUMBER + PRE_NUMBER + AFTER_NUMBER ? '#50535E' : lastColor
+
                 return [
-                  { offset: 0, color: colorUtil.rgbaToString(colorUtil.hexToRGBA(last.close > last.prevClose ? upColor : downColor, 0.01)) },
-                  { offset: 1, color: colorUtil.rgbaToString(colorUtil.hexToRGBA(last.close > last.prevClose ? upColor : downColor, 0.2)) }
+                  { type: 'segment', color: preColor, offset: PRE_NUMBER },
+                  { type: 'segment', color: Decimal.create(postData?.close).gt(postData?.prevClose ?? 0) ? upColor : downColor, offset: POST_NUMBER + PRE_NUMBER },
+                  { type: 'segment', color: afterColor },
                 ]
               },
-            }
+              backgroundColor(data) {
+                const postData = data.slice(0, POST_NUMBER + PRE_NUMBER).pop()
+                const lastData = data[data.length]
+                const lastColor = Decimal.create(lastData?.close).gt(lastData?.prevClose ?? 0) ? upColor : downColor
+
+                const color = Decimal.create(postData?.close).gt(postData?.prevClose ?? 0) ? upColor : downColor
+
+                const preColor = data.length > PRE_NUMBER ? '#DBDBDB' : lastColor
+                const afterColor = data.length >= POST_NUMBER + PRE_NUMBER + AFTER_NUMBER ? '#DBDBDB' : lastColor
+
+                return [
+                  {
+                    type: 'segment', offset: PRE_NUMBER, color: [{
+                      offset: 0,
+                      color: colorUtil.rgbaToString(colorUtil.hexToRGBA(preColor, 0.01))
+                    }, {
+                      offset: 1,
+                      color: colorUtil.rgbaToString(colorUtil.hexToRGBA(preColor, 0.2))
+                    }]
+                  },
+                  {
+                    type: 'segment', offset: POST_NUMBER + PRE_NUMBER, color: [{
+                      offset: 0,
+                      color: colorUtil.rgbaToString(colorUtil.hexToRGBA(color, 0.01))
+                    }, {
+                      offset: 1,
+                      color: colorUtil.rgbaToString(colorUtil.hexToRGBA(color, 0.2))
+                    }]
+                  },
+                  {
+                    type: 'segment', color: [{
+                      offset: 0,
+                      color: colorUtil.rgbaToString(colorUtil.hexToRGBA(afterColor, 0.01))
+                    }, {
+                      offset: 1,
+                      color: colorUtil.rgbaToString(colorUtil.hexToRGBA(afterColor, 0.2))
+                    }]
+                  },
+                ]
+              },
+            },
           }
         })
       } else {
-
+        chart.current?.removeIndicator({
+          id: splitId
+        })
         chart.current?.setXAxisTick(-1)
         chart.current?.setOffsetRightDistance(80)
         chart.current?.setStyles({

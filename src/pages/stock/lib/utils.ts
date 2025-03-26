@@ -173,7 +173,6 @@ export const renderUtils = {
     [
       StockChartInterval.PRE_MARKET,
       StockChartInterval.AFTER_HOURS,
-      StockChartInterval.INTRA_DAY,
-      StockChartInterval.FIVE_DAY
+      StockChartInterval.INTRA_DAY
     ].includes(timeIndex)
 }

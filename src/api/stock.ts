@@ -327,7 +327,7 @@ getStockChartV2.cacheKey = 'stock:kline:v2'
 
 export const getStockChartQuote = async (
   symbol: string,
-  period: 'pre' | 'intraday' | 'post' | '5d' | number,
+  period: 'pre' | 'intraday' | 'post' | '5d' | 'full-day' | number,
   time_format = 'int'
 ) => {
   const _period = isString(period)
@@ -349,7 +349,17 @@ export const getStockChartQuote = async (
       params: { symbol: symbol, period: _period, time_format },
       headers: { sign }
     })
-    .then(r => (r.data as any).data as { list: StockRawRecord[] })
+    .then(
+      r =>
+        ((r.data as any).data as { list: StockRawRecord[] }).list.map(v => [
+          v[0],
+          v[1],
+          v[4],
+          v[2],
+          v[3],
+          ...v.slice(5)
+        ]) as StockRawRecord[]
+    )
   return r
 }
 getStockChartQuote.cacheKey = 'stock:chart:quote'
@@ -1144,9 +1154,9 @@ type GetStockEconomicResult = {
      */
     next_time: string
   }[]
-  current: number;
-  next: number;
-  total_pages: number;
+  current: number
+  next: number
+  total_pages: number
 }
 
 /**
@@ -1189,7 +1199,7 @@ export const getCalendarEvents = () => {
 getCalendarEvents.cacheKey = 'calendar:events'
 
 type GetCalendarEventsResult = {
-  name: string,
+  name: string
   values: {
     title: string
     datetime: string

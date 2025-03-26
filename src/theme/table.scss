@@ -123,6 +123,7 @@ $dark-table-body-background: transparent;
 }
 .rc-table-cell {
   background: transparent;
+  user-select: none;
 }
 .rc-table-cell-fix-left,
 .rc-table-cell-fix-right {

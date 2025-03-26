@@ -4,6 +4,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
   Input,
   JknIcon,
@@ -11,7 +12,6 @@ import {
   ScrollArea,
   Separator,
   StockAlarm,
-  StockSelect,
   ToggleGroup,
   ToggleGroupItem,
   useModal
@@ -19,7 +19,7 @@ import {
 import { stockUtils } from '@/utils/stock'
 import { Fragment, memo, useEffect, useMemo, useRef, useState } from 'react'
 import { timeIndex, useSymbolQuery } from '../lib'
-import { ChartType, chartManage, useChartManage } from '../lib/store'
+import { ChartType, MainYAxis, chartManage, useChartManage } from '../lib/store'
 import { renderUtils } from '../lib/utils'
 import { useQuery } from "@tanstack/react-query"
 import { useAuthorized, useStockSearch, useToast } from "@/hooks"
@@ -31,7 +31,6 @@ import { useNavigate } from "react-router"
 
 export const ChartToolBar = () => {
   const symbol = useSymbolQuery()
-  const navigate = useNavigate()
 
   return (
     <div className="">
@@ -41,8 +40,8 @@ export const ChartToolBar = () => {
           &nbsp;
           <span className="text-base text-foreground">{symbol}</span>
         </div>
-        <Separator orientation="vertical" className="h-2 w-[1px] bg-accent mx-1" />
-        <TimeShareSelect />
+        {/* <Separator orientation="vertical" className="h-2 w-[1px] bg-accent mx-1" /> */}
+        {/* <TimeShareSelect /> */}
         <Separator orientation="vertical" className="h-2 w-[1px] bg-accent mx-1" />
         <PeriodSelect />
         <Separator orientation="vertical" className="h-2 w-[1px] bg-accent mx-1" />
@@ -185,7 +184,7 @@ export const PeriodSelect = memo(() => {
   const interval = useChartManage(s => s.getActiveChart().interval)
 
   const intervalStr = useMemo(() => {
-    if (renderUtils.isTimeIndexChart(interval)) return stockUtils.intervalToStr(StockChartInterval.ONE_MIN)
+    if (renderUtils.isTimeIndexChart(interval)) return '24H'
     return stockUtils.intervalToStr(interval)
   }, [interval])
 
@@ -196,10 +195,21 @@ export const PeriodSelect = memo(() => {
       </DropdownMenuTrigger>
 
       <DropdownMenuContent align="start" alignOffset={-10}>
+        <DropdownMenuItem data-checked={renderUtils.isTimeIndexChart(interval)} onClick={() => chartManage.setInterval(StockChartInterval.INTRA_DAY)}>
+          24H
+        </DropdownMenuItem>
+        <DropdownMenuSeparator className="bg-[#2E2E2E]" />
         {timeIndex.slice(4).map(i => (
-          <DropdownMenuItem key={i} data-checked={interval === i} onClick={() => chartManage.setInterval(i)}>
-            {stockUtils.intervalToStr(i)}
-          </DropdownMenuItem>
+          <Fragment key={i} >
+            <DropdownMenuItem data-checked={interval === i} onClick={() => chartManage.setInterval(i)}>
+              {stockUtils.intervalToStr(i)}
+            </DropdownMenuItem>
+            {
+              i === StockChartInterval.FORTY_FIVE_MIN || i === StockChartInterval.FOUR_HOUR ? (
+                <DropdownMenuSeparator className="bg-[#2E2E2E]" />
+              ) : null
+            }
+          </Fragment>
         ))}
       </DropdownMenuContent>
     </DropdownMenu>
@@ -508,11 +518,21 @@ const StockPkModal = () => {
   const pk = useChartManage(s => s.getActiveChart().overlayStock)
 
   const onClick = (symbol: string, name: string) => {
-    if (pk.find(p => p.symbol === symbol)) return
+    if (pk.find(p => p.symbol === symbol)) return false
+    const current = useChartManage.getState().getActiveChart().symbol
+
+    if (current === symbol) return false
 
     chartManage.setStockOverlay(symbol, name)
-    if (searchHistory?.find(p => p.symbol === symbol)) return
+    chartManage.setYAxis({
+      right: MainYAxis.Percentage
+    })
+
+    if (searchHistory?.find(p => p.symbol === symbol)) return true
+
     setSearchHistory([...(searchHistory ?? []), { symbol, name }])
+
+    return true
   }
 
   const [searchHistory, setSearchHistory] = useLocalStorageState<typeof pk>('stock-pk-history', {
@@ -574,8 +594,7 @@ const StockPkModal = () => {
           </ScrollArea>
         ) : (
           <StockVirtualList list={searchResult} onClick={(s, n) => {
-            onClick(s, n)
-            setSearch('')
+            onClick(s, n) && setSearch('')
           }} />
         )
       }
@@ -801,7 +820,7 @@ const BackTest = () => {
     chartManage.setMode(mode === 'normal' ? 'backTest' : 'normal')
   }
   return (
-    <div className="cursor-pointer hover:bg-accent h-full rounded px-3 box-border flex items-center text-sm py-2" onClick={onChangeMode} onKeyDown={() => { }}>
+    <div className={cn('cursor-pointer hover:bg-accent h-full rounded px-3 box-border flex items-center text-sm py-2', mode === 'backTest' && 'text-primary')} onClick={onChangeMode} onKeyDown={() => { }}>
       <JknIcon.Svg name="chart-back-test" size={20} />&nbsp;
       <span>回测</span>
     </div>

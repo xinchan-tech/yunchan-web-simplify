@@ -4,7 +4,7 @@ import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
 import { chartEvent } from './event'
 import { renderUtils } from './utils'
-import { appEvent } from "@/utils/event"
+import { appEvent } from '@/utils/event'
 
 type ViewMode =
   | 'single'
@@ -295,8 +295,8 @@ export const chartManage = {
   addSecondaryIndicator: (indicator: Indicator, chartId?: string) => {
     const secondary = useChartManage.getState().getActiveChart().secondaryIndicators
 
-    if(secondary.length >= 5){
-      appEvent.emit('toast', {message: '最多只能添加5个附图指标'} )
+    if (secondary.length >= 5) {
+      appEvent.emit('toast', { message: '最多只能添加5个附图指标' })
       return
     }
     chartManage.setStore(state => {
@@ -417,5 +417,11 @@ export const chartManage = {
       state.coiling = state.coiling.filter(c => c !== coiling)
     }, chartId)
     chartEvent.get().emit('coilingChange', { type: 'remove', coiling: [coiling] })
+  },
+  setYAxis: (yAxis: ChartStore['yAxis'], chartId?: string) => {
+    chartManage.setStore(state => {
+      state.yAxis = yAxis
+    }, chartId)
+    chartEvent.get().emit('yAxisChange', yAxis)
   }
 }

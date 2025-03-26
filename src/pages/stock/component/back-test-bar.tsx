@@ -60,7 +60,7 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
   const [tradeRecord, setTradeRecord] = useState<TradeRecord>({ sell: [], buy: [] })
   const [timer, setTimer] = useState<number | null>(null)
   const [profit, setProfit] = useState<number>(0)
-  const [positiveProfitCount, { inc: incPositiveProfitCount }] = useCounter(0)
+  const [positiveProfitCount, { inc: incPositiveProfitCount, dec: decPositiveProfitCount }] = useCounter(0)
   const [maxProfit, setMaxProfit] = useState<number>(0)
   const currentKline = useRef<number>(-1)
   // const klineCount = useRef<number>(0)
@@ -106,15 +106,40 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
     const next = candlesticksRestore.current[currentKline.current + 1]
 
     if (!next) {
-      toast({
-        description: '已到最新数据'
-      })
+      resultModel.modal.open()
+      // toast({
+      //   description: '已到最新数据'
+      // })
       return false
     }
     props.onNextCandlesticks(next)
     currentKline.current++
 
     return true
+  }
+
+  const toPrevLine = () => {
+    // if (currentKline.current === -1) return
+    // if (currentKline.current === 0) return
+    // const prev = candlesticksRestore.current.slice(0, currentKline.current)
+
+    // props.onChangeCandlesticks(prev)
+
+    // const current = candlesticksRestore.current[currentKline.current]
+
+    // currentKline.current--
+
+    // const _tradeRecord = {
+    //   buy: tradeRecord.buy.filter(t => t.time !== +current[0]!),
+    //   sell: tradeRecord.sell.filter(t => t.time !== +current[0]!)
+    // }
+
+    // setTradeRecord(_tradeRecord)
+
+    // const result = calcProfit(_tradeRecord)
+    // const diffProfit = result - profit
+    // setMaxProfit(Math.max(diffProfit, maxProfit))
+    // setProfit(result)
   }
 
   const toLastKLine = () => {
@@ -225,7 +250,7 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
 
     return shellPrice - buyPrice
   }
-  console.log(tradeRecord)
+
   //平仓
   const closePosition = () => {
     if (currentKline.current === -1) {
@@ -325,6 +350,8 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
     }
   })
 
+
+
   return (
     <div className="h-8 box-border grid grid-cols-3 text-xs px-2 w-full">
       <div />
@@ -356,6 +383,13 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
               <span>暂停</span>
             </div>
           )}
+          {/* <div
+            className="border cursor-pointer hover:bg-accent px-1 py-1 flex items-center rounded-xs"
+            onClick={toPrevLine}
+            onKeyDown={() => { }}
+          >
+            <JknIcon.Svg name="prev" size={16} />
+          </div> */}
           <div
             className="border cursor-pointer hover:bg-accent px-1 py-1 flex items-center rounded-xs"
             onClick={toNextLine}

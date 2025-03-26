@@ -76,7 +76,6 @@ const useMessages = () => {
           normalMessage.push(msg)
         }
       })
-
       revokeMessage.forEach(item => {
         const index = normalMessage.findIndex(msg => msg.messageID === item.content.param.message_id)
         if (index !== -1) {
@@ -317,7 +316,7 @@ const ChatMessageRow = ({ message, children, onMessageSend }: PropsWithChildren<
     return (
       <div className="py-3 px-4 flex justify-end items-start box-border">
         <div className="mr-2.5 flex flex-col items-end overflow-hidden" style={{ maxWidth: '50%' }}>
-          <div className="flex items-start mb-1.5">
+          <div className="flex items-start mb-1">
             <span className="text-tertiary text-xs">&nbsp;{getTimeFormatStr(message.timestamp * 1000)}</span>
           </div>
           <ChatMessageRowMenu message={message} fromName={fromName}>
@@ -348,7 +347,7 @@ const ChatMessageRow = ({ message, children, onMessageSend }: PropsWithChildren<
     <div className="py-3 px-4 flex items-start box-border">
       <ChatAvatar.User shape="square" src={fromAvatar} uid={message.fromUID} />
       <div className="ml-2.5 flex flex-col items-start" style={{ maxWidth: '50%' }}>
-        <div className="text-sm leading-[14px] flex items-start mb-1.5">
+        <div className="text-sm leading-[14px] flex items-start mb">
           <UsernameSpan uid={message.fromUID} name={fromName} channel={message.channel} />
           <span className="text-tertiary text-xs">&nbsp;{getTimeFormatStr(message.timestamp * 1000)}</span>
         </div>
@@ -357,9 +356,6 @@ const ChatMessageRow = ({ message, children, onMessageSend }: PropsWithChildren<
             {children}
           </div>
         </ChatMessageRowMenu>
-        {
-
-        }
         {
           message.content.reply as Reply ? <ReplyMessage reply={message.content.reply as Reply} /> : null
         }

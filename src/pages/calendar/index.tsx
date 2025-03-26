@@ -15,9 +15,9 @@ const StockCalendar = () => {
           <CapsuleTabs activeKey={active} onChange={setActive}>
             <CapsuleTabs.Tab value="financials" label="财报个股" />
             <CapsuleTabs.Tab value="timeline" label="财经日历" />
-            <CapsuleTabs.Tab value="usd" label="美联储决议" />
+            {/* <CapsuleTabs.Tab value="usd" label="美联储决议" />
             <CapsuleTabs.Tab value="wd" label="巫日" />
-            <CapsuleTabs.Tab value="holidays" label="休市" />
+            <CapsuleTabs.Tab value="holidays" label="休市" /> */}
           </CapsuleTabs>
         </div>
         <div className="flex-1 overflow-hidden">

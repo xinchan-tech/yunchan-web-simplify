@@ -236,6 +236,8 @@ const GroupChannel = (props: {
     }
   }
 
+  console.log(conversations)
+
   return (
     <div className="w-[180px] h-full border-0 border-x border-solid border-border bg-[#161616]">
       <div className="flex items-center text-xs text-tertiary px-2 py-1">

@@ -143,7 +143,7 @@ const TreeMap = (props: TreeMapProps) => {
       .attr('width', d => d.x1 - d.x0)
       .attr('height', d => d.y1 - d.y0)
       .attr('fill', d => d.data.color ?? 'transport')
-      .on('dblclick', (_, d) => {
+      .on('click', (_, d) => {
         router.navigate(`/stock?symbol=${d.data.name}`)
       })
   }
@@ -182,6 +182,7 @@ const TreeMap = (props: TreeMapProps) => {
         return _title
       })
       .attr('font-size', '14px')
+      .attr('style', 'user-select: none;')
       .attr('fill', () => '#B8B8B8')
 
     // chartRef.current!.selectAll('titles').data(root.descendants().filter(d => d.depth === 1)).enter()
@@ -228,7 +229,8 @@ const TreeMap = (props: TreeMapProps) => {
       })
       .attr('font-size', d => `${d.data.symbolSize}px`)
       .attr('fill', 'white')
-      .on('dblclick', (_, d) => {
+      .attr('style', 'user-select: none;')
+      .on('click', (_, d) => {
         router.navigate(`/stock/trading?symbol=${d.data.name}`)
       })
   }
@@ -270,7 +272,8 @@ const TreeMap = (props: TreeMapProps) => {
       .attr('font-size', d => `${d.data.percentSize}px`)
       // .attr("fill", d => (d.data.data ?? 0) >= 0 ? 'hsl(var(--stock-up-color)' : 'hsl(var(--stock-down-color))')
       .attr('fill', () => '#fff')
-      .on('dblclick', (_, d) => {
+      .attr('style', 'user-select: none;') // corrected 'sty' to 'style' and added 'user-select: none;'
+      .on('click', (_, d) => {
         router.navigate(`/stock/trading?symbol=${d.data.name}`)
       })
   }

@@ -9,9 +9,7 @@ import {
   getStockTrades
 } from '@/api'
 import {
-  AiAlarm,
   Button,
-  CapsuleTabs,
   Carousel,
   CarouselContent,
   CollectDropdownMenu,
@@ -34,6 +32,7 @@ import {
 } from '@/components'
 import { useStockQuoteSubscribe, useTableData, useTableRowClickToStockTrading } from '@/hooks'
 import { useTime, useToken } from '@/store'
+import { dateUtils } from "@/utils/date"
 import { stockUtils } from '@/utils/stock'
 import { cn } from '@/utils/style'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
@@ -41,10 +40,9 @@ import dayjs from 'dayjs'
 import Decimal from 'decimal.js'
 import Autoplay from 'embla-carousel-autoplay'
 import { nanoid } from 'nanoid'
-import { memo, useCallback, useEffect, useMemo, useState } from 'react'
-import { stockBaseCodeInfoExtend, useSymbolQuery } from '../lib'
-import { dateUtils } from "@/utils/date"
 import type { TableProps } from "rc-table"
+import { memo, useCallback, useEffect, useMemo, useState } from 'react'
+import { chartManage, stockBaseCodeInfoExtend, useSymbolQuery } from '../lib'
 
 const StockInfo = () => {
   return (
@@ -176,7 +174,7 @@ const StockBaseInfo = () => {
         {trading !== 'intraDay' ? (
           trading === 'preMarket' ? (
             <StockQuoteBar
-              label="点击查看盘前分时走势"
+              label="点击查看分时走势"
               percent={data?.subPercent}
               close={data?.subClose}
               prevClose={data?.subPrevClose}
@@ -188,7 +186,7 @@ const StockBaseInfo = () => {
             />
           ) : (
             <StockQuoteBar
-              label="点击查看盘后分时走势"
+              label="点击查看分时走势"
               percent={data?.subPercent}
               close={data?.subClose}
               prevClose={data?.subPrevClose}
@@ -219,7 +217,7 @@ const StockQuoteBar = withTooltip(
     // const trading = useTime(s => s.getTrading())
 
     const onClick = () => {
-      // kChartUtils.setTimeIndex({ timeIndex: props.interval })
+      chartManage.setInterval(props.interval)
     }
 
     const trading = useMemo(() => stockUtils.intervalToTrading(props.interval), [props.interval])
@@ -319,7 +317,7 @@ const StockQuote = () => {
           <span>{Decimal.create(quote.data?.q_high).toFixed(3)}</span>
         </div>
         <div className="flex items-center justify-between">
-          <span>今日价&nbsp;&nbsp;</span>
+          <span>今开价&nbsp;&nbsp;</span>
           <span>{Decimal.create(quote.data?.q_open).toFixed(3)}</span>
         </div>
         <div className="flex items-center justify-between">
@@ -365,10 +363,24 @@ const StockQuote = () => {
                 <span>52周低&nbsp;&nbsp;</span>
                 <span>{Decimal.create(quote.data?.q_year_low).toFixed(3)}</span>
               </div>
+
+
             </>
           ) : null
         }
       </div>
+      { +bubble.value !== 0 && expanded ? (
+        <div className="flex h-12">
+          <div className="w-1/2 flex items-center justify-center text-stock-green h-full">
+            估值泡沫
+          </div>
+          <div className="w-1/2 flex items-center justify-center text-stock-green h-full">
+            <span className={cn(Decimal.create(bubble.value).gte(2) ? 'text-stock-down' : 'text-stock-up')}>
+              {Decimal.create(bubble.value).toFixed(2)}({bubble.text})
+            </span>
+          </div>
+        </div>
+      ) : null}
 
       {
         <div className="w-full text-center">
@@ -732,7 +744,7 @@ const GoldenStockPool = () => {
       width: '30%',
       sort: true,
       render: (close, row) => (
-        <SubscribeSpan.PriceBlink className="text-xs" symbol={row.symbol} initValue={close} initDirection={stockUtils.isUp(row)} showColor={false}  />
+        <SubscribeSpan.PriceBlink className="text-xs" symbol={row.symbol} initValue={close} initDirection={stockUtils.isUp(row)} showColor={false} />
       )
     },
     {

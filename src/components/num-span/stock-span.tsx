@@ -126,7 +126,7 @@ export const PriceSubscribeSpan = memo(
             onChange={onChange}
             {...props}
           />
-          {value === zeroText ? null : <span data-direction={direction}>{direction === 'up' ? '↑' : '↓'}</span>}
+          {value === zeroText ? null : <span data-direction={direction} className="text-xs">{direction === 'up' ? '↑' : '↓'}</span>}
         </span>
       )
     }

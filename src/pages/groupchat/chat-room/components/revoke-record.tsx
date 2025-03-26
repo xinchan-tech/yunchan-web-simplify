@@ -20,13 +20,7 @@ export const RevokeRecord = ({ revoker, sender, channel }: RevokeTextRecordProps
   const uid = WKSDK.shared().config.uid
   return (
     <div className="text-center text-xs text-tertiary my-2.5">
-      {
-        revoker === uid ? (
-          <span>你 撤回了一条消息</span>
-        ) : (
-          <span>{revokerInfo.data?.name ?? ''} 撤回了一条消息</span>
-        )
-      }
+      <span>{revokerInfo.data?.name ?? ''} 撤回了一条消息</span>
       {
         revoker === uid && sender === uid ? (
           <span className="text-xs cursor-pointer text-primary ml-2">

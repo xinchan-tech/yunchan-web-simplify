@@ -50,18 +50,6 @@ export const ChartContextMenu = (props: PropsWithChildren<ChartContextMenuProps>
             <ContextMenuItem onClick={_setYAxis({ left: MainYAxis.Price, right: MainYAxis.Percentage })}>双边坐标</ContextMenuItem>
           </ContextMenuSubContent>
         </ContextMenuSub>
-        <ContextMenuSeparator />
-        <ContextMenuSub>
-          <ContextMenuSubTrigger>附图数量</ContextMenuSubTrigger>
-          <ContextMenuSubContent className="w-24 min-w-4 border border-solid border-dialog-border" sideOffset={10}>
-            {/* <ContextMenuItem onClick={onChangeSecondaryIndicators(0)}>0个窗口</ContextMenuItem>
-            <ContextMenuItem onClick={onChangeSecondaryIndicators(1)}>1个窗口</ContextMenuItem>
-            <ContextMenuItem onClick={onChangeSecondaryIndicators(2)}>2个窗口</ContextMenuItem>
-            <ContextMenuItem onClick={onChangeSecondaryIndicators(3)}>3个窗口</ContextMenuItem>
-            <ContextMenuItem onClick={onChangeSecondaryIndicators(4)}>4个窗口</ContextMenuItem>
-            <ContextMenuItem onClick={onChangeSecondaryIndicators(5)}>5个窗口</ContextMenuItem> */}
-          </ContextMenuSubContent>
-        </ContextMenuSub>
       </ContextMenuContent>
     </ContextMenu>
   )

@@ -96,16 +96,15 @@ const Menu = () => {
     return router.navigate(path)
   }
 
-  // return router.navigate(...args)
   return (
     <div className="h-full flex flex-col items-center w-full px-0.5 box-border space-y-2.5 mt-1 text-foreground">
       {menus.map(item => (
-        <div className="text-center" key={item.title}>
+        <div className="text-center cursor-pointer hover:text-primary" key={item.title}>
           <div
             onClick={() => onNav(item.path)}
             onKeyDown={() => { }}
             className={cn(
-              'flex flex-col items-center cursor-pointer hover:bg-accent w-8 h-6 justify-center rounded-xs',
+              'flex flex-col items-center hover:bg-accent w-8 h-6 justify-center rounded-xs',
               pathname === item.path && 'bg-primary/30'
             )}
           >

@@ -1,16 +1,12 @@
 import { StockChartInterval, getLargeCapIndexes, getStockChartQuote } from '@/api'
-import { CapsuleTabs, JknIcon, StockSelect, SubscribeSpan } from '@/components'
+import { ChartTypes, JknChart, JknIcon, SubscribeSpan } from '@/components'
 import { useStockQuoteSubscribe } from '@/hooks'
 import { useConfig, useTime } from '@/store'
-import { getTradingPeriod } from '@/utils/date'
-import echarts, { type ECOption } from '@/utils/echarts'
 import { type StockTrading, stockUtils } from '@/utils/stock'
 import { cn, colorUtil } from '@/utils/style'
 import { useQuery } from '@tanstack/react-query'
-import { useMount, useSize, useUnmount, useUpdateEffect } from 'ahooks'
-import dayjs from 'dayjs'
 import Decimal from 'decimal.js'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { type ComponentRef, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router'
 import { ScrollContainer } from './components/scroll-container'
@@ -151,7 +147,7 @@ const LargeCap = () => {
               }
             )}
             onClick={() => onActiveStockChange(stock.symbol)}
-            onKeyDown={() => {}}
+            onKeyDown={() => { }}
           >
             <JknIcon.Stock symbol={stock.symbol} className="w-[28px] h-[28px]" />
             <div className="ml-3 flex flex-col">
@@ -179,44 +175,10 @@ const LargeCap = () => {
       </ScrollContainer>
 
       <div className="flex-1 relative">
-        <div onDoubleClick={onChartDoubleClick} className="w-full h-full p-2 box-border">
+        <div onDoubleClick={onChartDoubleClick} className="w-full h-full py-2 box-border">
           <LargeCapChart code={activeStock} type={stockType} />
         </div>
-        {activeKey !== '大盘指数' && (
-          <div className="absolute bottom-8 left-4 border border-solid border-border rounded p-0.5">
-            <CapsuleTabs
-              className={cn('space-x-0 text-sm p-0')}
-              type="text"
-              activeKey={stockType.toString()}
-              onChange={value => setStockType(+value as unknown as StockChartInterval)}
-            >
-              <CapsuleTabs.Tab
-                className={cn(
-                  'rounded-sm w-[48px] h-[30px] p-0 flex items-center justify-center',
-                  stockType === StockChartInterval.PRE_MARKET && '!bg-accent'
-                )}
-                value={StockChartInterval.PRE_MARKET.toString()}
-                label={t('stockChart.before')}
-              />
-              <CapsuleTabs.Tab
-                className={cn(
-                  'rounded-sm w-[48px] h-[30px] p-0 flex items-center justify-center',
-                  stockType === StockChartInterval.INTRA_DAY && '!bg-accent'
-                )}
-                value={StockChartInterval.INTRA_DAY.toString()}
-                label={t('stockChart.in')}
-              />
-              <CapsuleTabs.Tab
-                className={cn(
-                  'rounded-sm w-[48px] h-[30px] p-0 flex items-center justify-center',
-                  stockType === StockChartInterval.AFTER_HOURS && '!bg-accent'
-                )}
-                value={StockChartInterval.AFTER_HOURS.toString()}
-                label={t('stockChart.after')}
-              />
-            </CapsuleTabs>
-          </div>
-        )}
+
       </div>
     </div>
   )
@@ -227,386 +189,520 @@ interface LargeCapChartProps {
   type: StockChartInterval
 }
 
+
+
 const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
-  const chartRef = useRef<echarts.ECharts>()
-  const chartDomRef = useRef<HTMLDivElement>(null)
-  const { getStockColor } = useConfig()
-  const stockUpColor = `hsl(${getStockColor()})`
-  const stockDownColor = `hsl(${getStockColor(false)})`
-  const trading = useTime(s => s.getTrading())
-
-  const interval = ((c, t) => {
-    if (['SPX', 'IXIC', 'DJI'].includes(c!)) {
-      return StockChartInterval.INTRA_DAY
-    }
-    return t
-  })(code, type)
-
-  const queryData = useQuery({
-    queryKey: [getStockChartQuote.cacheKey, code, type],
-    queryFn: () => getStockChartQuote(code!, type!),
-    enabled: !!code && type !== undefined,
-    refetchInterval: 60 * 1000,
-    placeholderData: () => ({
-      list: []
-    })
-  })
-
-  const [stockData, setStockData] = useState<typeof queryData.data>(queryData.data)
-
-  useUpdateEffect(() => {
-    setStockData(queryData.data)
-  }, [queryData.data])
+  const chart = useRef<ComponentRef<typeof JknChart>>(null)
 
   useEffect(() => {
-    renderChart(stockData, trading)
-  }, [stockData, trading])
-
-  const renderChart = (data: typeof queryData.data, _trading: StockTrading) => {
-    if (!data) return
-    const dataset: [string, number, number][] = []
-    let prevClose = 0
-    let lastPercent = 0
-    let lastPrice = 0
-    for (const s of data.list) {
-      const t = stockUtils.toStockWithExt(s)
-      prevClose = t.prevClose!
-      lastPercent = t.percent!
-      lastPrice = t.close!
-      dataset.push([dayjs(t.timestamp).tz('America/New_York').format('YYYY-MM-DD HH:mm:ss'), t.close!, t.percent!])
+    let PRE_NUMBER = 330
+    const POST_NUMBER = 390
+    let AFTER_NUMBER = 240
+    const c = chart.current?.getChart()
+    const splitId = 'split-indicator-large-cap'
+    if ('IXIC' === code || 'DJI' === code || 'SPX' === code) {
+      PRE_NUMBER = 0
+      AFTER_NUMBER = 0
+      c?.removeIndicator({
+        id: splitId
+      })
+    } else {
+      c?.createIndicator({
+        name: 'split-indicator',
+        id: splitId,
+        calcParams: [[PRE_NUMBER / (PRE_NUMBER + POST_NUMBER + AFTER_NUMBER), (PRE_NUMBER + POST_NUMBER) / (PRE_NUMBER + POST_NUMBER + AFTER_NUMBER)]],
+      }, true, {
+        id: ChartTypes.MAIN_PANE_ID
+      })
     }
 
-    const xAxisData = getTradingPeriod(intervalToTradingMap[interval] ?? 'intraDay', dataset[0] ? dataset[0][0] : '')
 
-    const style = colorUtil.hexToRGB(getStockColor(lastPercent >= 0, 'hex'))!
+    c?.setXAxisTick(PRE_NUMBER + POST_NUMBER + AFTER_NUMBER)
+    c?.setLeftMinVisibleBarCount(1)
+    const upColor = useConfig.getState().getStockColor(true, 'hex')
+    const downColor = useConfig.getState().getStockColor(false, 'hex')
 
-    chartRef.current?.setOption({
-      axisPointer: {
-        label: {
-          formatter: (params: any) => {
-            if (params.axisDimension !== 'y') return ''
-
-            const v = Decimal.create(params.value)
-            const perv = v.minus(prevClose).div(prevClose).mul(100)
-
-            if (params.axisIndex === 0) {
-              return `{${perv.gte(0) ? 'u' : 'd'}|${v.toFixed(2)}}`
-            }
-          }
-        }
-      },
-      yAxis: [
-        {
-          axisLabel: {
-            color: (v: number) => {
-              return v >= prevClose ? stockUpColor : stockDownColor
-            }
-          }
+    c?.setStyles({
+      grid: {
+        vertical: {
+          show: false
         },
-        {
-          axisLabel: {
-            formatter: (v: number) => {
-              const perv = Decimal.create(v).minus(prevClose).div(prevClose).mul(100)
-              return `${perv.gte(0) ? '+' : ''}${perv.toFixed(2)}%`
-            },
-            color: (v: number) => {
-              const perv = Decimal.create(v).minus(prevClose).div(prevClose).mul(100)
-              return perv.gte(0) ? stockUpColor : stockDownColor
-            }
-          }
+        horizontal: {
+          show: false
         }
-      ],
-      xAxis: {
-        data: xAxisData
       },
-      graphic: {
-        elements: [
-          {
-            type: 'text',
-            left: 'center',
-            top: '30%',
-            style: {
-              text:
-                interval === StockChartInterval.INTRA_DAY
-                  ? ''
-                  : interval === StockChartInterval.PRE_MARKET
-                    ? '盘前交易'
-                    : `${_trading === 'intraDay' ? '上一交易日\n    (盘后)' : '盘后交易'}`,
-              fill: 'rgba(255, 255, 255, .15)',
-              fontSize: 64,
-              textVerticalAlign: 'top'
-            }
-          }
-        ]
-      },
-      series: [
-        {
-          data: dataset,
-          encode: {
-            x: [0],
-            y: [1]
-          },
-          color: `rgba(${style.r}, ${style.g}, ${style.b} , 1)`,
-          areaStyle: {
-            color: {
-              x: 0,
-              y: 0,
-              x2: 0,
-              y2: 1,
-              colorStops: [
-                {
-                  offset: 0,
-                  color: `rgba(${style.r}, ${style.g}, ${style.b}, .35)` // 0% 处的颜色
-                },
-                {
-                  offset: 0.6,
-                  color: `rgba(${style.r}, ${style.g}, ${style.b}, .2)` // 100% 处的颜色
-                },
-                {
-                  offset: 1,
-                  color: 'transparent' // 100% 处的颜色
-                }
-              ]
-            }
-          },
-          markLine: {
-            symbol: 'none',
-            silent: true,
+      candle: {
+        type: 'area' as any,
 
-            data: [
-              [
-                {
-                  xAxis: 'max',
-                  yAxis: lastPrice
-                },
-                {
-                  x: (chartRef.current?.getWidth() ?? 0) - 50,
-                  yAxis: lastPrice,
-                  lineStyle: {
-                    color: `rgba(${style.r}, ${style.g}, ${style.b} , 1)`,
-                    width: 1,
-                    type: 'dashed'
-                  },
-                  label: {
-                    formatter: `{${lastPercent > 0 ? 'u' : 'd'}|${lastPrice.toFixed(2)}}`,
-                    rich: {
-                      u: {
-                        backgroundColor: stockUpColor,
-                        width: '100%',
-                        color: '#fff',
-                        padding: 3,
-                        fontSize: 10
-                        // borderRadius: 4
-                      },
-                      d: {
-                        backgroundColor: stockDownColor,
-                        width: '100%',
-                        color: '#fff',
-                        fontSize: 10,
-                        padding: 3
-                        // borderRadius: 4
-                      }
-                    }
-                  }
-                }
-              ]
+        area: {
+          lineColor: data => {
+            const postData = data.slice(0, POST_NUMBER + PRE_NUMBER).pop()
+            const lastData = data[data.length]
+
+            const lastColor = Decimal.create(lastData?.close).gt(lastData?.prevClose ?? 0) ? upColor : downColor
+            const preColor = data.length > PRE_NUMBER ? '#50535E' : lastColor
+
+            const afterColor = data.length >= POST_NUMBER + PRE_NUMBER + AFTER_NUMBER ? '#50535E' : lastColor
+
+            return [
+              { type: 'segment', color: preColor, offset: PRE_NUMBER },
+              { type: 'segment', color: Decimal.create(postData?.close).gt(postData?.prevClose ?? 0) ? upColor : downColor, offset: POST_NUMBER + PRE_NUMBER },
+              { type: 'segment', color: afterColor },
             ]
-          }
+          },
+          backgroundColor(data) {
+            const postData = data.slice(0, POST_NUMBER + PRE_NUMBER).pop()
+            const lastData = data[data.length]
+            const lastColor = Decimal.create(lastData?.close).gt(lastData?.prevClose ?? 0) ? upColor : downColor
+
+            const color = Decimal.create(postData?.close).gt(postData?.prevClose ?? 0) ? upColor : downColor
+
+            const preColor = data.length > PRE_NUMBER ? '#DBDBDB' : lastColor
+            const afterColor = data.length >= POST_NUMBER + PRE_NUMBER + AFTER_NUMBER ? '#DBDBDB' : lastColor
+
+            return [
+              {
+                type: 'segment', offset: PRE_NUMBER, color: [{
+                  offset: 0,
+                  color: colorUtil.rgbaToString(colorUtil.hexToRGBA(preColor, 0.01))
+                }, {
+                  offset: 1,
+                  color: colorUtil.rgbaToString(colorUtil.hexToRGBA(preColor, 0.2))
+                }]
+              },
+              {
+                type: 'segment', offset: POST_NUMBER + PRE_NUMBER, color: [{
+                  offset: 0,
+                  color: colorUtil.rgbaToString(colorUtil.hexToRGBA(color, 0.01))
+                }, {
+                  offset: 1,
+                  color: colorUtil.rgbaToString(colorUtil.hexToRGBA(color, 0.2))
+                }]
+              },
+              {
+                type: 'segment', color: [{
+                  offset: 0,
+                  color: colorUtil.rgbaToString(colorUtil.hexToRGBA(afterColor, 0.01))
+                }, {
+                  offset: 1,
+                  color: colorUtil.rgbaToString(colorUtil.hexToRGBA(afterColor, 0.2))
+                }]
+              },
+            ]
+          },
         },
-        {
-          data: dataset,
-          encode: {
-            x: [0],
-            y: [1]
-          }
+        tooltip: {
+          custom: [],
+          expand: false
         }
-      ]
+      }
+
     })
-  }
+  }, [code])
 
-  const options: ECOption = {
-    grid: {
-      left: 10,
-      right: 50,
-      top: '15',
-      bottom: 24
-    },
-    tooltip: {
-      trigger: 'axis',
-      showContent: false,
-      axisPointer: {
-        animation: false,
-        type: 'cross',
-        label: {
-          precision: 2
-        }
-      }
-    },
-    xAxis: {
-      type: 'category',
-      data: [],
-
-      splitLine: {
-        show: false,
-        lineStyle: {
-          color: '#202020',
-          type: 'dashed'
-        }
-      },
-      axisLine: {
-        show: false,
-        lineStyle: {
-          color: '#202020'
-        }
-      },
-      axisPointer: {
-        lineStyle: {
-          color: '#404040',
-          type: 'dashed'
-        },
-        label: {
-          show: false
-        }
-      },
-      axisLabel: {
-        alignMinLabel: 'left',
-        interval(index) {
-          return index % 30 === 0
-        },
-        showMinLabel: true,
-        formatter: (value, index) => {
-          return index % 60 === 0 ? dayjs(value).format('HH:mm') : ''
-        },
-        color: '#999999',
-        fontSize: 10
-      }
-    },
-    axisPointer: {
-      link: [{ yAxisIndex: 'all', xAxisIndex: 'all' }],
-      lineStyle: {
-        color: '#404040',
-        type: 'dashed'
-      },
-      label: {
-        position: 'right',
-        backgroundColor: '#777',
-        color: '#fff',
-        padding: 0,
-        // borderRadius: 4,
-        fontSize: 10,
-        rich: {
-          u: {
-            backgroundColor: stockUpColor,
-            width: '100%',
-            color: '#fff',
-            padding: [2, 4, 2, 4]
-            // borderRadius: 4
-          },
-          d: {
-            backgroundColor: stockDownColor,
-            width: '100%',
-            color: '#fff',
-            padding: [2, 4, 2, 4]
-            // borderRadius: 4
-          }
-        }
-      }
-    },
-    yAxis: [
-      {
-        splitNumber: 8,
-        scale: true,
-        position: 'right',
-        show: true,
-        axisLine: {
-          show: false,
-          lineStyle: {
-            color: '#202020',
-            type: 'dashed'
-          }
-        },
-        axisPointer: {
-          lineStyle: {
-            color: '#404040',
-            type: 'dashed'
-          }
-        },
-        splitLine: {
-          show: false,
-          lineStyle: {
-            color: '#202020',
-            type: 'dashed'
-          }
-        },
-        axisLabel: {
-          formatter: (v: number) => (v <= -9999 ? '-' : v.toFixed(2)),
-          color: stockUpColor,
-          fontSize: 10
-        }
-      },
-      {
-        splitNumber: 8,
-        position: 'right',
-        scale: true,
-        show: false,
-        axisPointer: {
-          lineStyle: {
-            color: '#404040',
-            type: 'dashed'
-          }
-        },
-        axisLine: {
-          show: false,
-          lineStyle: {
-            color: '#202020',
-            type: 'dashed'
-          }
-        },
-        splitLine: {
-          show: false
-        },
-        axisLabel: {
-          formatter: (v: number) => {
-            return v <= -9999 ? '-' : v.toFixed(2)
-          },
-          color: stockUpColor,
-          fontSize: 10
-        }
-      }
-    ],
-    series: [
-      {
-        type: 'line',
-        color: stockUpColor,
-        lineStyle: { width: 1 },
-        symbol: 'none',
-        markLine: {
-          symbol: 'none',
-          silent: true
-        }
-      },
-      { type: 'line', yAxisIndex: 1, showSymbol: false, color: 'transparent' }
-    ]
-  }
-
-  useMount(() => {
-    chartRef.current = echarts.init(chartDomRef.current)
-    chartRef.current.setOption(options)
-    renderChart(stockData, trading)
+  const candlesticks = useQuery({
+    queryKey: [getStockChartQuote.cacheKey, code],
+    queryFn: () => getStockChartQuote(code!, ['IXIC', 'DJI', 'SPX'].includes(code!) ? StockChartInterval.INTRA_DAY : 'full-day'),
+    enabled: !!code && type !== undefined,
+    placeholderData: () => ({
+      list: []
+    }),
+    refetchInterval: 30 * 1000,
+    select: ({ list }) => {
+      return list.map(s => stockUtils.toStock(s))
+    }
   })
 
-  useUnmount(() => {
-    chartRef.current?.dispose()
-    chartRef.current = undefined
-  })
+  useEffect(() => {
+    chart.current?.applyNewData(candlesticks.data ?? [])
 
-  const size = useSize(chartDomRef)
+  }, [candlesticks])
 
-  useUpdateEffect(() => {
-    chartRef.current?.resize()
-  }, [size])
 
-  return <div ref={chartDomRef} className="w-full h-full" />
+
+
+  return <JknChart ref={chart} className="w-full h-full" showLogo />
+  // const chartRef = useRef<echarts.ECharts>()
+  // const chartDomRef = useRef<HTMLDivElement>(null)
+  // const { getStockColor } = useConfig()
+  // const stockUpColor = `hsl(${getStockColor()})`
+  // const stockDownColor = `hsl(${getStockColor(false)})`
+  // const trading = useTime(s => s.getTrading())
+
+
+
+  // const interval = ((c, t) => {
+  //   if (['SPX', 'IXIC', 'DJI'].includes(c!)) {
+  //     return StockChartInterval.INTRA_DAY
+  //   }
+  //   return t
+  // })(code, type)
+
+  // const queryData = useQuery({
+  //   queryKey: [getStockChartQuote.cacheKey, code, type],
+  //   queryFn: () => getStockChartQuote(code!, type!),
+  //   enabled: !!code && type !== undefined,
+  //   refetchInterval: 60 * 1000,
+  //   placeholderData: () => ({
+  //     list: []
+  //   })
+  // })
+
+  // const [stockData, setStockData] = useState<typeof queryData.data>(queryData.data)
+
+  // useUpdateEffect(() => {
+  //   setStockData(queryData.data)
+  // }, [queryData.data])
+
+  // useEffect(() => {
+  //   renderChart(stockData, trading)
+  // }, [stockData, trading])
+
+  // const renderChart = (data: typeof queryData.data, _trading: StockTrading) => {
+  //   if (!data) return
+  //   const dataset: [string, number, number][] = []
+  //   let prevClose = 0
+  //   let lastPercent = 0
+  //   let lastPrice = 0
+  //   for (const s of data.list) {
+  //     const t = stockUtils.toStockWithExt(s)
+  //     prevClose = t.prevClose!
+  //     lastPercent = t.percent!
+  //     lastPrice = t.close!
+  //     dataset.push([dayjs(t.timestamp).tz('America/New_York').format('YYYY-MM-DD HH:mm:ss'), t.close!, t.percent!])
+  //   }
+
+  //   const xAxisData = getTradingPeriod(intervalToTradingMap[interval] ?? 'intraDay', dataset[0] ? dataset[0][0] : '')
+
+  //   const style = colorUtil.hexToRGB(getStockColor(lastPercent >= 0, 'hex'))!
+
+  //   chartRef.current?.setOption({
+  //     axisPointer: {
+  //       label: {
+  //         formatter: (params: any) => {
+  //           if (params.axisDimension !== 'y') return ''
+
+  //           const v = Decimal.create(params.value)
+  //           const perv = v.minus(prevClose).div(prevClose).mul(100)
+
+  //           if (params.axisIndex === 0) {
+  //             return `{${perv.gte(0) ? 'u' : 'd'}|${v.toFixed(2)}}`
+  //           }
+  //         }
+  //       }
+  //     },
+  //     yAxis: [
+  //       {
+  //         axisLabel: {
+  //           color: (v: number) => {
+  //             return v >= prevClose ? stockUpColor : stockDownColor
+  //           }
+  //         }
+  //       },
+  //       {
+  //         axisLabel: {
+  //           formatter: (v: number) => {
+  //             const perv = Decimal.create(v).minus(prevClose).div(prevClose).mul(100)
+  //             return `${perv.gte(0) ? '+' : ''}${perv.toFixed(2)}%`
+  //           },
+  //           color: (v: number) => {
+  //             const perv = Decimal.create(v).minus(prevClose).div(prevClose).mul(100)
+  //             return perv.gte(0) ? stockUpColor : stockDownColor
+  //           }
+  //         }
+  //       }
+  //     ],
+  //     xAxis: {
+  //       data: xAxisData
+  //     },
+  //     graphic: {
+  //       elements: [
+  //         {
+  //           type: 'text',
+  //           left: 'center',
+  //           top: '30%',
+  //           style: {
+  //             text:
+  //               interval === StockChartInterval.INTRA_DAY
+  //                 ? ''
+  //                 : interval === StockChartInterval.PRE_MARKET
+  //                   ? '盘前交易'
+  //                   : `${_trading === 'intraDay' ? '上一交易日\n    (盘后)' : '盘后交易'}`,
+  //             fill: 'rgba(255, 255, 255, .15)',
+  //             fontSize: 64,
+  //             textVerticalAlign: 'top'
+  //           }
+  //         }
+  //       ]
+  //     },
+  //     series: [
+  //       {
+  //         data: dataset,
+  //         encode: {
+  //           x: [0],
+  //           y: [1]
+  //         },
+  //         color: `rgba(${style.r}, ${style.g}, ${style.b} , 1)`,
+  //         areaStyle: {
+  //           color: {
+  //             x: 0,
+  //             y: 0,
+  //             x2: 0,
+  //             y2: 1,
+  //             colorStops: [
+  //               {
+  //                 offset: 0,
+  //                 color: `rgba(${style.r}, ${style.g}, ${style.b}, .35)` // 0% 处的颜色
+  //               },
+  //               {
+  //                 offset: 0.6,
+  //                 color: `rgba(${style.r}, ${style.g}, ${style.b}, .2)` // 100% 处的颜色
+  //               },
+  //               {
+  //                 offset: 1,
+  //                 color: 'transparent' // 100% 处的颜色
+  //               }
+  //             ]
+  //           }
+  //         },
+  //         markLine: {
+  //           symbol: 'none',
+  //           silent: true,
+
+  //           data: [
+  //             [
+  //               {
+  //                 xAxis: 'max',
+  //                 yAxis: lastPrice
+  //               },
+  //               {
+  //                 x: (chartRef.current?.getWidth() ?? 0) - 50,
+  //                 yAxis: lastPrice,
+  //                 lineStyle: {
+  //                   color: `rgba(${style.r}, ${style.g}, ${style.b} , 1)`,
+  //                   width: 1,
+  //                   type: 'dashed'
+  //                 },
+  //                 label: {
+  //                   formatter: `{${lastPercent > 0 ? 'u' : 'd'}|${lastPrice.toFixed(2)}}`,
+  //                   rich: {
+  //                     u: {
+  //                       backgroundColor: stockUpColor,
+  //                       width: '100%',
+  //                       color: '#fff',
+  //                       padding: 3,
+  //                       fontSize: 10
+  //                       // borderRadius: 4
+  //                     },
+  //                     d: {
+  //                       backgroundColor: stockDownColor,
+  //                       width: '100%',
+  //                       color: '#fff',
+  //                       fontSize: 10,
+  //                       padding: 3
+  //                       // borderRadius: 4
+  //                     }
+  //                   }
+  //                 }
+  //               }
+  //             ]
+  //           ]
+  //         }
+  //       },
+  //       {
+  //         data: dataset,
+  //         encode: {
+  //           x: [0],
+  //           y: [1]
+  //         }
+  //       }
+  //     ]
+  //   })
+  // }
+
+  // const options: ECOption = {
+  //   grid: {
+  //     left: 10,
+  //     right: 50,
+  //     top: '15',
+  //     bottom: 24
+  //   },
+  //   tooltip: {
+  //     trigger: 'axis',
+  //     showContent: false,
+  //     axisPointer: {
+  //       animation: false,
+  //       type: 'cross',
+  //       label: {
+  //         precision: 2
+  //       }
+  //     }
+  //   },
+  //   xAxis: {
+  //     type: 'category',
+  //     data: [],
+
+  //     splitLine: {
+  //       show: false,
+  //       lineStyle: {
+  //         color: '#202020',
+  //         type: 'dashed'
+  //       }
+  //     },
+  //     axisLine: {
+  //       show: false,
+  //       lineStyle: {
+  //         color: '#202020'
+  //       }
+  //     },
+  //     axisPointer: {
+  //       lineStyle: {
+  //         color: '#404040',
+  //         type: 'dashed'
+  //       },
+  //       label: {
+  //         show: false
+  //       }
+  //     },
+  //     axisLabel: {
+  //       alignMinLabel: 'left',
+  //       interval(index) {
+  //         return index % 30 === 0
+  //       },
+  //       showMinLabel: true,
+  //       formatter: (value, index) => {
+  //         return index % 60 === 0 ? dayjs(value).format('HH:mm') : ''
+  //       },
+  //       color: '#999999',
+  //       fontSize: 10
+  //     }
+  //   },
+  //   axisPointer: {
+  //     link: [{ yAxisIndex: 'all', xAxisIndex: 'all' }],
+  //     lineStyle: {
+  //       color: '#404040',
+  //       type: 'dashed'
+  //     },
+  //     label: {
+  //       position: 'right',
+  //       backgroundColor: '#777',
+  //       color: '#fff',
+  //       padding: 0,
+  //       // borderRadius: 4,
+  //       fontSize: 10,
+  //       rich: {
+  //         u: {
+  //           backgroundColor: stockUpColor,
+  //           width: '100%',
+  //           color: '#fff',
+  //           padding: [2, 4, 2, 4]
+  //           // borderRadius: 4
+  //         },
+  //         d: {
+  //           backgroundColor: stockDownColor,
+  //           width: '100%',
+  //           color: '#fff',
+  //           padding: [2, 4, 2, 4]
+  //           // borderRadius: 4
+  //         }
+  //       }
+  //     }
+  //   },
+  //   yAxis: [
+  //     {
+  //       splitNumber: 8,
+  //       scale: true,
+  //       position: 'right',
+  //       show: true,
+  //       axisLine: {
+  //         show: false,
+  //         lineStyle: {
+  //           color: '#202020',
+  //           type: 'dashed'
+  //         }
+  //       },
+  //       axisPointer: {
+  //         lineStyle: {
+  //           color: '#404040',
+  //           type: 'dashed'
+  //         }
+  //       },
+  //       splitLine: {
+  //         show: false,
+  //         lineStyle: {
+  //           color: '#202020',
+  //           type: 'dashed'
+  //         }
+  //       },
+  //       axisLabel: {
+  //         formatter: (v: number) => (v <= -9999 ? '-' : v.toFixed(2)),
+  //         color: stockUpColor,
+  //         fontSize: 10
+  //       }
+  //     },
+  //     {
+  //       splitNumber: 8,
+  //       position: 'right',
+  //       scale: true,
+  //       show: false,
+  //       axisPointer: {
+  //         lineStyle: {
+  //           color: '#404040',
+  //           type: 'dashed'
+  //         }
+  //       },
+  //       axisLine: {
+  //         show: false,
+  //         lineStyle: {
+  //           color: '#202020',
+  //           type: 'dashed'
+  //         }
+  //       },
+  //       splitLine: {
+  //         show: false
+  //       },
+  //       axisLabel: {
+  //         formatter: (v: number) => {
+  //           return v <= -9999 ? '-' : v.toFixed(2)
+  //         },
+  //         color: stockUpColor,
+  //         fontSize: 10
+  //       }
+  //     }
+  //   ],
+  //   series: [
+  //     {
+  //       type: 'line',
+  //       color: stockUpColor,
+  //       lineStyle: { width: 1 },
+  //       symbol: 'none',
+  //       markLine: {
+  //         symbol: 'none',
+  //         silent: true
+  //       }
+  //     },
+  //     { type: 'line', yAxisIndex: 1, showSymbol: false, color: 'transparent' }
+  //   ]
+  // }
+
+  // useMount(() => {
+  //   chartRef.current = echarts.init(chartDomRef.current)
+  //   chartRef.current.setOption(options)
+  //   renderChart(stockData, trading)
+  // })
+
+  // useUnmount(() => {
+  //   chartRef.current?.dispose()
+  //   chartRef.current = undefined
+  // })
+
+  // const size = useSize(chartDomRef)
+
+  // useUpdateEffect(() => {
+  //   chartRef.current?.resize()
+  // }, [size])
+
+
 }
 
 export default LargeCap

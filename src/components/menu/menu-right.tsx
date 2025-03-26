@@ -40,11 +40,11 @@ const MenuRight = () => {
       title: '榜单',
       path: '/push'
     },
-    {
-      icon: <JknIcon.Svg name="financial" size={20} />,
-      title: '财务',
-      path: '/finance'
-    },
+    // {
+    //   icon: <JknIcon.Svg name="financial" size={20} />,
+    //   title: '财务',
+    //   path: '/finance'
+    // },
     {
       icon: <JknIcon.Svg name="alarm" size={20} />,
       title: '警报',

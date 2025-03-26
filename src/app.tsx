@@ -195,9 +195,9 @@ const App = () => {
 
           <div className="w-[40px] flex-shrink-0 flex flex-col mt-1 bg-background rounded-tl-xs">
             <MenuRight />
-            <div className="mt-auto">
+            {/* <div className="mt-auto">
               <AiAlarmNotice />
-            </div>
+            </div> */}
           </div>
         </div>
       </div>

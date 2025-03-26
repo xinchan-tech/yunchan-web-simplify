@@ -1,4 +1,4 @@
-import { ChatMessageType } from '@/store'
+import { ChatCmdType, ChatMessageType } from '@/store'
 import { stringToUint8Array } from '@/utils/string'
 import { Buffer } from 'buffer'
 import { assign } from 'radash'
@@ -210,7 +210,24 @@ export const ConversationTransform = {
     WKSDK.shared().channelManager.setChannleInfoForCache(channelInfo)
 
     if (v.recents.length) {
-      const message = MessageTransform.toMessage(v.recents[0])
+      console.log("🚀 ~ v.recents:", v.recents)
+
+      const m = v.recents.find((r: any) => {
+        const _m = MessageTransform.toMessage(r)
+
+        if(_m.contentType !== ChatMessageType.Cmd){
+          return true
+        }
+
+        if(_m.content.cmd === ChatCmdType.MessageRevoke){
+          return true
+        }
+
+        return false
+      })
+      
+      // const r = v.recents.find(r => r.)
+      const message = MessageTransform.toMessage(m ?? v.recents[0])
       message.channel = conversation.channel
       conversation.lastMessage = message
     }
