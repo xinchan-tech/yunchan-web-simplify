@@ -304,11 +304,9 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
     queryKey: [getStockChartQuote.cacheKey, code],
     queryFn: () => getStockChartQuote(code!, ['IXIC', 'DJI', 'SPX'].includes(code!) ? StockChartInterval.INTRA_DAY : 'full-day'),
     enabled: !!code && type !== undefined,
-    placeholderData: () => ({
-      list: []
-    }),
+    placeholderData: () => ([]),
     refetchInterval: 30 * 1000,
-    select: ({ list }) => {
+    select: (list) => {
       return list.map(s => stockUtils.toStock(s))
     }
   })
