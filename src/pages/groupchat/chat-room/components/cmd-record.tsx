@@ -1,26 +1,17 @@
 import { useQuery } from "@tanstack/react-query"
-import WKSDK, { type Channel } from "wukongimjssdk"
+import WKSDK, { type Message, type Channel } from "wukongimjssdk"
 import { fetchUserInChannel } from "../../lib/utils"
 
-interface RevokeTextRecordProps {
-  revoker?: string
-  sender?: string
-  channel?: Channel
-  onReEdit: () => void
+interface CmdTextRecordProps {
+  message: Message
 }
 
-export const RevokeRecord = ({ revoker, sender, channel }: RevokeTextRecordProps) => {
-
-  const revokerInfo = useQuery({
-    queryKey: ['get-revoke-record-user', revoker, channel?.channelID],
-    queryFn: () => fetchUserInChannel(channel!, revoker!),
-    enabled: !!channel
-  })
+export const CmdRecord = ({ message }: CmdTextRecordProps) => {
 
   const uid = WKSDK.shared().config.uid
   return (
     <div className="text-center text-xs text-tertiary my-2.5">
-      {
+      {/* {
         revoker === uid ? (
           <span>你 撤回了一条消息</span>
         ) : (
@@ -33,7 +24,7 @@ export const RevokeRecord = ({ revoker, sender, channel }: RevokeTextRecordProps
             重新编辑
           </span>
         ) : null
-      }
+      } */}
     </div>
   )
 }

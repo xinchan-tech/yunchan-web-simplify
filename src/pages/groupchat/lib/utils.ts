@@ -71,3 +71,7 @@ export const getChannelDetailFromChannel = (channel?: Channel) => {
 
   return info.orgData as Awaited<ReturnType<typeof getChannelDetail>>
 }
+
+export const isRevokeMessage = (message: Message) => {
+  return message.remoteExtra.revoke
+}

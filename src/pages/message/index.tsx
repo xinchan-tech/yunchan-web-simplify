@@ -187,7 +187,7 @@ const MessageCenter = () => {
       </div>
       <div className="flex-1 box-border overflow-hidden">
         {type === 'chat' ? (
-          <ChatMessageContent msgKey={active} />
+          <ChatMessageContent msgKey={active === '0' ? '1' : active} />
         ) : (
           <SystemMessageContent msgKey={active} name={types.data?.find(item => item.id === active)?.name} avatar={select ? <JknAvatar className="mr-3" src={select.avatar} title={select.name ?? ''} /> : null} />
         )}
@@ -222,7 +222,7 @@ const ChatMessageContent = (props: MessageContentProps) => {
     if (fromUid !== props.msgKey) return
 
     queryClient.cancelQueries({ queryKey: [getChatRecords.cacheKey, props.msgKey] })
-   
+
     queryClient.setQueryData<typeof chats.data>(
       [getChatRecords.cacheKey, props.msgKey],
       produce(draft => {
@@ -411,7 +411,11 @@ type SystemMessageType = Awaited<ReturnType<typeof getNoticeList>>['items']
 const SystemMessageContent = (props: SystemMessageContentProps) => {
   const notices = useQuery({
     queryKey: [getNoticeList.cacheKey, props.msgKey],
-    queryFn: () => getNoticeList(props.msgKey!)
+    queryFn: () => getNoticeList(props.msgKey!),
+    select: data => {
+      data.items.reverse()
+      return data
+    }
   })
 
   const data = useMemo<SystemMessageType>(() => {
@@ -433,7 +437,7 @@ const SystemMessageContent = (props: SystemMessageContentProps) => {
               <div className="w-1/5 h-0 border-0 border-b border-solid border-b-border mr-2" />
               <JknIcon name="ic_us" className="w-3 h-3 mr-2" />
               美东时间&nbsp;
-              {dateUtils.toUsDay(msg.create_time).format('MM-DD w HH:mm')}
+              {dateUtils.toUsDay(+msg.create_time).format('MM-DD W HH:mm')}
               <div className="w-1/5 h-0 border-0 border-b border-solid border-b-border ml-2" />
             </div>
             <div className="flex items-center w-fit max-w-[960px] overflow-hidden">

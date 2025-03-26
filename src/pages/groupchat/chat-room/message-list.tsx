@@ -12,10 +12,12 @@ import { RevokeRecord } from "./components/revoke-record"
 import { ImageRecord } from "./components/image-record"
 import { chatEvent } from "../lib/event"
 import { revokeMessage } from "@/api"
-import { isChannelManager, isChannelOwner } from "../lib/utils"
+import { isChannelManager, isChannelOwner, isRevokeMessage } from "../lib/utils"
 import { messageCache } from "../cache"
 import { useLatestRef } from "@/hooks"
 import { UsernameSpan } from "../components/username-span"
+import { CmdRecord } from "./components/cmd-record"
+import { SystemRecord } from "./components/system-record"
 
 const mergePrevMessages = (oldData: Message[], newData: Message[]) => {
   const oldDataFirst = oldData[0]
@@ -46,9 +48,9 @@ const useMessages = () => {
         limit: 40,
         pullMode: PullMode.Down,
       })
-
       return r
     },
+    
     initialPageParam: 0,
     getNextPageParam: () => undefined,
     getPreviousPageParam: (firstPage) => {
@@ -78,7 +80,8 @@ const useMessages = () => {
       revokeMessage.forEach(item => {
         const index = normalMessage.findIndex(msg => msg.messageID === item.content.param.message_id)
         if (index !== -1) {
-          normalMessage[index].content = item.content
+          normalMessage[index].remoteExtra.revoke = true
+          normalMessage[index].remoteExtra.revoker = item.fromUID
         }
       })
 
@@ -130,8 +133,10 @@ const useMessages = () => {
     const message = messages.find(msg => msg.messageID === cmd.content.param.message_id)
     if (!message) return
 
-    message.content = content
+    message.remoteExtra.revoke = true
+    message.remoteExtra.revoker = cmd.fromUID
     const r = [...messages]
+
     setMessages(r)
     messageCache.updateBatch(r.slice(-40), channel)
   }
@@ -156,7 +161,6 @@ export const ChatMessageList = () => {
   const { messages, fetchPreviousPage, hasMore, appendMessage, revokeMessage } = useMessages()
   const messagesLast = useLatestRef(messages)
   const scrollRef = useRef<ComponentRef<typeof JknVirtualInfinite>>(null)
-
   useMessageListener((message) => {
     if (message.channel.channelID !== channel?.channelID) return
     chatEvent.emit('messageUpdate', null)
@@ -242,8 +246,6 @@ export const ChatMessageList = () => {
       chatEvent.off('messageInit', initHandler)
     }
   }, [messages, messagesLast])
-
-
   return (
     <JknVirtualInfinite className="w-full h-full chat-message-scroll-list"
       itemHeight={44}
@@ -255,11 +257,15 @@ export const ChatMessageList = () => {
       fetchMore={fetchPreviousPage}
       renderItem={(msg: Message) => (
         <ChatMessageRow key={msg.messageID} message={msg} onMessageSend={_onMessageSend}>
-          {{
-            [ChatMessageType.Text]: <TextRecord message={msg} />,
-            [ChatMessageType.Cmd]: <RevokeRecord onReEdit={() => { }} revoker={msg.fromUID} channel={msg.channel} />,
-            [ChatMessageType.Image]: <ImageRecord message={msg} />,
-          }[msg.contentType] ?? null}
+          {
+            isRevokeMessage(msg) ? <RevokeRecord onReEdit={() => { }} revoker={msg.remoteExtra.revoker} channel={msg.channel} /> :
+              {
+                [ChatMessageType.Text]: <TextRecord message={msg} />,
+                // [ChatMessageType.Cmd]: <CmdRecord message={msg} />,
+                [ChatMessageType.Image]: <ImageRecord message={msg} />,
+                [ChatMessageType.System]: <SystemRecord message={msg} />,
+              }[msg.contentType] ?? null
+          }
         </ChatMessageRow>
       )}
     >
@@ -289,7 +295,7 @@ const ChatMessageRow = ({ message, children, onMessageSend }: PropsWithChildren<
     }
   })
 
-  if (message.remoteExtra.revoke) {
+  if (message.remoteExtra.revoke || +message.contentType === +ChatMessageType.System) {
     return (
       <div>
         {children}

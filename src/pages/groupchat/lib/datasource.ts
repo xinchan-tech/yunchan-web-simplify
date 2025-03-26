@@ -60,6 +60,8 @@ const initChannelInfoDataSource = () => {
         channelInfo.channel = channel
       }
 
+      WKSDK.shared().channelManager.setChannleInfoForCache(channelInfo)
+
       channelInfo.orgData = detail
     } catch (error) {
       console.error(error)

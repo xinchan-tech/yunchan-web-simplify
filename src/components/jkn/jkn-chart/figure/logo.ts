@@ -1,5 +1,5 @@
 import type { FigureTemplate } from 'jkn-kline-chart'
-import stockLogo from '@/assets/image/stock-logo.png'
+import stockLogo from '@/assets/image/today-chart.png'
 
 type LogoAttrs = {
   x: number

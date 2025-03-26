@@ -1,13 +1,13 @@
 import { getChannelMembers, setChannelManager, setMemberForbidden } from "@/api"
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger, JknIcon, ScrollArea, Skeleton } from "@/components"
-import { useChatStore, useUser } from "@/store"
+import { ChatCmdType, useChatStore, useUser } from "@/store"
 import { useQuery } from "@tanstack/react-query"
-import WKSDK, { type Subscriber } from "wukongimjssdk"
+import WKSDK, { type CMDContent, type Subscriber } from "wukongimjssdk"
 import ChatAvatar from "../components/chat-avatar"
 import { chatEvent } from "../lib/event"
 import to from "await-to-js"
 import { useToast } from "@/hooks"
-import { useSubscribesListener } from "../lib/hooks"
+import { useCMDListener, useSubscribesListener } from "../lib/hooks"
 import { useCallback, useEffect } from "react"
 import { hasForbidden, isChannelManager, isChannelOwner } from "../lib/utils"
 import { nanoid } from "nanoid"
@@ -133,12 +133,18 @@ export const ChannelMembers = ({ owner }: ChannelMembersProps) => {
     // members.refetch()
   }
 
-  // useSubscribesListener(channel, useCallback((c) => {
-  //   if (c.isEqual(channel!)) {
-  //     const subscribes = WKSDK.shared().channelManager.getSubscribes(channel!)
-  //     subscriberCache.updateByChannel(c.channelID, subscribes)
-  //   }
-  // }, [channel]))
+  useCMDListener((msg) => {
+    const currentChannel = useChatStore.getState().lastChannel
+    if(!currentChannel) return
+    if(!msg.channel.isEqual(currentChannel)) return 
+
+    const content = msg.content as CMDContent
+
+    if(content.cmd === ChatCmdType.SubscriberForbidden){
+      subscribesQuery.refetch()
+    }
+  })
+
 
   return (
     <div className="chat-room-users h-full flex flex-col overflow-hidden">

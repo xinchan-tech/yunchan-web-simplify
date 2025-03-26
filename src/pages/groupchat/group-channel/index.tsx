@@ -140,6 +140,7 @@ const GroupChannel = (props: {
         conversation.lastMessage = cmd
         conversation.reloadIsMentionMe()
         conversationCache.updateOrSave(conversation)
+        updateRender()
       }
     }
   })
@@ -297,7 +298,7 @@ const GroupChannel = (props: {
                       c.lastMessage?.contentType === ChatMessageType.Cmd ?
                         c.lastMessage.content.cmd === ChatCmdType.MessageRevoke ?
                           '撤回了一条消息' : '[系统消息]' : c.lastMessage?.contentType === ChatMessageType.Image ?
-                          '[图片]' : c.lastMessage?.content.text || ''
+                          '[图片]' : +c.lastMessage!.contentType === +ChatMessageType.System ? '加入群聊' : c.lastMessage?.content.text || ''
                     }
                   </div>
                   <div className="text-xs text-tertiary">

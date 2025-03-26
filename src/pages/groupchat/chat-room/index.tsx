@@ -32,8 +32,8 @@ export const ChatRoom = () => {
 
   const noticeModal = useModal({
     content: <ChatRoomNotice notice={channelDetail?.notice ?? ''} onConfirm={() => {
-      readChannelNotice(channel!.channelID)
-      channelQuery.refetch()
+      readChannelNotice(channel!.channelID).then(() => { channelQuery.refetch() })
+
       noticeModal.modal.close()
     }} />,
     className: 'w-[476px]',
