@@ -2,7 +2,7 @@ import { StockChartInterval, getLargeCapIndexes, getStockChartQuote } from '@/ap
 import { ChartTypes, JknChart, JknIcon, SubscribeSpan } from '@/components'
 import { useStockBarSubscribe, useStockQuoteSubscribe } from '@/hooks'
 import { useConfig, useTime } from '@/store'
-import { type StockSubscribeHandler, type StockTrading, stockUtils } from '@/utils/stock'
+import { stockSubscribe, type StockSubscribeHandler, type StockTrading, stockUtils } from '@/utils/stock'
 import { cn, colorUtil } from '@/utils/style'
 import { useQuery } from '@tanstack/react-query'
 import Decimal from 'decimal.js'
@@ -378,18 +378,37 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
     }
   }, []))
 
-  useStockQuoteSubscribe(code ? [code] : [], useCallback<StockSubscribeHandler<'quote'>>((data) => {
-    const c = chart.current?.getChart()
-    const lastData = c?.getDataList()?.slice(-1)[0]
+  useEffect(() => {
+    if (!code) return
+    const unSubscribe = stockSubscribe.onQuoteTopic(code, data => {
+          const c = chart.current?.getChart()
+          const lastData = c?.getDataList()?.slice(-1)[0]
 
-    if (!lastData) return
+          if (!lastData) return
 
-    chart.current?.appendCandlestick({
-      ...lastData,
-      quote: data.record.close,
-      prevQuote: data.record.preClose
-    }, 1)
-  }, []))
+          chart.current?.appendCandlestick({
+            ...lastData,
+            quote: data.record.close,
+            prevQuote: data.record.preClose
+          }, 1)
+    })
+
+    return unSubscribe
+  }, [code])
+
+  // useStockQuoteSubscribe(code ? [code] : [], useCallback<StockSubscribeHandler<'quote'>>((data) => {
+  //   console.log(data)
+  //   const c = chart.current?.getChart()
+  //   const lastData = c?.getDataList()?.slice(-1)[0]
+
+  //   if (!lastData) return
+
+  //   chart.current?.appendCandlestick({
+  //     ...lastData,
+  //     quote: data.record.close,
+  //     prevQuote: data.record.preClose
+  //   }, 1)
+  // }, []))
 
 
   return <JknChart ref={chart} className="w-full h-full" showLogo />

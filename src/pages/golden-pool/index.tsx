@@ -24,7 +24,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { useCheckboxGroup, useOptimisticUpdate, useTableData, useTableRowClickToStockTrading, useToast } from "@/hooks"
+import { useCheckboxGroup, useOptimisticUpdate, useStockQuoteSubscribe, useTableData, useTableRowClickToStockTrading, useToast } from "@/hooks"
 import { GoldenPoolManager, GoldenPoolNameEdit } from "@/pages/golden-pool/components/golden-pool-manager"
 import { stockUtils } from "@/utils/stock"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
@@ -65,6 +65,8 @@ const GoldenPool = () => {
   })
 
   const [list, { setList, onSort }] = useTableData<TableDataType>([], "symbol")
+
+  useStockQuoteSubscribe(list.map((item) => item.symbol))
 
   useEffect(() => {
     const stockList = collects.data?.items.map((o) =>
