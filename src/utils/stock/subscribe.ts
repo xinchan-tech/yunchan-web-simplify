@@ -78,6 +78,7 @@ class StockSubscribe {
   private cid: string
   private bufferMax: number
   private quoteBuffer: QuoteBuffer
+
   constructor(url: string) {
     this.url = url
     this.subscribeTopic = {}
@@ -86,8 +87,9 @@ class StockSubscribe {
     this.bufferHandleLength = 500
     this.bufferMax = 20000
     this.quoteBuffer = {}
+
     this.ws = new Ws(`${this.url}&cid=${this.cid}`, {
-      beat: false,
+      beat: true,
       onMessage: ev => {
         const data = JSON.parse(ev.data)
         if (data.ev) {
@@ -102,10 +104,47 @@ class StockSubscribe {
             this.quoteBuffer[parserData.topic] = parserData
           }
         }
+      },
+      onOpen: () => {
+        this.reSubscribe()
       }
     })
     this.unSubscribeStockIdle()
     this.startBufferHandle()
+  }
+
+  private reSubscribe() {
+    const quote: string[] = []
+    const bar: string[] = []
+    for (const [topic, { count }] of Object.entries(this.subscribeTopic)) {
+      if (!count) continue
+
+      const [action, symbol] = topic.split(':')
+
+      if (action === 'quote') {
+        quote.push(symbol)
+      }
+
+      if (action === 'bar') {
+        bar.push(symbol)
+      }
+    }
+
+    if (quote.length) {
+      this.ws.send({
+        action: 'quote_add_symbols',
+        cid: this.cid,
+        params: quote
+      })
+    }
+
+    if (bar.length) {
+      this.ws.send({
+        action: 'bar_add_symbols',
+        cid: this.cid,
+        params: bar
+      })
+    }
   }
 
   public subscribe(action: SubscribeActionType, params: string[]) {

@@ -9,6 +9,8 @@ type WsOptions = {
   beat?: boolean
 }
 
+type WsStatus = 'open' | 'close' | 'error' | 'reconnect' | 'connecting'
+
 export class Ws {
   private url = ''
   /**
@@ -34,7 +36,7 @@ export class Ws {
   /**
    * 心跳间隔
    */
-  private heartbeatInterval = 3 * 1000
+  private heartbeatInterval = 15 * 1000
   /**
    * 延迟
    */
@@ -60,6 +62,23 @@ export class Ws {
     this.startQueueMessage()
   }
 
+  get status(): WsStatus {
+    const r = this.ws?.readyState
+
+    switch (r) {
+      case WebSocket.OPEN:
+        return 'open'
+      case WebSocket.CLOSED:
+        return 'close'
+      case WebSocket.CLOSING:
+        return 'close'
+      case WebSocket.CONNECTING:
+        return 'connecting'
+      default:
+        return 'close'
+    }
+  }
+
   private handleEvent() {
     if (!this.ws) return
 
@@ -73,6 +92,7 @@ export class Ws {
 
     this.ws.onclose = (ev: CloseEvent) => {
       this.closeHeartbeat()
+
       if (!this.manualClose) {
         this.retryConnect()
       }
@@ -82,6 +102,8 @@ export class Ws {
 
     this.ws.onerror = (ev: Event) => {
       this.options.onError?.(ev)
+
+      console.error('WebSocket error observed:', ev)
     }
 
     this.ws.onmessage = (ev: MessageEvent) => {
@@ -115,7 +137,7 @@ export class Ws {
 
   private startHeartbeat() {
     this.closeHeartbeat()
-
+ 
     this.heartbeatTimer = window.setInterval(() => {
       this.ws?.send('ping')
     }, this.heartbeatInterval)
@@ -127,11 +149,16 @@ export class Ws {
       console.log('重试次数过多，停止重试')
       return
     }
+
+    const nextTry = this.retryInterval * this.retryCount
+    console.log(`Next retry in ${nextTry} ms`)
+
     setTimeout(() => {
       console.log('重连中...')
       this.ws = new WebSocket(this.url)
       this.handleEvent()
-    }, this.retryInterval * this.retryCount)
+    }, nextTry)
+    
   }
 
   private closeHeartbeat() {

@@ -133,7 +133,7 @@ const SuperStock = () => {
   }
 
   return (
-    <div className="h-full w-full flex items-center justify-center bg-[#1F1F1F] overflow-hidden font-pingfang">
+    <div className="h-full w-full flex items-center justify-center bg-background overflow-hidden font-pingfang">
       <SuperStockContext.Provider
         value={{
           data: category as unknown as SuperStockContext["data"],
@@ -157,7 +157,7 @@ const SuperStock = () => {
           </div>
         ) : (
           <div className="h-full w-full">
-            <ScrollArea className="bg-muted h-full w-full">
+            <ScrollArea className="h-full w-full">
               <div className="w-page-content mx-auto">
                 <div className="flex justify-center mt-3">
                   <SuperStockTypeTab type={type} onChange={setType} />

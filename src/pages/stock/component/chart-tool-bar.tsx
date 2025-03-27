@@ -525,6 +525,7 @@ const StockPkModal = () => {
 
     chartManage.setStockOverlay(symbol, name)
     chartManage.setYAxis({
+      left: useChartManage.getState().getActiveChart().yAxis.left,
       right: MainYAxis.Percentage
     })
 

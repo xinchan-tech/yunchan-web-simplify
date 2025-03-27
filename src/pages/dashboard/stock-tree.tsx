@@ -19,7 +19,7 @@ import TreeMap from './components/tree-map'
 type StockTreeType = 'industry' | 'concept' | 'bull' | 'etf' | 'industry-heatmap' | 'etf-heatmap'
 type StockTreeDate = 'day' | 'week' | 'month'
 
-const colors = ['#AC312E', '#782029', '#3a1a1f', '#59616C', '#1A3326', '#089950', '#1A3326']
+const colors = ['#AC312E', '#AC312E', '#AC312E', '#59616C', '#056636', '#089950', '#1A3326']
 
 const steps = ['-3', '-2', '-1', '0', '0.1', '2', '3']
 
@@ -142,7 +142,10 @@ const StockTree = () => {
     queryKey: [getPlateList.cacheKey, type],
     queryFn: () => getPlateList(type === 'industry-heatmap' ? 1 : 2),
     enabled: type === 'industry-heatmap' || type === 'etf-heatmap',
-    select: d => d.slice(0,40)
+    select: d => {
+      d.sort((a, b) => b.amount - a.amount)
+      return d.slice(0, 50)
+    }
   })
 
   const dataPlate = useMemo(() => {

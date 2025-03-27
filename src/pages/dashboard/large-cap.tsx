@@ -1,8 +1,8 @@
 import { StockChartInterval, getLargeCapIndexes, getStockChartQuote } from '@/api'
 import { ChartTypes, JknChart, JknIcon, SubscribeSpan } from '@/components'
-import { useStockQuoteSubscribe } from '@/hooks'
+import { useStockBarSubscribe, useStockQuoteSubscribe } from '@/hooks'
 import { useConfig, useTime } from '@/store'
-import { type StockTrading, stockUtils } from '@/utils/stock'
+import { type StockSubscribeHandler, type StockTrading, stockUtils } from '@/utils/stock'
 import { cn, colorUtil } from '@/utils/style'
 import { useQuery } from '@tanstack/react-query'
 import Decimal from 'decimal.js'
@@ -154,6 +154,7 @@ const LargeCap = () => {
               <span className="text-sm text-left">{stock.name}</span>
               <div className="flex items-center mt-1 space-x-2">
                 <SubscribeSpan.Price
+                  trading={['SPX', 'IXIC', 'DJI'].includes(stock.symbol) ? 'intraDay' : ['preMarket', 'intraDay', 'afterHours']}
                   initValue={stock.close}
                   symbol={stock.symbol}
                   initDirection={stockUtils.isUp(stock)}
@@ -219,6 +220,9 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
 
     c?.setXAxisTick(PRE_NUMBER + POST_NUMBER + AFTER_NUMBER)
     c?.setLeftMinVisibleBarCount(1)
+    c?.setScrollEnabled(false)
+    c?.setZoomEnabled(false)
+
     const upColor = useConfig.getState().getStockColor(true, 'hex')
     const downColor = useConfig.getState().getStockColor(false, 'hex')
 
@@ -305,7 +309,6 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
     queryFn: () => getStockChartQuote(code!, ['IXIC', 'DJI', 'SPX'].includes(code!) ? StockChartInterval.INTRA_DAY : 'full-day'),
     enabled: !!code && type !== undefined,
     placeholderData: () => ([]),
-    refetchInterval: 30 * 1000,
     select: (list) => {
       return list.map(s => stockUtils.toStock(s))
     }
@@ -316,391 +319,36 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
 
   }, [candlesticks])
 
+  useStockBarSubscribe(code ? [`${code}@1m`] : [], useCallback((data) => {
+    const c = chart.current?.getChart()
+    const stock = stockUtils.toStock(data.rawRecord)
+    const lastData = c?.getDataList()[c.getDataList().length - 1]
+    if (!lastData) {
+      chart.current?.applyNewData([stock])
+    } else {
+      chart.current?.appendCandlestick({
+        ...stock,
+        quote: lastData.quote,
+        prevQuote: lastData?.prevQuote
+      }, 1)
+    }
+  }, []))
 
+  useStockQuoteSubscribe(code ? [code]: [], useCallback<StockSubscribeHandler<'quote'>>((data) => {
+    const c = chart.current?.getChart()
+    const lastData = c?.getDataList()?.slice(-1)[0]
+
+    if (!lastData) return
+
+    chart.current?.appendCandlestick({
+      ...lastData,
+      quote: data.record.close,
+      prevQuote: data.record.preClose
+    }, 1)
+  }, []))
 
 
   return <JknChart ref={chart} className="w-full h-full" showLogo />
-  // const chartRef = useRef<echarts.ECharts>()
-  // const chartDomRef = useRef<HTMLDivElement>(null)
-  // const { getStockColor } = useConfig()
-  // const stockUpColor = `hsl(${getStockColor()})`
-  // const stockDownColor = `hsl(${getStockColor(false)})`
-  // const trading = useTime(s => s.getTrading())
-
-
-
-  // const interval = ((c, t) => {
-  //   if (['SPX', 'IXIC', 'DJI'].includes(c!)) {
-  //     return StockChartInterval.INTRA_DAY
-  //   }
-  //   return t
-  // })(code, type)
-
-  // const queryData = useQuery({
-  //   queryKey: [getStockChartQuote.cacheKey, code, type],
-  //   queryFn: () => getStockChartQuote(code!, type!),
-  //   enabled: !!code && type !== undefined,
-  //   refetchInterval: 60 * 1000,
-  //   placeholderData: () => ({
-  //     list: []
-  //   })
-  // })
-
-  // const [stockData, setStockData] = useState<typeof queryData.data>(queryData.data)
-
-  // useUpdateEffect(() => {
-  //   setStockData(queryData.data)
-  // }, [queryData.data])
-
-  // useEffect(() => {
-  //   renderChart(stockData, trading)
-  // }, [stockData, trading])
-
-  // const renderChart = (data: typeof queryData.data, _trading: StockTrading) => {
-  //   if (!data) return
-  //   const dataset: [string, number, number][] = []
-  //   let prevClose = 0
-  //   let lastPercent = 0
-  //   let lastPrice = 0
-  //   for (const s of data.list) {
-  //     const t = stockUtils.toStockWithExt(s)
-  //     prevClose = t.prevClose!
-  //     lastPercent = t.percent!
-  //     lastPrice = t.close!
-  //     dataset.push([dayjs(t.timestamp).tz('America/New_York').format('YYYY-MM-DD HH:mm:ss'), t.close!, t.percent!])
-  //   }
-
-  //   const xAxisData = getTradingPeriod(intervalToTradingMap[interval] ?? 'intraDay', dataset[0] ? dataset[0][0] : '')
-
-  //   const style = colorUtil.hexToRGB(getStockColor(lastPercent >= 0, 'hex'))!
-
-  //   chartRef.current?.setOption({
-  //     axisPointer: {
-  //       label: {
-  //         formatter: (params: any) => {
-  //           if (params.axisDimension !== 'y') return ''
-
-  //           const v = Decimal.create(params.value)
-  //           const perv = v.minus(prevClose).div(prevClose).mul(100)
-
-  //           if (params.axisIndex === 0) {
-  //             return `{${perv.gte(0) ? 'u' : 'd'}|${v.toFixed(2)}}`
-  //           }
-  //         }
-  //       }
-  //     },
-  //     yAxis: [
-  //       {
-  //         axisLabel: {
-  //           color: (v: number) => {
-  //             return v >= prevClose ? stockUpColor : stockDownColor
-  //           }
-  //         }
-  //       },
-  //       {
-  //         axisLabel: {
-  //           formatter: (v: number) => {
-  //             const perv = Decimal.create(v).minus(prevClose).div(prevClose).mul(100)
-  //             return `${perv.gte(0) ? '+' : ''}${perv.toFixed(2)}%`
-  //           },
-  //           color: (v: number) => {
-  //             const perv = Decimal.create(v).minus(prevClose).div(prevClose).mul(100)
-  //             return perv.gte(0) ? stockUpColor : stockDownColor
-  //           }
-  //         }
-  //       }
-  //     ],
-  //     xAxis: {
-  //       data: xAxisData
-  //     },
-  //     graphic: {
-  //       elements: [
-  //         {
-  //           type: 'text',
-  //           left: 'center',
-  //           top: '30%',
-  //           style: {
-  //             text:
-  //               interval === StockChartInterval.INTRA_DAY
-  //                 ? ''
-  //                 : interval === StockChartInterval.PRE_MARKET
-  //                   ? '盘前交易'
-  //                   : `${_trading === 'intraDay' ? '上一交易日\n    (盘后)' : '盘后交易'}`,
-  //             fill: 'rgba(255, 255, 255, .15)',
-  //             fontSize: 64,
-  //             textVerticalAlign: 'top'
-  //           }
-  //         }
-  //       ]
-  //     },
-  //     series: [
-  //       {
-  //         data: dataset,
-  //         encode: {
-  //           x: [0],
-  //           y: [1]
-  //         },
-  //         color: `rgba(${style.r}, ${style.g}, ${style.b} , 1)`,
-  //         areaStyle: {
-  //           color: {
-  //             x: 0,
-  //             y: 0,
-  //             x2: 0,
-  //             y2: 1,
-  //             colorStops: [
-  //               {
-  //                 offset: 0,
-  //                 color: `rgba(${style.r}, ${style.g}, ${style.b}, .35)` // 0% 处的颜色
-  //               },
-  //               {
-  //                 offset: 0.6,
-  //                 color: `rgba(${style.r}, ${style.g}, ${style.b}, .2)` // 100% 处的颜色
-  //               },
-  //               {
-  //                 offset: 1,
-  //                 color: 'transparent' // 100% 处的颜色
-  //               }
-  //             ]
-  //           }
-  //         },
-  //         markLine: {
-  //           symbol: 'none',
-  //           silent: true,
-
-  //           data: [
-  //             [
-  //               {
-  //                 xAxis: 'max',
-  //                 yAxis: lastPrice
-  //               },
-  //               {
-  //                 x: (chartRef.current?.getWidth() ?? 0) - 50,
-  //                 yAxis: lastPrice,
-  //                 lineStyle: {
-  //                   color: `rgba(${style.r}, ${style.g}, ${style.b} , 1)`,
-  //                   width: 1,
-  //                   type: 'dashed'
-  //                 },
-  //                 label: {
-  //                   formatter: `{${lastPercent > 0 ? 'u' : 'd'}|${lastPrice.toFixed(2)}}`,
-  //                   rich: {
-  //                     u: {
-  //                       backgroundColor: stockUpColor,
-  //                       width: '100%',
-  //                       color: '#fff',
-  //                       padding: 3,
-  //                       fontSize: 10
-  //                       // borderRadius: 4
-  //                     },
-  //                     d: {
-  //                       backgroundColor: stockDownColor,
-  //                       width: '100%',
-  //                       color: '#fff',
-  //                       fontSize: 10,
-  //                       padding: 3
-  //                       // borderRadius: 4
-  //                     }
-  //                   }
-  //                 }
-  //               }
-  //             ]
-  //           ]
-  //         }
-  //       },
-  //       {
-  //         data: dataset,
-  //         encode: {
-  //           x: [0],
-  //           y: [1]
-  //         }
-  //       }
-  //     ]
-  //   })
-  // }
-
-  // const options: ECOption = {
-  //   grid: {
-  //     left: 10,
-  //     right: 50,
-  //     top: '15',
-  //     bottom: 24
-  //   },
-  //   tooltip: {
-  //     trigger: 'axis',
-  //     showContent: false,
-  //     axisPointer: {
-  //       animation: false,
-  //       type: 'cross',
-  //       label: {
-  //         precision: 2
-  //       }
-  //     }
-  //   },
-  //   xAxis: {
-  //     type: 'category',
-  //     data: [],
-
-  //     splitLine: {
-  //       show: false,
-  //       lineStyle: {
-  //         color: '#202020',
-  //         type: 'dashed'
-  //       }
-  //     },
-  //     axisLine: {
-  //       show: false,
-  //       lineStyle: {
-  //         color: '#202020'
-  //       }
-  //     },
-  //     axisPointer: {
-  //       lineStyle: {
-  //         color: '#404040',
-  //         type: 'dashed'
-  //       },
-  //       label: {
-  //         show: false
-  //       }
-  //     },
-  //     axisLabel: {
-  //       alignMinLabel: 'left',
-  //       interval(index) {
-  //         return index % 30 === 0
-  //       },
-  //       showMinLabel: true,
-  //       formatter: (value, index) => {
-  //         return index % 60 === 0 ? dayjs(value).format('HH:mm') : ''
-  //       },
-  //       color: '#999999',
-  //       fontSize: 10
-  //     }
-  //   },
-  //   axisPointer: {
-  //     link: [{ yAxisIndex: 'all', xAxisIndex: 'all' }],
-  //     lineStyle: {
-  //       color: '#404040',
-  //       type: 'dashed'
-  //     },
-  //     label: {
-  //       position: 'right',
-  //       backgroundColor: '#777',
-  //       color: '#fff',
-  //       padding: 0,
-  //       // borderRadius: 4,
-  //       fontSize: 10,
-  //       rich: {
-  //         u: {
-  //           backgroundColor: stockUpColor,
-  //           width: '100%',
-  //           color: '#fff',
-  //           padding: [2, 4, 2, 4]
-  //           // borderRadius: 4
-  //         },
-  //         d: {
-  //           backgroundColor: stockDownColor,
-  //           width: '100%',
-  //           color: '#fff',
-  //           padding: [2, 4, 2, 4]
-  //           // borderRadius: 4
-  //         }
-  //       }
-  //     }
-  //   },
-  //   yAxis: [
-  //     {
-  //       splitNumber: 8,
-  //       scale: true,
-  //       position: 'right',
-  //       show: true,
-  //       axisLine: {
-  //         show: false,
-  //         lineStyle: {
-  //           color: '#202020',
-  //           type: 'dashed'
-  //         }
-  //       },
-  //       axisPointer: {
-  //         lineStyle: {
-  //           color: '#404040',
-  //           type: 'dashed'
-  //         }
-  //       },
-  //       splitLine: {
-  //         show: false,
-  //         lineStyle: {
-  //           color: '#202020',
-  //           type: 'dashed'
-  //         }
-  //       },
-  //       axisLabel: {
-  //         formatter: (v: number) => (v <= -9999 ? '-' : v.toFixed(2)),
-  //         color: stockUpColor,
-  //         fontSize: 10
-  //       }
-  //     },
-  //     {
-  //       splitNumber: 8,
-  //       position: 'right',
-  //       scale: true,
-  //       show: false,
-  //       axisPointer: {
-  //         lineStyle: {
-  //           color: '#404040',
-  //           type: 'dashed'
-  //         }
-  //       },
-  //       axisLine: {
-  //         show: false,
-  //         lineStyle: {
-  //           color: '#202020',
-  //           type: 'dashed'
-  //         }
-  //       },
-  //       splitLine: {
-  //         show: false
-  //       },
-  //       axisLabel: {
-  //         formatter: (v: number) => {
-  //           return v <= -9999 ? '-' : v.toFixed(2)
-  //         },
-  //         color: stockUpColor,
-  //         fontSize: 10
-  //       }
-  //     }
-  //   ],
-  //   series: [
-  //     {
-  //       type: 'line',
-  //       color: stockUpColor,
-  //       lineStyle: { width: 1 },
-  //       symbol: 'none',
-  //       markLine: {
-  //         symbol: 'none',
-  //         silent: true
-  //       }
-  //     },
-  //     { type: 'line', yAxisIndex: 1, showSymbol: false, color: 'transparent' }
-  //   ]
-  // }
-
-  // useMount(() => {
-  //   chartRef.current = echarts.init(chartDomRef.current)
-  //   chartRef.current.setOption(options)
-  //   renderChart(stockData, trading)
-  // })
-
-  // useUnmount(() => {
-  //   chartRef.current?.dispose()
-  //   chartRef.current = undefined
-  // })
-
-  // const size = useSize(chartDomRef)
-
-  // useUpdateEffect(() => {
-  //   chartRef.current?.resize()
-  // }, [size])
-
-
 }
 
 export default LargeCap

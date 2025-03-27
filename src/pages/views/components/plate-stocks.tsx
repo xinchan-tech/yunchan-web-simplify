@@ -12,8 +12,7 @@ import {
 import { useCheckboxGroup, useStockQuoteSubscribe, useTableData, useTableRowClickToStockTrading } from '@/hooks'
 import { stockUtils } from '@/utils/stock'
 import { useQuery } from '@tanstack/react-query'
-import Decimal from 'decimal.js'
-import { useCallback, useEffect, useMemo } from 'react'
+import { useEffect, useMemo } from 'react'
 
 interface PlateStocksProps {
   plateId?: number
@@ -37,7 +36,7 @@ const PlateStocks = (props: PlateStocksProps) => {
   })
 
   const [list, { setList, onSort }] = useTableData<TableDataType>([], 'symbol')
-  const { checked, onChange, setCheckedAll, getIsChecked } = useCheckboxGroup([])
+  useCheckboxGroup([])
 
   useEffect(() => {
     setList(
@@ -51,27 +50,31 @@ const PlateStocks = (props: PlateStocksProps) => {
 
   const columns = useMemo<JknRcTableProps<TableDataType>['columns']>(
     () => [
-      { title: '序号', dataIndex: 'index', render: (_, __, index) => index + 1, align: 'center', width: 60 },
       {
         title: '名称代码',
         dataIndex: 'name',
         align: 'left',
-        width: 'full',
         sort: true,
-        render: (_, row) => <StockView name={row.name} code={row.symbol as string} />
+        width: '28.5%',
+        render: (_, row) => <div className='flex items-center h-[33px]'>
+          <CollectStar checked={row.extend?.collect === 1} code={row.symbol} />
+          <span className="mr-3" />
+          <StockView name={row.name} code={row.symbol as string} showName />
+        </div>
       },
       {
         title: '现价',
-        dataIndex: 'price',
-        align: 'right',
-        width: '8%',
+        dataIndex: 'close',
+        align: 'left',
+        width: '13.5%',
         sort: true,
         render: (_, row) => (
           <SubscribeSpan.PriceBlink
+            showColor={false}
             trading="intraDay"
             symbol={row.symbol}
             initValue={row.close}
-            decimal={3}
+            decimal={2}
             initDirection={stockUtils.isUp(row)}
           />
         )
@@ -79,13 +82,13 @@ const PlateStocks = (props: PlateStocksProps) => {
       {
         title: '涨跌幅',
         dataIndex: 'percent',
-        align: 'right',
-        width: 120,
+        align: 'left',
+        width: '13.5%',
         sort: true,
         render: (_, row) => (
-          <SubscribeSpan.PercentBlockBlink
-            trading="intraDay"
+          <SubscribeSpan.PercentBlink
             showSign
+            trading="intraDay"
             symbol={row.symbol}
             decimal={2}
             initValue={row.percent}
@@ -95,26 +98,10 @@ const PlateStocks = (props: PlateStocksProps) => {
         )
       },
       {
-        title: '总市值',
-        dataIndex: 'total',
-        align: 'right',
-        width: '8%',
-        sort: true,
-        render: (_, row) => (
-          <SubscribeSpan.MarketValueBlink
-            trading="intraDay"
-            symbol={row.symbol}
-            initValue={row.marketValue}
-            decimal={2}
-            totalShare={row.totalShare ?? 0}
-          />
-        )
-      },
-      {
         title: '成交额',
-        dataIndex: 'amount',
-        align: 'right',
-        width: '8%',
+        dataIndex: 'turnover',
+        align: 'left',
+        width: '13.5%',
         sort: true,
         render: (_, row) => (
           <SubscribeSpan.TurnoverBlink
@@ -127,68 +114,31 @@ const PlateStocks = (props: PlateStocksProps) => {
         )
       },
       {
-        title: '换手率',
-        dataIndex: 'turnoverRate',
+        title: '总市值',
+        dataIndex: 'marketValue',
         align: 'right',
-        width: '7%',
         sort: true,
-        render: turnoverRate => `${Decimal.create(turnoverRate).mul(100).toFixed(3)}%`
-      },
-      {
-        title: '市盈率',
-        dataIndex: 'pe',
-        align: 'right',
-        width: '7%',
-        sort: true,
-        render: (_, row) => `${Decimal.create(row.pe).lt(0) ? '亏损' : Decimal.create(row.pe).toFixed(2)}`
-      },
-      {
-        title: '市净率',
-        dataIndex: 'pb',
-        align: 'right',
-        width: '7%',
-        sort: true,
-        render: pb => Decimal.create(pb).toFixed(2)
-      },
-      {
-        title: '+股票金池',
-        dataIndex: 'collect',
-        align: 'center',
-        width: 80,
-        render: (_, row) => <CollectStar checked={row.extend!.collect === 1} code={row.symbol} />
-      },
-      {
-        title: '+AI报警',
-        dataIndex: 't9',
-        align: 'center',
-        width: 80,
         render: (_, row) => (
-          <AiAlarm code={row.symbol}>
-            <JknIcon className="rounded-none" name="ic_add" />
-          </AiAlarm>
+          <div className=''>
+            <SubscribeSpan.MarketValueBlink
+              trading="intraDay"
+              symbol={row.symbol}
+              initValue={row.marketValue}
+              decimal={2}
+              totalShare={row.totalShare ?? 0}
+              showColor={false}
+            />
+          </div>
         )
+      }, {
+        title: '所属行业',
+        dataIndex: 'industry',
+        align: 'right',
+        sort: true,
+        render: (_, row) => <span className="text-[14px]">{row.industry}</span>
       },
-      {
-        title: (
-          <CollectStar.Batch
-            checked={checked}
-            allCheckLength={list.length}
-            onCheckChange={v => setCheckedAll(v ? list.map(o => o.symbol) : [])}
-            onUpdate={() => {
-              plateStocks.refetch()
-              setCheckedAll([])
-            }}
-          />
-        ),
-        dataIndex: 'checked',
-        align: 'center',
-        width: 60,
-        render: (_, row) => (
-          <JknCheckbox checked={getIsChecked(row.symbol)} onCheckedChange={v => onChange(row.symbol, v)} />
-        )
-      }
     ],
-    [checked, list, getIsChecked, onChange, setCheckedAll, plateStocks.refetch]
+    []
   )
 
   const onRowClick = useTableRowClickToStockTrading('symbol')

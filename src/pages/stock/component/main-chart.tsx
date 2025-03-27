@@ -38,7 +38,8 @@ export const MainChart = (props: MainChartProps) => {
   const { candlesticks, startAt, refreshCandlesticks } = useCandlesticks(symbol, chartStore.interval)
   const stockCache = useRef({
     compare: new Map(),
-    mark: ''
+    mark: '',
+    rightAxisBeforePk: null as Nullable<typeof chartStore.yAxis>
   })
 
   useStockBarSubscribe([`${symbol}@${stockUtils.intervalToPeriod(chartStore.interval)}`], (data) => {
@@ -252,6 +253,9 @@ export const MainChart = (props: MainChartProps) => {
       if (chartImp.current === null) return
       if (type === 'add') {
         if (!stockCache.current.compare.has(symbol)) {
+          if(!stockCache.current.rightAxisBeforePk){
+            stockCache.current.rightAxisBeforePk = useChartManage.getState().chartStores[props.chartId].yAxis
+          }
           fetchCandlesticks(symbol, chartStore.interval, startAt.current).then(r => {
             if (!r.data.list.length) return
 
@@ -271,6 +275,11 @@ export const MainChart = (props: MainChartProps) => {
       } else {
         stockCache.current.compare.delete(symbol)
         chartImp.current?.removeStockCompare(symbol)
+        if(stockCache.current.compare.size === 0 && stockCache.current.rightAxisBeforePk){
+          chartImp.current?.setRightAxis(stockCache.current.rightAxisBeforePk.right as any)
+          chartImp.current?.setLeftAxis(stockCache.current.rightAxisBeforePk.left as any)
+          stockCache.current.rightAxisBeforePk = null
+        }
       }
     })
 

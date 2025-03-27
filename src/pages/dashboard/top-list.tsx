@@ -1,17 +1,12 @@
 import { IncreaseTopStatus, getIncreaseTop } from '@/api'
 import {
-  CapsuleTabs,
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
   JknIcon,
   JknRcTable,
   type JknRcTableProps,
-  NumSpanSubscribe,
   StockView,
   SubscribeSpan
 } from '@/components'
@@ -41,7 +36,7 @@ const TopList = () => {
   const { t } = useTranslation()
   const { isToday } = useTime()
   const [list, { setList, onSort }] = useTableData<TableDataType>([], 'symbol')
-  const [selectedRowKey, setSelectedRowKey] = useState<String>();
+  const [selectedRowKey, setSelectedRowKey] = useState<string>()
 
   const query = useQuery({
     queryKey: [getIncreaseTop.cacheKey, type],
@@ -122,9 +117,10 @@ const TopList = () => {
       )
     },
     {
-      title: `${type === IncreaseTopStatus.PRE_MARKET ? '盘前' : type === IncreaseTopStatus.AFTER_HOURS ? '盘后' : ''}涨跌幅%`,
+      title: `${type === IncreaseTopStatus.PRE_MARKET ? '盘前' : type === IncreaseTopStatus.AFTER_HOURS ? '盘后' : ''}涨跌幅`,
       dataIndex: 'percent',
       align: 'right',
+      width: 120,
       sort: true,
       render: (percent, row) => (
         <SubscribeSpan.PercentBlink

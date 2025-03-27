@@ -17,7 +17,7 @@ const useCollectSelect = (onChange?: (key: string) => void) => {
   const collects = useQuery({
     queryKey: [getStockCollectCates.cacheKey],
     queryFn: () => getStockCollectCates(),
-    initialData: [{ id: '1', name: '股票金池', create_time: '', active: 1, total: '0' }],
+    initialData: [{ id: '1', name: '我的自选', create_time: '', active: 1, total: '0' }],
     enabled: !!token
   })
   const queryClient = useQueryClient()
@@ -26,7 +26,7 @@ const useCollectSelect = (onChange?: (key: string) => void) => {
     if (!token) {
       queryClient.setQueryData(
         [getStockCollectCates.cacheKey],
-        [{ id: '1', name: '股票金池', create_time: '', active: 1, total: '0' }]
+        [{ id: '1', name: '我的自选', create_time: '', active: 1, total: '0' }]
       )
     }
   }, [token, queryClient.setQueryData])

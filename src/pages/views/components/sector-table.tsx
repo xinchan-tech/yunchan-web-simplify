@@ -1,9 +1,10 @@
 import { getPlateList } from '@/api'
-import { JknRcTable, type JknRcTableProps, SubscribeSpan } from '@/components'
+import { Button, JknRcTable, type JknRcTableProps, SubscribeSpan } from '@/components'
 import { useTableData } from '@/hooks'
 import { useQuery } from '@tanstack/react-query'
 import Decimal from 'decimal.js'
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import PlateStocks from "./plate-stocks"
 
 /**
  * SectorTable组件的属性类型
@@ -50,11 +51,17 @@ export type PlateDataType = {
  * @description 用于展示行业板块或概念板块的数据
  */
 const SectorTable = (props: SectorTableProps) => {
+
+  const [showDetail, setShowDetail] = useState(0)
   // 获取板块数据
   const plateQuery = useQuery({
     queryKey: [getPlateList.cacheKey, props.type],
     queryFn: () => getPlateList(props.type)
   })
+
+  useEffect(() => {
+    setShowDetail(props.type === 1 ? 0 : 0)
+  }, [props.type])
 
   // 使用useTableData处理表格数据和排序
   const [list, { setList, onSort }] = useTableData<PlateDataType>([], 'id')
@@ -116,17 +123,30 @@ const SectorTable = (props: SectorTableProps) => {
   )
 
   return (
-    <JknRcTable
-      headerHeight={48}
-      rowKey="id"
-      columns={columns}
-      data={list}
-      onSort={onSort}
-      isLoading={plateQuery.isLoading}
-      onRow={() => ({
-        onClick: undefined
-      })}
-    />
+    <>
+      {
+        !showDetail ? (
+          <JknRcTable
+            headerHeight={48}
+            rowKey="id"
+            columns={columns}
+            data={list}
+            onSort={onSort}
+            isLoading={plateQuery.isLoading}
+            onRow={(row) => ({
+              onClick: () => setShowDetail(+row.id)
+            })}
+          />
+        ) : (
+          <div className="flex flex-col h-full">
+            <Button size="sm" variant="outline" className="w-12 mt-2" onClick={() => setShowDetail(0)}>返回</Button>
+            <div className="flex-1">
+              <PlateStocks plateId={showDetail} />
+            </div>
+          </div>
+        )
+      }
+    </>
   )
 }
 

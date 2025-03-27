@@ -79,7 +79,7 @@ const initSyncSubscribersDataSource = () => {
   WKSDK.shared().config.provider.syncSubscribersCallback = async (channel: Channel) => {
     const subscribers: Subscriber[] = []
 
-    const [err, res] = await to(getChannelMembers(channel.channelID, 100))
+    const [err, res] = await to(getChannelMembers(channel.channelID, 999999))
 
     if (err) {
       console.error(err)

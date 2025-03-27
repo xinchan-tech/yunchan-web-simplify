@@ -86,7 +86,7 @@ const App = () => {
       queryClient.prefetchQuery({
         queryKey: [getStockCollectCates.cacheKey],
         queryFn: () => getStockCollectCates(),
-        initialData: [{ id: '1', name: '股票金池', create_time: '', active: 1, total: '0' }]
+        initialData: [{ id: '1', name: '我的自选', create_time: '', active: 1, total: '0' }]
       })
     }
   }, [token, queryClient.prefetchQuery])

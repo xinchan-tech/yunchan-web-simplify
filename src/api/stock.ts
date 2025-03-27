@@ -1898,7 +1898,7 @@ type GetPalTopResult = {
  */
 export const getPalTop = (params?: { date?: string; limit?: number }) => {
   return request
-    .get<GetPalTopResult[]>('/pal/top', { params: { date: params?.date, limit: params?.limit ?? 10 } })
+    .get<GetPalTopResult[]>('/stock-svc/ranking/top/plates', { params: { date: params?.date, limit: params?.limit ?? 10 } })
     .then(r => r.data)
 }
 getPalTop.cacheKey = 'pal:top'

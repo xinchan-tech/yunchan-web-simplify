@@ -1,7 +1,6 @@
 import { getPalTop } from '@/api'
 import { Skeleton } from '@/components'
 import { useChart } from '@/hooks'
-import { dateUtils } from '@/utils/date'
 import echarts, { type ECOption } from '@/utils/echarts'
 import { useQuery } from '@tanstack/react-query'
 import { useEffect } from 'react'
@@ -50,11 +49,12 @@ export const HotTop = () => {
         position: 'top',
         borderRadius: 12,
         formatter: (params: any) => {
-          const [name, score, time] = params.data
+          const [name, score] = params.data
           return `
             <div class="flex flex-col" style="min-width: 96px">
               <div class="text-lg text-center" style="color: #FFFFFF">${score}</div>
               <div class="text-xs text-center" style="color: #B7DBF9">热力值</div>
+              <div class="text-xs text-center" style="color: #B7DBF9">${name}</div>
             </div>
             `
         }

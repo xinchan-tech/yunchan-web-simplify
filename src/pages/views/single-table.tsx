@@ -253,7 +253,7 @@ const SingleTable = (props: SingleTableProps) => {
         render: (_, row) => <span className="text-[14px]">{row.industry}</span>
       },
     ],
-    [list, query.refetch]
+    []
   )
 
   const onRowClick = useTableRowClickToStockTrading('symbol')
