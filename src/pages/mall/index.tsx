@@ -43,7 +43,7 @@ const versions = [
   // { name: '量化精英', value: 'plus' },
   // { name: '聊天社群', value: 'group' },
   { name: '特色软件', value: 'packages' },
-  { name: '增值包', value: 'increment' }
+  // { name: '增值包', value: 'increment' }
 ]
 
 type Version = 'group' | 'increment' | 'packages'
