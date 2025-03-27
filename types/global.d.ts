@@ -34,9 +34,9 @@ declare type Optional<T, K extends keyof T> = Omit<T, K> & Partial<T>
 
 declare type RequiredBy<T, K extends keyof T> = Partial<Omit<T, K>> & Required<Pick<T, K>>
 
-declare type Nullable<T> = T | null
+declare type Nullable<T> = T | null | undefined
 
-declare type Undefinable<T> = T | undefined
+// declare type Undefinable<T> = T | undefined
 
 interface Google {
   accounts: any
@@ -47,11 +47,9 @@ interface Window {
   google: Google
   AppleID: any
 
-  Module: {
+  CoilingModule: () => Promise<{
     coiling_calculate: (data: StockRawRecord[], len: number, interval: number) => Promise<CoilingData>
-  }
-
-  CoilingModule: () => Promise<Module>
+  }>
 
   PolicyModule: () => Promise<{
     libversion: () => string

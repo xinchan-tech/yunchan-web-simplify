@@ -1,4 +1,3 @@
-import { calcCoiling } from '@/utils/coiling'
 import type { IndicatorTemplate } from 'jkn-kline-chart'
 import { candlestickToRaw } from '../utils'
 import {
@@ -10,6 +9,7 @@ import {
   CoilingIndicatorId
 } from '../coiling-calc'
 import { drawCoilingMA, drawCoilingPen, drawCoilingPivot, drawCoilingTradePoint } from '../draw/draw-coiling'
+import { IndicatorUtils } from '@/utils/coiling'
 
 /**
  * 笔
@@ -22,7 +22,7 @@ export const coilingIndicator: IndicatorTemplate<CoilingCalcResult> = {
   calc: async (dataList, { calcParams }) => {
     const rawList = dataList.map(candlestickToRaw)
     const [interval, coilingIds] = calcParams as [number, CoilingIndicatorId[]]
-    const coilingData = (await calcCoiling(rawList, interval)) as CoilingCalcResult
+    const coilingData = (await IndicatorUtils.calcCoiling(rawList, interval)) as CoilingCalcResult
     coilingData.maResult = {}
     coilingData.tradePointsResult = [null, null, null] as any
     coilingIds.forEach(id => {

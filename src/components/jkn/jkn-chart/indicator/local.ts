@@ -1,5 +1,6 @@
+import { getStockIndicatorData } from '@/api'
 import { useIndicator } from '@/store'
-import { type IndicatorData, calcIndicator } from '@/utils/coiling'
+import { type IndicatorData, IndicatorUtils } from '@/utils/coiling'
 import { aesDecrypt } from '@/utils/string'
 import Decimal from 'decimal.js'
 import { IndicatorSeries, type IndicatorTemplate } from 'jkn-kline-chart'
@@ -16,7 +17,6 @@ import {
   drawText
 } from '../draw'
 import { candlestickToRaw } from '../utils'
-import { getStockIndicatorData } from "@/api"
 
 type LocalIndicatorExtend = {
   name: string
@@ -55,7 +55,7 @@ export const localIndicator: IndicatorTemplate<IndicatorData, any, LocalIndicato
   calc: async (dataList, indicator) => {
     const [indicatorId, symbol, interval] = indicator.calcParams as [string, string, number]
     const formula = useIndicator.getState().formula
-    if(!dataList.length) return []
+    if (!dataList.length) return []
     const rawData = dataList.map(candlestickToRaw)
 
     if (isCoilingIndicator(indicatorId)) {
@@ -69,14 +69,14 @@ export const localIndicator: IndicatorTemplate<IndicatorData, any, LocalIndicato
       return []
     }
 
-    if(indicator.extendData?.isRemote) {
+    if (indicator.extendData?.isRemote) {
       const r = await getStockIndicatorData({
         symbol,
         id: indicatorId,
         cycle: interval,
-        db_type: "system"
+        db_type: 'system'
       })
-      
+
       return r.result.map(item => ({
         draw: item.draw as any,
         name: item.name,
@@ -88,7 +88,7 @@ export const localIndicator: IndicatorTemplate<IndicatorData, any, LocalIndicato
     }
 
     if (!formula[indicatorId]) return []
-    return await calcIndicator(
+    return await IndicatorUtils.calcIndicator(
       {
         formula: aesDecrypt(formula[indicatorId]),
         symbal: symbol,

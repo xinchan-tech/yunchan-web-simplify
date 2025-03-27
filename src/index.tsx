@@ -8,10 +8,10 @@ import { StrictMode, Suspense } from 'react'
 import '@/plugins/decimal-plugin'
 import {} from '@/utils/stock'
 import { RouterProvider } from 'react-router'
-import { initDataSource } from './pages/groupchat/Service/dataSource.ts'
 import { router } from './router'
 import './app.scss'
 import { queryClient } from './utils/query-client.ts'
+import { IndicatorUtils } from "./utils/coiling/index.ts"
 
 if (typeof window !== 'undefined' && import.meta.env.MODE === 'development') {
   scan({
@@ -19,7 +19,9 @@ if (typeof window !== 'undefined' && import.meta.env.MODE === 'development') {
     // log: true, // logs render info to console (default: false)
   })
 }
-initDataSource()
+// initDataSource()
+
+IndicatorUtils.init()
 
 const rootEl = document.getElementById('root')
 if (rootEl) {
