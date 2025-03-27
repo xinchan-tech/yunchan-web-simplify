@@ -298,7 +298,7 @@ const WxLoginForm = () => {
   useMount(() => {
     const size = 160
     const sid = uid(10)
-    const url = `https://us.mgjkn.com/login/wx?s_id=${sid}&inv_code=${''}&newsrv=1`
+    const url = `https://usnode2.mgjkn.com/login/wx?s_id=${sid}&inv_code=${''}&newsrv=1`
 
     QRCode.toCanvas(canvas.current, url, {
       errorCorrectionLevel: 'Q',

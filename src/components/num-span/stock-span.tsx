@@ -1,7 +1,6 @@
 import { usePropValue } from '@/hooks'
 import Decimal from 'decimal.js'
 import { type ComponentProps, type ComponentType, memo, useCallback, useMemo, useRef } from 'react'
-import { JknIcon } from '../jkn/jkn-icon'
 import { SubscribeSpan } from './num-span'
 
 type SubscribeSpanProps = ComponentProps<typeof SubscribeSpan>

@@ -95,8 +95,9 @@
   }
 }
 
-html{
+html {
   font-size: 16px;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Segoe UI", Helvetica, Arial, "PingFang SC", "Microsoft YaHei", "WenQuanYi Micro Hei", sans-serif;
 }
 
 body {
@@ -217,7 +218,6 @@ body {
     background: transparent;
   }
 }
-
 
 input[type="number"]::-webkit-outer-spin-button,
 input[type="number"]::-webkit-inner-spin-button {
