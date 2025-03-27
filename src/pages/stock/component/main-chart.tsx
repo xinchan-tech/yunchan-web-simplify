@@ -1,5 +1,5 @@
 import type { StockRawRecord } from '@/api'
-import { ChartTypes, JknChart } from '@/components'
+import { ChartTypes, JknChart, JknIcon } from '@/components'
 import { stockSubscribe, stockUtils } from '@/utils/stock'
 import { useMount, useUnmount, useUpdateEffect } from 'ahooks'
 import qs from 'qs'
@@ -243,6 +243,7 @@ export const MainChart = (props: MainChartProps) => {
           isRemote: renderUtils.isRemoteIndicator(indicator)
         })
       } else {
+      
         chartImp.current?.removeSubIndicator(indicator.id)
       }
     })
@@ -328,7 +329,18 @@ export const MainChart = (props: MainChartProps) => {
     <ChartContextMenu
       index={0}
     >
-      <div className="flex-1 overflow-hidden">
+      <div className="flex-1 overflow-hidden relative">
+        <div className="absolute top-6 left-1/2 -translate-x-1/2 z-20 flex items-center space-x-4">
+          {
+            chartStore.overlayStock.map((item, index) => (
+              <div key={item.symbol} className="cursor-pointer text-xs text-transparent border border-solid border-transparent flex items-center hover:text-foreground hover:border-foreground box-border px-1.5 rounded">
+                <span className="size-2" style={{ background: colorUtil.colorPalette[index] }} />
+                <span className="text-foreground mx-2">{item.symbol}</span>
+                <JknIcon.Svg name="delete" size={12} onClick={() => chartManage.removeStockOverlay(item.symbol, props.chartId)} />
+              </div>
+            ))
+          }
+        </div>
         <JknChart className="w-full" showLogo ref={chartImp} />
       </div>
       {

@@ -5,6 +5,7 @@ import { type ComponentProps, memo, useCallback, useEffect, useState } from 'rea
 import { CapsuleTabs } from '.'
 import { JknIcon } from '../jkn/jkn-icon'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../ui/dropdown-menu'
+import { ScrollArea } from "../ui/scroll-area"
 
 interface CollectCapsuleTabsProps extends ComponentProps<typeof CapsuleTabs> {
   onChange?: (key: string) => void
@@ -104,11 +105,13 @@ export const CollectDropdownMenu = memo(({ onChange, ...props }: CollectDropdown
         </div>
       </DropdownMenuTrigger>
       <DropdownMenuContent>
-        {collects.data?.map(cate => (
-          <DropdownMenuItem key={cate.id} onClick={() => _onChange(cate.id)}>
-            {cate.name}({cate.total})
-          </DropdownMenuItem>
-        ))}
+        <ScrollArea style={{ height: collects.data?.length > 9 ? 320 : 'auto' }}>
+          {collects.data?.map(cate => (
+            <DropdownMenuItem key={cate.id} onClick={() => _onChange(cate.id)}>
+              {cate.name}({cate.total})
+            </DropdownMenuItem>
+          ))}
+        </ScrollArea>
       </DropdownMenuContent>
     </DropdownMenu>
   )

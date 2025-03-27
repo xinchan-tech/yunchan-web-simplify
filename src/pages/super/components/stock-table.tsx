@@ -91,7 +91,7 @@ const StockTable = (props: StockTableProps) => {
       {
         title: '名称代码',
         dataIndex: 'name',
-        width: 120,
+        width: 130,
         align: 'left',
         sort: true,
         render: (name, row) => (
@@ -104,15 +104,15 @@ const StockTable = (props: StockTableProps) => {
       {
         title: '周期',
         dataIndex: 'stock_cycle',
-        width: 50,
-        align: 'right',
+        width: 90,
+        align: 'center',
         sort: true,
-        render: stock_cycle => `${stock_cycle}分`
+        render: stock_cycle => stockUtils.intervalToStr(stock_cycle)
       },
       {
         title: '信号类型',
         dataIndex: 'indicator_name',
-        width: 120,
+        width: 90,
         align: 'center',
         render: (indicator_name, row) =>
           indicator_name ? (
@@ -122,7 +122,6 @@ const StockTable = (props: StockTableProps) => {
                 row.bull === '1' ? 'text-stock-up' : 'text-stock-down'
               )}
             >
-              <JknIcon.Arrow direction={row.bull === '1' ? 'up' : 'down'} className="w-3 h-3 mb-1" />
               {indicator_name}
             </div>
           ) : (
@@ -132,74 +131,47 @@ const StockTable = (props: StockTableProps) => {
       {
         title: '底部类型',
         dataIndex: 'bottom',
-        width: 70,
+        width: 90,
         align: 'center',
         sort: true,
         render: bottom => <span>{bottom ? <span className="text-stock-up">{bottom}</span> : '--'}</span>
       },
+
       {
-        title: '信号强度',
-        dataIndex: 'score_total',
-        align: 'right',
-        width: 90,
-        sort: true,
-        render: score => <Star.Rect total={score} count={score} activeColor={useConfig.getState().getStockColor(true, 'hex')} />
-      },
-      {
-        title: '现价',
+        title: '现价/涨跌幅',
         dataIndex: 'close',
-        width: 80,
-        align: 'right',
+        width: 140,
+        align: 'left',
         sort: true,
         render: (close, row) => (
-          <SubscribeSpan.PriceBlink
-            trading="intraDay"
-            symbol={row.symbol}
-            initValue={close}
-            decimal={2}
-            initDirection={(row.percent ?? 0) > 0}
-          />
-        )
-      },
-      {
-        title: '涨跌幅',
-        dataIndex: 'percent',
-        width: 90,
-        align: 'right',
-        sort: true,
-        render: (percent, row) => (
-          <SubscribeSpan.PercentBlink
-            trading="intraDay"
-            symbol={row.symbol}
-            decimal={2}
-            showSign
-            initValue={percent}
-            initDirection={(row.percent ?? 0) >= 0}
-            nanText="--"
-          />
-        )
-      },
-      {
-        title: '成交额',
-        dataIndex: 'amount',
-        width: 100,
-        align: 'right',
-        sort: true,
-        render: (amount, row) => (
-          <SubscribeSpan.TurnoverBlink
-            trading="intraDay"
-            symbol={row.symbol}
-            decimal={2}
-            initValue={amount}
-            showColor={false}
-          />
+          <>
+            <SubscribeSpan.PriceBlink
+              trading="intraDay"
+              symbol={row.symbol}
+              initValue={close}
+              showColor={false}
+              decimal={2}
+              initDirection={(row.percent ?? 0) > 0}
+            />
+            &nbsp;&nbsp;
+            <SubscribeSpan.PercentBlink
+              trading="intraDay"
+              className="text-xs"
+              symbol={row.symbol}
+              decimal={2}
+              showSign
+              initValue={row.percent}
+              initDirection={(row.percent ?? 0) >= 0}
+              nanText="--"
+            />
+          </>
         )
       },
       {
         title: '总市值',
         dataIndex: 'total',
         width: 100,
-        align: 'right',
+        align: 'left',
         sort: true,
         render: (total, row) => (
           <SubscribeSpan.TurnoverBlink
@@ -212,11 +184,13 @@ const StockTable = (props: StockTableProps) => {
         )
       },
       {
-        title: '所属行业',
-        dataIndex: 'industry',
-        width: 120,
-        align: 'right'
-      },
+        title: '信号强度',
+        dataIndex: 'score_total',
+        align: 'center',
+        width: 100,
+        sort: true,
+        render: (score, row) => <Star.Rect total={5} count={score} activeColor={useConfig.getState().getStockColor(row.bull === '1', 'hex')} />
+      }
       // {
       //   title: '盘前涨跌幅',
       //   dataIndex: 'prePercent',

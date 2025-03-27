@@ -32,7 +32,7 @@ export const compareIndicator: IndicatorTemplate<any, any> = {
     }
   },
   draw: params => {
-    const { indicator, chart, ctx, xAxis, yAxis } = params
+    const { indicator, chart, ctx, xAxis, yAxis, bounding } = params
 
     const { realFrom, realTo } = chart.getVisibleRange()
     const result = indicator.result[0] as { validIndex: number; data: number[]; color: string }

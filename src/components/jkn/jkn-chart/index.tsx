@@ -14,18 +14,17 @@ import {
 } from 'jkn-kline-chart'
 import { debounce, uid } from 'radash'
 import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react'
-import { backTestLineFigure, backTestMarkFigure, IconFigure, LogoFigure, markOverlayFigure } from './figure'
+import { backTestLineFigure, backTestMarkFigure, compareLabelFigure, IconFigure, LogoFigure, markOverlayFigure } from './figure'
 import { compareIndicator, gapIndicator, localIndicator } from './indicator'
 import { markIndicator } from './indicator/mark'
 import type { AxisPosition, Candlestick } from './types'
-import { ChartTypes, getStockColor, getTickNumberByTrading, isSameInterval, transformCandleColor, transformTextColor } from './utils'
+import { ChartTypes, getStockColor, isSameInterval, transformCandleColor, transformTextColor } from './utils'
 import { backTestIndicator, type BackTestRecord } from "./indicator/back-test"
 import { CoilingIndicatorId } from "./coiling-calc"
 import { coilingIndicator } from "./indicator/coiling"
 import dayjs from "dayjs"
 import { LogoOverlay } from "./overlay"
 import { useMount, useUnmount } from "ahooks"
-import { stockUtils } from "@/utils/stock"
 import { VerticalLineOverlay } from "./overlay/line"
 import { SplitIndicator } from "./indicator/split"
 import Decimal from "decimal.js"
@@ -44,6 +43,7 @@ registerFigure(backTestLineFigure)
 registerFigure(IconFigure)
 registerFigure(markOverlayFigure)
 registerFigure(LogoFigure)
+registerFigure(compareLabelFigure)
 registerOverlay(LogoOverlay)
 registerOverlay(VerticalLineOverlay)
 

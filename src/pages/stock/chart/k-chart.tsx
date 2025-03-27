@@ -40,7 +40,7 @@ export const KChart = (props: KChartProps) => {
       <div className="text-tertiary text-sm flex items-center px-4 space-x-4 pt-1">
         <CoilingBar />
       </div>
-      <div className={cn('flex-1 overflow-hidden main-chart', `main-chart-${viewMode}`)}>
+      <div className={cn('flex-1 overflow-hidden main-chart', `main-chart-${viewMode}`)} id="stock-chart-container">
         {Array.from({ length: chartCount }).map((_, index, arr) => (
           // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
           <div key={index} className={cn(`chart-item-${index + 1}`, (active === getChartIdByIndex(index) && arr.length > 1) ? 'active' : '')} onClick={() => onChangeActive(index)} onKeyDown={() => { }}>

@@ -231,7 +231,7 @@ getAlarmConditionsList.cacheKey = 'alarms:conditions:list'
  * 删除报警条件
  */
 export const deleteAlarmCondition = async (ids: string[]) => {
-  return request.delete('/stock-svc/alarm/conditions', { data: { ids } }).then(r => r.data)
+  return request.post('/stock-svc/alarm/conditions/delete', { ids }).then(r => r.data)
 }
 
 type BaseAlarmRecord = {

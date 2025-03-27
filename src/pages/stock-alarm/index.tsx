@@ -1,5 +1,5 @@
 import { AlarmType, deleteAlarm, deleteAlarmCondition, getAlarmConditionsList, getAlarmLogsList, PriceAlarmTrigger } from "@/api"
-import { JknIcon, JknVirtualList, Tabs, TabsContent, TabsList, TabsTrigger, StockAlarm, JknVirtualInfinite } from '@/components'
+import { JknIcon, JknVirtualList, Tabs, TabsContent, TabsList, TabsTrigger, StockAlarm, JknVirtualInfinite, StockSelect } from '@/components'
 import { useCheckboxGroup, useToast } from "@/hooks"
 import { stockUtils } from "@/utils/stock"
 import { cn } from "@/utils/style"
@@ -21,7 +21,7 @@ const StockAlarmPage = () => {
               <span className="w-full">&emsp;触发日志&emsp;</span>
             </TabsTrigger>
           </TabsList>
-          <TabsContent value="list" className="flex-1" >
+          <TabsContent value="list" className="flex-1 overflow-hidden" >
             <StockAlarmList />
           </TabsContent>
           <TabsContent value="log" className="flex-1 overflow-hidden">
@@ -69,6 +69,7 @@ const StockAlarmList = () => {
         </StockAlarm>
 
         <JknIcon.Svg className="ml-auto mr-2 cursor-pointer rounded p-1 hover:bg-accent" name="search" size={18} />
+        {/* <StockSelect /> */}
         {/* <JknIcon.Svg className="cursor-pointer" name="sort" size={26} /> */}
         <JknIcon.Svg className="mr-2 cursor-pointer rounded p-1 hover:bg-accent" name="sort" size={18} />
       </div>

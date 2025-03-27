@@ -216,7 +216,11 @@ const TreeMap = (props: TreeMapProps) => {
           textSize = 32
         }
 
-        const textWidth = getStringWidth(text, `${textSize}px sans-serif`)
+        let textWidth = getStringWidth(text, `${textSize}px sans-serif`)
+        if(textWidth > rectWidth) {
+          textSize = textSize * rectWidth / textWidth
+          textWidth = rectWidth
+        }
         d.data.symbolSize = textSize
         d.data.symbolText = text
         return d.x0 + (rectWidth - textWidth) / 2

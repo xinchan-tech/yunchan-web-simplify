@@ -306,8 +306,10 @@ export const chartManage = {
     chartEvent.get().emit('subIndicatorChange', { type: 'add', indicator })
   },
   removeSecondaryIndicator: (indicatorId: string, chartId?: string) => {
+    console.log(useChartManage.getState().chartStores)
     chartManage.setStore(state => {
       const indicator = state.secondaryIndicators.find(indicator => indicator.id === indicatorId)
+      console.log(indicator)
       if (!indicator) return
       chartEvent.get().emit('subIndicatorChange', { type: 'remove', indicator })
       state.secondaryIndicators = state.secondaryIndicators.filter(indicator => indicator.id !== indicatorId)
@@ -344,6 +346,8 @@ export const chartManage = {
     const chartStores = useChartManage.getState().chartStores
     const newChartStores: typeof chartStores = {}
 
+    const newActive = currentModeCount > targetModeCount ? 'chart-0' : useChartManage.getState().activeChartId
+
     for (let i = 0; i < targetModeCount; i++) {
       const chartId = `chart-${i}`
       newChartStores[chartId] = chartStores[chartId] || createDefaultChartStore(chartId, active.symbol)
@@ -351,6 +355,7 @@ export const chartManage = {
 
     useChartManage.setState({
       viewMode,
+      activeChartId: newActive,
       chartStores: newChartStores
     })
   },

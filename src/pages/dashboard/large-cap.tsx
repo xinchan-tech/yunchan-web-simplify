@@ -264,28 +264,28 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
               {
                 type: 'segment', offset: PRE_NUMBER, color: [{
                   offset: 0,
-                  color: colorUtil.rgbaToString(colorUtil.hexToRGBA(preColor, 0.01))
+                  color: colorUtil.rgbaToString(colorUtil.hexToRGBA(preColor, 0))
                 }, {
                   offset: 1,
-                  color: colorUtil.rgbaToString(colorUtil.hexToRGBA(preColor, 0.2))
+                  color: colorUtil.rgbaToString(colorUtil.hexToRGBA(preColor, 0.1))
                 }]
               },
               {
                 type: 'segment', offset: POST_NUMBER + PRE_NUMBER, color: [{
                   offset: 0,
-                  color: colorUtil.rgbaToString(colorUtil.hexToRGBA(color, 0.01))
+                  color: colorUtil.rgbaToString(colorUtil.hexToRGBA(color, 0.0))
                 }, {
                   offset: 1,
-                  color: colorUtil.rgbaToString(colorUtil.hexToRGBA(color, 0.2))
+                  color: colorUtil.rgbaToString(colorUtil.hexToRGBA(color, 0.1))
                 }]
               },
               {
                 type: 'segment', color: [{
                   offset: 0,
-                  color: colorUtil.rgbaToString(colorUtil.hexToRGBA(afterColor, 0.01))
+                  color: colorUtil.rgbaToString(colorUtil.hexToRGBA(afterColor, 0.0))
                 }, {
                   offset: 1,
-                  color: colorUtil.rgbaToString(colorUtil.hexToRGBA(afterColor, 0.2))
+                  color: colorUtil.rgbaToString(colorUtil.hexToRGBA(afterColor, 0.1))
                 }]
               },
             ]

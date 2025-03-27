@@ -5,6 +5,7 @@ import { useConfig, useUser } from '@/store'
 import { cn } from '@/utils/style'
 import { useMutation } from "@tanstack/react-query"
 import { type PropsWithChildren, useState } from 'react'
+import { useChartManage } from "../stock/lib"
 
 const SettingPage = () => {
   const config = useConfig()
@@ -292,6 +293,9 @@ const SettingPage = () => {
                 【test env】 x-test: true
               </div>
             ) : null}
+          </div>
+          <div className="flex flex-col space-y-2 items-start mb-8">
+            <Button variant="outline" size="mini" onClick={() => useChartManage.setState(useChartManage.getInitialState())}>清除个股缓存</Button>
           </div>
           <SettingItem label="更多平台支持">
             <div className="flex items-center space-x-12 text-[#565656]">
