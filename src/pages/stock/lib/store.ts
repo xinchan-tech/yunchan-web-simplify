@@ -282,12 +282,14 @@ export const chartManage = {
     chartEvent.get().emit('mainIndicatorChange', { type: 'add', indicator })
   },
   removeMainIndicator: (indicatorId: string, chartId?: string) => {
-    chartManage.setStore(state => {
-      const indicator = state.mainIndicators.find(indicator => indicator.id === indicatorId)
-      if (!indicator) return
-      chartEvent.get().emit('mainIndicatorChange', { type: 'remove', indicator })
-      state.mainIndicators = state.mainIndicators.filter(indicator => indicator.id !== indicatorId)
-    }, chartId)
+    setTimeout(() => {
+      chartManage.setStore(state => {
+        const indicator = state.mainIndicators.find(indicator => indicator.id === indicatorId)
+        if (!indicator) return
+        chartEvent.get().emit('mainIndicatorChange', { type: 'remove', indicator })
+        state.mainIndicators = state.mainIndicators.filter(indicator => indicator.id !== indicatorId)
+      }, chartId)
+    }, 10)
   },
   /**
    *
@@ -306,14 +308,14 @@ export const chartManage = {
     chartEvent.get().emit('subIndicatorChange', { type: 'add', indicator })
   },
   removeSecondaryIndicator: (indicatorId: string, chartId?: string) => {
-    console.log(useChartManage.getState().chartStores)
-    chartManage.setStore(state => {
-      const indicator = state.secondaryIndicators.find(indicator => indicator.id === indicatorId)
-      console.log(indicator)
-      if (!indicator) return
-      chartEvent.get().emit('subIndicatorChange', { type: 'remove', indicator })
-      state.secondaryIndicators = state.secondaryIndicators.filter(indicator => indicator.id !== indicatorId)
-    }, chartId)
+    setTimeout(() => {
+      chartManage.setStore(state => {
+        const indicator = state.secondaryIndicators.find(indicator => indicator.id === indicatorId)
+        if (!indicator) return
+        chartEvent.get().emit('subIndicatorChange', { type: 'remove', indicator })
+        state.secondaryIndicators = state.secondaryIndicators.filter(indicator => indicator.id !== indicatorId)
+      }, chartId)
+    }, 10)
   },
   /**
    * 设置主图类型

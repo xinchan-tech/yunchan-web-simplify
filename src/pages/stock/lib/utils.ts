@@ -1,6 +1,6 @@
 import { StockChartInterval, type StockRawRecord } from '@/api'
 import type { StockTrading } from '@/utils/stock'
-import type { ChartManageStore, Indicator } from "./store"
+import type { ChartManageStore, Indicator } from './store'
 
 export const renderUtils = {
   getViewMode: (s: ChartManageStore['viewMode']) => {
@@ -144,25 +144,11 @@ export const renderUtils = {
     if (
       [StockChartInterval.PRE_MARKET, StockChartInterval.INTRA_DAY, StockChartInterval.AFTER_HOURS].includes(timeIndex)
     ) {
-      if (trading === 'preMarket' && timeIndex !== StockChartInterval.PRE_MARKET) {
-        return false
-      }
-
-      if (trading === 'intraDay' && timeIndex !== StockChartInterval.INTRA_DAY) {
-        return false
-      }
-
-      if (trading === 'afterHours' && timeIndex !== StockChartInterval.AFTER_HOURS) {
-        return false
-      }
-
-      if (trading === 'close') {
-        return false
-      }
-    } else {
-      if (trading !== 'intraDay') {
-        return false
-      }
+      return true
+    }
+    
+    if (trading !== 'intraDay') {
+      return false
     }
     return true
   },
@@ -170,9 +156,5 @@ export const renderUtils = {
    * 判断是否是分时图
    */
   isTimeIndexChart: (timeIndex: StockChartInterval) =>
-    [
-      StockChartInterval.PRE_MARKET,
-      StockChartInterval.AFTER_HOURS,
-      StockChartInterval.INTRA_DAY
-    ].includes(timeIndex)
+    [StockChartInterval.PRE_MARKET, StockChartInterval.AFTER_HOURS, StockChartInterval.INTRA_DAY].includes(timeIndex)
 }

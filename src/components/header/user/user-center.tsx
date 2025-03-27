@@ -230,7 +230,7 @@ const UserCenter = () => {
         <div className="flex justify-center items-center my-6">
           <div className="text-center w-28">
             <div className="text-sm text-tertiary mb-3">点击</div>
-            <div className="text-4xl font-bold">{user?.total_points}</div>
+            <div className="text-4xl font-bold">{user?.flow_num}</div>
           </div>
           <div className="text-center w-28">
             <div className="text-sm text-tertiary mb-3">注册</div>

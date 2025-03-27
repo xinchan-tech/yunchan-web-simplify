@@ -246,7 +246,7 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
           options: {
             axis: {
               position: 'right' as AxisPosition,
-              name: 'normal'
+              name: 'normal',
             },
             leftAxis: {
               position: 'right' as AxisPosition

@@ -222,7 +222,7 @@ export const ChartTypeSelect = memo(() => {
 
   const onChartTypeChange = (type: ChartType) => {
     if (type === ChartType.Candle && renderUtils.isTimeIndexChart(interval)) {
-      return
+      chartManage.setInterval(StockChartInterval.ONE_MIN)
     }
     chartManage.setType(type)
   }

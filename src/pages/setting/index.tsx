@@ -77,10 +77,10 @@ const SettingPage = () => {
                   <RadioGroupItem value="zh_CN" id="language-cn" />
                   <Label htmlFor="language-cn">简体中文</Label>
                 </div>
-                <div className="flex items-center space-x-2">
+                {/* <div className="flex items-center space-x-2">
                   <RadioGroupItem value="en" id="language-en" />
                   <Label htmlFor="language-en">English</Label>
-                </div>
+                </div> */}
               </RadioGroup>
             </SettingItem>
 

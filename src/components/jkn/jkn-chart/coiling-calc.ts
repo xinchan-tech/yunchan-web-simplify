@@ -59,19 +59,19 @@ export const calcCoilingPivots = (pivots: CoilingData['pivots'] | undefined) => 
     // 中枢背景颜色
     if (p.direction === 1) {
       if (p.segmentNum <= SEGMENT_NUM_LIMIT) {
-        bgColor = colorUtil.rgbaToString(colorUtil.argbToRGBA('B2007C37'))
-        color = colorUtil.rgbaToString(colorUtil.argbToRGBA('FF007C37'))
+        bgColor = 'rgba(8, 153, 129, 0.3)'
+        color = 'rgba(8, 153, 129, 1)'
       } else {
-        bgColor = colorUtil.rgbaToString(colorUtil.argbToRGBA('CB315FFF'))
-        color = colorUtil.rgbaToString(colorUtil.argbToRGBA('FF315FFF'))
+        bgColor = 'rgba(41, 98, 255, 0.3)'
+        color = 'rgba(41, 98, 255, 1)'
       }
     } else {
       if (p.segmentNum <= SEGMENT_NUM_LIMIT) {
-        bgColor = colorUtil.rgbaToString(colorUtil.argbToRGBA('9DF50D0D'))
-        color = colorUtil.rgbaToString(colorUtil.argbToRGBA('FFF50D0D'))
+        bgColor = 'rgba(242, 54, 69, 0.3)'
+        color = 'rgba(242, 54, 69, 1)'
       } else {
-        bgColor = colorUtil.rgbaToString(colorUtil.argbToRGBA('BCFF1DFC'))
-        color = colorUtil.rgbaToString(colorUtil.argbToRGBA('FFFF1DFC'))
+        bgColor = 'rgba(156, 39, 176, 0.3)'
+        color = 'rgba(156, 39, 176, 1)'
       }
     }
 
@@ -109,19 +109,19 @@ export const calcCoilingPivotsExpands = (expands: CoilingData['expands'] | undef
       // 中枢背景颜色
       if (p.direction === 1) {
         if (segmentNum === PIVOTS_EXPAND_LIMIT) {
-          bgColor = colorUtil.rgbaToString(colorUtil.argbToRGBA('BCFF1DFC'))
-          color = colorUtil.rgbaToString(colorUtil.argbToRGBA('FFFF1DFC'))
+          bgColor = 'rgba(156, 39, 176, 0.3)'
+          color = 'rgba(156, 39, 176, 1)'
         } else if (segmentNum > PIVOTS_EXPAND_LIMIT) {
-          bgColor = colorUtil.rgbaToString(colorUtil.argbToRGBA('CB315FFF'))
-          color = colorUtil.rgbaToString(colorUtil.argbToRGBA('FF315FFF'))
+          bgColor = 'rgba(41, 98, 255, 0.3)'
+          color = 'rgba(41, 98, 255, 1)'
         }
       } else {
         if (segmentNum === PIVOTS_EXPAND_LIMIT) {
-          bgColor = colorUtil.rgbaToString(colorUtil.argbToRGBA('CB315FFF'))
-          color = colorUtil.rgbaToString(colorUtil.argbToRGBA('FF315FFF'))
+          bgColor = 'rgba(41, 98, 255, 0.3)'
+          color = 'rgba(41, 98, 255, 1)'
         } else if (segmentNum > PIVOTS_EXPAND_LIMIT) {
-          bgColor = colorUtil.rgbaToString(colorUtil.argbToRGBA('BCFF1DFC'))
-          color = colorUtil.rgbaToString(colorUtil.argbToRGBA('FFFF1DFC'))
+          bgColor = 'rgba(156, 39, 176, 0.3)'
+          color = 'rgba(156, 39, 176, 1)'
         }
       }
 

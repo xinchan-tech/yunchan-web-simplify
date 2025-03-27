@@ -100,7 +100,7 @@ export const drawCoilingPivot: DrawCoilingFunc = ({ ctx, xAxis, yAxis, indicator
       attrs: {
         x: endPoints[0] + 24,
         y: startPoints[1],
-        text: mark,
+        text: '',
         align: 'center',
         baseline: 'bottom'
       },
@@ -139,7 +139,7 @@ export const drawCoilingPivot: DrawCoilingFunc = ({ ctx, xAxis, yAxis, indicator
       attrs: {
         x: endPoints[0] + 32,
         y: startPoints[1],
-        text: mark,
+        text: '',
         align: 'center',
         baseline: 'bottom'
       },

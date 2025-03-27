@@ -53,6 +53,7 @@ export type UserResult = {
   transaction: number
   inv_click: number
   points: number
+  flow_num: number
   buy_inchannel_status: number
 
   user_grade: string[]

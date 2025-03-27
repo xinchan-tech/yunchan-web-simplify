@@ -163,6 +163,7 @@ const LargeCap = () => {
                 />
                 <SubscribeSpan.Percent
                   className="text-sm"
+                  trading={['SPX', 'IXIC', 'DJI'].includes(stock.symbol) ? 'intraDay' : ['preMarket', 'intraDay', 'afterHours']}
                   initValue={stockUtils.getPercent(stock)}
                   symbol={stock.symbol}
                   initDirection={stockUtils.isUp(stock)}
@@ -176,7 +177,7 @@ const LargeCap = () => {
       </ScrollContainer>
 
       <div className="flex-1 relative">
-        <div onDoubleClick={onChartDoubleClick} className="w-full h-full py-2 box-border">
+        <div onDoubleClick={onChartDoubleClick} className="w-full h-full box-border">
           <LargeCapChart code={activeStock} type={stockType} />
         </div>
 
@@ -235,15 +236,31 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
           show: false
         }
       },
+      yAxis: {
+        tickText: {
+          color: '#B8B8B8'
+        },
+        axisLine: {
+          show: false
+        }
+      },
+      xAxis: {
+        tickText: {
+          color: '#B8B8B8'
+        },
+        axisLine: {
+          show: false
+        }
+      },
       candle: {
         type: 'area' as any,
-
         area: {
           lineColor: data => {
             const postData = data.slice(0, POST_NUMBER + PRE_NUMBER).pop()
-            const lastData = data[data.length]
+            const lastData = data[data.length - 1]
 
             const lastColor = Decimal.create(lastData?.close).gt(lastData?.prevClose ?? 0) ? upColor : downColor
+
             const preColor = data.length > PRE_NUMBER ? '#50535E' : lastColor
 
             const afterColor = data.length >= POST_NUMBER + PRE_NUMBER + AFTER_NUMBER ? '#50535E' : lastColor
@@ -256,7 +273,7 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
           },
           backgroundColor(data) {
             const postData = data.slice(0, POST_NUMBER + PRE_NUMBER).pop()
-            const lastData = data[data.length]
+            const lastData = data[data.length - 1]
             const lastColor = Decimal.create(lastData?.close).gt(lastData?.prevClose ?? 0) ? upColor : downColor
 
             const color = Decimal.create(postData?.close).gt(postData?.prevClose ?? 0) ? upColor : downColor
@@ -298,11 +315,38 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
         tooltip: {
           custom: [],
           expand: false
+        },
+        priceMark: {
+          last: {
+            line: {
+              type: 'full'
+            },
+            text: {
+
+            },
+            color(data) {
+              const lastData = data.slice(-1)[0]
+              return Decimal.create(lastData.close).gt(lastData.prevClose) ? colorUtil.rgbaToString(colorUtil.hexToRGBA(upColor, 1)) : colorUtil.rgbaToString(colorUtil.hexToRGBA(downColor, 1))
+            },
+          }
         }
-      }
+      },
+
 
     })
+
+    c?.setPaneOptions({
+      id: ChartTypes.MAIN_PANE_ID,
+      axis: {
+        gap: {
+          top: 0,
+          bottom: 0
+        }
+      }
+    })
   }, [code])
+
+
 
   const candlesticks = useQuery({
     queryKey: [getStockChartQuote.cacheKey, code],
@@ -334,7 +378,7 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
     }
   }, []))
 
-  useStockQuoteSubscribe(code ? [code]: [], useCallback<StockSubscribeHandler<'quote'>>((data) => {
+  useStockQuoteSubscribe(code ? [code] : [], useCallback<StockSubscribeHandler<'quote'>>((data) => {
     const c = chart.current?.getChart()
     const lastData = c?.getDataList()?.slice(-1)[0]
 

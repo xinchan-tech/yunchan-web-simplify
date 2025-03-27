@@ -1,11 +1,12 @@
-import { AlarmType, deleteAlarm, deleteAlarmCondition, getAlarmConditionsList, getAlarmLogsList, PriceAlarmTrigger } from "@/api"
-import { JknIcon, JknVirtualList, Tabs, TabsContent, TabsList, TabsTrigger, StockAlarm, JknVirtualInfinite, StockSelect } from '@/components'
+import { AlarmType, PriceAlarmTrigger, deleteAlarmCondition, getAlarmConditionsList, getAlarmLogsList } from "@/api"
+import { JknIcon, JknVirtualInfinite, StockAlarm, Tabs, TabsContent, TabsList, TabsTrigger } from '@/components'
 import { useCheckboxGroup, useToast } from "@/hooks"
 import { stockUtils } from "@/utils/stock"
 import { cn } from "@/utils/style"
 import { useInfiniteQuery } from "@tanstack/react-query"
 import to from "await-to-js"
 import { useState } from 'react'
+import { useNavigate } from "react-router"
 
 const StockAlarmPage = () => {
   const [activeTab, setActiveTab] = useState<'list' | 'log'>('list')
@@ -133,11 +134,10 @@ const AlarmItem = ({ symbol, data, onDelete }: AlarmItemProps) => {
     return null
   }
 
-
-
+  const navigate = useNavigate()
 
   return (
-    <div className="alarm-list-item px-5 py-3 leading-none text-sm border-b-primary hover:bg-[#1B1B1B]">
+    <div className="alarm-list-item px-5 py-3 leading-none text-sm border-b-primary hover:bg-[#1B1B1B]" onClick={() => navigate(`/stock?symbol=${symbol}`)} onKeyDown={() => { }}>
       <div className="flex items-center w-full relative">
         <JknIcon.Stock symbol={symbol} className="w-4 h-4 leading-4" />
         <span>{symbol}</span>，
@@ -184,9 +184,9 @@ const StockAlarmRecordList = () => {
     select: data => data.pages.flatMap(p => p.items ?? []),
   })
 
-  const { toast } = useToast()
+  // const { toast } = useToast()
 
-  const onDelete = async (id: string) => {
+  const onDelete = async (_id: string) => {
 
   }
 
