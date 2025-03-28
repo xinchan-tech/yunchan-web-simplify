@@ -42,7 +42,10 @@ export const compareIndicator: IndicatorTemplate<any, any> = {
     const validFrom = realFrom > result.validIndex ? realFrom : result.validIndex
     const dataList = chart.getDataList()
 
-    const base = dataList[validFrom].close
+    const base = dataList[validFrom]?.close
+
+    if(!base) return false
+
     const k = base / result.data[validFrom]
 
     new Line({

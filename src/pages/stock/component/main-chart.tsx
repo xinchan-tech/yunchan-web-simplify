@@ -284,10 +284,12 @@ export const MainChart = (props: MainChartProps) => {
           })
         }
       } else {
+        stockCache.current.compare.delete(symbol)
         if (stockCache.current.compare.size === 0 && stockCache.current.rightAxisBeforePk) {
           chartManage.setYAxis(stockCache.current.rightAxisBeforePk, props.chartId)
           stockCache.current.rightAxisBeforePk = null
         }
+        chartImp.current?.removeStockCompare(symbol)
       }
     })
 

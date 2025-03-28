@@ -244,9 +244,7 @@ class StockSubscribe {
    * @returns
    */
   private hasQuoteTopicSubscribe(symbol: string) {
-
     const topic = `quote:${symbol}`
-    console.log(JSON.stringify(this.subscribeTopic), symbol, this.subscribeTopic[topic]?.count)
     return this.subscribeTopic[topic]?.count > 0
   }
 

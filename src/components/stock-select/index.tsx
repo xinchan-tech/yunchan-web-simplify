@@ -42,9 +42,19 @@ const StockSelect = ({ onChange, className, width, ...props }: StockSelectProps)
     }, 200)
   }
 
+  const onSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setKeyword(e.target.value)
+    if (e.target.value && !open) {
+      setTrue()
+    }
+  }
+
   return (
     <div className="w-48" style={{ width }}>
-      <Popover modal open={open} onOpenChange={v => !v && setFalse()}>
+      <Popover modal open={open} onOpenChange={v => {
+        !v && setFalse()
+        console.log(v)
+      }}>
         <PopoverAnchor asChild>
           <div
             className={cn(
@@ -55,7 +65,7 @@ const StockSelect = ({ onChange, className, width, ...props }: StockSelectProps)
             <JknIcon.Svg className="w-4 h-4" color='#B8B8B8' name="search" />
             <Input
               value={keyword}
-              onChange={e => setKeyword(e.target.value)}
+              onChange={onSearch}
               className="border-none placeholder:text-tertiary"
               size="sm"
               onClick={() => setTrue()}
@@ -77,7 +87,7 @@ const StockSelect = ({ onChange, className, width, ...props }: StockSelectProps)
                     className="h-[49px] px-2 border-0 border-b border-solid border-border flex items-center hover:bg-accent cursor-pointer"
                     key={ele[1]}
                     onClick={() => _onClick(ele[1])}
-                    onKeyDown={() => {}}
+                    onKeyDown={() => { }}
                   >
                     <div className="flex-shrink-0">
                       {ele[0] ? (
@@ -133,7 +143,7 @@ const VirtualStockList = (props: VirtualStockListProps) => {
             className="h-[49px] px-2 border-0 border-b border-solid border-border flex items-center hover:bg-accent cursor-pointer w-48 box-border overflow-hidden"
             key={ele.index}
             onClick={() => props.onClick?.(ele.data[1])}
-            onKeyDown={() => {}}
+            onKeyDown={() => { }}
           >
             <div className="flex-shrink-0">
               {ele.data[0] ? (

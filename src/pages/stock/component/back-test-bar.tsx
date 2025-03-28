@@ -92,6 +92,7 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
         profit.clear()
         maxProfit.clear()
         positiveProfitCount.clear()
+        props.onSetBackTestRecord([])
         setTimer(null)
       }
     }

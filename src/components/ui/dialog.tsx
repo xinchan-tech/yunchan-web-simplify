@@ -25,34 +25,94 @@ const DialogOverlay = React.forwardRef<
 ))
 DialogOverlay.displayName = DialogPrimitive.Overlay.displayName
 
+const DialogContext = React.createContext<{ drag: (content: { x: number, y: number }, originPoint: { x: number; y: number }, targetPoint: { x: number; y: number }) => void } | undefined>(undefined)
+
 const DialogContent = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content>
->(({ className, children, ...props }, ref) => (
-  <DialogPortal>
-    <DialogOverlay />
-    <DialogPrimitive.Content
-      ref={ref}
-      className={cn(
-        'fixed left-[50%] top-[50%] z-50 grid w-full translate-x-[-50%] translate-y-[-50%] border bg-background duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:rounded-lg',
-        'bg-muted text-foreground rounded',
-        className
-      )}
-      {...props}
-    >
-      {children}
-      {/* <DialogPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
-        <Cross2Icon className="h-4 w-4" />
-        <span className="sr-only">Close</span>
-      </DialogPrimitive.Close> */}
-    </DialogPrimitive.Content>
-  </DialogPortal>
-))
+>(({ className, children, ...props }, ref) => {
+  const uid = React.useId()
+  const ele = React.useRef<HTMLDivElement>()
+  const drag = React.useCallback((content: { x: number; y: number }, originPoint: { x: number; y: number }, targetPoint: { x: number; y: number }) => {
+    if(!ele.current || ele.current.id !== uid){
+      ele.current = document.getElementById(uid) as HTMLDivElement
+    }
+
+    const offset = {
+      x: targetPoint.x - originPoint.x,
+      y: targetPoint.y - originPoint.y
+    }
+
+    const contentRect = {
+      left: content.x + offset.x,
+      top: content.y + offset.y
+    }
+
+    if (ele.current) {
+      ele.current.style.left = `${contentRect.left}px`
+      ele.current.style.top = `${contentRect.top}px`
+      ele.current.style.transform = 'none'
+      ele.current.style.transition = 'none'
+    }
+  }, [uid])
+  return (
+    <DialogPortal>
+      <DialogOverlay />
+      <DialogPrimitive.Content
+        ref={ref}
+        id={uid}
+        className={cn(
+          'fixed left-[50%] top-[50%] z-50 grid w-full translate-x-[-50%] translate-y-[-50%] border bg-background duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:rounded-lg',
+          'bg-muted text-foreground rounded',
+          className
+        )}
+        {...props}
+      >
+        <DialogContext.Provider value={{ drag }}>
+          {children}
+        </DialogContext.Provider>
+      </DialogPrimitive.Content>
+    </DialogPortal>
+  )
+})
 DialogContent.displayName = DialogPrimitive.Content.displayName
 
-const DialogHeader = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
-  <div className={cn('flex flex-col text-center sm:text-left ', className)} {...props} />
-)
+const DialogHeader = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => {
+  const ref = React.useRef<HTMLDivElement>(null)
+  const clickDownPoints = React.useRef({ x: 0, y: 0 })
+  const contentPoints = React.useRef({ x: 0, y: 0 })
+  const ctx = React.useContext(DialogContext)
+
+  const onClickDown = (e: React.MouseEvent) => {
+    const content = ref.current?.parentElement
+
+    if (!content) return
+
+    const rec = content.getBoundingClientRect()
+
+    contentPoints.current = { x: rec.left, y: rec.top }
+    clickDownPoints.current = { x: e.clientX, y: e.clientY }
+  }
+
+  const onMouseMove = (e: React.MouseEvent) => {
+    if (ctx && e.buttons === 1) {
+      const x = e.clientX - clickDownPoints.current.x
+      const y = e.clientY - clickDownPoints.current.y
+      if (Math.abs(x) > 5 || Math.abs(y) > 5) {
+        ctx.drag(contentPoints.current, { x: clickDownPoints.current.x, y: clickDownPoints.current.y }, { x: e.clientX, y: e.clientY })
+      }
+    }
+  }
+
+  return (
+    <div className={cn('flex flex-col text-center sm:text-left ', className)} {...props}
+      ref={ref}
+      onMouseDown={onClickDown}
+      onMouseMove={onMouseMove}
+      onMouseUp={() => { clickDownPoints.current = { x: 0, y: 0 }; contentPoints.current = { x: 0, y: 0 } }}
+    />
+  )
+}
 DialogHeader.displayName = 'DialogHeader'
 
 const DialogFooter = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (

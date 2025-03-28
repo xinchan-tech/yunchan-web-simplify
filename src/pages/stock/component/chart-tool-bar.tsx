@@ -22,7 +22,7 @@ import { timeIndex, useSymbolQuery } from '../lib'
 import { ChartType, MainYAxis, chartManage, useChartManage } from '../lib/store'
 import { renderUtils } from '../lib/utils'
 import { useQuery } from "@tanstack/react-query"
-import { useAuthorized, useStockSearch, useToast } from "@/hooks"
+import { toast, useAuthorized, useStockSearch, useToast } from "@/hooks"
 import { useLocalStorageState, useVirtualList } from "ahooks"
 import { cn } from "@/utils/style"
 import { chartEvent } from "../lib/event"
@@ -184,7 +184,7 @@ export const PeriodSelect = memo(() => {
   const interval = useChartManage(s => s.getActiveChart().interval)
 
   const intervalStr = useMemo(() => {
-    if (renderUtils.isTimeIndexChart(interval)) return '24H'
+    if (renderUtils.isTimeIndexChart(interval)) return '分时图'
     return stockUtils.intervalToStr(interval)
   }, [interval])
 
@@ -196,7 +196,7 @@ export const PeriodSelect = memo(() => {
 
       <DropdownMenuContent align="start" alignOffset={-10}>
         <DropdownMenuItem data-checked={renderUtils.isTimeIndexChart(interval)} onClick={() => chartManage.setInterval(StockChartInterval.INTRA_DAY)}>
-          24H
+          分时图
         </DropdownMenuItem>
         <DropdownMenuSeparator className="bg-[#2E2E2E]" />
         {timeIndex.slice(4).map(i => (
@@ -521,11 +521,18 @@ const StockPkModal = () => {
 
   const pk = useChartManage(s => s.getActiveChart().overlayStock)
 
+  const {toast} = useToast()
+
   const onClick = (symbol: string, name: string) => {
     if (pk.find(p => p.symbol === symbol)) return false
     const current = useChartManage.getState().getActiveChart().symbol
 
-    if (current === symbol) return false
+    if (current === symbol) {
+      toast({
+        description: '相同股票不能进行PK'
+      })
+      return false
+    }
 
     chartManage.setStockOverlay(symbol, name)
 
@@ -684,8 +691,6 @@ export const OverlayMarkModal = () => {
       if (tabList.data.find(t => t.key === category)) return
     }
 
-
-
     setCategory(tabList.data[0].key)
 
   }, [tabList.data, category])
@@ -698,7 +703,6 @@ export const OverlayMarkModal = () => {
     const list = tabList.data.find(t => t.key === category)
 
     if (!list) return []
-
 
 
     return list.value.filter(v => v.name.includes(search))
@@ -729,7 +733,7 @@ export const OverlayMarkModal = () => {
         }
       }
     }
-
+    chartManage.setInterval(StockChartInterval.DAY)
     chartManage.setMarkOverlay(mark.key, key)
   }
 
