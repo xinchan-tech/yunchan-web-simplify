@@ -145,6 +145,7 @@ const PlateStocks = (props: PlateStocksProps) => {
 
   return (
     <JknRcTable
+      headerHeight={61}
       isLoading={plateStocks.isLoading}
       rowKey="symbol"
       columns={columns}

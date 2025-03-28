@@ -1,16 +1,12 @@
-import { getAllStocks } from '@/api'
+import { useStockSearch } from "@/hooks"
 import { useStockList } from '@/store'
 import { cn } from '@/utils/style'
-import { useQuery } from '@tanstack/react-query'
 import { useBoolean, useVirtualList } from 'ahooks'
-import pako from 'pako'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { JknIcon } from '../jkn/jkn-icon'
 import { Input, type InputProps } from '../ui/input'
 import { Popover, PopoverAnchor, PopoverContent } from '../ui/popover'
 import { ScrollArea } from '../ui/scroll-area'
-import { Trie } from './trie-tree'
-import { useStockSearch } from "@/hooks"
 
 interface StockSelectProps extends Omit<InputProps, 'onChange'> {
   onChange?: (symbol: string) => void

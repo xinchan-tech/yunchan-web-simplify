@@ -518,6 +518,13 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
           id: ChartTypes.MAIN_PANE_ID
         })
 
+        chart.current?.setPaneOptions({
+          id: ChartTypes.MAIN_PANE_ID,
+          axis: {
+            value: 'prevClose'
+          }
+        })
+
         chart.current?.setStyles({
           candle: {
             type: 'area' as CandleType,
@@ -592,6 +599,12 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
               lineColor: DEFAULT_AREA_BG_COLOR.color,
               backgroundColor: DEFAULT_AREA_BG_COLOR.bg
             }
+          }
+        })
+        chart.current?.setPaneOptions({
+          id: ChartTypes.MAIN_PANE_ID,
+          axis: {
+            value: undefined
           }
         })
       }
