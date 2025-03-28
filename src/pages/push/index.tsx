@@ -246,7 +246,7 @@ const PushPage = () => {
       {
         title: `${activeType === "JRGW"
           ? "股王指数"
-          : menus.data?.find((item) => item.key === activeType)?.title
+          : menus.data?.find((item) => item.key === activeType)?.name
           }`,
         dataIndex: "star",
         align: "right",

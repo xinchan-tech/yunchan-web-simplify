@@ -138,8 +138,6 @@ const GoldenPool = () => {
 
   }, [removeFav.mutate])
 
-
-
   const columns: JknRcTableProps<TableDataType>["columns"] = useMemo(
     () => [
       {

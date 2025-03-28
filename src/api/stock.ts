@@ -541,7 +541,15 @@ type GetStockCollectsResult = {
  * 股票金池
  */
 export const getStockCollects = async (params: GetStockCollectsParams) => {
-  const r = await request.get<GetStockCollectsResult>('/collects', { params }).then(r => r.data)
+  if(!params.page){
+    params.page = 1
+  }
+  const r = await request.get<GetStockCollectsResult>('/stock-svc/collect/stocks', { params }).then(r => {
+    if(r.data.items === null){
+      r.data.items = []
+    }
+    return r.data
+  })
   return r
 }
 getStockCollects.cacheKey = 'getStockCollects'
@@ -571,15 +579,24 @@ type GetStockCollectCatesResult = {
    * 总数
    */
   total: string
+
+  /**
+   * 是否选中
+   */
+  is_default: boolean
+  
+  /**
+   * 排序
+   */
+  sort: number
+
 }
 
 /**
  * 股票金池分类
  */
-export const getStockCollectCates = (symbol?: string) => {
-  const url = symbol ? `/collect/cates/${symbol}` : '/collect/cates'
-
-  return request.get<GetStockCollectCatesResult[]>(url).then(r => r.data)
+export const getStockCollectCates = () => {
+  return request.get<GetStockCollectCatesResult[]>('/stock-svc/collect/categories').then(r => r.data)
 }
 getStockCollectCates.cacheKey = '/collect/cates'
 
@@ -587,21 +604,22 @@ getStockCollectCates.cacheKey = '/collect/cates'
  * 修改金池分类
  */
 export const updateStockCollectCate = (params: { id: string; name: string }) => {
-  return request.post('/collect/cate/update', new URLSearchParams(params)).then(r => r.data)
+  return request.post('/stock-svc/collect/categories/update', { cate_id: params.id, name: params.name }).then(r => r.data)
 }
 
 /**
  * 添加金池分类
  */
 export const addStockCollectCate = (name: string) => {
-  return request.post('/collect/cate/save', new URLSearchParams({ name })).then(r => r.data)
+  return request.post('/stock-svc/collect/categories', { name }).then(r => r.data)
 }
 
 /**
  * 删除金池分类
  */
-export const removeStockCollectCate = (id: string) => {
-  return request.post('/collect/cate/delete', new URLSearchParams({ id })).then(r => r.data)
+export const removeStockCollectCate = (id: string | string[]) => {
+  const ids = Array.isArray(id) ? id : [id]
+  return request.post('/stock-svc/collect/categories/delete',{ids} ).then(r => r.data)
 }
 
 /**
@@ -616,7 +634,7 @@ export const addStockCollect = (params: { symbols: string[]; cate_ids: number[] 
   for (const c of params.cate_ids) {
     form.append('cate_ids[]', c.toString())
   }
-  return request.post('/collect/save', new URLSearchParams(form)).then(r => r.data)
+  return request.post('/stock-svc/collect/stocks', form).then(r => r.data)
 }
 
 /**
@@ -643,7 +661,7 @@ export const removeStockCollect = (params: { symbols: string[]; cate_ids: number
   for (const c of params.cate_ids) {
     form.append('cate_ids[]', c.toString())
   }
-  return request.post<void>('/collect/delete', form).then(r => r.data)
+  return request.post<void>('/stock-svc/collect/stocks/delete', form).then(r => r.data)
 }
 
 /**
@@ -654,6 +672,14 @@ export const removeStockCollect = (params: { symbols: string[]; cate_ids: number
 export const moveStockCollectBatch = (params: { collect_ids: number[]; cate_ids: number[] }) => {
   return request.post<void>('/stock-svc/collect/stocks/move', params).then(r => r.data)
 }
+
+/**
+ * 股票金池分类排序
+ */
+export const sortStockCollectCate = (id: string, sort: number) => {
+  return request.post<void>(`/stock-svc/collect/categories/${id}/setSort`, {sort}).then(r => r.data)
+}
+
 
 /**
  * 股票：symbol
@@ -1429,11 +1455,12 @@ export type StockIndicator = {
   db_type: 'system' | 'user'
   formula?: string
   id: string
+  collect: 0 | 1
   type: string
   value: string
   name?: string
   param?: [string, number, number, number][]
-  items?: StockIndicator[]
+  // items?: StockIndicator[]
 }
 
 type GetStockIndicatorsResult = {
@@ -1448,6 +1475,7 @@ type GetStockIndicatorsResult = {
 
 /**
  * 指标列表
+ * @deprecated
  */
 export const getStockIndicators = () => {
   return request.get<GetStockIndicatorsResult>('/stock/indicators').then(r => {
@@ -1509,6 +1537,67 @@ export const getStockIndicators = () => {
 }
 getStockIndicators.cacheKey = 'stock:indicators'
 
+interface GetStockIndicatorsV2Result {
+  id: string
+  name: string
+  indicators?: StockIndicator[]
+  items?: {
+    id: string
+    name: string
+    indicators?: StockIndicator[]
+  }[]
+}
+
+export const getStockIndicatorsV2 = () => {
+  
+  return request.get<GetStockIndicatorsV2Result[]>('/stock-svc/v2/indicators').then(r => {
+    const indicator: {
+      id: string
+      name: string
+      params: { name: string; value: string; default: string; min: string; max: string }[]
+    }[] = []
+    const formula: Record<string, string> = {}
+    r.data.forEach(m => {
+      m.items?.forEach(i => {
+        i.indicators?.forEach(j => {
+          if (j.formula) {
+            formula[j.id] = j.formula
+          }
+          if (j.param) {
+            indicator.push({
+              id: j.id,
+              name: j.name!,
+              params: j.param.map(p => {
+                return {
+                  name: p[0],
+                  value: p[1].toString(),
+                  default: p[1].toString(),
+                  min: p[3].toString(),
+                  max: p[2].toString()
+                }
+              })
+            })
+          }
+        })
+      })
+    })
+
+
+    useIndicator.getState().mergeIndicatorParams(indicator)
+    useIndicator.getState().setFormula(formula)
+    return r.data
+  })
+}
+getStockIndicatorsV2.cacheKey = 'stock:indicators:v2'
+
+export const addStockIndicatorCollect = (ids: string[]) => {
+  return request.post('/stock-svc/indicators/collect/add', { ids }).then(r => r.data)
+}
+
+export const removeStockIndicatorCollect = (ids: string[]) => {
+  return request.post('/stock-svc/indicators/collect/remove', { ids }).then(r => r.data)
+}
+
 type GetStockIndicatorDataParams = {
   symbol: string
   id: string
@@ -1530,6 +1619,7 @@ type GetStockIndicatorDataResult = {
     }
   }[]
 }
+
 
 /**
  * 获取用户自编指标绘图数据

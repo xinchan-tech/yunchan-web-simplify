@@ -205,14 +205,14 @@ class StockSubscribe {
    * @returns cancelTopic
    */
   public onQuoteTopic(symbol: string, handler: StockSubscribeHandler<'quote'>) {
-    if (!this.hasQuoteTopicSubscribe(symbol)) {
-      this.subscribe('quote', [symbol])
-    }
+    // if (!this.hasQuoteTopicSubscribe(symbol)) {
+    //   this.subscribe('quote', [symbol])
+    // }
     this.subscribed.on(`${symbol}:quote`, handler)
 
     return () => {
       this.offQuoteTopic(symbol, handler)
-      this.unsubscribe('quote', [symbol])
+      // this.unsubscribe('quote', [symbol])
     }
   }
 
@@ -224,14 +224,14 @@ class StockSubscribe {
    * @returns cancelTopic
    */
   public onBarTopic(symbolWithPeriod: string, handler: StockSubscribeHandler<'bar'>) {
-    if (!this.hasBarTopicSubscribe(symbolWithPeriod)) {
-      this.subscribe('bar', [symbolWithPeriod])
-    }
+    // if (!this.hasBarTopicSubscribe(symbolWithPeriod)) {
+    //   this.subscribe('bar', [symbolWithPeriod])
+    // }
     this.subscribed.on(`${symbolWithPeriod}:bar`, handler)
 
     return () => {
       this.offBarTopic(symbolWithPeriod, handler)
-      this.unsubscribe('bar', [symbolWithPeriod])
+      // this.unsubscribe('bar', [symbolWithPeriod])
     }
   }
 

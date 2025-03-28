@@ -12,12 +12,12 @@ interface CollectCapsuleTabsProps extends ComponentProps<typeof CapsuleTabs> {
 }
 
 const useCollectSelect = (onChange?: (key: string) => void) => {
-  const [activeStock, setActiveStock] = useState<string>('1')
+  const [activeStock, setActiveStock] = useState<Nullable<string>>()
   const token = useToken(s => s.token)
   const collects = useQuery({
     queryKey: [getStockCollectCates.cacheKey],
     queryFn: () => getStockCollectCates(),
-    initialData: [{ id: '1', name: '我的自选', create_time: '', active: 1, total: '0' }],
+    initialData: [],
     enabled: !!token
   })
   const queryClient = useQueryClient()
@@ -26,10 +26,21 @@ const useCollectSelect = (onChange?: (key: string) => void) => {
     if (!token) {
       queryClient.setQueryData(
         [getStockCollectCates.cacheKey],
-        [{ id: '1', name: '我的自选', create_time: '', active: 1, total: '0' }]
+        []
       )
     }
   }, [token, queryClient.setQueryData])
+
+  useEffect(() => {
+    if (collects.data?.length && !activeStock) {
+      let defaultCate = collects.data.find(cate => cate.is_default)
+      if(!defaultCate) {
+        defaultCate = collects.data[0]
+      }
+      setActiveStock(defaultCate.id)
+      onChange?.(defaultCate.id)
+    }
+  }, [collects.data, onChange, activeStock])
 
   const _onChange = useCallback(
     (key: string) => {
@@ -43,32 +54,10 @@ const useCollectSelect = (onChange?: (key: string) => void) => {
 }
 
 export const CollectCapsuleTabs = ({ onChange, ...props }: CollectCapsuleTabsProps) => {
-  const [activeStock, setActiveStock] = useState<string>('1')
-  const token = useToken(s => s.token)
-  const collects = useQuery({
-    queryKey: [getStockCollectCates.cacheKey],
-    queryFn: () => getStockCollectCates(),
-    initialData: [{ id: '1', name: '自选', create_time: '', active: 1, total: '0' }],
-    enabled: !!token
-  })
-  const queryClient = useQueryClient()
-
-  useEffect(() => {
-    if (!token) {
-      queryClient.setQueryData(
-        [getStockCollectCates.cacheKey],
-        [{ id: '1', name: '自选', create_time: '', active: 1, total: '0' }]
-      )
-    }
-  }, [token, queryClient.setQueryData])
-
-  const _onChange = (key: string) => {
-    setActiveStock(key)
-    onChange?.(key)
-  }
-
+  const { activeStock, collects, _onChange } = useCollectSelect(onChange)
+  console.log(activeStock)
   return (
-    <CapsuleTabs activeKey={activeStock} onChange={_onChange} {...props}>
+    <CapsuleTabs activeKey={activeStock ?? ''} onChange={_onChange} {...props}>
       {collects.data?.map(cate => (
         <CapsuleTabs.Tab
           key={cate.id}

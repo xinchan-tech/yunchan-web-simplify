@@ -1,4 +1,4 @@
-import { getStockIndicators, getStockTabList, StockChartInterval, type StockIndicator } from '@/api'
+import { addStockIndicatorCollect, getStockIndicators, getStockIndicatorsV2, getStockTabList, removeStockCollectCate, StockChartInterval, type StockIndicator } from '@/api'
 import {
   CoilingIndicatorId,
   DropdownMenu,
@@ -22,7 +22,7 @@ import { timeIndex, useSymbolQuery } from '../lib'
 import { ChartType, MainYAxis, chartManage, useChartManage } from '../lib/store'
 import { renderUtils } from '../lib/utils'
 import { useQuery } from "@tanstack/react-query"
-import { toast, useAuthorized, useStockSearch, useToast } from "@/hooks"
+import { toast, useAuthorized, useOptimisticUpdate, useStockSearch, useToast } from "@/hooks"
 import { useLocalStorageState, useVirtualList } from "ahooks"
 import { cn } from "@/utils/style"
 import { chartEvent } from "../lib/event"
@@ -268,7 +268,7 @@ const IndicatorPicker = memo(() => {
   const modal = useModal({
     content: <IndicatorModal onClickParams={() => paramsForm.modal.open()} />,
     title: '指标策略',
-    className: 'w-[667px]',
+    className: 'w-[667px] bg-[#1F1F1F]',
     footer: false,
     closeIcon: true
   })
@@ -301,12 +301,16 @@ const IndicatorPicker = memo(() => {
 })
 
 export const IndicatorModal = (props: { onClickParams: () => void }) => {
+  // const indicator = useQuery({
+  //   queryKey: [getStockIndicators.cacheKey],
+  //   queryFn: getStockIndicators
+  // })
   const indicator = useQuery({
-    queryKey: [getStockIndicators.cacheKey],
-    queryFn: getStockIndicators
+    queryKey: [getStockIndicatorsV2.cacheKey],
+    queryFn: getStockIndicatorsV2
   })
   const [search, setSearch] = useState('')
-  const [category, setCategory] = useState<string>('缠论系统')
+  const [category, setCategory] = useState<Nullable<string>>()
   const [type, setType] = useState<'main' | 'secondary'>('main')
   const mainIndicators = useChartManage(s => s.getActiveChart().mainIndicators)
   const secondaryIndicators = useChartManage(s => s.getActiveChart().secondaryIndicators)
@@ -316,40 +320,44 @@ export const IndicatorModal = (props: { onClickParams: () => void }) => {
     setSearch(keyword ?? '')
   }
 
+  useEffect(() => {
+    if (indicator.data && !category) {
+      setCategory(indicator.data[0]?.id)
+    }
+  }, [indicator.data, category])
+
   const indicators = useMemo(() => {
     if (!indicator.data) return []
 
     const allList: StockIndicator[] = []
 
-    if (type === 'main') {
-      indicator.data.main.forEach(i => {
-        let name = i.name
-        if(i.name === '缠论系统'){
-          name = '特色指标'
-        }
-        if (category && name !== category) return
+    if (category) {
+      const list = indicator.data.find(i => i.id === category)
 
-        i.indicators.forEach(ii => {
-          if (search && !ii.name?.includes(search)) return
+      if (!list) return []
 
-          allList.push(ii)
+      if (list.name === '收藏') {
+        list.indicators?.forEach(i => {
+          allList.push(i)
         })
+        return allList
+      }
 
+      const t = list.items?.find(i => i.name.includes(type === 'main' ? '主图' : '副图'))
+
+      if (!t) return []
+
+      t.indicators?.forEach(i => {
+        if (search && !i.name?.includes(search)) return
+
+        allList.push(i)
       })
-    } else {
-      indicator.data.secondary.forEach(i => {
-        if (category && i.name !== category) return
 
-        i.indicators.forEach(ii => {
-          if (search && !ii.name?.includes(search)) return
-
-          allList.push(ii)
-        })
-
-      })
+      return allList
     }
 
-    return allList
+    return []
+
   }, [indicator.data, search, category, type])
 
   const [_, toastNotAuth] = useAuthorized()
@@ -389,6 +397,25 @@ export const IndicatorModal = (props: { onClickParams: () => void }) => {
     return r
   }, [mainIndicators, secondaryIndicators, system])
 
+  const collect = useOptimisticUpdate({
+    cacheKey: [getStockIndicatorsV2.cacheKey],
+    action: (params: { id: string, collect: boolean }) => params.collect ? addStockIndicatorCollect([params.id]) : removeStockCollectCate([params.id]),
+    onOptimisticUpdate: (params: { id: string, collect: boolean }, draft: NonNullable<typeof indicator.data>) => {
+      draft.forEach(i => {
+        i.items?.forEach(o => {
+          o.indicators?.forEach(oo => {
+            if (oo.id === params.id) {
+              oo.collect = params.collect ? 1 : 0
+            }
+          })
+        })
+      })
+    },
+    // onSuccess: () => {
+    //   indicator.refetch()
+    // }
+  })
+
 
 
   return (
@@ -406,7 +433,7 @@ export const IndicatorModal = (props: { onClickParams: () => void }) => {
             <JknIcon.Svg name="fav" size={16} />
             <span>缠论系统</span>
           </div> */}
-          <div data-checked={category === '特色指标'}
+          {/* <div data-checked={category === '特色指标'}
             className="flex items-center pl-4 space-x-2 py-3 hover:bg-accent cursor-pointer data-[checked=true]:bg-accent"
             onClick={() => setCategory('特色指标')} onKeyDown={() => { }}
           >
@@ -419,11 +446,22 @@ export const IndicatorModal = (props: { onClickParams: () => void }) => {
           >
             <JknIcon.Svg name="chart-indicator-normal" size={16} />
             <span>常规指标</span>
-          </div>
+          </div> */}
+          {
+            indicator.data?.map(i => (
+              <div data-checked={category === i.id} key={i.id}
+                className="flex items-center pl-4 space-x-2 py-3 hover:bg-accent cursor-pointer data-[checked=true]:bg-accent"
+                onClick={() => setCategory(i.id)} onKeyDown={() => { }}
+              >
+                <JknIcon.Svg name="chart-indicator-normal" size={16} />
+                <span>{i.name}</span>
+              </div>
+            ))
+          }
         </div>
         <div className="flex-1 overflow-auto py-2 box-border">
           {
-            category !== '缠论系统' ? (
+            indicator.data?.find(i => i.id === category)?.name !== '收藏' ? (
               <ToggleGroup className="ml-8 my-2" type="single" value={type} onValueChange={setType as any}>
                 <ToggleGroupItem value="main" className="rounded-2xl h-[24px] text-xs px-3 leading-1">主图</ToggleGroupItem>
                 <ToggleGroupItem value="secondary" className="rounded-2xl h-[24px] text-xs px-3 leading-1">副图</ToggleGroupItem>
@@ -433,12 +471,18 @@ export const IndicatorModal = (props: { onClickParams: () => void }) => {
           {
             indicators.map(i => (
               <div key={i.name}
-                className="flex items-center pl-2 space-x-2 hover:bg-accent cursor-pointer py-1.5 data-[checked=true]:bg-[#2962FF4D]"
+                className="flex items-center pl-2.5 space-x-2 hover:bg-accent cursor-pointer py-1.5 data-[checked=true]:bg-[#2962FF4D] text-transparent hover:text-[#B8B8B8]"
                 data-checked={checkedIndicator.has(i.id)}
                 onClick={() => onCheck(i)} onKeyDown={() => { }}
               >
-                <JknIcon.Svg name="fav-star" className="opacity-0" size={16} />
-                <span>{i.name}</span>
+                {
+                  i.collect === 1 ? (
+                    <JknIcon.Svg name="fav-star" className="text-[#FFC440] p-1 rounded" size={11} onClick={(e) => { e.stopPropagation(); e.preventDefault(); collect.mutate({ id: i.id, collect: false }) }} />
+                  ) : (
+                    <JknIcon.Svg name="fav" className="hover:bg-[#4A4A4A] p-1 rounded" size={11} onClick={(e) => { e.stopPropagation(); e.preventDefault(); collect.mutate({ id: i.id, collect: true }) }} />
+                  )
+                }
+                <span className="text-foreground">{i.name}</span>
                 {
                   !i.authorized ? (
                     <JknIcon name="ic_lock" className="rounded-none" />
@@ -521,7 +565,7 @@ const StockPkModal = () => {
 
   const pk = useChartManage(s => s.getActiveChart().overlayStock)
 
-  const {toast} = useToast()
+  const { toast } = useToast()
 
   const onClick = (symbol: string, name: string) => {
     if (pk.find(p => p.symbol === symbol)) return false
