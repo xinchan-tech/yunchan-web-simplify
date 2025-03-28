@@ -64,7 +64,7 @@ const StockSelect = ({ onChange, className, width, ...props }: StockSelectProps)
             />
           </div>
         </PopoverAnchor>
-        <PopoverContent align="start" onOpenAutoFocus={e => e.preventDefault()}>
+        <PopoverContent align="start" className="w-48" onOpenAutoFocus={e => e.preventDefault()}>
           {stockList.history.length > 0 && !keyword ? (
             <div>
               <div className="flex items-center justify-between px-2 py-2 border-0 border-b border-solid border-border">
@@ -130,7 +130,7 @@ const VirtualStockList = (props: VirtualStockListProps) => {
       <div ref={wrapperRef}>
         {list.map(ele => (
           <div
-            className="h-[49px] px-2 border-0 border-b border-solid border-border flex items-center hover:bg-accent cursor-pointer"
+            className="h-[49px] px-2 border-0 border-b border-solid border-border flex items-center hover:bg-accent cursor-pointer w-48 box-border overflow-hidden"
             key={ele.index}
             onClick={() => props.onClick?.(ele.data[1])}
             onKeyDown={() => {}}

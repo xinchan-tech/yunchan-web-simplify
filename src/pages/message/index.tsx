@@ -406,32 +406,26 @@ interface SystemMessageContentProps {
   avatar: ReactNode
 }
 
-type SystemMessageType = Awaited<ReturnType<typeof getNoticeList>>['items']
-
 const SystemMessageContent = (props: SystemMessageContentProps) => {
   const notices = useQuery({
     queryKey: [getNoticeList.cacheKey, props.msgKey],
     queryFn: () => getNoticeList(props.msgKey!),
     select: data => {
-      data.items.reverse()
-      return data
+      const r = [...data.items]
+      r.reverse()
+      return r
     }
   })
 
-  const data = useMemo<SystemMessageType>(() => {
-    const r = notices.data?.items ?? []
-
-    return r
-  }, [notices.data])
 
   return (
     <div className="h-full overflow-hidden w-full">
       <JknVirtualInfinite
-        data={data ?? []}
+        data={notices.data ?? []}
         rowKey="id"
         itemHeight={120}
         autoBottom
-        renderItem={(msg: ArrayItem<typeof data>) => (
+        renderItem={(msg: ArrayItem<typeof notices.data>) => (
           <div key={msg.id} className="space-y-4 mb-2">
             <div className="text-center flex items-center justify-center text-tertiary mt-4 text-sm">
               <div className="w-1/5 h-0 border-0 border-b border-solid border-b-border mr-2" />

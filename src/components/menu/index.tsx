@@ -97,7 +97,7 @@ const Menu = () => {
   }
 
   return (
-    <div className="h-full flex flex-col items-center w-full px-0.5 box-border space-y-2.5 mt-1 text-foreground">
+    <div className="h-full flex flex-col items-center w-full px-0.5 box-border space-y-2.5 text-foreground">
       {menus.map(item => (
         <div className="text-center cursor-pointer hover:text-primary" key={item.title}>
           <div

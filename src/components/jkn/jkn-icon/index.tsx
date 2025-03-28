@@ -100,15 +100,18 @@ interface JknSvgIconProps extends HtmlHTMLAttributes<SVGElement> {
   name: IconName
   title?: string
   size?: number
+  label?: string
 }
 
-const JknSvgIcon = ({ name, title, size = 24, ...props }: JknSvgIconProps) => {
-  return (
+const JknSvgIcon = ({ name, title, size = 24, label, ...props }: JknSvgIconProps) => {
+  const icon = (
     <svg width={size} height={size} {...props}>
       <title>{title}</title>
       <use xlinkHref={`#icon-${name}`} />
     </svg>
   )
+
+  return label ? wrapperLabel(icon, label) : icon
 }
 
 interface JknIconStockProps extends Omit<JknIconProps, 'stock'> {
@@ -119,7 +122,6 @@ const JknIconStock = ({ symbol, className, ...props }: JknIconStockProps) => {
   const listMap = useStockList(s => s.listMap)
   const stock = listMap[symbol]
 
-  // return <JknIcon stock={stock?.[0]} className="h-6 w-6" {...props} />
   return (
     <>
       {stock?.[0] ? (

@@ -9,6 +9,7 @@ interface StockViewProps {
   showName?: boolean
   iconSize?: number
   className?: string
+  
 }
 
 const StockView = ({ code, name, showName = false, iconSize = 24, className }: StockViewProps) => {
@@ -29,7 +30,7 @@ const StockView = ({ code, name, showName = false, iconSize = 24, className }: S
       </div>
       <div className="flex-1 overflow-hidden ">
         <div className="items-center gap-2">
-          <div className="text-foreground shrink-0 line-clamp-1">{code}</div>
+          <div className="text-foreground shrink-0 ">{code}</div>
           {showName ? (
             <div className="text-tertiary text-xs whitespace-nowrap text-ellipsis overflow-hidden text-[#575757]">
               {name || '--'}

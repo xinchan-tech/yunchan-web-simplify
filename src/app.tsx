@@ -176,7 +176,7 @@ const App = () => {
         </div>
         <div className="flex-1 overflow-hidden flex bg-accent">
           <div className="w-[40px] flex-shrink-0 bg-accent pt-1">
-            <div className="h-full bg-background w-full  flex flex-col items-center rounded-tr-xs pt-4">
+            <div className="h-full bg-background w-full  flex flex-col items-center rounded-tr-xs pt-3">
               <Menu />
             </div>
           </div>

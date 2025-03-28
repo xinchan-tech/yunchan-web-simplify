@@ -43,6 +43,8 @@ export const MainChart = (props: MainChartProps) => {
   })
 
   useStockBarSubscribe([`${symbol}@${stockUtils.intervalToPeriod(chartStore.interval)}`], (data) => {
+    const mode = useChartManage.getState().chartStores[props.chartId].mode
+    if (mode === 'backTest') return
     const trading = useTime.getState().getTrading()
     const interval = useChartManage.getState().chartStores[props.chartId].interval
     const record = stockUtils.toStock(data.rawRecord)
@@ -76,6 +78,8 @@ export const MainChart = (props: MainChartProps) => {
   useEffect(() => {
     const unSubscribe = stockSubscribe.onQuoteTopic(symbol, data => {
       const trading = useTime.getState().getTrading()
+      const mode = useChartManage.getState().chartStores[props.chartId].mode
+      if (mode === 'backTest') return
 
       if (!renderUtils.shouldUpdateChart(trading, chartStore.interval)) {
         return
@@ -96,7 +100,7 @@ export const MainChart = (props: MainChartProps) => {
     })
 
     return unSubscribe
-  }, [chartStore.interval, symbol])
+  }, [chartStore.interval, symbol, props.chartId])
 
   /**
    * 初始化
@@ -165,6 +169,9 @@ export const MainChart = (props: MainChartProps) => {
     if (Number.parseInt(gapShow) > 0) {
       chartImp.current?.createGapIndicator(Number.parseInt(gapShow))
     }
+
+    chartImp.current?.setLeftAxis(!!_store.yAxis.left)
+    chartImp.current?.setRightAxis(_store.yAxis.right === MainYAxis.Percentage ? 'percentage' : 'normal')
   })
 
   useUnmount(() => {
@@ -199,6 +206,7 @@ export const MainChart = (props: MainChartProps) => {
 
     const cancelSymbolEvent = chartEvent.on('symbolChange', (symbol) => {
       setSymbol(symbol)
+      chartManage.setSymbol(symbol, props.chartId)
     })
 
     // const cancelCoilingEvent = chartEvent.on('coilingChange', ({ type, coiling }) => {
@@ -244,7 +252,7 @@ export const MainChart = (props: MainChartProps) => {
           isRemote: renderUtils.isRemoteIndicator(indicator)
         })
       } else {
-      
+
         chartImp.current?.removeSubIndicator(indicator.id)
       }
     })
@@ -252,9 +260,12 @@ export const MainChart = (props: MainChartProps) => {
     const cancelStockCompareChange = chartEvent.on('stockCompareChange', ({ type, symbol }) => {
       if (chartImp.current === null) return
       if (type === 'add') {
+
         if (!stockCache.current.compare.has(symbol)) {
-          if(!stockCache.current.rightAxisBeforePk){
-            stockCache.current.rightAxisBeforePk = useChartManage.getState().chartStores[props.chartId].yAxis
+          if (!stockCache.current.rightAxisBeforePk) {
+            stockCache.current.rightAxisBeforePk = {
+              ...useChartManage.getState().chartStores[props.chartId].yAxis
+            }
           }
           fetchCandlesticks(symbol, chartStore.interval, startAt.current).then(r => {
             if (!r.data.list.length) return
@@ -273,11 +284,8 @@ export const MainChart = (props: MainChartProps) => {
           })
         }
       } else {
-        stockCache.current.compare.delete(symbol)
-        chartImp.current?.removeStockCompare(symbol)
-        if(stockCache.current.compare.size === 0 && stockCache.current.rightAxisBeforePk){
-          chartImp.current?.setRightAxis(stockCache.current.rightAxisBeforePk.right as any)
-          chartImp.current?.setLeftAxis(stockCache.current.rightAxisBeforePk.left as any)
+        if (stockCache.current.compare.size === 0 && stockCache.current.rightAxisBeforePk) {
+          chartManage.setYAxis(stockCache.current.rightAxisBeforePk, props.chartId)
           stockCache.current.rightAxisBeforePk = null
         }
       }
@@ -330,6 +338,10 @@ export const MainChart = (props: MainChartProps) => {
     chartImp.current?.createBackTestIndicator([record])
   }
 
+  const onSetBackTestRecord = (records: any[]) => {
+    chartImp.current?.setBackTestIndicator(records)
+  }
+
   const onNextBackTestLine = (candlestick: StockRawRecord) => {
     chartImp.current?.appendCandlestick(stockUtils.toStock(candlestick), chartStore.interval)
   }
@@ -361,6 +373,7 @@ export const MainChart = (props: MainChartProps) => {
               onNextCandlesticks={onNextBackTestLine}
               onChangeCandlesticks={(d) => chartImp.current?.applyNewData(convertToStock(d))}
               onAddBackTestRecord={onAddBackTestRecord}
+              onSetBackTestRecord={onSetBackTestRecord}
             />
           </div>
         ) : null

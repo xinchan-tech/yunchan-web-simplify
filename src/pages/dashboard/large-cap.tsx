@@ -177,7 +177,7 @@ const LargeCap = () => {
       </ScrollContainer>
 
       <div className="flex-1 relative">
-        <div onDoubleClick={onChartDoubleClick} className="w-full h-full box-border">
+        <div onClick={onChartDoubleClick} onKeyDown={() => { }} className="w-full h-full box-border">
           <LargeCapChart code={activeStock} type={stockType} />
         </div>
 
@@ -197,14 +197,13 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
   const chart = useRef<ComponentRef<typeof JknChart>>(null)
 
   useEffect(() => {
-    let PRE_NUMBER = 330
-    const POST_NUMBER = 390
-    let AFTER_NUMBER = 240
+    const tick = stockUtils.getIndexTimeTick()
     const c = chart.current?.getChart()
     const splitId = 'split-indicator-large-cap'
     if ('IXIC' === code || 'DJI' === code || 'SPX' === code) {
-      PRE_NUMBER = 0
-      AFTER_NUMBER = 0
+      tick.pre = 0
+      tick.after = 0
+      tick.total = tick.pre + tick.post + tick.after
       c?.removeIndicator({
         id: splitId
       })
@@ -212,14 +211,14 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
       c?.createIndicator({
         name: 'split-indicator',
         id: splitId,
-        calcParams: [[PRE_NUMBER / (PRE_NUMBER + POST_NUMBER + AFTER_NUMBER), (PRE_NUMBER + POST_NUMBER) / (PRE_NUMBER + POST_NUMBER + AFTER_NUMBER)]],
+        calcParams: [[tick.pre / (tick.total), (tick.post + tick.pre) / (tick.total)]],
       }, true, {
         id: ChartTypes.MAIN_PANE_ID
       })
     }
 
 
-    c?.setXAxisTick(PRE_NUMBER + POST_NUMBER + AFTER_NUMBER)
+    c?.setXAxisTick(tick.total)
     c?.setLeftMinVisibleBarCount(1)
     c?.setScrollEnabled(false)
     c?.setZoomEnabled(false)
@@ -256,34 +255,34 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
         type: 'area' as any,
         area: {
           lineColor: data => {
-            const postData = data.slice(0, POST_NUMBER + PRE_NUMBER).pop()
+            const postData = data.slice(0, tick.pre + tick.total).pop()
             const lastData = data[data.length - 1]
 
             const lastColor = Decimal.create(lastData?.close).gt(lastData?.prevClose ?? 0) ? upColor : downColor
 
-            const preColor = data.length > PRE_NUMBER ? '#50535E' : lastColor
+            const preColor = data.length > tick.pre ? '#50535E' : lastColor
 
-            const afterColor = data.length >= POST_NUMBER + PRE_NUMBER + AFTER_NUMBER ? '#50535E' : lastColor
+            const afterColor = data.length >= tick.total ? '#50535E' : lastColor
 
             return [
-              { type: 'segment', color: preColor, offset: PRE_NUMBER },
-              { type: 'segment', color: Decimal.create(postData?.close).gt(postData?.prevClose ?? 0) ? upColor : downColor, offset: POST_NUMBER + PRE_NUMBER },
+              { type: 'segment', color: preColor, offset: tick.pre },
+              { type: 'segment', color: Decimal.create(postData?.close).gt(postData?.prevClose ?? 0) ? upColor : downColor, offset: tick.post + tick.pre },
               { type: 'segment', color: afterColor },
             ]
           },
           backgroundColor(data) {
-            const postData = data.slice(0, POST_NUMBER + PRE_NUMBER).pop()
+            const postData = data.slice(0, tick.pre + tick.total).pop()
             const lastData = data[data.length - 1]
             const lastColor = Decimal.create(lastData?.close).gt(lastData?.prevClose ?? 0) ? upColor : downColor
 
             const color = Decimal.create(postData?.close).gt(postData?.prevClose ?? 0) ? upColor : downColor
 
-            const preColor = data.length > PRE_NUMBER ? '#DBDBDB' : lastColor
-            const afterColor = data.length >= POST_NUMBER + PRE_NUMBER + AFTER_NUMBER ? '#DBDBDB' : lastColor
+            const preColor = data.length > tick.pre ? '#DBDBDB' : lastColor
+            const afterColor = data.length >= tick.total ? '#DBDBDB' : lastColor
 
             return [
               {
-                type: 'segment', offset: PRE_NUMBER, color: [{
+                type: 'segment', offset: tick.pre, color: [{
                   offset: 0,
                   color: colorUtil.rgbaToString(colorUtil.hexToRGBA(preColor, 0))
                 }, {
@@ -292,7 +291,7 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
                 }]
               },
               {
-                type: 'segment', offset: POST_NUMBER + PRE_NUMBER, color: [{
+                type: 'segment', offset: tick.pre + tick.post, color: [{
                   offset: 0,
                   color: colorUtil.rgbaToString(colorUtil.hexToRGBA(color, 0.0))
                 }, {
@@ -360,7 +359,20 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
 
   useEffect(() => {
     chart.current?.applyNewData(candlesticks.data ?? [])
-
+    const tick = stockUtils.getIndexTimeTick()
+    if (candlesticks.data?.length === tick.total) {
+      chart.current?.getChart()?.setStyles({
+        candle: {
+          priceMark: {
+            last: {
+              line: {
+                show: true
+              }
+            }
+          }
+        }
+      })
+    }
   }, [candlesticks])
 
   useStockBarSubscribe(code ? [`${code}@1m`] : [], useCallback((data) => {
@@ -381,16 +393,16 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
   useEffect(() => {
     if (!code) return
     const unSubscribe = stockSubscribe.onQuoteTopic(code, data => {
-          const c = chart.current?.getChart()
-          const lastData = c?.getDataList()?.slice(-1)[0]
+      const c = chart.current?.getChart()
+      const lastData = c?.getDataList()?.slice(-1)[0]
 
-          if (!lastData) return
+      if (!lastData) return
 
-          chart.current?.appendCandlestick({
-            ...lastData,
-            quote: data.record.close,
-            prevQuote: data.record.preClose
-          }, 1)
+      chart.current?.appendCandlestick({
+        ...lastData,
+        quote: data.record.close,
+        prevQuote: data.record.preClose
+      }, 1)
     })
 
     return unSubscribe

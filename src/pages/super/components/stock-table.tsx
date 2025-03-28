@@ -97,7 +97,7 @@ const StockTable = (props: StockTableProps) => {
         render: (name, row) => (
           <div className="flex items-center space-x-2">
             <CollectStar onUpdate={props.onUpdate} checked={row.collect === 1} code={row.symbol} />
-            <StockView name={name} code={row.symbol} />
+            <StockView name={name} code={row.symbol} showName />
           </div>
         )
       },

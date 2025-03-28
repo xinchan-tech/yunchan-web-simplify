@@ -215,8 +215,7 @@ export const GoldenPoolNameEdit: FC<{
   const onAction = async () => {
     if (!name) {
       toast({
-        title: "请输入金池名称",
-        variant: "destructive",
+        title: "请输入金池名称"
       });
       return;
     }
@@ -232,8 +231,7 @@ export const GoldenPoolNameEdit: FC<{
 
     if (err) {
       toast({
-        title: err.message || "操作失败",
-        variant: "destructive",
+        title: err.message || "操作失败"
       });
       return;
     }

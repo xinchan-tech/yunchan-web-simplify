@@ -160,7 +160,7 @@ const StockTree = () => {
       if (!_colors.includes(_color)) continue
       const n = {
         name: plate.name,
-        value: plate.amount ? Math.abs(Math.log(plate.amount) ** 5) + 0.1 : 0,
+        value: plate.amount,
         data: plate.change,
         color: getColorByStep(plate.change / 100)
       }

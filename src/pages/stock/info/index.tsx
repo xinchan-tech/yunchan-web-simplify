@@ -155,6 +155,7 @@ const StockBaseInfo = () => {
             sideOffset={5}
             align="start"
             code={data.code}
+            size={20}
           />
         ) : null}
       </div>

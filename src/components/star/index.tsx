@@ -6,6 +6,7 @@ interface StarProps {
   className?: string
   checked?: boolean
   onChange?: (checked: boolean) => void
+  size?: number
 }
 
 const Star = (props: StarProps) => {
@@ -15,7 +16,7 @@ const Star = (props: StarProps) => {
 
   return (
     <span onClick={() => props.onChange?.(!props.checked)} onKeyDown={() => { }} onFocus={() => { }} onMouseOver={() => setHover(true)} onMouseLeave={() => setHover(false)}>
-      <JknIcon name={icon} className="w-4 h-4 flex items-center" />
+      <JknIcon name={icon} className="w-4 h-4 flex items-center" style={{ width: props.size, height: props.size }} />
     </span>
   )
 }

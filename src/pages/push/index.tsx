@@ -205,6 +205,7 @@ const PushPage = () => {
           <SubscribeSpan.PercentBlink
             symbol={row.symbol}
             decimal={2}
+            showSign
             initValue={percent}
             initDirection={stockUtils.isUp(row)}
           />

@@ -321,9 +321,13 @@ export const IndicatorModal = (props: { onClickParams: () => void }) => {
 
     const allList: StockIndicator[] = []
 
-    if (type === 'main' || category === '缠论系统') {
+    if (type === 'main') {
       indicator.data.main.forEach(i => {
-        if (category && i.name !== category) return
+        let name = i.name
+        if(i.name === '缠论系统'){
+          name = '特色指标'
+        }
+        if (category && name !== category) return
 
         i.indicators.forEach(ii => {
           if (search && !ii.name?.includes(search)) return
@@ -395,13 +399,13 @@ export const IndicatorModal = (props: { onClickParams: () => void }) => {
       </div>
       <div className="flex-1 overflow-hidden flex">
         <div className="border-r-primary w-[160px] h-full flex-shrink-0 py-2">
-          <div data-checked={category === '缠论系统'}
+          {/* <div data-checked={category === '缠论系统'}
             className="flex items-center pl-4 space-x-2 py-3 hover:bg-accent cursor-pointer data-[checked=true]:bg-accent"
             onClick={() => setCategory('缠论系统')} onKeyDown={() => { }}
           >
             <JknIcon.Svg name="fav" size={16} />
             <span>缠论系统</span>
-          </div>
+          </div> */}
           <div data-checked={category === '特色指标'}
             className="flex items-center pl-4 space-x-2 py-3 hover:bg-accent cursor-pointer data-[checked=true]:bg-accent"
             onClick={() => setCategory('特色指标')} onKeyDown={() => { }}
@@ -524,10 +528,6 @@ const StockPkModal = () => {
     if (current === symbol) return false
 
     chartManage.setStockOverlay(symbol, name)
-    chartManage.setYAxis({
-      left: useChartManage.getState().getActiveChart().yAxis.left,
-      right: MainYAxis.Percentage
-    })
 
     if (searchHistory?.find(p => p.symbol === symbol)) return true
 

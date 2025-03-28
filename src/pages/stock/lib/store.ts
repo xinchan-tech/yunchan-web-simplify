@@ -133,10 +133,6 @@ export interface ChartManageStore {
    */
   activeChartId: string
   /**
-   * current
-   */
-  currentSymbol: string
-  /**
    * 图表配置
    */
   chartStores: Record<string, ChartStore>
@@ -224,6 +220,12 @@ export const chartManage = {
     useChartManage.setState({
       activeChartId: chartId
     })
+  },
+  setSymbol: (symbol: string, chartId?: string) => {
+    chartManage.setStore(state => {
+      state.symbol = symbol
+    }, chartId)
+    // chartEvent.get().emit('symbolChange', symbol)
   },
   /**
    * 设置分时
@@ -371,7 +373,13 @@ export const chartManage = {
     chartManage.setStore(state => {
       state.overlayStock.push({ symbol, name })
     }, chartId)
+    
     chartEvent.get().emit('stockCompareChange', { type: 'add', symbol })
+
+    chartManage.setYAxis({
+      left: useChartManage.getState().getActiveChart().yAxis.left,
+      right: MainYAxis.Percentage
+    })
   },
   removeStockOverlay: (symbol: string, chartId?: string) => {
     chartManage.setStore(state => {

@@ -5,6 +5,9 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
   Input,
   JknDatePicker,
   JknIcon,
@@ -24,7 +27,7 @@ import { memo, useRef, useState } from 'react'
 import { useImmer } from 'use-immer'
 import { renderUtils } from '../lib/utils'
 import { useChartManage } from "../lib"
-import { useLatestRef, useToast } from "@/hooks"
+import { useLatestRef, useStack, useToast } from "@/hooks"
 
 const disabledDate = (d: Date, candlesticks: StockRawRecord[]) => {
   if (!candlesticks.length) return true
@@ -40,6 +43,7 @@ interface BackTestBarProps {
   onNextCandlesticks: (candlestick: StockRawRecord) => void
   onChangeCandlesticks: (data: StockRawRecord[]) => void
   onAddBackTestRecord: (record: { time: number; price: number; count: number; type: 'buy' | 'sell' | 'sellToZero' | 'buyToZero', index: number }) => void
+  onSetBackTestRecord: (records: any[]) => void
 }
 
 type TradeRecord = {
@@ -48,6 +52,7 @@ type TradeRecord = {
     time: number
     price: number
     count: number
+    zero?: boolean
   }[]
   buy: TradeRecord['sell']
 }
@@ -59,11 +64,11 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
   //交易记录
   const [tradeRecord, setTradeRecord] = useState<TradeRecord>({ sell: [], buy: [] })
   const [timer, setTimer] = useState<number | null>(null)
-  const [profit, setProfit] = useState<number>(0)
-  const [positiveProfitCount, { inc: incPositiveProfitCount, dec: decPositiveProfitCount }] = useCounter(0)
-  const [maxProfit, setMaxProfit] = useState<number>(0)
   const currentKline = useRef<number>(-1)
-  // const klineCount = useRef<number>(0)
+  const maxProfit = useStack<{ max: number, index: number }>([])
+  const profit = useStack<{ profit: number, index: number }>([])
+  const positiveProfitCount = useStack<{ count: number, index: number }>([])
+
 
 
   const onDateChange = (date?: string) => {
@@ -83,7 +88,9 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
         currentKline.current = kline.index
         setTradeRecord({ buy: [], sell: [] })
         window.clearInterval(timer!)
-        setProfit(0)
+        profit.clear()
+        maxProfit.clear()
+        positiveProfitCount.clear()
         setTimer(null)
       }
     }
@@ -119,27 +126,39 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
   }
 
   const toPrevLine = () => {
-    // if (currentKline.current === -1) return
-    // if (currentKline.current === 0) return
-    // const prev = candlesticksRestore.current.slice(0, currentKline.current)
+    if (currentKline.current === -1) return
+    if (currentKline.current === 0) return
+    const prev = candlesticksRestore.current.slice(0, currentKline.current)
 
-    // props.onChangeCandlesticks(prev)
+    props.onChangeCandlesticks(prev)
 
-    // const current = candlesticksRestore.current[currentKline.current]
+    const current = candlesticksRestore.current[currentKline.current]
 
-    // currentKline.current--
+    const _tradeRecord = {
+      buy: tradeRecord.buy.filter(t => t.time !== +current[0]!),
+      sell: tradeRecord.sell.filter(t => t.time !== +current[0]!)
+    }
+    console.log(_tradeRecord)
+    setTradeRecord(_tradeRecord)
 
-    // const _tradeRecord = {
-    //   buy: tradeRecord.buy.filter(t => t.time !== +current[0]!),
-    //   sell: tradeRecord.sell.filter(t => t.time !== +current[0]!)
-    // }
+    props.onSetBackTestRecord([
+      ..._tradeRecord.buy.map(item => ({ ...item })),
+      ..._tradeRecord.sell.map(item => ({ ...item }))
+    ])
 
-    // setTradeRecord(_tradeRecord)
+    if (profit.peek()?.index === currentKline.current) {
+      profit.pop()
+    }
 
-    // const result = calcProfit(_tradeRecord)
-    // const diffProfit = result - profit
-    // setMaxProfit(Math.max(diffProfit, maxProfit))
-    // setProfit(result)
+    if (maxProfit.peek()?.index === currentKline.current) {
+      maxProfit.pop()
+    }
+
+    if (positiveProfitCount.peek()?.index === currentKline.current) {
+      positiveProfitCount.pop()
+    }
+
+    currentKline.current--
   }
 
   const toLastKLine = () => {
@@ -199,12 +218,34 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
     props.onAddBackTestRecord(record)
 
     const result = calcProfit(_tradeRecord)
-    const diffProfit = result - profit
-    setMaxProfit(Math.max(diffProfit, maxProfit))
-    setProfit(result)
+    const lastProfit = profit.peek()
+    const lastMaxProfit = maxProfit.peek()
+    const diffProfit = result - (lastProfit?.profit ?? 0)
+
+    if ((lastMaxProfit?.max ?? 0) < diffProfit) {
+      if (lastMaxProfit?.index !== currentKline.current) {
+        maxProfit.push({ max: diffProfit, index: currentKline.current })
+      } else {
+        maxProfit.pop()
+        maxProfit.push({ max: diffProfit, index: currentKline.current })
+      }
+    }
+
+    if (lastProfit?.index !== currentKline.current) {
+      profit.push({ profit: result, index: currentKline.current })
+    } else {
+      profit.pop()
+      profit.push({ profit: result, index: currentKline.current })
+    }
 
     if (result > 0) {
-      incPositiveProfitCount()
+      const lastPositiveProfitCount = positiveProfitCount.peek()
+      if (lastPositiveProfitCount?.index !== currentKline.current) {
+        positiveProfitCount.push({ count: (lastPositiveProfitCount?.count ?? 0) + 1, index: currentKline.current })
+      } else {
+        positiveProfitCount.pop()
+        positiveProfitCount.push({ count: lastPositiveProfitCount.count + 1, index: currentKline.current })
+      }
     }
   }
 
@@ -212,6 +253,9 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
     setTimer(null)
     window.clearInterval(timer!)
     setTradeRecord({ buy: [], sell: [] })
+    profit.clear()
+    maxProfit.clear()
+    positiveProfitCount.clear()
   })
 
   const calcProfit = (record: TradeRecord) => {
@@ -293,9 +337,36 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
     // })
 
     const result = calcProfit(_tradeRecord)
-    const diffProfit = result - profit
-    setMaxProfit(Math.max(diffProfit, maxProfit))
-    setProfit(result)
+    const lastProfit = profit.peek()
+    const lastMaxProfit = maxProfit.peek()
+    const diffProfit = result - (lastProfit?.profit ?? 0)
+
+    if ((lastMaxProfit?.max ?? 0) < diffProfit) {
+      if (lastMaxProfit?.index !== currentKline.current) {
+        maxProfit.push({ max: diffProfit, index: currentKline.current })
+      } else {
+        maxProfit.pop()
+        maxProfit.push({ max: diffProfit, index: currentKline.current })
+      }
+    }
+
+    if (lastProfit?.index !== currentKline.current) {
+      profit.push({ profit: result, index: currentKline.current })
+    } else {
+      profit.pop()
+      profit.push({ profit: result, index: currentKline.current })
+    }
+
+    if (result > 0) {
+      const lastPositiveProfitCount = positiveProfitCount.peek()
+      if (lastPositiveProfitCount?.index !== currentKline.current) {
+        positiveProfitCount.push({ count: (lastPositiveProfitCount?.count ?? 0) + 1, index: currentKline.current })
+      } else {
+        positiveProfitCount.pop()
+        positiveProfitCount.push({ count: lastPositiveProfitCount.count + 1, index: currentKline.current })
+      }
+    }
+
     props.onAddBackTestRecord(record as any)
   }
 
@@ -319,8 +390,8 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
             <div className="flex-1 border border-solid border-border rounded py-4">
               <div className="text-xl mb-2">现金盈利</div>
               <div>
-                <span className={cn('text-3xl', profit > 0 ? 'text-stock-up' : 'text-stock-down')}>
-                  {Decimal.create(profit).toShort()}
+                <span className={cn('text-3xl', Decimal.create(profit.peek()?.profit).gt(0) ? 'text-stock-up' : 'text-stock-down')}>
+                  {Decimal.create(profit.peek()?.profit).toShort()}
                 </span>
                 <span> USD</span>
               </div>
@@ -328,9 +399,9 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
             <div className="flex-1 border border-solid border-border rounded py-4">
               <div className="text-xl mb-2">成功率</div>
               <div>
-                <span className={cn('text-3xl', profit > 0 ? 'text-stock-up' : 'text-stock-down')}>
+                <span className={cn('text-3xl', Decimal.create(positiveProfitCount.peek()?.count).gt(0) ? 'text-stock-up' : 'text-stock-down')}>
                   {' '}
-                  {total === 0 ? '0.00' : Decimal.create(positiveProfitCount).div(total).mul(100).toFixed(2)}
+                  {total === 0 ? '0.00' : Decimal.create(positiveProfitCount.peek()?.count).div(total).mul(100).toFixed(2)}
                 </span>
                 <span> %</span>
               </div>
@@ -338,8 +409,8 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
             <div className="flex-1 border border-solid border-border rounded py-4">
               <div className="text-xl mb-2"> 最赚钱的交易</div>
               <div>
-                <span className={cn('text-3xl', profit > 0 ? 'text-stock-up' : 'text-stock-down')}>
-                  {Decimal.create(maxProfit).toShort()}
+                <span className={cn('text-3xl', Decimal.create(maxProfit.peek()?.max).gt(0) ? 'text-stock-up' : 'text-stock-down')}>
+                  {Decimal.create(maxProfit.peek()?.max).toShort()}
                 </span>
                 <span> USD</span>
               </div>
@@ -353,12 +424,16 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
 
 
   return (
-    <div className="h-8 box-border grid grid-cols-3 text-xs px-2 w-full">
+    <div className="h-12 box-border grid grid-cols-3 text-xs px-2 w-full">
       <div />
-      <div className="flex items-center justify-center">
+      <div className="flex items-center justify-center text-sm">
         <div className="flex items-center space-x-2">
           <JknDatePicker onChange={onDateChange} disabled={d => disabledDate(d, props.candlesticks ?? [])}>
-            {v => <div className="hover:bg-accent rounded-xs px-3 py-1 cursor-pointer "><JknIcon.Svg name="calendar-2" className="align-middle pb-1" size={14} />&nbsp;{v ?? '选择日期'}</div>}
+            {
+              v => <div className="hover:bg-accent rounded-xs px-3 py-1 cursor-pointer flex items-center">
+                <JknIcon.Svg name="calendar-3" className="align-middle" size={20} />&nbsp;<span className="text-sm">{v ?? '选择日期'}
+                </span></div>
+            }
           </JknDatePicker>
         </div>
         <Separator orientation="vertical" className="h-4 w-[1px] mx-2" />
@@ -369,7 +444,7 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
               onClick={startBackTest}
               onKeyDown={() => { }}
             >
-              <JknIcon.Svg name="play" size={16} />
+              <JknIcon.Svg name="play" size={16} label="开始" />
             </div>
           ) : (
             <div
@@ -378,24 +453,24 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
               onKeyDown={() => { }}
             >
               { /* TODO: 暂停ICON */}
-              <JknIcon name="ic_huice3" className="w-3 h-3" />
+              <JknIcon name="ic_huice3" className="w-3 h-3" label="暂停" />
               &nbsp;
               <span>暂停</span>
             </div>
           )}
-          {/* <div
+          <div
             className="border cursor-pointer hover:bg-accent px-1 py-1 flex items-center rounded-xs"
             onClick={toPrevLine}
             onKeyDown={() => { }}
           >
-            <JknIcon.Svg name="prev" size={16} />
-          </div> */}
+            <JknIcon.Svg name="play-pre" size={16} label="上一根K线" />
+          </div>
           <div
             className="border cursor-pointer hover:bg-accent px-1 py-1 flex items-center rounded-xs"
             onClick={toNextLine}
             onKeyDown={() => { }}
           >
-            <JknIcon.Svg name="play-x1" size={16} />
+            <JknIcon.Svg name="play-x1" size={16} label="下一根K线" />
           </div>
           <div className="border cursor-pointer hover:bg-accent rounded-xs px-1 py-1 flex items-center">
             <BackTestSpeed speed={speed} onChange={setSpeed} />
@@ -406,22 +481,22 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
             onClick={toLastKLine}
             onKeyDown={() => { }}
           >
-            <JknIcon.Svg name="play-x2" size={16} />
+            <JknIcon.Svg name="play-x2" size={16} label="跳转到实时" />
           </div>
         </div>
       </div>
 
       <div className="flex items-center space-x-4 justify-end">
-        <span data-direction={profit > 0 ? 'up' : 'down'} data-direction-sign>{Decimal.create(profit).toFixed(3)}</span>
+        <span className="text-sm" data-direction={(profit.peek()?.profit ?? 0) > 0 ? 'up' : 'down'} data-direction-sign>{Decimal.create(profit.peek()?.profit ?? 0).toFixed(3)}</span>
         <Separator orientation="vertical" className="h-4 w-[1px] mx-2" />
-        <Button size="mini" variant="destructive" className="bg-[#F23645] w-[72px] box-border" onClick={() => action('sell')}>
+        <Button size="sm" variant="destructive" className="bg-[#F23645] w-[72px] box-border h-8" onClick={() => action('sell')}>
           卖出
         </Button>
         <NumberInput value={number} onChange={setNumber} />
-        <Button size="mini" className="bg-[#22AB94] w-[72px] box-border text-white" onClick={() => action('buy')}>
+        <Button size="sm" className="bg-[#22AB94] w-[72px] box-border text-white h-8" onClick={() => action('buy')}>
           买入
         </Button>
-        <Button size="mini" variant="outline" className="w-[72px]" onClick={closePosition}>
+        <Button size="sm" variant="outline" className="w-[72px] h-8" onClick={closePosition}>
           平仓
         </Button>
       </div>
@@ -443,24 +518,32 @@ const speedOptions = [
 
 const BackTestSpeed = (props: { speed: number; onChange: (v: number) => void }) => {
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <div className="w-6 text text-center cursor-pointer">
-          <span>x{props.speed}</span>
-        </div>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent side="top">
-        <div className="text-center">回放速度</div>
-        {speedOptions.map(option => (
-          <DropdownMenuItem key={option.value} onClick={() => props.onChange(option.value)}>
-            <div className="flex items-center cursor-pointer">
-              <span className="w-10">x{option.value}</span>
-              <span className="text-tertiary">{option.label}</span>
+    <HoverCard openDelay={300} closeDelay={300}>
+      <HoverCardTrigger className="flex items-center">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <div className="w-6 text text-center cursor-pointer">
+              <span>x{props.speed}</span>
             </div>
-          </DropdownMenuItem>
-        ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent side="top">
+            <div className="text-center">回放速度</div>
+            {speedOptions.map(option => (
+              <DropdownMenuItem key={option.value} onClick={() => props.onChange(option.value)}>
+                <div className="flex items-center cursor-pointer">
+                  <span className="w-10">x{option.value}</span>
+                  <span className="text-tertiary">{option.label}</span>
+                </div>
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </HoverCardTrigger>
+      <HoverCardContent align="center" side="bottom" className="w-fit py-1 px-2 text-sm">
+        回测速度
+      </HoverCardContent>
+    </HoverCard>
+
   )
 }
 
@@ -468,7 +551,7 @@ const NumberInput = (props: { value: number; onChange: (v: number) => void }) =>
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <div className="min-w-4 text text-center cursor-pointer bg-accent rounded-sm px-2 py-1">
+        <div className="min-w-4 text text-center cursor-pointer bg-accent rounded-sm px-2 h-8 box-border leading-8">
           <div>{props.value}</div>
         </div>
       </PopoverTrigger>

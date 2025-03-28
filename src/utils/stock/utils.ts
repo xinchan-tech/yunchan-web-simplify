@@ -404,5 +404,18 @@ export const stockUtils = {
     }
   },
 
+  getIndexTimeTick: () => {
+    const PRE_NUMBER = 330
+    const POST_NUMBER = 390
+    const AFTER_NUMBER = 240
+
+    return {
+      pre: PRE_NUMBER,
+      post: POST_NUMBER,
+      after: AFTER_NUMBER,
+      total: PRE_NUMBER + POST_NUMBER + AFTER_NUMBER
+    }
+  },
+
   parseTime
 }

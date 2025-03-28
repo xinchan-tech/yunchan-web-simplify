@@ -83,7 +83,7 @@ const MenuRight = () => {
   }
 
   return (
-    <div className="px-0.5 box-border space-y-2.5 py-[20px] flex h-full flex-col items-center text-secondary">
+    <div className="px-0.5 box-border space-y-2.5 pt-3 flex h-full flex-col items-center text-secondary">
       {menus.map(item => (
         <div className="text-center" key={item.title}>
           <div

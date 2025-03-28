@@ -13,10 +13,10 @@ const DashBoardPage = () => {
         </div>
         <div className="flex-1 flex justify-stretch overflow-hidden ">
           <div className="flex-1 overflow-hidden flex-shrink-0 rounded-xs bg-background box-border mr-0.5">
-            <TopList />
+            <GoldenStockPool />
           </div>
           <div className="flex-1 overflow-hidden flex-shrink-0 rounded-xs bg-background box-border ml-0.5">
-            <GoldenStockPool />
+            <TopList />
           </div>
         </div>
       </div>

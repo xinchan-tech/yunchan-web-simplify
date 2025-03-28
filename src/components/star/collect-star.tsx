@@ -15,6 +15,7 @@ interface CollectStarProps
   checked: boolean
   code: string
   onUpdate?: (checked: boolean) => void
+  size?: number
 }
 
 const _CollectStar = memo((props: CollectStarProps) => {
@@ -30,7 +31,7 @@ const _CollectStar = memo((props: CollectStarProps) => {
     <HoverCard onOpenChange={open => (open ? setTrue() : setFalse())} openDelay={100} closeDelay={100}>
       <HoverCardTrigger asChild>
         <div className="flex justify-center items-center">
-          <Star checked={checked} />
+          <Star checked={checked} size={props.size} />
         </div>
       </HoverCardTrigger>
       <HoverCardPortal>
@@ -120,7 +121,7 @@ const CollectList = (props: CollectListProps) => {
           <div
             key={item.id}
             onClick={() => onCheck(item)}
-            onKeyDown={() => {}}
+            onKeyDown={() => { }}
             className="flex cursor-pointer items-center pl-4 space-x-4 hover:bg-primary py-1"
           >
             {<Checkbox checked={item.active === 1} />}
