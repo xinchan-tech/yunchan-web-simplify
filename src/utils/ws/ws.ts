@@ -137,7 +137,7 @@ export class Ws {
 
   private startHeartbeat() {
     this.closeHeartbeat()
- 
+
     this.heartbeatTimer = window.setInterval(() => {
       this.ws?.send('ping')
     }, this.heartbeatInterval)
@@ -146,6 +146,7 @@ export class Ws {
   private retryConnect() {
     this.retryCount++
     if (this.retryCount > this.maxRetryCount) {
+      this.retryCount = 0
       console.log('重试次数过多，停止重试')
       return
     }
@@ -158,7 +159,6 @@ export class Ws {
       this.ws = new WebSocket(this.url)
       this.handleEvent()
     }, nextTry)
-    
   }
 
   private closeHeartbeat() {
@@ -199,5 +199,9 @@ export class Ws {
 
   public getIns() {
     return this.ws
+  }
+
+  public reconnect() {
+    this.retryConnect()
   }
 }

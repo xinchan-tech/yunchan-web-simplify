@@ -41,6 +41,7 @@ interface BackTestBarProps {
   chartId: string
   candlesticks: StockRawRecord[]
   onNextCandlesticks: (candlestick: StockRawRecord) => void
+  onPrevCandlesticks: (count: number) => void
   onChangeCandlesticks: (data: StockRawRecord[]) => void
   onAddBackTestRecord: (record: { time: number; price: number; count: number; type: 'buy' | 'sell' | 'sellToZero' | 'buyToZero', index: number }) => void
   onSetBackTestRecord: (records: any[]) => void
@@ -128,9 +129,9 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
   const toPrevLine = () => {
     if (currentKline.current === -1) return
     if (currentKline.current === 0) return
-    const prev = candlesticksRestore.current.slice(0, currentKline.current)
+    // const prev = candlesticksRestore.current.slice(0, currentKline.current)
 
-    props.onChangeCandlesticks(prev)
+    props.onPrevCandlesticks(1)
 
     const current = candlesticksRestore.current[currentKline.current]
 
@@ -138,7 +139,6 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
       buy: tradeRecord.buy.filter(t => t.time !== +current[0]!),
       sell: tradeRecord.sell.filter(t => t.time !== +current[0]!)
     }
-    console.log(_tradeRecord)
     setTradeRecord(_tradeRecord)
 
     props.onSetBackTestRecord([

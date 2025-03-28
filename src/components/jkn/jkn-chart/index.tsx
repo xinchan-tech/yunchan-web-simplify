@@ -63,6 +63,7 @@ type IndicatorParams = {
 interface JknChartIns {
   applyNewData: Chart['applyNewData']
   appendCandlestick: (kline: Candlestick, interval: number) => void
+  restoreCandlestick: (count: number) => void
   isSameIntervalCandlestick: (kline: Candlestick, interval: number) => undefined | boolean
   setCoiling: (coiling: CoilingIndicatorId[], interval: number) => void
   removeCoiling: (coiling: CoilingIndicatorId[]) => void
@@ -300,6 +301,9 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
 
         chart.current?.updateData(_r)
       }
+    },
+    restoreCandlestick: (count: number) => {
+      chart.current?.restoreData(count)
     },
     isSameIntervalCandlestick: (candlestick, interval) => {
       const lastData = chart.current?.getDataList().slice(-1)[0]

@@ -346,6 +346,10 @@ export const MainChart = (props: MainChartProps) => {
     chartImp.current?.appendCandlestick(stockUtils.toStock(candlestick), chartStore.interval)
   }
 
+  const onPrevBackTestLine = () => {
+    chartImp.current?.restoreCandlestick(1)
+  }
+
   return (
     <ChartContextMenu
       index={0}
@@ -374,6 +378,7 @@ export const MainChart = (props: MainChartProps) => {
               onChangeCandlesticks={(d) => chartImp.current?.applyNewData(convertToStock(d))}
               onAddBackTestRecord={onAddBackTestRecord}
               onSetBackTestRecord={onSetBackTestRecord}
+              onPrevCandlesticks={onPrevBackTestLine}
             />
           </div>
         ) : null

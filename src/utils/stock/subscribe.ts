@@ -52,7 +52,7 @@ export type StockSubscribeHandler<T extends SubscribeActionType> = T extends 'ba
   ? (data: ReturnType<typeof barActionResultParser>) => void
   : (data: ReturnType<typeof quoteActionResultParser>) => void
 
-export type SubscribeActionType = 'bar' | 'quote'
+export type SubscribeActionType = 'bar' | 'quote' | ''
 
 type BufferItem = {
   action: string
@@ -78,6 +78,7 @@ class StockSubscribe {
   private cid: string
   private bufferMax: number
   private quoteBuffer: QuoteBuffer
+  private lastBeat: number
 
   constructor(url: string) {
     this.url = url
@@ -87,6 +88,7 @@ class StockSubscribe {
     this.bufferHandleLength = 500
     this.bufferMax = 20000
     this.quoteBuffer = {}
+    this.lastBeat = Date.now()
 
     this.ws = new Ws(`${this.url}&cid=${this.cid}`, {
       beat: true,
@@ -111,6 +113,7 @@ class StockSubscribe {
     })
     this.unSubscribeStockIdle()
     this.startBufferHandle()
+    this.startCheckWsStatus()
   }
 
   private reSubscribe() {
@@ -198,16 +201,58 @@ class StockSubscribe {
     this.subscribed.off(action, handler)
   }
 
-  public onQuoteTopic(topic: string, handler: StockSubscribeHandler<'quote'>) {
-    this.subscribed.on(`${topic}:quote`, handler)
+  /**
+   * @returns cancelTopic
+   */
+  public onQuoteTopic(symbol: string, handler: StockSubscribeHandler<'quote'>) {
+    if (!this.hasQuoteTopicSubscribe(symbol)) {
+      this.subscribe('quote', [symbol])
+    }
+    this.subscribed.on(`${symbol}:quote`, handler)
 
     return () => {
-      this.offQuoteTopic(topic, handler)
+      this.offQuoteTopic(symbol, handler)
+      this.unsubscribe('quote', [symbol])
     }
   }
 
   public offQuoteTopic(topic: string, handler: StockSubscribeHandler<'quote'>) {
     this.subscribed.off(`${topic}:quote`, handler)
+  }
+
+  /**
+   * @returns cancelTopic
+   */
+  public onBarTopic(symbolWithPeriod: string, handler: StockSubscribeHandler<'bar'>) {
+    if (!this.hasBarTopicSubscribe(symbolWithPeriod)) {
+      this.subscribe('bar', [symbolWithPeriod])
+    }
+    this.subscribed.on(`${symbolWithPeriod}:bar`, handler)
+
+    return () => {
+      this.offBarTopic(symbolWithPeriod, handler)
+      this.unsubscribe('bar', [symbolWithPeriod])
+    }
+  }
+
+  public offBarTopic(topic: string, handler: StockSubscribeHandler<'bar'>) {
+    this.subscribed.off(`${topic}:bar`, handler)
+  }
+
+  /**
+   *
+   * @returns
+   */
+  private hasQuoteTopicSubscribe(symbol: string) {
+
+    const topic = `quote:${symbol}`
+    console.log(JSON.stringify(this.subscribeTopic), symbol, this.subscribeTopic[topic]?.count)
+    return this.subscribeTopic[topic]?.count > 0
+  }
+
+  private hasBarTopicSubscribe(symbolWithPeriod: string) {
+    const topic = `bar:${symbolWithPeriod}`
+    return this.subscribeTopic[topic]?.count > 0
   }
 
   private unSubscribeStockIdle() {
@@ -234,6 +279,21 @@ class StockSubscribe {
 
     requestAnimationFrame(() => {
       this.unSubscribeStockIdle()
+    })
+  }
+
+  private startCheckWsStatus() {
+    const current = Date.now() 
+    if(current > this.lastBeat + 1000 * 60 * 1){
+      if(this.ws.status === 'error' || this.ws.status === 'close'){
+        console.warn(`ws beat check status ${this.ws.status}`)
+        this.ws.reconnect()
+      }
+      this.lastBeat = current
+    }
+
+    requestAnimationFrame(() => {
+      this.startCheckWsStatus()
     })
   }
 
