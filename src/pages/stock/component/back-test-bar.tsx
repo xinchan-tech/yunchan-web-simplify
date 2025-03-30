@@ -61,7 +61,7 @@ type TradeRecord = {
 export const BackTestBar = memo((props: BackTestBarProps) => {
   const [speed, setSpeed] = useState<number>(1)
   const [number, setNumber] = useState<number>(100)
-  const candlesticksRestore = useLatestRef<StockRawRecord[]>(props.candlesticks)
+  const candlesticksRestore = useRef<StockRawRecord[]>(props.candlesticks)
   //交易记录
   const [tradeRecord, setTradeRecord] = useState<TradeRecord>({ sell: [], buy: [] })
   const [timer, setTimer] = useState<number | null>(null)

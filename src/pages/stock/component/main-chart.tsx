@@ -107,6 +107,7 @@ export const MainChart = (props: MainChartProps) => {
    */
   useMount(() => {
     chartManage.cleanStockOverlay()
+    chartManage.setMode('normal')
     const _store = useChartManage.getState().chartStores[props.chartId]
 
     const stockData = convertToStock(candlesticks)
@@ -182,6 +183,9 @@ export const MainChart = (props: MainChartProps) => {
    * 数据变化
    */
   useEffect(() => {
+    if(chartStore.mode === 'backTest') {
+      return
+    }
     if (!candlesticks.length) {
       chartImp.current?.applyNewData([])
       return
@@ -190,7 +194,9 @@ export const MainChart = (props: MainChartProps) => {
     const stockData = convertToStock(candlesticks)
 
     chartImp.current?.applyNewData(stockData)
-  }, [candlesticks])
+
+    chartImp.current?.removeBackTestIndicator()
+  }, [candlesticks, chartStore.mode])
 
   /**
    * 缠论数据变化
@@ -328,12 +334,12 @@ export const MainChart = (props: MainChartProps) => {
   //   chartImp.current?.setChartType(chartStore.type === ChartType.Candle ? 'candle' : 'area')
   // }, [chartStore.type])
 
-  useUpdateEffect(() => {
-    if (chartStore.mode === 'normal') {
-      refreshCandlesticks()
-      chartImp.current?.removeBackTestIndicator()
-    }
-  }, [chartStore.mode])
+  // useUpdateEffect(() => {
+  //   if (chartStore.mode === 'normal') {
+  //     refreshCandlesticks()
+  //     chartImp.current?.removeBackTestIndicator()
+  //   }
+  // }, [chartStore.mode])
 
 
   const onAddBackTestRecord = (record: any) => {
