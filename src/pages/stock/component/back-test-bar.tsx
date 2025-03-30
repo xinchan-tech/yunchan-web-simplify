@@ -260,40 +260,70 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
   })
 
   const calcProfit = (record: TradeRecord) => {
-    const buyLength = record.buy.length
-    const sellLength = record.sell.length
+    const count = Math.min(
+      record.buy.reduce((prev, cur) => prev + cur.count, 0),
+      record.sell.reduce((prev, cur) => prev + cur.count, 0)
+    )
 
-    const count =
-      buyLength < sellLength
-        ? record.buy.reduce((prev, cur) => prev + cur.count, 0)
-        : record.sell.reduce((prev, cur) => prev + cur.count, 0)
-
-    let shellPrice = 0
-    let c = 0
-    record.sell.forEach((shell, index) => {
-      if (c + index < count) {
-        shellPrice += shell.price * shell.count
-        c += shell.count
-      } else {
-        shellPrice += shell.price * (count - c)
-        c += count - c
+    let buyTotal = 0
+    let buyCount = count
+    record.buy.forEach(({price, count}) => {
+      if(buyCount > count) {
+        buyTotal += price * count
+        buyCount -= count
+      }else{
+        buyTotal += price * buyCount
+        buyCount = 0
       }
     })
 
-    c = 0
-    let buyPrice = 0
-
-    record.buy.forEach((buy, index) => {
-      if (c + index < count) {
-        buyPrice += buy.price * buy.count
-        c += buy.count
+    let sellTotal = 0
+    let sellCount = count
+    record.sell.forEach(({price, count}) => {
+      if(sellCount > count) {
+        sellTotal += price * count
+        sellCount -= count
       } else {
-        buyPrice += buy.price * (count - c)
-        c += count - c
+        sellTotal += price * sellCount
+        sellCount = 0
       }
     })
 
-    return shellPrice - buyPrice
+    return sellTotal - buyTotal
+    // const buyLength = record.buy.length
+    // const sellLength = record.sell.length
+
+    // const count =
+    //   buyLength < sellLength
+    //     ? record.buy.reduce((prev, cur) => prev + cur.count, 0)
+    //     : record.sell.reduce((prev, cur) => prev + cur.count, 0)
+
+    // let shellPrice = 0
+    // let c = 0
+    // record.sell.forEach((shell, index) => {
+    //   if (c + index < count) {
+    //     shellPrice += shell.price * shell.count
+    //     c += shell.count
+    //   } else {
+    //     shellPrice += shell.price * (count - c)
+    //     c += count - c
+    //   }
+    // })
+
+    // c = 0
+    // let buyPrice = 0
+
+    // record.buy.forEach((buy, index) => {
+    //   if (c + index < count) {
+    //     buyPrice += buy.price * buy.count
+    //     c += buy.count
+    //   } else {
+    //     buyPrice += buy.price * (count - c)
+    //     c += count - c
+    //   }
+    // })
+
+    // return shellPrice - buyPrice
   }
 
   //平仓

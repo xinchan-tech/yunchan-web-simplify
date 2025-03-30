@@ -24,7 +24,8 @@ export const backTestIndicator: IndicatorTemplate<any, any> = {
     const timeMap: Record<string, number> = {}
 
     record.forEach(item => {
-      const key = `${item.time.toString()}${item.type}`
+      const type = isBuyRecord(item) ? 'buy' : 'sell'
+      const key = `${item.time.toString()}${type}`
       if (!timeMap[key]) {
         timeMap[key] = 0
       }
@@ -59,6 +60,7 @@ export const backTestIndicator: IndicatorTemplate<any, any> = {
     let totalDiff = 0
     let totalSellPrice = 0
     let totalBuyPrice = 0
+    console.log(result)
 
     result.forEach(item => {
       totalCount += item.count
