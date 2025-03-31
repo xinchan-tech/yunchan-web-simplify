@@ -2,9 +2,11 @@ import { AlarmType, PriceAlarmTrigger, deleteAlarmCondition, getAlarmConditionsL
 import { JknIcon, JknVirtualInfinite, StockAlarm, Tabs, TabsContent, TabsList, TabsTrigger } from '@/components'
 import { useCheckboxGroup, useToast } from "@/hooks"
 import { stockUtils } from "@/utils/stock"
+import { AESCrypt } from "@/utils/string"
 import { cn } from "@/utils/style"
 import { useInfiniteQuery } from "@tanstack/react-query"
 import to from "await-to-js"
+import qs from "qs"
 import { useState } from 'react'
 import { useNavigate } from "react-router"
 
@@ -136,8 +138,16 @@ const AlarmItem = ({ symbol, data, onDelete }: AlarmItemProps) => {
 
   const navigate = useNavigate()
 
+  const onNav = () => {
+    const interval = data.stock_cycle
+
+    const params = qs.stringify({symbol, q: AESCrypt.encrypt(JSON.stringify({ interval })) })
+
+    navigate(`/stock?${params}`)
+  }
+
   return (
-    <div className="alarm-list-item px-5 py-3 leading-none text-sm border-b-primary hover:bg-[#1B1B1B]" onClick={() => navigate(`/stock?symbol=${symbol}`)} onKeyDown={() => { }}>
+    <div className="alarm-list-item px-5 py-3 leading-none text-sm border-b-primary hover:bg-[#1B1B1B]" onClick={onNav} onKeyDown={() => { }}>
       <div className="flex items-center w-full relative">
         <JknIcon.Stock symbol={symbol} className="w-4 h-4 leading-4" />
         <span>{symbol}</span>，
@@ -146,7 +156,10 @@ const AlarmItem = ({ symbol, data, onDelete }: AlarmItemProps) => {
         }
         <span className="bg-accent rounded-xs px-1 py-[1px] box-border text-tertiary text-xs ml-1">{data.type === AlarmType.AI ? 'AI' : '股价'}</span>
         <div className="absolute -right-2 -top-1 alarm-list-item-action space-x-1 text-secondary">
-          <JknIcon.Svg name="delete" size={16} className="cursor-pointer p-1 rounded hover:bg-accent" onClick={() => onDelete(data.id)} />
+          <JknIcon.Svg name="delete" size={16} className="cursor-pointer p-1 rounded hover:bg-accent" onClick={(e) => {
+            e.stopPropagation()
+            onDelete(data.id)
+          }} />
           {/* <JknIcon.Svg name="edit" size={16} className="cursor-pointer p-1 rounded hover:bg-accent" /> */}
         </div>
       </div>

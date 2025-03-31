@@ -55,7 +55,6 @@ const useCollectSelect = (onChange?: (key: string) => void) => {
 
 export const CollectCapsuleTabs = ({ onChange, ...props }: CollectCapsuleTabsProps) => {
   const { activeStock, collects, _onChange } = useCollectSelect(onChange)
-  console.log(activeStock)
   return (
     <CapsuleTabs activeKey={activeStock ?? ''} onChange={_onChange} {...props}>
       {collects.data?.map(cate => (

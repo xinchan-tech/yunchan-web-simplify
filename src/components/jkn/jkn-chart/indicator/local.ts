@@ -1,7 +1,7 @@
 import { getStockIndicatorData } from '@/api'
 import { useIndicator } from '@/store'
 import { type IndicatorData, IndicatorUtils } from '@/utils/coiling'
-import { aesDecrypt } from '@/utils/string'
+import { AESCrypt } from '@/utils/string'
 import Decimal from 'decimal.js'
 import { IndicatorSeries, type IndicatorTemplate } from 'jkn-kline-chart'
 import { isNumber } from 'radash'
@@ -90,7 +90,7 @@ export const localIndicator: IndicatorTemplate<IndicatorData, any, LocalIndicato
     if (!formula[indicatorId]) return []
     return await IndicatorUtils.calcIndicator(
       {
-        formula: aesDecrypt(formula[indicatorId]),
+        formula: AESCrypt.decrypt(formula[indicatorId]),
         symbal: symbol,
         indicatorId
       },

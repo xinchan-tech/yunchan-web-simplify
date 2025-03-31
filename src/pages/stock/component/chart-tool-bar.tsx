@@ -6,6 +6,10 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  HoverCard,
+  HoverCardArrow,
+  HoverCardContent,
+  HoverCardTrigger,
   Input,
   JknIcon,
   JknSearchInput,
@@ -17,7 +21,7 @@ import {
   useModal
 } from '@/components'
 import { stockUtils } from '@/utils/stock'
-import { Fragment, memo, useEffect, useMemo, useRef, useState } from 'react'
+import { Fragment, memo, type PropsWithChildren, type ReactNode, useEffect, useMemo, useRef, useState } from 'react'
 import { timeIndex, useSymbolQuery } from '../lib'
 import { ChartType, MainYAxis, chartManage, useChartManage } from '../lib/store'
 import { renderUtils } from '../lib/utils'
@@ -29,50 +33,105 @@ import { chartEvent } from "../lib/event"
 import { IndicatorParamsForm } from "./indicator-param-form"
 import { useNavigate } from "react-router"
 
+const WrapperLabel = ({ children, label }: PropsWithChildren<{ label: string | ReactNode }>) => {
+  return (
+    <HoverCard openDelay={300} closeDelay={300}>
+      <HoverCardTrigger asChild>{children}</HoverCardTrigger>
+
+      <HoverCardContent align="center" side="bottom" className="w-fit py-1 px-2 text-base">
+        <HoverCardArrow width={10} height={4} className="text-accent fill-accent" />
+        {label}
+      </HoverCardContent>
+    </HoverCard>
+  )
+}
 export const ChartToolBar = () => {
   const symbol = useSymbolQuery()
 
   return (
     <div className="">
-      <div className="flex items-center h-11 py-1 box-border w-full bg-background text-sm text-secondary px-4">
-        <div className="flex items-center mr-2">
-          <JknIcon.Stock symbol={symbol} />
-          &nbsp;
-          <span className="text-base text-foreground">{symbol}</span>
-        </div>
+      <div className="flex items-center h-11 py-1 box-border w-full bg-background text-sm text-secondary px-4 leading-9">
+        <WrapperLabel label="股票代码">
+          <div className="flex items-center mr-2">
+            <JknIcon.Stock symbol={symbol} />
+            &nbsp;
+            <span className="text-base text-foreground">{symbol}</span>
+          </div>
+        </WrapperLabel>
         {/* <Separator orientation="vertical" className="h-2 w-[1px] bg-accent mx-1" /> */}
         {/* <TimeShareSelect /> */}
         <Separator orientation="vertical" className="h-2 w-[1px] bg-accent mx-1" />
-        <PeriodSelect />
+        <WrapperLabel label="股票周期">
+          <div className="flex items-center mr-2">
+            <PeriodSelect />
+          </div>
+        </WrapperLabel>
         <Separator orientation="vertical" className="h-2 w-[1px] bg-accent mx-1" />
-        <ChartTypeSelect />
+        <WrapperLabel label="线型切换">
+          <div >
+            <ChartTypeSelect />
+          </div>
+        </WrapperLabel>
         <Separator orientation="vertical" className="h-2 w-[1px] bg-accent mx-1" />
-        <IndicatorPicker />
-        <ViewModeSelect />
+        <WrapperLabel label="指标策略">
+          <div >
+            <IndicatorPicker />
+          </div>
+        </WrapperLabel>
+        <WrapperLabel label="视图模式">
+          <div>
+            <ViewModeSelect />
+          </div>
+        </WrapperLabel>
         <Separator orientation="vertical" className="h-2 w-[1px] bg-accent mx-1" />
-        <StockPkPicker />
+        <WrapperLabel label="股票PK">
+          <div >
+            <StockPkPicker />
+          </div>
+        </WrapperLabel>
         <Separator orientation="vertical" className="h-2 w-[1px] bg-accent mx-1" />
-        <OverlayMarkPicker />
+        <WrapperLabel label="股票叠加">
+          <div >
+            <OverlayMarkPicker />
+          </div>
+        </WrapperLabel>
         <Separator orientation="vertical" className="h-2 w-[1px] bg-accent mx-1" />
-        <AlarmPicker />
+        <WrapperLabel label="股票报警">
+          <div >
+            <AlarmPicker />
+          </div>
+        </WrapperLabel>
         <Separator orientation="vertical" className="h-2 w-[1px] bg-accent mx-1" />
-        <BackTest />
+        <WrapperLabel label="股票回测">
+          <div >
+            <BackTest />
+          </div>
+        </WrapperLabel>
       </div>
     </div>
   )
 }
 
 export const CoilingBar = () => {
+  // const coiling = useChartManage.getState().getActiveChart().mainIndicators
+  // type === 21时是缠论的选择
+  // const hasCoiling = useChartManage.getState().getActiveChart().mainIndicators.find(i => +i.type === 21)
   const system = useChartManage(s => s.getActiveChart().system)
-  const indicator = useQuery({
-    queryKey: [getStockIndicators.cacheKey],
-    queryFn: getStockIndicators
-  })
+  // const indicator = useQuery({
+  //   queryKey: [getStockIndicators.cacheKey],
+  //   queryFn: getStockIndicators
+  // })
 
-  const coilingList = indicator.data?.main.find(i => i.name === '缠论系统')?.indicators.find(o => o.id === system)?.items
+  // const coilingList = indicator.data?.main.find(i => i.name === '缠论系统')?.indicators.find(o => o.id === system)?.items
   const coiling = useChartManage(s => s.getActiveChart().coiling)
 
-  if (!coiling) return null
+  const coilingList = [
+    { name: '笔', id: CoilingIndicatorId.PEN },
+    { name: '1类', id: CoilingIndicatorId.ONE_TYPE },
+    { name: '2类', id: CoilingIndicatorId.TWO_TYPE },
+    { name: '3类', id: CoilingIndicatorId.THREE_TYPE },
+    { name: '中枢', id: CoilingIndicatorId.PIVOT }
+  ]
 
   const _onClickCoiling = (id: string) => {
     if (coiling.includes(id as any)) {
@@ -81,6 +140,8 @@ export const CoilingBar = () => {
       chartManage.addCoiling(id as any)
     }
   }
+
+  if (!coiling) return null
 
   return (
     <>
@@ -229,7 +290,7 @@ export const ChartTypeSelect = memo(() => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <span className="cursor-pointer hover:bg-accent h-full rounded flex px-3">
+        <span className="cursor-pointer hover:bg-accent rounded flex px-3 h-9">
           <JknIcon.Svg
             name={chartType === ChartType.Candle ? 'chart-candle' : 'chart-area'}
             size={20}
@@ -368,21 +429,23 @@ export const IndicatorModal = (props: { onClickParams: () => void }) => {
       return
     }
 
-    if (category === '缠论系统') {
-      chartManage.setSystem(i.id)
-    } else {
-      if (type === 'main') {
-        if (mainIndicators.find(ii => ii.id === i.id)) {
-          chartManage.removeMainIndicator(i.id)
-        } else {
-          chartManage.addMainIndicator({ id: i.id, name: i.name!, type: i.db_type!, calcType: i.value })
+    if (type === 'main') {
+      if (mainIndicators.find(ii => ii.id === i.id)) {
+        if (+i.type === 21) {
+          chartManage.setSystem(undefined)
         }
+        chartManage.removeMainIndicator(i.id)
       } else {
-        if (secondaryIndicators.find(ii => ii.id === i.id)) {
-          chartManage.removeSecondaryIndicator(i.id)
-        } else {
-          chartManage.addSecondaryIndicator({ id: i.id, name: i.name!, type: i.db_type!, calcType: i.value })
+        if (+i.type === 21) {
+          chartManage.setSystem(i.id)
         }
+        chartManage.addMainIndicator({ id: i.id, name: i.name!, type: i.db_type!, calcType: i.value })
+      }
+    } else {
+      if (secondaryIndicators.find(ii => ii.id === i.id)) {
+        chartManage.removeSecondaryIndicator(i.id)
+      } else {
+        chartManage.addSecondaryIndicator({ id: i.id, name: i.name!, type: i.db_type!, calcType: i.value })
       }
     }
   }
@@ -471,7 +534,7 @@ export const IndicatorModal = (props: { onClickParams: () => void }) => {
           {
             indicators.map(i => (
               <div key={i.name}
-                className="flex items-center pl-2.5 space-x-2 hover:bg-accent cursor-pointer py-1.5 data-[checked=true]:bg-[#2962FF4D] text-transparent hover:text-[#B8B8B8]"
+                className="flex items-center pl-2.5 pr-3.5 space-x-2 hover:bg-accent cursor-pointer py-1.5 data-[checked=true]:bg-[#2962FF4D] text-transparent hover:text-[#B8B8B8]"
                 data-checked={checkedIndicator.has(i.id)}
                 onClick={() => onCheck(i)} onKeyDown={() => { }}
               >
@@ -486,6 +549,11 @@ export const IndicatorModal = (props: { onClickParams: () => void }) => {
                 {
                   !i.authorized ? (
                     <JknIcon name="ic_lock" className="rounded-none" />
+                  ) : null
+                }
+                {
+                  checkedIndicator.has(i.id) ? (
+                    <JknIcon.Svg name="check" size={10} className="rounded-none text-foreground !ml-auto mr-1" />
                   ) : null
                 }
               </div>
@@ -518,7 +586,7 @@ const ViewModeSelect = () => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <span className="cursor-pointer hover:bg-accent h-full rounded leading-9 px-3 flex items-center justify-center">
+        <span className="cursor-pointer hover:bg-accent  h-9 rounded leading-9 px-3 flex items-center justify-center">
           <JknIcon name={viewModeMenuItems.find(i => i.value === viewMode)?.icon as any} className="w-5 h-5" />
         </span>
       </DropdownMenuTrigger>
@@ -548,7 +616,7 @@ const StockPkPicker = () => {
 
   return (
     <>
-      <div className="cursor-pointer hover:bg-accent h-full rounded px-3 flex items-center" onClick={() => modal.modal.open()} onKeyDown={() => { }}>
+      <div className="cursor-pointer hover:bg-accent  h-9 rounded px-3 flex items-center" onClick={() => modal.modal.open()} onKeyDown={() => { }}>
         <JknIcon.Svg name="chart-pk" size={20} />
       </div>
       {
@@ -593,7 +661,7 @@ const StockPkModal = () => {
 
   return (
     <div className="flex h-[500px] flex-col text-sm">
-      <div className="border-b-primary flex items-center px-4 flex-shrink-0">
+      <div className="border-b-primary flex items-center px-4 flex-shrink-0 ">
         <JknIcon.Svg name="search" size={20} className="text-secondary" />
         <Input placeholder="搜索" value={search} onChange={(e) => setSearch(e.target.value)} className="border-none placeholder:text-tertiary text-secondary" />
       </div>
@@ -707,7 +775,7 @@ const OverlayMarkPicker = () => {
 
   return (
     <>
-      <div className="cursor-pointer hover:bg-accent h-full rounded px-3 flex items-center" onClick={() => modal.modal.open()} onKeyDown={() => { }}>
+      <div className="cursor-pointer hover:bg-accent  h-9 rounded px-3 flex items-center" onClick={() => modal.modal.open()} onKeyDown={() => { }}>
         <JknIcon.Svg name="chart-fav" size={20} />
       </div>
       {

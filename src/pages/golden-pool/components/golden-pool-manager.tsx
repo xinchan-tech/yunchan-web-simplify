@@ -49,7 +49,7 @@ export const GoldenPoolManager = memo(() => {
         onClick={() => modal.open()}
         onKeyDown={() => { }}
       >
-        <JknIcon.Svg name={"more"} size={24} className="mr-1" color="#808080" />
+        <JknIcon.Svg name={"edit-outline"} size={20} className="mr-2" color="#B8B8B8" />
       </div>
       {context}
     </>
@@ -91,18 +91,18 @@ const GoldenPoolTable = () => {
                 null
               ) : (
                 <GoldenPoolNameEdit id={row.id as string} onUpdate={cates.refetch}>
-                  <JknIcon.Svg name="edit" size={20} className="ml-1 cursor-pointer" color="#808080" />
+                  <JknIcon.Svg name="edit" size={20} className="ml-1 p-1" color="#808080" label="重命名" hoverable />
                 </GoldenPoolNameEdit>
               )
             }
             {
-              index !== 0 ? (
+              index !== 0 && index !== 1 ? (
                 <span
                   className="cursor-pointer ml-3"
-                  onClick={() => sort.mutate({ id: row.id as string, sort: index })}
+                  onClick={() => sort.mutate({ id: row.id as string, sort: 2 })}
                   onKeyDown={() => { }}
                 >
-                  <JknIcon.Svg name="top" size={20} className="ml-1 cursor-pointer" color="#808080" />
+                  <JknIcon.Svg name="top" size={20} className="ml-1 p-0.5" color="#808080" label="置顶" hoverable/>
                 </span>
               ) : null
             }
@@ -115,7 +115,7 @@ const GoldenPoolTable = () => {
                   onClick={() => onDelete(row.id as string, row.name as string)}
                   onKeyDown={() => { }}
                 >
-                  <JknIcon.Svg name="delete" size={20} className="ml-1 cursor-pointer" color="#808080" />
+                  <JknIcon.Svg name="delete" size={20} className="ml-1 p-0.5" color="#808080" label="删除" hoverable/>
                 </span>
               )
             }
@@ -135,9 +135,10 @@ const GoldenPoolTable = () => {
   const onDelete = async (id: string, name: string) => {
     JknAlert.confirm({
       cancelBtn: true,
+      okBtnVariant: "destructive",
       content: (
-        <div className="mt-4 text-[#DBDBDB] text-left text-base">
-          确定删除该金池？删除后将取消该金池里已收藏的股票，此操作不可撤销
+        <div className="text-[#DBDBDB] text-center text-base">
+          确定删除该自选？<br/>删除后将取消自选里收藏股票，此操作不可撤销 
         </div>
       ),
       onAction: async (action) => {

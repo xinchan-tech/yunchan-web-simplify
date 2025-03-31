@@ -1,5 +1,6 @@
 import {
   AlertDialog,
+  AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
   AlertDialogFooter,
@@ -12,7 +13,8 @@ import to from 'await-to-js'
 import { nanoid } from 'nanoid'
 import type { ReactNode } from 'react'
 import { createRoot } from 'react-dom/client'
-import { Button } from '../../ui/button'
+import { Button, type ButtonProps } from '../../ui/button'
+import { JknIcon } from "../jkn-icon"
 
 type AlertAction = 'confirm' | 'cancel' | 'close'
 
@@ -22,10 +24,12 @@ type AlertOptions = {
   onAction?: (action: AlertAction) => Promise<unknown | boolean>
   cancelBtn?: boolean
   okBtnText?: string
+  closeIcon?: boolean
+  okBtnVariant?: ButtonProps['variant']
 }
 
 export const JknAlert = {
-  info({ content, title, onAction, cancelBtn, okBtnText }: AlertOptions) {
+  info({ content, title, onAction, cancelBtn, okBtnText, closeIcon, okBtnVariant }: AlertOptions) {
     let rootEl = document.getElementById('alert-wrapper')
 
     if (!rootEl) {
@@ -53,6 +57,8 @@ export const JknAlert = {
         onAction={onAction}
         cancelBtn={cancelBtn}
         okBtnText={okBtnText}
+        closeIcon={closeIcon}
+        okBtnVariant={okBtnVariant}
       />
     )
   },
@@ -65,6 +71,8 @@ export const JknAlert = {
 interface AlertDialogProps extends AlertOptions {
   afterClose?: () => void
   okBtnText?: string
+  closeIcon?: boolean
+  okBtnVariant?: ButtonProps['variant']
 }
 
 const AlertComponent = (props: AlertDialogProps) => {
@@ -111,22 +119,31 @@ const AlertComponent = (props: AlertDialogProps) => {
     <AlertDialog open={open} onOpenChange={open => !open && onClose()}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          {props.title !== undefined ? (
-            <AlertDialogTitle>{props.title}</AlertDialogTitle>
-          ) : (
-            <VisuallyHidden>
-              <AlertDialogTitle />
-            </VisuallyHidden>
-          )}
-          <AlertDialogDescription className="text-center text-lg mt-4">{props.content}</AlertDialogDescription>
+          <p className="flex items-center w-full box-border p-4 my-0">
+            {props.title !== undefined ? (
+              <AlertDialogTitle>
+                {props.title}
+              </AlertDialogTitle>
+            ) : (
+              <VisuallyHidden>
+                <AlertDialogTitle />
+              </VisuallyHidden>
+            )}
+            {
+              props.closeIcon !== false ? (
+                <JknIcon.Svg name="close" size={14} className="ml-auto text-foreground p-1" hoverable  onClick={onClose}/>
+              ) : null
+            }
+          </p>
         </AlertDialogHeader>
-        <AlertDialogFooter>
+        <AlertDialogDescription className="text-center text-lg">{props.content}</AlertDialogDescription>
+        <AlertDialogFooter className="justify-end">
           {props.cancelBtn && (
-            <Button variant="outline" onClick={onCancel}>
+            <Button className="w-[72px]" variant="outline" onClick={onCancel}>
               取消
             </Button>
           )}
-          <Button onClick={onConfirm}>{props.okBtnText ?? '确认'}</Button>
+          <Button className="w-[72px]" variant={props.okBtnVariant} onClick={onConfirm}>{props.okBtnText ?? '确认'}</Button>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

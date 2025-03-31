@@ -260,7 +260,7 @@ const SingleTable = (props: SingleTableProps) => {
 
   return (
     <JknRcTable
-      headerHeight={48}
+      headerHeight={61}
       isLoading={query.isLoading}
       columns={columns}
       rowKey="symbol"

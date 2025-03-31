@@ -1,4 +1,5 @@
 import type { FigureTemplate } from 'jkn-kline-chart'
+import deleteSvg from '@/assets/svg/delete-2.svg'
 
 const iconContext = import.meta.webpackContext('@/assets/icon/script_icons')
 
@@ -45,20 +46,56 @@ export const IconFigure: FigureTemplate<IconAttrs> = {
   }
 }
 
+const drawRoundedRect = (
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  radius: number | [number, number, number, number]
+) => {
+  let leftTop = 0
+  let rightTop = 0
+  let rightBottom = 0
+  let leftBottom = 0
+  if (Array.isArray(radius)) {
+    ;[leftTop, rightTop, rightBottom, leftBottom] = radius
+  } else {
+    leftTop = rightTop = rightBottom = leftBottom = radius
+  }
+  ctx.beginPath()
+  ctx.moveTo(x + leftTop, y)
+  ctx.arcTo(x + width, y, x + width, y + rightTop, rightTop)
+  ctx.lineTo(x + width, y + height - rightBottom)
+  ctx.arcTo(x + width, y + height, x + width - rightBottom, y + height, rightBottom)
+  ctx.lineTo(x + leftBottom, y + height)
+  ctx.arcTo(x, y + height, x, y + height - leftBottom, leftBottom)
+  ctx.lineTo(x, y + leftTop)
+  ctx.arcTo(x, y, x + leftTop, y, leftTop)
+  ctx.closePath()
+  ctx.fill()
+}
+
 export type MarkOverlayAttrs = {
   x: number
   y: number
   date: string
-  title: string
+  dateWidth?: number
+  title: string,
+  cb: (data: any) => void
 }
 
 export const markOverlayFigure: FigureTemplate<MarkOverlayAttrs> = {
   name: 'mark-overlay',
   draw: (ctx, attrs) => {
-    const { x, y, date, title } = attrs
-    const maxWidth = Math.max(ctx.measureText(date).width, ctx.measureText(title).width)
-    const padding = [5, 10, 5, 10]
-    const fontSize = 12
+    const { x, y, date, title, cb } = attrs
+    const fontSize = 16
+    ctx.font = `${fontSize}px Arial`
+    const titleWidth = ctx.measureText(title).width
+    const dateWidth = ctx.measureText(date).width + 6 + 15
+    attrs.dateWidth = dateWidth
+    const maxWidth = Math.max(dateWidth, titleWidth)
+    const padding = [8, 10, 8, 10]
     const height = padding[0] + fontSize + padding[2]
     const width = maxWidth + padding[1] + padding[3] + padding[3]
     ctx.save()
@@ -70,17 +107,29 @@ export const markOverlayFigure: FigureTemplate<MarkOverlayAttrs> = {
     ctx.setLineDash([5, 5])
     ctx.lineTo(x, height * 2)
     ctx.stroke()
-
     ctx.fillStyle = '#e91e63'
-    ctx.fillRect(x - width / 2, 0, width, height)
+    drawRoundedRect(ctx, x - width / 2, 0, width, height, [6, 6, 0, 0])
+    // ctx.fillRect(x - width / 2, 0, width, height)
     ctx.fillStyle = '#fff'
-    ctx.font = `${fontSize}px Arial`
+
     ctx.textBaseline = 'top'
     ctx.fillText(date, x - width / 2 + padding[1], padding[0])
-    // ctx.strokeText(date, x - width / 2 + padding[3], padding[0] + fontSize)
+
+    if (!imgCache.has('overlay-delete')) {
+      const img = new Image()
+      img.src = deleteSvg
+      img.onload = () => {
+        ctx.drawImage(img, x - width / 2 + dateWidth, padding[0] - 1, 15, 15)
+        imgCache.set('overlay-delete', img)
+      }
+    } else {
+      const img = imgCache.get('overlay-delete')
+      ctx.drawImage(img!, x - width / 2 + dateWidth, padding[0] - 1, 15, 15)
+    }
 
     ctx.fillStyle = '#fff'
-    ctx.fillRect(x - width / 2, height, width, height)
+    drawRoundedRect(ctx, x - width / 2, height, width, height, [0, 0, 6, 6])
+    // ctx.fillRect(x - width / 2, height, width, height)
     ctx.fillStyle = 'black'
     ctx.fillText(title, x - width / 2 + padding[1], height + padding[0])
 
@@ -88,12 +137,18 @@ export const markOverlayFigure: FigureTemplate<MarkOverlayAttrs> = {
 
     ctx.closePath()
     ctx.restore()
+
+    cb({
+      x:  x - width / 2 + dateWidth,
+      y: padding[0] - 1,
+      width: 15,
+      height: 15
+    })
   },
   checkEventOn: (coordinate, attrs) => {
+    console.log(attrs.dateWidth)
     const { x, y } = coordinate
     const { y: y1 } = attrs
     return y >= y1 && y <= y1 && x !== undefined
   }
 }
-
-

@@ -1,4 +1,5 @@
 import type { StockRawRecord } from '@/api'
+import resultImg from '@/assets/image/back-result.png'
 import {
   Button,
   DropdownMenu,
@@ -17,17 +18,16 @@ import {
   Separator,
   useModal
 } from '@/components'
+import { useStack, useToast } from "@/hooks"
 import { dateUtils } from '@/utils/date'
 import { stockUtils } from '@/utils/stock'
 import { cn } from '@/utils/style'
-import { useCounter, useUnmount } from 'ahooks'
+import { useMount, useUnmount } from 'ahooks'
 import dayjs from 'dayjs'
 import Decimal from 'decimal.js'
 import { memo, useRef, useState } from 'react'
-import { useImmer } from 'use-immer'
-import { renderUtils } from '../lib/utils'
 import { useChartManage } from "../lib"
-import { useLatestRef, useStack, useToast } from "@/hooks"
+import { renderUtils } from '../lib/utils'
 
 const disabledDate = (d: Date, candlesticks: StockRawRecord[]) => {
   if (!candlesticks.length) return true
@@ -36,6 +36,8 @@ const disabledDate = (d: Date, candlesticks: StockRawRecord[]) => {
     !dateUtils.isMarketOpen(day) || !dayjs().isAfter(d) || !day.isSameOrAfter(dateUtils.toUsDay(+candlesticks[0][0]!))
   )
 }
+
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 
 interface BackTestBarProps {
   chartId: string
@@ -69,24 +71,34 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
   const maxProfit = useStack<{ max: number, index: number }>([])
   const profit = useStack<{ profit: number, index: number }>([])
   const positiveProfitCount = useStack<{ count: number, index: number }>([])
+  const [loading, setLoading] = useState<boolean>(false)
+  const startIndex = useRef<number>(-1)
 
-
-
-  const onDateChange = (date?: string) => {
+  const onDateChange = async (date?: string) => {
     // setStartDate(date)
 
     if (!date) {
       props.onChangeCandlesticks(candlesticksRestore.current)
       currentKline.current = -1
+      startIndex.current = -1
     } else {
       const kline = renderUtils.findNearestTime(
         candlesticksRestore.current,
         +dateUtils.toUsDay(date).valueOf().toString().slice(0, -3)
       )
+      /**
+       * 假的
+       */
+      setLoading(true)
+
+      await sleep(Math.random() * 1000 + 500)
+
+      setLoading(false)
 
       if (kline) {
         props.onChangeCandlesticks(candlesticksRestore.current.slice(0, kline.index + 1))
         currentKline.current = kline.index
+        startIndex.current = kline.index
         setTradeRecord({ buy: [], sell: [] })
         window.clearInterval(timer!)
         profit.clear()
@@ -116,6 +128,8 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
 
     if (!next) {
       resultModel.modal.open()
+      currentKline.current = -1
+      startIndex.current = -1
       // toast({
       //   description: '已到最新数据'
       // })
@@ -164,9 +178,11 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
 
   const toLastKLine = () => {
     if (currentKline.current === -1) return
+    window.clearTimeout(timer!)
     resultModel.modal.open()
     props.onChangeCandlesticks(candlesticksRestore.current)
     currentKline.current = -1
+    startIndex.current = -1
   }
 
   const startBackTest = () => {
@@ -250,14 +266,6 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
     }
   }
 
-  useUnmount(() => {
-    setTimer(null)
-    window.clearInterval(timer!)
-    setTradeRecord({ buy: [], sell: [] })
-    profit.clear()
-    maxProfit.clear()
-    positiveProfitCount.clear()
-  })
 
   const calcProfit = (record: TradeRecord) => {
     const count = Math.min(
@@ -265,31 +273,81 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
       record.sell.reduce((prev, cur) => prev + cur.count, 0)
     )
 
-    let buyTotal = 0
-    let buyCount = count
-    record.buy.forEach(({price, count}) => {
-      if(buyCount > count) {
-        buyTotal += price * count
-        buyCount -= count
-      }else{
-        buyTotal += price * buyCount
-        buyCount = 0
-      }
-    })
+    const buy = [...record.buy]
+    const sell = [...record.sell]
 
-    let sellTotal = 0
-    let sellCount = count
-    record.sell.forEach(({price, count}) => {
-      if(sellCount > count) {
-        sellTotal += price * count
-        sellCount -= count
-      } else {
-        sellTotal += price * sellCount
-        sellCount = 0
-      }
-    })
+    // 买入持有
+    const totalBuy = {
+      count: 0,
+      price: 0
+    }
+    const totalShell = {
+      count: 0,
+      price: 0
+    }
+    for(let i = startIndex.current; i <= currentKline.current; i++) {
+      while(buy[0].index === i){
+        totalBuy.count += buy[0].count
+        totalBuy.price += buy[0].price * buy[0].count
+        buy.shift()
 
-    return sellTotal - buyTotal
+        if(!buy.length) break
+      }
+
+      while(sell[0].index === i){
+        totalShell.count += sell[0].count
+        totalShell.price += sell[0].price * sell[0].count
+        sell.shift()
+
+        if(!sell.length) break
+      }
+
+
+    }
+    return 0
+    // let totalShell = 0
+    // let totalBuy = 0
+
+    // let sellStart = record.buy[0].index
+    // let buyStart = record.sell[0].index
+
+    // let shellEnd = record.sell[record.sell.length - 1].index
+    // let buyEnd = record.buy[record.buy.length - 1].index
+
+    // let pointStart = Math.min(sellStart, buyStart)
+
+    // let pointEnd = Math.min(shellEnd, buyEnd)
+
+    // for (let i = pointStart; i <= pointEnd; i++) {
+      
+    // }
+
+
+    // let buyTotal = 0
+    // let buyCount = count
+    // record.buy.forEach(({ price, count }) => {
+    //   if (buyCount > count) {
+    //     buyTotal += price * count
+    //     buyCount -= count
+    //   } else {
+    //     buyTotal += price * buyCount
+    //     buyCount = 0
+    //   }
+    // })
+
+    // let sellTotal = 0
+    // let sellCount = count
+    // record.sell.forEach(({ price, count }) => {
+    //   if (sellCount > count) {
+    //     sellTotal += price * count
+    //     sellCount -= count
+    //   } else {
+    //     sellTotal += price * sellCount
+    //     sellCount = 0
+    //   }
+    // })
+
+    // return sellTotal - buyTotal
     // const buyLength = record.buy.length
     // const sellLength = record.sell.length
 
@@ -402,9 +460,10 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
   }
 
   const resultModel = useModal({
-    title: ' ',
+    title: undefined,
     closeIcon: true,
     footer: false,
+    className: 'w-[540px]',
     closeOnMaskClick: false,
     content: () => {
       const symbol = useChartManage.getState().chartStores[props.chartId].symbol
@@ -412,14 +471,17 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
       const total = tradeRecord.buy.length + tradeRecord.sell.length
 
       return (
-        <div className="text-center px-4">
-          <div className="my-4 text-4xl">再接再厉，交易员！</div>
-          <div className="text-lg">
-            您在 {symbol} - {stockUtils.intervalToStr(timeIndex)} 的回测中
+        <div className="text-center px-4 h-[444px] ">
+          <div className="h-[108px] w-[100px] mx-auto mt-8">
+            <img src={resultImg} className="w-full h-full" alt="" />
           </div>
-          <div className="flex justify-between items-center my-12 space-x-4">
-            <div className="flex-1 border border-solid border-border rounded py-4">
-              <div className="text-xl mb-2">现金盈利</div>
+          <div className="my-1 text-2xl text-white">再接再厉，交易员！</div>
+          <div className="text-base text-foreground">
+            您在 {symbol} - {stockUtils.intervalToStr(timeIndex)} 的表现
+          </div>
+          <div className="flex justify-between items-center mt-6 space-x-2 mx-auto w-[321px] h-[98px] border border-solid border-[#2E2E2E] rounded-lg">
+            <div className="flex-1 rounded py-4">
+              <div className="text-sm text-tertiary mb-3">现金盈利</div>
               <div>
                 <span className={cn('text-3xl', Decimal.create(profit.peek()?.profit).gt(0) ? 'text-stock-up' : 'text-stock-down')}>
                   {Decimal.create(profit.peek()?.profit).toShort()}
@@ -427,8 +489,9 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
                 <span> USD</span>
               </div>
             </div>
-            <div className="flex-1 border border-solid border-border rounded py-4">
-              <div className="text-xl mb-2">成功率</div>
+            <Separator orientation="vertical" className="h-8 w-[1px] bg-[#2E2E2E]" />
+            <div className="flex-1 rounded py-4">
+              <div className="text-sm text-tertiary mb-3">成功率</div>
               <div>
                 <span className={cn('text-3xl', Decimal.create(positiveProfitCount.peek()?.count).gt(0) ? 'text-stock-up' : 'text-stock-down')}>
                   {' '}
@@ -437,19 +500,22 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
                 <span> %</span>
               </div>
             </div>
-            <div className="flex-1 border border-solid border-border rounded py-4">
-              <div className="text-xl mb-2"> 最赚钱的交易</div>
-              <div>
-                <span className={cn('text-3xl', Decimal.create(maxProfit.peek()?.max).gt(0) ? 'text-stock-up' : 'text-stock-down')}>
-                  {Decimal.create(maxProfit.peek()?.max).toShort()}
-                </span>
-                <span> USD</span>
-              </div>
-            </div>
           </div>
+          <div className="w-[321px] h-[42px] border border-solid border-[#2E2E2E] rounded-[30px] text-center mx-auto mt-8 leading-[42px] text-sm cursor-pointer" onClick={() => resultModel.modal.close()} onKeyDown={() => { }}>
+              好的
+            </div>
         </div>
       )
     }
+  })
+
+  useUnmount(() => {
+    setTimer(null)
+    window.clearInterval(timer!)
+    setTradeRecord({ buy: [], sell: [] })
+    profit.clear()
+    maxProfit.clear()
+    positiveProfitCount.clear()
   })
 
 
@@ -532,6 +598,14 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
         </Button>
       </div>
       {resultModel.context}
+      {loading && (
+        <div className="fixed left-0 right-0 bottom-0 top-0 bg-background/35 flex items-center justify-center z-10">
+          <div className="w-60 bg-background/95 p-12 flex flex-col items-center">
+            <JknIcon className="w-48 h-48" name="load" />
+            <div className="text-center mt-4">回测准备中</div>
+          </div>
+        </div>
+      )}
     </div>
   )
 })

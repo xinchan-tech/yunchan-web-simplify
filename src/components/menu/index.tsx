@@ -30,42 +30,42 @@ const Menu = () => {
   const menus: MenuItem[] = useMemo(
     () => [
       {
-        icon: <JknIcon.Svg name="dashboard" size={20} />,
+        icon: <JknIcon.Svg name="dashboard" size={24} />,
         title: '首页',
         path: '/'
       },
       {
-        icon: <JknIcon.Svg name="views" size={20} />,
+        icon: <JknIcon.Svg name="views" size={24} />,
         title: '行情',
         path: '/views'
       },
       {
-        icon: <JknIcon.Svg name="pool" size={20} />,
+        icon: <JknIcon.Svg name="pool" size={24} />,
         title: '自选',
         path: '/golden'
       },
       {
-        icon: <JknIcon.Svg name="picker" size={20} />,
+        icon: <JknIcon.Svg name="picker" size={24} />,
         title: '选股',
         path: '/super'
       },
       // {
-      //   icon: <JknIcon.Svg name="ai-alarm" size={20} />,
+      //   icon: <JknIcon.Svg name="ai-alarm" size={24} />,
       //   title: 'AI报警',
       //   path: '/alarm'
       // },
       {
-        icon: <JknIcon.Svg name="calendar" size={20} />,
+        icon: <JknIcon.Svg name="calendar" size={24} />,
         title: '日历',
         path: '/calendar'
       },
       {
-        icon: <JknIcon.Svg name="message" size={20} />,
+        icon: <JknIcon.Svg name="message" size={24} />,
         title: '消息',
         path: '/message'
       },
       // {
-      //   icon: <JknIcon.Svg name="shout" size={20} />,
+      //   icon: <JknIcon.Svg name="shout" size={24} />,
       //   title: '大V快评',
       //   path: '/shout'
       // },
@@ -104,11 +104,11 @@ const Menu = () => {
             onClick={() => onNav(item.path)}
             onKeyDown={() => { }}
             className={cn(
-              'flex flex-col items-center hover:bg-accent w-8 h-6 justify-center rounded-xs',
+              'flex flex-col items-center hover:bg-accent w-8 h-[28px] justify-center rounded-xs',
               pathname === item.path && 'bg-primary/30'
             )}
           >
-            <div className={cn('inline-block h-[20px]', pathname === item.path ? 'text-primary' : '')}>{item.icon}</div>
+            <div className={cn('flex', pathname === item.path ? 'text-primary' : '')}>{item.icon}</div>
           </div>
           <span className={cn('text-xs', pathname === item.path ? 'text-primary' : '')}>
             {item.title}

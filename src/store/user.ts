@@ -1,6 +1,6 @@
 import { getUser } from '@/api'
 import { queryClient } from '@/utils/query-client'
-import { aesDecrypt } from '@/utils/string'
+import { AESCrypt } from '@/utils/string'
 import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
 
@@ -63,7 +63,7 @@ export const useUser = create<UserStore>()(
 )
 
 export const parseUserPermission = (str: string) => {
-  const permission = aesDecrypt(str)
+  const permission = AESCrypt.decrypt(str)
 
   let result: UserPermission = {
     overlayMark: [],

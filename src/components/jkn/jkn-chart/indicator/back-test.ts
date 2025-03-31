@@ -60,8 +60,7 @@ export const backTestIndicator: IndicatorTemplate<any, any> = {
     let totalDiff = 0
     let totalSellPrice = 0
     let totalBuyPrice = 0
-    console.log(result)
-
+    
     result.forEach(item => {
       totalCount += item.count
       totalPrice += item.price * item.count

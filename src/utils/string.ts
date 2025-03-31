@@ -29,29 +29,36 @@ export const gzDecode = (str: string): string => {
   return pako.inflate(dataUint8, { to: 'string' })
 }
 
-/**
- * aesDecrypt
- */
-export const aesDecrypt = (str: string): string => {
-  try {
-    const key = import.meta.env.PUBLIC_BASE_AES_KEY
-    const iv = import.meta.env.PUBLIC_BASE_AES_IV
-    const decryptedData = aes.decrypt(str, encUtf8.parse(key), {
-      iv: encUtf8.parse(iv)
-    })
-    return decryptedData.toString(encUtf8)
-  } catch (e) {
-    console.error(
-      'AES decrypt error:',
-      e,
-      'key:',
-      import.meta.env.PUBLIC_BASE_AES_KEY,
-      'iv:',
-      import.meta.env.PUBLIC_BASE_AES_IV,
-      'str:',
-      str
-    )
-    throw e
+export class AESCrypt {
+  private static key: string = import.meta.env.PUBLIC_BASE_AES_KEY
+  private static iv: string = import.meta.env.PUBLIC_BASE_AES_IV
+
+  get key(): string {
+    throw new Error('Key is not defined')
+  }
+
+  static encrypt(data: string): string {
+    try {
+      const encrypted = aes.encrypt(data, encUtf8.parse(AESCrypt.key), {
+        iv: encUtf8.parse(AESCrypt.iv)
+      })
+      return encrypted.toString()
+    } catch (error) {
+      console.error('Encryption error:', error)
+      throw error
+    }
+  }
+
+  static decrypt(data: string): string {
+    try {
+      const decrypted = aes.decrypt(data, encUtf8.parse(AESCrypt.key), {
+        iv: encUtf8.parse(AESCrypt.iv)
+      })
+      return decrypted.toString(encUtf8)
+    } catch (error) {
+      console.error('Decryption error:', error)
+      throw error
+    }
   }
 }
 

@@ -13,10 +13,14 @@ const Star = (props: StarProps) => {
   const [hover, setHover] = useState(false)
 
   const icon: IconName = props.checked ? 'ic_star_on' : hover ? 'ic_star_hover' : 'ic_star_off'
-
+  
+  const onClick = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    props.onChange?.(!props.checked)
+  }
   return (
-    <span onClick={() => props.onChange?.(!props.checked)} onKeyDown={() => { }} onFocus={() => { }} onMouseOver={() => setHover(true)} onMouseLeave={() => setHover(false)}>
-      <JknIcon name={icon} className="w-4 h-4 flex items-center" style={{ width: props.size, height: props.size }} />
+    <span onClick={onClick} onKeyDown={() => { }} onFocus={() => { }} onMouseOver={() => setHover(true)} onMouseLeave={() => setHover(false)}>
+      <JknIcon name={icon} className="w-5 h-5 flex items-center" style={{ width: props.size, height: props.size }} />
     </span>
   )
 }

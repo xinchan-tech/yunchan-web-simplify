@@ -142,7 +142,9 @@ export const MainChart = (props: MainChartProps) => {
 
     if (_store.overlayMark) {
       stockCache.current.mark =
-        chartImp.current?.createMarkOverlay(symbol, _store.overlayMark.type, _store.overlayMark.mark) ?? ''
+        chartImp.current?.createMarkOverlay(symbol, _store.overlayMark.type, _store.overlayMark.mark, () => {
+          chartManage.removeMarkOverlay(props.chartId)
+        }) ?? ''
     }
 
     const chart = chartImp.current?.getChart()
@@ -151,9 +153,9 @@ export const MainChart = (props: MainChartProps) => {
       chart.subscribeAction('onIndicatorActionClick' as any, (e: any) => {
         if (e.event === 'delete') {
           if (e.paneId === ChartTypes.MAIN_PANE_ID) {
-            chartManage.removeMainIndicator(e.indicator.id, props.chartId)
+            chartManage.removeMainIndicator(e.indicator.id.toString(), props.chartId)
           } else {
-            chartManage.removeSecondaryIndicator(e.indicator.id, props.chartId)
+            chartManage.removeSecondaryIndicator(e.indicator.id.toString(), props.chartId)
           }
         } else if (e.event === 'invisible' || e.event === 'visible') {
           chartImp.current?.setIndicatorVisible(e.indicator.id, e.event !== 'invisible')
@@ -235,7 +237,6 @@ export const MainChart = (props: MainChartProps) => {
 
     const cancelIndicatorEvent = chartEvent.on('mainIndicatorChange', ({ type, indicator }) => {
       if (type === 'add') {
-        console.log(indicator)
         chartImp.current?.createIndicator({
           indicator: indicator.id,
           symbol,
@@ -244,7 +245,7 @@ export const MainChart = (props: MainChartProps) => {
           isRemote: renderUtils.isRemoteIndicator(indicator)
         })
       } else {
-        chartImp.current?.removeIndicator(indicator.id)
+        chartImp.current?.removeIndicator(indicator.id.toString())
       }
     })
 
@@ -259,7 +260,7 @@ export const MainChart = (props: MainChartProps) => {
         })
       } else {
 
-        chartImp.current?.removeSubIndicator(indicator.id)
+        chartImp.current?.removeSubIndicator(indicator.id.toString())
       }
     })
 
@@ -305,7 +306,9 @@ export const MainChart = (props: MainChartProps) => {
           chartImp.current?.removeMarkOverlay(stockCache.current.mark)
         }
 
-        stockCache.current.mark = chartImp.current?.createMarkOverlay(symbol, params.type, params.mark) ?? ''
+        stockCache.current.mark = chartImp.current?.createMarkOverlay(symbol, params.type, params.mark, () => {
+          chartManage.removeMarkOverlay(props.chartId)
+        }) ?? ''
       } else {
         chartImp.current?.removeMarkOverlay(stockCache.current.mark)
         stockCache.current.mark = ''

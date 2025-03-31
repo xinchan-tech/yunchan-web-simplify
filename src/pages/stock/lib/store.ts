@@ -286,10 +286,10 @@ export const chartManage = {
   removeMainIndicator: (indicatorId: string, chartId?: string) => {
     setTimeout(() => {
       chartManage.setStore(state => {
-        const indicator = state.mainIndicators.find(indicator => indicator.id === indicatorId)
+        const indicator = state.mainIndicators.find(indicator => +indicator.id === +indicatorId)
         if (!indicator) return
         chartEvent.get().emit('mainIndicatorChange', { type: 'remove', indicator })
-        state.mainIndicators = state.mainIndicators.filter(indicator => indicator.id !== indicatorId)
+        state.mainIndicators = state.mainIndicators.filter(indicator => +indicator.id !== +indicatorId)
       }, chartId)
     }, 10)
   },

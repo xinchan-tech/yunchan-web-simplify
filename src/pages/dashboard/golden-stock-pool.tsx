@@ -57,7 +57,7 @@ const GoldenStockPool = () => {
       dataIndex: 'name',
       align: 'left',
       sort: true,
-      render: (name, row) => <StockView className='h-[26px]' code={row.symbol} name={name} />
+      render: (name, row) => <StockView className='min-h-[26px]' code={row.symbol} name={name} />
     },
     {
       title: '现价',

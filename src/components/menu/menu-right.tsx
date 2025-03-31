@@ -31,27 +31,27 @@ const MenuRight = () => {
 
   const menus: MenuItem[] = [
     {
-      icon: <JknIcon.Svg name="stock" size={20} />,
+      icon: <JknIcon.Svg name="stock" size={24} />,
       title: '图表',
       path: '/stock'
     },
     {
-      icon: <JknIcon.Svg name="push" size={20} />,
+      icon: <JknIcon.Svg name="push" size={24} />,
       title: '榜单',
       path: '/push'
     },
     // {
-    //   icon: <JknIcon.Svg name="financial" size={20} />,
+    //   icon: <JknIcon.Svg name="financial" size={24} />,
     //   title: '财务',
     //   path: '/finance'
     // },
     {
-      icon: <JknIcon.Svg name="alarm" size={20} />,
+      icon: <JknIcon.Svg name="alarm" size={24} />,
       title: '警报',
       path: '/stock/alarm'
     },
     {
-      icon: <JknIcon.Svg name="group" size={20} />,
+      icon: <JknIcon.Svg name="group" size={24} />,
       title: "群聊",
       path: "/chat-group",
     },
@@ -60,22 +60,46 @@ const MenuRight = () => {
   // const [auth, toastNotAuth] = useAuthorized('vcomment')
 
   const onNav = (path: string) => {
-    if (!token && path !== '/app') {
+    if (!token) {
       toast({
         title: '请先登录'
       })
       return
     }
 
-    const search = new URLSearchParams(window.location.search)
-    const symbol = search.get('symbol') ?? 'QQQ'
+    if (path === "/chat-group") {
+      if (user?.permission && user.permission.chat === true) {
+        if (useConfig.getState().ip === 'CN') {
+          JknAlert.info({
+            content: '根据中国大陆地区相关政策要求，此项功能暂不面向中国大陆地区用户开放，感谢理解！Due to regulatory requirements in Mainland China, This feature is not available in Mainland China.Thanks for your understanding​',
+            title: '服务不可用'
+          })
+          return
+        }
+        window.open(
+          `${window.location.origin}/chat`,
+          "whatever",
+          "hideit,height=750,width=1000,resizable=yes,scrollbars=yes,status=no,location=no"
+        )
+        return
+      } else {
+        onNav("/mall")
+        return
+      }
+    }
 
-    // if(path === '/shout' && !auth()){
-    //   toastNotAuth()
-    //   return
-    // }
+
+
 
     if (path.startsWith('/stock')) {
+      const search = new URLSearchParams(window.location.search)
+      const symbol = search.get('symbol') ?? 'QQQ'
+
+      if(window.location.pathname.startsWith('/stock/alarm') && pathname === '/stock/alarm'){
+        router.navigate(`/stock?symbol=${symbol}`)
+        return
+
+      }
       router.navigate(`${path}?symbol=${symbol}`)
     } else {
       router.navigate(path)
@@ -83,49 +107,21 @@ const MenuRight = () => {
   }
 
   return (
-    <div className="px-0.5 box-border space-y-2.5 pt-3 flex h-full flex-col items-center text-secondary">
+    <div className="px-0.5 box-border space-y-3 pt-3 flex h-full flex-col items-center text-secondary">
       {menus.map(item => (
         <div className="text-center" key={item.title}>
           <div
-            onClick={() => {
-              if (item.path === "/chat-group") {
-                if (!token) {
-                  toast({
-                    title: "请先登录",
-                  })
-                  return
-                }
-
-                if (user?.permission && user.permission.chat === true) {
-                  if (useConfig.getState().ip === 'CN') {
-                    JknAlert.info({
-                      content: '根据中国大陆地区相关政策要求，此项功能暂不面向中国大陆地区用户开放，感谢理解！Due to regulatory requirements in Mainland China, This feature is not available in Mainland China.Thanks for your understanding​',
-                      title: '服务不可用'
-                    })
-                    return
-                  }
-                  window.open(
-                    `${window.location.origin}/chat`,
-                    "whatever",
-                    "hideit,height=750,width=1000,resizable=yes,scrollbars=yes,status=no,location=no"
-                  )
-                } else {
-                  onNav("/mall")
-                }
-              } else {
-                onNav(item.path)
-              }
-            }}
+            onClick={() => onNav(item.path)}
             onKeyDown={() => { }}
-            className={cn("flex flex-col items-center cursor-pointer hover:bg-accent w-8 h-6 justify-center rounded-xs", pathname === item.path && 'bg-primary/30')}
+            className={cn("flex flex-col items-center cursor-pointer hover:bg-accent w-8 h-[28px] justify-center rounded-xs", pathname === item.path && 'bg-primary/30')}
           >
-            <div className={cn('inline-block h-[20px]', pathname === item.path ? 'text-primary' : '')}>
+            <div className={cn('flex', pathname === item.path ? 'text-primary' : '')}>
               {
                 item.icon
               }
             </div>
           </div>
-          <span className={cn('text-xs leading-none', pathname === item.path ? 'text-primary' : '')}>
+          <span className={cn('text-xs leading-[24px]]', pathname === item.path ? 'text-primary' : '')}>
             {item.title}
           </span>
         </div>

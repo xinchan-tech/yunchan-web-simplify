@@ -42,6 +42,8 @@ const priceToShort = (price: Decimal, decimal = 3) => {
 
   if (_price.isNaN()) return '--'
 
+  if (_price.isZero()) return _price.toFixed(decimal)
+
   for (let i = 0; i < unitSteps.length - 1; i++) {
     const step = new Decimal(unitSteps[i])
 
@@ -50,7 +52,7 @@ const priceToShort = (price: Decimal, decimal = 3) => {
     }
   }
 
-  return symbol + _price.div(unitSteps[unitSteps.length - 1]).toFixed(decimal) + unit[unit.length - 1]
+  return symbol + _price.div(unitSteps[unitSteps.length - 1]).toFixed(decimal) + unit[unitSteps.length - 1]
 }
 
 declare module 'decimal.js' {

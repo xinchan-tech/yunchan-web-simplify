@@ -417,5 +417,6 @@ export const stockUtils = {
     }
   },
 
+
   parseTime
 }

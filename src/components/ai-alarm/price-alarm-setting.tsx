@@ -19,6 +19,7 @@ import { JknVirtualList } from "../jkn/jkn-virtual-list"
 import { Separator } from "../ui/separator"
 import { cn } from "@/utils/style"
 import { Tabs, TabsList, TabsTrigger } from "../ui/tabs"
+import { ScrollArea } from "../ui/scroll-area"
 
 const formSchema = z.object({
   symbol: z.string({ message: '股票代码错误' }).min(1, '股票代码错误'),
@@ -100,31 +101,33 @@ export const PriceAlarmSetting = (props: PriceAlarmSetting) => {
 
           <div className="text-xs text-tertiary">条件</div>
           <Separator className="my-2 h-[1px] w-full" />
-          <FormField
-            control={form.control}
-            name="rise"
-            render={({ field }) => (
-              <FormItem className="pb-4 flex space-y-0">
-                <FormLabel className="w-32">价格报警</FormLabel>
-                <FormControl className="flex-1">
-                  <PriceSetting mode="rise" value={field.value} onChange={field.onChange} />
-                </FormControl>
-              </FormItem>
-            )}
-          />
+          <ScrollArea className="h-[320px]">
+            <FormField
+              control={form.control}
+              name="rise"
+              render={({ field }) => (
+                <FormItem className="pb-4 flex space-y-0">
+                  <FormLabel className="w-32">价格报警</FormLabel>
+                  <FormControl className="flex-1">
+                    <PriceSetting mode="rise" value={field.value} onChange={field.onChange} />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
 
-          <FormField
-            control={form.control}
-            name="fall"
-            render={({ field }) => (
-              <FormItem className="pb-4 flex space-y-0">
-                <FormLabel className="w-32" />
-                <FormControl>
-                  <PriceSetting mode="fall" value={field.value} onChange={field.onChange} />
-                </FormControl>
-              </FormItem>
-            )}
-          />
+            <FormField
+              control={form.control}
+              name="fall"
+              render={({ field }) => (
+                <FormItem className="pb-4 flex space-y-0">
+                  <FormLabel className="w-32" />
+                  <FormControl>
+                    <PriceSetting mode="fall" value={field.value} onChange={field.onChange} />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+          </ScrollArea>
 
           <Separator className="my-2 h-[1px] w-full" />
 

@@ -1,7 +1,7 @@
-import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components'
+import { HoverCard, HoverCardArrow, HoverCardContent, HoverCardTrigger } from '@/components'
 import { useConfig, useStockList } from '@/store'
 import { cn } from '@/utils/style'
-import { CSSProperties, type HtmlHTMLAttributes, type ReactNode, memo } from 'react'
+import { type CSSProperties, type HtmlHTMLAttributes, type ReactNode, memo } from 'react'
 import { JknIconCheckbox } from './icon-checkbox'
 
 const iconContext = import.meta.webpackContext('@/assets/icon', {
@@ -57,7 +57,9 @@ const wrapperLabel = (component: ReactNode, label: string | ReactNode) => {
   return (
     <HoverCard openDelay={300} closeDelay={300}>
       <HoverCardTrigger className="flex items-center">{component}</HoverCardTrigger>
+
       <HoverCardContent align="center" side="bottom" className="w-fit py-1 px-2 text-sm">
+        <HoverCardArrow width={10} height={4} className="text-accent fill-accent" />
         {label}
       </HoverCardContent>
     </HoverCard>
@@ -101,11 +103,12 @@ interface JknSvgIconProps extends HtmlHTMLAttributes<SVGElement> {
   title?: string
   size?: number
   label?: string
+  hoverable?: boolean
 }
 
-const JknSvgIcon = ({ name, title, size = 24, label, ...props }: JknSvgIconProps) => {
+const JknSvgIcon = ({ name, title, size = 24, label, hoverable, className, style, ...props }: JknSvgIconProps) => {
   const icon = (
-    <svg width={size} height={size} {...props}>
+    <svg width={size} height={size} className={cn(hoverable ? 'hover:bg-accent rounded cursor-pointer' : '', className)} style={{ pointerEvents: 'auto', ...style }} {...props}>
       <title>{title}</title>
       <use xlinkHref={`#icon-${name}`} />
     </svg>

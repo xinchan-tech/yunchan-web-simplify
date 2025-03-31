@@ -1,6 +1,6 @@
 import { useIndicator } from '@/store'
 import { IndicatorUtils, type IndicatorData } from '@/utils/coiling'
-import { aesDecrypt } from '@/utils/string'
+import { AESCrypt } from '@/utils/string'
 import { IndicatorSeries, type IndicatorTemplate } from 'jkn-kline-chart'
 import { candlestickToRaw } from '../utils'
 import { localIndicator } from "./local"
@@ -26,7 +26,7 @@ export const remoteIndicator: IndicatorTemplate<IndicatorData, any, RemoteIndica
 
     const r = await IndicatorUtils.calcIndicator(
       {
-        formula: aesDecrypt(formula[indicatorId]),
+        formula: AESCrypt.decrypt(formula[indicatorId]),
         symbal: symbol,
         indicatorId
       },

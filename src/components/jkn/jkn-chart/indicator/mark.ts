@@ -6,11 +6,25 @@ import { inRange } from 'radash'
 import type { MarkOverlayAttrs } from '../figure'
 import { findEqualTime } from '../utils'
 
+let markOverlayCache: { x: number; y: number; width: number; height: number }[] = []
+
 export const markIndicator: IndicatorTemplate<any, any> = {
   name: 'mark-indicator',
   shortName: 'mark-indicator',
   zLevel: 1,
   series: IndicatorSeries.Price,
+  onClickCheck(e) {
+    const { x, y } = e
+    for (const item of markOverlayCache) {
+      if (inRange(x, item.x, item.x + item.width) && inRange(y, item.y, item.y + item.height)) {
+        if(this.onClick){
+          this.onClick(this.id as any)
+        }
+        return true
+      }
+    }
+    return false
+  },
   calcParams: ['', '', ''],
   calc: async (_dataList, indicator) => {
     const [symbol, type, mark] = indicator.calcParams
@@ -60,7 +74,7 @@ export const markIndicator: IndicatorTemplate<any, any> = {
   },
   draw: params => {
     const { indicator, chart, ctx, xAxis, yAxis } = params
-
+    markOverlayCache = []
     const MarkOverlay = getFigureClass('mark-overlay')! as FigureConstructor<MarkOverlayAttrs>
 
     const { realFrom, realTo } = chart.getVisibleRange()
@@ -76,7 +90,15 @@ export const markIndicator: IndicatorTemplate<any, any> = {
           x: xPixel,
           y: y1,
           date: dateUtils.toUsDay(item.x).format('YYYY-MM-DD'),
-          title: item.title
+          title: item.title,
+          cb(rect) {
+            markOverlayCache.push({
+              x: rect.x,
+              y: rect.y,
+              width: rect.width,
+              height: rect.height
+            })
+          }
         },
         styles: {}
       }).draw(ctx)

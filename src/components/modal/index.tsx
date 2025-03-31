@@ -118,7 +118,7 @@ export const useModal = ({
                 </DialogTitle>
                 <DialogDescription className="text-center" />
               </DialogHeader>
-            ): <VisuallyHidden><DialogHeader /></VisuallyHidden>
+            ) : <VisuallyHidden><DialogHeader> <DialogTitle /></DialogHeader></VisuallyHidden>
           }
           {isFunction(content) ? content({ ...modal, onOk: props.onOk }) : content}
           {footer === null ? null : footer === undefined ? (

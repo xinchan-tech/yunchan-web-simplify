@@ -79,7 +79,7 @@ interface JknChartIns {
   removeSubIndicator: (indicatorId: string) => void
   createStockCompare: (symbol: string, candlesticks: number[], color: string) => string
   removeStockCompare: (symbol: string) => void
-  createMarkOverlay: (symbol: string, type: string, mark: string) => string
+  createMarkOverlay: (symbol: string, type: string, mark: string, cb: (data: any) => void) => string
   removeMarkOverlay: (indicatorId: string) => void
   setMarkOverlay: (mark: string) => void
   createBackTestIndicator: (record: (Optional<BackTestRecord, 'num'>[])) => Nullable<string> | undefined
@@ -446,11 +446,14 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
     removeStockCompare: symbol => {
       chart.current?.removeIndicator({ id: `compare-${symbol}` })
     },
-    createMarkOverlay: (symbol, type, mark) => {
+    createMarkOverlay: (symbol, type, mark, cb) => {
       return chart.current?.createIndicator(
         {
           name: 'mark-indicator',
-          calcParams: [symbol, type, mark]
+          calcParams: [symbol, type, mark],
+          onClick: (id: any) => {
+            cb(id)
+          }
         },
         true,
         { id: ChartTypes.MAIN_PANE_ID }

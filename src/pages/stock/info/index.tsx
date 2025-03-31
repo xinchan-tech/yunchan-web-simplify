@@ -532,7 +532,7 @@ const StockRelated = () => {
         dataIndex: 'symbol',
         sort: true,
         align: 'left',
-        render: symbol => <StockView code={symbol} iconSize={16} className="text-xs" />
+        render: symbol => <StockView code={symbol} iconSize={16} className="text-base" />
       },
       {
         title: '现价',
@@ -542,7 +542,7 @@ const StockRelated = () => {
         sort: true,
         render: (close, row) => (
           <SubscribeSpan.PriceBlink
-            className="text-xs"
+            className="text-base"
             symbol={row.symbol}
             initValue={close}
             showColor={false}
@@ -557,7 +557,7 @@ const StockRelated = () => {
         sort: true,
         render: (percent, row) => (
           <SubscribeSpan.PercentBlink
-            className="text-xs"
+            className="text-base"
             symbol={row.symbol}
             decimal={2}
             initValue={percent}
@@ -736,7 +736,7 @@ const GoldenStockPool = () => {
       dataIndex: 'name',
       align: 'left',
       sort: true,
-      render: (_name, row) => <StockView code={row.symbol} iconSize={16} className="text-xs" />
+      render: (_name, row) => <StockView code={row.symbol} iconSize={16} className="text-base" />
     },
     {
       title: '现价',
@@ -745,7 +745,7 @@ const GoldenStockPool = () => {
       width: '30%',
       sort: true,
       render: (close, row) => (
-        <SubscribeSpan.PriceBlink className="text-xs" symbol={row.symbol} initValue={close} initDirection={stockUtils.isUp(row)} showColor={false} />
+        <SubscribeSpan.PriceBlink className="text-base" symbol={row.symbol} initValue={close} initDirection={stockUtils.isUp(row)} showColor={false} />
       )
     },
     {
@@ -756,7 +756,7 @@ const GoldenStockPool = () => {
       sort: true,
       render: (percent, row) => (
         <SubscribeSpan.PercentBlink
-          className="text-xs"
+          className="text-base"
           showSign
           symbol={row.symbol}
           decimal={2}

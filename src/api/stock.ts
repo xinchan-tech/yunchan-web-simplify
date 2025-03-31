@@ -1,6 +1,6 @@
 import { useIndicator } from '@/store'
 import request from '@/utils/request'
-import { aesDecrypt, gzDecode } from '@/utils/string'
+import { gzDecode } from '@/utils/string'
 import axios from 'axios'
 import dayjs from 'dayjs'
 import { md5 } from 'js-md5'

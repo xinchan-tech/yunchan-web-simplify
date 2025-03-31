@@ -93,7 +93,7 @@ const TopList = () => {
       dataIndex: 'name',
       align: 'left',
       sort: true,
-      render: (_, row) => <StockView className='h-[26px]' code={row.symbol} name={row.name} />
+      render: (_, row) => <StockView className='min-h-[26px]' code={row.symbol} name={row.name} />
     },
     {
       title: `${type === IncreaseTopStatus.PRE_MARKET ? '盘前' : type === IncreaseTopStatus.AFTER_HOURS ? '盘后' : '现'}价`,
@@ -214,19 +214,11 @@ const TopList = () => {
     return d.isValid() ? ` ${d.format('MM-DD')} ${dateToWeek(d)} ` : date
   }
 
-  const onRowClick = (record: TableDataType) => {
-    return {
-      onClick: () => {
-        setSelectedRowKey(record.symbol)
-        console.log('record', record)
-      },
-      ...useTableRowClickToStockTrading('symbol')
-    }
-  }
+  const onRowClick = useTableRowClickToStockTrading('symbol')
 
-  const rowClassName = (record: TableDataType) => {
-    return selectedRowKey === record.symbol ? 'selected-row' : '';
-  };
+  // const rowClassName = (record: TableDataType) => {
+  //   return selectedRowKey === record.symbol ? 'selected-row' : '';
+  // };
 
   const tabs = [
     { key: IncreaseTopStatus.PRE_MARKET.toString(), label: `${t('stockChart.before')}热门` },
@@ -320,7 +312,6 @@ const TopList = () => {
           data={list}
           onSort={onSort}
           onRow={onRowClick}
-          rowClassName={rowClassName}
         />
       </div>
 

@@ -6,6 +6,8 @@ import { chartEvent } from '../lib/event'
 import { chartManage, useChartManage } from '../lib/store'
 import { renderUtils } from '../lib/utils'
 import { CoilingBar } from "../component/chart-tool-bar"
+import { useQueryParams } from "@/hooks"
+import { AESCrypt } from "@/utils/string"
 
 interface KChartProps {
   onChangeLeftSide: () => void
@@ -22,12 +24,20 @@ const getChartIdByIndex = (index: number) => `chart-${index}`
 export const KChart = (props: KChartProps) => {
   // const currentSymbol = useChartManage(s => s.currentSymbol)
   const viewMode = useChartManage(s => s.viewMode)
-  const symbol = useSymbolQuery()
+  // const symbol = useSymbolQuery()
+  const [queryParams] = useQueryParams<{ symbol: string; q?: string }>()
   const active = useChartManage(s => s.activeChartId)
 
   useEffect(() => {
-    chartEvent.get().emit('symbolChange', symbol)
-  }, [symbol])
+    chartEvent.get().emit('symbolChange', queryParams.symbol ?? 'QQQ')
+
+    if (queryParams.q) {
+      const q = JSON.parse(AESCrypt.decrypt(queryParams.q)) as { interval?: number }
+      if(q.interval !== undefined){
+        chartManage.setInterval(q.interval)
+      }
+    }
+  }, [queryParams.symbol, queryParams.q])
 
   const onChangeActive = (index: number) => {
     chartManage.setActiveChart(getChartIdByIndex(index))
