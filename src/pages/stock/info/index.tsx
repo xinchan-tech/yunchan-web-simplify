@@ -223,6 +223,8 @@ const StockQuoteBar = withTooltip(
 
     const trading = useMemo(() => stockUtils.intervalToTrading(props.interval), [props.interval])
 
+    const [arrowUp, setArrowUp] = useState(Decimal.create(props?.percent).gt(0))
+
     return (
       <div
         className={cn('flex items-baseline flex-wrap px-2 box-border my-1 cursor-pointer text-tertiary', props.interval !== StockChartInterval.INTRA_DAY && 'text-sm')}
@@ -241,9 +243,9 @@ const StockQuoteBar = withTooltip(
             zeroText="--"
           />
           <JknIcon.Svg
-            name={Decimal.create(props?.percent).gt(0) ? 'stock-up' : 'stock-down'}
+            name={ arrowUp? 'stock-up' : 'stock-down'}
             className={cn(
-              Decimal.create(props?.percent).gt(0) ? 'text-stock-up' : 'text-stock-down',
+              arrowUp ? 'text-stock-up' : 'text-stock-down',
               'ml-1',
               props.interval === StockChartInterval.INTRA_DAY ? 'w-4 h-[18px]' : 'w-2.5 h-[11px] '
             )} />
@@ -255,6 +257,9 @@ const StockQuoteBar = withTooltip(
             symbol={symbol}
             trading={trading}
             decimal={3}
+            onChange={(v) => {
+              setArrowUp(v.record.close - v.record.preClose > 0)
+            }}
             showSign={props.percent !== Number.POSITIVE_INFINITY}
             showColor={props.percent !== Number.POSITIVE_INFINITY}
             initDirection={Decimal.create(props?.percent).gt(0)}

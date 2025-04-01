@@ -185,6 +185,8 @@ class StockSubscribe {
     })
   }
 
+  // public onceShap
+
   public unsubscribeAll(code: string) {
     this.subscribed.off(code)
   }

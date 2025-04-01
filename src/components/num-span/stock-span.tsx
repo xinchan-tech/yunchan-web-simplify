@@ -151,7 +151,8 @@ interface PercentSubscribeSpanProps
   extends NumberSubscribeSpanProps,
     Omit<ComponentProps<typeof SubscribeSpan>, 'onChange' | 'formatter' | 'value'> {
   type?: 'percent' | 'amount'
-  nanText?: string
+  nanText?: string,
+  onChange?: SubscribeSpanProps['onChange']
 }
 
 export const PercentSubscribeSpan = memo(
@@ -164,6 +165,7 @@ export const PercentSubscribeSpan = memo(
     showColor = true,
     type = 'percent',
     nanText,
+    onChange,
     onValueChange,
     ...props
   }: PercentSubscribeSpanProps) => {
@@ -181,7 +183,7 @@ export const PercentSubscribeSpan = memo(
       [decimal, zeroText, type, nanText]
     )
 
-    const { value, direction, onChange } = useBaseSubscribe(initValue, initDirection, numberFormatter, onValueChange)
+    const { value, direction, onChange: _onChange } = useBaseSubscribe(initValue, initDirection, numberFormatter, onValueChange)
 
     const subscribeFormatter = useCallback<SubscribeSpanProps['formatter']>(
       data => {
@@ -193,6 +195,13 @@ export const PercentSubscribeSpan = memo(
       [numberFormatter, type]
     )
 
+    const __onChange = useCallback<NonNullable<SubscribeSpanProps['onChange']>>((e, v) => {
+      if (onChange) {
+        onChange(e, v)
+      }
+      _onChange(e, v)
+    }, [onChange, _onChange])
+
     return (
       <SubscribeSpan
         value={value}
@@ -200,7 +209,7 @@ export const PercentSubscribeSpan = memo(
         data-direction-show={showColor && value !== nanText ? 'true' : 'false'}
         data-direction-sign={showSign && value !== nanText}
         formatter={subscribeFormatter}
-        onChange={onChange}
+        onChange={__onChange}
         {...props}
       />
     )
