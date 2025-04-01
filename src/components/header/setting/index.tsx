@@ -10,6 +10,7 @@ import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router"
 import { useBoolean, useMount, useUnmount } from "ahooks"
 import { appEvent } from "@/utils/event"
+import logoTitleSm from '@/assets/image/logo-title-sm.png'
 
 export const HeaderSetting = () => {
   const token = useToken(s => s.token)
@@ -92,28 +93,28 @@ export const HeaderSetting = () => {
           <span>
             {
               token ? (
-                <JknAvatar src={user?.avatar} title={user?.realname} className="w-6 h-6" />
-              ) : <JknIcon.Svg size={24} name="more" />
+                <JknAvatar src={user?.avatar} title={user?.realname} className="size-8" />
+              ) : <JknIcon.Svg size={32} name="more" />
             }
           </span>
         </PopoverTrigger>
         <PopoverContent align="start" side="right" sideOffset={10} className="w-[260px]">
-          <div className="pb-1 pt-2 px-2.5 border-b-primary">
-            <JknIcon.Svg name="chart-text" className="w-24" />
+          <div className="pb-2 pt-2 px-2.5 border-b-primary">
+            <img src={logoTitleSm} alt="logo" className="w-[143px] h-8" />
           </div>
           <div className="border-b-primary">
             {
               token ? (
                 <HeaderSettingCell
-                  icon={<JknAvatar src={user?.avatar} title={user?.realname} className="w-4 h-4" />}
+                  icon={<JknAvatar src={user?.avatar} title={user?.realname} className="size-5" />}
                   title={user?.realname}
                   onClick={() => userCenter.modal.open()}
                 />
               ) : null
             }
             <HeaderSettingCell
-              icon="dashboard"
-              title="首页"
+              icon="home"
+              title="返回官网"
               onClick={() => { navigate('/'); setFalse() }}
             />
             <HeaderSettingCell
@@ -176,15 +177,15 @@ interface HeaderSettingCellProps {
 }
 const HeaderSettingCell = ({ icon, title, label, color, onClick }: HeaderSettingCellProps) => {
   return (
-    <div className="flex items-center px-2.5 w-full text-sm h-10 hover:bg-accent box-border cursor-pointer" style={{ color }} onClick={onClick} onKeyDown={() => { }}>
+    <div className="flex items-center px-2.5 w-full text-sm h-11 hover:bg-accent box-border cursor-pointer" style={{ color }} onClick={onClick} onKeyDown={() => { }}>
       {
         typeof icon === 'string' ? (
-          <JknIcon.Svg name={icon as IconName} size={16} />
+          <JknIcon.Svg name={icon as IconName} size={20} />
         ) : (
           icon
         )
       }
-      <span className="ml-2">{title}</span>
+      <span className="ml-2.5">{title}</span>
       {label ? <span className="ml-auto">{label}</span> : <JknIcon.Svg name="arrow-right" className="ml-auto" size={8} />}
     </div>
   )

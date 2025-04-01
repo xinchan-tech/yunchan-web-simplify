@@ -171,7 +171,7 @@ const App = () => {
             ) : null
           }
           <div className="ml-auto">
-            <StockSelect className="rounded-[300px] px-3 bg-[#1F1F1F]" onChange={(s) => navigate(`/stock?symbol=${s}`)} />
+            <StockSelect className="rounded-[300px] px-3 bg-[#2E2E2E]" onChange={(s) => navigate(`/stock?symbol=${s}`)} />
           </div>
         </div>
         <div className="flex-1 overflow-hidden flex bg-accent">

@@ -38,7 +38,7 @@ const WrapperLabel = ({ children, label }: PropsWithChildren<{ label: string | R
     <HoverCard openDelay={300} closeDelay={300}>
       <HoverCardTrigger asChild>{children}</HoverCardTrigger>
 
-      <HoverCardContent align="center" side="bottom" className="w-fit py-1 px-2 text-base">
+      <HoverCardContent align="center" side="bottom" className="w-fit py-1 px-2 text-sm">
         <HoverCardArrow width={10} height={4} className="text-accent fill-accent" />
         {label}
       </HoverCardContent>
@@ -154,7 +154,7 @@ export const CoilingBar = () => {
                   return (
                     <span className="cursor-pointer" onClick={() => _onClickCoiling(c.id)} onKeyDown={() => { }}>
                       <JknIcon.Svg name="mins" size={12} className="mr-1" style={{ color: coiling.includes(c.id) ? '#E7C88D' : '#575757' }} />
-                      <span style={{ color: coiling.includes(c.id) ? '#808080' : '#575757' }}>{c.name}</span>
+                      <span style={{ color: coiling.includes(c.id) ? '#B8B8B8' : '#575757' }}>{c.name}</span>
                     </span>
                   )
                 case CoilingIndicatorId.ONE_TYPE:
@@ -163,14 +163,14 @@ export const CoilingBar = () => {
                   return (
                     <span className="cursor-pointer flex items-center" onClick={() => _onClickCoiling(c.id as any)} onKeyDown={() => { }}>
                       <JknIcon.Checkbox checked={coiling.includes(c.id)} uncheckedIcon="chart-coiling-bs" checkedIcon="chart-coiling-bs-active" className="h-4 w-4 rounded mr-1" />
-                      <span style={{ color: coiling.includes(c.id) ? '#808080' : '#575757' }}>{c.name}</span>
+                      <span style={{ color: coiling.includes(c.id) ? '#B8B8B8' : '#575757' }}>{c.name}</span>
                     </span>
                   )
                 case CoilingIndicatorId.PIVOT:
                   return (
                     <span className="cursor-pointer flex items-center" onClick={() => _onClickCoiling(c.id as any)} onKeyDown={() => { }}>
                       <JknIcon.Svg name="poivts" size={16} style={{ color: coiling.includes(c.id) ? '#808080' : '#575757' }} />
-                      <span style={{ color: coiling.includes(c.id) ? '#808080' : '#575757' }}>{c.name}</span>
+                      <span style={{ color: coiling.includes(c.id) ? '#B8B8B8' : '#575757' }}>{c.name}</span>
                     </span>
                   )
                 default:
@@ -540,9 +540,9 @@ export const IndicatorModal = (props: { onClickParams: () => void }) => {
               >
                 {
                   i.collect === 1 ? (
-                    <JknIcon.Svg name="fav-star" className="text-[#FFC440] p-1 rounded" size={11} onClick={(e) => { e.stopPropagation(); e.preventDefault(); collect.mutate({ id: i.id, collect: false }) }} />
+                    <JknIcon.Svg name="fav-star" className="text-[#FFC440] p-1 rounded" size={16} onClick={(e) => { e.stopPropagation(); e.preventDefault(); collect.mutate({ id: i.id, collect: false }) }} />
                   ) : (
-                    <JknIcon.Svg name="fav" className="hover:bg-[#4A4A4A] p-1 rounded" size={11} onClick={(e) => { e.stopPropagation(); e.preventDefault(); collect.mutate({ id: i.id, collect: true }) }} />
+                    <JknIcon.Svg name="fav" className="hover:bg-[#4A4A4A] p-1 rounded" size={16} onClick={(e) => { e.stopPropagation(); e.preventDefault(); collect.mutate({ id: i.id, collect: true }) }} />
                   )
                 }
                 <span className="text-foreground">{i.name}</span>

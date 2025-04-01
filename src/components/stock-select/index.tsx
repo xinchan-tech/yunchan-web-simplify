@@ -49,12 +49,11 @@ const StockSelect = ({ onChange, className, width, ...props }: StockSelectProps)
     <div className="w-48" style={{ width }}>
       <Popover modal open={open} onOpenChange={v => {
         !v && setFalse()
-        console.log(v)
       }}>
         <PopoverAnchor asChild>
           <div
             className={cn(
-              'border border-solid border-dialog-border rounded-sm flex items-center px-2 bg-accent',
+              'rounded-sm flex items-center px-2 bg-muted h-[38px]',
               className
             )}
           >
@@ -62,7 +61,7 @@ const StockSelect = ({ onChange, className, width, ...props }: StockSelectProps)
             <Input
               value={keyword}
               onChange={onSearch}
-              className="border-none placeholder:text-tertiary"
+              className="border-none placeholder:text-[#B8B8B8] text-base"
               size="sm"
               onClick={() => setTrue()}
               placeholder="搜索股票"
@@ -70,7 +69,7 @@ const StockSelect = ({ onChange, className, width, ...props }: StockSelectProps)
             />
           </div>
         </PopoverAnchor>
-        <PopoverContent align="start" className="w-48" onOpenAutoFocus={e => e.preventDefault()}>
+        <PopoverContent align="start" className="w-48 bg-muted" onOpenAutoFocus={e => e.preventDefault()}>
           {stockList.history.length > 0 && !keyword ? (
             <div>
               <div className="flex items-center justify-between px-2 py-2 border-0 border-b border-solid border-border">
@@ -80,7 +79,7 @@ const StockSelect = ({ onChange, className, width, ...props }: StockSelectProps)
               <ScrollArea className="h-[300px]">
                 {stockList.history.map(ele => (
                   <div
-                    className="h-[49px] px-2 border-0 border-b border-solid border-border flex items-center hover:bg-accent cursor-pointer"
+                    className="h-[49px] px-2 border-b-primary flex items-center hover:bg-accent cursor-pointer"
                     key={ele[1]}
                     onClick={() => _onClick(ele[1])}
                     onKeyDown={() => { }}

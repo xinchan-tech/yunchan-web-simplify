@@ -18,7 +18,7 @@ import {
   Separator,
   useModal
 } from '@/components'
-import { useStack, useToast } from "@/hooks"
+import { useLatestRef, useStack, useToast } from "@/hooks"
 import { dateUtils } from '@/utils/date'
 import { stockUtils } from '@/utils/stock'
 import { cn } from '@/utils/style'
@@ -62,11 +62,13 @@ type TradeRecord = {
 
 export const BackTestBar = memo((props: BackTestBarProps) => {
   const [speed, setSpeed] = useState<number>(1)
+  const speedRef = useLatestRef(speed)
   const [number, setNumber] = useState<number>(100)
   const candlesticksRestore = useRef<StockRawRecord[]>(props.candlesticks)
   //交易记录
   const [tradeRecord, setTradeRecord] = useState<TradeRecord>({ sell: [], buy: [] })
   const [timer, setTimer] = useState<number | null>(null)
+
   const currentKline = useRef<number>(-1)
   const maxProfit = useStack<{ max: number, index: number }>([])
   const profit = useStack<{ profit: number, index: number }>([])
@@ -98,11 +100,11 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
         currentKline.current = kline.index
         setTradeRecord({ buy: [], sell: [] })
         window.clearInterval(timer!)
+        setTimer(null)
         profit.clear()
         maxProfit.clear()
         positiveProfitCount.clear()
         props.onSetBackTestRecord([])
-        setTimer(null)
       }
     }
   }
@@ -177,7 +179,8 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
 
   const toLastKLine = () => {
     if (currentKline.current === -1) return
-    window.clearTimeout(timer!)
+    window.clearInterval(timer!)
+    setTimer(null)
     resultModel.modal.open()
     props.onChangeCandlesticks(candlesticksRestore.current)
     currentKline.current = -1
@@ -191,7 +194,7 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
           setTimer(null)
         }
       },
-      (1 / speed) * 1000
+      (1 / speedRef.current) * 1000
     )
     setTimer(timer)
   }
@@ -199,6 +202,17 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
   const stopBackTest = () => {
     window.clearInterval(timer!)
     setTimer(null)
+  }
+
+  const onChangeSpeed = (v: number) => {
+    setSpeed(v)
+    if (timer) {
+      window.clearInterval(timer!)
+      setTimer(null)
+      window.setTimeout(() => {
+        startBackTest()
+      })
+    }
   }
 
   const { toast } = useToast()
@@ -318,7 +332,14 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
 
     const diffCount = sellCount - buyCount
 
-    if (diffCount === 0) return
+    if (diffCount === 0) {
+      toast({
+        description: '没有持仓'
+      })
+      return
+    }
+
+    // if (diffCount === 0) return
 
     const _tradeRecord = { ...tradeRecord }
 
@@ -420,16 +441,16 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
             </div>
           </div>
           <div className="w-[321px] h-[42px] border border-solid border-[#2E2E2E] rounded-[30px] text-center mx-auto mt-8 leading-[42px] text-sm cursor-pointer" onClick={() => resultModel.modal.close()} onKeyDown={() => { }}>
-              好的
-            </div>
+            好的
+          </div>
         </div>
       )
     }
   })
 
   useUnmount(() => {
-    setTimer(null)
     window.clearInterval(timer!)
+    setTimer(null)
     setTradeRecord({ buy: [], sell: [] })
     profit.clear()
     maxProfit.clear()
@@ -488,7 +509,7 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
             <JknIcon.Svg name="play-x1" size={16} label="下一根K线" />
           </div>
           <div className="border cursor-pointer hover:bg-accent rounded-xs px-1 py-1 flex items-center">
-            <BackTestSpeed speed={speed} onChange={setSpeed} />
+            <BackTestSpeed speed={speed} onChange={onChangeSpeed} />
           </div>
           <Separator orientation="vertical" className="h-4 w-[1px] mx-2" />
           <div
@@ -550,7 +571,6 @@ const BackTestSpeed = (props: { speed: number; onChange: (v: number) => void }) 
             </div>
           </DropdownMenuTrigger>
           <DropdownMenuContent side="top">
-            <div className="text-center">回放速度</div>
             {speedOptions.map(option => (
               <DropdownMenuItem key={option.value} onClick={() => props.onChange(option.value)}>
                 <div className="flex items-center cursor-pointer">
