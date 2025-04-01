@@ -138,9 +138,9 @@ export enum StockChartInterval {
 }
 
 export enum StockPeriod {
-  INTRA_DAY = '1m',
-  PRE_MARKET = '1m',
-  AFTER_HOURS = '1m',
+  INTRA_DAY = 'quote',
+  PRE_MARKET = 'quote',
+  AFTER_HOURS = 'quote',
   FIVE_DAY = '5d',
   ONE_MIN = '1m',
   TWO_MIN = '2m',

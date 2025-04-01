@@ -375,7 +375,7 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
     }
   }, [candlesticks])
 
-  useStockBarSubscribe(code ? [`${code}@1m`] : [], useCallback((data) => {
+  useStockBarSubscribe(code ? [`${code}@quote`] : [], useCallback((data) => {
     const c = chart.current?.getChart()
     const stock = stockUtils.toStock(data.rawRecord)
     const lastData = c?.getDataList()[c.getDataList().length - 1]

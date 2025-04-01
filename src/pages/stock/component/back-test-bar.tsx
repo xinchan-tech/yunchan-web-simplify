@@ -126,11 +126,11 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
     const next = candlesticksRestore.current[currentKline.current + 1]
 
     if (!next) {
+      //最后一笔平仓
+      closePosition(candlesticksRestore.current.length - 1)
+
       resultModel.modal.open()
       currentKline.current = -1
-      // toast({
-      //   description: '已到最新数据'
-      // })
       return false
     }
     props.onNextCandlesticks(next)
@@ -138,8 +138,6 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
 
     return true
   }
-
-  console.log(tradeRecord)
 
   const toPrevLine = () => {
     if (currentKline.current === -1) return
@@ -179,6 +177,7 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
 
   const toLastKLine = () => {
     if (currentKline.current === -1) return
+    closePosition(candlesticksRestore.current.length - 1)
     window.clearInterval(timer!)
     setTimer(null)
     resultModel.modal.open()
@@ -326,8 +325,9 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
   }
 
   //平仓
-  const closePosition = () => {
-    if (currentKline.current === -1) {
+  const closePosition = (index?: number) => {
+    const current = index === undefined ? currentKline.current : index
+    if (current === -1) {
       toast({
         description: '请先选择日期'
       })
@@ -335,16 +335,16 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
       return
     }
 
-    const stock = candlesticksRestore.current[currentKline.current]
+    const stock = candlesticksRestore.current[current]
     const sellCount = tradeRecord.sell.reduce((prev, cur) => prev + cur.count, 0)
     const buyCount = tradeRecord.buy.reduce((prev, cur) => prev + cur.count, 0)
 
     const diffCount = sellCount - buyCount
 
     if (diffCount === 0) {
-      toast({
-        description: '没有持仓'
-      })
+      // toast({
+      //   description: '没有持仓'
+      // })
       return
     }
 
@@ -353,7 +353,7 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
     const _tradeRecord = { ...tradeRecord }
 
     const record = {
-      index: currentKline.current,
+      index: current,
       time: +stock[0]!,
       price: +stock[2]!,
       count: Math.abs(diffCount),
@@ -371,7 +371,7 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
 
     // setTradeRecord(s => {
     //   s[diffCount > 0 ? 'buy' : 'sell'].push({
-    //     index: currentKline.current,
+    //     index: current,
     //     time: +stock[0]!,
     //     price: +stock[2]!,
     //     count: Math.abs(diffCount)
@@ -386,28 +386,28 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
     const diffProfit = result - (lastProfit?.profit ?? 0)
 
     if ((lastMaxProfit?.max ?? 0) < diffProfit) {
-      if (lastMaxProfit?.index !== currentKline.current) {
-        maxProfit.push({ max: diffProfit, index: currentKline.current })
+      if (lastMaxProfit?.index !== current) {
+        maxProfit.push({ max: diffProfit, index: current })
       } else {
         maxProfit.pop()
-        maxProfit.push({ max: diffProfit, index: currentKline.current })
+        maxProfit.push({ max: diffProfit, index: current })
       }
     }
 
-    if (lastProfit?.index !== currentKline.current) {
-      profit.push({ profit: result, index: currentKline.current })
+    if (lastProfit?.index !== current) {
+      profit.push({ profit: result, index: current })
     } else {
       profit.pop()
-      profit.push({ profit: result, index: currentKline.current })
+      profit.push({ profit: result, index: current })
     }
 
     if (result > 0) {
       const lastPositiveProfitCount = positiveProfitCount.peek()
-      if (lastPositiveProfitCount?.index !== currentKline.current) {
-        positiveProfitCount.push({ count: (lastPositiveProfitCount?.count ?? 0) + 1, index: currentKline.current })
+      if (lastPositiveProfitCount?.index !== current) {
+        positiveProfitCount.push({ count: (lastPositiveProfitCount?.count ?? 0) + 1, index: current })
       } else {
         positiveProfitCount.pop()
-        positiveProfitCount.push({ count: lastPositiveProfitCount.count + 1, index: currentKline.current })
+        positiveProfitCount.push({ count: lastPositiveProfitCount.count + 1, index: current })
       }
     }
 
