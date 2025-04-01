@@ -91,8 +91,8 @@ export const backTestIndicator: IndicatorTemplate<any, any> = {
     if (totalDiff !== 0) {
       const avgPrice = totalPrice / totalCount
       const lastStock = chart.getDataList()[chart.getDataList().length - 1]
-      const lastPrice = lastStock.close * Math.abs(totalDiff)
-      const totalProfit = result[result.length - 1].cost - lastPrice
+      const lastPrice = lastStock.close * totalDiff
+      const totalProfit = lastPrice - result[result.length - 1].cost
 
       const BackTestLine = getFigureClass('back-test-line')! as FigureConstructor<BackTestLineAttrs, BackTestLineStyles>
 

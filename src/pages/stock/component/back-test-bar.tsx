@@ -72,9 +72,9 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
   const currentKline = useRef<number>(-1)
   const maxProfit = useStack<{ max: number, index: number }>([])
   const profit = useStack<{ profit: number, index: number }>([])
-  const positiveProfitCount = useStack<{ count: number, index: number }>([])
+  const positiveProfitCount = useStack<{ count: number, index: number, total: number }>([])
   const [loading, setLoading] = useState<boolean>(false)
-  console.log(tradeRecord)
+
   const onDateChange = async (date?: string) => {
     // setStartDate(date)
 
@@ -177,7 +177,7 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
 
   const toLastKLine = () => {
     if (currentKline.current === -1) return
-    closePosition(candlesticksRestore.current.length - 1)
+    closePosition(currentKline.current)
     window.clearInterval(timer!)
     setTimer(null)
     resultModel.modal.open()
@@ -271,13 +271,13 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
       profit.push({ profit: result, index: currentKline.current })
     }
 
-    if (result > 0) {
+    if (result !== 0) {
       const lastPositiveProfitCount = positiveProfitCount.peek()
       if (lastPositiveProfitCount?.index !== currentKline.current) {
-        positiveProfitCount.push({ count: (lastPositiveProfitCount?.count ?? 0) + 1, index: currentKline.current })
+        positiveProfitCount.push({ count: (lastPositiveProfitCount?.count ?? 0) + (result > 0 ? 1 : 0), index: currentKline.current, total: (lastPositiveProfitCount?.total ?? 0) + 1 })
       } else {
         positiveProfitCount.pop()
-        positiveProfitCount.push({ count: lastPositiveProfitCount.count + 1, index: currentKline.current })
+        positiveProfitCount.push({ count: lastPositiveProfitCount.count + (result > 0 ? 1 : 0), index: currentKline.current, total: (lastPositiveProfitCount?.total ?? 0) + 1 })
       }
     }
   }
@@ -299,7 +299,7 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
         buyCount -= count
       } else {
         buyTotal += price * buyCount
-        buyCost += -price * (count - buyCount)
+        buyCost += price * (count - buyCount)
         buyCount = 0
       }
     })
@@ -313,14 +313,14 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
         sellCount -= count
       } else {
         sellTotal += price * sellCount
-        sellCost += price * (count - sellCount)
+        sellCost += -price * (count - sellCount)
         sellCount = 0
       }
     })
-
+ 
     return {
       profit: sellTotal - buyTotal,
-      cost: sellCost - buyCost
+      cost: buyCost + sellCost
     }
   }
 
@@ -401,13 +401,13 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
       profit.push({ profit: result, index: current })
     }
 
-    if (result > 0) {
+    if (result !== 0) {
       const lastPositiveProfitCount = positiveProfitCount.peek()
-      if (lastPositiveProfitCount?.index !== current) {
-        positiveProfitCount.push({ count: (lastPositiveProfitCount?.count ?? 0) + 1, index: current })
+      if (lastPositiveProfitCount?.index !== currentKline.current) {
+        positiveProfitCount.push({ count: (lastPositiveProfitCount?.count ?? 0) + (result > 0 ? 1 : 0), index: currentKline.current, total: (lastPositiveProfitCount?.total ?? 0) + 1 })
       } else {
         positiveProfitCount.pop()
-        positiveProfitCount.push({ count: lastPositiveProfitCount.count + 1, index: current })
+        positiveProfitCount.push({ count: lastPositiveProfitCount.count + (result > 0 ? 1 : 0), index: currentKline.current, total: (lastPositiveProfitCount?.total ?? 0) + 1 })
       }
     }
 
@@ -423,7 +423,6 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
     content: () => {
       const symbol = useChartManage.getState().chartStores[props.chartId].symbol
       const timeIndex = useChartManage.getState().chartStores[props.chartId].interval
-      const total = tradeRecord.buy.length + tradeRecord.sell.length
 
       return (
         <div className="text-center px-4 h-[444px] ">
@@ -450,7 +449,7 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
               <div>
                 <span className={cn('text-3xl', Decimal.create(positiveProfitCount.peek()?.count).gt(0) ? 'text-stock-up' : 'text-stock-down')}>
                   {' '}
-                  {total === 0 ? '0.00' : Decimal.create(positiveProfitCount.peek()?.count).div(total).mul(100).toFixed(2)}
+                  {positiveProfitCount.peek()?.total === 0 ? '0.00' : Decimal.create(positiveProfitCount.peek()?.count).div(positiveProfitCount.peek()?.total ?? 0).mul(100).toFixed(2)}
                 </span>
                 <span> %</span>
               </div>
@@ -548,7 +547,7 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
         <Button size="sm" className="bg-[#22AB94] w-[72px] box-border text-white h-8" onClick={() => action('buy')}>
           买入
         </Button>
-        <Button size="sm" variant="outline" className="w-[72px] h-8" onClick={closePosition}>
+        <Button size="sm" variant="outline" className="w-[72px] h-8" onClick={() => closePosition()}>
           平仓
         </Button>
       </div>
