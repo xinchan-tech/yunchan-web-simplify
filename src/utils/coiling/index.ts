@@ -109,7 +109,7 @@ export class IndicatorUtils {
     if (!isEmpty(indicator)) {
       fml.formula = listify(indicator, (k, v) => `${k}:=${v};`).join('') + fml.formula
     }
-
+    console.log('formula', fml.formula, fml.indicatorId)
     const result = (await module.policy_execute(fml, rawData, interval)) as {
       data: IndicatorRawData[]
       status: number

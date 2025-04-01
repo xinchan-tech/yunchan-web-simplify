@@ -262,7 +262,6 @@ export const MainChart = (props: MainChartProps) => {
           isRemote: renderUtils.isRemoteIndicator(indicator)
         })
       } else {
-
         chartImp.current?.removeSubIndicator(indicator.id.toString())
       }
     })

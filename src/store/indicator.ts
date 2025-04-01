@@ -274,14 +274,14 @@ export const useIndicator = create<IndicatorStore>()(
           )
         })),
       isDefaultIndicatorParams: indicatorId => {
-        const indicator = defaultIndicatorParams.find(item => item.id === indicatorId)
+        const indicator = defaultIndicatorParams.find(item => +item.id === +indicatorId)
         if (!indicator) {
           return false
         }
         return JSON.stringify(indicator) === JSON.stringify(get().indicatorParams.find(item => item.id === indicatorId))
       },
       getIndicatorQueryParams: indicatorId => {
-        const params = get().indicatorParams.find(item => item.id === indicatorId)?.params
+        const params = get().indicatorParams.find(item => +item.id === +indicatorId)?.params
         if (!params) return {}
 
         return params.reduce(
@@ -295,7 +295,7 @@ export const useIndicator = create<IndicatorStore>()(
       mergeIndicatorParams: params =>
         set(s => {
           const newIndicatorParams = params.map(item => {
-            const oldParams = s.indicatorParams.find(oldItem => oldItem.id === item.id)?.params ?? []
+            const oldParams = s.indicatorParams.find(oldItem => +oldItem.id === +item.id)?.params ?? []
             return {
               ...item,
               params: item.params.map(paramItem => {
