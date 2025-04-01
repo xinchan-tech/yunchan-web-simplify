@@ -12,14 +12,21 @@ import { JknIcon } from '../jkn/jkn-icon'
 import { Button } from '../ui/button'
 import { FormControl, FormField, FormItem, FormLabel } from '../ui/form'
 import { ToggleGroup, ToggleGroupItem } from '../ui/toggle-group'
-import { AlarmStockPicker } from "./alarm-stock-picker"
+import { AlarmStockPicker } from "./components/alarm-stock-picker"
 import { Separator } from "../ui/separator"
+import { StockCycleSelect } from "./components/alarm-period"
+import { DatePicker } from "./components/date-picker"
+import { FrequencySelect } from "./components/frequency-select"
+import { NameInput } from "./components/name-input"
 
 const formSchema = z.object({
   symbol: z.string({ message: '股票代码错误' }).min(1, '股票代码错误'),
   stockCycle: z.array(z.string()).min(1, '至少选择一个周期'),
   categoryIds: z.array(z.string()).min(1, '请选择报警类型'),
-  categoryHdlyIds: z.array(z.string()).optional()
+  categoryHdlyIds: z.array(z.string()).optional(),
+  frequency: z.string({ message: '周期错误' }),
+  name: z.string().optional(),
+  date: z.string().optional()
 })
 
 interface AiAlarmSetting {
@@ -32,7 +39,10 @@ const AiAlarmSetting = (props: AiAlarmSetting) => {
     stockCycle: [],
     categoryHdlyIds: [],
     categoryIds: [],
-    symbol: props.code ?? ''
+    symbol: props.code ?? '',
+    name: '',
+    frequency: '1',
+    date: ''
   })
   const [loading, { toggle }] = useBoolean(false)
 
@@ -77,7 +87,7 @@ const AiAlarmSetting = (props: AiAlarmSetting) => {
   }
 
   return (
-    <div>
+    <div className="h-full w-full overflow-hidden flex flex-col">
       <FormProvider {...form}>
         <form className="px-8 mt-4">
           <FormField
@@ -133,9 +143,48 @@ const AiAlarmSetting = (props: AiAlarmSetting) => {
               </FormItem>
             )}
           />
+
+          <FormField
+            control={form.control}
+            name="name"
+            render={({ field }) => (
+              <FormItem className="pb-4 flex space-y-0  items-center">
+                <FormLabel className="w-32">报警名称</FormLabel>
+                <FormControl >
+                  <NameInput {...field} />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="frequency"
+            render={({ field }) => (
+              <FormItem className="pb-4 flex space-y-0 items-center">
+                <FormLabel className="w-32">触发频率</FormLabel>
+                <FormControl >
+                  <FrequencySelect {...field} />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="date"
+            render={({ field }) => (
+              <FormItem className="pb-4 flex space-y-0  items-center">
+                <FormLabel className="w-32">到期时间</FormLabel>
+                <FormControl >
+                  <DatePicker {...field} />
+                </FormControl>
+              </FormItem>
+            )}
+          />
         </form>
       </FormProvider>
-      <div className="text-right mt-6 space-x-4 px-8">
+      <div className="text-right mt-auto mb-6 space-x-4 px-8">
         <Button className="w-24" variant="outline" onClick={props.onClose}>
           取消
         </Button>
@@ -149,27 +198,7 @@ const AiAlarmSetting = (props: AiAlarmSetting) => {
 
 export default AiAlarmSetting
 
-interface StockCycleSelectProps {
-  value?: string[]
-  onChange?: (value: string[]) => void
-}
-const StockCycleSelect = forwardRef((props: StockCycleSelectProps, _) => {
-  const query = useQuery({
-    queryKey: [getAlarmTypes.cacheKey],
-    queryFn: () => getAlarmTypes()
-  })
 
-  return (
-    <ToggleGroup value={props.value} variant="outline" type="multiple" onValueChange={props.onChange}>
-      {query.data?.stock_kline.map(item => (
-        <ToggleGroupItem disabled={!item.authorized} className="w-20 relative" key={item.id} value={item.value}>
-          {!item.authorized && <JknIcon name="ic_lock" className="absolute right-0 top-0 w-3 h-3" />}
-          {item.name}
-        </ToggleGroupItem>
-      ))}
-    </ToggleGroup>
-  )
-})
 
 interface AlarmsTypeSelectProps {
   value?: string[]

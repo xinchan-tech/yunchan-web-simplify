@@ -20,6 +20,7 @@ import { AlarmStockPicker } from "./components/alarm-stock-picker"
 import { DatePicker } from "./components/date-picker"
 import { FrequencySelect } from "./components/frequency-select"
 import { NameInput } from "./components/name-input"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../ui/dropdown-menu"
 
 const formSchema = z.object({
   symbol: z.string({ message: '股票代码错误' }).min(1, '股票代码错误'),
@@ -30,12 +31,12 @@ const formSchema = z.object({
   date: z.string().optional()
 })
 
-interface PriceAlarmSetting {
+interface PercentageAlarmSettingProps {
   code?: string
   onClose?: () => void
 }
 
-export const PriceAlarmSetting = (props: PriceAlarmSetting) => {
+export const PercentageAlarmSetting = (props: PercentageAlarmSettingProps) => {
   const form = useZForm(formSchema, {
     symbol: props.code ?? '',
     rise: [],
@@ -197,8 +198,8 @@ interface PriceSettingProps {
 const PriceSetting = forwardRef((props: PriceSettingProps, _) => {
   const form = useFormContext()
   const symbol = form.watch('symbol')
-  const [list, setList] = useState<{ checked: boolean; value: string; id: string }[]>([
-    { checked: false, value: '', id: nanoid(8) }
+  const [list, setList] = useState<{ checked: boolean; value: string; id: string, type: 'price' | 'percent' }[]>([
+    { checked: false, value: '', id: nanoid(8), type: 'percent' }
   ])
   const query = useQuery({
     queryKey: [getStockBaseCodeInfo.cacheKey, symbol, ['total_share']],
@@ -216,19 +217,25 @@ const PriceSetting = forwardRef((props: PriceSettingProps, _) => {
       const r = Decimal.create(stock.close ?? 0)
         .mul(props.mode === 'rise' ? 1.05 : 0.95)
         .toFixed(2)
-      setList([{ checked: false, value: r, id: nanoid(8) }])
+      setList([{ checked: false, value: r, id: nanoid(8), type: 'percent' }])
     }
   }, [query.data, props.mode])
 
-  const calcPercent = (price: string) => {
+  const calcPercent = (price: string, type: 'price' | 'percent') => {
     if (!query.data || !price) {
       return '-'
     }
+
     const stock = stockUtils.toStock(query.data.stock, {
       extend: query.data.extend,
       symbol: query.data.symbol,
       name: query.data.name
     })
+
+    if (type === 'price') {
+      return `${props.mode === 'rise' ? '+' : ''}${new Decimal(price).minus(stock.close).toFixed(2)}`
+    }
+
     return `${props.mode === 'rise' ? '+' : ''}${new Decimal(price).minus(stock.close).div(stock.close).mul(100).toFixed(2)}%`
   }
 
@@ -240,12 +247,16 @@ const PriceSetting = forwardRef((props: PriceSettingProps, _) => {
     setList(list.map(item => (item.id === id ? { ...item, checked: checked === true } : item)))
   }
 
+  const onChangeType = (id: string, type: 'price' | 'percent') => {
+    setList(list.map(item => (item.id === id ? { ...item, type } : item)))
+  }
+
   useEffect(() => {
     props.onChange?.(list.filter(item => item.checked && item.value).map(item => item.value))
   }, [list, props.onChange])
 
   const addListItem = () => {
-    setList([...list, { checked: false, value: '', id: nanoid(8) }])
+    setList([...list, { checked: false, value: '', id: nanoid(8), type: 'percent' }])
   }
 
   const removeListItem = (id: string) => {
@@ -259,8 +270,30 @@ const PriceSetting = forwardRef((props: PriceSettingProps, _) => {
           <div className={cn('text-tertiary flex items-center space-x-2 my-2', item.checked ? 'text-foreground' : '')}>
             <Checkbox checked={item.checked} onCheckedChange={checked => onCheckChange(item.id, checked)} />
             <span>
-              {props.mode === 'rise' ? '上涨' : '下跌'}
+              {props.mode === 'rise' ? '浮动追踪上涨' : '浮动追踪下跌'}
             </span>
+            <div className="!ml-auto flex items-center rounded-sm  text-xs px-1 py-0.5 hover:bg-accent cursor-pointer text-secondary !mr-6">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <span>{
+                    item.type === 'price' ? (
+                      '价格差额'
+                    ) : (
+                      '涨跌比例'
+                    )
+                  }</span>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  <DropdownMenuItem data-checked={item.type === 'percent'} onClick={() => onChangeType(item.id, 'percent')}>
+                    <span>按涨跌比例</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem data-checked={item.type === 'price'} onClick={() => onChangeType(item.id, 'price')}>
+                    <span>按价格差额</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              <JknIcon.Svg name="arrow-down" className="size-3" />
+            </div>
           </div>
           <div className="flex items-center">
             {props.mode === 'rise' ? (
@@ -272,7 +305,7 @@ const PriceSetting = forwardRef((props: PriceSettingProps, _) => {
                   onChange={e => onValueChange(item.id, e.target.value)}
                 />
                 <Separator className="h-4 w-[1px] bg-border mx-2" />
-                <span className="text-stock-up min-w-16 text-center">{calcPercent(item.value)}</span>
+                <span className="text-stock-up min-w-16 text-center">{calcPercent(item.value, item.type)}</span>
               </div>
             ) : (
               <>
@@ -284,7 +317,7 @@ const PriceSetting = forwardRef((props: PriceSettingProps, _) => {
                     onChange={e => onValueChange(item.id, e.target.value)}
                   />
                   <Separator className="h-4 w-[1px] bg-border mx-2" />
-                  <span className="text-stock-down min-w-16 text-center">{calcPercent(item.value)}</span>
+                  <span className="text-stock-down min-w-16 text-center">{calcPercent(item.value, item.type)}</span>
                 </div>
               </>
             )}

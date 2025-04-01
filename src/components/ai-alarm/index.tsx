@@ -13,6 +13,11 @@ import { cn } from "@/utils/style"
 interface AiAlarmProps {
   code?: string
 }
+/**
+ * @deprecated
+ * @param props 
+ * @returns 
+ */
 export const AiAlarm = (props: PropsWithChildren<AiAlarmProps>) => {
   const [open, { setTrue, setFalse }] = useBoolean(false)
   const [visible, { setTrue: setVisibleTrue, setFalse: setVisibleFalse }] = useBoolean(false)
@@ -63,6 +68,11 @@ export const AiAlarm = (props: PropsWithChildren<AiAlarmProps>) => {
   )
 }
 
+/**
+ * @deprecated
+ * @param props 
+ * @returns 
+ */
 export const PriceAlarm = (props: PropsWithChildren<AiAlarmProps>) => {
   const [open, { setTrue, setFalse }] = useBoolean(false)
   const [visible, { setTrue: setVisibleTrue, setFalse: setVisibleFalse }] = useBoolean(false)
@@ -111,6 +121,7 @@ export const PriceAlarm = (props: PropsWithChildren<AiAlarmProps>) => {
     </>
   )
 }
+
 
 export const StockAlarm = (props: PropsWithChildren<AiAlarmProps>) => {
   const [open, { setTrue, setFalse }] = useBoolean(false)
