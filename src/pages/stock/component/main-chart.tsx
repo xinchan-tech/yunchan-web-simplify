@@ -119,7 +119,7 @@ export const MainChart = (props: MainChartProps) => {
     if (_store.mainIndicators.length) {
       _store.mainIndicators.forEach(indicator => {
         chartImp.current?.createIndicator({
-          indicator: indicator.id,
+          indicator: indicator.id.toString(),
           symbol,
           interval: chartStore.interval,
           name: indicator.name,
@@ -131,7 +131,7 @@ export const MainChart = (props: MainChartProps) => {
     if (_store.secondaryIndicators) {
       _store.secondaryIndicators.forEach(indicator => {
         chartImp.current?.createSubIndicator({
-          indicator: indicator.id,
+          indicator: indicator.id.toString(),
           symbol,
           interval: chartStore.interval,
           name: indicator.name,
@@ -215,6 +215,7 @@ export const MainChart = (props: MainChartProps) => {
     const cancelSymbolEvent = chartEvent.on('symbolChange', (symbol) => {
       setSymbol(symbol)
       chartManage.setSymbol(symbol, props.chartId)
+      chartManage.setMode('normal')
     })
 
     // const cancelCoilingEvent = chartEvent.on('coilingChange', ({ type, coiling }) => {
@@ -238,7 +239,7 @@ export const MainChart = (props: MainChartProps) => {
     const cancelIndicatorEvent = chartEvent.on('mainIndicatorChange', ({ type, indicator }) => {
       if (type === 'add') {
         chartImp.current?.createIndicator({
-          indicator: indicator.id,
+          indicator: indicator.id.toString(),
           symbol,
           interval: chartStore.interval,
           name: indicator.name,
@@ -252,7 +253,7 @@ export const MainChart = (props: MainChartProps) => {
     const cancelSubIndicatorEvent = chartEvent.on('subIndicatorChange', ({ type, indicator }) => {
       if (type === 'add') {
         chartImp.current?.createSubIndicator({
-          indicator: indicator.id,
+          indicator: indicator.id.toString(),
           symbol,
           interval: chartStore.interval,
           name: indicator.name,

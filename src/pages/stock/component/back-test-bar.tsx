@@ -22,7 +22,7 @@ import { useStack, useToast } from "@/hooks"
 import { dateUtils } from '@/utils/date'
 import { stockUtils } from '@/utils/stock'
 import { cn } from '@/utils/style'
-import { useMount, useUnmount } from 'ahooks'
+import { useUnmount } from 'ahooks'
 import dayjs from 'dayjs'
 import Decimal from 'decimal.js'
 import { memo, useRef, useState } from 'react'
@@ -72,7 +72,6 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
   const profit = useStack<{ profit: number, index: number }>([])
   const positiveProfitCount = useStack<{ count: number, index: number }>([])
   const [loading, setLoading] = useState<boolean>(false)
-  const startIndex = useRef<number>(-1)
 
   const onDateChange = async (date?: string) => {
     // setStartDate(date)
@@ -80,7 +79,6 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
     if (!date) {
       props.onChangeCandlesticks(candlesticksRestore.current)
       currentKline.current = -1
-      startIndex.current = -1
     } else {
       const kline = renderUtils.findNearestTime(
         candlesticksRestore.current,
@@ -98,7 +96,6 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
       if (kline) {
         props.onChangeCandlesticks(candlesticksRestore.current.slice(0, kline.index + 1))
         currentKline.current = kline.index
-        startIndex.current = kline.index
         setTradeRecord({ buy: [], sell: [] })
         window.clearInterval(timer!)
         profit.clear()
@@ -129,7 +126,6 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
     if (!next) {
       resultModel.modal.open()
       currentKline.current = -1
-      startIndex.current = -1
       // toast({
       //   description: '已到最新数据'
       // })
@@ -141,6 +137,8 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
     return true
   }
 
+  console.log(tradeRecord)
+
   const toPrevLine = () => {
     if (currentKline.current === -1) return
     if (currentKline.current === 0) return
@@ -151,9 +149,10 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
     const current = candlesticksRestore.current[currentKline.current]
 
     const _tradeRecord = {
-      buy: tradeRecord.buy.filter(t => t.time !== +current[0]!),
-      sell: tradeRecord.sell.filter(t => t.time !== +current[0]!)
+      buy: tradeRecord.buy.filter(t => t.time < +current[0]!),
+      sell: tradeRecord.sell.filter(t => t.time < +current[0]!)
     }
+
     setTradeRecord(_tradeRecord)
 
     props.onSetBackTestRecord([
@@ -182,7 +181,6 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
     resultModel.modal.open()
     props.onChangeCandlesticks(candlesticksRestore.current)
     currentKline.current = -1
-    startIndex.current = -1
   }
 
   const startBackTest = () => {
@@ -268,120 +266,40 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
 
 
   const calcProfit = (record: TradeRecord) => {
-    const count = Math.min(
-      record.buy.reduce((prev, cur) => prev + cur.count, 0),
-      record.sell.reduce((prev, cur) => prev + cur.count, 0)
-    )
+    const buyLength = record.buy.length
+    const sellLength = record.sell.length
 
-    const buy = [...record.buy]
-    const sell = [...record.sell]
+    const count =
+      buyLength < sellLength
+        ? record.buy.reduce((prev, cur) => prev + cur.count, 0)
+        : record.sell.reduce((prev, cur) => prev + cur.count, 0)
 
-    // 买入持有
-    const totalBuy = {
-      count: 0,
-      price: 0
-    }
-    const totalShell = {
-      count: 0,
-      price: 0
-    }
-    for(let i = startIndex.current; i <= currentKline.current; i++) {
-      while(buy[0].index === i){
-        totalBuy.count += buy[0].count
-        totalBuy.price += buy[0].price * buy[0].count
-        buy.shift()
-
-        if(!buy.length) break
+    let shellPrice = 0
+    let c = 0
+    record.sell.forEach((shell, index) => {
+      if (c + index < count) {
+        shellPrice += shell.price * shell.count
+        c += shell.count
+      } else {
+        shellPrice += shell.price * (count - c)
+        c += count - c
       }
+    })
 
-      while(sell[0].index === i){
-        totalShell.count += sell[0].count
-        totalShell.price += sell[0].price * sell[0].count
-        sell.shift()
+    c = 0
+    let buyPrice = 0
 
-        if(!sell.length) break
+    record.buy.forEach((buy, index) => {
+      if (c + index < count) {
+        buyPrice += buy.price * buy.count
+        c += buy.count
+      } else {
+        buyPrice += buy.price * (count - c)
+        c += count - c
       }
+    })
 
-
-    }
-    return 0
-    // let totalShell = 0
-    // let totalBuy = 0
-
-    // let sellStart = record.buy[0].index
-    // let buyStart = record.sell[0].index
-
-    // let shellEnd = record.sell[record.sell.length - 1].index
-    // let buyEnd = record.buy[record.buy.length - 1].index
-
-    // let pointStart = Math.min(sellStart, buyStart)
-
-    // let pointEnd = Math.min(shellEnd, buyEnd)
-
-    // for (let i = pointStart; i <= pointEnd; i++) {
-      
-    // }
-
-
-    // let buyTotal = 0
-    // let buyCount = count
-    // record.buy.forEach(({ price, count }) => {
-    //   if (buyCount > count) {
-    //     buyTotal += price * count
-    //     buyCount -= count
-    //   } else {
-    //     buyTotal += price * buyCount
-    //     buyCount = 0
-    //   }
-    // })
-
-    // let sellTotal = 0
-    // let sellCount = count
-    // record.sell.forEach(({ price, count }) => {
-    //   if (sellCount > count) {
-    //     sellTotal += price * count
-    //     sellCount -= count
-    //   } else {
-    //     sellTotal += price * sellCount
-    //     sellCount = 0
-    //   }
-    // })
-
-    // return sellTotal - buyTotal
-    // const buyLength = record.buy.length
-    // const sellLength = record.sell.length
-
-    // const count =
-    //   buyLength < sellLength
-    //     ? record.buy.reduce((prev, cur) => prev + cur.count, 0)
-    //     : record.sell.reduce((prev, cur) => prev + cur.count, 0)
-
-    // let shellPrice = 0
-    // let c = 0
-    // record.sell.forEach((shell, index) => {
-    //   if (c + index < count) {
-    //     shellPrice += shell.price * shell.count
-    //     c += shell.count
-    //   } else {
-    //     shellPrice += shell.price * (count - c)
-    //     c += count - c
-    //   }
-    // })
-
-    // c = 0
-    // let buyPrice = 0
-
-    // record.buy.forEach((buy, index) => {
-    //   if (c + index < count) {
-    //     buyPrice += buy.price * buy.count
-    //     c += buy.count
-    //   } else {
-    //     buyPrice += buy.price * (count - c)
-    //     c += count - c
-    //   }
-    // })
-
-    // return shellPrice - buyPrice
+    return shellPrice - buyPrice
   }
 
   //平仓
