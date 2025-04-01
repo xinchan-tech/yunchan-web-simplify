@@ -185,7 +185,7 @@ export const MainChart = (props: MainChartProps) => {
    * 数据变化
    */
   useEffect(() => {
-    if(chartStore.mode === 'backTest') {
+    if (chartStore.mode === 'backTest') {
       return
     }
     if (!candlesticks.length) {
@@ -224,10 +224,12 @@ export const MainChart = (props: MainChartProps) => {
 
     const cancelIntervalEvent = chartEvent.on('intervalChange', async (interval) => {
       if (renderUtils.isTimeIndexChart(interval)) {
-        chartManage.setType(ChartType.Area, props.chartId)
+        // chartManage.setType(ChartType.Area, props.chartId)
         chartImp.current?.setTimeShareChart(interval)
       } else {
         chartImp.current?.setTimeShareChart()
+        const c = chartManage.getChart(props.chartId)
+        chartImp.current?.setChartType(c?.type === ChartType.Candle ? 'candle' : 'area')
       }
       chartManage.setMode('normal')
     })

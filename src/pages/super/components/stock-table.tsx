@@ -191,71 +191,19 @@ const StockTable = (props: StockTableProps) => {
         sort: true,
         render: (score, row) => <Star.Rect total={5} count={score} activeColor={useConfig.getState().getStockColor(row.bull === '1', 'hex')} />
       }
-      // {
-      //   title: '盘前涨跌幅',
-      //   dataIndex: 'prePercent',
-      //   width: 120,
-      //   align: 'right',
-      //   sort: true,
-      //   render: (prePercent, row) => (
-      //     <SubscribeSpan.PercentBlink
-      //       trading="preMarket"
-      //       symbol={row.symbol}
-      //       showSign
-      //       decimal={2}
-      //       initValue={prePercent}
-      //       initDirection={(prePercent ?? 0) > 0}
-      //       nanText="--"
-      //     />
-      //   )
-      // },
-      // {
-      //   title: '盘后涨跌幅',
-      //   dataIndex: 'afterPercent',
-      //   width: 120,
-      //   align: 'right',
-      //   sort: true,
-      //   render: (afterPercent, row) => (
-      //     <SubscribeSpan.PercentBlink
-      //       trading="afterHours"
-      //       showSign
-      //       symbol={row.symbol}
-      //       decimal={2}
-      //       initValue={afterPercent}
-      //       initDirection={(afterPercent ?? 0) > 0}
-      //       nanText="--"
-      //     />
-      //   )
-      // },
-      // {
-      //   title: '+股票金池',
-      //   dataIndex: 'collect',
-      //   width: 80,
-      //   align: 'center',
-      //   render: (collect, row) => (
-      //     <div>
-      //       <CollectStar onUpdate={props.onUpdate} checked={collect} code={row.symbol} />
-      //     </div>
-      //   )
-      // },
-      // {
-      //   title: '+AI报警',
-      //   dataIndex: 't9',
-      //   width: 50,
-      //   align: 'center',
-      //   render: (_, row) => (
-      //     <AiAlarm code={row.symbol}>
-      //       <JknIcon className="rounded-none" name="ic_add" />
-      //     </AiAlarm>
-      //   )
-      // }
     ],
     [props.onUpdate]
   )
 
-  const onRowClick = useTableRowClickToStockTrading('symbol')
+  // const onRowClick = useTableRowClickToStockTrading('symbol')
 
-  return <JknRcTable rowKey="key" columns={columns} data={list} onRow={onRowClick} onSort={onSort} />
+  return <JknRcTable rowKey="key" columns={columns} data={list} onRow={(r) => ({
+    onClick: () => {
+      stockUtils.gotoStockPage(r.symbol, {
+        interval: r.stock_cycle
+      })
+    }
+  })} onSort={onSort} />
 }
 
 export default StockTable

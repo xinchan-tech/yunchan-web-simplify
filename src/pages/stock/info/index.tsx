@@ -159,7 +159,7 @@ const StockBaseInfo = () => {
           />
         ) : null}
       </div>
-      <div className="py-1 space-y-2 bg-background">
+      <div className="py-1 space-y-3 bg-background">
         <StockQuoteBar
           label="点击查看盘中分时走势"
           percent={data?.percent}
@@ -225,23 +225,30 @@ const StockQuoteBar = withTooltip(
 
     return (
       <div
-        className={cn('flex items-baseline flex-wrap px-2 box-border text-xs my-1 cursor-pointer text-tertiary')}
+        className={cn('flex items-baseline flex-wrap px-2 box-border my-1 cursor-pointer text-tertiary', props.interval !== StockChartInterval.INTRA_DAY && 'text-sm')}
         onClick={onClick}
         onKeyDown={() => { }}
       >
-        <span className={cn('text-base font-bold ', props.interval === StockChartInterval.INTRA_DAY && 'text-xl')}>
+        <span className={cn('text-xl font-500 text-foreground', props.interval === StockChartInterval.INTRA_DAY && 'text-[32px]')}>
           <SubscribeSpan.Price
             symbol={symbol}
-            arrow={props.percent !== Number.POSITIVE_INFINITY}
-            showColor={props.percent !== Number.POSITIVE_INFINITY}
+            arrow={false}
+            showColor={false}
             decimal={3}
             trading={trading}
             initDirection={Decimal.create(props?.percent).gt(0)}
             initValue={props.close}
             zeroText="--"
           />
+          <JknIcon.Svg
+            name={Decimal.create(props?.percent).gt(0) ? 'stock-up' : 'stock-down'}
+            className={cn(
+              Decimal.create(props?.percent).gt(0) ? 'text-stock-up' : 'text-stock-down',
+              'ml-1',
+              props.interval === StockChartInterval.INTRA_DAY ? 'w-4 h-[18px]' : 'w-2.5 h-[11px] '
+            )} />
         </span>
-        &emsp;
+        &nbsp;&nbsp;
         <span>
           <SubscribeSpan.Percent
             type="amount"
@@ -255,7 +262,7 @@ const StockQuoteBar = withTooltip(
             zeroText="--"
           />
         </span>
-        &emsp;
+        &nbsp;&nbsp;
         <span>
           <SubscribeSpan.Percent
             symbol={symbol}
@@ -269,7 +276,7 @@ const StockQuoteBar = withTooltip(
             nanText="--"
           />
         </span>
-        <span className="text-tertiary w-full text-xs">
+        <span className="text-tertiary w-full text-xs mt-1">
           {props.tradingLabel}
           <SubscribeSpan
             trading={trading}
@@ -312,7 +319,7 @@ const StockQuote = () => {
 
   return (
     <div className="bg-background">
-      <div className="mt-1 grid grid-cols-2 text-xs px-2 gap-y-2 gap-x-4 text-tertiary">
+      <div className="mt-1 grid grid-cols-2 text-sm px-2 gap-y-2 gap-x-4 text-tertiary">
         <div className="flex items-center justify-between">
           <span>最高价&nbsp;&nbsp;</span>
           <span>{Decimal.create(quote.data?.q_high).toFixed(3)}</span>
@@ -370,7 +377,7 @@ const StockQuote = () => {
           ) : null
         }
       </div>
-      { +bubble.value !== 0 && expanded ? (
+      {+bubble.value !== 0 && expanded ? (
         <div className="flex h-12">
           <div className="w-1/2 flex items-center justify-center text-stock-green h-full">
             估值泡沫
@@ -582,7 +589,7 @@ const StockRelated = () => {
       <div className="flex px-3 py-2.5">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <div onClick={() => setMenuType('plates')} onKeyDown={() => {}}>
+            <div onClick={() => setMenuType('plates')} onKeyDown={() => { }}>
               <span className="text-lg font-normal">
                 {plates?.find(item => item.id === plateId)?.name ? (
                   <span className={cn(menuType === 'plates' && 'text-primary')}>

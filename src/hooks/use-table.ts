@@ -83,7 +83,7 @@ export const useTableData = <T extends Record<string, any>>(data: T[], _?: Order
   return [list, { setList: _setList, onSort, updateList }] as const
 }
 
-export const useTableRowClickToStockTrading = (symbolField: string) => {
+export const useTableRowClickToStockTrading = (symbolField: string, interval?: number) => {
   return useCallback(
     (record: any) => {
       return {

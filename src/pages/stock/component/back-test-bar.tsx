@@ -45,7 +45,7 @@ interface BackTestBarProps {
   onNextCandlesticks: (candlestick: StockRawRecord) => void
   onPrevCandlesticks: (count: number) => void
   onChangeCandlesticks: (data: StockRawRecord[]) => void
-  onAddBackTestRecord: (record: { time: number; price: number; count: number; type: 'buy' | 'sell' | 'sellToZero' | 'buyToZero', index: number }) => void
+  onAddBackTestRecord: (record: { time: number; price: number; count: number; type: 'buy' | 'sell' | 'sellToZero' | 'buyToZero', index: number, cost: number }) => void
   onSetBackTestRecord: (records: any[]) => void
 }
 
@@ -74,7 +74,7 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
   const profit = useStack<{ profit: number, index: number }>([])
   const positiveProfitCount = useStack<{ count: number, index: number }>([])
   const [loading, setLoading] = useState<boolean>(false)
-
+  console.log(tradeRecord)
   const onDateChange = async (date?: string) => {
     // setStartDate(date)
 
@@ -237,16 +237,21 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
       time: stock[0]! as unknown as number,
       price: +stock[2]!,
       count: number,
-      type
+      type,
+      cost: 0
     }
 
     _tradeRecord[type].push(record)
+
+    const { profit: result, cost } = calcProfit(_tradeRecord)
+
+    record.cost = cost
 
     setTradeRecord(_tradeRecord)
 
     props.onAddBackTestRecord(record)
 
-    const result = calcProfit(_tradeRecord)
+
     const lastProfit = profit.peek()
     const lastMaxProfit = maxProfit.peek()
     const diffProfit = result - (lastProfit?.profit ?? 0)
@@ -280,40 +285,44 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
 
 
   const calcProfit = (record: TradeRecord) => {
-    const buyLength = record.buy.length
-    const sellLength = record.sell.length
+    const count = Math.min(
+      record.buy.reduce((prev, cur) => prev + cur.count, 0),
+      record.sell.reduce((prev, cur) => prev + cur.count, 0)
+    )
 
-    const count =
-      buyLength < sellLength
-        ? record.buy.reduce((prev, cur) => prev + cur.count, 0)
-        : record.sell.reduce((prev, cur) => prev + cur.count, 0)
+    let buyTotal = 0
+    let buyCount = count
+    let buyCost = 0
 
-    let shellPrice = 0
-    let c = 0
-    record.sell.forEach((shell, index) => {
-      if (c + index < count) {
-        shellPrice += shell.price * shell.count
-        c += shell.count
+    record.buy.forEach(({ price, count }) => {
+      if (buyCount > count) {
+        buyTotal += price * count
+        buyCount -= count
       } else {
-        shellPrice += shell.price * (count - c)
-        c += count - c
+        buyTotal += price * buyCount
+        buyCost += -price * (count - buyCount)
+        buyCount = 0
       }
     })
 
-    c = 0
-    let buyPrice = 0
-
-    record.buy.forEach((buy, index) => {
-      if (c + index < count) {
-        buyPrice += buy.price * buy.count
-        c += buy.count
+    let sellTotal = 0
+    let sellCount = count
+    let sellCost = 0
+    record.sell.forEach(({ price, count }) => {
+      if (sellCount > count) {
+        sellTotal += price * count
+        sellCount -= count
       } else {
-        buyPrice += buy.price * (count - c)
-        c += count - c
+        sellTotal += price * sellCount
+        sellCost += price * (count - sellCount)
+        sellCount = 0
       }
     })
 
-    return shellPrice - buyPrice
+    return {
+      profit: sellTotal - buyTotal,
+      cost: sellCost - buyCost
+    }
   }
 
   //平仓
@@ -348,10 +357,15 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
       time: +stock[0]!,
       price: +stock[2]!,
       count: Math.abs(diffCount),
-      type: diffCount > 0 ? 'buyToZero' : 'sellToZero'
+      type: diffCount > 0 ? 'buyToZero' : 'sellToZero',
+      cost: 0
     }
 
     _tradeRecord[buyCount > sellCount ? 'sell' : 'buy'].push(record)
+
+    const { profit: result, cost } = calcProfit(_tradeRecord)
+
+    record.cost = cost
 
     setTradeRecord(_tradeRecord)
 
@@ -364,7 +378,9 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
     //   })
     // })
 
-    const result = calcProfit(_tradeRecord)
+
+
+
     const lastProfit = profit.peek()
     const lastMaxProfit = maxProfit.peek()
     const diffProfit = result - (lastProfit?.profit ?? 0)

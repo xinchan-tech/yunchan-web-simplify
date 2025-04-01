@@ -5,6 +5,9 @@ import { isNumber } from 'radash'
 import { dateUtils } from '../date'
 import { type Stock, StockRecord, type StockResultRecord, type StockTrading, type StockWithExt } from './stock'
 import type { StockSubscribeHandler } from './subscribe'
+import { AESCrypt } from "../string"
+import { router } from "@/router"
+import qs from "qs"
 
 /**
  * 判断时间数据
@@ -415,6 +418,19 @@ export const stockUtils = {
       after: AFTER_NUMBER,
       total: PRE_NUMBER + POST_NUMBER + AFTER_NUMBER
     }
+  },
+
+  gotoStockPage: (symbol: string, opts?:{interval: number}) => {
+    const { interval } = opts ?? { }
+    const query: any = {
+      symbol
+    }
+
+    if(interval) {
+      query.q = AESCrypt.encrypt(JSON.stringify({ interval }))
+    }
+
+    router.navigate(`/stock?${qs.stringify(query)}`)
   },
 
 

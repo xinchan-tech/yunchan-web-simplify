@@ -73,8 +73,7 @@ const SecondaryStep = () => {
                   value={item.value}
                   className={cn(
                     "w-full py-5 px-[14px] rounded-sm border border-[#2E2E2E] bg-transparent relative",
-                    "data-[state=on]:bg-transparent",
-                    "data-[state=on]:text-[#DBDBDB] data-[state=on]:border-[#DBDBDB]",
+                    "data-[state=on]:bg-accent data-[state=on]:text-secondary",
                   )}
                 >
                   {!item.authorized && (<JknIcon name="ic_lock" className="absolute right-0 top-0 w-3 h-3 rounded-none" />)}

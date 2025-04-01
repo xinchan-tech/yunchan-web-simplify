@@ -136,14 +136,15 @@ const AlarmItem = ({ symbol, data, onDelete }: AlarmItemProps) => {
     return null
   }
 
-  const navigate = useNavigate()
+  // const navigate = useNavigate()
 
   const onNav = () => {
-    const interval = data.stock_cycle
+    // const interval = data.stock_cycle
 
-    const params = qs.stringify({symbol, q: AESCrypt.encrypt(JSON.stringify({ interval })) })
+    // const params = qs.stringify({symbol, q: AESCrypt.encrypt(JSON.stringify({ interval })) })
 
-    navigate(`/stock?${params}`)
+    // navigate(`/stock?${params}`)
+    stockUtils.gotoStockPage(symbol, { interval: data.stock_cycle })
   }
 
   return (

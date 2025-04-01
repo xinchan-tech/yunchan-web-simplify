@@ -1,22 +1,22 @@
-import { getPlateList, getStockCollectCates } from "@/api";
+import { getPlateList, getStockCollectCates } from "@/api"
 import {
+  Button,
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-  Button,
   JknIcon,
   ToggleGroup,
   ToggleGroupItem,
-} from "@/components";
-import { useAuthorized } from "@/hooks";
-import { useQuery } from "@tanstack/react-query";
-import { useContext, useEffect, useMemo, useRef, useState } from "react";
-import { useMount, useUnmount } from "ahooks";
-import { SuperStockContext } from "../ctx";
-import { CrownIcon, StockTrendIcon } from "./super-icon";
-import { cn } from "@/utils/style";
-import { SuperCarousel } from "./super-carousel";
+} from "@/components"
+import { useAuthorized } from "@/hooks"
+import { cn } from "@/utils/style"
+import { useQuery } from "@tanstack/react-query"
+import { useMount, useUnmount } from "ahooks"
+import { useContext, useEffect, useMemo, useRef, useState } from "react"
+import { SuperStockContext } from "../ctx"
+import { SuperCarousel } from "./super-carousel"
+import { CrownIcon, StockTrendIcon } from "./super-icon"
 
 const FirstStep = () => {
   const [type, setType] = useState("FeaturedRanking");
@@ -200,8 +200,7 @@ const FeaturedRankingPanel = () => {
               disabled={!child.authorized}
               className={cn(
                 "w-full h-16 rounded-sm border border-[#2E2E2E] bg-transparent relative group",
-                "data-[state=on]:bg-transparent",
-                "data-[state=on]:text-[#DBDBDB] data-[state=on]:border-[#DBDBDB]"
+                "data-[state=on]:bg-accent data-[state=on]:text-secondary"
               )}
             >
               {!child.authorized && (
@@ -297,8 +296,7 @@ const GoldenPoolPanel = () => {
                   value={item.id}
                   className={cn(
                     "w-full h-16 py-5 px-[14px] rounded-sm border border-[#2E2E2E] bg-transparent relative",
-                    "data-[state=on]:bg-transparent",
-                    "data-[state=on]:text-[#DBDBDB] data-[state=on]:border-[#DBDBDB]"
+                    "data-[state=on]:bg-accent data-[state=on]:text-secondary"
                   )}
                 >
                   {item.name}

@@ -9,6 +9,7 @@ export type BackTestRecord = {
   type: 'buy' | 'sell' | 'buyToZero' | 'sellToZero'
   index: number
   num: number
+  cost: number
 }
 
 const isBuyRecord = (record: BackTestRecord) => record.type === 'buy' || record.type === 'buyToZero'
@@ -54,23 +55,15 @@ export const backTestIndicator: IndicatorTemplate<any, any> = {
     const fromPixel = xAxis.convertToPixel(realFrom)
     const toPixel = xAxis.convertToPixel(realTo)
     const data = chart.getDataList()
-
+  
     let totalCount = 0
     let totalPrice = 0
     let totalDiff = 0
-    let totalSellPrice = 0
-    let totalBuyPrice = 0
-    
+
     result.forEach(item => {
       totalCount += item.count
       totalPrice += item.price * item.count
       totalDiff += isBuyRecord(item) ? item.count : -item.count
-
-      if (isBuyRecord(item)) {
-        totalBuyPrice += item.price * item.count
-      } else {
-        totalSellPrice += item.price * item.count
-      }
 
       const xPixel = xAxis.convertTimestampToPixel(item.time * 1000)
 
@@ -98,9 +91,8 @@ export const backTestIndicator: IndicatorTemplate<any, any> = {
     if (totalDiff !== 0) {
       const avgPrice = totalPrice / totalCount
       const lastStock = chart.getDataList()[chart.getDataList().length - 1]
-      const lastPrice = lastStock.close * totalDiff
-      const totalDiffPrice = totalSellPrice - totalBuyPrice
-      const totalProfit = totalDiff < 0 ? 0 : lastPrice + totalDiffPrice
+      const lastPrice = lastStock.close * Math.abs(totalDiff)
+      const totalProfit = result[result.length - 1].cost - lastPrice
 
       const BackTestLine = getFigureClass('back-test-line')! as FigureConstructor<BackTestLineAttrs, BackTestLineStyles>
 

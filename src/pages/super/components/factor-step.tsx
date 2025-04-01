@@ -80,7 +80,7 @@ const FactorStep = () => {
                     className={cn(
                       "w-full py-5 px-[14px] box-border rounded-sm border border-[#2E2E2E] bg-transparent relative",
                       "data-[state=on]:bg-transparent",
-                      "data-[state=on]:text-[#DBDBDB] data-[state=on]:border-[#DBDBDB]",
+                      "data-[state=on]:bg-stock-up data-[state=on]:text-white data-[state=on]:border-stock-up"
                     )}
                   >
                     {!child.authorized && (<JknIcon name="ic_lock" className="absolute right-0 top-0 w-3 h-3 rounded-none" />)}

@@ -151,9 +151,9 @@ const MethodStep = () => {
                     className={cn(
                       "w-full py-5 px-[14px] rounded-sm border border-[#2E2E2E] bg-transparent relative",
                       "data-[state=on]:bg-transparent",
-                      "data-[state=on]:text-[#22AB94] data-[state=on]:border-[#22AB94]",
-                      "data-[state=on]:[&:not([data-item-name='多头策略'])]:text-[#D61B5F]",
-                      "data-[state=on]:[&:not([data-item-name='多头策略'])]:border-[#D61B5F]"
+                      "data-[state=on]:bg-[#22AB94] data-[state=on]:text-white data-[state=on]:border-[#22AB94]",
+                      "data-[state=on]:[&:not([data-item-name='多头策略'])]:border-[#D61B5F]",
+                      "data-[state=on]:[&:not([data-item-name='多头策略'])]:bg-[#D61B5F]"
                     )}
                   >
                     {!child.authorized && <JknIcon name="ic_lock" className="absolute right-0 top-0 w-3 h-3" />}

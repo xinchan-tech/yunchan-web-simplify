@@ -23,15 +23,14 @@ import {
 import { stockUtils } from '@/utils/stock'
 import { Fragment, memo, type PropsWithChildren, type ReactNode, useEffect, useMemo, useRef, useState } from 'react'
 import { timeIndex, useSymbolQuery } from '../lib'
-import { ChartType, MainYAxis, chartManage, useChartManage } from '../lib/store'
+import { ChartType, chartManage, useChartManage } from '../lib/store'
 import { renderUtils } from '../lib/utils'
 import { useQuery } from "@tanstack/react-query"
-import { toast, useAuthorized, useOptimisticUpdate, useStockSearch, useToast } from "@/hooks"
+import { useAuthorized, useOptimisticUpdate, useStockSearch, useToast } from "@/hooks"
 import { useLocalStorageState, useVirtualList } from "ahooks"
 import { cn } from "@/utils/style"
 import { chartEvent } from "../lib/event"
 import { IndicatorParamsForm } from "./indicator-param-form"
-import { useNavigate } from "react-router"
 
 const WrapperLabel = ({ children, label }: PropsWithChildren<{ label: string | ReactNode }>) => {
   return (
@@ -73,34 +72,19 @@ export const ChartToolBar = () => {
           </div>
         </WrapperLabel>
         <Separator orientation="vertical" className="h-2 w-[1px] bg-accent mx-1" />
-        <WrapperLabel label="指标策略">
-          <div >
-            <IndicatorPicker />
-          </div>
-        </WrapperLabel>
+        <IndicatorPicker />
         <WrapperLabel label="视图模式">
           <div>
             <ViewModeSelect />
           </div>
         </WrapperLabel>
         <Separator orientation="vertical" className="h-2 w-[1px] bg-accent mx-1" />
-        <WrapperLabel label="股票PK">
-          <div >
-            <StockPkPicker />
-          </div>
-        </WrapperLabel>
+        <StockPkPicker />
+
         <Separator orientation="vertical" className="h-2 w-[1px] bg-accent mx-1" />
-        <WrapperLabel label="股票叠加">
-          <div >
-            <OverlayMarkPicker />
-          </div>
-        </WrapperLabel>
+        <OverlayMarkPicker />
         <Separator orientation="vertical" className="h-2 w-[1px] bg-accent mx-1" />
-        <WrapperLabel label="股票报警">
-          <div >
-            <AlarmPicker />
-          </div>
-        </WrapperLabel>
+        <AlarmPicker />
         <Separator orientation="vertical" className="h-2 w-[1px] bg-accent mx-1" />
         <WrapperLabel label="股票回测">
           <div >
@@ -292,7 +276,7 @@ export const ChartTypeSelect = memo(() => {
       <DropdownMenuTrigger asChild>
         <span className="cursor-pointer hover:bg-accent rounded flex px-3 h-9">
           <JknIcon.Svg
-            name={chartType === ChartType.Candle ? 'chart-candle' : 'chart-area'}
+            name={renderUtils.isTimeIndexChart(interval) ? 'chart-area' : chartType === ChartType.Candle ? 'chart-candle' : 'chart-area'}
             size={20}
             className="m-auto"
           />
@@ -301,14 +285,14 @@ export const ChartTypeSelect = memo(() => {
 
       <DropdownMenuContent align="start" alignOffset={-10}>
         <DropdownMenuItem
-          data-checked={chartType === ChartType.Area}
+          data-checked={renderUtils.isTimeIndexChart(interval) || chartType === ChartType.Area}
           onClick={() => onChartTypeChange(ChartType.Area)}
         >
           <JknIcon.Svg name="chart-area" size={20} />
           折线图
         </DropdownMenuItem>
         <DropdownMenuItem
-          data-checked={chartType === ChartType.Candle}
+          data-checked={!renderUtils.isTimeIndexChart(interval) && chartType === ChartType.Candle}
           onClick={() => onChartTypeChange(ChartType.Candle)}
         >
           <JknIcon.Svg name="chart-candle" size={20} />
@@ -346,11 +330,13 @@ const IndicatorPicker = memo(() => {
 
   return (
     <>
-      <div className="cursor-pointer hover:bg-accent h-full rounded px-3 flex items-center" onClick={() => modal.modal.open()} onKeyDown={() => { }}>
-        <JknIcon.Svg name="chart-indicator" size={20} />
-        &nbsp;
-        <span>指标</span>
-      </div>
+      <WrapperLabel label="指标策略">
+        <div className="cursor-pointer hover:bg-accent h-full rounded px-3 flex items-center" onClick={() => modal.modal.open()} onKeyDown={() => { }}>
+          <JknIcon.Svg name="chart-indicator" size={20} />
+          &nbsp;
+          <span>指标</span>
+        </div>
+      </WrapperLabel>
       {
         modal.context
       }
@@ -587,7 +573,7 @@ const ViewModeSelect = () => {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <span className="cursor-pointer hover:bg-accent  h-9 rounded leading-9 px-3 flex items-center justify-center">
-          <JknIcon name={viewModeMenuItems.find(i => i.value === viewMode)?.icon as any} className="w-5 h-5" />
+          <JknIcon name={viewModeMenuItems.find(i => i.value === viewMode)?.icon as any} className="w-5 h-5 rounded-none" />
         </span>
       </DropdownMenuTrigger>
 
@@ -616,9 +602,11 @@ const StockPkPicker = () => {
 
   return (
     <>
-      <div className="cursor-pointer hover:bg-accent  h-9 rounded px-3 flex items-center" onClick={() => modal.modal.open()} onKeyDown={() => { }}>
-        <JknIcon.Svg name="chart-pk" size={20} />
-      </div>
+      <WrapperLabel label="股票PK">
+        <div className="cursor-pointer hover:bg-accent  h-9 rounded px-3 flex items-center" onClick={() => modal.modal.open()} onKeyDown={() => { }}>
+          <JknIcon.Svg name="chart-pk" size={20} />
+        </div>
+      </WrapperLabel>
       {
         modal.context
       }
@@ -775,9 +763,11 @@ const OverlayMarkPicker = () => {
 
   return (
     <>
-      <div className="cursor-pointer hover:bg-accent  h-9 rounded px-3 flex items-center" onClick={() => modal.modal.open()} onKeyDown={() => { }}>
-        <JknIcon.Svg name="chart-fav" size={20} />
-      </div>
+      <WrapperLabel label="股票叠加">
+        <div className="cursor-pointer hover:bg-accent  h-9 rounded px-3 flex items-center" onClick={() => modal.modal.open()} onKeyDown={() => { }}>
+          <JknIcon.Svg name="chart-fav" size={20} />
+        </div>
+      </WrapperLabel>
       {
         modal.context
       }
@@ -908,10 +898,12 @@ const AlarmPicker = () => {
   return (
     <>
       <StockAlarm code={symbol}>
-        <div className="cursor-pointer hover:bg-accent h-full rounded px-3 flex items-center text-sm py-2">
-          <JknIcon.Svg name="chart-alarm" size={20} />&nbsp;
-          <span>警报</span>
-        </div>
+        <WrapperLabel label="股票报警">
+          <div className="cursor-pointer hover:bg-accent h-full rounded px-3 flex items-center text-sm py-2">
+            <JknIcon.Svg name="chart-alarm" size={20} />&nbsp;
+            <span>警报</span>
+          </div>
+        </WrapperLabel>
       </StockAlarm>
       {/* <div className="cursor-pointer hover:bg-accent h-full rounded px-3 flex items-center" onClick={() => modal.modal.open()} onKeyDown={() => { }}>
         <JknIcon.Svg name="chart-alarm" size={20} />

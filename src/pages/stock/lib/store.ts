@@ -221,6 +221,10 @@ export const chartManage = {
       activeChartId: chartId
     })
   },
+  getChart: (chartId: string): Nullable<ChartStore> => {
+    const chart = useChartManage.getState().chartStores[chartId]
+    return chart
+  },
   setSymbol: (symbol: string, chartId?: string) => {
     chartManage.setStore(state => {
       state.symbol = symbol
