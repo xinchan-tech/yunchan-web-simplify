@@ -11,6 +11,10 @@ import {
   CollectStar,
   Button,
   Star,
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
 } from "@/components"
 import {
   useStockQuoteSubscribe,
@@ -270,7 +274,7 @@ const PushPage = () => {
 
   return (
     <div className="h-full w-full overflow-hidden flex justify-center bg-black">
-      <div className="h-full overflow-hidden flex flex-col w-[918px] pt-[40px] stock-push">
+      <div className="h-full overflow-hidden flex flex-col w-table pt-[40px] stock-push">
         <div className="flex items-center flex-shrink-0 pl-2">
           <CapsuleTabs
             activeKey={activeType}
@@ -284,12 +288,29 @@ const PushPage = () => {
                 label={item.title}
               />
             ))}
-
-            {/* <CapsuleTabs.Tab value={StockPushType.COILING} label="缠论推送" />
-            <CapsuleTabs.Tab value={StockPushType.MA} label="MA趋势评级" /> */}
           </CapsuleTabs>
+          {activeType === "JRGW" ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <div className="border border-solid px-3 py-1 rounded text-base border-[#2E2E2E] text-[#808080] ml-auto">
+                  {dayjs(date).format("MM-DD W")}
+                  &nbsp;
+                  <JknIcon.Svg name="arrow-down" size={12} color="#808080" />
+                </div>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                {
+                  dates.current.map(item => (
+                    <DropdownMenuItem key={item} onClick={() => setDate(item)}>
+                      {item}
+                    </DropdownMenuItem>
+                  ))
+                }
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : null}
         </div>
-        {activeType === "JRGW" ? (
+        {/* {activeType === "JRGW" ? (
           <div className="flex items-center pt-5 pl-2">
             <JknDatePicker onChange={(v) => v && setDate(v)}>
               <Button variant="outline" className="h-8 px-2 text-base border-[#2E2E2E] text-[#808080]">
@@ -298,7 +319,7 @@ const PushPage = () => {
               </Button>
             </JknDatePicker>
           </div>
-        ) : null}
+        ) : null} */}
         <div className="flex-1 overflow-hidden">
           <JknRcTable
             headerHeight={48}

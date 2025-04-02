@@ -4,7 +4,7 @@ import { RegisterForm } from "./register"
 import { ResetForm } from "./reset"
 
 const LoginPage = () => {
-  const [page, setPage] = useState<'login' | 'register' | 'resetPassword'>('resetPassword')
+  const [page, setPage] = useState<'login' | 'register' | 'resetPassword'>('login')
   return (
     <div className="bg-background w-full h-full rounded-xs">
       <div className="mx-auto w-fit">

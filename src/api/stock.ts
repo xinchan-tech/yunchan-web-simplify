@@ -1952,7 +1952,7 @@ type GetStockPushResult = {
  * 特色推送
  */
 export const getStockPush = (params: GetStockPushParams) => {
-  return request.get<GetStockPushResult[]>('/push/index', { params }).then(r => r.data ?? [])
+  return request.get<GetStockPushResult[]>('/stock-svc/ranking/top/stocks', { params }).then(r => r.data ?? [])
 }
 getStockPush.cacheKey = 'push:index'
 
@@ -1970,7 +1970,7 @@ type GetStockPushListResult = {
   datetime: number
 }
 export const getStockPushList = (key: string, extend?: StockExtend[]) => {
-  return request.get<GetStockPushListResult[]>('/push/list', { params: { key, extend } }).then(r => r.data)
+  return request.get<GetStockPushListResult[]>('/stock-svc/ranking/stocks', { params: { key, extend } }).then(r => r.data)
 }
 getStockPushList.cacheKey = 'push:list'
 

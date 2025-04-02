@@ -11,16 +11,14 @@ import { FormProvider, useFormContext } from 'react-hook-form'
 import { z } from 'zod'
 import { JknIcon } from '../jkn/jkn-icon'
 import { Button } from '../ui/button'
-import { Checkbox } from '../ui/checkbox'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../ui/dropdown-menu"
 import { FormControl, FormField, FormItem, FormLabel } from '../ui/form'
 import { Input } from '../ui/input'
 import { ScrollArea } from "../ui/scroll-area"
 import { Separator } from "../ui/separator"
 import { AlarmStockPicker } from "./components/alarm-stock-picker"
 import { DatePicker } from "./components/date-picker"
-import { FrequencySelect } from "./components/frequency-select"
 import { NameInput } from "./components/name-input"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../ui/dropdown-menu"
 
 const formSchema = z.object({
   symbol: z.string({ message: '股票代码错误' }).min(1, '股票代码错误'),
@@ -46,6 +44,14 @@ export const PercentageAlarmSetting = (props: PercentageAlarmSettingProps) => {
     date: ''
   })
 
+  const symbol = form.watch('symbol')
+
+  const query = useQuery({
+    queryKey: [getStockBaseCodeInfo.cacheKey, symbol, ['total_share']],
+    queryFn: () => getStockBaseCodeInfo({ symbol: symbol, extend: ['total_share'] }),
+    enabled: !!symbol
+  })
+
   const { toast } = useToast()
 
   const queryClient = useQueryClient()
@@ -60,17 +66,37 @@ export const PercentageAlarmSetting = (props: PercentageAlarmSettingProps) => {
       }
     }
 
+    if (!query.data) return
+
+    const stock = stockUtils.toStock(query.data.stock, {
+      extend: query.data.extend,
+      symbol: query.data.symbol,
+      name: query.data.name
+    })
+
+    const rise: number[] = []
+    const fall: number[] = []
+
+    form.getValues('rise')?.map(v => {
+      const price = Decimal.create(v)
+      if (price.gt(stock.close)) {
+        rise.push(price.toNumber())
+      } else {
+        fall.push(price.toNumber())
+      }
+    })
+
     const params = {
       symbol: form.getValues('symbol'),
       type: 2,
       condition: {
-        rise: form.getValues('rise')?.map(v => +v) ?? [],
-        fall: form.getValues('fall')?.map(v => +v) ?? [],
+        rise: rise,
+        fall: fall,
         frequency: +form.getValues('frequency')
       }
     }
 
-    if (params.condition.rise.length + params.condition.fall.length === 0) {
+    if (rise.length + fall.length === 0) {
       toast({ description: '股价设置条件必须要一个以上' })
       return
     }
@@ -113,22 +139,9 @@ export const PercentageAlarmSetting = (props: PercentageAlarmSettingProps) => {
               name="rise"
               render={({ field }) => (
                 <FormItem className="pb-4 flex space-y-0">
-                  <FormLabel className="w-32 font-normal text-secondary text-base font-normal">价格报警</FormLabel>
+                  <FormLabel className="w-32 font-normal text-secondary text-base font-normal">浮动报警</FormLabel>
                   <FormControl className="flex-1">
                     <PriceSetting mode="rise" value={field.value} onChange={field.onChange} />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="fall"
-              render={({ field }) => (
-                <FormItem className="pb-4 flex space-y-0">
-                  <FormLabel className="w-32" />
-                  <FormControl>
-                    <PriceSetting mode="fall" value={field.value} onChange={field.onChange} />
                   </FormControl>
                 </FormItem>
               )}
@@ -149,7 +162,7 @@ export const PercentageAlarmSetting = (props: PercentageAlarmSettingProps) => {
               </FormItem>
             )}
           />
-
+          {/* 
           <FormField
             control={form.control}
             name="frequency"
@@ -161,24 +174,25 @@ export const PercentageAlarmSetting = (props: PercentageAlarmSettingProps) => {
                 </FormControl>
               </FormItem>
             )}
-          />
+          /> */}
 
-          {
+          {/* {
             form.getValues('frequency') === '1' ? (
-              <FormField
-                control={form.control}
-                name="date"
-                render={({ field }) => (
-                  <FormItem className="pb-4 flex space-y-0  items-center">
-                    <FormLabel className="w-32 text-base font-normal">到期时间</FormLabel>
-                    <FormControl >
-                      <DatePicker {...field} />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
+            
             ) : null
-          }
+          } */}
+          <FormField
+            control={form.control}
+            name="date"
+            render={({ field }) => (
+              <FormItem className="pb-4 flex space-y-0  items-center">
+                <FormLabel className="w-32 text-base font-normal">到期时间</FormLabel>
+                <FormControl >
+                  <DatePicker {...field} />
+                </FormControl>
+              </FormItem>
+            )}
+          />
         </form>
       </FormProvider>
       <div className="text-right space-x-2 px-8 mb-6 mt-auto">
@@ -202,8 +216,8 @@ interface PriceSettingProps {
 const PriceSetting = forwardRef((props: PriceSettingProps, _) => {
   const form = useFormContext()
   const symbol = form.watch('symbol')
-  const [list, setList] = useState<{ checked: boolean; value: string; id: string, type: 'price' | 'percent' }[]>([
-    { checked: false, value: '', id: nanoid(8), type: 'percent' }
+  const [list, setList] = useState<{ value: string; id: string, type: 'price' | 'percent' }[]>([
+    { value: '', id: nanoid(8), type: 'percent' }
   ])
   const query = useQuery({
     queryKey: [getStockBaseCodeInfo.cacheKey, symbol, ['total_share']],
@@ -218,12 +232,17 @@ const PriceSetting = forwardRef((props: PriceSettingProps, _) => {
         symbol: query.data.symbol,
         name: query.data.name
       })
-      const r = Decimal.create(stock.close ?? 0)
-        .mul(props.mode === 'rise' ? 1.05 : 0.95)
+      const up = Decimal.create(stock.close ?? 0)
+        .mul(1.05)
         .toFixed(2)
-      setList([{ checked: false, value: r, id: nanoid(8), type: 'percent' }])
+
+      const down = Decimal.create(stock.close ?? 0)
+        .mul(0.95)
+        .toFixed(2)
+
+      setList([{ value: up, id: nanoid(8), type: 'percent' }, { value: down, id: nanoid(8), type: 'percent' }])
     }
-  }, [query.data, props.mode])
+  }, [query.data])
 
   const calcPercent = (price: string, type: 'price' | 'percent') => {
     if (!query.data || !price) {
@@ -236,31 +255,32 @@ const PriceSetting = forwardRef((props: PriceSettingProps, _) => {
       name: query.data.name
     })
 
+
     if (type === 'price') {
-      return `${props.mode === 'rise' ? '+' : ''}${new Decimal(price).minus(stock.close).toFixed(2)}`
+      const r = Decimal.create(price).minus(stock.close).toNumber()
+      return <span className={cn(r > 0 ? 'text-stock-up' : 'text-stock-down')}>{`${r > 0 ? '+' : ''}${r.toFixed(2)}`}</span>
     }
 
-    return `${props.mode === 'rise' ? '+' : ''}${new Decimal(price).minus(stock.close).div(stock.close).mul(100).toFixed(2)}%`
+    const r = Decimal.create(price).minus(stock.close).div(stock.close).mul(100).toNumber()
+    return <span className={cn(r > 0 ? 'text-stock-up' : 'text-stock-down')}>{`${r > 0 ? '+' : ''}${r.toFixed(2)}%`}</span>
   }
 
   const onValueChange = (id: string, value: string) => {
     setList(list.map(item => (item.id === id ? { ...item, value } : item)))
   }
 
-  const onCheckChange = (id: string, checked: boolean | string) => {
-    setList(list.map(item => (item.id === id ? { ...item, checked: checked === true } : item)))
-  }
+
 
   const onChangeType = (id: string, type: 'price' | 'percent') => {
     setList(list.map(item => (item.id === id ? { ...item, type } : item)))
   }
 
   useEffect(() => {
-    props.onChange?.(list.filter(item => item.checked && item.value).map(item => item.value))
+    props.onChange?.(list.filter(item => item.value).map(item => item.value))
   }, [list, props.onChange])
 
   const addListItem = () => {
-    setList([...list, { checked: false, value: '', id: nanoid(8), type: 'percent' }])
+    setList([...list, { value: '', id: nanoid(8), type: 'percent' }])
   }
 
   const removeListItem = (id: string) => {
@@ -271,11 +291,7 @@ const PriceSetting = forwardRef((props: PriceSettingProps, _) => {
     <div className="flex flex-col space-y-2 text-sm flex-1">
       {list.map((item, index) => (
         <div key={item.id} className="flex flex-col">
-          <div className={cn('text-tertiary flex items-center space-x-2 my-2', item.checked ? 'text-foreground' : '')}>
-            <Checkbox checked={item.checked} onCheckedChange={checked => onCheckChange(item.id, checked)} />
-            <span>
-              {props.mode === 'rise' ? '浮动追踪上涨' : '浮动追踪下跌'}
-            </span>
+          <div className={cn('text-tertiary flex items-center space-x-2 my-2')}>
             <div className="!ml-auto flex items-center rounded-sm  text-xs px-1 py-0.5 hover:bg-accent cursor-pointer text-secondary !mr-6">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -300,31 +316,16 @@ const PriceSetting = forwardRef((props: PriceSettingProps, _) => {
             </div>
           </div>
           <div className="flex items-center">
-            {props.mode === 'rise' ? (
-              <div className="border border-solid border-input rounded w-full flex items-center">
-                <Input
-                  type="number"
-                  className="w-64 border-none flex-1"
-                  value={item.value}
-                  onChange={e => onValueChange(item.id, e.target.value)}
-                />
-                <Separator className="h-4 w-[1px] bg-border mx-2" />
-                <span className="text-stock-up min-w-16 text-center">{calcPercent(item.value, item.type)}</span>
-              </div>
-            ) : (
-              <>
-                <div className="border border-solid border-input rounded w-full flex items-center">
-                  <Input
-                    type="number"
-                    className="w-64 border-none flex-1"
-                    value={item.value}
-                    onChange={e => onValueChange(item.id, e.target.value)}
-                  />
-                  <Separator className="h-4 w-[1px] bg-border mx-2" />
-                  <span className="text-stock-down min-w-16 text-center">{calcPercent(item.value, item.type)}</span>
-                </div>
-              </>
-            )}
+            <div className="border border-solid border-input rounded w-full flex items-center">
+              <Input
+                type="number"
+                className="w-64 border-none flex-1"
+                value={item.value}
+                onChange={e => onValueChange(item.id, e.target.value)}
+              />
+              <Separator className="h-4 w-[1px] bg-border mx-2" />
+              <span className="text-stock-up min-w-16 text-center">{calcPercent(item.value, item.type)}</span>
+            </div>
 
             {index === 0 ? (
               <JknIcon.Svg name="plus-circle" className="w-6 h-6 ml-2 text-tertiary hover:text-foreground cursor-pointer" onClick={addListItem} />
