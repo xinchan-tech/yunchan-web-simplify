@@ -263,7 +263,6 @@ class StockSubscribe {
   }
 
   public unsubscribe(action: SubscribeActionType, params: string[]) {
-    console.log(action, params)
     params.forEach(symbol => {
       const topic = `${action}:${symbol}`
       if (this.subscribeTopic[topic]) {
