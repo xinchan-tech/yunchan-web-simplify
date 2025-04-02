@@ -21,7 +21,7 @@ const ToggleGroup = React.forwardRef<
     style={
       {
         '--toggle-active-bg': activeColor ?? '#fff',
-        '--toggle-hover-bg': hoverColor ?? '#4A4A4A',
+        '--toggle-hover-bg': hoverColor ?? '#2E2E2E',
         ...style
       } as React.CSSProperties
     }

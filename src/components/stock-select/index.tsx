@@ -57,7 +57,7 @@ const StockSelect = ({ onChange, className, width, ...props }: StockSelectProps)
               className
             )}
           >
-            <JknIcon.Svg className="w-4 h-4" color='#B8B8B8' name="search" />
+            <JknIcon.Svg className="w-5 h-5" color='#B8B8B8' name="search" />
             <Input
               value={keyword}
               onChange={onSearch}

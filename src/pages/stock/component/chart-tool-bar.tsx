@@ -49,7 +49,7 @@ export const ChartToolBar = () => {
 
   return (
     <div className="">
-      <div className="flex items-center h-11 py-1 box-border w-full bg-background text-sm text-secondary px-4 leading-9">
+      <div className="flex items-center h-11 py-1 box-border w-full bg-background text-sm text-foreground px-4 leading-9">
         <WrapperLabel label="股票代码">
           <div className="flex items-center mr-2">
             <JknIcon.Stock symbol={symbol} />
@@ -138,7 +138,7 @@ export const CoilingBar = () => {
                   return (
                     <span className="cursor-pointer" onClick={() => _onClickCoiling(c.id)} onKeyDown={() => { }}>
                       <JknIcon.Svg name="mins" size={12} className="mr-1" style={{ color: coiling.includes(c.id) ? '#E7C88D' : '#575757' }} />
-                      <span style={{ color: coiling.includes(c.id) ? '#B8B8B8' : '#575757' }}>{c.name}</span>
+                      <span style={{ color: coiling.includes(c.id) ? '#DBDBDB' : '#575757' }}>{c.name}</span>
                     </span>
                   )
                 case CoilingIndicatorId.ONE_TYPE:
@@ -147,14 +147,14 @@ export const CoilingBar = () => {
                   return (
                     <span className="cursor-pointer flex items-center" onClick={() => _onClickCoiling(c.id as any)} onKeyDown={() => { }}>
                       <JknIcon.Checkbox checked={coiling.includes(c.id)} uncheckedIcon="chart-coiling-bs" checkedIcon="chart-coiling-bs-active" className="h-4 w-4 rounded mr-1" />
-                      <span style={{ color: coiling.includes(c.id) ? '#B8B8B8' : '#575757' }}>{c.name}</span>
+                      <span style={{ color: coiling.includes(c.id) ? '#DBDBDB' : '#575757' }}>{c.name}</span>
                     </span>
                   )
                 case CoilingIndicatorId.PIVOT:
                   return (
                     <span className="cursor-pointer flex items-center" onClick={() => _onClickCoiling(c.id as any)} onKeyDown={() => { }}>
                       <JknIcon.Svg name="poivts" size={16} style={{ color: coiling.includes(c.id) ? '#808080' : '#575757' }} />
-                      <span style={{ color: coiling.includes(c.id) ? '#B8B8B8' : '#575757' }}>{c.name}</span>
+                      <span style={{ color: coiling.includes(c.id) ? '#DBDBDB' : '#575757' }}>{c.name}</span>
                     </span>
                   )
                 default:

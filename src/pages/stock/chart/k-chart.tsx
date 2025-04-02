@@ -47,7 +47,7 @@ export const KChart = (props: KChartProps) => {
 
   return (
     <div className="h-full overflow-hidden flex flex-col bg-background">
-      <div className="text-tertiary text-sm flex items-center px-4 space-x-4 pt-1">
+      <div className="text-foreground text-sm flex items-center px-4 space-x-4 pt-1">
         <CoilingBar />
       </div>
       <div className={cn('flex-1 overflow-hidden main-chart', `main-chart-${viewMode}`)} id="stock-chart-container">

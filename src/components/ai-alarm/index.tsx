@@ -143,7 +143,7 @@ export const StockAlarm = (props: PropsWithChildren<AiAlarmProps>) => {
       </div>
       {visible ? (
         <Dialog open={open} onOpenChange={v => !v && setFalse()} modal={true}>
-          <DialogContent className="w-[650px]">
+          <DialogContent className="w-[600px] overflow-hidden">
             <DialogHeader>
               <DialogTitle asChild>
                 <div className="px-4 flex items-center">

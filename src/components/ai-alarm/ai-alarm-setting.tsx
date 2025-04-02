@@ -18,6 +18,7 @@ import { StockCycleSelect } from "./components/alarm-period"
 import { DatePicker } from "./components/date-picker"
 import { FrequencySelect } from "./components/frequency-select"
 import { NameInput } from "./components/name-input"
+import { useConfig } from "@/store"
 
 const formSchema = z.object({
   symbol: z.string({ message: '股票代码错误' }).min(1, '股票代码错误'),
@@ -116,7 +117,7 @@ const AiAlarmSetting = (props: AiAlarmSetting) => {
             )}
           />
 
-          <div className="text-xs text-tertiary">报警类型</div>
+          <div className="text-base">报警类型</div>
           <Separator className="my-2 h-[1px] w-full" />
           <FormField
             control={form.control}
@@ -170,18 +171,22 @@ const AiAlarmSetting = (props: AiAlarmSetting) => {
             )}
           />
 
-          <FormField
-            control={form.control}
-            name="date"
-            render={({ field }) => (
-              <FormItem className="pb-4 flex space-y-0  items-center">
-                <FormLabel className="w-32">到期时间</FormLabel>
-                <FormControl >
-                  <DatePicker {...field} />
-                </FormControl>
-              </FormItem>
-            )}
-          />
+          {
+            form.getValues('frequency') === '1' ? (
+              <FormField
+                control={form.control}
+                name="date"
+                render={({ field }) => (
+                  <FormItem className="pb-4 flex space-y-0  items-center">
+                    <FormLabel className="w-32">到期时间</FormLabel>
+                    <FormControl >
+                      <DatePicker {...field} />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+            ) : null
+          }
         </form>
       </FormProvider>
       <div className="text-right mt-auto mb-6 space-x-4 px-8">
@@ -189,7 +194,7 @@ const AiAlarmSetting = (props: AiAlarmSetting) => {
           取消
         </Button>
         <Button className="w-24" loading={loading} onClick={onSubmit}>
-          确定
+          创建
         </Button>
       </div>
     </div>
@@ -280,14 +285,18 @@ const AlarmsTypeSelect = forwardRef((props: AlarmsTypeSelectProps, _) => {
                 value={props.value}
                 onValueChange={v => _onValueChange(v, item.name)}
                 type="multiple"
-                variant="outline"
-                className="flex-1 flex "
+                size="xl"
+                hoverColor="#2E2E2E"
+                activeColor={item.name === '多头策略' ? useConfig.getState().getStockColor(true, 'hex') : useConfig.getState().getStockColor(false, 'hex')}
+                variant="ghost"
+                className="flex-1 grid grid-cols-4 gap-3"
               >
                 {(item.children as unknown as StockCategory[])?.map(child =>
                   child.name !== '' ? (
                     <ToggleGroupItem
                       disabled={!child.authorized}
-                      className="w-28 relative"
+                      className="w-full relative"
+
                       key={child.id}
                       value={child.id}
                     >
@@ -322,11 +331,15 @@ const StockHdlySelect = forwardRef((props: StockHdlySelectProps, _) => {
       <ToggleGroup
         value={props.value}
         type="multiple"
-        variant="outline"
+        size="xl"
+        hoverColor="#2E2E2E"
+        variant="ghost"
+        className="flex-1 grid grid-cols-4 gap-3"
+        activeColor={useConfig.getState().getStockColor(true, 'hex')}
         onValueChange={props.onChange}
       >
         {data?.children?.map(item => (
-          <ToggleGroupItem disabled={!item.authorized} className="w-20 relative" key={item.id} value={item.id}>
+          <ToggleGroupItem disabled={!item.authorized} className=" relative" key={item.id} value={item.id}>
             {!item.authorized && <JknIcon name="ic_lock" className="absolute right-0 top-0 w-3 h-3" />}
             {item.name}
           </ToggleGroupItem>

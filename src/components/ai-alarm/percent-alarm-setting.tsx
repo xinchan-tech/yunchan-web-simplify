@@ -105,15 +105,15 @@ export const PercentageAlarmSetting = (props: PercentageAlarmSettingProps) => {
             )}
           />
 
-          <div className="text-xs text-tertiary">条件</div>
+          <div className="text-base">条件</div>
           <Separator className="my-2 h-[1px] w-full" />
-          <ScrollArea className="h-[480px]">
+          <ScrollArea className="h-[280px]">
             <FormField
               control={form.control}
               name="rise"
               render={({ field }) => (
                 <FormItem className="pb-4 flex space-y-0">
-                  <FormLabel className="w-32">价格报警</FormLabel>
+                  <FormLabel className="w-32 font-normal text-secondary">价格报警</FormLabel>
                   <FormControl className="flex-1">
                     <PriceSetting mode="rise" value={field.value} onChange={field.onChange} />
                   </FormControl>
@@ -163,18 +163,22 @@ export const PercentageAlarmSetting = (props: PercentageAlarmSettingProps) => {
             )}
           />
 
-          <FormField
-            control={form.control}
-            name="date"
-            render={({ field }) => (
-              <FormItem className="pb-4 flex space-y-0  items-center">
-                <FormLabel className="w-32">到期时间</FormLabel>
-                <FormControl >
-                  <DatePicker {...field} />
-                </FormControl>
-              </FormItem>
-            )}
-          />
+          {
+            form.getValues('frequency') === '1' ? (
+              <FormField
+                control={form.control}
+                name="date"
+                render={({ field }) => (
+                  <FormItem className="pb-4 flex space-y-0  items-center">
+                    <FormLabel className="w-32">到期时间</FormLabel>
+                    <FormControl >
+                      <DatePicker {...field} />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+            ) : null
+          }
         </form>
       </FormProvider>
       <div className="text-right space-x-2 px-8 mb-6 mt-auto">
@@ -182,7 +186,7 @@ export const PercentageAlarmSetting = (props: PercentageAlarmSettingProps) => {
           取消
         </Button>
         <Button className="w-24" onClick={onSubmit}>
-          确定
+          创建
         </Button>
       </div>
     </div>

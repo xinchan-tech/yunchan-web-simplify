@@ -12,7 +12,7 @@ const PriceAlarmForm = (props: PriceAlarmFormProps) => {
   const [active, setActive] = useState('1')
 
   return (
-    <div className="h-[900px] overflow-hidden w-full flex flex-col">
+    <div className="h-[700px] overflow-hidden w-full flex flex-col">
       <div className="border-0 border-b border-solid border-border flex items-center px-4">
         <Tabs value={active} onValueChange={setActive} >
           <TabsList variant="line">

@@ -129,6 +129,14 @@ export const routes: RouteObject[] = [
         handle: {
           title: '财务估值'
         }
+      },
+
+      {
+        path: '/login',
+        Component: lazy(() => import('@/pages/login')),
+        handle: {
+          title: '登录'
+        }
       }
     ]
   },

@@ -156,13 +156,13 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
               const percent = (amount / current.prevClose) * 100
               const color = amount > 0 ? upColor : downColor
               return [
-                { title: { text: time.format(format), color: '#B8B8B8' }, value: '' },
-                { title: { text: '开：', color: '#B8B8B8' }, value: { text: current.open.toFixed(3), color: '#B8B8B8' } },
-                { title: { text: '高：', color: '#B8B8B8' }, value: { text: current.high.toFixed(3), color: '#B8B8B8' } },
-                { title: { text: '低：', color: '#B8B8B8' }, value: { text: current.low.toFixed(3), color: '#B8B8B8' } },
-                { title: { text: '收：', color: '#B8B8B8' }, value: { text: current.close.toFixed(3), color: '#B8B8B8' } },
-                { title: { text: '涨跌额：', color: '#B8B8B8' }, value: { text: `${amount > 0 ? '+' : ''}${amount.toFixed(3)}`, color } },
-                { title: { text: '涨跌幅：', color: '#B8B8B8' }, value: { text: `${percent > 0 ? '+' : ''}${percent.toFixed(2)}%`, color } },
+                { title: { text: time.format(format), color: '#DBDBDB' }, value: '' },
+                { title: { text: '开：', color: '#DBDBDB' }, value: { text: current.open.toFixed(3), color: '#DBDBDB' } },
+                { title: { text: '高：', color: '#DBDBDB' }, value: { text: current.high.toFixed(3), color: '#DBDBDB' } },
+                { title: { text: '低：', color: '#DBDBDB' }, value: { text: current.low.toFixed(3), color: '#DBDBDB' } },
+                { title: { text: '收：', color: '#DBDBDB' }, value: { text: current.close.toFixed(3), color: '#DBDBDB' } },
+                { title: { text: '涨跌额：', color: '#DBDBDB' }, value: { text: `${amount > 0 ? '+' : ''}${amount.toFixed(3)}`, color } },
+                { title: { text: '涨跌幅：', color: '#DBDBDB' }, value: { text: `${percent > 0 ? '+' : ''}${percent.toFixed(2)}%`, color } },
               ]
             },
             text: {

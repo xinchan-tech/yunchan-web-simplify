@@ -30,7 +30,7 @@ import {
   SubscribeSpan,
   withTooltip
 } from '@/components'
-import { useStockQuoteSubscribe, useTableData, useTableRowClickToStockTrading } from '@/hooks'
+import { usePropValue, useStockQuoteSubscribe, useTableData, useTableRowClickToStockTrading } from '@/hooks'
 import { useTime, useToken } from '@/store'
 import { dateUtils } from "@/utils/date"
 import { stockUtils } from '@/utils/stock'
@@ -223,8 +223,8 @@ const StockQuoteBar = withTooltip(
 
     const trading = useMemo(() => stockUtils.intervalToTrading(props.interval), [props.interval])
 
-    const [arrowUp, setArrowUp] = useState(Decimal.create(props?.percent).gt(0))
-
+    const [arrowUp, setArrowUp] = usePropValue(Decimal.create(props?.percent).gt(0))
+ 
     return (
       <div
         className={cn('flex items-baseline flex-wrap px-2 box-border my-1 cursor-pointer text-tertiary', props.interval !== StockChartInterval.INTRA_DAY && 'text-sm')}
