@@ -1,6 +1,7 @@
 import { forgotPassword, registerByEmail, sendEmailCode } from "@/api"
 import { Button, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage, Input, InputOTP, InputOTPGroup, InputOTPSlot, JknCheckbox, JknIcon } from "@/components"
 import { useCheckbox, useToast, useZForm } from "@/hooks"
+import { cn } from "@/utils/style"
 import { useMutation } from "@tanstack/react-query"
 import { useCountDown, useCounter } from "ahooks"
 import to from "await-to-js"
@@ -130,7 +131,7 @@ export const RegisterForm = (props: {
               <div className="text-center">
                 <Button className="mb-4 mt-16" size="xl" loading={register.isPending} onClick={() => register.mutate(form.getValues())} block>确定</Button>
                 <span className="text-sm">收不到验证码？<span className="text-tertiary cursor-pointer" onClick={() => !time && sendCode.mutate()} onKeyDown={() => { }}>
-                  重发
+                  <span className={cn(!time && 'text-primary')}>重发</span>
                   {
                     time ? (
                       <span>(<CountDownSpan onEnd={() => setTime(undefined)} />)s</span>

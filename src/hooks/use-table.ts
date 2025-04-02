@@ -1,6 +1,7 @@
 import { router } from '@/router'
 import { isNumber } from 'radash'
 import { useCallback, useRef, useState } from 'react'
+import { useNavigate } from "react-router"
 
 type OrderKey<T = any> = keyof T | ((arg: T) => string)
 
@@ -84,12 +85,13 @@ export const useTableData = <T extends Record<string, any>>(data: T[], _?: Order
 }
 
 export const useTableRowClickToStockTrading = (symbolField: string, interval?: number) => {
+  const navigate = useNavigate()
   return useCallback(
     (record: any) => {
       return {
-        onClick: () => router.navigate(`/stock?symbol=${record[symbolField]}`)
+        onClick: () => navigate(`/stock?symbol=${record[symbolField]}`)
       }
     },
-    [symbolField]
+    [symbolField, navigate]
   )
 }

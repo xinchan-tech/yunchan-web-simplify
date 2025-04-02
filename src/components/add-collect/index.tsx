@@ -86,9 +86,9 @@ export const AddCollect = ({ children, sideOffset, alignOffset }: AddCollectProp
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-52 text-center" sideOffset={sideOffset} alignOffset={alignOffset}>
-        <div className="bg-background text-center py-2">新建金池</div>
+        <div className="bg-background text-center py-2">新建自选</div>
         <div className="px-4">
-          <Input size="sm" placeholder="输入金池名称" onChange={e => setName(e.target.value)} />
+          <Input size="sm" placeholder="输入自选名称" onChange={e => setName(e.target.value)} />
           <PopoverClose asChild>
             <Button size="sm" className="w-16 my-4" onClick={onAdd}>
               确定

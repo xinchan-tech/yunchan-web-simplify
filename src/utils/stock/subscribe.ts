@@ -234,6 +234,14 @@ class StockSubscribe {
   public subscribe(action: SubscribeActionType, params: string[]) {
     const _action = `${action}_add_symbols`
     const _params: string[] = []
+
+    if (Object.keys(this.subscribeTopic).filter(topic => topic.startsWith('quote')).length > 100) {
+      console.warn('股票价格订阅数大于100， 取消订阅')
+      return () => {
+        
+      }
+    }
+
     params.forEach(symbol => {
       const topic = `${action}:${symbol}`
       if (this.subscribeTopic[topic]) {
@@ -244,11 +252,7 @@ class StockSubscribe {
       }
     })
 
-    if (Object.keys(this.subscribeTopic).filter(topic => topic.startsWith('quote')).length > 100) {
-      console.warn('股票价格订阅数大于100， 取消订阅')
-      return
-    }
-
+  
     if (_params.length > 0) {
       this.ws.send({
         action: _action,

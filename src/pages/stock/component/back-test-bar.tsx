@@ -274,10 +274,10 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
     if (result !== 0) {
       const lastPositiveProfitCount = positiveProfitCount.peek()
       if (lastPositiveProfitCount?.index !== currentKline.current) {
-        positiveProfitCount.push({ count: (lastPositiveProfitCount?.count ?? 0) + (result > 0 ? 1 : 0), index: currentKline.current, total: (lastPositiveProfitCount?.total ?? 0) + 1 })
+        positiveProfitCount.push({ count: (lastPositiveProfitCount?.count ?? 0) + (diffProfit > 0 ? 1 : 0), index: currentKline.current, total: (lastPositiveProfitCount?.total ?? 0) + 1 })
       } else {
         positiveProfitCount.pop()
-        positiveProfitCount.push({ count: lastPositiveProfitCount.count + (result > 0 ? 1 : 0), index: currentKline.current, total: (lastPositiveProfitCount?.total ?? 0) + 1 })
+        positiveProfitCount.push({ count: lastPositiveProfitCount.count + (diffProfit > 0 ? 1 : 0), index: currentKline.current, total: (lastPositiveProfitCount?.total ?? 0) + 1 })
       }
     }
   }
@@ -404,10 +404,10 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
     if (result !== 0) {
       const lastPositiveProfitCount = positiveProfitCount.peek()
       if (lastPositiveProfitCount?.index !== currentKline.current) {
-        positiveProfitCount.push({ count: (lastPositiveProfitCount?.count ?? 0) + (result > 0 ? 1 : 0), index: currentKline.current, total: (lastPositiveProfitCount?.total ?? 0) + 1 })
+        positiveProfitCount.push({ count: (lastPositiveProfitCount?.count ?? 0) + (diffProfit > 0 ? 1 : 0), index: currentKline.current, total: (lastPositiveProfitCount?.total ?? 0) + 1 })
       } else {
         positiveProfitCount.pop()
-        positiveProfitCount.push({ count: lastPositiveProfitCount.count + (result > 0 ? 1 : 0), index: currentKline.current, total: (lastPositiveProfitCount?.total ?? 0) + 1 })
+        positiveProfitCount.push({ count: lastPositiveProfitCount.count + (diffProfit > 0 ? 1 : 0), index: currentKline.current, total: (lastPositiveProfitCount?.total ?? 0) + 1 })
       }
     }
 

@@ -88,30 +88,21 @@ const StockBaseInfo = () => {
   useSnapshotOnce(code,useCallback(e => {
     setDataInfo(e.data)
   }, []))
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
+  useEffect(() => {
+    setDataInfo({
+      close: 0,
+      prevClose: 0,
+      dayUpdated: 0,
+      extPrice: 0,
+      extUpdated: 0,
+    } as any)
+  }, [code])
+
   const queryClient = useQueryClient()
 
   const codeInfo = useQuery(queryOptions)
-
-
-  // useEffect(() => {
-  //   const [lastData, beforeData, afterData] = codeInfo.data ? stockUtils.toStockRecord(codeInfo.data) : []
-
-  //   const subData = trading === 'preMarket' || trading === 'intraDay' ? beforeData : afterData
-
-  //   setData({
-  //     name: lastData?.name ?? '',
-  //     collect: lastData?.collect ?? 0,
-  //     code: lastData?.code ?? '',
-  //     percent: lastData?.percent ?? 0,
-  //     close: lastData?.close ?? 0,
-  //     prevClose: lastData?.prevClose ?? 0,
-  //     subClose: subData?.close ?? 0,
-  //     subPercent: subData?.percent ?? 0,
-  //     time: lastData?.time ?? '',
-  //     subTime: subData?.time ?? '',
-  //     subPrevClose: subData?.prevClose ?? 0
-  //   })
-  // }, [codeInfo.data, trading])
 
   useStockQuoteSubscribe([code])
 
@@ -211,7 +202,6 @@ const StockQuoteBar = withTooltip(
   memo((props: StockQuoteBarProps) => {
     const symbol = useSymbolQuery()
     // const trading = useTime(s => s.getTrading())
-
     const onClick = () => {
       chartManage.setInterval(props.interval)
     }
@@ -237,13 +227,17 @@ const StockQuoteBar = withTooltip(
             initValue={props.close}
             zeroText="--"
           />
-          <JknIcon.Svg
+         {
+          !props.close ? null : (
+            <JknIcon.Svg
             name={ arrowUp? 'stock-up' : 'stock-down'}
             className={cn(
               arrowUp ? 'text-stock-up' : 'text-stock-down',
               'ml-1',
               props.interval === StockChartInterval.INTRA_DAY ? 'w-4 h-[18px]' : 'w-2.5 h-[11px] '
             )} />
+          )
+         }
         </span>
         &nbsp;&nbsp;
         <span>

@@ -7,7 +7,9 @@ const useStockSubscribe = (action: SubscribeActionType, symbols: string[]) => {
     if (symbols.length === 0) return
     const unsubscribe = stockSubscribe.subscribe(action, symbols)
 
-    return unsubscribe
+    return () => {
+      unsubscribe()
+    }
   }, [action, symbols])
 }
 
@@ -70,6 +72,7 @@ export const useSnapshotOnce = (symbol: string, handler: StockSubscribeHandler<'
     if (!symbol) return
     const unsubscribe = stockSubscribe.snapshot(symbol)
     unSubscribe.current = unsubscribe
+    once.current = 0
     return () => {
       unsubscribe()
     }

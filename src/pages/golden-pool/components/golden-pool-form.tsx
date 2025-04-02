@@ -18,7 +18,7 @@ export const GoldenPoolForm = () => {
           <FormItem hidden>
             <FormLabel>id</FormLabel>
             <FormControl>
-              <Input placeholder="请输入金池名称" {...field} value={field.value} />
+              <Input placeholder="请输入自选名称" {...field} value={field.value} />
             </FormControl>
           </FormItem>
         )}
@@ -28,9 +28,9 @@ export const GoldenPoolForm = () => {
         name="name"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>金池名称</FormLabel>
+            <FormLabel>自选名称</FormLabel>
             <FormControl>
-              <Input placeholder="请输入金池名称" {...field} value={field.value} />
+              <Input placeholder="请输入自选名称" {...field} value={field.value} />
             </FormControl>
           </FormItem>
         )}

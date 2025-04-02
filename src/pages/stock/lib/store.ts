@@ -146,7 +146,7 @@ export const createDefaultChartStore = (chartId: string, symbol?: string): Chart
   return {
     type: ChartType.Candle,
     interval: StockChartInterval.DAY,
-    system: 'pro',
+    system: undefined,
     mode: 'normal',
     id: chartId,
     symbol: symbol ?? 'QQQ',
@@ -169,14 +169,8 @@ export const createDefaultChartStore = (chartId: string, symbol?: string): Chart
       }
     ],
     mainIndicators: [],
-    coiling: [
-      CoilingIndicatorId.PEN,
-      CoilingIndicatorId.ONE_TYPE,
-      CoilingIndicatorId.TWO_TYPE,
-      CoilingIndicatorId.THREE_TYPE,
-      CoilingIndicatorId.PIVOT
-    ],
     overlayStock: [],
+    coiling: [],
     overlayMark: undefined,
     yAxis: {
       right: MainYAxis.Price

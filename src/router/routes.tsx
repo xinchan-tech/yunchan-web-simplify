@@ -47,7 +47,7 @@ export const routes: RouteObject[] = [
         path: '/golden',
         Component: lazy(() => import('@/pages/golden-pool')),
         handle: {
-          title: '股票金池'
+          title: '股票自选'
         }
       },
       {

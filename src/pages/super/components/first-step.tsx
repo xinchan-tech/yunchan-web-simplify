@@ -73,7 +73,7 @@ const DropdownSelector = ({
     },
     {
       id: "GoldenPool",
-      name: "股票金池",
+      name: "股票自选",
       icon: <StockTrendIcon />,
     },
     {

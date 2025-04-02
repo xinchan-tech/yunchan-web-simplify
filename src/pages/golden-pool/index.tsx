@@ -241,7 +241,7 @@ const GoldenPool = () => {
         align: 'right',
         width: '5%',
         render: (_, row) => (
-          <div className="flex items-center justify-end pr-1">
+          <div className="flex items-center justify-end pr-1" onClick={(e => e.stopPropagation())} onKeyDown={() => { }}>
             <JknCheckbox className="w-5 h-5" checked={isChecked(row.id)} onCheckedChange={v => onCheckChange(row.id, v)} />
           </div>
         )

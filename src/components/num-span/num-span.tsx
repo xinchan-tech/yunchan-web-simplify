@@ -288,6 +288,10 @@ export const SubscribeSpan = memo(
       
       if (!subscribe) return
       const unSubscribe = stockSubscribe.onQuoteTopic(symbol, data => {
+        if(symbol !== data.topic){
+          console.warn('SubscribeSpan: symbol not match', symbol, data.topic)
+          return
+        }
         if (trading) {
           const _trading = stockUtils.getTrading(stockUtils.parseTime(data.record.time.toString()))
           if (Array.isArray(trading)) {

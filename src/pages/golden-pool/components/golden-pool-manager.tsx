@@ -326,7 +326,7 @@ export const GoldenPoolNameEdit: FC<{
       <DialogContent
         className="w-[300px] text-center rounded-2xl bg-[#1F1F1F] border-[#2E2E2E]"
       >
-        <div className="text-center py-5">{props.id ? "重命名" : "新建金池"}</div>
+        <div className="text-center py-5">{props.id ? "重命名" : "新建自选"}</div>
         <div className="mt-5 px-4">
           <Input
             className="pb-2 border-x-0 border-t-0 border-b border-[#2E2E2E] rounded-none placeholder:text-[#575757]"

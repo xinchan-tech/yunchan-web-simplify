@@ -26,7 +26,7 @@ import { timeIndex, useSymbolQuery } from '../lib'
 import { ChartType, chartManage, useChartManage } from '../lib/store'
 import { renderUtils } from '../lib/utils'
 import { useQuery } from "@tanstack/react-query"
-import { useAuthorized, useOptimisticUpdate, useStockSearch, useToast } from "@/hooks"
+import { useAuthorized, useLatestRef, useOptimisticUpdate, useStockSearch, useToast } from "@/hooks"
 import { useLocalStorageState, useVirtualList } from "ahooks"
 import { cn } from "@/utils/style"
 import { chartEvent } from "../lib/event"
@@ -319,12 +319,17 @@ const IndicatorPicker = memo(() => {
   })
 
   useEffect(() => {
-    const cancelEvent = chartEvent.get().on('showIndicatorSetting', () => {
+    const handler = () => {
       modal.modal.open()
-    })
+    }
+    
+   chartEvent.get().on('showIndicatorSetting', handler)
 
-    return cancelEvent
-  }, [modal])
+   
+    return () => {
+      chartEvent.get().off('showIndicatorSetting', handler)
+    }
+  },  [modal.modal])
 
 
 

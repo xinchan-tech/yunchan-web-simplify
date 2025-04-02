@@ -37,7 +37,6 @@ export const HeaderSetting = () => {
   const onLogout = async () => {
     setFalse()
     JknAlert.confirm({
-      title: '退出登录',
       content: '确定要退出登录吗？',
       onAction: async status => {
         if (status === 'confirm') {

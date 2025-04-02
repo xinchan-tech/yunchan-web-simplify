@@ -59,7 +59,7 @@ const CollectList = (props: CollectListProps) => {
   const cateQuery = useQuery({
     queryKey: [getStockCollectCates.cacheKey, props.code],
     queryFn: () => getStockCollectCates(props.code),
-    initialData: [{ id: '1', name: '股票金池', create_time: '', active: 0, total: '0' }]
+    initialData: [{ id: '1', name: '我的自选', create_time: '', active: 0, total: '0' }]
   })
 
   const updateCollectMutation = useMutation({
@@ -131,7 +131,7 @@ const CollectList = (props: CollectListProps) => {
       </ScrollArea>
       <div className="w-full">
         <AddCollect sideOffset={-100}>
-          <div className="rounded-none w-48 bg-primary h-10 leading-10">新建金池</div>
+          <div className="rounded-none w-48 bg-primary h-10 leading-10">新建自选</div>
         </AddCollect>
       </div>
     </>
