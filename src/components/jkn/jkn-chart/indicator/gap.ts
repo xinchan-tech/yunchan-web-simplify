@@ -1,5 +1,13 @@
-import { type FigureConstructor, getFigureClass, IndicatorSeries, type KLineData, PolygonType, type RectAttrs, type RectStyle, type IndicatorTemplate } from "jkn-kline-chart"
-
+import {
+  type FigureConstructor,
+  getFigureClass,
+  IndicatorSeries,
+  type KLineData,
+  PolygonType,
+  type RectAttrs,
+  type RectStyle,
+  type IndicatorTemplate
+} from 'jkn-kline-chart'
 
 export const gapIndicator: IndicatorTemplate<any, any> = {
   name: 'gap-indicator',
@@ -7,7 +15,7 @@ export const gapIndicator: IndicatorTemplate<any, any> = {
   zLevel: -1,
   series: IndicatorSeries.Normal,
   calcParams: [1],
-  calc: async (dataList) => {
+  calc: async dataList => {
     return dataList
   },
   createTooltipDataSource: () => {
@@ -22,12 +30,19 @@ export const gapIndicator: IndicatorTemplate<any, any> = {
     const [count] = params.indicator.calcParams
     const result = params.indicator.result as KLineData[]
 
-    const {from, to} = params.chart.getVisibleRange()
+    const { from, to } = params.chart.getVisibleRange()
 
     const data = result.slice(from, to)
+
+    if (data.length < 2) {
+      return false
+    }
+
+    const last = data.slice(-1)[0]
+    const end = params.xAxis.convertTimestampToPixel(last.timestamp)
+
     const Rect = getFigureClass('rect') as FigureConstructor<RectAttrs, Partial<RectStyle>>
 
-    let c = 0
     const gap: {
       low: number
       high: number
@@ -35,71 +50,54 @@ export const gapIndicator: IndicatorTemplate<any, any> = {
       start: number
     }[] = []
 
-    let min = Number.MAX_SAFE_INTEGER
-    let max = Number.MIN_SAFE_INTEGER
-    
-    data.reverse().forEach((d, i) => {
-      const {low, high} = d
+ 
 
-      if(min > high){
-        gap.push({
-          low: high,
-          high: min,
-          direction: 'down',
-          start: i
-        })
-      }else if(max < low){
-        gap.push({
-          low: high,
-          high: max,
-          direction: 'up',
-          start: i
-        })
-      }else {
+    let min = data.slice(-1)[0].low
+    let max = data.slice(-1)[0].high
+
+    data
+      .reverse()
+      .slice(1)
+      .forEach((d) => {
+        if (gap.length >= count) {
+          return false
+        }
+        const { low, high } = d
+        if (low > max) {
+          gap.push({
+            low: max,
+            high: low,
+            direction: 'down',
+            start: d.timestamp
+          })
+        } else if (high < min) {
+          gap.push({
+            low: high,
+            high: min,
+            direction: 'up',
+            start: d.timestamp
+          })
+        }
+
         min = Math.min(min, low)
         max = Math.max(max, high)
-      }
-      // if(c >= count){
-      //   return
-      // }
-      // const prev = data[i + 1]
-      // if(prev){
-      //   if(d.high < prev.low || d.low > prev.high){
-      //     c++
+      })
 
-      //     const startX = params.xAxis.convertTimestampToPixel(prev.timestamp)
-      //     const endX = params.xAxis.convertTimestampToPixel(result[result.length - 1].timestamp)
-
-      //     let bottom = 0
-      //     let top = 0
-          
-
-      //     if(d.low > prev.high){
-      //       bottom = params.yAxis.convertToPixel(prev.high)
-      //       top = params.yAxis.convertToPixel(d.low)
-      //     }else if(d.high < prev.low){
-      //       bottom = params.yAxis.convertToPixel(d.high)
-      //       top = params.yAxis.convertToPixel(prev.low)
-      //     }
-
-      //     new Rect({
-      //       name: 'gapRect',
-      //       attrs: {
-      //         x: startX,
-      //         y: top,
-      //         width: endX - startX,
-      //         height: bottom - top
-      //       },
-      //       styles: {
-      //         color: 'rgba(127.5, 127.5, 127.5,0.2)',
-      //         style: PolygonType.Fill
-      //       }
-      //     }).draw(params.ctx)
-      //   }
-      // }
+    gap.forEach(g => {
+      new Rect({
+        name: 'gapRect',
+        attrs: {
+          x: params.xAxis.convertTimestampToPixel(g.start),
+          y: params.yAxis.convertToPixel(g.low),
+          width: end - params.xAxis.convertTimestampToPixel(g.start),
+          height: params.yAxis.convertToPixel(g.high) - params.yAxis.convertToPixel(g.low),
+        },
+        styles: {
+          color: 'rgba(127.5, 127.5, 127.5,0.2)',
+          style: PolygonType.Fill
+        }
+      }).draw(params.ctx)
     })
-
-    console.log(gap)
 
     return true
   }

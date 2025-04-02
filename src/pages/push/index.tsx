@@ -322,7 +322,7 @@ const PushPage = () => {
         ) : null} */}
         <div className="flex-1 overflow-hidden">
           <JknRcTable
-            headerHeight={48}
+            headerHeight={61}
             rowKey="id"
             onSort={onSort}
             columns={columns}

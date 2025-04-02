@@ -48,6 +48,14 @@ export const MainChart = (props: MainChartProps) => {
     const trading = useTime.getState().getTrading()
     const interval = useChartManage.getState().chartStores[props.chartId].interval
     const record = stockUtils.toStock(data.rawRecord)
+    const symbol = useChartManage.getState().chartStores[props.chartId].symbol
+    const [_symbol] = data.topic.split('@')
+    if(_symbol !== symbol) {
+      console.log('stock bar subscribe symbol error')
+      console.warn(_symbol, symbol)
+      return 
+    }
+  
     // console.log('stock bar subscribe ********************')
     // console.log(dateUtils.toUsDay(data.rawRecord[0]! as unknown as number).format('YYYY-MM-DD HH:mm:ss'))
     // console.log(trading, renderUtils.shouldUpdateChart(trading, chartStore.interval), chartImp.current?.isSameIntervalCandlestick(record, chartStore.interval))

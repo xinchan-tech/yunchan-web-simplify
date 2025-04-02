@@ -424,8 +424,7 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
       const symbol = useChartManage.getState().chartStores[props.chartId].symbol
       const timeIndex = useChartManage.getState().chartStores[props.chartId].interval
 
-      const offset = Math.abs(tradeRecord.buy.length - tradeRecord.sell.length)
-      const total = !positiveProfitCount.peek()?.total ? '0.00' : + Decimal.create(positiveProfitCount.peek()?.count).div((positiveProfitCount.peek()?.total ?? 0) + offset).mul(100).toNumber().toFixed(2)
+      const total = Math.max(tradeRecord.buy.length , tradeRecord.sell.length)
       return (
         <div className="text-center px-4 h-[444px] ">
           <div className="h-[108px] w-[100px] mx-auto mt-8">
@@ -437,7 +436,7 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
           </div>
           <div className="flex justify-between items-center mt-6 space-x-2 mx-auto w-[321px] h-[98px] border border-solid border-[#2E2E2E] rounded-lg">
             <div className="flex-1 rounded py-4">
-              <div className="text-sm text-tertiary mb-3">现金盈利</div>
+              <div className="text-sm text-tertiary mb-3">{Decimal.create(profit.peek()?.profit).gt(0) ? '现金盈利': '现金亏损'}</div>
               <div>
                 <span className={cn('text-3xl', Decimal.create(profit.peek()?.profit).gt(0) ? 'text-stock-up' : 'text-stock-down')}>
                   {Decimal.create(profit.peek()?.profit).toShort()}
@@ -451,7 +450,7 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
               <div>
                 <span className={cn('text-3xl', Decimal.create(positiveProfitCount.peek()?.count).gt(0) ? 'text-stock-up' : 'text-stock-down')}>
                   {' '}
-                  {total}
+                  {total > 0 ? Decimal.create(positiveProfitCount.peek()?.count).div(total).mul(100).toFixed(2) : 0}
                 </span>
                 <span> %</span>
               </div>

@@ -106,7 +106,7 @@ export const HotTop = () => {
           ]),
           borderRadius: [4, 4, 0, 0]
         },
-        barWidth: 12
+        barWidth: 24
       }
     }
 
