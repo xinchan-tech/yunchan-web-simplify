@@ -1,31 +1,17 @@
 import {
   bindInviteCode,
-  forgotPassword,
   getUser,
-  getWxLoginStatus,
   login,
   loginByThird,
-  loginImService,
-  registerByEmail,
-  sendEmailCode
+  loginImService
 } from '@/api'
-import AppleIcon from '@/assets/icon/apple.png'
-import GoogleIcon from '@/assets/icon/google.png'
-import WechatLoginIcon from '@/assets/icon/wechat_login.png'
-import LoginLeftImg from '@/assets/image/login_left.png'
-import { Button, Form, FormControl, FormField, FormItem, FormLabel, Input, JknCheckbox, JknIcon, Separator, useModal } from '@/components'
-import { useCheckbox, useToast, useZForm } from '@/hooks'
+import { Button, Form, FormControl, FormField, FormItem, FormLabel, Input } from '@/components'
+import { useToast, useZForm } from '@/hooks'
 import { useToken } from '@/store'
-import { appEvent } from '@/utils/event'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useCountDown, useMount, useUnmount } from 'ahooks'
 import dayjs from 'dayjs'
-import { LockIcon, MailIcon, RectangleEllipsisIcon } from 'lucide-react'
-import QRCode from 'qrcode'
-import { uid } from 'radash'
-import { useEffect, useRef, useState } from 'react'
-import type { SubmitErrorHandler } from 'react-hook-form'
 import { z } from 'zod'
+import { AppleLogin, GoogleLogin, WeChatLogin } from "./login-other"
 
 interface LoginFormProps {
   afterLogin?: () => void
@@ -39,20 +25,6 @@ const loginSchema = z.object({
 
 type LoginForm = z.infer<typeof loginSchema>
 
-type GoogleLoginResult = {
-  clientId: string
-  client_id: string
-  credential: string
-  select_by: string
-}
-
-type AppleLoginResult = {
-  authorization: {
-    code: string
-    id_token: string
-    state: string
-  }
-}
 
 // const LoginModal = (props: LoginFormProps) => {
 //   const [page, setPage] = useState<'login' | 'register' | 'resetPassword'>('login')
@@ -127,7 +99,7 @@ export const LoginForm = (props: LoginFormProps & { setPage: (page: 'login' | 'r
 
   return (
     <>
-      <div className=" h-full w-[371px] box-border flex flex-col">
+      <div className="pt-[140px] h-full w-[371px] box-border flex flex-col">
         <p className="text-[32px] mb-16">欢迎登录</p>
         <Form {...form}>
           <form className="space-y-5 text-foreground">
@@ -195,7 +167,7 @@ export const LoginForm = (props: LoginFormProps & { setPage: (page: 'login' | 'r
             <span className="text-secondary mx-3 text-m">或其他登录方式</span>
             <span className="border-0 border-b border-solid border-accent flex-1" />
           </div>
-          <div className="flex items-center justify-between px-20">
+          <div className="flex items-center justify-between px-20 mt-6">
             <AppleLogin onLogin={data => loginMutation.mutate({ type: 'apple', data })} />
             <WeChatLogin />
             <GoogleLogin onLogin={data => loginMutation.mutate({ type: 'google', data })} />
@@ -206,153 +178,3 @@ export const LoginForm = (props: LoginFormProps & { setPage: (page: 'login' | 'r
   )
 }
 
-interface ThirdLoginFormProps {
-  onLogin: (data: any) => void
-}
-
-const AppleLogin = (props: ThirdLoginFormProps) => {
-  useMount(() => {
-    window.AppleID.auth.init({
-      clientId: 'com.jkn.app.web',
-      redirectURI: import.meta.env.PUBLIC_BASE_APPLE_REDIRECT_URI,
-      scope: 'email',
-      state: 'https://www.mgjkn.com/main',
-      nonce: 'xxx',
-      usePopup: true
-    })
-  })
-
-  const onClick = () => {
-    window.AppleID.auth.signIn().then((r: AppleLoginResult) => {
-      props.onLogin(r.authorization.code)
-    })
-  }
-
-  return (
-    <div className="apple-login cursor-pointer" onClick={onClick} onKeyUp={() => { }}>
-      <JknIcon name="apple-2" className="size-8" />
-    </div>
-  )
-}
-
-const WeChatLogin = () => {
-  const modal = useModal({
-    content: <WxLoginForm />,
-    title: '',
-    closeIcon: true,
-    footer: null,
-    className: 'w-[379px] bg-muted !rounded-[14px]'
-  })
-
-  return (
-    <>
-      <div className="wechat-login w-8 h-8 cursor-pointer" onClick={modal.modal.open} onKeyUp={() => { }}>
-        <JknIcon name="wechat-2" className="size-8" />
-      </div>
-      {modal.context}
-    </>
-  )
-}
-
-const GoogleLogin = (props: ThirdLoginFormProps) => {
-  const onLoginRef = useRef(props.onLogin)
-
-  useEffect(() => {
-    onLoginRef.current = props.onLogin
-
-    return () => {
-      onLoginRef.current = () => { }
-    }
-  }, [props.onLogin])
-
-  useMount(() => {
-    if (window.google) {
-      window.google.accounts.id.initialize({
-        client_id: '1084914910896-skncl8a34m47fe8toeak808pvrdn18vr.apps.googleusercontent.com',
-        context: 'signin',
-        ux_mode: 'popup',
-        callback: (res: GoogleLoginResult) => {
-          onLoginRef.current(res.credential)
-        }
-      })
-
-      window.google.accounts.id.renderButton(document.getElementById('google-login'), {
-        theme: 'outline',
-        type: 'icon',
-        size: 'medium',
-        text: 'filled_black',
-        shape: 'circle'
-      })
-    }
-  })
-
-  const checkGoogleScript = () => {
-    if (!window.google) {
-      appEvent.emit('toast', { message: '无法连接到Google' })
-    }
-  }
-  return (
-    <div className="google-login cursor-pointer relative overflow-hidden size-8">
-      <div id="google-login" className="opacity-0 w-full h-full" onClick={checkGoogleScript} onKeyDown={() => { }} />
-      <JknIcon name="google-2" className="size-full absolute top-0 left-0 pointer-events-none" />
-    </div>
-  )
-}
-
-const WxLoginForm = () => {
-  const canvas = useRef<HTMLCanvasElement>(null)
-  const timer = useRef<number>()
-
-  useMount(() => {
-    const size = 160
-    const sid = uid(10)
-    const url = `https://usnode2.mgjkn.com/login/wx?s_id=${sid}&inv_code=${''}&newsrv=1`
-
-    QRCode.toCanvas(canvas.current, url, {
-      errorCorrectionLevel: 'Q',
-      color: {
-        dark: '#000000',
-        light: '#ffffff'
-      },
-      margin: 2
-    })
-
-    // 中间绘制logo
-    const ctx = canvas.current?.getContext('2d')
-
-    // const img = new Image()
-
-    // img.src = WechatLoginIcon
-
-    // img.onload = () => {
-    //   // 白底
-    //   ctx?.arc(size / 2, size / 2, 20, 0, Math.PI * 2)
-    //   ctx!.fillStyle = '#ffffff'
-    //   ctx?.fill()
-    //   ctx?.drawImage(img, (size - 40) / 2, (size - 40) / 2, 40, 40)
-    // }
-
-    timer.current = window.setInterval(() => {
-      getWxLoginStatus(sid).then(res => {
-        if (res.code) {
-          useToken.getState().setToken(res.code)
-          window.clearInterval(timer.current)
-          window.location.reload()
-        }
-      })
-    }, 4000)
-  })
-
-  useUnmount(() => {
-    window.clearInterval(timer.current)
-  })
-
-  return (
-    <div className="h-[351px] flex flex-col items-center justify-center">
-      <canvas id="wx-qrcode" className="w-[160px] h-[160px] rounded-[14px]" ref={canvas} />
-      <div className="mt-5">
-        请用微信扫码登录
-      </div>
-    </div>
-  )
-}

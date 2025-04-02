@@ -18,22 +18,23 @@ const PriceAlarmForm = (props: PriceAlarmFormProps) => {
         <Tabs value={active} onValueChange={setActive}>
           <TabsList variant="line" className="w-full">
             <TabsTrigger value="1" asChild>
-              <span>价格报警</span>
+              <span className="!text-base !text-foreground !leading-5">AI报警</span>
             </TabsTrigger>
             <TabsTrigger value="2" asChild>
-              <span>浮动报警</span>
+              <span className="!text-base !text-foreground !leading-5">浮动报警</span>
             </TabsTrigger>
+
             <TabsTrigger value="3" asChild>
-              <span>AI报警</span>
+              <span className="!text-base !text-foreground !leading-5">价格报警</span>
             </TabsTrigger>
           </TabsList>
         </Tabs>
       </div>
       <div className="flex-1 overflow-hidden">
         {{
-          1: <PriceAlarmSetting code={props.code} onClose={props.onClose} />,
+          3: <PriceAlarmSetting code={props.code} onClose={props.onClose} />,
           2: <PercentageAlarmSetting code={props.code} onClose={props.onClose} />,
-          3: <AiAlarmSetting code={props.code} onClose={props.onClose} />,
+          1: <AiAlarmSetting code={props.code} onClose={props.onClose} />,
         }[active] ?? null}
       </div>
     </div>

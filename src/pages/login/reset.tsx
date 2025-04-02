@@ -1,15 +1,17 @@
-import { forgotPassword, registerByEmail, sendEmailCode } from "@/api"
-import { Button, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage, Input, InputOTP, InputOTPGroup, InputOTPSlot, JknCheckbox, JknIcon } from "@/components"
-import { useCheckbox, useToast, useZForm } from "@/hooks"
-import { useMutation } from "@tanstack/react-query"
+import { bindInviteCode, forgotPassword, getUser, login, loginByThird, loginImService, type registerByEmail, sendEmailCode } from "@/api"
+import { Button, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage, Input, InputOTP, InputOTPGroup, InputOTPSlot, JknIcon } from "@/components"
+import { useToast, useZForm } from "@/hooks"
+import { useToken } from "@/store"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useCountDown, useCounter } from "ahooks"
-import to from "await-to-js"
 import { REGEXP_ONLY_DIGITS, } from "input-otp"
 import { useState } from "react"
 import { FormProvider, type SubmitErrorHandler } from "react-hook-form"
 import { z } from "zod"
+import { AppleLogin, GoogleLogin, WeChatLogin } from "./login-other"
+import dayjs from "dayjs"
 
-const registerSchema = z
+const resetFormSchema = z
   .object({
     username: z.string().email({ message: '请输入正确的邮箱格式' }),
     password: z.string().min(6, { message: '最少输入6位密码' }).max(50),
@@ -19,19 +21,23 @@ const registerSchema = z
   })
   .refine(data => data.password === data.passwordConfirm, { message: '两次密码输入不一致' })
 
-type RegisterSchema = z.infer<typeof registerSchema>
+type RegisterSchema = z.infer<typeof resetFormSchema>
 
-export const RegisterForm = (props: {
+export const ResetForm = (props: {
+  afterLogin(): unknown
   setPage: (page: 'login' | 'register' | 'resetPassword') => void
 }) => {
-  const form = useZForm(registerSchema, { username: '', password: '', passwordConfirm: '', code: '', inv: '' })
+  const form = useZForm(resetFormSchema, { username: '', password: '', passwordConfirm: '', code: '', inv: '' })
   const [time, setTime] = useState<number | undefined>()
-  const { checked, toggle } = useCheckbox(false)
   const [inv, setInv] = useState(false)
   const [step, { inc: nextStep, dec: prevStep }] = useCounter(1)
   const [code, setCode] = useState('')
-
+  const setToken = useToken(s => s.setToken)
   const { toast } = useToast()
+  const queryClient = useQueryClient()
+
+
+
   const onError: SubmitErrorHandler<RegisterSchema> = err => {
     toast({
       description: Object.values(err)[0].message
@@ -48,7 +54,7 @@ export const RegisterForm = (props: {
         throw new Error('请输入正确的邮箱')
       }
 
-      await sendEmailCode(form.getValues('username'), 'register')
+      await sendEmailCode(form.getValues('username'), 'forgot')
     },
     onSuccess: () => {
       toast({
@@ -68,10 +74,6 @@ export const RegisterForm = (props: {
 
   const register = useMutation({
     mutationFn: (data: RegisterSchema) => {
-      if (!checked) {
-        throw new Error('请先阅读并接受《服务条款》')
-      }
-
       if (!code) {
         throw new Error('请输入验证码')
       }
@@ -83,11 +85,11 @@ export const RegisterForm = (props: {
         code: code
       }
 
-      return registerByEmail(r)
+      return forgotPassword(r)
     },
     onSuccess: () => {
       toast({
-        description: '注册成功'
+        description: '重置密码成功'
       })
       props.setPage('login')
     },
@@ -98,9 +100,95 @@ export const RegisterForm = (props: {
     }
   })
 
+  const onLoginSuccess = (token: string) => {
+    setToken(token)
+
+    queryClient.refetchQueries({ queryKey: [getUser.cacheKey] })
+
+    loginImService()
+
+    const code = localStorage.getItem('invite-code')
+
+    if (code) {
+      const codeObj = JSON.parse(code)
+      if (codeObj.timestamp) {
+        const current = dayjs()
+        if (current.diff(codeObj.timestamp, 'day') <= 3) {
+          bindInviteCode(codeObj.code, codeObj.cid)
+        }
+      }
+    }
+
+    props.afterLogin?.()
+  }
+
+
+  const loginMutation = useMutation({
+    mutationFn: ({ type, data }: { type: string; data: any }) => {
+      return type === 'apple' ? loginByThird('apple', data) : loginByThird('google', data)
+    },
+    onSuccess: r => onLoginSuccess(r.token),
+    onError: err => {
+      toast({
+        description: err.message
+      })
+    }
+  })
 
   return (
     <>
+      {
+        step === 1 ? (
+          <div className="w-[960px] mx-auto pt-[60px]">
+            <div className="flex items-center" onClick={() => props.setPage('login')} onKeyDown={() => { }}>
+              <div className="size-8 rounded bg-accent flex items-center justify-center mr-2">
+                <JknIcon.Svg name="arrow-left" size={10} className="" />
+              </div>
+              <span>返回</span>
+            </div>
+            <div className="h-full w-[371px] pt-[80px] box-border flex flex-col leading-none text-foreground mx-auto">
+              <p className="text-[32px] mb-16">
+                <span>找回密码</span><br />
+              </p>
+              <div>
+                <InputOTP maxLength={6} pattern={REGEXP_ONLY_DIGITS} value={code} onChange={v => setCode(v)} className="w-full">
+                  <InputOTPGroup className="justify-between space-x-6">
+                    <InputOTPSlot index={0} />
+                    <InputOTPSlot index={1} />
+                    <InputOTPSlot index={2} />
+                    <InputOTPSlot index={3} />
+                    <InputOTPSlot index={4} />
+                    <InputOTPSlot index={5} />
+                  </InputOTPGroup>
+                </InputOTP>
+              </div>
+              <div className="flex text-secondary justify-center space-x-4 mt-4 text-sm">
+                {/* <div className="cursor-pointer" onClick={() => props.setPage('resetPassword')} onKeyDown={() => { }}>
+            忘记密码
+          </div> */}
+                <div className="text-center">
+                  还没有账号？
+                  <span className="cursor-pointer text-primary" onClick={() => props.setPage('register')} onKeyDown={() => { }}>
+                    立即注册
+                  </span>
+                </div>
+              </div>
+              <div className="px-4 other-login mt-16">
+                <div className="flex items-center mb-2">
+                  <span className="border-0 border-b border-solid border-accent flex-1" />
+                  <span className="text-secondary mx-3 text-m">或其他登录方式</span>
+                  <span className="border-0 border-b border-solid border-accent flex-1" />
+                </div>
+                <div className="flex items-center justify-between px-20 mt-6">
+                  <AppleLogin onLogin={data => loginMutation.mutate({ type: 'apple', data })} />
+                  <WeChatLogin />
+                  <GoogleLogin onLogin={data => loginMutation.mutate({ type: 'google', data })} />
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : null
+      }
       {
         step >= 2 ? (
           <div className="w-[960px] mx-auto pt-[60px]">
@@ -235,11 +323,6 @@ export const RegisterForm = (props: {
                 />
 
                 <div className="!mt-10">
-                  <FormItem className="flex items-center space-y-0">
-                    <JknCheckbox checked={checked} onClick={toggle} className="text-sm" />
-                    &nbsp;
-                    <span className="text-sm text-secondary">我已阅读并接受<span className="text-primary cursor-pointer">《软件服务条款》</span></span>
-                  </FormItem>
                   <Button className="mt-4" block loading={sendCode.isPending}>
                     下一步
                   </Button>

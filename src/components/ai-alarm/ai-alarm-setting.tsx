@@ -27,7 +27,8 @@ const formSchema = z.object({
   categoryHdlyIds: z.array(z.string()).optional(),
   frequency: z.string({ message: '周期错误' }),
   name: z.string().optional(),
-  date: z.string().optional()
+  date: z.string().optional(),
+  categoryType: z.string().optional()
 })
 
 interface AiAlarmSetting {
@@ -43,12 +44,15 @@ const AiAlarmSetting = (props: AiAlarmSetting) => {
     symbol: props.code ?? '',
     name: '',
     frequency: '1',
-    date: ''
+    date: '',
+    categoryType: '多头策略'
   })
   const [loading, { toggle }] = useBoolean(false)
 
   const { toast } = useToast()
   const queryClient = useQueryClient()
+
+  const categoryType = form.watch('categoryType')
 
   const onSubmit = async () => {
     const valid = await form.trigger()
@@ -137,7 +141,10 @@ const AiAlarmSetting = (props: AiAlarmSetting) => {
             name="categoryHdlyIds"
             render={({ field }) => (
               <FormItem className="pb-3 flex items-start space-y-0">
-                <FormLabel className="w-32 flex-shrink-0 text-base font-normal">底部信号</FormLabel>
+                <FormLabel
+                  className="w-32 flex-shrink-0 text-base font-normal"
+                  style={{color: categoryType === '多头策略' ? 'hsl(var(--stock-up-color))': '#808080'}}
+                >底部信号</FormLabel>
                 <FormControl>
                   <StockHdlySelect {...field} />
                 </FormControl>
@@ -216,6 +223,7 @@ const AlarmsTypeSelect = forwardRef((props: AlarmsTypeSelectProps, _) => {
     queryKey: [getAlarmTypes.cacheKey],
     queryFn: () => getAlarmTypes()
   })
+  const [type, setType] = useState('多头策略')
   const [method, setMethod] = useState<Awaited<ReturnType<typeof getAlarmTypes>>['stocks'][0]>()
 
   const data = useMemo(() => query.data?.stocks.find(item => item.name === '报警类型'), [query.data])
@@ -245,6 +253,19 @@ const AlarmsTypeSelect = forwardRef((props: AlarmsTypeSelectProps, _) => {
     props.onChange?.(e)
   }
 
+  const onChangeType = (_type: string) => {
+    setType(_type)
+    if (type !== _type) {
+      props.onChange?.([])
+    }
+    form.setValue('categoryType', _type)
+    // const item = method?.children?.find(item => item.name === type)
+    // if (item) {
+    //   setMethod(item)
+    //   props.onChange?.(props.value?.filter(v => !item.children.map(i => i.id).includes(v)) ?? [])
+    // }
+  }
+
   return (
     <>
       <div className="flex-1 flex flex-col">
@@ -272,9 +293,11 @@ const AlarmsTypeSelect = forwardRef((props: AlarmsTypeSelectProps, _) => {
           {method?.children?.map(item => (
             <div key={item.id} className="flex mb-4">
               <div
-                className="flex-shrink-0 flex items-center text-base font-normal w-32"
+                className="flex-shrink-0 flex items-center text-base font-normal w-32 cursor-pointer"
+                onClick={() => onChangeType(item.name)}
+                onKeyDown={() => { }}
                 style={{
-                  color: item.name === '多头策略' ? 'hsl(var(--stock-up-color))' : 'hsl(var(--stock-down-color))'
+                  color: item.name === type ? (item.name === '多头策略' ? 'hsl(var(--stock-up-color))' : 'hsl(var(--stock-down-color))') : '#808080'
                 }}
               >
                 {/* <JknIcon name={item.name === '多头策略' ? 'ic_price_up_green' : 'ic_price_down_red'} /> */}
@@ -283,30 +306,34 @@ const AlarmsTypeSelect = forwardRef((props: AlarmsTypeSelectProps, _) => {
                   item.name === '多头策略' ? '↑' : '↓'
                 }
               </div>
-              <ToggleGroup
-                value={props.value}
-                onValueChange={v => _onValueChange(v, item.name)}
-                type="multiple"
-                hoverColor="#2E2E2E"
-                activeColor={item.name === '多头策略' ? useConfig.getState().getStockColor(true, 'hex') : useConfig.getState().getStockColor(false, 'hex')}
-                variant="ghost"
-                className="flex-1 grid grid-cols-4 gap-2 h-[38px]"
-              >
-                {(item.children as unknown as StockCategory[])?.map(child =>
-                  child.name !== '' ? (
-                    <ToggleGroupItem
-                      disabled={!child.authorized}
-                      className="w-full relative"
+              {
+                type === item.name ? (
+                  <ToggleGroup
+                    value={props.value}
+                    onValueChange={v => _onValueChange(v, item.name)}
+                    type="multiple"
+                    hoverColor="#2E2E2E"
+                    activeColor={item.name === '多头策略' ? useConfig.getState().getStockColor(true, 'hex') : useConfig.getState().getStockColor(false, 'hex')}
+                    variant="ghost"
+                    className="flex-1 grid grid-cols-4 gap-2 h-[38px]"
+                  >
+                    {(item.children as unknown as StockCategory[])?.map(child =>
+                      child.name !== '' ? (
+                        <ToggleGroupItem
+                          disabled={!child.authorized}
+                          className="w-full relative"
 
-                      key={child.id}
-                      value={child.id}
-                    >
-                      {!child.authorized && <JknIcon name="ic_lock" className="absolute right-0 top-0 w-3 h-3" />}
-                      {child.name}
-                    </ToggleGroupItem>
-                  ) : null
-                )}
-              </ToggleGroup>
+                          key={child.id}
+                          value={child.id}
+                        >
+                          {!child.authorized && <JknIcon name="ic_lock" className="absolute right-0 top-0 w-3 h-3" />}
+                          {child.name}
+                        </ToggleGroupItem>
+                      ) : null
+                    )}
+                  </ToggleGroup>
+                ) : <div className="h-[38px]" />
+              }
             </div>
           ))}
         </div>
@@ -327,6 +354,17 @@ const StockHdlySelect = forwardRef((props: StockHdlySelectProps, _) => {
 
   const data = useMemo(() => query.data?.stocks.find(item => item.name === '底部叠加'), [query.data])
 
+  const form = useFormContext()
+
+  const categoryType = form.watch('categoryType')
+
+  // useUpdateEffect(() => {
+  //   if (categoryHdlyIds.length > 0) {
+  //     const arr = method?.children?.find(item => item.name === '空头策略')?.children?.map(item => item.id) ?? []
+  //     props.onChange?.(props.value?.filter(v => !arr.includes(v)) ?? [])
+  //   }
+  // }, [categoryHdlyIds, props.onChange, method])
+
   return (
     <div className="flex items-center flex-1">
       <ToggleGroup
@@ -338,12 +376,12 @@ const StockHdlySelect = forwardRef((props: StockHdlySelectProps, _) => {
         activeColor={useConfig.getState().getStockColor(true, 'hex')}
         onValueChange={props.onChange}
       >
-        {data?.children?.map(item => (
+        {categoryType === '多头策略' ? data?.children?.map(item => (
           <ToggleGroupItem disabled={!item.authorized} className=" relative" key={item.id} value={item.id}>
             {!item.authorized && <JknIcon name="ic_lock" className="absolute right-0 top-0 w-3 h-3" />}
             {item.name}
           </ToggleGroupItem>
-        ))}
+        )) : <div />}
       </ToggleGroup>
     </div>
   )
