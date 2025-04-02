@@ -143,7 +143,7 @@ const AiAlarmSetting = (props: AiAlarmSetting) => {
               <FormItem className="pb-3 flex items-start space-y-0">
                 <FormLabel
                   className="w-32 flex-shrink-0 text-base font-normal"
-                  style={{color: categoryType === '多头策略' ? 'hsl(var(--stock-up-color))': '#808080'}}
+                  style={{ color: categoryType === '多头策略' ? 'hsl(var(--stock-up-color))' : '#808080' }}
                 >底部信号</FormLabel>
                 <FormControl>
                   <StockHdlySelect {...field} />
@@ -259,6 +259,10 @@ const AlarmsTypeSelect = forwardRef((props: AlarmsTypeSelectProps, _) => {
       props.onChange?.([])
     }
     form.setValue('categoryType', _type)
+
+    if (_type === '空头策略') {
+      form.setValue('categoryHdlyIds', [])
+    }
     // const item = method?.children?.find(item => item.name === type)
     // if (item) {
     //   setMethod(item)

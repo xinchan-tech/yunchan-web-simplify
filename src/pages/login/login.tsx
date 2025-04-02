@@ -26,29 +26,6 @@ const loginSchema = z.object({
 type LoginForm = z.infer<typeof loginSchema>
 
 
-// const LoginModal = (props: LoginFormProps) => {
-//   const [page, setPage] = useState<'login' | 'register' | 'resetPassword'>('login')
-//   return (
-//     <div className="flex login-form">
-//       <div className="w-[380px] h-[400px] relative">
-//         <div
-//           className="absolute left-0 top-0 w-8 h-8 cursor-pointer"
-//           onClick={() => props.onClose?.()}
-//           onKeyUp={() => {}}
-//         />
-//         <img src={LoginLeftImg} alt="" className="w-full h-full" />
-//       </div>
-//       <div className="bg-white h-[400px] w-[280px] box-border flex flex-col px-4">
-//         {{
-//           login: <LoginForm afterLogin={props.afterLogin} onClose={props.onClose} setPage={setPage} />,
-//           register: <RegisterForm setPage={setPage} type="register" />,
-//           resetPassword: <RegisterForm setPage={setPage} type="forgot" />
-//         }[page] ?? null}
-//       </div>
-//     </div>
-//   )
-// }
-
 export const LoginForm = (props: LoginFormProps & { setPage: (page: 'login' | 'register' | 'resetPassword') => void }) => {
   const form = useZForm(loginSchema, { mobile: '', password: '' })
   const setToken = useToken(s => s.setToken)
