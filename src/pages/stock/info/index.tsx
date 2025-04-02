@@ -33,7 +33,7 @@ import {
 import { usePropValue, useSnapshot, useSnapshotOnce, useStockQuoteSubscribe, useTableData, useTableRowClickToStockTrading } from '@/hooks'
 import { useTime, useToken } from '@/store'
 import { dateUtils } from "@/utils/date"
-import { StockSubscribeHandler, stockUtils } from '@/utils/stock'
+import { type StockSubscribeHandler, stockUtils } from '@/utils/stock'
 import { cn } from '@/utils/style'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import dayjs from 'dayjs'

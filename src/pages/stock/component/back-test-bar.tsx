@@ -317,7 +317,7 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
         sellCount = 0
       }
     })
- 
+
     return {
       profit: sellTotal - buyTotal,
       cost: buyCost + sellCost
@@ -424,6 +424,8 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
       const symbol = useChartManage.getState().chartStores[props.chartId].symbol
       const timeIndex = useChartManage.getState().chartStores[props.chartId].interval
 
+      const offset = Math.abs(tradeRecord.buy.length - tradeRecord.sell.length)
+      const total = !positiveProfitCount.peek()?.total ? '0.00' : + Decimal.create(positiveProfitCount.peek()?.count).div((positiveProfitCount.peek()?.total ?? 0) + offset).mul(100).toNumber().toFixed(2)
       return (
         <div className="text-center px-4 h-[444px] ">
           <div className="h-[108px] w-[100px] mx-auto mt-8">
@@ -449,7 +451,7 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
               <div>
                 <span className={cn('text-3xl', Decimal.create(positiveProfitCount.peek()?.count).gt(0) ? 'text-stock-up' : 'text-stock-down')}>
                   {' '}
-                  {positiveProfitCount.peek()?.total === 0 ? '0.00' : Decimal.create(positiveProfitCount.peek()?.count).div(positiveProfitCount.peek()?.total ?? 0).mul(100).toFixed(2)}
+                  {total}
                 </span>
                 <span> %</span>
               </div>
