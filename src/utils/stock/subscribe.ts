@@ -163,6 +163,11 @@ class StockSubscribe {
       }
     })
 
+    if(Object.keys(this.subscribeTopic).filter(topic => topic.startsWith('quote')).length > 100){
+      console.warn('股票价格订阅数大于100， 取消订阅')
+      return 
+    }
+
     if (_params.length > 0) {
       this.ws.send({
         action: _action,
