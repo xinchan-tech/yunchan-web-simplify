@@ -108,7 +108,7 @@ const AiAlarmSetting = (props: AiAlarmSetting) => {
             control={form.control}
             name="stockCycle"
             render={({ field }) => (
-              <FormItem className="pb-4 flex items-start space-y-0">
+              <FormItem className="pb-2 flex items-start space-y-0">
                 <FormLabel className="w-32 flex-shrink-0 text-base font-normal">报警周期</FormLabel>
                 <FormControl>
                   <StockCycleSelect {...field} />
@@ -136,7 +136,7 @@ const AiAlarmSetting = (props: AiAlarmSetting) => {
             control={form.control}
             name="categoryHdlyIds"
             render={({ field }) => (
-              <FormItem className="pb-4 flex items-start space-y-0">
+              <FormItem className="pb-3 flex items-start space-y-0">
                 <FormLabel className="w-32 flex-shrink-0 text-base font-normal">底部信号</FormLabel>
                 <FormControl>
                   <StockHdlySelect {...field} />
@@ -145,11 +145,13 @@ const AiAlarmSetting = (props: AiAlarmSetting) => {
             )}
           />
 
+          <Separator className="my-2 h-[1px] w-full" />
+
           <FormField
             control={form.control}
             name="name"
             render={({ field }) => (
-              <FormItem className="pb-4 flex space-y-0  items-center">
+              <FormItem className="pb-3 flex space-y-0  items-center">
                 <FormLabel className="w-32 text-base font-normal">报警名称</FormLabel>
                 <FormControl >
                   <NameInput {...field} />
@@ -162,7 +164,7 @@ const AiAlarmSetting = (props: AiAlarmSetting) => {
             control={form.control}
             name="frequency"
             render={({ field }) => (
-              <FormItem className="pb-4 flex space-y-0 items-center">
+              <FormItem className="pb-3 flex space-y-0 items-center">
                 <FormLabel className="w-32 text-base font-normal">触发频率</FormLabel>
                 <FormControl >
                   <FrequencySelect {...field} />
@@ -189,7 +191,7 @@ const AiAlarmSetting = (props: AiAlarmSetting) => {
           }
         </form>
       </FormProvider>
-      <div className="text-right mt-auto mb-6 space-x-4 px-8">
+      <div className="text-right mt-auto mb-6 space-x-2 px-8">
         <Button className="w-24" variant="outline" onClick={props.onClose}>
           取消
         </Button>
@@ -266,7 +268,7 @@ const AlarmsTypeSelect = forwardRef((props: AlarmsTypeSelectProps, _) => {
             </div>
           ))}
         </div> */}
-        <div className="py-3">
+        <div className="py-2">
           {method?.children?.map(item => (
             <div key={item.id} className="flex mb-4">
               <div
@@ -285,11 +287,10 @@ const AlarmsTypeSelect = forwardRef((props: AlarmsTypeSelectProps, _) => {
                 value={props.value}
                 onValueChange={v => _onValueChange(v, item.name)}
                 type="multiple"
-                size="xl"
                 hoverColor="#2E2E2E"
                 activeColor={item.name === '多头策略' ? useConfig.getState().getStockColor(true, 'hex') : useConfig.getState().getStockColor(false, 'hex')}
                 variant="ghost"
-                className="flex-1 grid grid-cols-4 gap-3"
+                className="flex-1 grid grid-cols-4 gap-2 h-[38px]"
               >
                 {(item.children as unknown as StockCategory[])?.map(child =>
                   child.name !== '' ? (
@@ -327,14 +328,13 @@ const StockHdlySelect = forwardRef((props: StockHdlySelectProps, _) => {
   const data = useMemo(() => query.data?.stocks.find(item => item.name === '底部叠加'), [query.data])
 
   return (
-    <div className="flex items-center">
+    <div className="flex items-center flex-1">
       <ToggleGroup
         value={props.value}
         type="multiple"
-        size="xl"
         hoverColor="#2E2E2E"
         variant="ghost"
-        className="flex-1 grid grid-cols-4 gap-3"
+        className="flex-1 grid grid-cols-2 gap-2 h-[38px]"
         activeColor={useConfig.getState().getStockColor(true, 'hex')}
         onValueChange={props.onChange}
       >

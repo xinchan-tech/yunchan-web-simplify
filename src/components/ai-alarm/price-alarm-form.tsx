@@ -13,9 +13,10 @@ const PriceAlarmForm = (props: PriceAlarmFormProps) => {
 
   return (
     <div className="h-[700px] overflow-hidden w-full flex flex-col">
-      <div className="border-0 border-b border-solid border-border flex items-center px-4">
-        <Tabs value={active} onValueChange={setActive} >
-          <TabsList variant="line">
+      <div className="flex items-center px-4 relative">
+        <div className="absolute left-4 bottom-0 right-4 h-1 bg-[#575757] -z-0 rounded" />
+        <Tabs value={active} onValueChange={setActive}>
+          <TabsList variant="line" className="w-full">
             <TabsTrigger value="1" asChild>
               <span>价格报警</span>
             </TabsTrigger>

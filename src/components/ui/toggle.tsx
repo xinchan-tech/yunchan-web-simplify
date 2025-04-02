@@ -18,7 +18,7 @@ const toggleVariants = cva(
           'bg-transparent text-secondary data-[state=on]:bg-[var(--toggle-active-bg)]  data-[state=on]:border-[var(--toggle-active-bg)] data-[state=on]:text-foreground hover:border-accent hover:bg-[var(--toggle-hover-bg)] hover:text-foreground',
       },
       size: {
-        default: 'h-10 leading-10 py-2 min-w-9',
+        default: 'h-9 leading-9 py-2 min-w-9',
         sm: 'h-8 px-1.5 min-w-8',
         lg: 'h-10 px-2.5 min-w-10',
         xl: 'h-11 px-3.5 min-w-11',

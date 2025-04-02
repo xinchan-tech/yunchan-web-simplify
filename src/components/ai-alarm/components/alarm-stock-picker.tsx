@@ -19,9 +19,9 @@ export const AlarmStockPicker = ({ value, onChange }: AlarmStickPickerProps) => 
   return (
     <Popover modal open={open} onOpenChange={v => !v && setOpen(false)}>
       <PopoverTrigger asChild>
-        <div className="flex items-center h-[50px] ml-auto overflow-hidden flex-1">
+        <div className="flex items-center h-[40px] ml-auto overflow-hidden flex-1">
           <div className={cn(
-            'flex items-center border border-input border-solid rounded-md px-5 py-2.5 flex-1 overflow-hidden',
+            'flex items-center border border-input border-solid rounded-md px-5 py-[7px] flex-1 overflow-hidden',
             open && 'border-[3px] border-primary'
           )} onClick={() => setOpen(true)} onKeyDown={() => { }}>
             {

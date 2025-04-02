@@ -14,7 +14,10 @@ const inputVariants = cva(
         default: 'h-9 px-3 py-1',
         sm: 'h-7 px-2 text-xs',
         mini: 'h-5 px-1 text-xs',
-        lg: 'h-11 px-3 text-base'
+        lg: 'h-11 px-3 text-base rounded-[6px]'
+      },
+      showError: {
+        true: 'aria-[invalid=true]:border-destructive'
       }
     },
     defaultVariants: {
@@ -26,10 +29,10 @@ const inputVariants = cva(
 
 export interface InputProps
   extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'size'>,
-    VariantProps<typeof inputVariants> {}
+  VariantProps<typeof inputVariants> { }
 
-const Input = React.forwardRef<HTMLInputElement, InputProps>(({ className, variant, size, type, ...props }, ref) => {
-  return <input type={type} className={cn(inputVariants({ size, variant, className }))} ref={ref} {...props} />
+const Input = React.forwardRef<HTMLInputElement, InputProps>(({ className, variant, size, type, showError, ...props }, ref) => {
+  return <input type={type} className={cn(inputVariants({ size, variant, className, showError }))} ref={ref} {...props} />
 })
 Input.displayName = 'Input'
 

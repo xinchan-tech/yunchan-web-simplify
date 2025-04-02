@@ -1,0 +1,236 @@
+import { sendEmailCode, registerByEmail, forgotPassword } from "@/api"
+import { FormField, FormItem, FormControl, Input, JknCheckbox, Button, FormLabel, FormMessage, FormDescription, JknIcon } from "@/components"
+import { useZForm, useCheckbox, useToast } from "@/hooks"
+import { useMutation } from "@tanstack/react-query"
+import { useCountDown } from "ahooks"
+import { useState } from "react"
+import { FormProvider, type SubmitErrorHandler } from "react-hook-form"
+import { z } from "zod"
+
+const registerSchema = z
+  .object({
+    username: z.string().email({ message: '请输入正确的邮箱格式' }),
+    password: z.string().min(6, { message: '最少输入6位密码' }).max(50),
+    passwordConfirm: z.string(),
+    inv: z.string().optional(),
+    code: z.string().optional()
+  })
+  .refine(data => data.password === data.passwordConfirm, { message: '两次密码输入不一致' })
+
+type RegisterSchema = z.infer<typeof registerSchema>
+
+export const RegisterForm = (props: {
+  type: 'forgot' | 'register'
+  setPage: (page: 'login' | 'register' | 'resetPassword') => void
+}) => {
+  const form = useZForm(registerSchema, { username: '', password: '', passwordConfirm: '', code: '', inv: '' })
+  const [time, setTime] = useState<number | undefined>()
+  const { checked, toggle } = useCheckbox(false)
+  const [inv, setInv] = useState(false)
+  const [showCode, setShowCode] = useState(true)
+
+  const { toast } = useToast()
+  const onError: SubmitErrorHandler<RegisterSchema> = err => {
+    toast({
+      description: Object.values(err)[0].message
+    })
+  }
+
+  const sendCode = useMutation({
+    mutationFn: async () => {
+      const r = await form.trigger('username')
+      if (!r) {
+        toast({
+          description: '请输入正确的邮箱'
+        })
+        throw new Error('请输入正确的邮箱')
+      }
+
+      await sendEmailCode(form.getValues('username'), props.type)
+    },
+    onSuccess: () => {
+      toast({
+        description: '验证码已发送'
+      })
+      setTime(60 * 1000)
+    },
+    onError: e => {
+      toast({
+        description: e.message
+      })
+    }
+  })
+
+  const register = useMutation({
+    mutationFn: (data: RegisterSchema) => {
+      if (props.type === 'register' && !checked) {
+        throw new Error('请先阅读并接受《服务条款》')
+      }
+      const r: Parameters<typeof registerByEmail>[0] = {
+        username: data.username,
+        password: data.password,
+        password_confirm: data.passwordConfirm,
+        code: data.code || ''
+      }
+
+      return props.type === 'register' ? registerByEmail(r) : forgotPassword(r)
+    },
+    onSuccess: () => {
+      toast({
+        description: props.type === 'register' ? '注册成功' : '重置密码成功'
+      })
+      props.setPage('login')
+    },
+    onError: e => {
+      toast({
+        description: e.message
+      })
+    }
+  })
+
+  const nextCode = () => {
+    setShowCode(true)
+  }
+
+  return (
+    <>
+      {
+        showCode ? (
+          <div className=" h-full w-[371px] box-border flex flex-col leading-none text-foreground">
+            <p className="text-[32px] mb-16">
+              <span>输入邮箱验证码</span><br />
+              <span className="mt-3 text-base text-tertiary">验证码已发送至{form.getValues('username')}</span>
+            </p>
+            
+          </div>
+        ) : (
+          <div className=" h-full w-[371px] box-border flex flex-col leading-none text-foreground">
+            <p className="text-[32px] mb-16">
+              <span>创建账号</span><br />
+              <span className="mt-3 text-base text-tertiary">请输入您用于注册的邮箱地址</span>
+            </p>
+            <FormProvider {...form}>
+              <form className="space-y-6" onSubmit={form.handleSubmit(() => nextCode(), onError)}>
+                <FormField
+                  control={form.control}
+                  name="username"
+                  render={({ field }) => (
+                    <FormItem className="">
+                      <FormLabel className="text-base text-foreground">邮箱</FormLabel>
+                      <FormControl>
+                        <Input
+                          showError
+                          size="lg"
+                          className="border-border placeholder:text-tertiary"
+                          placeholder="请输入邮箱"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage className="text-sm text-destructive" />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem className="">
+                      <FormLabel className="text-base text-foreground">密码</FormLabel>
+                      <FormControl>
+                        <Input
+                          size="lg"
+                          showError
+                          className="border-border placeholder:text-tertiary"
+                          placeholder="请输入密码"
+                          {...field}
+                          type="password"
+                        />
+                      </FormControl>
+                      <FormDescription className="text-sm text-tertiary">密码长度至少6位</FormDescription>
+                      <FormMessage className="text-sm text-destructive" />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="passwordConfirm"
+                  render={({ field }) => (
+                    <FormItem className="">
+                      <FormLabel className="text-base text-foreground">确认密码</FormLabel>
+                      <FormControl>
+                        <Input
+                          size="lg"
+                          className="border-border placeholder:text-tertiary"
+                          placeholder="请再次输入密码"
+                          {...field}
+                          type="password"
+                        />
+                      </FormControl>
+                      <FormMessage className="text-sm text-destructive" />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="inv"
+                  render={({ field }) => (
+                    <FormItem className="">
+                      <FormLabel className="text-base flex items-center text-foreground cursor-pointer" onClick={() => setInv(s => !s)}>
+                        邀请码(选填)
+                        <JknIcon.Svg name="arrow-down" className="size-3 ml-auto mt-1" />
+                      </FormLabel>
+                      {
+                        inv ? (
+                          <FormControl>
+                            <Input
+                              size="lg"
+                              className="border-border placeholder:text-tertiary"
+                              placeholder="请输入邀请码"
+                              {...field}
+                            />
+                          </FormControl>
+                        ) : null
+                      }
+                    </FormItem>
+                  )}
+                />
+
+                <div className="!mt-6">
+                  {props.type === 'register' ? (
+                    <FormItem className="flex items-center space-y-0">
+                      <JknCheckbox checked={checked} onClick={toggle} className="text-sm" />
+                      &nbsp;
+                      <span className="text-sm text-secondary">我已阅读并接受<span className="text-primary cursor-pointer">《软件服务条款》</span></span>
+                    </FormItem>
+                  ) : null}
+                  <Button className="mt-2" block loading={register.isPending}>
+                    下一步
+                  </Button>
+                </div>
+              </form>
+              <div className="flex text-secondary justify-center space-x-4 mt-4 text-sm">
+                <div className="text-center">
+                  已有账户？
+                  <span className="cursor-pointer text-primary" onClick={() => props.setPage('register')} onKeyDown={() => { }}>
+                    立即注册
+                  </span>
+                </div>
+              </div>
+            </FormProvider>
+          </div>
+        )
+      }
+    </>
+  )
+}
+
+const CountDownSpan = ({ onEnd }: { onEnd: () => void }) => {
+  const [count] = useCountDown({
+    leftTime: 60 * 1000,
+    onEnd
+  })
+
+  return <span className="text-primary text-xs whitespace-nowrap cursor-pointer">剩余{Math.round(count / 1000)}秒</span>
+}
