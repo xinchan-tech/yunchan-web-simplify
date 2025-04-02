@@ -1,8 +1,9 @@
 import { sendEmailCode, registerByEmail, forgotPassword } from "@/api"
-import { FormField, FormItem, FormControl, Input, JknCheckbox, Button, FormLabel, FormMessage, FormDescription, JknIcon } from "@/components"
+import { FormField, FormItem, FormControl, Input, JknCheckbox, Button, FormLabel, FormMessage, FormDescription, JknIcon, InputOTP, InputOTPGroup, InputOTPSlot } from "@/components"
 import { useZForm, useCheckbox, useToast } from "@/hooks"
 import { useMutation } from "@tanstack/react-query"
-import { useCountDown } from "ahooks"
+import { useCountDown, useCounter } from "ahooks"
+import { REGEXP_ONLY_DIGITS_AND_CHARS } from "input-otp"
 import { useState } from "react"
 import { FormProvider, type SubmitErrorHandler } from "react-hook-form"
 import { z } from "zod"
@@ -27,7 +28,7 @@ export const RegisterForm = (props: {
   const [time, setTime] = useState<number | undefined>()
   const { checked, toggle } = useCheckbox(false)
   const [inv, setInv] = useState(false)
-  const [showCode, setShowCode] = useState(true)
+  const [step, { inc: nextStep, dec: prevStep }] = useCounter(2)
 
   const { toast } = useToast()
   const onError: SubmitErrorHandler<RegisterSchema> = err => {
@@ -89,19 +90,30 @@ export const RegisterForm = (props: {
   })
 
   const nextCode = () => {
-    setShowCode(true)
+    nextStep()
   }
 
   return (
     <>
       {
-        showCode ? (
+        step >= 2 ? (
           <div className=" h-full w-[371px] box-border flex flex-col leading-none text-foreground">
             <p className="text-[32px] mb-16">
               <span>输入邮箱验证码</span><br />
               <span className="mt-3 text-base text-tertiary">验证码已发送至{form.getValues('username')}</span>
             </p>
-            
+            <div>
+              <InputOTP maxLength={6} pattern={REGEXP_ONLY_DIGITS_AND_CHARS}>
+                <InputOTPGroup>
+                  <InputOTPSlot index={0} />
+                  <InputOTPSlot index={1} />
+                  <InputOTPSlot index={2} />
+                  <InputOTPSlot index={3} />
+                  <InputOTPSlot index={4} />
+                  <InputOTPSlot index={5} />
+                </InputOTPGroup>
+              </InputOTP>
+            </div>
           </div>
         ) : (
           <div className=" h-full w-[371px] box-border flex flex-col leading-none text-foreground">

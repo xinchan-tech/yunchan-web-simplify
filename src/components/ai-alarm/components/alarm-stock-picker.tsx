@@ -21,7 +21,7 @@ export const AlarmStockPicker = ({ value, onChange }: AlarmStickPickerProps) => 
       <PopoverTrigger asChild>
         <div className="flex items-center h-[40px] ml-auto overflow-hidden flex-1">
           <div className={cn(
-            'flex items-center border border-input border-solid rounded-md px-5 py-[7px] flex-1 overflow-hidden',
+            'flex items-center border border-input border-solid rounded-md px-5 py-1.5 flex-1 overflow-hidden',
             open && 'border-[3px] border-primary'
           )} onClick={() => setOpen(true)} onKeyDown={() => { }}>
             {
@@ -37,7 +37,7 @@ export const AlarmStockPicker = ({ value, onChange }: AlarmStickPickerProps) => 
           </div>
         </div>
       </PopoverTrigger>
-      <PopoverContent className="w-[458px]">
+      <PopoverContent className="w-[408px]">
         <div className="w-full">
           <div className="flex items-center border-b-primary px-4">
             <JknIcon.Svg name="search" className="w-6 h-6 text-tertiary" />

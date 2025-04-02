@@ -268,7 +268,7 @@ const PriceSetting = forwardRef((props: PriceSettingProps, _) => {
           </div>
           <div className="flex items-center">
             {props.mode === 'rise' ? (
-              <div className="py-1 border border-solid border-input rounded w-full flex items-center">
+              <div className="border border-solid border-input rounded w-full flex items-center">
                 <Input
                   type="number"
                   className="w-64 border-none flex-1"
@@ -280,7 +280,7 @@ const PriceSetting = forwardRef((props: PriceSettingProps, _) => {
               </div>
             ) : (
               <>
-                <div className="py-1 border border-solid border-input rounded w-full flex items-center">
+                <div className="border border-solid border-input rounded w-full flex items-center">
                   <Input
                     type="number"
                     className="w-64 border-none flex-1"
