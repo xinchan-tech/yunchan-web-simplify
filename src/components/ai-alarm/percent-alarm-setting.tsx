@@ -97,7 +97,7 @@ export const PercentageAlarmSetting = (props: PercentageAlarmSettingProps) => {
             name="symbol"
             render={({ field }) => (
               <FormItem className="pb-4 flex items-center space-y-0">
-                <FormLabel className="w-32">股票名称</FormLabel>
+                <FormLabel className="w-32 text-base font-normal">股票名称</FormLabel>
                 <FormControl>
                   <AlarmStockPicker {...field} />
                 </FormControl>
@@ -113,7 +113,7 @@ export const PercentageAlarmSetting = (props: PercentageAlarmSettingProps) => {
               name="rise"
               render={({ field }) => (
                 <FormItem className="pb-4 flex space-y-0">
-                  <FormLabel className="w-32 font-normal text-secondary">价格报警</FormLabel>
+                  <FormLabel className="w-32 font-normal text-secondary text-base font-normal">价格报警</FormLabel>
                   <FormControl className="flex-1">
                     <PriceSetting mode="rise" value={field.value} onChange={field.onChange} />
                   </FormControl>
@@ -142,7 +142,7 @@ export const PercentageAlarmSetting = (props: PercentageAlarmSettingProps) => {
             name="name"
             render={({ field }) => (
               <FormItem className="pb-4 flex space-y-0  items-center">
-                <FormLabel className="w-32">报警名称</FormLabel>
+                <FormLabel className="w-32 text-base font-normal">报警名称</FormLabel>
                 <FormControl >
                   <NameInput {...field} />
                 </FormControl>
@@ -155,7 +155,7 @@ export const PercentageAlarmSetting = (props: PercentageAlarmSettingProps) => {
             name="frequency"
             render={({ field }) => (
               <FormItem className="pb-4 flex space-y-0 items-center">
-                <FormLabel className="w-32">触发频率</FormLabel>
+                <FormLabel className="w-32 text-base font-normal">触发频率</FormLabel>
                 <FormControl >
                   <FrequencySelect {...field} />
                 </FormControl>
@@ -170,7 +170,7 @@ export const PercentageAlarmSetting = (props: PercentageAlarmSettingProps) => {
                 name="date"
                 render={({ field }) => (
                   <FormItem className="pb-4 flex space-y-0  items-center">
-                    <FormLabel className="w-32">到期时间</FormLabel>
+                    <FormLabel className="w-32 text-base font-normal">到期时间</FormLabel>
                     <FormControl >
                       <DatePicker {...field} />
                     </FormControl>

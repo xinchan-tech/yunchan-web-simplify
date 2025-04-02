@@ -88,7 +88,7 @@ export const PriceAlarmSetting = (props: PriceAlarmSetting) => {
   }
 
   return (
-    <div className="w-full overflow-hidden flex flex-col h-full">
+    <div className="w-full overflow-hidden flex flex-col h-full ">
       <FormProvider {...form}>
         <form className="px-8 mt-4">
           <FormField
@@ -96,7 +96,7 @@ export const PriceAlarmSetting = (props: PriceAlarmSetting) => {
             name="symbol"
             render={({ field }) => (
               <FormItem className="pb-4 flex items-center space-y-0">
-                <FormLabel className="w-32">股票名称</FormLabel>
+                <FormLabel className="w-32 text-base font-normal">股票名称</FormLabel>
                 <FormControl>
                   <AlarmStockPicker {...field} />
                 </FormControl>
@@ -112,7 +112,7 @@ export const PriceAlarmSetting = (props: PriceAlarmSetting) => {
               name="rise"
               render={({ field }) => (
                 <FormItem className="pb-4 flex space-y-0">
-                  <FormLabel className="w-32 !font-normal text-secondary">价格报警</FormLabel>
+                  <FormLabel className="w-32 !font-normal text-secondary text-base">价格报警</FormLabel>
                   <FormControl className="flex-1">
                     <PriceSetting mode="rise" value={field.value} onChange={field.onChange} />
                   </FormControl>
@@ -141,7 +141,7 @@ export const PriceAlarmSetting = (props: PriceAlarmSetting) => {
             name="name"
             render={({ field }) => (
               <FormItem className="pb-4 flex space-y-0  items-center">
-                <FormLabel className="w-32">报警名称</FormLabel>
+                <FormLabel className="w-32 text-base font-normal">报警名称</FormLabel>
                 <FormControl >
                   <NameInput {...field} />
                 </FormControl>
@@ -154,7 +154,7 @@ export const PriceAlarmSetting = (props: PriceAlarmSetting) => {
             name="frequency"
             render={({ field }) => (
               <FormItem className="pb-4 flex space-y-0 items-center">
-                <FormLabel className="w-32">触发频率</FormLabel>
+                <FormLabel className="w-32 text-base font-normal">触发频率</FormLabel>
                 <FormControl >
                   <FrequencySelect {...field} />
                 </FormControl>
@@ -169,7 +169,7 @@ export const PriceAlarmSetting = (props: PriceAlarmSetting) => {
                 name="date"
                 render={({ field }) => (
                   <FormItem className="pb-4 flex space-y-0  items-center">
-                    <FormLabel className="w-32">到期时间</FormLabel>
+                    <FormLabel className="w-32 text-base font-normal">到期时间</FormLabel>
                     <FormControl >
                       <DatePicker {...field} />
                     </FormControl>

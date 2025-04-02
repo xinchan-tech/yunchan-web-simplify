@@ -96,7 +96,7 @@ const AiAlarmSetting = (props: AiAlarmSetting) => {
             name="symbol"
             render={({ field }) => (
               <FormItem className="pb-4 flex items-center space-y-0">
-                <FormLabel className="w-32">股票名称</FormLabel>
+                <FormLabel className="w-32 text-base font-normal">股票名称</FormLabel>
                 <FormControl>
                   <AlarmStockPicker {...field} />
                 </FormControl>
@@ -109,7 +109,7 @@ const AiAlarmSetting = (props: AiAlarmSetting) => {
             name="stockCycle"
             render={({ field }) => (
               <FormItem className="pb-4 flex items-start space-y-0">
-                <FormLabel className="w-32 flex-shrink-0">报警周期</FormLabel>
+                <FormLabel className="w-32 flex-shrink-0 text-base font-normal">报警周期</FormLabel>
                 <FormControl>
                   <StockCycleSelect {...field} />
                 </FormControl>
@@ -137,7 +137,7 @@ const AiAlarmSetting = (props: AiAlarmSetting) => {
             name="categoryHdlyIds"
             render={({ field }) => (
               <FormItem className="pb-4 flex items-start space-y-0">
-                <FormLabel className="w-32 flex-shrink-0">底部信号</FormLabel>
+                <FormLabel className="w-32 flex-shrink-0 text-base font-normal">底部信号</FormLabel>
                 <FormControl>
                   <StockHdlySelect {...field} />
                 </FormControl>
@@ -150,7 +150,7 @@ const AiAlarmSetting = (props: AiAlarmSetting) => {
             name="name"
             render={({ field }) => (
               <FormItem className="pb-4 flex space-y-0  items-center">
-                <FormLabel className="w-32">报警名称</FormLabel>
+                <FormLabel className="w-32 text-base font-normal">报警名称</FormLabel>
                 <FormControl >
                   <NameInput {...field} />
                 </FormControl>
@@ -163,7 +163,7 @@ const AiAlarmSetting = (props: AiAlarmSetting) => {
             name="frequency"
             render={({ field }) => (
               <FormItem className="pb-4 flex space-y-0 items-center">
-                <FormLabel className="w-32">触发频率</FormLabel>
+                <FormLabel className="w-32 text-base font-normal">触发频率</FormLabel>
                 <FormControl >
                   <FrequencySelect {...field} />
                 </FormControl>
@@ -178,7 +178,7 @@ const AiAlarmSetting = (props: AiAlarmSetting) => {
                 name="date"
                 render={({ field }) => (
                   <FormItem className="pb-4 flex space-y-0  items-center">
-                    <FormLabel className="w-32">到期时间</FormLabel>
+                    <FormLabel className="w-32 text-base font-normal">到期时间</FormLabel>
                     <FormControl >
                       <DatePicker {...field} />
                     </FormControl>
@@ -270,7 +270,7 @@ const AlarmsTypeSelect = forwardRef((props: AlarmsTypeSelectProps, _) => {
           {method?.children?.map(item => (
             <div key={item.id} className="flex mb-4">
               <div
-                className="flex-shrink-0 flex items-center text-sm w-32"
+                className="flex-shrink-0 flex items-center text-base font-normal w-32"
                 style={{
                   color: item.name === '多头策略' ? 'hsl(var(--stock-up-color))' : 'hsl(var(--stock-down-color))'
                 }}

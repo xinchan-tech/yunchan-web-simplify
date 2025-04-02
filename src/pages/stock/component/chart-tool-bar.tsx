@@ -634,6 +634,15 @@ const StockPkModal = () => {
       return false
     }
 
+    const len = useChartManage.getState().getActiveChart().overlayStock.length
+
+    if (len >= 5) {
+      toast({
+        description: '最多只能添加5只股票'
+      })
+      return false
+    }
+
     chartManage.setStockOverlay(symbol, name)
 
     if (searchHistory?.find(p => p.symbol === symbol)) return true
