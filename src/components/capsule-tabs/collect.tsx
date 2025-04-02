@@ -44,6 +44,7 @@ const useCollectSelect = (onChange?: (key: string) => void) => {
           sort: 0
         }]
       )
+      setActiveStock('-1')
     }
   }, [token, queryClient.setQueryData])
 
