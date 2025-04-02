@@ -298,11 +298,11 @@ const PushPage = () => {
                   <JknIcon.Svg name="arrow-down" size={12} color="#808080" />
                 </div>
               </DropdownMenuTrigger>
-              <DropdownMenuContent>
+              <DropdownMenuContent className="w-fit">
                 {
                   dates.current.map(item => (
                     <DropdownMenuItem key={item} onClick={() => setDate(item)}>
-                      {item}
+                      {dayjs(item).format("MM-DD W")}
                     </DropdownMenuItem>
                   ))
                 }

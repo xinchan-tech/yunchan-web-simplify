@@ -638,6 +638,13 @@ export const addStockCollect = (params: { symbols: string[]; cate_ids: number[] 
 }
 
 /**
+ * 加入默认金池
+ */
+export const addStockCollectDefault = ( symbols: string[] ) => {
+  return request.post('/stock-svc/collect/stocks/default', { symbols }).then(r => r.data)
+}
+
+/**
  * 单个股票加入多个金池
  */
 export const addStockCollectBatch = (params: { symbol: string; cate_ids: number[] }) => {

@@ -1,12 +1,10 @@
-import { addStockCollectBatch, getStockCollectCates } from '@/api'
+import { addStockCollectBatch, addStockCollectDefault, getStockCollectCates } from '@/api'
 import { usePropValue, useToast } from '@/hooks'
 import type { HoverCardContentProps } from '@radix-ui/react-hover-card'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useBoolean, useMemoizedFn } from 'ahooks'
 import { produce } from 'immer'
 import { memo } from 'react'
 import { AddCollect, Checkbox, ScrollArea } from '..'
-import { HoverCard, HoverCardContent, HoverCardPortal, HoverCardTrigger } from '../ui/hover-card'
 import { CollectStarBatch } from './collect-star-batch'
 import Star from './index'
 
@@ -19,33 +17,51 @@ interface CollectStarProps
 }
 
 const _CollectStar = memo((props: CollectStarProps) => {
-  const [render, { setTrue, setFalse }] = useBoolean()
   const [checked, setChecked] = usePropValue(props.checked)
 
-  const _onUpdate = useMemoizedFn((checked: boolean) => {
-    setChecked(checked)
-    props.onUpdate?.(checked)
+
+  const action = useMutation({
+    mutationFn: (checked: boolean) => {
+      if(checked){
+        return addStockCollectDefault([props.code])
+      }
+      return Promise.reject()
+    },
+    onMutate: async (checked) => {
+      setChecked(checked)
+
+      props.onUpdate?.(checked)
+
+      return !checked
+    },
+    onError: (_, _v, checked) => {
+      setChecked(checked)
+      props.onUpdate?.(!!checked)
+    }
   })
 
   return (
-    <HoverCard onOpenChange={open => (open ? setTrue() : setFalse())} openDelay={100} closeDelay={100}>
-      <HoverCardTrigger asChild>
-        <div className="flex justify-center items-center">
-          <Star checked={checked} size={props.size} />
-        </div>
-      </HoverCardTrigger>
-      <HoverCardPortal>
-        <HoverCardContent
-          sideOffset={props.sideOffset ?? 10}
-          alignOffset={props.alignOffset ?? -50}
-          align={props.align ?? 'start'}
-          side={props.side ?? 'left'}
-          className="p-0 w-48 bg-muted border-dialog-border border border-solid"
-        >
-          {render ? <CollectList code={props.code} onUpdate={_onUpdate} /> : null}
-        </HoverCardContent>
-      </HoverCardPortal>
-    </HoverCard>
+    <div className="flex justify-center items-center">
+      <Star checked={checked} size={props.size} onChange={v => action.mutate(v)} />
+    </div>
+    // <HoverCard onOpenChange={open => (open ? setTrue() : setFalse())} openDelay={100} closeDelay={100}>
+    //   <HoverCardTrigger asChild>
+    //     <div className="flex justify-center items-center">
+    //       <Star checked={checked} size={props.size} />
+    //     </div>
+    //   </HoverCardTrigger>
+    //   <HoverCardPortal>
+    //     <HoverCardContent
+    //       sideOffset={props.sideOffset ?? 10}
+    //       alignOffset={props.alignOffset ?? -50}
+    //       align={props.align ?? 'start'}
+    //       side={props.side ?? 'left'}
+    //       className="p-0 w-48 bg-muted border-dialog-border border border-solid"
+    //     >
+    //       {render ? <CollectList code={props.code} onUpdate={_onUpdate} /> : null}
+    //     </HoverCardContent>
+    //   </HoverCardPortal>
+    // </HoverCard>
   )
 })
 

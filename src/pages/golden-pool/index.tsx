@@ -127,7 +127,7 @@ const GoldenPool = () => {
 
   const handleRemoveFav = useCallback((symbol: string[]) => {
     JknAlert.confirm({
-      content: '确认取消该股票收藏？',
+      content: symbol.length > 1 ? `确定批量取消${symbol.length}支股票收藏?`: '确认取消该股票收藏？',
       onAction: async (action) => {
         if (action === 'confirm') {
           removeFav.mutate(symbol)

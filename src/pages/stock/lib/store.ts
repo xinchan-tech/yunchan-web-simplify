@@ -346,13 +346,14 @@ export const chartManage = {
     }
 
     const chartStores = useChartManage.getState().chartStores
+    const activeChart = useChartManage.getState().getActiveChart()
     const newChartStores: typeof chartStores = {}
 
     const newActive = currentModeCount > targetModeCount ? 'chart-0' : useChartManage.getState().activeChartId
 
     for (let i = 0; i < targetModeCount; i++) {
       const chartId = `chart-${i}`
-      newChartStores[chartId] = chartStores[chartId] || createDefaultChartStore(chartId, active.symbol)
+      newChartStores[chartId] = chartStores[chartId] || {...activeChart, id: chartId}
     }
 
     useChartManage.setState({

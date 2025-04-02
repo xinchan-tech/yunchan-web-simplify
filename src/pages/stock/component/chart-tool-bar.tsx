@@ -322,14 +322,14 @@ const IndicatorPicker = memo(() => {
     const handler = () => {
       modal.modal.open()
     }
-    
-   chartEvent.get().on('showIndicatorSetting', handler)
 
-   
+    chartEvent.get().on('showIndicatorSetting', handler)
+
+
     return () => {
       chartEvent.get().off('showIndicatorSetting', handler)
     }
-  },  [modal.modal])
+  }, [modal.modal])
 
 
 
@@ -388,12 +388,12 @@ export const IndicatorModal = (props: { onClickParams: () => void }) => {
 
       if (!list) return []
 
-      if (list.name === '收藏') {
-        list.indicators?.forEach(i => {
-          allList.push(i)
-        })
-        return allList
-      }
+      // if (list.name === '收藏') {
+      //   list.indicators?.forEach(i => {
+      //     allList.push(i)
+      //   })
+      //   return allList
+      // }
 
       const t = list.items?.find(i => i.name.includes(type === 'main' ? '主图' : '副图'))
 
@@ -513,43 +513,41 @@ export const IndicatorModal = (props: { onClickParams: () => void }) => {
             ))
           }
         </div>
-        <div className="flex-1 overflow-auto py-2 box-border">
-          {
-            indicator.data?.find(i => i.id === category)?.name !== '收藏' ? (
-              <ToggleGroup className="ml-8 my-2" type="single" value={type} onValueChange={setType as any}>
-                <ToggleGroupItem value="main" className="rounded-2xl h-[24px] text-xs px-3 leading-1">主图</ToggleGroupItem>
-                <ToggleGroupItem value="secondary" className="rounded-2xl h-[24px] text-xs px-3 leading-1">副图</ToggleGroupItem>
-              </ToggleGroup>
-            ) : null
-          }
-          {
-            indicators.map(i => (
-              <div key={i.name}
-                className="flex items-center pl-2.5 pr-3.5 space-x-2 hover:bg-accent cursor-pointer py-1.5 data-[checked=true]:bg-[#2962FF4D] text-transparent hover:text-[#B8B8B8]"
-                data-checked={checkedIndicator.has(i.id)}
-                onClick={() => onCheck(i)} onKeyDown={() => { }}
-              >
-                {
-                  i.collect === 1 ? (
-                    <JknIcon.Svg name="fav-star" className="text-[#FFC440] p-1 rounded" size={16} onClick={(e) => { e.stopPropagation(); e.preventDefault(); collect.mutate({ id: i.id, collect: false }) }} />
-                  ) : (
-                    <JknIcon.Svg name="fav" className="hover:bg-[#4A4A4A] p-1 rounded" size={16} onClick={(e) => { e.stopPropagation(); e.preventDefault(); collect.mutate({ id: i.id, collect: true }) }} />
-                  )
-                }
-                <span className="text-foreground">{i.name}</span>
-                {
-                  !i.authorized ? (
-                    <JknIcon name="ic_lock" className="rounded-none" />
-                  ) : null
-                }
-                {
-                  checkedIndicator.has(i.id) ? (
-                    <JknIcon.Svg name="check" size={10} className="rounded-none text-foreground !ml-auto mr-1" />
-                  ) : null
-                }
-              </div>
-            ))
-          }
+        <div className="flex-1 overflow-auto py-2 box-border flex-col flex">
+          <ToggleGroup className="ml-8 my-2" type="single" value={type} onValueChange={setType as any}>
+            <ToggleGroupItem value="main" className="rounded-2xl h-[24px] text-xs px-3 leading-1">主图</ToggleGroupItem>
+            <ToggleGroupItem value="secondary" className="rounded-2xl h-[24px] text-xs px-3 leading-1">副图</ToggleGroupItem>
+          </ToggleGroup>
+          <ScrollArea className="flex-1">
+            {
+              indicators.map(i => (
+                <div key={i.name}
+                  className="flex items-center pl-2.5 pr-3.5 space-x-2 hover:bg-accent cursor-pointer py-1.5 data-[checked=true]:bg-[#2962FF4D] text-transparent hover:text-[#B8B8B8]"
+                  data-checked={checkedIndicator.has(i.id)}
+                  onClick={() => onCheck(i)} onKeyDown={() => { }}
+                >
+                  {
+                    i.collect === 1 ? (
+                      <JknIcon.Svg name="fav-star" className="text-[#FFC440] p-1 rounded" size={16} onClick={(e) => { e.stopPropagation(); e.preventDefault(); collect.mutate({ id: i.id, collect: false }) }} />
+                    ) : (
+                      <JknIcon.Svg name="fav" className="hover:bg-[#4A4A4A] p-1 rounded" size={16} onClick={(e) => { e.stopPropagation(); e.preventDefault(); collect.mutate({ id: i.id, collect: true }) }} />
+                    )
+                  }
+                  <span className="text-foreground">{i.name}</span>
+                  {
+                    !i.authorized ? (
+                      <JknIcon name="ic_lock" className="rounded-none" />
+                    ) : null
+                  }
+                  {
+                    checkedIndicator.has(i.id) ? (
+                      <JknIcon.Svg name="check" size={10} className="rounded-none text-foreground !ml-auto mr-1" />
+                    ) : null
+                  }
+                </div>
+              ))
+            }
+          </ScrollArea>
         </div>
       </div>
     </div>

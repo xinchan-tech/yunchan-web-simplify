@@ -1,7 +1,7 @@
 import { useStockSearch } from "@/hooks"
 import { useStockList } from '@/store'
 import { cn } from '@/utils/style'
-import { useBoolean, useVirtualList } from 'ahooks'
+import { useBoolean, useLocalStorageState, useVirtualList } from 'ahooks'
 import { useRef, useState } from 'react'
 import { JknIcon } from '../jkn/jkn-icon'
 import { Input, type InputProps } from '../ui/input'
@@ -16,6 +16,9 @@ const StockSelect = ({ onChange, className, width, ...props }: StockSelectProps)
   const [open, { setTrue, setFalse }] = useBoolean(false)
   const stockList = useStockList()
   const [keyword, setKeyword] = useState('')
+  const [history, setHistory] = useLocalStorageState<typeof stockList.list>('stock-search-history', {
+    defaultValue: []
+  })
 
   const _onClick = (symbol: string) => {
     setFalse()
@@ -24,7 +27,11 @@ const StockSelect = ({ onChange, className, width, ...props }: StockSelectProps)
       const s = stockList.list.find(item => item[1] === symbol)
 
       if (s) {
-        stockList.appendHistory([s])
+        setHistory(_s => {
+          const newHistory = _s?.filter(item => item[1] !== symbol) ?? []
+          newHistory.unshift(s)
+          return newHistory
+        })
         onChange?.(symbol)
       }
     }, 200)
@@ -34,7 +41,7 @@ const StockSelect = ({ onChange, className, width, ...props }: StockSelectProps)
     setFalse()
 
     setTimeout(() => {
-      stockList.cleanHistory()
+      setHistory([])
     }, 200)
   }
 
@@ -44,7 +51,7 @@ const StockSelect = ({ onChange, className, width, ...props }: StockSelectProps)
       setTrue()
     }
   }
-
+ 
   return (
     <div className="w-48" style={{ width }}>
       <Popover modal open={open} onOpenChange={v => {
@@ -70,14 +77,14 @@ const StockSelect = ({ onChange, className, width, ...props }: StockSelectProps)
           </div>
         </PopoverAnchor>
         <PopoverContent align="start" className="w-48 bg-muted" onOpenAutoFocus={e => e.preventDefault()}>
-          {stockList.history.length > 0 && !keyword ? (
+          {history?.length && !keyword ? (
             <div>
               <div className="flex items-center justify-between px-2 py-2 border-0 border-b border-solid border-border">
                 <div className="text-sm">最近搜索</div>
                 <JknIcon name="del" onClick={_onClean} className="w-4 h-4 cursor-pointer" />
               </div>
               <ScrollArea className="h-[300px]">
-                {stockList.history.map(ele => (
+                {history?.map(ele => (
                   <div
                     className="h-[49px] px-2 border-b-primary flex items-center hover:bg-accent cursor-pointer"
                     key={ele[1]}

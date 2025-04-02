@@ -232,7 +232,7 @@ export const drawGradientTransform = (raw: IndicatorRawData) => {
     let len = 0
 
     y1.split(',').forEach((y, i) => {
-      const _y = Number.parseInt(y)
+      const _y = Number.parseFloat(y)
       points.push({ x: i + x, y: _y })
       maxY = Math.max(maxY, _y)
       minY = Math.min(minY, _y)
@@ -240,7 +240,7 @@ export const drawGradientTransform = (raw: IndicatorRawData) => {
     })
 
     const y2Points = y2.split(',').map((y, i) => {
-      const _y = Number.parseInt(y)
+      const _y = Number.parseFloat(y)
       maxY = Math.max(maxY, _y)
       minY = Math.min(minY, _y)
       return { x: x + i, y: _y }
@@ -251,7 +251,7 @@ export const drawGradientTransform = (raw: IndicatorRawData) => {
     // gradients.push([x, x + len, minY, maxY, points, color1, color2])
     gradients.push({ x1: x, y1: minY, x2: x + len, y2: maxY, color: [color1, color2], points })
   })
-
+  
   raw.draw_data = gradients
 
   return raw

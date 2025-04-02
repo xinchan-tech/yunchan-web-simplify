@@ -391,7 +391,7 @@ export const drawText: DrawerFunc<DrawerTextShape[]> = (options, _, { xAxisIndex
   const grid = renderUtils.getGridByYAxisIndex(options, yAxisIndex)
   const top = grid?.top ?? 2
   const bottom = top + (grid?.height ?? Number.MAX_SAFE_INTEGER)
-  console.log(data)
+
   const line: CustomSeriesOption = {
     xAxisIndex: xAxisIndex,
     yAxisIndex: yAxisIndex,

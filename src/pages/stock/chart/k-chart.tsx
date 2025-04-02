@@ -25,7 +25,7 @@ export const KChart = (props: KChartProps) => {
   // const currentSymbol = useChartManage(s => s.currentSymbol)
   const viewMode = useChartManage(s => s.viewMode)
   // const symbol = useSymbolQuery()
-  const [queryParams] = useQueryParams<{ symbol: string; q?: string }>()
+  const [queryParams, setQueryParams] = useQueryParams<{ symbol: string; q?: string }>()
   const active = useChartManage(s => s.activeChartId)
 
   useEffect(() => {
@@ -41,6 +41,7 @@ export const KChart = (props: KChartProps) => {
 
   const onChangeActive = (index: number) => {
     chartManage.setActiveChart(getChartIdByIndex(index))
+    setQueryParams({ symbol: chartManage.getChart(getChartIdByIndex(index))?.symbol})
   }
 
   const chartCount = useMemo(() => renderUtils.getViewMode(viewMode), [viewMode])

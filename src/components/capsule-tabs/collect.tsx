@@ -12,13 +12,13 @@ interface CollectCapsuleTabsProps extends ComponentProps<typeof CapsuleTabs> {
 }
 
 const useCollectSelect = (onChange?: (key: string) => void) => {
-  const [activeStock, setActiveStock] = useState<Nullable<string>>()
+  const [activeStock, setActiveStock] = useState<Nullable<string>>('-1')
   const token = useToken(s => s.token)
   const collects = useQuery({
     queryKey: [getStockCollectCates.cacheKey],
     queryFn: () => getStockCollectCates(),
     initialData: [{
-      id: '1',
+      id: '-1',
       name: '我的自选',
       create_time: '',
       active: 0,
@@ -35,7 +35,7 @@ const useCollectSelect = (onChange?: (key: string) => void) => {
       queryClient.setQueryData(
         [getStockCollectCates.cacheKey],
         [{
-          id: '1',
+          id: '-1',
           name: '我的自选',
           create_time: '',
           active: 0,
@@ -48,7 +48,8 @@ const useCollectSelect = (onChange?: (key: string) => void) => {
   }, [token, queryClient.setQueryData])
 
   useEffect(() => {
-    if (collects.data?.length && !activeStock) {
+
+    if (collects.data?.length && activeStock === '-1') {
       let defaultCate = collects.data.find(cate => cate.is_default)
       if(!defaultCate) {
         defaultCate = collects.data[0]

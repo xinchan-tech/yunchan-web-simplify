@@ -694,7 +694,7 @@ const StockBrief = () => {
 
 
 const GoldenStockPool = () => {
-  const [type, setType] = useState('1')
+  const [type, setType] = useState('-1')
   const { token } = useToken()
   const [list, { setList, onSort }] = useTableData<ReturnType<typeof stockUtils.toStockWithExt>>([], 'symbol')
 
@@ -772,7 +772,7 @@ const GoldenStockPool = () => {
 
   return (
     <div className="w-full h-full flex flex-col overflow-hidden bg-background rounded">
-      <div className="flex items-center border-b-[#1B1B1B]">
+      <div className="flex items-center border-b-[#1B1B1B] text-foreground">
         <CollectDropdownMenu activeKey={type} onChange={setType} />
       </div>
       <div className="flex-1 overflow-hidden ">
