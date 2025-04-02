@@ -30,10 +30,10 @@ import {
   SubscribeSpan,
   withTooltip
 } from '@/components'
-import { usePropValue, useStockQuoteSubscribe, useTableData, useTableRowClickToStockTrading } from '@/hooks'
+import { usePropValue, useSnapshot, useSnapshotOnce, useStockQuoteSubscribe, useTableData, useTableRowClickToStockTrading } from '@/hooks'
 import { useTime, useToken } from '@/store'
 import { dateUtils } from "@/utils/date"
-import { stockUtils } from '@/utils/stock'
+import { StockSubscribeHandler, stockUtils } from '@/utils/stock'
 import { cn } from '@/utils/style'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import dayjs from 'dayjs'
@@ -67,23 +67,13 @@ const StockInfo = () => {
 
 export default StockInfo
 
-type StockBaseInfoData = {
-  name: string
-  collect: 0 | 1
-  code: string
-  percent: number
-  close: number
-  prevClose: number
-  time: string
-  subTime: string
-  subClose: number
-  subPercent: number
-  subPrevClose: number
-}
+type StockBaseInfoData = Parameters<StockSubscribeHandler<'snapshot'>>[0]['data']
 
 const StockBaseInfo = () => {
   const code = useSymbolQuery()
   const trading = useTime(s => s.getTrading())
+
+  const [dataInfo, setDataInfo] = useState<Nullable<StockBaseInfoData>>()
 
   const queryOptions = useMemo(
     () => ({
@@ -93,31 +83,35 @@ const StockBaseInfo = () => {
     }),
     [code]
   )
+
+
+  useSnapshotOnce(code,useCallback(e => {
+    setDataInfo(e.data)
+  }, []))
   const queryClient = useQueryClient()
 
   const codeInfo = useQuery(queryOptions)
 
-  const [data, setData] = useState<StockBaseInfoData>()
 
-  useEffect(() => {
-    const [lastData, beforeData, afterData] = codeInfo.data ? stockUtils.toStockRecord(codeInfo.data) : []
+  // useEffect(() => {
+  //   const [lastData, beforeData, afterData] = codeInfo.data ? stockUtils.toStockRecord(codeInfo.data) : []
 
-    const subData = trading === 'preMarket' || trading === 'intraDay' ? beforeData : afterData
+  //   const subData = trading === 'preMarket' || trading === 'intraDay' ? beforeData : afterData
 
-    setData({
-      name: lastData?.name ?? '',
-      collect: lastData?.collect ?? 0,
-      code: lastData?.code ?? '',
-      percent: lastData?.percent ?? 0,
-      close: lastData?.close ?? 0,
-      prevClose: lastData?.prevClose ?? 0,
-      subClose: subData?.close ?? 0,
-      subPercent: subData?.percent ?? 0,
-      time: lastData?.time ?? '',
-      subTime: subData?.time ?? '',
-      subPrevClose: subData?.prevClose ?? 0
-    })
-  }, [codeInfo.data, trading])
+  //   setData({
+  //     name: lastData?.name ?? '',
+  //     collect: lastData?.collect ?? 0,
+  //     code: lastData?.code ?? '',
+  //     percent: lastData?.percent ?? 0,
+  //     close: lastData?.close ?? 0,
+  //     prevClose: lastData?.prevClose ?? 0,
+  //     subClose: subData?.close ?? 0,
+  //     subPercent: subData?.percent ?? 0,
+  //     time: lastData?.time ?? '',
+  //     subTime: subData?.time ?? '',
+  //     subPrevClose: subData?.prevClose ?? 0
+  //   })
+  // }, [codeInfo.data, trading])
 
   useStockQuoteSubscribe([code])
 
@@ -137,6 +131,7 @@ const StockBaseInfo = () => {
     },
     [queryClient, codeInfo.data, queryOptions]
   )
+
   return (
     <>
       <div className="flex w-full items-center px-2 box-border pt-2 bg-background ">
@@ -146,15 +141,15 @@ const StockBaseInfo = () => {
           <JknIcon.Stock symbol={code} />
           <span className="text-lg">{code}</span>
           &nbsp;
-          <span className="text-tertiary text-xs flex-1 overflow-hidden text-ellipsis whitespace-nowrap">{data?.name}</span>
+          <span className="text-tertiary text-xs flex-1 overflow-hidden text-ellipsis whitespace-nowrap">{codeInfo.data?.name}</span>
         </span>
-        {data?.code ? (
+        {codeInfo.data?.symbol ? (
           <CollectStar
             onUpdate={onStarUpdate}
-            checked={data?.collect === 1}
+            checked={codeInfo.data?.extend?.collect === 1}
             sideOffset={5}
             align="start"
-            code={data.code}
+            code={code}
             size={20}
           />
         ) : null}
@@ -162,11 +157,11 @@ const StockBaseInfo = () => {
       <div className="py-1 space-y-3 bg-background">
         <StockQuoteBar
           label="点击查看盘中分时走势"
-          percent={data?.percent}
-          close={data?.close}
-          prevClose={data?.prevClose}
+          percent={dataInfo ? stockUtils.getPercent(dataInfo) : undefined}
+          close={dataInfo?.close}
+          prevClose={dataInfo?.prevClose}
           tradingLabel={trading === 'intraDay' ? '交易中' : '收盘价'}
-          time={data?.time}
+          time={dateUtils.toUsDay(dataInfo?.dayUpdated ?? '0').format('MM/DD hh:mm')}
           side="bottom"
           contentClassName="text-xs"
           interval={StockChartInterval.INTRA_DAY}
@@ -176,11 +171,11 @@ const StockBaseInfo = () => {
           trading === 'preMarket' ? (
             <StockQuoteBar
               label="点击查看分时走势"
-              percent={data?.subPercent}
-              close={data?.subClose}
-              prevClose={data?.subPrevClose}
+              percent={dataInfo ? stockUtils.getPercent({close: dataInfo.extPrice, prevClose: dataInfo.close}) : undefined}
+              close={dataInfo?.extPrice}
+              prevClose={dataInfo?.close}
+              time={dateUtils.toUsDay(dataInfo?.extUpdated ?? '0').format('MM/DD hh:mm')}
               tradingLabel="盘前价"
-              time={data?.subTime}
               side="bottom"
               contentClassName="text-xs"
               interval={StockChartInterval.PRE_MARKET}
@@ -188,11 +183,11 @@ const StockBaseInfo = () => {
           ) : (
             <StockQuoteBar
               label="点击查看分时走势"
-              percent={data?.subPercent}
-              close={data?.subClose}
-              prevClose={data?.subPrevClose}
+              percent={dataInfo ? stockUtils.getPercent({close: dataInfo.extPrice, prevClose: dataInfo.close}) : undefined}
+              close={dataInfo?.extPrice}
+              prevClose={dataInfo?.close}
+              time={dateUtils.toUsDay(dataInfo?.extUpdated ?? '0').format('MM/DD hh:mm')}
               tradingLabel="盘后价"
-              time={data?.subTime}
               side="bottom"
               contentClassName="text-xs"
               interval={StockChartInterval.AFTER_HOURS}
@@ -282,11 +277,11 @@ const StockQuoteBar = withTooltip(
           />
         </span>
         <span className="text-tertiary w-full text-xs mt-1">
-          {props.tradingLabel}
+          {props.tradingLabel} &nbsp;
           <SubscribeSpan
             trading={trading}
             symbol={symbol}
-            value={props.time?.slice(5, 11).replace('-', '/')}
+            value={props.time}
             formatter={v =>
               dateUtils.toUsDay(v.record.time).format('MM/DD hh:mm')
             }

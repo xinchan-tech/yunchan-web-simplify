@@ -45,3 +45,46 @@ export const useStockBarSubscribe = (symbols: string[], handler: StockSubscribeH
     return cancel
   }, [renderFn])
 }
+
+export const useSnapshot = (symbol: string, handler: StockSubscribeHandler<'snapshot'>) => {
+  useEffect(() => {
+    if (!symbol) return
+    const unsubscribe = stockSubscribe.snapshot(symbol)
+
+    return unsubscribe
+  }, [symbol])
+
+  useEffect(() => {
+    const cancel = stockSubscribe.on('snapshot', handler)
+
+    return cancel
+  }, [handler])
+}
+
+export const useSnapshotOnce = (symbol: string, handler: StockSubscribeHandler<'snapshot'>)=> {
+  const once = useRef(0)
+  const unSubscribe = useRef<() => void>()
+  const unSubscribeHandler = useRef<() => void>()
+
+  useEffect(() => {
+    if (!symbol) return
+    const unsubscribe = stockSubscribe.snapshot(symbol)
+    unSubscribe.current = unsubscribe
+    return () => {
+      unsubscribe()
+    }
+  }, [symbol])
+
+  useEffect(() => {
+    if(once.current) return
+    const _handler:  StockSubscribeHandler<'snapshot'> = (e) => {
+      if(e.data.symbol !== symbol) return
+      once.current = 1
+      handler(e)
+    }
+    const cancel = stockSubscribe.on('snapshot', _handler)
+    unSubscribeHandler.current = cancel
+
+    return cancel
+  }, [handler, symbol])
+}

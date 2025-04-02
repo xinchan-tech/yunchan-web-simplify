@@ -48,11 +48,80 @@ const quoteActionResultParser = (data: any) => {
   }
 }
 
+const snapshotActionResultParser = (data: any) => {
+  const action = data.ev as string
+  const {
+    symbol,
+    w52_high,
+    w52_low,
+    day_high,
+    day_open,
+    day_low,
+    day_close,
+    day_amount,
+    day_volume,
+    market_cap,
+    turnover,
+    pe,
+    pb,
+    pre_close,
+    updated,
+    ext_updated,
+    day_updated,
+    ext_price
+  } = data.detail
+
+  return {
+    action,
+    topic: action as string,
+    data: {
+      symbol,
+      w52High: w52_high,
+      w52Low: w52_low,
+      dayHigh: day_high,
+      dayOpen: day_open,
+      dayLow: day_low,
+      close: day_close,
+      dayAmount: day_amount,
+      dayVolume: day_volume,
+      marketCap: market_cap,
+      turnover,
+      pe,
+      pb,
+      prevClose: pre_close,
+      updated,
+      extPrice: ext_price,
+      extUpdated: ext_updated,
+      dayUpdated: day_updated
+    } as {
+      dayAmount: number // 当日成交金额
+      close: number // 当日收盘价
+      w52High: number // 当日最高价
+      dayLow: number // 当日最低价
+      dayOpen: number // 当日开盘价
+      dayVolume: number // 当日成交量
+      marketCap: number // 市值
+      pb: number // 市净率
+      pe: number // 市盈率
+      prevClose: number // 昨日收盘价
+      symbol: string // 股票代码
+      turnover: number // 换手率
+      updated: number // 更新时间戳
+      w52Low: number // 52周最低价
+      extPrice: number // 扩展价格
+      extUpdated: number // 扩展更新时间戳
+      dayUpdated: number // 当日更新时间戳
+    }
+  }
+}
+
 export type StockSubscribeHandler<T extends SubscribeActionType> = T extends 'bar'
   ? (data: ReturnType<typeof barActionResultParser>) => void
-  : (data: ReturnType<typeof quoteActionResultParser>) => void
+  : T extends 'quote'
+    ? (data: ReturnType<typeof quoteActionResultParser>) => void
+    : (data: ReturnType<typeof snapshotActionResultParser>) => void
 
-export type SubscribeActionType = 'bar' | 'quote' | ''
+export type SubscribeActionType = 'bar' | 'quote' | '' | 'snapshot'
 
 type BufferItem = {
   action: string
@@ -63,6 +132,11 @@ type BufferItem = {
  * quote 时间窗口buffer结构
  */
 type QuoteBuffer = Record<string, ReturnType<typeof quoteActionResultParser>>
+
+/**
+ * snapshot 时间窗口buffer结构
+ */
+type SnapshotBuffer = Record<string, ReturnType<typeof snapshotActionResultParser>>
 
 class StockSubscribe {
   private subscribed = mitt<Record<string, any>>()
@@ -78,6 +152,7 @@ class StockSubscribe {
   private cid: string
   private bufferMax: number
   private quoteBuffer: QuoteBuffer
+  private snapshotBuffer: SnapshotBuffer
   private lastBeat: number
 
   constructor(url: string) {
@@ -88,6 +163,7 @@ class StockSubscribe {
     this.bufferHandleLength = 500
     this.bufferMax = 20000
     this.quoteBuffer = {}
+    this.snapshotBuffer = {}
     this.lastBeat = Date.now()
 
     this.ws = new Ws(`${this.url}&cid=${this.cid}`, {
@@ -95,6 +171,11 @@ class StockSubscribe {
       onMessage: ev => {
         const data = JSON.parse(ev.data)
         if (data.ev) {
+          if (data.ev === 'snapshot') {
+            const parserData = snapshotActionResultParser(data)
+            this.snapshotBuffer[parserData.topic] = parserData
+            return
+          }
           if (data.b) {
             const parserData = barActionResultParser(data)
             this.buffer.push({ action: parserData.topic, data: parserData })
@@ -163,9 +244,9 @@ class StockSubscribe {
       }
     })
 
-    if(Object.keys(this.subscribeTopic).filter(topic => topic.startsWith('quote')).length > 100){
+    if (Object.keys(this.subscribeTopic).filter(topic => topic.startsWith('quote')).length > 100) {
       console.warn('股票价格订阅数大于100， 取消订阅')
-      return 
+      return
     }
 
     if (_params.length > 0) {
@@ -182,12 +263,34 @@ class StockSubscribe {
   }
 
   public unsubscribe(action: SubscribeActionType, params: string[]) {
+    console.log(action, params)
     params.forEach(symbol => {
       const topic = `${action}:${symbol}`
       if (this.subscribeTopic[topic]) {
         this.subscribeTopic[topic].count--
       }
     })
+  }
+
+  public snapshot(symbol: string) {
+    const action = 'snapshot'
+    const topic = `${action}:${symbol}`
+
+    if (this.subscribeTopic[topic]) {
+      this.subscribeTopic[topic].count++
+    } else {
+      this.subscribeTopic[topic] = { count: 1 }
+    }
+
+    this.ws.send({
+      action: `${action}_subscribe`,
+      cid: this.cid,
+      params: symbol
+    })
+
+    return () => {
+      this.unsubscribe(action, [symbol])
+    }
   }
 
   // public onceShap
@@ -267,6 +370,15 @@ class StockSubscribe {
       if (value.count === 0) {
         delete this.subscribeTopic[key]
         const [action, symbol] = key.split(':')
+        if (action === 'snapshot') {
+          this.ws.send({
+            action: 'snapshot_unsubscribe',
+            cid: this.cid,
+            params: symbol
+          })
+          continue
+        }
+
         if (!cleanTopic[action]) {
           cleanTopic[action] = []
         }
@@ -288,9 +400,9 @@ class StockSubscribe {
   }
 
   private startCheckWsStatus() {
-    const current = Date.now() 
-    if(current > this.lastBeat + 1000 * 60 * 1){
-      if(this.ws.status === 'error' || this.ws.status === 'close'){
+    const current = Date.now()
+    if (current > this.lastBeat + 1000 * 60 * 1) {
+      if (this.ws.status === 'error' || this.ws.status === 'close') {
         console.warn(`ws beat check status ${this.ws.status}`)
         this.ws.reconnect()
       }
@@ -312,6 +424,12 @@ class StockSubscribe {
     this.quoteBuffer = {}
     quoteBuffer.forEach(([topic, data]) => {
       this.subscribed.emit(`${topic}:quote`, data)
+      this.subscribed.emit(topic, data)
+    })
+
+    const snapshotBuffer = Object.entries(this.snapshotBuffer)
+    this.snapshotBuffer = {}
+    snapshotBuffer.forEach(([topic, data]) => {
       this.subscribed.emit(topic, data)
     })
 

@@ -1,8 +1,8 @@
 import { StockChartInterval, getLargeCapIndexes, getStockChartQuote } from '@/api'
 import { ChartTypes, JknChart, JknIcon, SubscribeSpan } from '@/components'
-import { useStockBarSubscribe, useStockQuoteSubscribe } from '@/hooks'
+import { useSnapshotOnce, useStockBarSubscribe, useStockQuoteSubscribe } from '@/hooks'
 import { useConfig, useTime } from '@/store'
-import { stockSubscribe, type StockSubscribeHandler, type StockTrading, stockUtils } from '@/utils/stock'
+import { type Stock, stockSubscribe, type StockTrading, stockUtils } from '@/utils/stock'
 import { cn, colorUtil } from '@/utils/style'
 import { useQuery } from '@tanstack/react-query'
 import Decimal from 'decimal.js'
@@ -71,13 +71,6 @@ const LargeCap = () => {
     navigate(`/stock/trading?symbol=${activeStock}`)
   }, [activeStock, navigate])
 
-  // const tabs = useMemo(() => {
-  //   return largeCap.data?.map(item => ({
-  //     key: item.category_name,
-  //     label: item.category_name
-  //   }))
-  // }, [largeCap.data])
-
   const { t } = useTranslation()
 
   const activeKey = useMemo(() => {
@@ -137,43 +130,8 @@ const LargeCap = () => {
       <ScrollContainer onNextStock={onNextStock} onPrevStock={onPreStock}>
         {/* <div className=""> */}
         {stocks.map(stock => (
-          <div
-            key={stock.name}
-            data-stock-symbol={stock.symbol}
-            className={cn(
-              'large-cap-stock-select hover:bg-hover text-center py-3 px-3 box-border cursor-pointer transition-all duration-300 w-[220px] h-[57px] flex items-center flex-shrink-0 rounded-[300px]',
-              {
-                'bg-accent': activeStock === stock.symbol
-              }
-            )}
-            onClick={() => onActiveStockChange(stock.symbol)}
-            onKeyDown={() => { }}
-          >
-            <JknIcon.Stock symbol={stock.symbol} className="w-[28px] h-[28px]" />
-            <div className="ml-3 flex flex-col">
-              <span className="text-sm text-left">{stock.name}</span>
-              <div className="flex items-center mt-1 space-x-2">
-                <SubscribeSpan.Price
-                  trading={['SPX', 'IXIC', 'DJI'].includes(stock.symbol) ? 'intraDay' : ['preMarket', 'intraDay', 'afterHours']}
-                  initValue={stock.close}
-                  symbol={stock.symbol}
-                  initDirection={stockUtils.isUp(stock)}
-                  decimal={3}
-                  arrow
-                />
-                <SubscribeSpan.Percent
-                  className="text-sm"
-                  trading={['SPX', 'IXIC', 'DJI'].includes(stock.symbol) ? 'intraDay' : ['preMarket', 'intraDay', 'afterHours']}
-                  initValue={stockUtils.getPercent(stock)}
-                  symbol={stock.symbol}
-                  initDirection={stockUtils.isUp(stock)}
-                  decimal={2}
-                />
-              </div>
-            </div>
-          </div>
+          <StockBarItem key={stock.symbol} stock={stock} check={activeStock === stock.symbol} onActiveStockChange={onActiveStockChange} />
         ))}
-        {/* </div> */}
       </ScrollContainer>
 
       <div className="flex-1 relative">
@@ -181,6 +139,53 @@ const LargeCap = () => {
           <LargeCapChart code={activeStock} type={stockType} />
         </div>
 
+      </div>
+    </div>
+  )
+}
+
+interface StockBarItemProps {
+  stock: Stock
+  check: boolean
+  onActiveStockChange: (symbol: string) => void
+}
+
+const StockBarItem = ({ stock, check, onActiveStockChange }: StockBarItemProps) => {
+
+  return (
+    <div
+      key={stock.name}
+      data-stock-symbol={stock.symbol}
+      className={cn(
+        'large-cap-stock-select hover:bg-hover text-center py-3 px-3 box-border cursor-pointer transition-all duration-300 w-[220px] h-[57px] flex items-center flex-shrink-0 rounded-[300px]',
+        {
+          'bg-accent': check
+        }
+      )}
+      onClick={() => onActiveStockChange(stock.symbol)}
+      onKeyDown={() => { }}
+    >
+      <JknIcon.Stock symbol={stock.symbol} className="w-[28px] h-[28px]" />
+      <div className="ml-3 flex flex-col">
+        <span className="text-sm text-left">{stock.name}</span>
+        <div className="flex items-center mt-1 space-x-2">
+          <SubscribeSpan.Price
+            trading={['SPX', 'IXIC', 'DJI'].includes(stock.symbol) ? 'intraDay' : ['preMarket', 'intraDay', 'afterHours']}
+            initValue={stock.close}
+            symbol={stock.symbol}
+            initDirection={stockUtils.isUp(stock)}
+            decimal={3}
+            arrow
+          />
+          <SubscribeSpan.Percent
+            className="text-sm"
+            trading={['SPX', 'IXIC', 'DJI'].includes(stock.symbol) ? 'intraDay' : ['preMarket', 'intraDay', 'afterHours']}
+            initValue={stockUtils.getPercent(stock)}
+            symbol={stock.symbol}
+            initDirection={stockUtils.isUp(stock)}
+            decimal={2}
+          />
+        </div>
       </div>
     </div>
   )
@@ -236,9 +241,6 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
         }
       },
       yAxis: {
-        tickText: {
-          color: '#B8B8B8'
-        },
         axisLine: {
           show: false
         }

@@ -253,7 +253,7 @@ export const stockUtils = {
   /**
    * 涨幅
    */
-  getPercent: (stock: Stock, decimal?: number, percent?: boolean): number | undefined => {
+  getPercent: (stock: Pick<Stock, 'close' | 'prevClose'>, decimal?: number, percent?: boolean): number | undefined => {
     if (!stock.prevClose) return
     let n = Decimal.create(stock.close).minus(stock.prevClose).div(stock.prevClose)
 
