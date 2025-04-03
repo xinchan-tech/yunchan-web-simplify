@@ -257,9 +257,8 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
         type: 'area' as any,
         area: {
           lineColor: data => {
-            const postData = data.slice(0, tick.pre + tick.total).pop()
+            const postData = data.slice(0, tick.pre + tick.post).pop()
             const lastData = data[data.length - 1]
-
             const lastColor = Decimal.create(lastData?.close).gt(lastData?.prevClose ?? 0) ? upColor : downColor
 
             const preColor = data.length > tick.pre ? '#50535E' : lastColor
@@ -273,7 +272,7 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
             ]
           },
           backgroundColor(data) {
-            const postData = data.slice(0, tick.pre + tick.total).pop()
+            const postData = data.slice(0, tick.pre + tick.post).pop()
             const lastData = data[data.length - 1]
             const lastColor = Decimal.create(lastData?.close).gt(lastData?.prevClose ?? 0) ? upColor : downColor
 
