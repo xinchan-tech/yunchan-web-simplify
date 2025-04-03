@@ -119,7 +119,13 @@ type IndicatorDataDrawBand = IndicatorDataBase<'DRAWBAND'> & {
  * color: 颜色
  */
 type IndicatorDataDrawRectRel = IndicatorDataBase<'DRAWRECTREL'> & {
-  drawData: Record<number, [number, number, number, number, string]>
+  drawData: {
+    x: number
+    y: number
+    width: number
+    height: number
+    color: string
+  }[]
 }
 type IndicatorDataDrawIcon = IndicatorDataBase<'DRAWICON'> & {
   drawData: {
@@ -439,16 +445,17 @@ export const drawNumberTransform = (raw: IndicatorRawData) => {
   return raw
 }
 
-export const drawRectrelTransform = (raw: IndicatorRawData) => {
+export const drawRectRelTransform = (raw: IndicatorRawData) => {
   if (raw.draw !== 'DRAWRECTREL') return raw
   if (!raw.draw_data) return raw
 
-  raw.draw_data = raw.draw_data.map(item => {
+  raw.draw_data = Object.values(raw.draw_data).map(item => {
     return {
-      x: item.x,
-      y: item.y,
-      rectWidth: item.rectWidth || 10,
-      rectHeight: item.rectHeight || 5
+      x: item[0],
+      y: item[1],
+      width: item[2],
+      height: item[3],
+      color: item[4]
     }
   })
 

@@ -212,7 +212,7 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
 
                   return lastData.close > lastData.prevClose ? upColor : downColor
                 }
-                console.log(axisType)
+      
                 if (axisType === 'percentage') {
                   const { from } = chart.getVisibleRange()
                   const firstData = data[from]

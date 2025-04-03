@@ -10,7 +10,7 @@ import {
   drawIconTransform,
   drawLineTransform,
   drawNumberTransform,
-  drawRectrelTransform,
+  drawRectRelTransform,
   drawStickLineTransform,
   drawTextTransform
 } from './transform'
@@ -24,7 +24,7 @@ const transformChain = chain(
   drawIconTransform,
   drawBandTransform,
   drawNumberTransform,
-  drawRectrelTransform,
+  drawRectRelTransform,
   drawGradientTransform
 )
 
