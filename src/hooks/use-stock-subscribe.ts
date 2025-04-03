@@ -14,26 +14,26 @@ const useStockSubscribe = (action: SubscribeActionType, symbols: string[]) => {
 }
 
 export const useStockQuoteSubscribe = (symbols: string[], handler?: StockSubscribeHandler<'quote'>) => {
-  useStockSubscribe('quote', symbols)
-  const handlerRef = useRef(handler ?? (() => {}))
+  // useStockSubscribe('quote', symbols)
+  // const handlerRef = useRef(handler ?? (() => {}))
 
-  useEffect(() => {
-    handlerRef.current = handler ?? (() => {})
+  // useEffect(() => {
+  //   handlerRef.current = handler ?? (() => {})
 
-    return () => {
-      handlerRef.current = () => {}
-    }
-  }, [handler])
+  //   return () => {
+  //     handlerRef.current = () => {}
+  //   }
+  // }, [handler])
 
-  useEffect(() => {
-    const unSubscribe = stockSubscribe.on('quote', d => {
-      handlerRef.current(d)
-    })
+  // useEffect(() => {
+  //   const unSubscribe = stockSubscribe.on('quote', d => {
+  //     handlerRef.current(d)
+  //   })
 
-    return () => {
-      unSubscribe()
-    }
-  }, [])
+  //   return () => {
+  //     unSubscribe()
+  //   }
+  // }, [])
 }
 
 export const useStockBarSubscribe = (symbols: string[], handler: StockSubscribeHandler<'bar'>) => {

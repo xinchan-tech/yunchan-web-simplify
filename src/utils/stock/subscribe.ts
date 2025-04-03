@@ -325,14 +325,12 @@ class StockSubscribe {
    * @returns cancelTopic
    */
   public onQuoteTopic(symbol: string, handler: StockSubscribeHandler<'quote'>) {
-    // if (!this.hasQuoteTopicSubscribe(symbol)) {
-    //   this.subscribe('quote', [symbol])
-    // }
+    this.subscribe('quote', [symbol])
     this.subscribed.on(`${symbol}:quote`, handler)
-
+    // console.log(this.subscribeTopic)
     return () => {
       this.offQuoteTopic(symbol, handler)
-      // this.unsubscribe('quote', [symbol])
+      this.unsubscribe('quote', [symbol])
     }
   }
 
@@ -377,7 +375,7 @@ class StockSubscribe {
     const cleanTopic: Record<string, string[]> = {}
 
     for (const [key, value] of Object.entries(this.subscribeTopic)) {
-      if (value.count === 0) {
+      if (value.count <= 0) {
         delete this.subscribeTopic[key]
         const [action, symbol] = key.split(':')
         if (action === 'snapshot') {
@@ -464,3 +462,4 @@ class StockSubscribe {
 const token = uid(14)
 
 export const stockSubscribe = new StockSubscribe(`${import.meta.env.PUBLIC_BASE_WS_STOCK_URL}?token=${token}`)
+window.stockSubscribe = stockSubscribe

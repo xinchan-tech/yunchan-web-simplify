@@ -243,6 +243,7 @@ export const NumSpanSubscribe = ({
  */
 interface SubscribeSpanProps extends Omit<HTMLAttributes<HTMLSpanElement>, 'onChange'> {
   value: number | string | undefined
+  visibleOptimization?: boolean
   symbol: string
   formatter: (data: Parameters<StockSubscribeHandler<'quote'>>[0]) => number | string | undefined
   /**
@@ -268,6 +269,7 @@ export const SubscribeSpan = memo(
     subscribe = true,
     onChange,
     className,
+    visibleOptimization = true,
     ...props
   }: SubscribeSpanProps) => {
     const [innerValue, setInnerValue] = usePropValue(value)
@@ -275,6 +277,7 @@ export const SubscribeSpan = memo(
     const formatFn = useRef(formatter)
     const changeFn = useRef(onChange)
     const lastValue = useRef(value)
+    const [visible, setVisible] = useState(!visibleOptimization)
 
     useEffect(() => {
       formatFn.current = formatter
@@ -285,10 +288,29 @@ export const SubscribeSpan = memo(
     }, [onChange])
 
     useEffect(() => {
-      
+      if (!visibleOptimization) {
+        setVisible(true)
+        return
+      }
+
+      const observer = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+          setVisible(entry.isIntersecting)
+        })
+      })
+
+      observer.observe(spanRef.current!)
+
+      return () => {
+        observer.disconnect()
+      }
+    }, [visibleOptimization])
+
+    useEffect(() => {
       if (!subscribe) return
+      if (!visible) return
       const unSubscribe = stockSubscribe.onQuoteTopic(symbol, data => {
-        if(symbol !== data.topic){
+        if (symbol !== data.topic) {
           console.warn('SubscribeSpan: symbol not match', symbol, data.topic)
           return
         }
@@ -319,7 +341,7 @@ export const SubscribeSpan = memo(
       return () => {
         unSubscribe()
       }
-    }, [symbol, setInnerValue, trading, subscribe])
+    }, [symbol, setInnerValue, trading, subscribe, visible])
 
     return (
       <span ref={spanRef} className={cn('subscribe-span', className)} {...props}>
