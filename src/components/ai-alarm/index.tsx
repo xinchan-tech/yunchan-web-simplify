@@ -51,7 +51,7 @@ export const AiAlarm = (props: PropsWithChildren<AiAlarmProps>) => {
                       <Cross2Icon className="scale-75" />
                     </span>
                   </DialogClose>
-                  <span className="leading-[40px]">AI报警设置</span>
+                  <span className="leading-[40px]">AI警报设置</span>
                 </div>
               </DialogTitle>
               <VisuallyHidden>
@@ -105,7 +105,7 @@ export const PriceAlarm = (props: PropsWithChildren<AiAlarmProps>) => {
                       <Cross2Icon className="scale-75" />
                     </span>
                   </DialogClose>
-                  <span className="leading-[40px]">股价报警设置</span>
+                  <span className="leading-[40px]">股价警报设置</span>
                 </div>
               </DialogTitle>
               <VisuallyHidden>

@@ -12,7 +12,7 @@ const AlarmPage = () => {
   const [count, setCount] = useState(0)
   const aiForm = useModal({
     content: <AiAlarmForm />,
-    title: 'AI报警设置',
+    title: 'AI警报设置',
     className: 'w-[900px]',
     closeIcon: true,
     footer: false
@@ -20,7 +20,7 @@ const AlarmPage = () => {
 
   const priceForm = useModal({
     content: <PriceAlarmForm />,
-    title: '股价报警设置',
+    title: '股价警报设置',
     closeIcon: true,
     footer: false,
     className: 'w-[900px]'
@@ -30,23 +30,23 @@ const AlarmPage = () => {
     <div className="h-full bg-muted flex flex-col">
       <div className="border border-solid border-border py-1 flex items-center w-full pr-4 box-border mr-auto">
         <CapsuleTabs activeKey={alarmType.toString()} onChange={v => setAlarmType(+v)}>
-          <CapsuleTabs.Tab label="AI报警" value={AlarmType.AI.toString()} />
-          <CapsuleTabs.Tab label="股价报警" value={AlarmType.PRICE.toString()} />
-          <CapsuleTabs.Tab label="画线报警" value={AlarmType.LINE.toString()} />
+          <CapsuleTabs.Tab label="AI警报" value={AlarmType.AI.toString()} />
+          <CapsuleTabs.Tab label="股价警报" value={AlarmType.PRICE.toString()} />
+          <CapsuleTabs.Tab label="画线警报" value={AlarmType.LINE.toString()} />
         </CapsuleTabs>
         <div className="ml-auto">
           {alarmType === AlarmType.AI ? (
             <AiAlarm>
               <div className="flex items-center cursor-pointer ml-auto text-xs text-secondary space-x-1">
                 <JknIcon name="add" className="w-3 h-3" />
-                <span>添加报警</span>
+                <span>添加警报</span>
               </div>
             </AiAlarm>
           ) : (
             <PriceAlarm>
               <div className="flex items-center cursor-pointer ml-auto text-xs text-secondary space-x-1">
                 <JknIcon name="add" className="w-3 h-3" />
-                <span>添加报警</span>
+                <span>添加警报</span>
               </div>
             </PriceAlarm>
           )}
@@ -55,10 +55,10 @@ const AlarmPage = () => {
       <div className="flex-1 overflow-hidden flex flex-col">
         <div className="border-0 border-b border-solid border-border py-1 flex items-center">
           <CapsuleTabs type="text" activeKey={viewType} onChange={setViewKey}>
-            <CapsuleTabs.Tab label="报警列表" value="list" />
-            <CapsuleTabs.Tab label="已触发报警" value="log" />
+            <CapsuleTabs.Tab label="警报列表" value="list" />
+            <CapsuleTabs.Tab label="已触发警报" value="log" />
           </CapsuleTabs>
-          {viewType === 'list' ? <div className="text-xs ml-auto">当前运行报警：{count} 条</div> : null}
+          {viewType === 'list' ? <div className="text-xs ml-auto">当前运行警报：{count} 条</div> : null}
         </div>
         <div className="flex-1 overflow-hidden">
           {

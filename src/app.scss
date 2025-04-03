@@ -309,3 +309,9 @@ span[data-direction-sign="true"][data-direction="up"]::before {
     display: block !important;
   }
 }
+
+.jkn-dialog{
+  div[data-orientation="vertical"][data-state="visible"] {
+    opacity: 0.75;
+  }
+}

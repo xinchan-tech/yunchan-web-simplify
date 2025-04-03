@@ -42,7 +42,7 @@ const AlarmLog = (props: AlarmLogProps) => {
         render: (_, row) => <StockView name={row.symbol} code={row.symbol} />
       },
       {
-        title: '报警类型',
+        title: '警报类型',
         dataIndex: 'alarmType',
         align: 'right',
         render: (_, row) => (
@@ -73,7 +73,7 @@ const AlarmLog = (props: AlarmLogProps) => {
       })
     }
     ;(r as any[]).push({
-      title: '报警时间',
+      title: '警报时间',
       dataIndex: 'create',
       width: 120,
       align: 'center',

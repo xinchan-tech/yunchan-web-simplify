@@ -30,7 +30,7 @@ export const routes: RouteObject[] = [
             path: '/stock/alarm',
             Component: lazy(() => import('@/pages/stock-alarm')),
             handle: {
-              title: '股票报警'
+              title: '股票警报'
             }
           },
           {
@@ -89,7 +89,7 @@ export const routes: RouteObject[] = [
         path: '/alarm',
         Component: lazy(() => import('@/pages/alarm')),
         handle: {
-          title: 'AI报警'
+          title: 'AI警报'
         }
       },
       {

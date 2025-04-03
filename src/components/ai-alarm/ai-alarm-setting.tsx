@@ -23,7 +23,7 @@ import { useConfig } from "@/store"
 const formSchema = z.object({
   symbol: z.string({ message: '股票代码错误' }).min(1, '股票代码错误'),
   stockCycle: z.array(z.string()).min(1, '至少选择一个周期'),
-  categoryIds: z.array(z.string()).min(1, '请选择报警类型'),
+  categoryIds: z.array(z.string()).min(1, '请选择警报类型'),
   categoryHdlyIds: z.array(z.string()).optional(),
   frequency: z.string({ message: '周期错误' }),
   name: z.string().optional(),
@@ -113,7 +113,7 @@ const AiAlarmSetting = (props: AiAlarmSetting) => {
             name="stockCycle"
             render={({ field }) => (
               <FormItem className="pb-2 flex items-start space-y-0">
-                <FormLabel className="w-32 flex-shrink-0 text-base font-normal">报警周期</FormLabel>
+                <FormLabel className="w-32 flex-shrink-0 text-base font-normal">警报周期</FormLabel>
                 <FormControl>
                   <StockCycleSelect {...field} />
                 </FormControl>
@@ -121,7 +121,7 @@ const AiAlarmSetting = (props: AiAlarmSetting) => {
             )}
           />
 
-          <div className="text-base">报警类型</div>
+          <div className="text-base">警报类型</div>
           <Separator className="my-2 h-[1px] w-full" />
           <FormField
             control={form.control}
@@ -159,7 +159,7 @@ const AiAlarmSetting = (props: AiAlarmSetting) => {
             name="name"
             render={({ field }) => (
               <FormItem className="pb-3 flex space-y-0  items-center">
-                <FormLabel className="w-32 text-base font-normal">报警名称</FormLabel>
+                <FormLabel className="w-32 text-base font-normal">警报名称</FormLabel>
                 <FormControl >
                   <NameInput {...field} />
                 </FormControl>
@@ -226,7 +226,7 @@ const AlarmsTypeSelect = forwardRef((props: AlarmsTypeSelectProps, _) => {
   const [type, setType] = useState('多头策略')
   const [method, setMethod] = useState<Awaited<ReturnType<typeof getAlarmTypes>>['stocks'][0]>()
 
-  const data = useMemo(() => query.data?.stocks.find(item => item.name === '报警类型'), [query.data])
+  const data = useMemo(() => query.data?.stocks.find(item => item.name === '警报类型'), [query.data])
 
   const form = useFormContext()
 

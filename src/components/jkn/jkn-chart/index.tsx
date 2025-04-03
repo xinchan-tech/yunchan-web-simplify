@@ -222,6 +222,9 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
           },
           tickLine: {
             color: '#202123'
+          },
+          tickText: {
+            color: '#B8B8B8'
           }
         },
         separator: {

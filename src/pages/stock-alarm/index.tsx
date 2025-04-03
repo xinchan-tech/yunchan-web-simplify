@@ -1,14 +1,12 @@
 import { AlarmType, PriceAlarmTrigger, deleteAlarmCondition, getAlarmConditionsList, getAlarmLogsList } from "@/api"
 import { JknIcon, JknVirtualInfinite, StockAlarm, Tabs, TabsContent, TabsList, TabsTrigger } from '@/components'
 import { useCheckboxGroup, useToast } from "@/hooks"
+import { dateUtils } from "@/utils/date"
 import { stockUtils } from "@/utils/stock"
-import { AESCrypt } from "@/utils/string"
 import { cn } from "@/utils/style"
 import { useInfiniteQuery } from "@tanstack/react-query"
 import to from "await-to-js"
-import qs from "qs"
 import { useState } from 'react'
-import { useNavigate } from "react-router"
 
 const StockAlarmPage = () => {
   const [activeTab, setActiveTab] = useState<'list' | 'log'>('list')
@@ -18,7 +16,7 @@ const StockAlarmPage = () => {
         <Tabs value={activeTab} onValueChange={setActiveTab as any} className="h-full flex flex-col">
           <TabsList variant="flat" className="mx-5">
             <TabsTrigger value={'list'} asChild>
-              <span className="w-full">&emsp;报警列表&emsp;</span>
+              <span className="w-full">&emsp;警报列表&emsp;</span>
             </TabsTrigger>
             <TabsTrigger value={'log'} asChild>
               <span className="w-full">&emsp;触发日志&emsp;</span>
@@ -139,18 +137,13 @@ const AlarmItem = ({ symbol, data, onDelete }: AlarmItemProps) => {
   // const navigate = useNavigate()
 
   const onNav = () => {
-    // const interval = data.stock_cycle
-
-    // const params = qs.stringify({symbol, q: AESCrypt.encrypt(JSON.stringify({ interval })) })
-
-    // navigate(`/stock?${params}`)
     stockUtils.gotoStockPage(symbol, { interval: data.stock_cycle })
   }
 
   return (
-    <div className="alarm-list-item px-5 py-3 leading-none text-sm border-b-primary hover:bg-[#1B1B1B]" onClick={onNav} onKeyDown={() => { }}>
+    <div className="alarm-list-item text-foreground px-5 py-3 leading-none text-sm border-b-primary hover:bg-[#1B1B1B]" onClick={onNav} onKeyDown={() => { }}>
       <div className="flex items-center w-full relative">
-        <JknIcon.Stock symbol={symbol} className="w-4 h-4 leading-4" />
+        <JknIcon.Stock symbol={symbol} className="w-4 h-4 leading-4 mr-1" />
         <span>{symbol}</span>，
         {
           renderTrigger()
@@ -165,10 +158,28 @@ const AlarmItem = ({ symbol, data, onDelete }: AlarmItemProps) => {
         </div>
       </div>
       <div className="text-tertiary text-xs text-left mt-2.5">
-        {
-          data.condition.frequency === 1 ? '持续提醒' : '仅提醒一次'
-        }
+        <span>
+          添加时间&nbsp;
+          {dateUtils.toUsDay(data.create_time).format('MM/DD w HH:mm')}
+        </span>
+        &emsp;
+        <span>
+          <span className="text-secondary">频率·</span>
+          {
+            data.condition.frequency === 1 ? '持续提醒' : '仅提醒一次'
+          }
+        </span>
       </div>
+      {
+        data.expire_time ? (
+          <div className="text-tertiary text-xs text-left mt-2.5">
+            <span>
+              到期时间&nbsp;
+              {dateUtils.toUsDay(data.expire_time).format('YYYY/MM/DD')}
+            </span>
+          </div>
+        ) : null
+      }
       <style jsx>
         {
           `
@@ -188,7 +199,6 @@ const AlarmItem = ({ symbol, data, onDelete }: AlarmItemProps) => {
 type AlarmRecordItemType = ArrayItem<Awaited<ReturnType<typeof getAlarmLogsList>>['items']>
 
 const StockAlarmRecordList = () => {
-  const { checked, toggle } = useCheckboxGroup([])
   const alarmQuery = useInfiniteQuery({
     queryKey: [getAlarmLogsList.cacheKey],
     queryFn: async ({ pageParam = 0 }) => getAlarmLogsList({ page: pageParam, limit: 20 }),
@@ -215,7 +225,7 @@ const StockAlarmRecordList = () => {
       <JknVirtualInfinite direction="down" className="flex-1" itemHeight={70} rowKey="id" data={alarmQuery.data ?? []}
         hasMore={alarmQuery.hasNextPage}
         fetchMore={alarmQuery.fetchNextPage}
-        renderItem={(row) => <AlarmRecordItem symbol={row.symbol} data={row} onDelete={onDelete} checked={checked.some(item => item === row.id)} onClick={() => toggle(row.id)} />}
+        renderItem={(row) => <AlarmRecordItem symbol={row.symbol} data={row} onDelete={onDelete} />}
       />
     </div>
   )
@@ -225,10 +235,12 @@ interface AlarmRecordItemProps {
   symbol: string
   data: AlarmRecordItemType
   onDelete: (id: string) => void
-  onClick: () => void
-  checked: boolean
 }
-const AlarmRecordItem = ({ symbol, data, onDelete, checked, onClick }: AlarmRecordItemProps) => {
+const AlarmRecordItem = ({ symbol, data, onDelete }: AlarmRecordItemProps) => {
+
+  const onClick = () => {
+    stockUtils.gotoStockPage(symbol, { interval: data.stock_cycle })
+  }
   const renderTrigger = () => {
     if (data.type === AlarmType.AI) {
       const cyc = stockUtils.intervalToStr(data.stock_cycle)
@@ -276,9 +288,9 @@ const AlarmRecordItem = ({ symbol, data, onDelete, checked, onClick }: AlarmReco
 
 
   return (
-    <div className="alarm-list-item px-5 py-3 leading-none text-sm border-b-primary hover:bg-[#1B1B1B]" style={{ background: checked ? 'rgba(41, 98, 255, 0.3)' : undefined }} onClick={onClick} onKeyDown={() => { }}>
+    <div className="alarm-list-item text-foreground px-5 py-3 leading-none text-sm border-b-primary hover:bg-[#1B1B1B]" onClick={onClick} onKeyDown={() => { }}>
       <div className="flex items-center w-full relative">
-        <JknIcon.Stock symbol={symbol} className="w-4 h-4 leading-4" />
+        <JknIcon.Stock symbol={symbol} className="w-4 h-4 leading-4 mr-1" />
         <span>{symbol}</span>，
         {
           renderTrigger()
@@ -301,11 +313,12 @@ const AlarmRecordItem = ({ symbol, data, onDelete, checked, onClick }: AlarmReco
       }
       <div className="text-tertiary text-xs text-left mt-2.5">
         {
+          data.alarm_time ? <span>触发时间 {dateUtils.toUsDay(data.alarm_time).format('MM/DD w HH:mm')}</span> : null
+        }
+        &emsp;
+        {
           data.condition.frequency === 1 ? '持续提醒' : '仅提醒一次'
         }
-        {/* {
-          data.alarm_time
-        } */}
       </div>
       <style jsx>
         {

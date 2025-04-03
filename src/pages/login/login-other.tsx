@@ -94,7 +94,7 @@ export const GoogleLogin = (props: ThirdLoginFormProps) => {
         }
       })
 
-      window.google.accounts.id.renderButton(document.getElementById('google-login'), {
+      window.google.accounts.id.renderButton(document.getElementById('google-login-2'), {
         theme: 'outline',
         type: 'icon',
         size: 'medium',
@@ -111,8 +111,10 @@ export const GoogleLogin = (props: ThirdLoginFormProps) => {
   }
   return (
     <div className="google-login cursor-pointer relative overflow-hidden size-8">
-      <div id="google-login" className="opacity-0 w-full h-full" onClick={checkGoogleScript} onKeyDown={() => { }} />
-      <JknIcon name="google-2" className="size-full absolute top-0 left-0 pointer-events-none -z-0" />
+      <div id="google-login-2" className="w-full h-full" onClick={checkGoogleScript} onKeyDown={() => { }} />
+      <div className="bg-background w-full h-full absolute top-0 left-0 pointer-events-none">
+        <JknIcon name="google-2" className="size-full" />
+      </div>
     </div>
   )
 }

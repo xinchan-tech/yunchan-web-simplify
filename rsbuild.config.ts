@@ -52,6 +52,13 @@ export default defineConfig({
           '^/ws': ''
         }
       },
+      '/v2-ws': {
+        target: 'ws://api.awstest.mgjkn.com/ws',
+        ws: true,
+        pathRewrite: {
+          '^/v2-ws': ''
+        }
+      },
       '/websocket': {
         target: 'ws://chart.mgjkn.com',
         ws: true

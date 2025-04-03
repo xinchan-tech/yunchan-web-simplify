@@ -18,14 +18,14 @@ const PriceAlarmForm = (props: PriceAlarmFormProps) => {
         <Tabs value={active} onValueChange={setActive}>
           <TabsList variant="line" className="w-full">
             <TabsTrigger value="1" asChild>
-              <span className="!text-base !text-foreground !leading-5">AI报警</span>
+              <span className="!text-base !text-foreground !leading-5">AI警报</span>
             </TabsTrigger>
             <TabsTrigger value="2" asChild>
-              <span className="!text-base !text-foreground !leading-5">浮动报警</span>
+              <span className="!text-base !text-foreground !leading-5">浮动警报</span>
             </TabsTrigger>
 
             <TabsTrigger value="3" asChild>
-              <span className="!text-base !text-foreground !leading-5">价格报警</span>
+              <span className="!text-base !text-foreground !leading-5">价格警报</span>
             </TabsTrigger>
           </TabsList>
         </Tabs>

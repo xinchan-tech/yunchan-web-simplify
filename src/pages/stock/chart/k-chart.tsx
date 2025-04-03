@@ -1,7 +1,6 @@
 import { cn } from '@/utils/style'
 import { useEffect, useMemo } from 'react'
 import { MainChart } from '../component/main-chart'
-import { useSymbolQuery } from '../lib'
 import { chartEvent } from '../lib/event'
 import { chartManage, useChartManage } from '../lib/store'
 import { renderUtils } from '../lib/utils'

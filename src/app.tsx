@@ -1,7 +1,7 @@
 import { getConfig, getStockCollectCates } from '@/api'
 import { useToast } from '@/hooks'
 import { appEvent } from '@/utils/event'
-import { wsManager } from '@/utils/ws'
+import { wsManager, WsV2 } from '@/utils/ws'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useMount, useUpdateEffect } from 'ahooks'
 import { uid } from 'radash'
@@ -23,6 +23,7 @@ import { useJoinGroupByInviteCode } from "./pages/groupchat/hooks"
 import { router, routes } from './router'
 import { chatConstants, useConfig, useToken, useUser } from './store'
 import { ChartToolBar } from "./pages/stock/component/chart-tool-bar"
+import { AlarmSubscribe } from "./components/ai-alarm/alarm-subscribe"
 
 export const CHAT_STOCK_JUMP = 'chat_stock_jump'
 export const CHAT_TO_APP_REFRESH_USER = 'chat_to_app_refresh_user'
@@ -195,9 +196,9 @@ const App = () => {
 
           <div className="w-[40px] flex-shrink-0 flex flex-col mt-1 bg-background rounded-tl-xs">
             <MenuRight />
-            {/* <div className="mt-auto">
-              <AiAlarmNotice />
-            </div> */}
+            <div className="mt-auto">
+              <AlarmSubscribe />
+            </div>
           </div>
         </div>
       </div>

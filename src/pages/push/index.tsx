@@ -22,7 +22,7 @@ import {
   useTableRowClickToStockTrading,
 } from "@/hooks"
 import { useTime } from "@/store"
-import { getPrevTradingDays } from "@/utils/date"
+import { dateUtils, getPrevTradingDays } from "@/utils/date"
 import { type Stock, stockUtils } from "@/utils/stock"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import dayjs from "dayjs"
@@ -124,7 +124,7 @@ const PushPage = () => {
   const [activeType, setActiveType] = useState<string>("JRGW")
   const [date, setDate] = useState(getLastTime())
   const [list, { setList, onSort }] = useTableData<TableDataType>([], "id")
-  const dates = useRef(getPrevTradingDays(date, 7))
+  const dates = useRef(getPrevTradingDays(date, 7).reverse())
 
   const menus = useQuery({
     queryKey: [getPushMenu.cacheKey],
@@ -262,10 +262,23 @@ const PushPage = () => {
               // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
               key={i}
               name={"ic_fire_red"}
-            />) : <Star.Rect count={v} activeColor={row.bull === "1" ? "#22AB94" : "#F23645"} total={5} />,
+            />) : <Star.Rect count={v} activeColor={+row.bull === 1 ? "#22AB94" : "#F23645"} total={5} />,
 
       },
     ]
+
+    if(activeType === "JRGW") {
+      (common as any[]).splice(5, 0,
+        {
+          title: "入选时间",
+          dataIndex: "create_time",
+          align: "left",
+          sort: true,
+          render: (create_time: number) => (
+            <span>{dateUtils.toUsDay(create_time).format("HH:mm")}</span>
+          ),
+        },)
+    }
     return common
   })()
 
@@ -274,7 +287,7 @@ const PushPage = () => {
 
   return (
     <div className="h-full w-full overflow-hidden flex justify-center bg-black">
-      <div className="h-full overflow-hidden flex flex-col w-table pt-[40px] stock-push">
+      <div className="h-full overflow-hidden flex flex-col w-table pt-[40px] stock-push box-border">
         <div className="flex items-center flex-shrink-0 pl-2">
           <CapsuleTabs
             activeKey={activeType}

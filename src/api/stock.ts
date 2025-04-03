@@ -37,8 +37,8 @@ export type StockRawRecord =
 
 /**
  * 股票接口通用extend参数
- * // 'alarm_ai' => 是否有ai报警,
- * // 'alarm_all' =>是否有全息报警,
+ * // 'alarm_ai' => 是否有ai警报,
+ * // 'alarm_all' =>是否有全息警报,
  * // 'collect' =>是否存在金池,
  * // 'thumbs' => 股票缩略走势图,
  * // 'day_basic' => 市值、换手率、市盈率,

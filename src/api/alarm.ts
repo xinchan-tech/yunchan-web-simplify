@@ -5,7 +5,8 @@ export enum AlarmType {
   AI = 0,
   HISTORY = 1,
   PRICE = 2,
-  LINE = 3
+  LINE = 3,
+  PERCENT = 4,
 }
 
 export enum PriceAlarmTrigger {
@@ -37,10 +38,10 @@ type GetAlarmsParams = {
   page?: number | string
   symbol?: string
   /**
-   * 0 AI报警
-   * 1 全息报警
-   * 2 股价报警
-   * 3 画线报警
+   * 0 AI警报
+   * 1 全息警报
+   * 2 股价警报
+   * 3 画线警报
    */
   type: number
 }
@@ -68,7 +69,7 @@ export const getAlarms = async (params: GetAlarmsParams) => {
 getAlarms.cacheKey = 'alarms:list'
 
 /**
- * 删除报警
+ * 删除警报
  */
 export const deleteAlarm = async (params: { ids?: string[]; symbols?: string[]; type: AlarmType }) => {
   const f = new URLSearchParams()
@@ -85,7 +86,7 @@ export const deleteAlarm = async (params: { ids?: string[]; symbols?: string[]; 
 }
 
 /**
- * 添加报警
+ * 添加警报
  */
 
 type AddAlarmParams = {
@@ -125,7 +126,7 @@ type GetAlarmTypesResult = {
 }
 
 /**
- * 获取报警类型
+ * 获取警报类型
  */
 export const getAlarmTypes = async () => {
   return request.get<GetAlarmTypesResult>('/alarm/getStocks').then(r => r.data)
@@ -176,7 +177,7 @@ type GetAlarmLogsResult = PageResult<{
 }>
 
 /**
- * 获取触发报警列表
+ * 获取触发警报列表
  */
 export const getAlarmLogs = async (params: GetAlarmLogsParams) => {
   return request.get<GetAlarmLogsResult>('/alarm/logs', { params }).then(r => r.data)
@@ -193,6 +194,7 @@ type AlarmBaseType = {
   id: string
   stock_cycle: number
   symbol: string
+  expire_time?: number
 }
 
 type AlarmAIType = AlarmBaseType & {
@@ -220,7 +222,7 @@ type PriceAlarmType = AlarmBaseType & {
 type GetAlarmConditionsListResult = AlarmAIType | PriceAlarmType
 
 /**
- * 报警列表
+ * 警报列表
  */
 export const getAlarmConditionsList = async (params: GetAlarmConditionsListParams) => {
   return request.get<Page<GetAlarmConditionsListResult>>('/stock-svc/alarm/conditions', { params }).then(r => r.data)
@@ -228,7 +230,7 @@ export const getAlarmConditionsList = async (params: GetAlarmConditionsListParam
 getAlarmConditionsList.cacheKey = 'alarms:conditions:list'
 
 /**
- * 删除报警条件
+ * 删除警报条件
  */
 export const deleteAlarmCondition = async (ids: string[]) => {
   return request.post('/stock-svc/alarm/conditions/delete', { ids }).then(r => r.data)
@@ -266,7 +268,7 @@ type PriceAlarmRecord = BaseAlarmRecord & {
 }
 
 /**
- * 触发报警日志列表
+ * 触发警报日志列表
  */
 export const getAlarmLogsList = async (params: GetAlarmLogsParams) => {
   return request.get<Page<PriceAlarmRecord | AiAlarmRecord>>('/stock-svc/alarm/logs', { params }).then(r => r.data)

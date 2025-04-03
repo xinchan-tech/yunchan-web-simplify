@@ -32,7 +32,7 @@ function JknDatePicker({ children, onChange, ...props }: JknDatePickerProps) {
       <PopoverTrigger asChild>
         {typeof children === 'function' ? children(date, { open: setTrue, close: setFalse }) : children}
       </PopoverTrigger>
-      <PopoverContent className="w-auto p-0">
+      <PopoverContent className="p-0 w-[360] h-[432]">
         <Calendar mode="single" selected={dayjs(date).toDate()} onSelect={_onSelect} {...props} />
       </PopoverContent>
     </Popover>

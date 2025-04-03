@@ -85,12 +85,12 @@ export const LoginForm = (props: LoginFormProps & { setPage: (page: 'login' | 'r
               name="mobile"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>邮箱</FormLabel>
+                  <FormLabel>账号</FormLabel>
                   <FormControl>
                     <Input
                       size="lg"
                       className="border-border placeholder:text-tertiary"
-                      placeholder="请输入邮箱账号"
+                      placeholder="请输入账号"
                       {...field}
                     />
                   </FormControl>

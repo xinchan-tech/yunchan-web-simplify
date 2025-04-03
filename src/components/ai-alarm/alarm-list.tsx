@@ -265,7 +265,7 @@ const GroupAlarm = (props: AlarmItemProps) => {
               <PopoverContent className="w-auto">
                 <div className="text-center py-1 bg-background">删除确认</div>
                 <div className="my-4 bg-muted px-4">
-                  <div>确定删除 {row.symbol} 的所有报警？</div>
+                  <div>确定删除 {row.symbol} 的所有警报？</div>
                   <div className="items-center justify-center flex gap-2 mt-4">
                     <PopoverClose asChild>
                       <Button size="mini" variant="outline">
@@ -432,7 +432,7 @@ const AlarmGroupList = (props: AlarmGroupListProps) => {
         render: (_, row) => <span>{row.cycle}分</span>
       },
       {
-        title: '报警类型',
+        title: '警报类型',
         dataIndex: 'bull',
         align: 'right',
         render: (_, row) => (
@@ -530,7 +530,7 @@ const AlarmGroupList = (props: AlarmGroupListProps) => {
                 <div>
                   <div className="text-center py-1 bg-background">删除确认</div>
                   <div className="my-4 bg-muted px-12">
-                    <div>确定删除报警？</div>
+                    <div>确定删除警报？</div>
                     <div className="items-center justify-center flex gap-2 mt-4">
                       <PopoverClose asChild>
                         <Button size="mini" variant="outline">

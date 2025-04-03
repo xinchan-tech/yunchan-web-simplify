@@ -555,16 +555,16 @@ export const IndicatorModal = (props: { onClickParams: () => void }) => {
 }
 
 const viewModeMenuItems = [
-  { name: '1图', icon: 'frame_1', value: 'single' },
-  { name: '2图-上下', icon: 'frame_2_1', value: 'double' },
-  { name: '2图-左右', icon: 'frame_2_2', value: 'double-vertical' },
-  { name: '3图-上下', icon: 'frame_3_1', value: 'three-vertical-top-single' },
-  { name: '3图-上下', icon: 'frame_3_2', value: 'three-vertical-bottom-single' },
-  { name: '3图-左右', icon: 'frame_3_3', value: 'three-left-single' },
-  { name: '3图-左右', icon: 'frame_3_4', value: 'three-right-single' },
-  { name: '4图', icon: 'frame_4', value: 'four' },
-  { name: '6图', icon: 'frame_5', value: 'six' },
-  { name: '9图', icon: 'frame_6', value: 'nine' },
+  { name: '1图', icon: 'view-mode-1', value: 'single' },
+  { name: '2图-上下', icon: 'view-mode-2-1', value: 'double-vertical' },
+  { name: '2图-左右', icon: 'view-mode-2-2', value: 'double' },
+  { name: '3图-上下', icon: 'view-mode-3-1', value: 'three-vertical-top-single' },
+  { name: '3图-上下', icon: 'view-mode-3-2', value: 'three-vertical-bottom-single' },
+  { name: '3图-左右', icon: 'view-mode-3-3', value: 'three-left-single' },
+  { name: '3图-左右', icon: 'view-mode-3-4', value: 'three-right-single' },
+  { name: '4图', icon: 'view-mode-4', value: 'four' },
+  { name: '6图', icon: 'view-mode-6', value: 'six' },
+  { name: '9图', icon: 'view-mode-9', value: 'nine' },
 ]
 
 const ViewModeSelect = () => {
@@ -576,7 +576,7 @@ const ViewModeSelect = () => {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <span className="cursor-pointer hover:bg-accent  h-9 rounded leading-9 px-3 flex items-center justify-center">
-          <JknIcon name={viewModeMenuItems.find(i => i.value === viewMode)?.icon as any} className="w-5 h-5 rounded-none" />
+          <JknIcon.Svg name={viewModeMenuItems.find(i => i.value === viewMode)?.icon as any} className="w-5 h-5 rounded-none" />
         </span>
       </DropdownMenuTrigger>
 
@@ -584,7 +584,7 @@ const ViewModeSelect = () => {
         {
           viewModeMenuItems.map(menu => (
             <DropdownMenuItem data-checked={viewMode === menu.value} key={menu.value} onClick={() => onClick(menu.value)}>
-              <JknIcon className="w-4 h-4 rounded-none" name={menu.icon as any} />
+              <JknIcon.Svg className="w-4 h-4 rounded-none" name={menu.icon as any} />
               <span>{menu.name}</span>
             </DropdownMenuItem>
           ))
@@ -910,7 +910,7 @@ const AlarmPicker = () => {
   return (
     <>
       <StockAlarm code={symbol}>
-        <WrapperLabel label="股票报警">
+        <WrapperLabel label="股票警报">
           <div className="cursor-pointer hover:bg-accent h-full rounded px-3 flex items-center text-sm py-2">
             <JknIcon.Svg name="chart-alarm" size={20} />&nbsp;
             <span>警报</span>

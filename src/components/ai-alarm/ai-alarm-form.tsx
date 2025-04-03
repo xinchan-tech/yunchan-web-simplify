@@ -15,11 +15,11 @@ const AiAlarmForm = (props: AiAlarmFormProps) => {
     <div className="h-[800px]  overflow-hidden w-[900px] flex flex-col">
       <div className="p-1 border-0 border-b border-solid border-border flex items-center">
         <CapsuleTabs activeKey={active} onChange={setActive}>
-          <CapsuleTabs.Tab label="报警设置" value="1" />
-          <CapsuleTabs.Tab label="报警列表" value="2" />
-          <CapsuleTabs.Tab label="已触发报警" value="3" />
+          <CapsuleTabs.Tab label="警报设置" value="1" />
+          <CapsuleTabs.Tab label="警报列表" value="2" />
+          <CapsuleTabs.Tab label="已触发警报" value="3" />
         </CapsuleTabs>
-        <div className="text-xs ml-auto">当前运行报警：{count} 条</div>
+        <div className="text-xs ml-auto">当前运行警报：{count} 条</div>
       </div>
       <div className="flex-1">
         {{

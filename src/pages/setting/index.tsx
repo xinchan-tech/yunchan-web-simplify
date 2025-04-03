@@ -173,7 +173,7 @@ const SettingPage = () => {
               </RadioGroup>
             </SettingItem>
 
-            <SettingItem label="报警提示">
+            <SettingItem label="警报提示">
               <RadioGroup
                 className="flex space-x-8"
                 value={config.setting.alarmTips}
@@ -190,7 +190,7 @@ const SettingPage = () => {
               </RadioGroup>
             </SettingItem>
 
-            <SettingItem label="报警显示">
+            <SettingItem label="警报显示">
               <RadioGroup
                 className="flex space-x-8"
                 value={config.setting.alarmShow}
@@ -231,7 +231,7 @@ const SettingPage = () => {
               </div>
             </SettingItem>
 
-            <SettingItem label="报警邮箱">
+            <SettingItem label="警报邮箱">
               <div>
                 <span>
                   {user?.alarm_email ? (
@@ -386,7 +386,7 @@ const AlarmEmailSetting = ({ children }: PropsWithChildren) => {
         <DialogHeader>
           <DialogTitle asChild>
             <div className="px-8 flex items-center justify-center pt-5 pb-[15px] border-solid border-x-0 border-t-0 border-b border-[#3D3D3D]">
-              设置报警邮箱
+              设置警报邮箱
             </div>
           </DialogTitle>
           <DialogDescription className="text-center" />

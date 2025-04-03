@@ -117,7 +117,7 @@ export const AiAlarmNotice = () => {
         render: (_, row) => <span>{row.stock_cycle}分</span>
       },
       {
-        title: '报警类型',
+        title: '警报类型',
         dataIndex: 'type',
         align: 'center',
         width: 120,
@@ -150,7 +150,7 @@ export const AiAlarmNotice = () => {
         render: (_, row) => <span>{row.condition.category_hdly_name ?? '-'}</span>
       },
       {
-        title: '报警时间',
+        title: '警报时间',
         dataIndex: 'alarm_time',
         align: 'center',
         width: 80,
@@ -171,7 +171,7 @@ export const AiAlarmNotice = () => {
             <JknIcon name="minimize" className="h-4 w-4 absolute left-2 top-3" onClick={setFalse} />
             <div className="flex items-center justify-center w-full h-full space-x-2">
               <JknIcon name="ic_alarm" className="h-6 w-6" />
-              <span>已触发报警</span>
+              <span>已触发警报</span>
               {query.data?.items && query.data?.items.length > 0 ? (
                 <span className="bg-stock-down w-4 h-4 rounded-full text-center leading-4">
                   {query.data.items.length}

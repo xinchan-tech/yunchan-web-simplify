@@ -139,7 +139,7 @@ export const PercentageAlarmSetting = (props: PercentageAlarmSettingProps) => {
               name="rise"
               render={({ field }) => (
                 <FormItem className="pb-4 flex space-y-0">
-                  <FormLabel className="w-32 font-normal text-secondary text-base font-normal">浮动报警</FormLabel>
+                  <FormLabel className="w-32 font-normal text-secondary text-base font-normal">浮动警报</FormLabel>
                   <FormControl className="flex-1">
                     <PriceSetting mode="rise" value={field.value} onChange={field.onChange} />
                   </FormControl>
@@ -155,7 +155,7 @@ export const PercentageAlarmSetting = (props: PercentageAlarmSettingProps) => {
             name="name"
             render={({ field }) => (
               <FormItem className="pb-4 flex space-y-0  items-center">
-                <FormLabel className="w-32 text-base font-normal">报警名称</FormLabel>
+                <FormLabel className="w-32 text-base font-normal">警报名称</FormLabel>
                 <FormControl >
                   <NameInput {...field} />
                 </FormControl>

@@ -51,7 +51,7 @@ const Menu = () => {
       },
       // {
       //   icon: <JknIcon.Svg name="ai-alarm" size={24} />,
-      //   title: 'AI报警',
+      //   title: 'AI警报',
       //   path: '/alarm'
       // },
       {

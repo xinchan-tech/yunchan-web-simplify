@@ -1,7 +1,6 @@
 import type { StockExtendResultMap, StockRawRecord } from '@/api'
 import dayjs from 'dayjs'
 import Decimal from 'decimal.js'
-import { isNumber } from 'radash'
 import { getTrading } from '../date'
 
 export type StockTrading = 'preMarket' | 'intraDay' | 'afterHours' | 'close'

@@ -20,6 +20,7 @@ export interface JknRcTableProps<T = any> extends TableProps<T> {
     fetchMore?: () => void
     hasMore?: boolean
   }
+  sortClear?: boolean
 }
 
 const _JknRcTable = <T extends DefaultRecordType = any>({
@@ -30,6 +31,7 @@ const _JknRcTable = <T extends DefaultRecordType = any>({
   virtual,
   infiniteScroll,
   designWidth,
+  sortClear = false,
   ...props
 }: JknRcTableProps<T>) => {
   // const [size, dom] = useDomSize<HTMLDivElement>()
@@ -81,6 +83,7 @@ const _JknRcTable = <T extends DefaultRecordType = any>({
           title: (
             <SortTitle
               onSort={onSort}
+              sortClear={sortClear}
               sort={sort.columnKey === (column as any).dataIndex ? sort.order : undefined}
               field={(column as any).dataIndex}
             >
@@ -91,7 +94,7 @@ const _JknRcTable = <T extends DefaultRecordType = any>({
       }
       return column
     })
-  }, [columns, sort, onSort, designWidth])
+  }, [columns, sort, onSort, designWidth, sortClear])
 
 
 

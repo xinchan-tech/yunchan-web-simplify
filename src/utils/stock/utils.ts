@@ -426,7 +426,7 @@ export const stockUtils = {
       symbol
     }
 
-    if(interval) {
+    if(interval !== undefined) {
       query.q = AESCrypt.encrypt(JSON.stringify({ interval }))
     }
 
