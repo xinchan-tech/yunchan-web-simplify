@@ -12,7 +12,8 @@ import {
   drawNumberTransform,
   drawRectRelTransform,
   drawStickLineTransform,
-  drawTextTransform
+  drawTextTransform,
+  drawPipeTransform
 } from './transform'
 
 export type { IndicatorData } from './transform'
@@ -25,7 +26,8 @@ const transformChain = chain(
   drawBandTransform,
   drawNumberTransform,
   drawRectRelTransform,
-  drawGradientTransform
+  drawGradientTransform,
+  drawPipeTransform
 )
 
 export class IndicatorUtils {
@@ -114,8 +116,6 @@ export class IndicatorUtils {
       data: IndicatorRawData[]
       status: number
     }
-
-    console.log(JSON.parse(JSON.stringify(result)))
 
     return result.data.map(item => {
       const r: IndicatorData = {

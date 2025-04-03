@@ -24,6 +24,7 @@ export type IndicatorData =
   | IndicatorDataDrawBand
   | IndicatorDataHorizontalLine
   | IndicatorDataHdlyLabel
+  | IndicatorDataDrawPipe
 
 export type IndicatorDataType<T extends DrawFunc> = IndicatorData & { draw: T }
 
@@ -38,6 +39,8 @@ type DrawFunc =
   | 'DRAWBAND'
   | 'HORIZONTALLINE'
   | 'HDLY_LABEL'
+  | 'DRAWPIPE'
+
 type IndicatorDataBase<T extends DrawFunc> = {
   draw: T
   color: string | string[]
@@ -145,6 +148,16 @@ type IndicatorDataHdlyLabel = IndicatorDataBase<'HDLY_LABEL'> & {
     x: number
     y: number
     text: string
+  }[]
+}
+
+type IndicatorDataDrawPipe = IndicatorDataBase<'DRAWPIPE'> & {
+  drawData: {
+    width: number
+    y: number
+    height: number
+    position: 'right' | 'left'
+    empty: boolean
   }[]
 }
 
@@ -456,6 +469,23 @@ export const drawRectRelTransform = (raw: IndicatorRawData) => {
       width: item[2],
       height: item[3],
       color: item[4]
+    }
+  })
+
+  return raw
+}
+
+export const drawPipeTransform = (raw: IndicatorRawData) => {
+  if (raw.draw !== 'DRAWPIPE') return raw
+  if (!raw.draw_data) return raw
+
+  raw.draw_data = Object.values(raw.draw_data).map(([y1, y2, width, pos, type]) => {
+    return {
+      y: y2,
+      height: y2- y1,
+      width,
+      position: pos === 0 ? 'right' : 'left',
+      empty: type === 1
     }
   })
 

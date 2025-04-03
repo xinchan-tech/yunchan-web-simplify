@@ -88,7 +88,7 @@ const AlarmContent = ({ data, onClose }: AlarmContentProps) => {
                   {data.indicators}
                   <span>{data.bull === '1' ? '↑' : '↓'}</span>
                 </span>
-                <span className="bg-accent py-0.5 rounded text-xs px-1">AI</span>
+                <span className="bg-accent py-0.5 rounded text-xs px-1">股价</span>
               </>
             ) : null
           }

@@ -19,6 +19,7 @@ import {
 import { candlestickToRaw } from '../utils'
 import { drawRect } from "@/pages/stock/lib/drawer"
 import { drawRectRel } from "../draw/rect"
+import { drawPipe } from "../draw/pipe"
 
 type LocalIndicatorExtend = {
   name: string
@@ -122,7 +123,6 @@ export const localIndicator: IndicatorTemplate<IndicatorData, any, LocalIndicato
     const { indicator } = params
     const result = indicator.result as unknown as IndicatorData[]
     if (!result) return false
-    console.log(result)
     result.forEach(d => {
       if (d.draw === '') {
         drawLine(params, {
@@ -177,6 +177,11 @@ export const localIndicator: IndicatorTemplate<IndicatorData, any, LocalIndicato
         drawHDLYLabel(params, { color: d.color as string, data: d.drawData })
       } else if (d.draw === 'DRAWGRADIENT') {
         drawGradient(params, d.drawData)
+      } else if (d.draw === 'DRAWPIPE'){
+        drawPipe(params, {
+          color: d.color as string,
+          data: d.drawData
+        })
       }
     })
 

@@ -219,7 +219,7 @@ const SettingPage = () => {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent>
                     {
-                      [1, 2, 3, 4, 5].map((item) => (
+                      [0, 1, 2, 3, 4, 5].map((item) => (
                         <DropdownMenuItem key={item} onClick={() => config.setSetting({ gapShow: item.toString() })}>
                           {item}
                         </DropdownMenuItem>
