@@ -297,7 +297,7 @@ const AlarmRecordItem = ({ symbol, data, onDelete }: AlarmRecordItemProps) => {
         }
         <span className="bg-accent rounded-xs px-1 py-[1px] box-border text-tertiary text-xs ml-1">{data.type === AlarmType.AI ? 'AI' : '股价'}</span>
         <div className="absolute -right-2 -top-1 alarm-list-item-action space-x-1 text-secondary">
-          <JknIcon.Svg name="delete" size={16} className="cursor-pointer p-1 rounded hover:bg-accent" onClick={() => onDelete(data.id)} />
+          <JknIcon.Svg name="delete" size={16} className="cursor-pointer p-1 rounded hover:bg-accent" onClick={(e) => { e.stopPropagation(); onDelete(data.id) }} />
           {/* <JknIcon.Svg name="edit" size={16} className="cursor-pointer p-1 rounded hover:bg-accent" /> */}
         </div>
       </div>

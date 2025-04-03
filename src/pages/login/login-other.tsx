@@ -6,6 +6,7 @@ import { useMount, useUnmount } from "ahooks"
 import { uid } from "radash"
 import { useRef, useEffect } from "react"
 import QRCode from 'qrcode'
+import { router } from "@/router"
 
 interface ThirdLoginFormProps {
   onLogin: (data: any) => void
@@ -157,7 +158,7 @@ const WxLoginForm = () => {
         if (res.code) {
           useToken.getState().setToken(res.code)
           window.clearInterval(timer.current)
-          window.location.reload()
+          router.navigate('/')
         }
       })
     }, 4000)

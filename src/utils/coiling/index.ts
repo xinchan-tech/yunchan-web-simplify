@@ -139,7 +139,7 @@ export class IndicatorUtils {
       return [Math.floor(stockUtils.parseTime(item[0]) / 1000), ...item.slice(1)] as unknown as StockRawRecord
     }, true)
     const r = await module.coiling_calculate(_data, data.length, interval)
-    console.log(data, r)
+  
     return r
   }
 }

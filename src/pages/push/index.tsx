@@ -104,7 +104,7 @@ const getTableList = async (type: string, date?: string) => {
         name: item.name,
       }) as TableDataType
       stock.update_time = item.datetime.toString()
-      stock.star = item.score.toString()
+      stock.star = (item.score * (item.score * (item.bull === 0 ? -1 : 1))).toString()
       stock.id = item.symbol
       stock.warning = (item.type - 1).toString()
       stock.percent = stockUtils.getPercent(stock)
@@ -262,7 +262,7 @@ const PushPage = () => {
               // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
               key={i}
               name={"ic_fire_red"}
-            />) : <Star.Rect count={v} activeColor={+row.bull === 1 ? "#22AB94" : "#F23645"} total={5} />,
+            />) : <Star.Rect count={Math.abs(v)} activeColor={+row.bull === 1 ? "#22AB94" : "#F23645"} total={5} />,
 
       },
     ]

@@ -50,12 +50,12 @@ export const MainChart = (props: MainChartProps) => {
     const record = stockUtils.toStock(data.rawRecord)
     const symbol = useChartManage.getState().chartStores[props.chartId].symbol
     const [_symbol] = data.topic.split('@')
-    if(_symbol !== symbol) {
+    if (_symbol !== symbol) {
       console.log('stock bar subscribe symbol error')
       console.warn(_symbol, symbol)
-      return 
+      return
     }
-  
+
     // console.log('stock bar subscribe ********************')
     // console.log(dateUtils.toUsDay(data.rawRecord[0]! as unknown as number).format('YYYY-MM-DD HH:mm:ss'))
     // console.log(trading, renderUtils.shouldUpdateChart(trading, chartStore.interval), chartImp.current?.isSameIntervalCandlestick(record, chartStore.interval))
@@ -175,14 +175,24 @@ export const MainChart = (props: MainChartProps) => {
 
     if (renderUtils.isTimeIndexChart(chartStore.interval)) {
       chartImp.current?.setTimeShareChart(chartStore.interval)
+    } else {
+      if (_store.yAxis.left) {
+        chartImp.current?.setAxisType('double')
+      } else if (_store.yAxis.right === MainYAxis.Percentage) {
+        chartImp.current?.setAxisType('percentage')
+      } else {
+        chartImp.current?.setAxisType('normal')
+      }
     }
 
     if (Number.parseInt(gapShow) > 0) {
       chartImp.current?.createGapIndicator(Number.parseInt(gapShow))
     }
 
-    chartImp.current?.setLeftAxis(!!_store.yAxis.left)
-    chartImp.current?.setRightAxis(_store.yAxis.right === MainYAxis.Percentage ? 'percentage' : 'normal')
+
+
+    // chartImp.current?.setLeftAxis(!!_store.yAxis.left)
+    // chartImp.current?.setRightAxis(_store.yAxis.right === MainYAxis.Percentage ? 'percentage' : 'normal')
   })
 
   useUnmount(() => {
@@ -326,8 +336,16 @@ export const MainChart = (props: MainChartProps) => {
     })
 
     const cancelYAxisChange = chartEvent.on('yAxisChange', (type) => {
-      chartImp.current?.setLeftAxis(!!type.left)
-      chartImp.current?.setRightAxis(type.right === MainYAxis.Percentage ? 'percentage' : 'normal')
+      if (type.left) {
+        chartImp.current?.setAxisType('double')
+      } else if (type.right === MainYAxis.Percentage) {
+        chartImp.current?.setAxisType('percentage')
+      } else {
+        chartImp.current?.setAxisType('normal')
+      }
+
+      // chartImp.current?.setLeftAxis(!!type.left)
+      // chartImp.current?.setRightAxis(type.right === MainYAxis.Percentage ? 'percentage' : 'normal')
     })
 
     return () => {

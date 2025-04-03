@@ -68,7 +68,9 @@ const snapshotActionResultParser = (data: any) => {
     updated,
     ext_updated,
     day_updated,
-    ext_price
+    ext_price,
+    bubble_val,
+    bubble_status
   } = data.detail
 
   return {
@@ -92,7 +94,9 @@ const snapshotActionResultParser = (data: any) => {
       updated,
       extPrice: ext_price,
       extUpdated: ext_updated,
-      dayUpdated: day_updated
+      dayUpdated: day_updated,
+      bubbleVal: bubble_val,
+      bubbleStatus: bubble_status
     } as {
       dayAmount: number // 当日成交金额
       close: number // 当日收盘价
@@ -111,6 +115,9 @@ const snapshotActionResultParser = (data: any) => {
       extPrice: number // 扩展价格
       extUpdated: number // 扩展更新时间戳
       dayUpdated: number // 当日更新时间戳
+      dayHigh: number
+      bubbleVal: number // 泡沫值
+      bubbleStatus: number // 泡沫状态
     }
   }
 }

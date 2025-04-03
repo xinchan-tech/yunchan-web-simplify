@@ -70,8 +70,11 @@ const AiAlarmSetting = (props: AiAlarmSetting) => {
       stock_cycle: form.getValues('stockCycle'),
       condition: {
         category_ids: form.getValues('categoryIds'),
-        category_hdly_ids: form.getValues('categoryHdlyIds')
-      }
+        category_hdly_ids: form.getValues('categoryHdlyIds'),
+        frequency: +form.getValues('frequency'),
+      },
+      expire_time: form.getValues('date'),
+      name: form.getValues('name')
     }
 
     toggle()
@@ -226,7 +229,7 @@ const AlarmsTypeSelect = forwardRef((props: AlarmsTypeSelectProps, _) => {
   const [type, setType] = useState('多头策略')
   const [method, setMethod] = useState<Awaited<ReturnType<typeof getAlarmTypes>>['stocks'][0]>()
 
-  const data = useMemo(() => query.data?.stocks.find(item => item.name === '警报类型'), [query.data])
+  const data = useMemo(() => query.data?.stocks.find(item => item.name === '报警类型'), [query.data])
 
   const form = useFormContext()
 

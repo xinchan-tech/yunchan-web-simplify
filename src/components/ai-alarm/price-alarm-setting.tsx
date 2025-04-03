@@ -93,7 +93,9 @@ export const PriceAlarmSetting = (props: PriceAlarmSetting) => {
         rise: rise,
         fall: fall,
         frequency: +form.getValues('frequency')
-      }
+      },
+      expire_time: form.getValues('date'),
+      name: form.getValues('name')
     }
 
     if (rise.length + fall.length === 0) {

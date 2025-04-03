@@ -85,7 +85,7 @@ const StockBaseInfo = () => {
   )
 
 
-  useSnapshotOnce(code,useCallback(e => {
+  useSnapshotOnce(code, useCallback(e => {
     setDataInfo(e.data)
   }, []))
 
@@ -162,7 +162,7 @@ const StockBaseInfo = () => {
           trading === 'preMarket' ? (
             <StockQuoteBar
               label="点击查看分时走势"
-              percent={dataInfo ? stockUtils.getPercent({close: dataInfo.extPrice, prevClose: dataInfo.close}) : undefined}
+              percent={dataInfo ? stockUtils.getPercent({ close: dataInfo.extPrice, prevClose: dataInfo.close }) : undefined}
               close={dataInfo?.extPrice}
               prevClose={dataInfo?.close}
               time={dateUtils.toUsDay(dataInfo?.extUpdated ?? '0').format('MM/DD hh:mm')}
@@ -174,7 +174,7 @@ const StockBaseInfo = () => {
           ) : (
             <StockQuoteBar
               label="点击查看分时走势"
-              percent={dataInfo ? stockUtils.getPercent({close: dataInfo.extPrice, prevClose: dataInfo.close}) : undefined}
+              percent={dataInfo ? stockUtils.getPercent({ close: dataInfo.extPrice, prevClose: dataInfo.close }) : undefined}
               close={dataInfo?.extPrice}
               prevClose={dataInfo?.close}
               time={dateUtils.toUsDay(dataInfo?.extUpdated ?? '0').format('MM/DD hh:mm')}
@@ -209,7 +209,7 @@ const StockQuoteBar = withTooltip(
     const trading = useMemo(() => stockUtils.intervalToTrading(props.interval), [props.interval])
 
     const [arrowUp, setArrowUp] = usePropValue(Decimal.create(props?.percent).gt(0))
- 
+
     return (
       <div
         className={cn('flex items-baseline flex-wrap px-2 box-border my-1 cursor-pointer text-tertiary', props.interval !== StockChartInterval.INTRA_DAY && 'text-sm')}
@@ -227,17 +227,17 @@ const StockQuoteBar = withTooltip(
             initValue={props.close}
             zeroText="--"
           />
-         {
-          !props.close ? null : (
-            <JknIcon.Svg
-            name={ arrowUp? 'stock-up' : 'stock-down'}
-            className={cn(
-              arrowUp ? 'text-stock-up' : 'text-stock-down',
-              'ml-1',
-              props.interval === StockChartInterval.INTRA_DAY ? 'w-4 h-[18px]' : 'w-2.5 h-[11px] '
-            )} />
-          )
-         }
+          {
+            !props.close ? null : (
+              <JknIcon.Svg
+                name={arrowUp ? 'stock-up' : 'stock-down'}
+                className={cn(
+                  arrowUp ? 'text-stock-up' : 'text-stock-down',
+                  'ml-1',
+                  props.interval === StockChartInterval.INTRA_DAY ? 'w-4 h-[18px]' : 'w-2.5 h-[11px] '
+                )} />
+            )
+          }
         </span>
         &nbsp;&nbsp;
         <span>
@@ -295,75 +295,97 @@ const StockQuote = () => {
     queryFn: () => getStockQuote(code)
   })
 
-  const codeInfo = useQuery({
-    queryKey: [getStockBaseCodeInfo.cacheKey, code, stockBaseCodeInfoExtend],
-    queryFn: () => getStockBaseCodeInfo({ symbol: code, extend: stockBaseCodeInfoExtend })
-  })
+  const [codeInfo, setCodeInfo] = useState<StockBaseInfoData>()
 
-  const [stock, _, __] = codeInfo.data ? stockUtils.toStockRecord(codeInfo.data) : []
+  // const codeInfoQuery = useQuery({
+  //   queryKey: [getStockBaseCodeInfo.cacheKey, code, stockBaseCodeInfoExtend],
+  //   queryFn: () => getStockBaseCodeInfo({ symbol: code, extend: stockBaseCodeInfoExtend })
+  // })
 
-  const bubble = useMemo(() => {
-    const bubble = {
-      value: codeInfo.data?.extend?.bubble?.bubble_val ?? 0,
-      text: codeInfo.data?.extend?.bubble?.bubble_status ?? ''
+  useSnapshot(code, useCallback(e => {
+    setCodeInfo(s => {
+      const _s: any = s ?? {}
+      Object.keys(e.data).map((key: any) => {
+        if (e.data[key as keyof StockBaseInfoData] === undefined) {
+          return
+        }
+        _s[key] = e.data[key as keyof StockBaseInfoData]
+      })
+
+      return _s
+    })
+  }, []))
+
+  useEffect(() => {
+    if (code !== codeInfo?.symbol) {
+      setCodeInfo(undefined)
     }
+  }, [code, codeInfo])
 
-    return bubble
-  }, [codeInfo.data])
+  // const [stock, _, __] = codeInfoQuery.data ? stockUtils.toStockWithExt(codeInfoQuery.data) : []
+
+  // const bubble = useMemo(() => {
+  //   const bubble = {
+  //     value: codeInfo.data?.extend?.bubble?.bubble_val ?? 0,
+  //     text: codeInfo.data?.extend?.bubble?.bubble_status ?? ''
+  //   }
+
+  //   return bubble
+  // }, [codeInfo.data])
 
   return (
     <div className="bg-background">
       <div className="mt-1 grid grid-cols-2 text-sm px-2 gap-y-2 gap-x-4 text-tertiary">
         <div className="flex items-center justify-between">
           <span>最高价&nbsp;&nbsp;</span>
-          <span>{Decimal.create(quote.data?.q_high).toFixed(3)}</span>
+          <span>{Decimal.create(codeInfo?.dayHigh).toFixed(3)}</span>
         </div>
         <div className="flex items-center justify-between">
           <span>今开价&nbsp;&nbsp;</span>
-          <span>{Decimal.create(quote.data?.q_open).toFixed(3)}</span>
+          <span>{Decimal.create(codeInfo?.dayOpen).toFixed(3)}</span>
         </div>
         <div className="flex items-center justify-between">
           <span>最低价&nbsp;&nbsp;</span>
-          <span>{Decimal.create(quote.data?.q_close).toFixed(3)}</span>
+          <span>{Decimal.create(codeInfo?.dayLow).toFixed(3)}</span>
         </div>
         <div className="flex items-center justify-between">
           <span>成交额&nbsp;&nbsp;</span>
-          <span>{quote.data?.amount}</span>
+          <span>{Decimal.create(codeInfo?.dayAmount).toShortCN()}</span>
         </div>
         <div className="flex items-center justify-between">
           <span>总市值&nbsp;&nbsp;</span>
-          <span>{Decimal.create(stock?.marketValue).toShortCN(3)}</span>
+          <span>{Decimal.create(codeInfo?.marketCap).toShortCN(3)}</span>
         </div>
         <div className="flex items-center justify-between">
           <span>换手率&nbsp;&nbsp;</span>
-          <span>{Decimal.create(stock?.turnOverRate).mul(100).toFixed(2)}%</span>
+          <span>{Decimal.create(codeInfo?.turnover).mul(100).toFixed(2)}%</span>
         </div>
         {
           expanded ? (
             <>
               <div className="flex items-center justify-between">
                 <span>昨收价&nbsp;&nbsp;</span>
-                <span>{Decimal.create(quote.data?.q_preday_close).toFixed(3)}</span>
+                <span>{Decimal.create(codeInfo?.prevClose).toFixed(3)}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span>成交量&nbsp;&nbsp;</span>
-                <span>{quote.data?.volume}</span>
+                <span>{codeInfo?.dayVolume}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span>市盈率&nbsp;&nbsp;</span>
-                <span>{stock?.pe ? Decimal.create(stock.pe).toFixed(2) : '--'}</span>
+                <span>{codeInfo?.pe ? Decimal.create(codeInfo.pe).toFixed(2) : '--'}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span>市净率&nbsp;&nbsp;</span>
-                <span>{stock?.pb ? Decimal.create(stock.pb).toFixed(2) : '--'}</span>
+                <span>{codeInfo?.pb ? Decimal.create(codeInfo.pb).toFixed(2) : '--'}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span>52周高&nbsp;&nbsp;</span>
-                <span>{Decimal.create(quote.data?.q_year_high).toFixed(3)}</span>
+                <span>{Decimal.create(codeInfo?.w52High).toFixed(3)}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span>52周低&nbsp;&nbsp;</span>
-                <span>{Decimal.create(quote.data?.q_year_low).toFixed(3)}</span>
+                <span>{Decimal.create(codeInfo?.w52Low).toFixed(3)}</span>
               </div>
 
 
@@ -371,14 +393,14 @@ const StockQuote = () => {
           ) : null
         }
       </div>
-      {+bubble.value !== 0 && expanded ? (
+      {codeInfo?.bubbleStatus && expanded ? (
         <div className="flex h-12">
           <div className="w-1/2 flex items-center justify-center text-stock-green h-full">
             估值泡沫
           </div>
           <div className="w-1/2 flex items-center justify-center text-stock-green h-full">
-            <span className={cn(Decimal.create(bubble.value).gte(2) ? 'text-stock-down' : 'text-stock-up')}>
-              {Decimal.create(bubble.value).toFixed(2)}({bubble.text})
+            <span className={cn(Decimal.create(codeInfo?.bubbleVal).gte(2) ? 'text-stock-down' : 'text-stock-up')}>
+              {Decimal.create(codeInfo?.bubbleVal).toFixed(2)}({codeInfo?.bubbleStatus})
             </span>
           </div>
         </div>

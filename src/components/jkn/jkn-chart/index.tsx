@@ -67,8 +67,9 @@ interface JknChartIns {
   isSameIntervalCandlestick: (kline: Candlestick, interval: number) => undefined | boolean
   setCoiling: (coiling: CoilingIndicatorId[], interval: number) => void
   removeCoiling: (coiling: CoilingIndicatorId[]) => void
-  setLeftAxis: (show: boolean) => void
-  setRightAxis: (type: 'percentage' | 'normal') => void
+  // setLeftAxis: (show: boolean) => void
+  setAxisType: (type: 'normal' | 'percentage' | 'double') => void
+  // setRightAxis: (type: 'percentage' | 'normal') => void
   setChartType: (type: 'area' | 'candle') => void
   removeAllCoiling: () => void
   createIndicator: (params: IndicatorParams) => void
@@ -91,6 +92,27 @@ interface JknChartIns {
   createGapIndicator: (count: number) => void
   removeGapIndicator: () => void
   setGapIndicator: (count: number) => void
+}
+
+const getAxisType = (chart: Chart) => {
+  let pane = chart.getPaneOptions(ChartTypes.MAIN_PANE_ID)
+
+  if (Array.isArray(pane)) {
+    pane = pane[0]
+  }
+  if (pane?.axis?.name === 'normal') {
+    return 'normal'
+  }
+
+  if (pane?.axis?.name === 'percentage') {
+    if (pane?.leftAxis?.position !== 'none' as any) {
+      return 'double'
+    }
+
+    return 'percentage'
+  }
+
+  return 'normal'
 }
 
 const DEFAULT_AREA_BG_COLOR = {
@@ -174,19 +196,41 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
               upColor: upColor,
               downColor: downColor,
               noChangeColor: downColor,
-              color: (data) => {
+              color: (data, chart) => {
                 const lastData = data[data.length - 1]
 
                 if (!lastData) return downColor
 
-                if (lastData.quote) {
-                  const prev = (lastData.prevQuote as number) ?? lastData.prevClose
+                const axisType = getAxisType(chart)
 
-                  return lastData.quote > prev ? upColor : downColor
+                if (axisType === 'normal') {
+                  if (lastData.quote) {
+                    const prev = (lastData.prevQuote as number) ?? lastData.prevClose
+
+                    return lastData.quote > prev ? upColor : downColor
+                  }
+
+                  return lastData.close > lastData.prevClose ? upColor : downColor
+                }
+                console.log(axisType)
+                if (axisType === 'percentage') {
+                  const { from } = chart.getVisibleRange()
+                  const firstData = data[from]
+
+                  if (!firstData) return downColor
+
+                  return lastData.close > firstData.prevClose ? upColor : downColor
                 }
 
-                return lastData.close > lastData.prevClose ? upColor : downColor
+                if (axisType === 'double') {
+                  const { from } = chart.getVisibleRange()
+                  const firstData = data[from]
 
+                  if (!firstData) return downColor
+
+                  return lastData.close > firstData.open ? upColor : downColor
+                }
+                return lastData.close > lastData.prevClose ? upColor : downColor
               },
             },
             high: {
@@ -314,20 +358,56 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
 
       return isSameInterval(lastData, candlestick, interval)
     },
-    setLeftAxis: show => {
-      chart.current?.setPaneOptions({
-        leftAxis: {
-          position: (show ? 'left' : 'none') as AxisPosition
-        }
-      })
+    setAxisType: type => {
+      if (type === 'normal') {
+        chart.current?.setPaneOptions({
+          id: ChartTypes.MAIN_PANE_ID,
+          axis: {
+            name: 'normal',
+            value: undefined
+          },
+          leftAxis: {
+            position: 'none' as AxisPosition
+          }
+        })
+      } else if (type === 'percentage') {
+        chart.current?.setPaneOptions({
+          id: ChartTypes.MAIN_PANE_ID,
+          axis: {
+            name: 'percentage',
+            value: 'prevClose'
+          },
+          leftAxis: {
+            position: 'none' as AxisPosition
+          }
+        })
+      } else if (type === 'double') {
+        chart.current?.setPaneOptions({
+          id: ChartTypes.MAIN_PANE_ID,
+          axis: {
+            name: 'percentage',
+            value: 'high'
+          },
+          leftAxis: {
+            position: 'right' as AxisPosition
+          }
+        })
+      }
     },
-    setRightAxis: type => {
-      chart.current?.setPaneOptions({
-        axis: {
-          name: type
-        }
-      })
-    },
+    // setLeftAxis: show => {
+    //   chart.current?.setPaneOptions({
+    //     leftAxis: {
+    //       position: (show ? 'left' : 'none') as AxisPosition
+    //     }
+    //   })
+    // },
+    // setRightAxis: type => {
+    //   chart.current?.setPaneOptions({
+    //     axis: {
+    //       name: type
+    //     }
+    //   })
+    // },
     setChartType: type => {
       chart.current?.setStyles({
         candle: {
@@ -524,10 +604,16 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
           id: ChartTypes.MAIN_PANE_ID
         })
 
+        // const type = getAxisType(chart.current!)
+
         chart.current?.setPaneOptions({
           id: ChartTypes.MAIN_PANE_ID,
           axis: {
+            name: 'percentage',
             value: 'prevClose'
+          },
+          leftAxis: {
+            position: 'none' as AxisPosition
           }
         })
 
@@ -611,6 +697,14 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
           id: ChartTypes.MAIN_PANE_ID,
           axis: {
             value: undefined
+          }
+        })
+
+        const type = getAxisType(chart.current!)
+        chart.current?.setPaneOptions({
+          id: ChartTypes.MAIN_PANE_ID,
+          axis: {
+            value: type === 'double' ? 'close' : 'prevClose'
           }
         })
       }
