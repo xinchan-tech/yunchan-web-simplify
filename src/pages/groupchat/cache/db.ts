@@ -4,13 +4,14 @@ const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 export const CacheStoreName = {
   CONVERSATION_STORE: 'chat-conversation',
   SUBSCRIBER_STORE: 'chat-subscriber',
-  MESSAGE_STORE: 'chat-message'
+  MESSAGE_STORE: 'chat-message',
+  USER_STORE: 'chat-user'
 }
 
 export class ChatCache {
   public db: Nullable<IDBPDatabase> = null
   public static DB_NAME = 'chat-store'
-  public static DB_VERSION = 2
+  public static DB_VERSION = 3
 
   constructor() {
     openDB(ChatCache.DB_NAME, ChatCache.DB_VERSION, {
@@ -25,6 +26,8 @@ export class ChatCache {
 
         const messageStore = db.createObjectStore(CacheStoreName.MESSAGE_STORE, { keyPath: 'messageID', autoIncrement: true })
         messageStore.createIndex('channelId', 'channel.channelID')
+
+        db.createObjectStore(CacheStoreName.USER_STORE, { keyPath: 'uid', autoIncrement: true })
       },
       blocked() {
         console.warn(`conversation db blocked: ${ChatCache.DB_NAME}`)

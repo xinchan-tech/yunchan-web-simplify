@@ -19,6 +19,7 @@ import WKSDK, {
 } from 'wukongimjssdk'
 import { ConversationTransform, MessageTransform } from './transform'
 import { MediaMessageUploadTask } from './upload-task'
+import { userCache } from "../cache/user"
 
 /**
  * 请求频道资料数据源
@@ -97,6 +98,12 @@ const initSyncSubscribersDataSource = () => {
       // subscriber.forbidden = member.forbidden === '1'
       subscribers.push(subscriber)
     })
+
+    userCache.updateBatch(res.items.map(member => ({
+      uid: member.username,
+      name: member.realname,
+      avatar: member.avatar
+    })))
 
     return subscribers
   }

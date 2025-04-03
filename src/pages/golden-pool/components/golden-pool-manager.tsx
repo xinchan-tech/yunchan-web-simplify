@@ -99,7 +99,7 @@ const GoldenPoolTable = () => {
               index !== 0 && index !== 1 ? (
                 <span
                   className="cursor-pointer ml-3"
-                  onClick={() => sort.mutate({ id: row.id as string, sort: 2 })}
+                  onClick={() => sort.mutate({ id: row.id as string, sort: 1 })}
                   onKeyDown={() => { }}
                 >
                   <JknIcon.Svg name="top" size={20} className="ml-1 p-0.5" color="#808080" label="置顶" hoverable/>

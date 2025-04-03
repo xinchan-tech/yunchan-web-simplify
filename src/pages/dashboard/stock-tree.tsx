@@ -200,7 +200,7 @@ const StockTree = () => {
       if (!colors.includes(_color)) continue
       const child = {
         name: stock.symbol,
-        value: Math.abs(Math.log(stockRecord.volume) ** 5) + 0.1,
+        value: stockRecord.volume + 0.1,
         data: percent,
         color: _color
       }

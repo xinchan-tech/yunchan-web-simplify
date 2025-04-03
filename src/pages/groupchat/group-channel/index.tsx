@@ -236,8 +236,6 @@ const GroupChannel = (props: {
     }
   }
 
-  console.log(conversations)
-
   return (
     <div className="w-[180px] h-full border-0 border-x border-solid border-border bg-[#161616]">
       <div className="flex items-center text-xs text-tertiary px-2 py-1">
@@ -248,7 +246,7 @@ const GroupChannel = (props: {
       </div>
       <div className="group-filter flex items-center justify-between px-1 pb-3">
         <JknSearchInput size="mini" onSearch={setChannelSearchKeyword} rootClassName="bg-accent px-2 py-0.5 w-full text-tertiary" className="text-secondary placeholder:text-tertiary" placeholder="搜索" />
-        <CreateGroup />
+        {/* <CreateGroup /> */}
       </div>
       <div className="group-list">
         {

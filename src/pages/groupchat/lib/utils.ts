@@ -21,12 +21,21 @@ const userCache = new Map<string, { name: string; avatar?: string }>()
 export const fetchUserInChannel = async (channel: Channel, userId: string) => {
   const subscribes = WKSDK.shared().channelManager.getSubscribes(channel)
 
-  const subscriber = subscribes.find(subscriber => subscriber.uid === userId)
+  const subscriber = subscribes.find(subscriber => subscriber.uid === userId) as Nullable<Subscriber>
 
-  if (subscriber?.name) {
+  if (subscriber) {
     return {
       name: subscriber.name,
       avatar: subscriber.avatar
+    }
+  }
+
+  const userFromUserCache = await userCache.get(userId)
+
+  if (userFromUserCache) {
+    return {
+      name: userFromUserCache.name,
+      avatar: userFromUserCache.avatar
     }
   }
 
