@@ -1,3 +1,4 @@
+import { JknImage } from "@/components"
 import { useMemo } from "react"
 import type { Message, MessageImage } from "wukongimjssdk"
 
@@ -13,8 +14,12 @@ export const ImageRecord = (props: ImageRecordProps) => {
     return content.file ? URL.createObjectURL(content.file) : ''
   }, [content.remoteUrl, content.file])
 
+
+  const preview = () => {
+    JknImage.preview(url)
+  }
   return (
-    <div className="w-full">
+    <div className="w-full cursor-zoom-in" onClick={preview} onKeyDown={preview}>
       <img src={url} className="w-full" alt="" />
     </div>
   )

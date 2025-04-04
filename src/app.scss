@@ -315,3 +315,7 @@ span[data-direction-sign="true"][data-direction="up"]::before {
     opacity: 0.75;
   }
 }
+
+.react-viewer-mask {
+  background-color: rgba(0, 0, 0, 0.8) !important;
+}

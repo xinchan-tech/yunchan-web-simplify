@@ -177,6 +177,7 @@ const TopList = () => {
           }
           symbol={row.symbol}
           decimal={2}
+          showColor={false}
           initValue={marketValue}
           totalShare={row.totalShare ?? 0}
         />

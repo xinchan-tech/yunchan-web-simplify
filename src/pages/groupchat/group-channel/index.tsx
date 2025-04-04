@@ -74,7 +74,6 @@ const GroupChannel = (props: {
   const queryClient = useQueryClient()
   const updateRender = useUpdate()
   const lastChannel = useChatStore(s => s.lastChannel)
-  const selectionChannel = useLatestRef<Channel>(lastChannel!)
   const [conversations, setConversations] = useConversationWithCache()
 
   const conversationsQuery = useQuery({
