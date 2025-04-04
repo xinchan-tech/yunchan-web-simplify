@@ -294,21 +294,9 @@ export const MainChart = (props: MainChartProps) => {
               ...useChartManage.getState().chartStores[props.chartId].yAxis
             }
           }
-          fetchCandlesticks(symbol, chartStore.interval, startAt.current).then(r => {
-            if (!r.data.list.length) return
+          const color = colorUtil.colorPalette[stockCache.current.compare.size]
 
-            const compareStockStart = r.data.list[0][0]! as unknown as number
-
-            const startInCandlesticksIndex = renderUtils.findNearestTime(candlesticks, compareStockStart)
-
-            if (!startInCandlesticksIndex || startInCandlesticksIndex?.index === -1) return
-
-            const compareCandlesticks = new Array(startInCandlesticksIndex!.index)
-              .fill(null)
-              .concat(r.data.list.map(c => c[2]))
-            const color = colorUtil.colorPalette[stockCache.current.compare.size]
-            stockCache.current.compare.set(symbol, chartImp.current?.createStockCompare(symbol, compareCandlesticks, color))
-          })
+          stockCache.current.compare.set(symbol, chartImp.current?.createStockCompare(symbol, { color, interval: chartStore.interval, startAt: startAt.current }))
         }
       } else {
         stockCache.current.compare.delete(symbol)
@@ -359,7 +347,7 @@ export const MainChart = (props: MainChartProps) => {
       cancelIntervalEvent()
       cancelYAxisChange()
     }
-  }, [activeChartId, props.chartId, candlesticks, chartStore.interval, symbol, startAt])
+  }, [activeChartId, props.chartId, chartStore.interval, symbol, startAt])
 
   // useUpdateEffect(() => {
   //   chartImp.current?.setChartType(chartStore.type === ChartType.Candle ? 'candle' : 'area')

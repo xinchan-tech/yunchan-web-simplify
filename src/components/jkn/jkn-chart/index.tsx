@@ -78,7 +78,7 @@ interface JknChartIns {
   createSubIndicator: (params: IndicatorParams) => Nullable<string>
   setSubIndicator: (indicatorId: string, params: IndicatorParams) => void
   removeSubIndicator: (indicatorId: string) => void
-  createStockCompare: (symbol: string, candlesticks: number[], color: string) => string
+  createStockCompare: (symbol: string, params: {color: string, interval: number, startAt: string}) => string
   removeStockCompare: (symbol: string) => void
   createMarkOverlay: (symbol: string, type: string, mark: string, cb: (data: any) => void) => string
   removeMarkOverlay: (indicatorId: string) => void
@@ -174,6 +174,8 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
               if (time.format('HH:mm') === '00:00') {
                 format = 'YYYY-MM-DD w'
               }
+
+
               const amount = current.close - current.prevClose
               const percent = (amount / current.prevClose) * 100
               const color = amount > 0 ? upColor : downColor
@@ -512,13 +514,13 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
     removeSubIndicator(indicatorId) {
       chart.current?.removeIndicator({ id: indicatorId })
     },
-    createStockCompare: (symbol, candlesticks, color) => {
+    createStockCompare: (symbol, params) => {
       const indicator = uid(8)
       chart.current?.createIndicator(
         {
           name: 'compare-indicator',
           id: `compare-${symbol}`,
-          calcParams: [candlesticks, color]
+          calcParams: [params.color, symbol, params.interval, params.startAt]
         },
         true,
         { id: ChartTypes.MAIN_PANE_ID }

@@ -40,7 +40,10 @@ export const KChart = (props: KChartProps) => {
 
   const onChangeActive = (index: number) => {
     chartManage.setActiveChart(getChartIdByIndex(index))
-    setQueryParams({ symbol: chartManage.getChart(getChartIdByIndex(index))?.symbol})
+    const activeSymbol = chartManage.getChart(getChartIdByIndex(index))?.symbol
+    if(queryParams.symbol !== activeSymbol){
+      setQueryParams({ symbol: chartManage.getChart(getChartIdByIndex(index))?.symbol})
+    }
   }
 
   const chartCount = useMemo(() => renderUtils.getViewMode(viewMode), [viewMode])
