@@ -48,7 +48,7 @@ const StockInfo = () => {
   return (
     <div className="h-full flex flex-col overflow-hidden rounded-xs ml-1">
       <div className="flex-1 flex flex-col overflow-hidden">
-        <div className="bg-background rounded overflow-hidden flex-shrink-0">
+        <div className="bg-background rounded overflow-hidden flex-shrink-0 pb-1">
           <StockBaseInfo />
           <StockQuote />
           <StockNews />
@@ -72,6 +72,7 @@ type StockBaseInfoData = Parameters<StockSubscribeHandler<'snapshot'>>[0]['data'
 const StockBaseInfo = () => {
   const code = useSymbolQuery()
   const trading = useTime(s => s.getTrading())
+  const [dataTrading, setDataTrading] = useState<Nullable<string>>(undefined)
 
   const [dataInfo, setDataInfo] = useState<Nullable<StockBaseInfoData>>()
 
@@ -83,7 +84,6 @@ const StockBaseInfo = () => {
     }),
     [code]
   )
-
 
   useSnapshotOnce(code, useCallback(e => {
     setDataInfo(e.data)
@@ -152,7 +152,7 @@ const StockBaseInfo = () => {
           close={dataInfo?.close}
           prevClose={dataInfo?.prevClose}
           tradingLabel={trading === 'intraDay' ? '交易中' : '收盘价'}
-          time={dateUtils.toUsDay(dataInfo?.dayUpdated ?? '0').format('MM/DD hh:mm')}
+          time={dateUtils.toUsDay(dataInfo?.dayUpdated ?? '0').format('MM/DD HH:mm')}
           side="bottom"
           contentClassName="text-xs"
           interval={StockChartInterval.INTRA_DAY}
@@ -165,7 +165,7 @@ const StockBaseInfo = () => {
               percent={dataInfo ? stockUtils.getPercent({ close: dataInfo.extPrice, prevClose: dataInfo.close }) : undefined}
               close={dataInfo?.extPrice}
               prevClose={dataInfo?.close}
-              time={dateUtils.toUsDay(dataInfo?.extUpdated ?? '0').format('MM/DD hh:mm')}
+              time={dateUtils.toUsDay(dataInfo?.extUpdated ?? '0').format('MM/DD HH:mm')}
               tradingLabel="盘前价"
               side="bottom"
               contentClassName="text-xs"
@@ -177,7 +177,7 @@ const StockBaseInfo = () => {
               percent={dataInfo ? stockUtils.getPercent({ close: dataInfo.extPrice, prevClose: dataInfo.close }) : undefined}
               close={dataInfo?.extPrice}
               prevClose={dataInfo?.close}
-              time={dateUtils.toUsDay(dataInfo?.extUpdated ?? '0').format('MM/DD hh:mm')}
+              time={dateUtils.toUsDay(dataInfo?.extUpdated ?? '0').format('MM/DD HH:mm')}
               tradingLabel="盘后价"
               side="bottom"
               contentClassName="text-xs"
@@ -225,7 +225,7 @@ const StockQuoteBar = withTooltip(
             trading={trading}
             initDirection={Decimal.create(props?.percent).gt(0)}
             initValue={props.close}
-            zeroText="--"
+            zeroText="0.000"
           />
           {
             !props.close ? null : (
@@ -253,7 +253,8 @@ const StockQuoteBar = withTooltip(
             showColor={props.percent !== Number.POSITIVE_INFINITY}
             initDirection={Decimal.create(props?.percent).gt(0)}
             initValue={props.percent !== Number.POSITIVE_INFINITY ? (props?.close ?? 0) - (props?.prevClose ?? 0) : '-'}
-            zeroText="--"
+            zeroText="0.000"
+            nanText="--"
           />
         </span>
         &nbsp;&nbsp;
@@ -265,7 +266,7 @@ const StockQuoteBar = withTooltip(
             showSign
             initDirection={Decimal.create(props?.percent).gt(0)}
             initValue={props.percent}
-            zeroText="--"
+            zeroText="0.00%"
             showColor={props.percent !== Number.POSITIVE_INFINITY}
             nanText="--"
           />
@@ -369,7 +370,7 @@ const StockQuote = () => {
               </div>
               <div className="flex items-center justify-between">
                 <span>成交量&nbsp;&nbsp;</span>
-                <span>{codeInfo?.dayVolume}</span>
+                <span>{Decimal.create(codeInfo?.dayVolume).toShortCN()}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span>市盈率&nbsp;&nbsp;</span>

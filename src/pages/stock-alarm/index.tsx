@@ -1,12 +1,13 @@
-import { AlarmType, PriceAlarmTrigger, deleteAlarmCondition, getAlarmConditionsList, getAlarmLogsList } from "@/api"
-import { JknIcon, JknVirtualInfinite, StockAlarm, Tabs, TabsContent, TabsList, TabsTrigger } from '@/components'
-import { useCheckboxGroup, useToast } from "@/hooks"
+import { AlarmType, PriceAlarmTrigger, clearAlarmLogs, deleteAlarmCondition, deleteAlarmLog, getAlarmConditionsList, getAlarmLogsList } from "@/api"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, Input, JknAlert, JknIcon, JknVirtualInfinite, Separator, StockAlarm, Tabs, TabsContent, TabsList, TabsTrigger } from '@/components'
+import { useToast } from "@/hooks"
 import { dateUtils } from "@/utils/date"
 import { stockUtils } from "@/utils/stock"
 import { cn } from "@/utils/style"
+import { WsV2 } from "@/utils/ws"
 import { useInfiniteQuery } from "@tanstack/react-query"
 import to from "await-to-js"
-import { useState } from 'react'
+import { Fragment, type KeyboardEventHandler, useEffect, useState } from 'react'
 
 const StockAlarmPage = () => {
   const [activeTab, setActiveTab] = useState<'list' | 'log'>('list')
@@ -37,9 +38,12 @@ const StockAlarmPage = () => {
 type AlarmItemType = ArrayItem<Awaited<ReturnType<typeof getAlarmConditionsList>>['items']>
 
 const StockAlarmList = () => {
+  const [search, setSearch] = useState('')
+  const [showSearch, setShowSearch] = useState(false)
+  const [sort, setSort] = useState({ order: '', orderBy: '' })
   const alarmQuery = useInfiniteQuery({
-    queryKey: [getAlarmConditionsList.cacheKey],
-    queryFn: async ({ pageParam = 0 }) => getAlarmConditionsList({ page: pageParam, limit: 20 }),
+    queryKey: [getAlarmConditionsList.cacheKey, search, sort],
+    queryFn: async ({ pageParam = 0 }) => getAlarmConditionsList({ page: pageParam, limit: 20, symbol: search, order: sort.order as any, order_by: sort.orderBy }),
     initialPageParam: 1,
     getNextPageParam: (lastPage, _, lastPageParam) => lastPage.total_pages > lastPageParam ? lastPageParam + 1 : undefined,
     getPreviousPageParam: () => undefined,
@@ -60,6 +64,24 @@ const StockAlarmList = () => {
     alarmQuery.refetch()
   }
 
+  const onSearch: KeyboardEventHandler<HTMLInputElement> = (e) => {
+    if (e.key === 'Enter') {
+      setSearch((e.target as HTMLInputElement).value)
+    }
+  }
+
+  const onChangeSearch = () => {
+    if (showSearch) {
+      setShowSearch(false)
+      setSearch('')
+    } else {
+      setShowSearch(true)
+    }
+  }
+
+  const onSort: SortButtonProps['onChange'] = (e) => {
+    setSort({ order: e.order, orderBy: e.orderBy })
+  }
 
 
   return (
@@ -68,15 +90,34 @@ const StockAlarmList = () => {
         <StockAlarm>
           <JknIcon.Svg name="plus" size={16} className="cursor-pointer rounded flex items-center justify-center p-1 hover:bg-accent" />
         </StockAlarm>
-
-        <JknIcon.Svg className="ml-auto mr-2 cursor-pointer rounded p-1 hover:bg-accent" name="search" size={18} />
+        <div className="ml-auto mr-2 flex items-center">
+          {
+            showSearch ? (
+              <Input size="sm" className="transition placeholder:text-tertiary h-[26px] text-foreground" placeholder="输入股票名称搜索" onKeyDown={onSearch} />
+            ) : null
+          }
+          <JknIcon.Svg className={cn(
+            'ml-2 cursor-pointer rounded p-1 hover:bg-accent flex-shrink-0',
+            showSearch && 'text-primary'
+          )} name="search" size={18} onClick={onChangeSearch} />
+        </div>
         {/* <StockSelect /> */}
         {/* <JknIcon.Svg className="cursor-pointer" name="sort" size={26} /> */}
-        <JknIcon.Svg className="mr-2 cursor-pointer rounded p-1 hover:bg-accent" name="sort" size={18} />
+        {/* <JknIcon.Svg className="mr-2 cursor-pointer rounded p-1 hover:bg-accent" name="sort" size={18} /> */}
+        <SortButton
+          list={[
+            { label: '代码(A到Z)', order: 'asc', field: 'symbol' },
+            { label: '代码(A到Z)', order: 'desc', field: 'symbol' },
+            { label: '创建时间(从旧到新)', order: 'asc', field: 'create_time' },
+            { label: '创建时间(从新到旧)', order: 'desc', field: 'create_time' }
+          ]}
+          onChange={onSort}
+        />
       </div>
       <JknVirtualInfinite direction="down" className="flex-1" itemHeight={70} rowKey="id" data={alarmQuery.data ?? []}
         hasMore={alarmQuery.hasNextPage}
         fetchMore={alarmQuery.fetchNextPage}
+        loading={alarmQuery.isLoading}
         renderItem={(row) => <AlarmItem symbol={row.symbol} data={row} onDelete={onDelete} />}
       />
       {/* <JknVirtualList className="flex-1" itemHeight={70} rowKey="id" data={alarmQuery.data ?? []}
@@ -98,7 +139,7 @@ const AlarmItem = ({ symbol, data, onDelete }: AlarmItemProps) => {
       return (
         <span>
           <span>{cyc}</span>
-          <span>
+          <span data-direction={data.condition.bull === '1' ? 'up' : 'down'}>
             &nbsp;
             {data.condition.category_names.join('·')}
             {
@@ -199,28 +240,85 @@ const AlarmItem = ({ symbol, data, onDelete }: AlarmItemProps) => {
 type AlarmRecordItemType = ArrayItem<Awaited<ReturnType<typeof getAlarmLogsList>>['items']>
 
 const StockAlarmRecordList = () => {
+  const [sort, setSort] = useState({ order: '', orderBy: '' })
   const alarmQuery = useInfiniteQuery({
-    queryKey: [getAlarmLogsList.cacheKey],
-    queryFn: async ({ pageParam = 0 }) => getAlarmLogsList({ page: pageParam, limit: 20 }),
+    queryKey: [getAlarmLogsList.cacheKey, sort],
+    queryFn: async ({ pageParam = 0 }) => getAlarmLogsList({ page: pageParam, limit: 20, order: sort.order as any, order_by: sort.orderBy }),
     initialPageParam: 1,
     getNextPageParam: (lastPage, _, lastPageParam) => lastPage.total_pages > lastPageParam ? lastPageParam + 1 : undefined,
     getPreviousPageParam: () => undefined,
     select: data => data.pages.flatMap(p => p.items ?? []),
   })
 
+  const { toast } = useToast()
   // const { toast } = useToast()
 
-  const onDelete = async (_id: string) => {
-
+  const onSort: SortButtonProps['onChange'] = (e) => {
+    setSort({ order: e.order, orderBy: e.orderBy })
   }
 
+  const onDelete = async (id: string) => {
+    const [err] = await to(deleteAlarmLog([id]))
 
+    if (err) {
+      toast({ description: err.message })
+      return
+    }
+
+    toast({ description: '删除成功' })
+    alarmQuery.refetch()
+  }
+
+  const onClean = async () => {
+    JknAlert.confirm({
+      content: '是否清空所有警报记录？',
+      okBtnText: '清空',
+      okBtnVariant: 'destructive',
+      onAction: async (r) => {
+        if (r === 'confirm') {
+          const [err] = await to(clearAlarmLogs())
+
+          if (err) {
+            toast({ description: err.message })
+            return
+          }
+
+          toast({ description: '清空成功' })
+          alarmQuery.refetch()
+        }
+      }
+    })
+  }
+
+  useEffect(() => {
+    const ws = WsV2.getWs()
+
+    const unSubscribe = ws?.onAlarm(() => {
+      alarmQuery.refetch()
+    })
+
+    return () => {
+      unSubscribe?.()
+    }
+  }, [alarmQuery.refetch])
 
   return (
     <div className="h-full flex flex-col">
       <div className="px-5 flex items-center w-full box-border border-b-primary pb-2">
-        <JknIcon.Svg name="clean" size={18} className="cursor-pointer rounded flex items-center justify-center p-1 hover:bg-accent" />
-        <JknIcon.Svg className="ml-auto mr-2 cursor-pointer rounded flex items-center justify-center p-1 hover:bg-accent" name="sort" size={18} />
+        <JknIcon.Svg name="clean" size={18} className="cursor-pointer rounded flex items-center justify-center p-1 hover:bg-accent" onClick={onClean} />
+        <span className="ml-auto">
+          <SortButton
+            list={[
+              { label: '代码(A到Z)', order: 'asc', field: 'symbol' },
+              { label: '代码(A到Z)', order: 'desc', field: 'symbol' },
+              { label: '创建时间(从旧到新)', order: 'asc', field: 'create_time' },
+              { label: '创建时间(从新到旧)', order: 'desc', field: 'create_time' },
+              { label: '警报时间(从旧到新)', order: 'asc', field: 'alarm_time' },
+              { label: '警报时间(从新到旧)', order: 'desc', field: 'alarm_time' },
+            ]}
+            onChange={onSort}
+          />
+        </span>
       </div>
       <JknVirtualInfinite direction="down" className="flex-1" itemHeight={70} rowKey="id" data={alarmQuery.data ?? []}
         hasMore={alarmQuery.hasNextPage}
@@ -333,6 +431,52 @@ const AlarmRecordItem = ({ symbol, data, onDelete }: AlarmRecordItemProps) => {
         }
       </style>
     </div>
+  )
+}
+
+interface SortButtonProps {
+  list: { label: string; order: 'asc' | 'desc', field: string }[]
+  onChange: (params: { order: 'asc' | 'desc', orderBy: string }) => void
+}
+
+const SortButton = ({ list, onChange }: SortButtonProps) => {
+  const [order, setOrder] = useState<{ order: 'asc' | 'desc', orderBy: string }>({ order: 'desc', orderBy: '' })
+
+  const onSort = (item: { order: 'asc' | 'desc', field: string }) => {
+    setOrder({ order: item.order, orderBy: item.field })
+    onChange({ order: item.order, orderBy: item.field })
+  }
+
+  return (
+    // <div className="flex items-center">
+    //           {/* <JknIcon.Svg className="mr-2 cursor-pointer rounded p-1 hover:bg-accent" name="sort" size={18} />
+    //   <JknIcon.Svg name={order === 'asc' ? 'sort-asc' : 'sort'} size={16} className="cursor-pointer rounded flex items-center justify-center p-1 hover:bg-accent" onClick={onClick} />
+    //   <span className="text-tertiary text-xs ml-1 cursor-pointer" onClick={onClick}>{selected === 'asc' ? '升序' : '降序'}</span> */}
+    // </div>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <span className="inline-flex">
+          <JknIcon.Svg name={order.order === 'asc' ? 'sort-asc' : 'sort'} className="mr-2 cursor-pointer rounded p-1 hover:bg-accent" size={18} />
+        </span>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent>
+        {
+          list.map((item, index, arr) => (
+            <Fragment key={item.field}>
+              <DropdownMenuItem data-checked={order.order === item.order && order.orderBy === item.field} key={item.field} onClick={() => onSort(item)} >
+                <JknIcon.Svg name={item.order === 'asc' ? 'sort-asc' : 'sort'} size={18} />
+                {
+                  item.label
+                }
+              </DropdownMenuItem>
+              {
+                index !== arr.length - 1 && index !== 0 && index % 2 === 1 ? <Separator /> : null
+              }
+            </Fragment>
+          ))
+        }
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
 }
 

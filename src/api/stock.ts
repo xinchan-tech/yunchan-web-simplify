@@ -660,15 +660,7 @@ export const addStockCollectBatch = (params: { symbol: string; cate_ids: number[
  * 移出金池
  */
 export const removeStockCollect = (params: { symbols: string[]; cate_ids: number[] }) => {
-  const form = new URLSearchParams()
-  for (const s of params.symbols) {
-    form.append('symbols[]', s)
-  }
-
-  for (const c of params.cate_ids) {
-    form.append('cate_ids[]', c.toString())
-  }
-  return request.post<void>('/stock-svc/collect/stocks/delete', form).then(r => r.data)
+  return request.post<void>('/stock-svc/collect/stocks/delete', params).then(r => r.data)
 }
 
 /**

@@ -1,6 +1,7 @@
 import { StockChartInterval, type StockRawRecord } from '@/api'
 import type { StockTrading } from '@/utils/stock'
 import type { ChartManageStore, Indicator } from './store'
+import { dateUtils } from '@/utils/date'
 
 export const renderUtils = {
   getViewMode: (s: ChartManageStore['viewMode']) => {
@@ -146,7 +147,7 @@ export const renderUtils = {
     ) {
       return true
     }
-    
+
     if (trading !== 'intraDay') {
       return false
     }
@@ -156,5 +157,16 @@ export const renderUtils = {
    * 判断是否是分时图
    */
   isTimeIndexChart: (timeIndex: StockChartInterval) =>
-    [StockChartInterval.PRE_MARKET, StockChartInterval.AFTER_HOURS, StockChartInterval.INTRA_DAY].includes(timeIndex)
+    [StockChartInterval.PRE_MARKET, StockChartInterval.AFTER_HOURS, StockChartInterval.INTRA_DAY].includes(timeIndex),
+  /**
+   * k线获取数据逻辑
+   */
+  getChartStartDate: (interval: StockChartInterval) => {
+    const current = dateUtils.toUsDay(new Date().valueOf())
+    if (interval <= StockChartInterval.FOUR_HOUR) {
+      return current.add(-1 * 15 * interval, 'd').format('YYYY-MM-DD HH:mm:ss')
+    }
+
+    return current.add(-1 * 15 * 180, 'd').format('YYYY-MM-DD HH:mm:ss')
+  }
 }

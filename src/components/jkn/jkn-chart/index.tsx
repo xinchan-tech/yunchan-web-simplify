@@ -78,8 +78,9 @@ interface JknChartIns {
   createSubIndicator: (params: IndicatorParams) => Nullable<string>
   setSubIndicator: (indicatorId: string, params: IndicatorParams) => void
   removeSubIndicator: (indicatorId: string) => void
-  createStockCompare: (symbol: string, params: {color: string, interval: number, startAt: string}) => string
+  createStockCompare: (symbol: string, params: { color: string, interval: number, startAt: string }) => string
   removeStockCompare: (symbol: string) => void
+  setStockCompare: (indicatorId: string, params: Partial<{ color: string; interval: number; startAt: string }>) => void
   createMarkOverlay: (symbol: string, type: string, mark: string, cb: (data: any) => void) => string
   removeMarkOverlay: (indicatorId: string) => void
   setMarkOverlay: (mark: string) => void
@@ -214,7 +215,7 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
 
                   return lastData.close > lastData.prevClose ? upColor : downColor
                 }
-      
+
                 if (axisType === 'percentage') {
                   const { from } = chart.getVisibleRange()
                   const firstData = data[from]
@@ -391,7 +392,7 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
             value: 'high'
           },
           leftAxis: {
-            position: 'right' as AxisPosition
+            position: 'left' as AxisPosition
           }
         })
       }
@@ -515,11 +516,11 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
       chart.current?.removeIndicator({ id: indicatorId })
     },
     createStockCompare: (symbol, params) => {
-      const indicator = uid(8)
+      const indicator = `compare-${symbol}`
       chart.current?.createIndicator(
         {
           name: 'compare-indicator',
-          id: `compare-${symbol}`,
+          id: indicator,
           calcParams: [params.color, symbol, params.interval, params.startAt]
         },
         true,
@@ -527,6 +528,20 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
       )
 
       return indicator
+    },
+    setStockCompare: (indicatorId, params) => {
+      const indicator = chart.current?.getIndicators({ id: indicatorId })[0]
+      const orgColor = indicator?.calcParams[0] as string
+      const orgInterval = indicator?.calcParams[2] as StockChartInterval
+      const orgStartAt = indicator?.calcParams[3] as string
+      const orgSymbol = indicator?.calcParams[1] as string
+      if (!indicator) return
+
+      chart.current?.overrideIndicator({
+        name: 'compare-indicator',
+        id: indicatorId,
+        calcParams: [params.color || orgColor, orgSymbol, params.interval || orgInterval, params.startAt || orgStartAt]
+      })
     },
     removeStockCompare: symbol => {
       chart.current?.removeIndicator({ id: `compare-${symbol}` })

@@ -90,7 +90,7 @@ export const compareIndicator: IndicatorTemplate<any, any> = {
     if (_dataList.length === 0) return []
 
 
-    const cache = indicator.extendData as Nullable<{ dataLen: number, data: [
+    const cache = indicator.extendData as Nullable<{ dataLen: number, interval: number, data: [
       {
         validIndex: number
         data: KLineData[],
@@ -99,12 +99,12 @@ export const compareIndicator: IndicatorTemplate<any, any> = {
     ] }>
 
     if(cache){
-      if(cache.dataLen === _dataList.length){
+      if(cache.dataLen === _dataList.length && cache.interval === indicator.calcParams[2]){
         console.warn('use cache')
         return cache.data
       }
     }
-
+   
     const [color, symbol, interval, startAt] = indicator.calcParams
     const queryKey = [
       getStockChartV2.cacheKey,
@@ -149,6 +149,7 @@ export const compareIndicator: IndicatorTemplate<any, any> = {
 
     indicator.extendData = {
       dataLen: _dataList.length,
+      interval: interval,
       data: ret
     }
 

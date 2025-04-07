@@ -205,6 +205,11 @@ export class WsV2 {
 
     return WsV2.instance
   }
+
+  static getWs() {
+    return WsV2.instance
+  }
 }
+
 
 export const wsManager = new WsManager(wsUrl)

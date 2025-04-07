@@ -15,6 +15,7 @@ import {
   drawTextTransform,
   drawPipeTransform
 } from './transform'
+import { nanoid } from 'nanoid'
 
 export type { IndicatorData } from './transform'
 
@@ -111,7 +112,7 @@ export class IndicatorUtils {
     if (!isEmpty(indicator)) {
       fml.formula = listify(indicator, (k, v) => `${k}:=${v};`).join('') + fml.formula
     }
- 
+
     const result = (await module.policy_execute(fml, rawData, interval)) as {
       data: IndicatorRawData[]
       status: number
@@ -134,12 +135,17 @@ export class IndicatorUtils {
     await IndicatorUtils.withCoilingModuleReady()
 
     const module = IndicatorUtils.ins.coilingModule as Awaited<ReturnType<typeof window.CoilingModule>>
-
+    // const calcId = nanoid(8)
     const _data = data.map((item: StockRawRecord) => {
       return [Math.floor(stockUtils.parseTime(item[0]) / 1000), ...item.slice(1)] as unknown as StockRawRecord
     }, true)
-    const r = await module.coiling_calculate(_data, data.length, interval)
-  
-    return r
+    try {
+      const r = await module.coiling_calculate(_data, data.length - 100, interval)
+      // console.log('计算id:', calcId, r)
+      return r
+    } catch (e) {
+      // console.error('计算失败:', calcId, e)
+    }
+
   }
 }

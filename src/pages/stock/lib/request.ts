@@ -1,4 +1,4 @@
-import { StockChartInterval, type StockRawRecord, getStockChartQuote, getStockChartV2, getStockTabData } from '@/api'
+import { type StockChartInterval, type StockRawRecord, getStockChartQuote, getStockChartV2, getStockTabData } from '@/api'
 import { dateUtils } from '@/utils/date'
 import { queryClient } from '@/utils/query-client'
 import { stockUtils } from '@/utils/stock'
@@ -6,20 +6,10 @@ import { useQuery } from '@tanstack/react-query'
 import { useRef } from 'react'
 import { renderUtils } from './utils'
 
-/**
- * k线获取数据逻辑
- */
-const getChartStartDate = (interval: StockChartInterval) => {
-  const current = dateUtils.toUsDay(new Date().valueOf())
-  if (interval <= StockChartInterval.FOUR_HOUR) {
-    return current.add(-1 * 15 * interval, 'd').format('YYYY-MM-DD HH:mm:ss')
-  }
 
-  return current.add(-1 * 15 * 180, 'd').format('YYYY-MM-DD HH:mm:ss')
-}
 
 export const useCandlesticks = (symbol: string, interval: StockChartInterval) => {
-  const startAt = useRef<string>(getChartStartDate(interval))
+  const startAt = useRef<string>(renderUtils.getChartStartDate(interval))
   const queryKey = [
     'stock-kline:v2',
     {
@@ -33,7 +23,7 @@ export const useCandlesticks = (symbol: string, interval: StockChartInterval) =>
     queryKey: queryKey,
     queryFn: () => {
       if (!renderUtils.isTimeIndexChart(interval)) {
-        startAt.current = getChartStartDate(interval)
+        startAt.current = renderUtils.getChartStartDate(interval)
         return getStockChartV2({
           symbol,
           period: stockUtils.intervalToPeriod(interval),

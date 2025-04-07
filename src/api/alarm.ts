@@ -6,7 +6,7 @@ export enum AlarmType {
   HISTORY = 1,
   PRICE = 2,
   LINE = 3,
-  PERCENT = 4,
+  PERCENT = 4
 }
 
 export enum PriceAlarmTrigger {
@@ -153,6 +153,8 @@ type GetAlarmLogsParams = {
    */
   end?: string
   extend?: StockExtend[]
+  order?: 'asc' | 'desc'
+  order_by?: string
 }
 
 type GetAlarmLogsResult = PageResult<{
@@ -187,6 +189,9 @@ getAlarmLogs.cacheKey = 'alarms:logs'
 type GetAlarmConditionsListParams = {
   page: number
   limit: number
+  symbol?: string
+  order?: 'asc' | 'desc'
+  order_by?: string
 }
 
 type AlarmBaseType = {
@@ -274,3 +279,17 @@ export const getAlarmLogsList = async (params: GetAlarmLogsParams) => {
   return request.get<Page<PriceAlarmRecord | AiAlarmRecord>>('/stock-svc/alarm/logs', { params }).then(r => r.data)
 }
 getAlarmLogsList.cacheKey = 'stock-svc:alarms:logs'
+
+/**
+ * 删除报警触发日志
+ */
+export const deleteAlarmLog = async (ids: string[]) => {
+  return request.post('/stock-svc/alarm/logs/delete', { ids }).then(r => r.data)
+}
+
+/**
+ * 清除所有报警触发日志
+ */
+export const clearAlarmLogs = async () => {
+  return request.post('/stock-svc/alarm/logs/deleteAll').then(r => r.data)
+}

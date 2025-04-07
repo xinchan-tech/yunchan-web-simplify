@@ -1,4 +1,4 @@
-import { addStockCollectBatch, addStockCollectDefault, getStockCollectCates } from '@/api'
+import { addStockCollectBatch, addStockCollectDefault, getStockCollectCates, removeStockCollect } from '@/api'
 import { usePropValue, useToast } from '@/hooks'
 import type { HoverCardContentProps } from '@radix-ui/react-hover-card'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
@@ -25,7 +25,10 @@ const _CollectStar = memo((props: CollectStarProps) => {
       if(checked){
         return addStockCollectDefault([props.code])
       }
-      return Promise.reject()
+      return removeStockCollect({
+        symbols: [props.code],
+        cate_ids: [1]
+      })
     },
     onMutate: async (checked) => {
       setChecked(checked)
@@ -73,9 +76,9 @@ interface CollectListProps {
 const CollectList = (props: CollectListProps) => {
   const queryClient = useQueryClient()
   const cateQuery = useQuery({
-    queryKey: [getStockCollectCates.cacheKey, props.code],
-    queryFn: () => getStockCollectCates(props.code),
-    initialData: [{ id: '1', name: '我的自选', create_time: '', active: 0, total: '0' }]
+    queryKey: [getStockCollectCates.cacheKey],
+    queryFn: () => getStockCollectCates(),
+    initialData: [{ id: '1', name: '我的自选', create_time: '', active: 0, total: '0', is_default: true, sort: 0 }],
   })
 
   const updateCollectMutation = useMutation({

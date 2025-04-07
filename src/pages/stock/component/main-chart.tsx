@@ -35,7 +35,7 @@ export const MainChart = (props: MainChartProps) => {
   const activeChartId = useChartManage(s => s.activeChartId)
   const chartStore = useChartManage(s => s.chartStores[props.chartId])
   const chartImp = useRef<ComponentRef<typeof JknChart>>(null)
-  const { candlesticks, startAt, refreshCandlesticks } = useCandlesticks(symbol, chartStore.interval)
+  const { candlesticks, startAt } = useCandlesticks(symbol, chartStore.interval)
   const stockCache = useRef({
     compare: new Map(),
     mark: '',
@@ -250,6 +250,13 @@ export const MainChart = (props: MainChartProps) => {
         chartImp.current?.setChartType(c?.type === ChartType.Candle ? 'candle' : 'area')
       }
       chartManage.setMode('normal')
+      Array.from(stockCache.current.compare.entries()).forEach(([_, indicatorId]) => {
+        console.log(indicatorId)
+        chartImp.current?.setStockCompare(indicatorId, {
+          interval,
+          startAt: renderUtils.getChartStartDate(interval)
+        })
+      })
     })
 
     const cancelCharTypeEvent = chartEvent.on('chartTypeChange', (type) => {
@@ -324,6 +331,7 @@ export const MainChart = (props: MainChartProps) => {
     })
 
     const cancelYAxisChange = chartEvent.on('yAxisChange', (type) => {
+      console.log('yAxisChange', type)
       if (type.left) {
         chartImp.current?.setAxisType('double')
       } else if (type.right === MainYAxis.Percentage) {
