@@ -312,8 +312,7 @@ const StockQuote = () => {
         }
         _s[key] = e.data[key as keyof StockBaseInfoData]
       })
-
-      return _s
+      return {..._s}
     })
   }, []))
 

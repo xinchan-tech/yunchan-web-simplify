@@ -235,7 +235,7 @@ const GoldenPool = () => {
         title: (
           <div className="flex items-center justify-end pr-1">
             <JknCheckbox className="w-5 h-5" checked={isAllChecked} onCheckedChange={handleCheckAll} />
-          </div>
+        </div>
         ),
         dataIndex: 'check',
         align: 'right',
