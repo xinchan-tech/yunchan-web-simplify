@@ -1,7 +1,6 @@
 import type { getStockIndicators } from '@/api'
 import { HoverCard, HoverCardContent, HoverCardTrigger, JknIcon } from '@/components'
 import { useCallback } from 'react'
-import { CoilingIndicatorId, kChartUtils, useKChartStore } from '../lib'
 import { chartManage, useChartManage } from '../lib/store'
 import { SearchList } from './search-list'
 

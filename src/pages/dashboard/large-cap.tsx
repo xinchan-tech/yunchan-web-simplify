@@ -200,6 +200,7 @@ interface LargeCapChartProps {
 
 const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
   const chart = useRef<ComponentRef<typeof JknChart>>(null)
+  const lastBarInInterval = useRef<Stock | null>(null)
 
   useEffect(() => {
     const tick = stockUtils.getIndexTimeTick()
@@ -380,14 +381,23 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
     const c = chart.current?.getChart()
     const stock = stockUtils.toStock(data.rawRecord)
     const lastData = c?.getDataList()[c.getDataList().length - 1]
+
     if (!lastData) {
       chart.current?.applyNewData([stock])
     } else {
+      if (chart.current?.isSameIntervalCandlestick(stock, StockChartInterval.ONE_MIN)) {
+        lastBarInInterval.current = stock
+        return
+      }
+
+      if (lastBarInInterval.current) {
+        chart.current?.appendCandlestick({
+          ...lastBarInInterval.current
+        }, StockChartInterval.ONE_MIN)
+      }
       chart.current?.appendCandlestick({
-        ...stock,
-        quote: lastData.quote,
-        prevQuote: lastData?.prevQuote
-      }, 1)
+        ...stock
+      }, StockChartInterval.ONE_MIN)
     }
   }, []))
 
@@ -400,10 +410,8 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
       if (!lastData) return
 
       chart.current?.appendCandlestick({
-        ...lastData,
-        quote: data.record.close,
-        prevQuote: data.record.preClose
-      }, 1)
+        ...lastData
+      }, StockChartInterval.ONE_MIN)
     })
 
     return unSubscribe

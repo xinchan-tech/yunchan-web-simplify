@@ -21,7 +21,7 @@ export const transformTextColor = (text: string, startData: Candlestick) => {
   if (!startData) {
     return 'transparent'
   }
-  return Number.parseFloat(text) > startData.prevClose ? getColor(true, 'hex') : getColor(false, 'hex')
+  return Number.parseFloat(text) > startData.open ? getColor(true, 'hex') : getColor(false, 'hex')
 }
 
 export const transformCandleColor = (candle: Candlestick) => {

@@ -1,10 +1,10 @@
 
-import {  ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuSeparator, ContextMenuSub, ContextMenuSubContent, ContextMenuSubTrigger, ContextMenuTrigger } from "@/components"
+import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuSeparator, ContextMenuSub, ContextMenuSubContent, ContextMenuSubTrigger, ContextMenuTrigger } from "@/components"
 import type { PropsWithChildren } from 'react'
-import { chartManage, type ChartStore, MainYAxis } from "../lib"
+import { chartManage, type ChartStore, MainYAxis, renderUtils } from "../lib"
 
 interface ChartContextMenuProps {
-  index: number
+  chartId: string
   // onChangeSecondaryCount: (count: number) => void
   // onChangeYAxis?: (type: Parameters<typeof kChartUtils.setYAxis>[0]['yAxis']) => void
 }
@@ -28,18 +28,23 @@ export const ChartContextMenu = (props: PropsWithChildren<ChartContextMenuProps>
   // }
 
   const _setYAxis = (type: ChartStore['yAxis']) => () => {
-    chartManage.setYAxis(type)
+    const interval = chartManage.getChart(props.chartId)?.interval
+
+    if (interval !== undefined && renderUtils.isTimeIndexChart(interval)) {
+      return
+    }
+    chartManage.setYAxis(type, props.chartId)
   }
 
   return (
- 
+
     <ContextMenu>
       <ContextMenuTrigger asChild >
         <div className="w-full h-full overflow-hidden flex flex-col">
-        {
-          props.children
-        }
-      </div>
+          {
+            props.children
+          }
+        </div>
       </ContextMenuTrigger>
       <ContextMenuContent className="w-24 min-w-4 border border-solid border-dialog-border">
         <ContextMenuSub>

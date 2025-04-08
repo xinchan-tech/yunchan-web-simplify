@@ -1,18 +1,18 @@
 import type { StockRawRecord } from '@/api'
 import { ChartTypes, JknChart, JknIcon } from '@/components'
-import { stockSubscribe, stockUtils } from '@/utils/stock'
-import { useMount, useUnmount, useUpdateEffect } from 'ahooks'
+import { useStockBarSubscribe } from "@/hooks"
+import { useConfig, useTime } from "@/store"
+import { type Stock, stockSubscribe, stockUtils } from '@/utils/stock'
+import { colorUtil } from "@/utils/style"
+import { useMount, useUnmount } from 'ahooks'
 import qs from 'qs'
 import { type ComponentRef, useEffect, useRef, useState } from 'react'
 import { chartEvent } from '../lib/event'
-import { fetchCandlesticks, useCandlesticks } from '../lib/request'
-import { chartManage, ChartType, MainYAxis, useChartManage } from '../lib/store'
+import { useCandlesticks } from '../lib/request'
+import { ChartType, MainYAxis, chartManage, useChartManage } from '../lib/store'
 import { renderUtils } from '../lib/utils'
-import { ChartContextMenu } from './chart-context-menu'
 import { BackTestBar } from "./back-test-bar"
-import { useStockBarSubscribe } from "@/hooks"
-import { useConfig, useTime } from "@/store"
-import { colorUtil } from "@/utils/style"
+import { ChartContextMenu } from './chart-context-menu'
 
 interface MainChartProps {
   chartId: string
@@ -31,7 +31,6 @@ const convertToStock = (candlesticks: StockRawRecord[]) => candlesticks.map(c =>
 export const MainChart = (props: MainChartProps) => {
   const [symbol, setSymbol] = useState(getSymbolByUrl())
   const gapShow = useConfig(s => s.setting.gapShow)
-  const trading = useTime(s => s.getTrading())
   const activeChartId = useChartManage(s => s.activeChartId)
   const chartStore = useChartManage(s => s.chartStores[props.chartId])
   const chartImp = useRef<ComponentRef<typeof JknChart>>(null)
@@ -41,6 +40,7 @@ export const MainChart = (props: MainChartProps) => {
     mark: '',
     rightAxisBeforePk: null as Nullable<typeof chartStore.yAxis>
   })
+  const lastBarInInterval = useRef<Stock | null>(null)
 
   useStockBarSubscribe([`${symbol}@${stockUtils.intervalToPeriod(chartStore.interval)}`], (data) => {
     const mode = useChartManage.getState().chartStores[props.chartId].mode
@@ -65,20 +65,20 @@ export const MainChart = (props: MainChartProps) => {
       return
     }
 
-    const chart = chartImp.current?.getChart()
-    const lastData = chart?.getDataList()?.slice(-1)[0]
-
     if (chartImp.current?.isSameIntervalCandlestick(record, interval)) {
-      chartImp.current?.appendCandlestick({
-        ...record,
-        quote: lastData?.quote,
-        prevQuote: lastData?.prevQuote
-      }, interval)
+      lastBarInInterval.current = record
+      // chartImp.current?.appendCandlestick({
+      //   ...record
+      // }, interval)
     } else {
+      // 用bar数据覆盖上一根k线quote的数据
+      if(lastBarInInterval.current) {
+        chartImp.current?.appendCandlestick({
+          ...lastBarInInterval.current
+        }, interval)
+      }
       chartImp.current?.appendCandlestick({
-        ...record,
-        quote: record.close,
-        prevQuote: record.prevClose
+        ...record
       }, interval)
     }
   })
@@ -100,8 +100,8 @@ export const MainChart = (props: MainChartProps) => {
 
       const newData = {
         ...lastData,
-        quote: data.record.close,
-        prevQuote: data.record.preClose
+        close: data.record.close,
+        prevClose: data.record.preClose
       }
 
       chartImp.current?.appendCandlestick(newData, chartStore.interval)
@@ -386,9 +386,7 @@ export const MainChart = (props: MainChartProps) => {
   }
 
   return (
-    <ChartContextMenu
-      index={0}
-    >
+    <ChartContextMenu chartId={props.chartId}>
       <div className="flex-1 overflow-hidden relative">
         <div className="absolute top-6 left-1/2 -translate-x-1/2 z-20 flex items-center space-x-4">
           {

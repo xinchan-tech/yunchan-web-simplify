@@ -207,33 +207,15 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
                 const axisType = getAxisType(chart)
 
                 if (axisType === 'normal') {
-                  if (lastData.quote) {
-                    const prev = (lastData.prevQuote as number) ?? lastData.prevClose
-
-                    return lastData.quote > prev ? upColor : downColor
-                  }
-
                   return lastData.close > lastData.prevClose ? upColor : downColor
                 }
+                
+                const { from } = chart.getVisibleRange()
+                const firstData = data[from]
 
-                if (axisType === 'percentage') {
-                  const { from } = chart.getVisibleRange()
-                  const firstData = data[from]
-
-                  if (!firstData) return downColor
-
-                  return lastData.close > firstData.prevClose ? upColor : downColor
-                }
-
-                if (axisType === 'double') {
-                  const { from } = chart.getVisibleRange()
-                  const firstData = data[from]
-
-                  if (!firstData) return downColor
-
-                  return lastData.close > firstData.open ? upColor : downColor
-                }
-                return lastData.close > lastData.prevClose ? upColor : downColor
+                if (!firstData) return downColor
+                console.log('lastData', lastData.close, firstData.open)
+                return lastData.close > firstData.open ? upColor : downColor
               },
             },
             high: {
@@ -377,8 +359,7 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
         chart.current?.setPaneOptions({
           id: ChartTypes.MAIN_PANE_ID,
           axis: {
-            name: 'percentage',
-            value: 'prevClose'
+            name: 'percentage'
           },
           leftAxis: {
             position: 'none' as AxisPosition
@@ -388,8 +369,7 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
         chart.current?.setPaneOptions({
           id: ChartTypes.MAIN_PANE_ID,
           axis: {
-            name: 'percentage',
-            value: 'high'
+            name: 'percentage'
           },
           leftAxis: {
             position: 'left' as AxisPosition
@@ -626,11 +606,10 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
         chart.current?.setPaneOptions({
           id: ChartTypes.MAIN_PANE_ID,
           axis: {
-            name: 'percentage',
-            value: 'prevClose'
+            name: 'percentage'
           },
           leftAxis: {
-            position: 'none' as AxisPosition
+            position: 'left' as AxisPosition
           }
         })
 
@@ -710,12 +689,12 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
             }
           }
         })
-        chart.current?.setPaneOptions({
-          id: ChartTypes.MAIN_PANE_ID,
-          axis: {
-            value: undefined
-          }
-        })
+        // chart.current?.setPaneOptions({
+        //   id: ChartTypes.MAIN_PANE_ID,
+        //   axis: {
+        //     value: undefined
+        //   }
+        // })
 
         const type = getAxisType(chart.current!)
         chart.current?.setPaneOptions({

@@ -86,7 +86,6 @@ export const colorUtil = {
     return ''
   },
   stringToColor(str: string, format?: 'rgba' | 'rgb' | 'hex') {
-    console.log(str)
     const hash = MD5(str.trim()).toString()
 
     // 提取颜色值并强制不透明

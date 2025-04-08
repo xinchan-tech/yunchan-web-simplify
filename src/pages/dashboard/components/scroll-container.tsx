@@ -1,5 +1,4 @@
 import { JknIcon } from '@/components'
-import { useMount, useUnmount } from 'ahooks'
 import { type ReactNode, useEffect, useRef } from 'react'
 
 interface ScrollContainerProps {
@@ -20,7 +19,6 @@ export const ScrollContainer = ({ children, onNextStock, onPrevStock }: ScrollCo
       const width = el.scrollWidth - el.clientWidth
       const prev = el.previousElementSibling as HTMLElement
       const next = el.nextElementSibling as HTMLElement
-      console.log(width)
 
       if (left === 0) {
         prev.style.display = 'none'
