@@ -26,6 +26,7 @@ import { dateUtils, getPrevTradingDays } from "@/utils/date"
 import { type Stock, stockUtils } from "@/utils/stock"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import dayjs from "dayjs"
+import { nanoid } from "nanoid"
 import { useEffect, useRef, useState } from "react"
 
 type TableDataType = Stock & {
@@ -79,7 +80,7 @@ const getTableList = async (type: string, date?: string) => {
       }) as TableDataType
       stock.update_time = item.update_time
       stock.star = item.star
-      stock.id = item.id
+      stock.id = item.symbol + item.update_time + nanoid(5)
       stock.warning = item.warning
       stock.percent = stockUtils.getPercent(stock)
       stock.marketValue = stockUtils.getMarketValue(stock)

@@ -1,5 +1,4 @@
 import { type StockChartInterval, type StockRawRecord, getStockChartQuote, getStockChartV2, getStockTabData } from '@/api'
-import { dateUtils } from '@/utils/date'
 import { queryClient } from '@/utils/query-client'
 import { stockUtils } from '@/utils/stock'
 import { useQuery } from '@tanstack/react-query'
@@ -9,7 +8,7 @@ import { renderUtils } from './utils'
 
 
 export const useCandlesticks = (symbol: string, interval: StockChartInterval) => {
-  const startAt = useRef<string>(renderUtils.getChartStartDate(interval))
+  const startAt = useRef<Nullable<string>>(renderUtils.getChartStartDate(interval))
   const queryKey = [
     'stock-kline:v2',
     {

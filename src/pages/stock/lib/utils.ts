@@ -163,8 +163,13 @@ export const renderUtils = {
    */
   getChartStartDate: (interval: StockChartInterval) => {
     const current = dateUtils.toUsDay(new Date().valueOf())
+
     if (interval <= StockChartInterval.FOUR_HOUR) {
       return current.add(-1 * 15 * interval, 'd').format('YYYY-MM-DD HH:mm:ss')
+    }
+
+    if (interval >= StockChartInterval.HALF_YEAR) {
+      return undefined
     }
 
     return current.add(-1 * 15 * 180, 'd').format('YYYY-MM-DD HH:mm:ss')

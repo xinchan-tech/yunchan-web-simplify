@@ -85,7 +85,6 @@ export const GoogleLogin = (props: ThirdLoginFormProps) => {
 
   useMount(() => {
     if (window.google) {
-      console.log('google login')
       window.google.accounts.id.initialize({
         client_id: '1084914910896-skncl8a34m47fe8toeak808pvrdn18vr.apps.googleusercontent.com',
         context: 'signin',

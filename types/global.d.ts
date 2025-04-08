@@ -63,6 +63,8 @@ interface Window {
       interval: number
     ) => Promise<{ data: any[]; status: number }>
   }>
+
+  stockSubscribe: any
 }
 
 /**

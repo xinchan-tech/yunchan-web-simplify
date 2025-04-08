@@ -28,6 +28,7 @@ interface UserStore {
   setUser: (user: Partial<User>) => void
   refreshUser: () => Promise<User>
   reset: () => void
+  hasAuthorized: () => boolean
 }
 
 export const useUser = create<UserStore>()(
@@ -53,6 +54,21 @@ export const useUser = create<UserStore>()(
         set({ user })
 
         return user
+      },
+      hasAuthorized: () => {
+        const user = get().user
+
+        if (!user) {
+          return false
+        }
+
+        const { authorized } = user
+
+        if (authorized.length === 0) {
+          return false
+        }
+
+        return true
       }
     }),
     {

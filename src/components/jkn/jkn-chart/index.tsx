@@ -78,7 +78,7 @@ interface JknChartIns {
   createSubIndicator: (params: IndicatorParams) => Nullable<string>
   setSubIndicator: (indicatorId: string, params: IndicatorParams) => void
   removeSubIndicator: (indicatorId: string) => void
-  createStockCompare: (symbol: string, params: { color: string, interval: number, startAt: string }) => string
+  createStockCompare: (symbol: string, params: { color: string, interval: number, startAt?: string }) => string
   removeStockCompare: (symbol: string) => void
   setStockCompare: (indicatorId: string, params: Partial<{ color: string; interval: number; startAt: string }>) => void
   createMarkOverlay: (symbol: string, type: string, mark: string, cb: (data: any) => void) => string

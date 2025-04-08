@@ -244,9 +244,7 @@ class StockSubscribe {
 
     if (Object.keys(this.subscribeTopic).filter(topic => topic.startsWith('quote')).length > 100) {
       console.warn('股票价格订阅数大于100， 取消订阅')
-      return () => {
-        
-      }
+      return () => {}
     }
 
     params.forEach(symbol => {
@@ -259,7 +257,6 @@ class StockSubscribe {
       }
     })
 
-  
     if (_params.length > 0) {
       this.ws.send({
         action: _action,
@@ -299,8 +296,15 @@ class StockSubscribe {
     })
 
     return () => {
-      this.unsubscribe(action, [symbol])
+      this.unsubscribeSnapshot()
     }
+  }
+
+  public unsubscribeSnapshot() {
+    this.ws.send({
+      action: 'snapshot_unsubscribe',
+      cid: this.cid
+    })
   }
 
   // public onceShap
@@ -379,11 +383,12 @@ class StockSubscribe {
         delete this.subscribeTopic[key]
         const [action, symbol] = key.split(':')
         if (action === 'snapshot') {
-          this.ws.send({
-            action: 'snapshot_unsubscribe',
-            cid: this.cid,
-            params: symbol
-          })
+          // 手动取消
+          // this.ws.send({
+          //   action: 'snapshot_unsubscribe',
+          //   cid: this.cid,
+          //   params: symbol
+          // })
           continue
         }
 

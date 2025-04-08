@@ -260,6 +260,12 @@ type AiAlarmRecord = BaseAlarmRecord & {
     }
     score_total: number
     frequency: number
+    coiling: {
+      action: string
+      param: {
+        stock_cycle: number
+      }
+    }
   }
 }
 

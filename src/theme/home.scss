@@ -1,0 +1,78 @@
+.home-section-bg-1 {
+  background-image: radial-gradient(27.06% 46.4% at 93.05% 9.59%, rgb(63, 52, 247) 0%, rgb(28, 20, 178) 22%, rgb(13, 7, 120) 44%, rgb(10, 10, 10) 100%)
+}
+
+.home-section-bg-2 {
+  background-image: radial-gradient(38.18% 60.36% at 6.37% 95.31%, rgb(250, 46, 121) 0%, rgb(159, 4, 61) 22%, rgb(115, 4, 44) 44%, rgb(10, 10, 10) 100%);
+}
+
+.home-content-w-1 {
+  width: 840px;
+}
+
+.linear-gradient-1 {
+  background: linear-gradient(83.9deg, #3F34F7 9.32%, #FA2E79 103.69%);
+}
+
+.home-content {
+  summary::marker {
+    display: none;
+    unicode-bidi: normal;
+  }
+}
+
+.home-container {
+  --wp--preset--color--black: #000000;
+  --wp--preset--color--cyan-bluish-gray: #abb8c3;
+  --wp--preset--color--white: #ffffff;
+  --wp--preset--color--pale-pink: #f78da7;
+  --wp--preset--color--vivid-red: #cf2e2e;
+  --wp--preset--color--luminous-vivid-orange: #ff6900;
+  --wp--preset--color--luminous-vivid-amber: #fcb900;
+  --wp--preset--color--light-green-cyan: #7bdcb5;
+  --wp--preset--color--vivid-green-cyan: #00d084;
+  --wp--preset--color--pale-cyan-blue: #8ed1fc;
+  --wp--preset--color--vivid-cyan-blue: #0693e3;
+  --wp--preset--color--vivid-purple: #9b51e0;
+  --wp--preset--color--primary: #3F34F7;
+  --wp--preset--color--secondary: #FA2E79;
+  --wp--preset--color--primary-shade-one: #1C14B2;
+  --wp--preset--color--primary-shade-2: #0D0778;
+  --wp--preset--color--secondary-shade-1: #9F043D;
+  --wp--preset--color--secondary-shade-2: #73042C;
+  --wp--preset--color--light-color: #FFFFFE;
+  --wp--preset--color--black-color: #101010;
+  --wp--preset--color--dark-shade: #0A0A0A;
+  --wp--preset--color--heading-color: #1E262A;
+  --wp--preset--color--background: #FFFFFF;
+  --wp--preset--color--background-alt: #19161C;
+  --wp--preset--color--foreground: #6C6C6C;
+  --wp--preset--color--foreground-alt: #C0C0C0;
+  --wp--preset--color--meta-color: #C2C2C2;
+  --wp--preset--color--border-color: #453E4D;
+  --wp--preset--color--transparent: #ffffff00;
+  --wp--preset--gradient--gradient-one: radial-gradient(25.38% 41.96% at 3.49% 45.05%, var(--wp--preset--color--primary) 0%, var(--wp--preset--color--primary-shade-one) 22%, var(--wp--preset--color--primary-shade-2) 44%, var(--wp--preset--color--dark-shade) 100%);
+  --wp--preset--gradient--gradient-two: radial-gradient(33.6% 47.05% at 96.71% 45.31%, var(--wp--preset--color--primary) 0%, var(--wp--preset--color--primary-shade-one) 22%, var(--wp--preset--color--primary-shade-2) 44%, var(--wp--preset--color--dark-shade) 100%);
+  --wp--preset--gradient--gradient-three: radial-gradient(27.06% 46.4% at 93.05% 9.59%, var(--wp--preset--color--primary) 0%, var(--wp--preset--color--primary-shade-one) 22%, var(--wp--preset--color--primary-shade-2) 44%, var(--wp--preset--color--dark-shade) 100%);
+  --wp--preset--gradient--gradient-four: radial-gradient(39.83% 51.22% at 7.05% 13.98%, var(--wp--preset--color--primary) 0%, var(--wp--preset--color--primary-shade-one) 22%, var(--wp--preset--color--primary-shade-2) 44%, var(--wp--preset--color--dark-shade) 100%);
+  --wp--preset--gradient--gradient-five: radial-gradient(34.34% 48.21% at 50% 4.44%, var(--wp--preset--color--primary) 0%, var(--wp--preset--color--primary-shade-one) 22%, var(--wp--preset--color--primary-shade-2) 44%, var(--wp--preset--color--dark-shade) 100%);
+  --wp--preset--gradient--gradient-six: radial-gradient(35.79% 50.26% at 50% 95.15%, var(--wp--preset--color--primary) 0%, var(--wp--preset--color--primary-shade-one) 22%, var(--wp--preset--color--primary-shade-2) 44%, var(--wp--preset--color--dark-shade) 100%);
+  --wp--preset--gradient--gradient-seven: radial-gradient(38.18% 60.36% at 6.37% 95.31%, var(--wp--preset--color--primary) 0%, var(--wp--preset--color--primary-shade-one) 22%, var(--wp--preset--color--primary-shade-2) 44%, var(--wp--preset--color--dark-shade) 100%);
+  --wp--preset--gradient--gradient-eight: radial-gradient(37.77% 59.72% at 93.66% 90.51%, var(--wp--preset--color--primary) 0%, var(--wp--preset--color--primary-shade-one) 22%, var(--wp--preset--color--primary-shade-2) 44%, var(--wp--preset--color--dark-shade) 100%);
+  --wp--preset--gradient--gradient-nine: radial-gradient(45.1% 63.32% at 50% 125%, var(--wp--preset--color--primary) 0%, var(--wp--preset--color--primary-shade-one) 22%, var(--wp--preset--color--primary-shade-2) 44%, var(--wp--preset--color--dark-shade) 100%);
+  --wp--preset--gradient--gradient-ten: radial-gradient(38.18% 60.36% at 6.37% 95.31%, var(--wp--preset--color--secondary) 0%, var(--wp--preset--color--secondary-shade-1) 22%, var(--wp--preset--color--secondary-shade-2) 44%, var(--wp--preset--color--dark-shade) 100%);
+  --wp--preset--gradient--gradient-eleven: radial-gradient(30.1% 47.59% at 95.55% 7.35%, var(--wp--preset--color--secondary) 0%, var(--wp--preset--color--secondary-shade-1) 22%, var(--wp--preset--color--secondary-shade-2) 44%, var(--wp--preset--color--dark-shade) 100%);
+  --wp--preset--gradient--gradient-twelve: linear-gradient(90deg, var(--wp--preset--color--primary) 0%, var(--wp--preset--color--secondary) 100%);
+  --wp--preset--gradient--gradient-thirteen: linear-gradient(90deg, var(--wp--preset--color--secondary) 0%, var(--wp--preset--color--primary) 100%);
+  --wp--preset--gradient--gradient-fourteen: linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, var(--wp--preset--color--dark-shade) 100%);
+  --wp--preset--gradient--gradient-fifteen: linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, var(--wp--preset--color--primary) 100%);
+  --wp--preset--gradient--gradient-sixteen: radial-gradient(45.93% 45.93% at 71.16% -2.38%, var(--wp--preset--color--primary) 0%, rgba(255, 255, 255, 0.4) 100%);
+  --wp--preset--gradient--gradient-seventeen: radial-gradient(64.28% 64.28% at 50% 81.63%, var(--wp--preset--color--secondary) 0%, var(--wp--preset--color--primary-shade-one) 100%);
+  --wp--preset--gradient--gradient-eighteen: radial-gradient(45% 45% at 50% 89.1%, var(--wp--preset--color--secondary) 0%, var(--wp--preset--color--primary-shade-one) 100%);
+  --wp--preset--gradient--gradient-nineteen: radial-gradient(64.28% 64.28% at 50% 81.63%, var(--wp--preset--color--primary) 0%, var(--wp--preset--color--secondary-shade-1) 100%);
+  --wp--preset--gradient--gradient-twenty: radial-gradient(45% 45% at 50% 89.1%, var(--wp--preset--color--primary) 0%, var(--wp--preset--color--secondary-shade-1) 100%);
+  --wp--preset--gradient--gradient-twentyone: radial-gradient(30.75% 44.49% at 0% 0%, var(--wp--preset--color--primary) 19%, var(--wp--preset--color--primary-shade-one) 41.83%, rgba(0, 0, 0, 0) 100%), radial-gradient(35.43% 53.33% at 89.62% 84.85%, var(--wp--preset--color--primary) 0%, var(--wp--preset--color--primary-shade-one) 22%, var(--wp--preset--color--primary-shade-2) 44%, var(--wp--preset--color--dark-shade) 100%);
+  --wp--preset--gradient--gradient-twentytwo: radial-gradient(25.82% 39.61% at 100% 0%, var(--wp--preset--color--primary) 19%, var(--wp--preset--color--primary-shade-one) 41.83%, rgba(0, 0, 0, 0) 100%), radial-gradient(41.2% 65.13% at 9.38% 87.14%, var(--wp--preset--color--primary) 0%, var(--wp--preset--color--primary-shade-one) 22%, var(--wp--preset--color--primary-shade-2) 44%, var(--wp--preset--color--dark-shade) 100%);
+  --wp--preset--gradient--gradient-twentythree: radial-gradient(30.86% 47.99% at 105.55% 46.12%, var(--wp--preset--color--primary) 0, var(--wp--preset--color--primary-shade-one) 15%, rgba(0, 0, 0, 0) 100%), radial-gradient(41.2% 65.13% at 9.38% 87.14%, var(--wp--preset--color--primary) 0%, var(--wp--preset--color--primary-shade-one) 22%, var(--wp--preset--color--primary-shade-2) 44%, var(--wp--preset--color--dark-shade) 100%);
+  --wp--preset--gradient--gradient-twentyfour: radial-gradient(31.54% 48.32% at -4.42% 50%, var(--wp--preset--color--primary) 0%, var(--wp--preset--color--primary-shade-one) 15%, rgba(0, 0, 0, 0) 100%), radial-gradient(41.4% 65.45% at 86.92% 82.5%, var(--wp--preset--color--primary) 0%, var(--wp--preset--color--primary-shade-one) 22%, var(--wp--preset--color--primary-shade-2) 44%, var(--wp--preset--color--dark-shade) 100%);
+}

@@ -24,9 +24,13 @@ export const HeaderSetting = () => {
 
   useMount(() => {
     appEvent.on('login', () => {
-      if (!token) {
-        loginForm.modal.open()
+      const currentPath = window.location.pathname
+      if(currentPath === '/login') {
+        return
       }
+      const params = encodeURIComponent(currentPath)
+      navigate(`/login?redirect=${params}`)
+      return
     })
   })
 
@@ -51,8 +55,13 @@ export const HeaderSetting = () => {
 
           reset()
           removeToken()
-          if (window.location.pathname !== '/') {
-            window.location.href = '/'
+          const path = window.location.pathname
+          if (path !== '/') {
+            if (path.startsWith('/home')) {
+              window.location.href = path
+            } else {
+              window.location.href = '/'
+            }
           }
         }
       }
@@ -114,7 +123,7 @@ export const HeaderSetting = () => {
             <HeaderSettingCell
               icon="home"
               title="返回官网"
-              onClick={() => { navigate('/'); setFalse() }}
+              onClick={() => { navigate('/home'); setFalse() }}
             />
             <HeaderSettingCell
               icon="theme"
@@ -150,16 +159,16 @@ export const HeaderSetting = () => {
                   title="登录"
                   label=" "
                   color="#2962FF"
-                  onClick={() => loginForm.modal.open()}
+                  onClick={() => { navigate('/login'); setFalse() }}
                 />
               )
             }
           </div>
         </PopoverContent>
       </Popover>
-      {
+      {/* {
         loginForm.context
-      }
+      } */}
       {
         userCenter.context
       }

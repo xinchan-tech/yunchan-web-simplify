@@ -295,7 +295,7 @@ type GetStockChartV2Params = {
    * 开始时间
    * @example 2021-01-01 00:00:00
    */
-  start_at: string
+  start_at?: string
   /**
    * 结束时间
    * @example 2021-01-01 00:00:00

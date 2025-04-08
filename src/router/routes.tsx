@@ -146,5 +146,23 @@ export const routes: RouteObject[] = [
     handle: {
       title: '讨论社群'
     }
+  },
+  {
+    path: '/home',
+    Component: lazy(() => import('@/pages/home')),
+    children: [
+      {
+        index: true,
+        Component: lazy(() => import('@/pages/home/home')),
+      },
+      {
+        path: 'features',
+        Component: lazy(() => import('@/pages/home/features')),
+
+      }
+    ],
+    handle: {
+      title: '官网'
+    }
   }
 ]

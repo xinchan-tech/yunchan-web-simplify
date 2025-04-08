@@ -310,7 +310,7 @@ const StockAlarmRecordList = () => {
           <SortButton
             list={[
               { label: '代码(A到Z)', order: 'asc', field: 'symbol' },
-              { label: '代码(A到Z)', order: 'desc', field: 'symbol' },
+              { label: '代码(Z到A)', order: 'desc', field: 'symbol' },
               { label: '创建时间(从旧到新)', order: 'asc', field: 'create_time' },
               { label: '创建时间(从新到旧)', order: 'desc', field: 'create_time' },
               { label: '警报时间(从旧到新)', order: 'asc', field: 'alarm_time' },
@@ -341,7 +341,7 @@ const AlarmRecordItem = ({ symbol, data, onDelete }: AlarmRecordItemProps) => {
   }
   const renderTrigger = () => {
     if (data.type === AlarmType.AI) {
-      const cyc = stockUtils.intervalToStr(data.stock_cycle)
+      const cyc = stockUtils.intervalToStr(data.condition.coiling.param.stock_cycle)
 
       return (
         <span>

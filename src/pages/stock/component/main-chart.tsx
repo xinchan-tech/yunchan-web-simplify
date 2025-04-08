@@ -303,7 +303,7 @@ export const MainChart = (props: MainChartProps) => {
           }
           const color = colorUtil.colorPalette[stockCache.current.compare.size]
 
-          stockCache.current.compare.set(symbol, chartImp.current?.createStockCompare(symbol, { color, interval: chartStore.interval, startAt: startAt.current }))
+          stockCache.current.compare.set(symbol, chartImp.current?.createStockCompare(symbol, { color, interval: chartStore.interval, startAt: startAt.current ?? undefined }))
         }
       } else {
         stockCache.current.compare.delete(symbol)
