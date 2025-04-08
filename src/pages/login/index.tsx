@@ -13,7 +13,7 @@ const LoginPage = () => {
     navigate(params.redirect || '/')
   }
   return (
-    <div className="bg-background w-full h-full rounded-xs">
+    <div className="bg-background w-full h-full rounded-xs overflow-y-auto">
       <div className="mx-auto w-fit">
         {{
           login: <LoginForm setPage={setPage} afterLogin={onNav} />,
