@@ -60,7 +60,7 @@ export default defineConfig({
         }
       },
       '/websocket': {
-        target: 'ws://chart.mgjkn.com',
+        target: 'wss://todaychart.com',
         ws: true
       },
       '/im-ws': {

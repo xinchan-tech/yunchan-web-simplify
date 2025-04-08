@@ -431,6 +431,9 @@ export enum IncreaseTopStatus {
   WEEK = 5
 }
 
+/**
+ * @deprecated
+ */
 type GetIncreaseTopParams = {
   open_status: IncreaseTopStatus
   extend: StockExtend[]
@@ -442,15 +445,31 @@ type GetIncreaseTopResult = {
   stock: StockRawRecord
   extend?: StockExtendResultMap
 }[]
-
 /**
  * 鹰眼数据
+ * @deprecated 改用 getIncreaseTopV2
  */
 export const getIncreaseTop = async (params: GetIncreaseTopParams) => {
   const r = await request.get<GetIncreaseTopResult>('/index/increase/top', { params }).then(r => r.data)
   return r
 }
 getIncreaseTop.cacheKey = 'index:increase:top'
+
+type GetIncreaseTopV2Params = {
+  key: 'PHRM' | 'PQRM' | 'PZRM' | 'ZRRM'
+  extend: StockExtend[]
+}
+
+/**
+ * 热度前几名
+ */
+export const getIncreaseTopV2 = async (params: GetIncreaseTopV2Params) => {
+  const r = await request
+    .get<GetIncreaseTopResult>('/stock-svc//home/hot/stocks', { params })
+    .then(r => r.data)
+  return r
+}
+getIncreaseTopV2.cacheKey = 'stock-svc:home:hot:stocks'
 
 type GetCollectHotResult = {
   name: string

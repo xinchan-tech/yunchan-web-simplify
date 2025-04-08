@@ -1,4 +1,4 @@
-import { IncreaseTopStatus, getIncreaseTop } from '@/api'
+import { IncreaseTopStatus, getIncreaseTop, getIncreaseTopV2 } from '@/api'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,28 +19,34 @@ import dayjs from 'dayjs'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
-const tradingToTopStatusMap: Record<StockTrading, IncreaseTopStatus> = {
-  intraDay: IncreaseTopStatus.INTRA_DAY,
-  preMarket: IncreaseTopStatus.PRE_MARKET,
-  afterHours: IncreaseTopStatus.AFTER_HOURS,
-  close: IncreaseTopStatus.AFTER_HOURS
-}
 
 type TableDataType = ReturnType<typeof stockUtils.toStockWithExt>
 
+const tradingToKey = (trading: StockTrading) => {
+  switch (trading) {
+    case 'preMarket':
+      return 'PQRM'
+    case 'intraDay':
+      return 'PZRM'
+    case 'afterHours':
+      return 'PHRM'
+    default:
+      return 'PZRM'
+  }
+}
+
 const TopList = () => {
   const trading = useTime(s => s.getTrading())
-  const [type, setType] = useState<IncreaseTopStatus>(
-    tradingToTopStatusMap[trading as keyof typeof tradingToTopStatusMap]
-  )
+  const [type, setType] = useState<string>(tradingToKey(trading))
+  
   const { t } = useTranslation()
   const { isToday } = useTime()
   const [list, { setList, onSort }] = useTableData<TableDataType>([], 'symbol')
-  const [selectedRowKey, setSelectedRowKey] = useState<string>()
+  
 
   const query = useQuery({
     queryKey: [getIncreaseTop.cacheKey, type],
-    queryFn: () => getIncreaseTop({ open_status: type, extend: ['total_share', 'stock_before', 'stock_after'] }),
+    queryFn: () => getIncreaseTopV2({ key: type as any, extend: ['total_share', 'stock_before', 'stock_after'] }),
     refetchInterval: 30 * 1000
   })
 
@@ -53,7 +59,7 @@ const TopList = () => {
     }
 
     // const data = query.data?.map(item => stockUtils.toStockRecord(item))
-    if (type === IncreaseTopStatus.PRE_MARKET) {
+    if (type === 'PQRM') {
       setList(
         query.data?.map(v =>
           stockUtils.toStockWithExt(trading === 'preMarket' ? v.extend?.stock_before : v.stock, {
@@ -63,7 +69,7 @@ const TopList = () => {
           })
         )
       )
-    } else if (type === IncreaseTopStatus.AFTER_HOURS) {
+    } else if (type === 'PHRM') {
       setList(
         query.data?.map(v =>
           stockUtils.toStockWithExt(trading === 'intraDay' ? v.stock : v.extend?.stock_after, {
@@ -80,7 +86,7 @@ const TopList = () => {
     }
   }, [query.data, setList, type, trading])
 
-  const onTypeChange = (s: IncreaseTopStatus) => {
+  const onTypeChange = (s: string) => {
     setType(s)
     queryClient.invalidateQueries({ queryKey: [getIncreaseTop.cacheKey, s] })
   }
@@ -96,7 +102,7 @@ const TopList = () => {
       render: (_, row) => <StockView className='min-h-[26px]' code={row.symbol} name={row.name} />
     },
     {
-      title: `${type === IncreaseTopStatus.PRE_MARKET ? '盘前' : type === IncreaseTopStatus.AFTER_HOURS ? '盘后' : '现'}价`,
+      title: `${type === 'PQRM' ? '盘前' : type === 'PHRM' ? '盘后' : '现'}价`,
       dataIndex: 'close',
       align: 'right',
       sort: true,
@@ -104,9 +110,9 @@ const TopList = () => {
         <SubscribeSpan.PriceBlink
           showColor={false}
           trading={
-            type === IncreaseTopStatus.PRE_MARKET
+            type === 'PQRM'
               ? 'preMarket'
-              : type === IncreaseTopStatus.AFTER_HOURS
+              : type === 'PHRM'
                 ? 'afterHours'
                 : 'intraDay'
           }
@@ -117,7 +123,7 @@ const TopList = () => {
       )
     },
     {
-      title: `${type === IncreaseTopStatus.PRE_MARKET ? '盘前' : type === IncreaseTopStatus.AFTER_HOURS ? '盘后' : ''}涨跌幅`,
+      title: `${type === 'PQRM' ? '盘前' : type === 'PHRM' ? '盘后' : ''}涨跌幅`,
       dataIndex: 'percent',
       align: 'right',
       width: 120,
@@ -125,9 +131,9 @@ const TopList = () => {
       render: (percent, row) => (
         <SubscribeSpan.PercentBlink
           trading={
-            type === IncreaseTopStatus.PRE_MARKET
+            type === 'PQRM'
               ? 'preMarket'
-              : type === IncreaseTopStatus.AFTER_HOURS
+              : type === 'PHRM'
                 ? 'afterHours'
                 : 'intraDay'
           }
@@ -148,9 +154,9 @@ const TopList = () => {
         <SubscribeSpan.TurnoverBlink
           showColor={false}
           trading={
-            type === IncreaseTopStatus.PRE_MARKET
+            type === 'PQRM'
               ? 'preMarket'
-              : type === IncreaseTopStatus.AFTER_HOURS
+              : type === 'PHRM'
                 ? 'afterHours'
                 : 'intraDay'
           }
@@ -169,9 +175,9 @@ const TopList = () => {
       render: (marketValue, row) => (
         <SubscribeSpan.MarketValueBlink
           trading={
-            type === IncreaseTopStatus.PRE_MARKET
+            type === 'PQRM'
               ? 'preMarket'
-              : type === IncreaseTopStatus.AFTER_HOURS
+              : type === 'PHRM'
                 ? 'afterHours'
                 : 'intraDay'
           }
@@ -185,36 +191,6 @@ const TopList = () => {
     }
   ]
 
-  const isShowTips = () => {
-    if (!list || list.length === 0) return false
-
-    const firstRecord = list[0]
-    if (!firstRecord) return false
-
-    if (isToday(firstRecord.timestamp)) {
-      if (type === IncreaseTopStatus.PRE_MARKET && ['preMarket', 'intraDay', 'afterHours'].includes(trading)) {
-        return false
-      }
-
-      if (type === IncreaseTopStatus.INTRA_DAY && ['intraDay', 'afterHours'].includes(trading)) {
-        return false
-      }
-
-      if (type === IncreaseTopStatus.AFTER_HOURS && ['afterHours'].includes(trading)) {
-        return false
-      }
-
-      return true
-    }
-
-    return true
-  }
-
-  const formatDate = (date: number) => {
-    const d = dayjs(date).tz('America/New_York')
-    return d.isValid() ? ` ${d.format('MM-DD')} ${dateToWeek(d)} ` : date
-  }
-
   const onRowClick = useTableRowClickToStockTrading('symbol')
 
   // const rowClassName = (record: TableDataType) => {
@@ -222,11 +198,10 @@ const TopList = () => {
   // };
 
   const tabs = [
-    { key: IncreaseTopStatus.PRE_MARKET.toString(), label: `${t('stockChart.before')}热门` },
-    { key: IncreaseTopStatus.INTRA_DAY.toString(), label: `${t('stockChart.in')}热门` },
-    { key: IncreaseTopStatus.AFTER_HOURS.toString(), label: `${t('stockChart.after')}热门` },
-    { key: IncreaseTopStatus.YESTERDAY.toString(), label: '昨日' },
-    { key: IncreaseTopStatus.WEEK.toString(), label: '本周' }
+    { key: 'PQRM', label: `${t('stockChart.before')}热门` },
+    { key: 'PZRM', label: `${t('stockChart.in')}热门` },
+    { key: 'PHRM', label: `${t('stockChart.after')}热门` },
+    { key: 'ZRRM', label: '昨日' }
   ]
   return (
     <div className="w-full h-full flex flex-col font-pingfang">
@@ -240,70 +215,12 @@ const TopList = () => {
           </DropdownMenuTrigger>
           <DropdownMenuContent>
             {tabs.map(tab => (
-              <DropdownMenuItem key={tab.key} onClick={() => onTypeChange(+tab.key as IncreaseTopStatus)}>
+              <DropdownMenuItem key={tab.key} onClick={() => onTypeChange(tab.key as string)}>
                 {tab.label}
               </DropdownMenuItem>
             ))}
           </DropdownMenuContent>
         </DropdownMenu>
-        {/* <CapsuleTabs activeKey={type.toString()} onChange={v => onTypeChange(+v as IncreaseTopStatus)}>
-          <CapsuleTabs.Tab
-            value={IncreaseTopStatus.PRE_MARKET.toString()}
-            label={
-              <span className="flex items-center">
-                {`${t('stockChart.before')}热门`}&nbsp;
-                {isShowTips() && (
-                  <HoverCard>
-                    <HoverCardTrigger className="flex items-center">
-                      <JknIcon name="ic_tip1" className="w-3 h-3" />
-                    </HoverCardTrigger>
-                    <HoverCardContent side="top" className="w-fit">
-                      {`上一个交易日${formatDate(list[0]?.timestamp)}统计`}
-                    </HoverCardContent>
-                  </HoverCard>
-                )}
-              </span>
-            }
-          />
-          <CapsuleTabs.Tab
-            value={IncreaseTopStatus.INTRA_DAY.toString()}
-            label={
-              <span className="flex items-center">
-                {`${t('stockChart.in')}热门`}&nbsp;
-                {isShowTips() && (
-                  <HoverCard>
-                    <HoverCardTrigger className="flex items-center">
-                      <JknIcon name="ic_tip1" className="w-3 h-3" />
-                    </HoverCardTrigger>
-                    <HoverCardContent side="top" className="w-fit">
-                      {`上一个交易日${formatDate(list[0]?.timestamp)}统计`}
-                    </HoverCardContent>
-                  </HoverCard>
-                )}
-              </span>
-            }
-          />
-          <CapsuleTabs.Tab
-            value={IncreaseTopStatus.AFTER_HOURS.toString()}
-            label={
-              <span className="flex items-center">
-                {`${t('stockChart.after')}热门`}&nbsp;
-                {isShowTips() && (
-                  <HoverCard>
-                    <HoverCardTrigger className="flex items-center">
-                      <JknIcon name="ic_tip1" className="w-3 h-3" />
-                    </HoverCardTrigger>
-                    <HoverCardContent side="top" className="w-fit">
-                      {`上一个交易日${formatDate(list[0]?.timestamp)}统计`}
-                    </HoverCardContent>
-                  </HoverCard>
-                )}
-              </span>
-            }
-          />
-          <CapsuleTabs.Tab value={IncreaseTopStatus.YESTERDAY.toString()} label={<span>昨日</span>} />
-          <CapsuleTabs.Tab value={IncreaseTopStatus.WEEK.toString()} label={<span>本周</span>} />
-        </CapsuleTabs> */}
       </div>
       <div className="flex-1 overflow-hidden">
         <JknRcTable
