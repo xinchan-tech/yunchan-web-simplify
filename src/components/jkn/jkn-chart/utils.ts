@@ -9,7 +9,7 @@ export enum ChartTypes {
   MAIN_X_AXIS_ID = 'candle_xAxis'
 }
 
-export const transformTextColor = (text: string, startData: Candlestick) => {
+export const transformTextColor = (text: string, compareData: Candlestick, field: 'open' | 'prevClose') => {
   const getColor = useConfig.getState().getStockColor
   if (text.endsWith('%')) {
     if (Number.parseFloat(text) > 0) {
@@ -18,10 +18,10 @@ export const transformTextColor = (text: string, startData: Candlestick) => {
     return getColor(false, 'hex')
   }
 
-  if (!startData) {
+  if (!compareData) {
     return 'transparent'
   }
-  return Number.parseFloat(text) > startData.open ? getColor(true, 'hex') : getColor(false, 'hex')
+  return Number.parseFloat(text) > compareData[field] ? getColor(true, 'hex') : getColor(false, 'hex')
 }
 
 export const transformCandleColor = (candle: Candlestick) => {

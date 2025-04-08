@@ -410,7 +410,9 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
       if (!lastData) return
 
       chart.current?.appendCandlestick({
-        ...lastData
+        ...lastData,
+        close: data.record.close,
+        prevClose: data.record.preClose
       }, StockChartInterval.ONE_MIN)
     })
 
