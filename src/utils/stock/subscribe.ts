@@ -435,16 +435,6 @@ class StockSubscribe {
     let count = this.bufferHandleLength
     const quoteBuffer = Object.entries(this.quoteBuffer)
     this.quoteBuffer = {}
-    quoteBuffer.forEach(([topic, data]) => {
-      this.subscribed.emit(`${topic}:quote`, data)
-      this.subscribed.emit(topic, data)
-    })
-
-    const snapshotBuffer = Object.entries(this.snapshotBuffer)
-    this.snapshotBuffer = {}
-    snapshotBuffer.forEach(([topic, data]) => {
-      this.subscribed.emit(topic, data)
-    })
 
     while (count > 0 && this.buffer.length > 0) {
       const item = this.buffer.shift()!
@@ -457,6 +447,17 @@ class StockSubscribe {
       // this.bufferMap.delete(item.data.action)
       count--
     }
+
+    quoteBuffer.forEach(([topic, data]) => {
+      this.subscribed.emit(`${topic}:quote`, data)
+      this.subscribed.emit(topic, data)
+    })
+
+    const snapshotBuffer = Object.entries(this.snapshotBuffer)
+    this.snapshotBuffer = {}
+    snapshotBuffer.forEach(([topic, data]) => {
+      this.subscribed.emit(topic, data)
+    })
 
     setTimeout(() => {
       this.startBufferHandle()
