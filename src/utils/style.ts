@@ -8,14 +8,7 @@ export const colorUtil = {
   /**
    * 颜色盘
    */
-  colorPalette: [
-    '#ffd740',
-    '#448aff',
-    '#ff4081',
-    '#7c4dff',
-    '#18ffff',
-    '#ff6e40'
-  ],
+  colorPalette: ['#ffd740', '#448aff', '#ff4081', '#7c4dff', '#18ffff', '#ff6e40'],
   hexToRGB(hex: string) {
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
     return result
@@ -28,13 +21,13 @@ export const colorUtil = {
   },
   hexToRGBA(hex: string, alpha?: number) {
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})?$/i.exec(hex)
-   
+
     return result
       ? {
           r: Number.parseInt(result[1], 16),
           g: Number.parseInt(result[2], 16),
           b: Number.parseInt(result[3], 16),
-          a: alpha ?? (Number.parseInt(result[4], 16) / 255) ?? 1
+          a: alpha ?? Number.parseInt(result[4], 16) / 255 ?? 1
         }
       : undefined
   },
@@ -93,6 +86,7 @@ export const colorUtil = {
     return ''
   },
   stringToColor(str: string, format?: 'rgba' | 'rgb' | 'hex') {
+    console.log(str)
     const hash = MD5(str.trim()).toString()
 
     // 提取颜色值并强制不透明
@@ -112,5 +106,14 @@ export const colorUtil = {
       return `rgba(${r}, ${g}, ${b}, 1)`
     }
     return colorUtil.rgbToHex({ r, g, b })
+  },
+  /**
+   * 去除字符串中的 Unicode 字符
+   * @param str 输入的字符串
+   * @returns 去除 Unicode 字符后的字符串
+   */
+  removeUnicode: (str: string): string => {
+    // biome-ignore lint/suspicious/noControlCharactersInRegex: <explanation>
+    return str.replace(/[\u0000-\u001F\u007F-\uFFFF]/g, '')
   }
 }

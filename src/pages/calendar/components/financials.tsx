@@ -181,10 +181,10 @@ const StockFinancials = () => {
         render: (_: any, row) => <span className="text-[#808080]">{row.date}</span>
       },
     ],
-    [checked, data, getIsChecked, onChange, setCheckedAll, query.refetch]
+    []
   )
 
-  const onRowClick = useTableRowClickToStockTrading('id')
+  const onRowClick = useTableRowClickToStockTrading('symbol')
 
   return (
     <div className="h-full flex flex-col stock-calendar">
