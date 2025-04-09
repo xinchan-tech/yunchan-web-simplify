@@ -97,10 +97,32 @@ export const getPaymentTypes = () => {
 getPaymentTypes.cacheKey = 'mall:paymentTypes'
 
 
+type PaymentBillProduct = {
+  id: string
+  name: string
+  status: string
+  subscribe_status: string
+  next_pay_time: string
+  expire_time: string
+  model: string
+  subscribe_period: string
+  price: string
+  platform: string
+  create_time: string
+  status_text: string
+  subscribe_status_text: string
+}
+
+
+export interface GetPaymentListResult {
+  product: PaymentBillProduct[]
+  channel: any[]
+}
+
 /**
  * 账单列表
  */
 export const getPaymentList = () => {
-  return request.get<any>('/user/getPayment').then(r => r.data) 
+  return request.get<GetPaymentListResult>('/user/getPayment').then(r => r.data) 
 }
 getPaymentList.cacheKey = 'mall:paymentList'

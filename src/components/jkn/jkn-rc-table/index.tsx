@@ -13,6 +13,7 @@ export interface JknRcTableProps<T = any> extends TableProps<T> {
   headerHeight?: number
   isLoading?: boolean
   virtual?: boolean
+  fixedTable?: boolean
   designWidth?: number
   onSort?: (columnKey: keyof T, order: 'asc' | 'desc' | undefined) => void
   infiniteScroll?: {
@@ -32,6 +33,7 @@ const _JknRcTable = <T extends DefaultRecordType = any>({
   infiniteScroll,
   designWidth,
   sortClear = false,
+  fixedTable = true,
   ...props
 }: JknRcTableProps<T>) => {
   // const [size, dom] = useDomSize<HTMLDivElement>()

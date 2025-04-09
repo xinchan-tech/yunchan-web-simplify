@@ -17,12 +17,12 @@ const UserPage = () => {
   }, [pathname])
   return (
     <div className="w-full h-full overflow-y-auto bg-background leading-none text-foreground">
-      <div className="w-page mx-auto mt-10">
+      <div className="w-page mx-auto pt-10 h-full box-border flex flex-col">
         {
           title.length === 1 ? (
-            <h3 className="text-[32px]">个人中心</h3>
+            <h3 className="text-[32px] flex-shrink-0">个人中心</h3>
           ) : (
-            <div className="space-x-2 flex items-center mb-10">
+            <div className="space-x-2 flex items-center mb-10 flex-shrink-0">
               {
                 title.map((item, index) => (
                   <Fragment key={item}>
@@ -45,7 +45,7 @@ const UserPage = () => {
             </div>
           )
         }
-        <div>
+        <div className="flex-1 overflow-hidden pt-1 box-border">
           <Outlet />
         </div>
       </div>
