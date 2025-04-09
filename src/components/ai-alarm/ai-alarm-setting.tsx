@@ -12,13 +12,13 @@ import { JknIcon } from '../jkn/jkn-icon'
 import { Button } from '../ui/button'
 import { FormControl, FormField, FormItem, FormLabel } from '../ui/form'
 import { ToggleGroup, ToggleGroupItem } from '../ui/toggle-group'
-import { AlarmStockPicker } from "./components/alarm-stock-picker"
-import { Separator } from "../ui/separator"
-import { StockCycleSelect } from "./components/alarm-period"
-import { DatePicker } from "./components/date-picker"
-import { FrequencySelect } from "./components/frequency-select"
-import { NameInput } from "./components/name-input"
-import { useConfig } from "@/store"
+import { AlarmStockPicker } from './components/alarm-stock-picker'
+import { Separator } from '../ui/separator'
+import { StockCycleSelect } from './components/alarm-period'
+import { DatePicker } from './components/date-picker'
+import { FrequencySelect } from './components/frequency-select'
+import { NameInput } from './components/name-input'
+import { useConfig } from '@/store'
 
 const formSchema = z.object({
   symbol: z.string({ message: '股票代码错误' }).min(1, '股票代码错误'),
@@ -71,7 +71,7 @@ const AiAlarmSetting = (props: AiAlarmSetting) => {
       condition: {
         category_ids: form.getValues('categoryIds'),
         category_hdly_ids: form.getValues('categoryHdlyIds'),
-        frequency: +form.getValues('frequency'),
+        frequency: +form.getValues('frequency')
       },
       expire_time: form.getValues('date'),
       name: form.getValues('name')
@@ -90,7 +90,7 @@ const AiAlarmSetting = (props: AiAlarmSetting) => {
     toast({ description: '添加成功' })
     toggle()
     queryClient.refetchQueries({
-      queryKey: [getAlarmConditionsList.cacheKey],
+      queryKey: [getAlarmConditionsList.cacheKey]
     })
   }
 
@@ -147,7 +147,9 @@ const AiAlarmSetting = (props: AiAlarmSetting) => {
                 <FormLabel
                   className="w-32 flex-shrink-0 text-base font-normal"
                   style={{ color: categoryType === '多头策略' ? 'hsl(var(--stock-up-color))' : '#808080' }}
-                >底部信号</FormLabel>
+                >
+                  底部信号
+                </FormLabel>
                 <FormControl>
                   <StockHdlySelect {...field} />
                 </FormControl>
@@ -163,7 +165,7 @@ const AiAlarmSetting = (props: AiAlarmSetting) => {
             render={({ field }) => (
               <FormItem className="pb-3 flex space-y-0  items-center">
                 <FormLabel className="w-32 text-base font-normal">警报名称</FormLabel>
-                <FormControl >
+                <FormControl>
                   <NameInput {...field} />
                 </FormControl>
               </FormItem>
@@ -176,29 +178,27 @@ const AiAlarmSetting = (props: AiAlarmSetting) => {
             render={({ field }) => (
               <FormItem className="pb-3 flex space-y-0 items-center">
                 <FormLabel className="w-32 text-base font-normal">触发频率</FormLabel>
-                <FormControl >
+                <FormControl>
                   <FrequencySelect {...field} />
                 </FormControl>
               </FormItem>
             )}
           />
 
-          {
-            form.getValues('frequency') === '1' ? (
-              <FormField
-                control={form.control}
-                name="date"
-                render={({ field }) => (
-                  <FormItem className="pb-4 flex space-y-0  items-center">
-                    <FormLabel className="w-32 text-base font-normal">到期时间</FormLabel>
-                    <FormControl >
-                      <DatePicker {...field} />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-            ) : null
-          }
+          {form.getValues('frequency') === '1' ? (
+            <FormField
+              control={form.control}
+              name="date"
+              render={({ field }) => (
+                <FormItem className="pb-4 flex space-y-0  items-center">
+                  <FormLabel className="w-32 text-base font-normal">到期时间</FormLabel>
+                  <FormControl>
+                    <DatePicker {...field} />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+          ) : null}
         </form>
       </FormProvider>
       <div className="text-right mt-auto mb-6 space-x-2 px-8">
@@ -214,8 +214,6 @@ const AiAlarmSetting = (props: AiAlarmSetting) => {
 }
 
 export default AiAlarmSetting
-
-
 
 interface AlarmsTypeSelectProps {
   value?: string[]
@@ -302,45 +300,51 @@ const AlarmsTypeSelect = forwardRef((props: AlarmsTypeSelectProps, _) => {
               <div
                 className="flex-shrink-0 flex items-center text-base font-normal w-32 cursor-pointer"
                 onClick={() => onChangeType(item.name)}
-                onKeyDown={() => { }}
+                onKeyDown={() => {}}
                 style={{
-                  color: item.name === type ? (item.name === '多头策略' ? 'hsl(var(--stock-up-color))' : 'hsl(var(--stock-down-color))') : '#808080'
+                  color:
+                    item.name === type
+                      ? item.name === '多头策略'
+                        ? 'hsl(var(--stock-up-color))'
+                        : 'hsl(var(--stock-down-color))'
+                      : '#808080'
                 }}
               >
                 {/* <JknIcon name={item.name === '多头策略' ? 'ic_price_up_green' : 'ic_price_down_red'} /> */}
                 {item.name}
-                {
-                  item.name === '多头策略' ? '↑' : '↓'
-                }
+                {item.name === '多头策略' ? '↑' : '↓'}
               </div>
-              {
-                type === item.name ? (
-                  <ToggleGroup
-                    value={props.value}
-                    onValueChange={v => _onValueChange(v, item.name)}
-                    type="multiple"
-                    hoverColor="#2E2E2E"
-                    activeColor={item.name === '多头策略' ? useConfig.getState().getStockColor(true, 'hex') : useConfig.getState().getStockColor(false, 'hex')}
-                    variant="ghost"
-                    className="flex-1 grid grid-cols-4 gap-2 h-[38px]"
-                  >
-                    {(item.children as unknown as StockCategory[])?.map(child =>
-                      child.name !== '' ? (
-                        <ToggleGroupItem
-                          disabled={!child.authorized}
-                          className="w-full relative"
-
-                          key={child.id}
-                          value={child.id}
-                        >
-                          {!child.authorized && <JknIcon name="ic_lock" className="absolute right-0 top-0 w-3 h-3" />}
-                          {child.name}
-                        </ToggleGroupItem>
-                      ) : null
-                    )}
-                  </ToggleGroup>
-                ) : <div className="h-[38px]" />
-              }
+              {type === item.name ? (
+                <ToggleGroup
+                  value={props.value}
+                  onValueChange={v => _onValueChange(v, item.name)}
+                  type="multiple"
+                  hoverColor="#2E2E2E"
+                  activeColor={
+                    item.name === '多头策略'
+                      ? useConfig.getState().getStockColor(true, 'hex')
+                      : useConfig.getState().getStockColor(false, 'hex')
+                  }
+                  variant="ghost"
+                  className="flex-1 grid grid-cols-4 gap-2 h-[38px]"
+                >
+                  {(item.children as unknown as StockCategory[])?.map(child =>
+                    child.name !== '' ? (
+                      <ToggleGroupItem
+                        disabled={!child.authorized}
+                        className="w-full relative"
+                        key={child.id}
+                        value={child.id}
+                      >
+                        {!child.authorized && <JknIcon name="ic_lock" className="absolute right-0 top-0 w-3 h-3" />}
+                        {child.name}
+                      </ToggleGroupItem>
+                    ) : null
+                  )}
+                </ToggleGroup>
+              ) : (
+                <div className="h-[38px]" />
+              )}
             </div>
           ))}
         </div>
@@ -383,12 +387,16 @@ const StockHdlySelect = forwardRef((props: StockHdlySelectProps, _) => {
         activeColor={useConfig.getState().getStockColor(true, 'hex')}
         onValueChange={props.onChange}
       >
-        {categoryType === '多头策略' ? data?.children?.map(item => (
-          <ToggleGroupItem disabled={!item.authorized} className=" relative" key={item.id} value={item.id}>
-            {!item.authorized && <JknIcon name="ic_lock" className="absolute right-0 top-0 w-3 h-3" />}
-            {item.name}
-          </ToggleGroupItem>
-        )) : <div />}
+        {categoryType === '多头策略' ? (
+          data?.children?.map(item => (
+            <ToggleGroupItem disabled={!item.authorized} className=" relative" key={item.id} value={item.id}>
+              {!item.authorized && <JknIcon name="ic_lock" className="absolute right-0 top-0 w-3 h-3" />}
+              {item.name}
+            </ToggleGroupItem>
+          ))
+        ) : (
+          <div />
+        )}
       </ToggleGroup>
     </div>
   )

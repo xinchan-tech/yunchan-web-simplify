@@ -1,7 +1,15 @@
 import { ScrollArea } from '@/components'
 import { useLatestRef } from '@/hooks'
 import { cn } from '@/utils/style'
-import { type CSSProperties, type PropsWithChildren, forwardRef, useEffect, useId, useImperativeHandle, useRef } from 'react'
+import {
+  type CSSProperties,
+  type PropsWithChildren,
+  forwardRef,
+  useEffect,
+  useId,
+  useImperativeHandle,
+  useRef
+} from 'react'
 import { animateScroll } from 'react-scroll'
 
 interface JknInfiniteAreaProps {

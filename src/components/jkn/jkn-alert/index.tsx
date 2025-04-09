@@ -14,7 +14,7 @@ import { nanoid } from 'nanoid'
 import type { ReactNode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { Button, type ButtonProps } from '../../ui/button'
-import { JknIcon } from "../jkn-icon"
+import { JknIcon } from '../jkn-icon'
 
 type AlertAction = 'confirm' | 'cancel' | 'close'
 
@@ -121,19 +121,15 @@ const AlertComponent = (props: AlertDialogProps) => {
         <AlertDialogHeader>
           <p className="flex items-center w-full box-border p-4 my-0">
             {props.title !== undefined ? (
-              <AlertDialogTitle>
-                {props.title}
-              </AlertDialogTitle>
+              <AlertDialogTitle>{props.title}</AlertDialogTitle>
             ) : (
               <VisuallyHidden>
                 <AlertDialogTitle />
               </VisuallyHidden>
             )}
-            {
-              props.closeIcon !== false ? (
-                <JknIcon.Svg name="close" size={14} className="ml-auto text-foreground p-1" hoverable  onClick={onClose}/>
-              ) : null
-            }
+            {props.closeIcon !== false ? (
+              <JknIcon.Svg name="close" size={14} className="ml-auto text-foreground p-1" hoverable onClick={onClose} />
+            ) : null}
           </p>
         </AlertDialogHeader>
         <AlertDialogDescription className="text-center text-lg">{props.content}</AlertDialogDescription>
@@ -143,7 +139,9 @@ const AlertComponent = (props: AlertDialogProps) => {
               取消
             </Button>
           )}
-          <Button className="w-[72px]" variant={props.okBtnVariant} onClick={onConfirm}>{props.okBtnText ?? '确认'}</Button>
+          <Button className="w-[72px]" variant={props.okBtnVariant} onClick={onConfirm}>
+            {props.okBtnText ?? '确认'}
+          </Button>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

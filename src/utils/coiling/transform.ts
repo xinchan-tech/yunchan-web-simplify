@@ -244,7 +244,7 @@ export const drawGradientTransform = (raw: IndicatorRawData) => {
     if ((value as any[]).length < 2) {
       return
     }
-    const points: {x: number, y: number}[] = []
+    const points: { x: number; y: number }[] = []
     const [x, y1, y2, color1, color2] = value as [number, string, string, string, string, number]
     let maxY = Number.NEGATIVE_INFINITY
     let minY = Number.POSITIVE_INFINITY
@@ -270,7 +270,7 @@ export const drawGradientTransform = (raw: IndicatorRawData) => {
     // gradients.push([x, x + len, minY, maxY, points, color1, color2])
     gradients.push({ x1: x, y1: minY, x2: x + len, y2: maxY, color: [color1, color2], points })
   })
-  
+
   raw.draw_data = gradients
 
   return raw
@@ -482,7 +482,7 @@ export const drawPipeTransform = (raw: IndicatorRawData) => {
   raw.draw_data = Object.values(raw.draw_data).map(([y1, y2, width, pos, type]) => {
     return {
       y: y2,
-      height: y2- y1,
+      height: y2 - y1,
       width,
       position: pos === 0 ? 'right' : 'left',
       empty: type === 1

@@ -2,7 +2,18 @@ import { type ComponentProps, forwardRef, type PropsWithChildren, useImperativeH
 
 import { getChatChannels, joinGroupByInviteCode } from '@/api'
 import type { GroupChannelItem, getChatChannelsParams } from '@/api'
-import { Dialog, DialogClose, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, Input, JknIcon, JknSearchInput } from '@/components'
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  Input,
+  JknIcon,
+  JknSearchInput
+} from '@/components'
 import FullScreenLoading from '@/components/loading'
 import { useToast } from '@/hooks'
 import { useGroupChatShortStore } from '@/store/group-chat-new'
@@ -11,7 +22,7 @@ import { useQuery } from '@tanstack/react-query'
 import type { GroupData } from '../../group-channel'
 import { JoinGroup } from '../join-group'
 import GroupChannelCard from './group-channel-card'
-import { createPortal } from "react-dom"
+import { createPortal } from 'react-dom'
 
 type GroupCategoryValue = '1' | '2' | '3'
 
@@ -94,7 +105,9 @@ export const JoinGroupContent = (props: { onSuccess: () => void; type?: string }
           <JknIcon name="hot-fire" />
           <span>热门</span>
           <JknSearchInput
-            rootClassName="border border-solid rounded-lg border-border text-tertiary w-[324px] ml-auto" className="placeholder:text-secondary" placeholder={props.type === 'change' ? '请输入邀请码' : '请输入群名称'}
+            rootClassName="border border-solid rounded-lg border-border text-tertiary w-[324px] ml-auto"
+            className="placeholder:text-secondary"
+            placeholder={props.type === 'change' ? '请输入邀请码' : '请输入群名称'}
             onSearch={v => setKeywords(v)}
           />
         </div>
@@ -220,7 +233,7 @@ export const JoinGroupContent = (props: { onSuccess: () => void; type?: string }
   )
 }
 
-interface JoinGroupContentModalProps extends PropsWithChildren<ComponentProps<typeof JoinGroupContent>> { }
+interface JoinGroupContentModalProps extends PropsWithChildren<ComponentProps<typeof JoinGroupContent>> {}
 interface JoinGroupContentModalIns {
   open: () => void
 }
@@ -239,21 +252,24 @@ export const JoinGroupContentModal = forwardRef<JoinGroupContentModalIns, JoinGr
       <DialogTrigger asChild>
         <div ref={divRef}>{props.children}</div>
       </DialogTrigger>
-      <DialogContent className="w-[800px] bg-chat-background" onPointerDownOutside={(e) => { e.stopPropagation(); e.stopImmediatePropagation() }}>
+      <DialogContent
+        className="w-[800px] bg-chat-background"
+        onPointerDownOutside={e => {
+          e.stopPropagation()
+          e.stopImmediatePropagation()
+        }}
+      >
         <DialogHeader className="bg-chat-background items-end !py-4 px-10">
           <DialogTitle asChild className="bg-chat-background">
             <DialogClose asChild className="w-6 h-6 !p-0 -z-0">
-              <span className="hover:bg-accent !leading-6 text-center cursor-pointer !rounded"><JknIcon.Svg name="close" size={12} /></span>
+              <span className="hover:bg-accent !leading-6 text-center cursor-pointer !rounded">
+                <JknIcon.Svg name="close" size={12} />
+              </span>
             </DialogClose>
           </DialogTitle>
         </DialogHeader>
         <DialogDescription className="text-center" />
-        {
-          <JoinGroupContent
-            onSuccess={props.onSuccess}
-            type={props.type}
-          />
-        }
+        {<JoinGroupContent onSuccess={props.onSuccess} type={props.type} />}
       </DialogContent>
     </Dialog>
   )

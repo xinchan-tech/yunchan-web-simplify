@@ -96,7 +96,6 @@ const MessageCenter = () => {
     }
   })
 
-
   useWsChat(msg => {
     const fromUid = msg.data.from_uid
 
@@ -127,7 +126,7 @@ const MessageCenter = () => {
               markAsReadMutation.mutate(item.uid)
               setSelect(null)
             }}
-            onKeyDown={() => { }}
+            onKeyDown={() => {}}
             className={cn(
               'flex py-4 hover:bg-[#3a3a3a] cursor-pointer transition-all px-2 items-center border-0 border-b border-solid border-border',
               item.uid === active && type === 'chat' && 'bg-[#3a3a3a]'
@@ -142,7 +141,9 @@ const MessageCenter = () => {
                     {item.unread}
                   </span>
                 )}
-                <span className="ml-auto text-tertiary text-xs">{item.create_time ? formatTime(item.create_time) : '-'}</span>
+                <span className="ml-auto text-tertiary text-xs">
+                  {item.create_time ? formatTime(item.create_time) : '-'}
+                </span>
               </div>
               <div className="mt-1 w-full text-ellipsis overflow-hidden whitespace-nowrap text-tertiary text-xs">
                 {item.message || '-'}
@@ -159,7 +160,7 @@ const MessageCenter = () => {
               markMessageReadMutation.mutate(item.id)
               setSelect(item)
             }}
-            onKeyDown={() => { }}
+            onKeyDown={() => {}}
             className={cn(
               'flex py-4 hover:bg-[#3a3a3a] cursor-pointer transition-all px-2 items-center border-0 border-b border-solid border-border',
               item.id === active && type === 'notice' && 'bg-[#3a3a3a]'
@@ -189,7 +190,11 @@ const MessageCenter = () => {
         {type === 'chat' ? (
           <ChatMessageContent msgKey={active === '0' ? '1' : active} />
         ) : (
-          <SystemMessageContent msgKey={active} name={types.data?.find(item => item.id === active)?.name} avatar={select ? <JknAvatar className="mr-3" src={select.avatar} title={select.name ?? ''} /> : null} />
+          <SystemMessageContent
+            msgKey={active}
+            name={types.data?.find(item => item.id === active)?.name}
+            avatar={select ? <JknAvatar className="mr-3" src={select.avatar} title={select.name ?? ''} /> : null}
+          />
         )}
       </div>
     </div>
@@ -417,7 +422,6 @@ const SystemMessageContent = (props: SystemMessageContentProps) => {
     }
   })
 
-
   return (
     <div className="h-full overflow-hidden w-full">
       <JknVirtualInfinite
@@ -436,9 +440,7 @@ const SystemMessageContent = (props: SystemMessageContentProps) => {
             </div>
             <div className="flex items-center w-fit max-w-[960px] overflow-hidden">
               <div className="flex items-start text-black w-full box-border pl-4">
-                {
-                  props.avatar
-                }
+                {props.avatar}
                 <div className="bg-stock-green rounded py-2 px-2 box-border relative message-content-right text-base w-full overflow-hidden">
                   <div className="font-bold">{msg.title}</div>
                   <pre style={{ whiteSpace: 'pre-wrap', wordWrap: 'break-word' }}>{msg.content}</pre>
@@ -447,9 +449,8 @@ const SystemMessageContent = (props: SystemMessageContentProps) => {
             </div>
           </div>
         )}
-        className="w-full h-full">
-
-      </JknVirtualInfinite>
+        className="w-full h-full"
+      ></JknVirtualInfinite>
       <style jsx>
         {`
         .message-content-right::after {

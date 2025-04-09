@@ -14,10 +14,10 @@ class SubscriberCache extends ChatCache {
   async get(channelId: string, uid: string) {
     const db = await this.getDb()
     const obj = await db.get(SubscriberCache.SUBSCRIBER_STORE, `${uid}-${channelId}`)
-    if(!obj) {
+    if (!obj) {
       return null
     }
-    
+
     obj.channel = {
       channelID: obj.channelId,
       channelType: obj.channelType

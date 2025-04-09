@@ -1,8 +1,8 @@
 import type { StockRawRecord } from '@/api'
 import { useConfig } from '@/store'
 import type { Candlestick } from './types'
-import type { StockTrading } from "@/utils/stock"
-import dayjs from "dayjs"
+import type { StockTrading } from '@/utils/stock'
+import dayjs from 'dayjs'
 
 export enum ChartTypes {
   MAIN_PANE_ID = 'candle_pane',
@@ -85,16 +85,16 @@ export const findEqualTime = (data: Candlestick[], time: number) => {
 
 /**
  * 新数据是否是相同时间段
- * @param src 
+ * @param src
  * @param target
  * @param interval 分钟数
- * 
+ *
  * @returns 返回undefined表示是错误数据, 返回true表示是相同时间段, 返回false表示不是相同时间段
  */
 export const isSameInterval = (src: Candlestick, target: Candlestick, interval: number) => {
   const maxTime = src.timestamp + interval * 60 * 1000
 
-  if(target.timestamp < src.timestamp) {
+  if (target.timestamp < src.timestamp) {
     return undefined
   }
 
@@ -107,7 +107,7 @@ export const isSameInterval = (src: Candlestick, target: Candlestick, interval: 
 export const getTickNumberByTrading = (trading: StockTrading) => {
   let start = dayjs('2022-01-01 09:30:00')
   let end = dayjs('2022-01-01 15:00:00')
- 
+
   switch (trading) {
     case 'preMarket':
       start = start.hour(4).minute(0)

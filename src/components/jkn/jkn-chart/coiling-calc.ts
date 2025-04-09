@@ -1,6 +1,6 @@
-import type { StockRawRecord } from "@/api"
-import type { IndicatorData } from "@/utils/coiling"
-import type { IndicatorDataType } from "@/utils/coiling/transform"
+import type { StockRawRecord } from '@/api'
+import type { IndicatorData } from '@/utils/coiling'
+import type { IndicatorDataType } from '@/utils/coiling/transform'
 import { colorUtil } from '@/utils/style'
 import type { Candlestick } from './types'
 import { candlestickToRaw } from './utils'
@@ -37,7 +37,11 @@ export enum CoilingIndicatorId {
 export type CoilingCalcResult = CoilingData & {
   pivotsResult: ReturnType<typeof calcCoilingPivots>
   expandsResult: ReturnType<typeof calcCoilingPivotsExpands>
-  tradePointsResult: [ReturnType<typeof calcTradePoints>, ReturnType<typeof calcTradePoints>, ReturnType<typeof calcTradePoints>]
+  tradePointsResult: [
+    ReturnType<typeof calcTradePoints>,
+    ReturnType<typeof calcTradePoints>,
+    ReturnType<typeof calcTradePoints>
+  ]
   maResult: Record<string, ReturnType<typeof calculateMA>>
 }
 
@@ -150,13 +154,9 @@ export const calcTradePoints = (coiling: CoilingData['class_1_trade_points']) =>
     let color = ''
 
     if (v.buy) {
-      color = v.large
-        ? '#22AB94'
-        : '#2962FF'
+      color = v.large ? '#22AB94' : '#2962FF'
     } else {
-      color = v.large
-        ? '#F23645'
-        : '#9C27B0'
+      color = v.large ? '#F23645' : '#9C27B0'
     }
 
     return {
@@ -223,7 +223,6 @@ export const calculateMABatch = (dayCounts: number[], candlesticks: Candlestick[
 
   return result
 }
-
 
 /**
  * 计算底部信号

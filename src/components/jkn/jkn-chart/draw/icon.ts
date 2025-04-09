@@ -1,4 +1,4 @@
-import { type IndicatorDrawParams, getFigureClass } from "jkn-kline-chart"
+import { type IndicatorDrawParams, getFigureClass } from 'jkn-kline-chart'
 
 /**
  * 画icon

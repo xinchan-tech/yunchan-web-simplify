@@ -16,17 +16,17 @@ import { cleanUnreadConversation } from '@/api'
 import ChatAvatar from '../components/chat-avatar'
 
 import { Skeleton } from '@/components'
-import { useLatestRef } from "@/hooks"
-import { ChatCmdType, ChatMessageType, chatManager, useChatStore } from "@/store"
-import { dateUtils } from "@/utils/date"
+import { useLatestRef } from '@/hooks'
+import { ChatCmdType, ChatMessageType, chatManager, useChatStore } from '@/store'
+import { dateUtils } from '@/utils/date'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import dayjs from "dayjs"
-import { useImmer } from "use-immer"
-import { conversationCache } from "../cache"
-import { getTimeFormatStr } from "../chat-utils"
+import dayjs from 'dayjs'
+import { useImmer } from 'use-immer'
+import { conversationCache } from '../cache'
+import { getTimeFormatStr } from '../chat-utils'
 import CreateGroup from '../components/create-and-join-group'
-import { UsernameSpan } from "../components/username-span"
-import { useCMDListener } from "../lib/hooks"
+import { UsernameSpan } from '../components/username-span'
+import { useCMDListener } from '../lib/hooks'
 
 export type GroupData = {
   id: string
@@ -60,11 +60,9 @@ const useConversationWithCache = () => {
   return [conversations, setConversations] as const
 }
 
-
 const GroupChannel = (props: {
   onSelectChannel: (c: Channel) => void
 }) => {
-
   /**
    * 新逻辑
    */
@@ -95,43 +93,46 @@ const GroupChannel = (props: {
   }, [conversationsQuery.data])
 
   // 监听最近会话列表的变化
-  const conversationListener = useCallback((conversation: Conversation, action: ConversationAction) => {
-    // 监听最近会话列表的变化
-    const _channelQueryKey = ['conversation-sync', channelSearchKeyword]
+  const conversationListener = useCallback(
+    (conversation: Conversation, action: ConversationAction) => {
+      // 监听最近会话列表的变化
+      const _channelQueryKey = ['conversation-sync', channelSearchKeyword]
 
-    if (action === ConversationAction.add || action === ConversationAction.update) {
-      const _channels = queryClient.getQueryData<NonNullable<typeof conversations>>(_channelQueryKey)
-      if (_channels) {
-        const _channel = _channels.find(c => c.channel.channelID === conversation.channel.channelID)
-        if (_channel) {
-          if (useChatStore.getState().lastChannel?.isEqual(conversation.channel)) {
-            conversation.unread = 0
-          }
-          conversation.reloadIsMentionMe()
+      if (action === ConversationAction.add || action === ConversationAction.update) {
+        const _channels = queryClient.getQueryData<NonNullable<typeof conversations>>(_channelQueryKey)
+        if (_channels) {
+          const _channel = _channels.find(c => c.channel.channelID === conversation.channel.channelID)
+          if (_channel) {
+            if (useChatStore.getState().lastChannel?.isEqual(conversation.channel)) {
+              conversation.unread = 0
+            }
+            conversation.reloadIsMentionMe()
 
-          queryClient.setQueryData<NonNullable<typeof conversations>>(_channelQueryKey, oldData => {
-            const r = oldData?.map(item => {
-              return item.channel.channelID === conversation.channel.channelID ? conversation : item
+            queryClient.setQueryData<NonNullable<typeof conversations>>(_channelQueryKey, oldData => {
+              const r = oldData?.map(item => {
+                return item.channel.channelID === conversation.channel.channelID ? conversation : item
+              })
+              conversationCache.updateBatch(r ?? [])
+              return r
             })
-            conversationCache.updateBatch(r ?? [])
-            return r
-          })
-          updateRender()
-        } else {
-          queryClient.setQueryData<NonNullable<typeof conversations>>(_channelQueryKey, c => ([
-            conversation,
-            ...(c ?? [])
-          ]))
+            updateRender()
+          } else {
+            queryClient.setQueryData<NonNullable<typeof conversations>>(_channelQueryKey, c => [
+              conversation,
+              ...(c ?? [])
+            ])
+          }
         }
+      } else if (action === ConversationAction.remove) {
+        queryClient.setQueryData<NonNullable<typeof conversations>>(_channelQueryKey, oldData => {
+          return oldData?.filter(item => item.channel.channelID !== conversation.channel.channelID)
+        })
       }
-    } else if (action === ConversationAction.remove) {
-      queryClient.setQueryData<NonNullable<typeof conversations>>(_channelQueryKey, oldData => {
-        return oldData?.filter(item => item.channel.channelID !== conversation.channel.channelID)
-      })
-    }
-  }, [queryClient, updateRender, channelSearchKeyword])
+    },
+    [queryClient, updateRender, channelSearchKeyword]
+  )
 
-  useCMDListener((cmd) => {
+  useCMDListener(cmd => {
     const content = cmd.content as CMDContent
     if (content.cmd === ChatCmdType.MessageRevoke) {
       const conversation = conversations.find(c => c.channel.channelID === cmd.channel.channelID)
@@ -156,7 +157,6 @@ const GroupChannel = (props: {
       // WKSDK.shared().channelManager.removeListener(channelInfoListener)
     }
   }, [conversationListener])
-
 
   const onChannelSelect = (conversation: Conversation) => {
     chatManager.setLastChannelId(conversation.channel)
@@ -212,7 +212,7 @@ const GroupChannel = (props: {
     inviteToGroupModal.modal.close()
   }
 
-  const statusInfo: Record<ConnectStatus, { color: string, text: string }> = {
+  const statusInfo: Record<ConnectStatus, { color: string; text: string }> = {
     [ConnectStatus.Disconnect]: {
       color: 'red',
       text: '未连接'
@@ -239,77 +239,77 @@ const GroupChannel = (props: {
     <div className="w-[180px] h-full border-0 border-x border-solid border-border bg-[#161616]">
       <div className="flex items-center text-xs text-tertiary px-2 py-1">
         <span className="size-2 rounded-full mr-2" style={{ background: statusInfo[chatState].color }} />
-        <span>
-          {statusInfo[chatState].text}
-        </span>
+        <span>{statusInfo[chatState].text}</span>
       </div>
       <div className="group-filter flex items-center justify-between px-1 pb-3">
-        <JknSearchInput size="mini" onSearch={setChannelSearchKeyword} rootClassName="bg-accent px-2 py-0.5 w-full text-tertiary" className="text-secondary placeholder:text-tertiary" placeholder="搜索" />
+        <JknSearchInput
+          size="mini"
+          onSearch={setChannelSearchKeyword}
+          rootClassName="bg-accent px-2 py-0.5 w-full text-tertiary"
+          className="text-secondary placeholder:text-tertiary"
+          placeholder="搜索"
+        />
         {/* <CreateGroup /> */}
       </div>
       <div className="group-list">
-        {
-          conversations.map(c => (
-            <div key={c.channel.channelID}
-              className={cn(
-                'flex conversation-card overflow-hidden cursor-pointer',
-                c.channel.channelID === lastChannel?.channelID && 'actived'
-              )}
-              onClick={() => onChannelSelect(c)}
-              onKeyDown={() => { }}
-            >
-              <div className="group-avatar rounded-md flex items-center text-ellipsis justify-center relative">
-                <ChatAvatar
-                  radius="4px"
-                  className="w-[30px] h-[30px]"
-                  data={{
-                    name: c.channelInfo?.title || '',
-                    uid: c.channel.channelID,
-                    avatar: c.channelInfo?.logo || ''
-                  }}
-                />
-                {c.unread > 0 ? (
-                  <div className="absolute h-[14px] box-border unread min-w-5 text-xs">
-                    {c.unread > 99 ? '99+' : c.unread}
-                  </div>
-                ) : null}
-              </div>
-              <div className="group-data flex-1 overflow-hidden">
-                <div className="group-title flex  justify-between">
-                  <div className="flex items-baseline">
-                    <div
-                      title={c.channelInfo?.title || ''}
-                      className="overflow-hidden whitespace-nowrap text-ellipsis w-full text-sm"
-                    >
-                      {c.channelInfo?.title || ''}
-                    </div>
+        {conversations.map(c => (
+          <div
+            key={c.channel.channelID}
+            className={cn(
+              'flex conversation-card overflow-hidden cursor-pointer',
+              c.channel.channelID === lastChannel?.channelID && 'actived'
+            )}
+            onClick={() => onChannelSelect(c)}
+            onKeyDown={() => {}}
+          >
+            <div className="group-avatar rounded-md flex items-center text-ellipsis justify-center relative">
+              <ChatAvatar
+                radius="4px"
+                className="w-[30px] h-[30px]"
+                data={{
+                  name: c.channelInfo?.title || '',
+                  uid: c.channel.channelID,
+                  avatar: c.channelInfo?.logo || ''
+                }}
+              />
+              {c.unread > 0 ? (
+                <div className="absolute h-[14px] box-border unread min-w-5 text-xs">
+                  {c.unread > 99 ? '99+' : c.unread}
+                </div>
+              ) : null}
+            </div>
+            <div className="group-data flex-1 overflow-hidden">
+              <div className="group-title flex  justify-between">
+                <div className="flex items-baseline">
+                  <div
+                    title={c.channelInfo?.title || ''}
+                    className="overflow-hidden whitespace-nowrap text-ellipsis w-full text-sm"
+                  >
+                    {c.channelInfo?.title || ''}
                   </div>
                 </div>
-                <div className="group-last-msg flex justify-between items-center">
-                  <div className="flex-1 text-xs text-tertiary line-clamp-1">
-                    {
-                      c.isMentionMe ? (
-                        <span style={{ color: 'red' }}>[有人@我]</span>
-                      ) : null
-                    }
-                    <UsernameSpan uid={c.lastMessage?.fromUID!} channel={c.channel!} colon />
-                    {
-                      c.lastMessage?.contentType === ChatMessageType.Cmd ?
-                        c.lastMessage.content.cmd === ChatCmdType.MessageRevoke ?
-                          '撤回了一条消息' : '[系统消息]' : c.lastMessage?.contentType === ChatMessageType.Image ?
-                          '[图片]' : +c.lastMessage!.contentType === +ChatMessageType.System ? '加入群聊' : c.lastMessage?.content.text || ''
-                    }
-                  </div>
-                  <div className="text-xs text-tertiary">
-                    {
-                      c.lastMessage?.timestamp ? dateUtils.dateAgo(dayjs(c.lastMessage.timestamp * 1000)) : null
-                    }
-                  </div>
+              </div>
+              <div className="group-last-msg flex justify-between items-center">
+                <div className="flex-1 text-xs text-tertiary line-clamp-1">
+                  {c.isMentionMe ? <span style={{ color: 'red' }}>[有人@我]</span> : null}
+                  <UsernameSpan uid={c.lastMessage?.fromUID!} channel={c.channel!} colon />
+                  {c.lastMessage?.contentType === ChatMessageType.Cmd
+                    ? c.lastMessage.content.cmd === ChatCmdType.MessageRevoke
+                      ? '撤回了一条消息'
+                      : '[系统消息]'
+                    : c.lastMessage?.contentType === ChatMessageType.Image
+                      ? '[图片]'
+                      : +c.lastMessage!.contentType === +ChatMessageType.System
+                        ? '加入群聊'
+                        : c.lastMessage?.content.text || ''}
+                </div>
+                <div className="text-xs text-tertiary">
+                  {c.lastMessage?.timestamp ? dateUtils.dateAgo(dayjs(c.lastMessage.timestamp * 1000)) : null}
                 </div>
               </div>
             </div>
-          ))
-        }
+          </div>
+        ))}
       </div>
       {/* {updateGroupInfoModal.context} */}
       {inviteToGroupModal.context}
@@ -367,10 +367,12 @@ const GroupChannel = (props: {
   )
 }
 
-const ChannelSkeleton = memo(() => Array.from({
-  length: 10
-}).map((_, i) => (
-  // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
-  <Skeleton style={{ background: '#555' }} key={`${i}channel`} className="h-[76px] mb-2" />
-)))
+const ChannelSkeleton = memo(() =>
+  Array.from({
+    length: 10
+  }).map((_, i) => (
+    // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
+    <Skeleton style={{ background: '#555' }} key={`${i}channel`} className="h-[76px] mb-2" />
+  ))
+)
 export default GroupChannel

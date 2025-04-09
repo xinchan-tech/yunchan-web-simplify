@@ -2,10 +2,10 @@ import LogoTitle from '@/assets/image/logo-title-sm.png'
 import PcDownload from '@/assets/image/pc-download.png'
 import AndroidDownload from '@/assets/image/android-download.png'
 import IosDownload from '@/assets/image/ios-download.png'
-import { Button, JknIcon, StockSelect } from "@/components"
-import { useToken, useUser } from "@/store"
-import { Link, Outlet, useNavigate } from "react-router"
-import { HeaderSetting } from "@/components/header/setting"
+import { Button, JknIcon, StockSelect } from '@/components'
+import { useToken, useUser } from '@/store'
+import { Link, Outlet, useNavigate } from 'react-router'
+import { HeaderSetting } from '@/components/header/setting'
 
 const HomePage = () => {
   const hasAuthorized = useUser(s => s.hasAuthorized())
@@ -24,26 +24,31 @@ const HomePage = () => {
         </div>
         <div className="flex items-center space-x-12">
           <StockSelect className="rounded-[300px] bg-[#2E2E2E] px-3" onChange={v => navigate(`/stock?symbol=${v}`)} />
-          <Link to="/mall" className="home-navigate-item hover:text-primary">价格</Link>
-          <Link to="/home/features" className="home-navigate-item hover:text-primary">特色功能</Link>
-          <Link to="/stock?symbol=QQQ" className="home-navigate-item hover:text-primary">图表</Link>
+          <Link to="/mall" className="home-navigate-item hover:text-primary">
+            价格
+          </Link>
+          <Link to="/home/features" className="home-navigate-item hover:text-primary">
+            特色功能
+          </Link>
+          <Link to="/stock?symbol=QQQ" className="home-navigate-item hover:text-primary">
+            图表
+          </Link>
         </div>
         <div className="flex items-center space-x-4">
-          {
-            token ? (
-              <HeaderSetting />
-            ) : (
-              <JknIcon.Svg name="user" size={24} className="cursor-pointer" onClick={gotoLogin} />
-            )
-          }
-          {
-            hasAuthorized ? (
-              null
-            ) : (
-              <Link to="/mall" className="linear-gradient-1 w-[90px] h-[38px] rounded-xl text-white cursor-pointer flex items-center justify-center">开通会员</Link>
-              // <Button className="linear-gradient-1 w-[90px] h-[38px] rounded-xl text-white cursor-pointer" onClick={() =>}></Button>
-            )
-          }
+          {token ? (
+            <HeaderSetting />
+          ) : (
+            <JknIcon.Svg name="user" size={24} className="cursor-pointer" onClick={gotoLogin} />
+          )}
+          {hasAuthorized ? null : (
+            <Link
+              to="/mall"
+              className="linear-gradient-1 w-[90px] h-[38px] rounded-xl text-white cursor-pointer flex items-center justify-center"
+            >
+              开通会员
+            </Link>
+            // <Button className="linear-gradient-1 w-[90px] h-[38px] rounded-xl text-white cursor-pointer" onClick={() =>}></Button>
+          )}
         </div>
       </div>
       <div className="home-content">

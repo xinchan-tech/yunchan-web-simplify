@@ -353,7 +353,7 @@ export const chartManage = {
 
     for (let i = 0; i < targetModeCount; i++) {
       const chartId = `chart-${i}`
-      newChartStores[chartId] = chartStores[chartId] || {...activeChart, id: chartId}
+      newChartStores[chartId] = chartStores[chartId] || { ...activeChart, id: chartId }
     }
 
     useChartManage.setState({
@@ -372,7 +372,7 @@ export const chartManage = {
     chartManage.setStore(state => {
       state.overlayStock.push({ symbol, name })
     }, chartId)
-    
+
     chartEvent.get().emit('stockCompareChange', { type: 'add', symbol })
 
     chartManage.setYAxis({

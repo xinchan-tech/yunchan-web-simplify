@@ -1,6 +1,6 @@
-import { JknImage } from "@/components"
-import { useMemo } from "react"
-import type { Message, MessageImage } from "wukongimjssdk"
+import { JknImage } from '@/components'
+import { useMemo } from 'react'
+import type { Message, MessageImage } from 'wukongimjssdk'
 
 interface ImageRecordProps {
   message: Message
@@ -10,10 +10,9 @@ export const ImageRecord = (props: ImageRecordProps) => {
   const content = props.message.content as MessageImage
 
   const url = useMemo(() => {
-    if(content.remoteUrl) return content.remoteUrl
+    if (content.remoteUrl) return content.remoteUrl
     return content.file ? URL.createObjectURL(content.file) : ''
   }, [content.remoteUrl, content.file])
-
 
   const preview = () => {
     JknImage.preview(url)

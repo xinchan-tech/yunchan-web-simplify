@@ -14,7 +14,9 @@ const JknAvatar = ({ src, fallback, title, ...props }: JknAvatarProps) => {
     <Avatar {...props}>
       <AvatarImage src={src} />
       {title ? (
-        <AvatarFallback style={{ background: colorUtil.stringToColor(colorUtil.removeUnicode(title).slice(0, 1).toUpperCase()) }}>
+        <AvatarFallback
+          style={{ background: colorUtil.stringToColor(colorUtil.removeUnicode(title).slice(0, 1).toUpperCase()) }}
+        >
           {title.slice(0, 1).toUpperCase()}
         </AvatarFallback>
       ) : (

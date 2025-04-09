@@ -1,15 +1,15 @@
-import { logout } from "@/api"
-import { JknAlert, JknAvatar, JknIcon, Popover, PopoverContent, PopoverTrigger, useModal } from "@/components"
-import { useToast } from "@/hooks"
-import { useToken, useUser } from "@/store"
-import to from "await-to-js"
-import type { ReactNode } from "react"
-import LoginForm from "../user/login-form"
-import UserCenter from "../user/user-center"
-import { useTranslation } from "react-i18next"
-import { useNavigate } from "react-router"
-import { useBoolean, useMount, useUnmount } from "ahooks"
-import { appEvent } from "@/utils/event"
+import { logout } from '@/api'
+import { JknAlert, JknAvatar, JknIcon, Popover, PopoverContent, PopoverTrigger, useModal } from '@/components'
+import { useToast } from '@/hooks'
+import { useToken, useUser } from '@/store'
+import to from 'await-to-js'
+import type { ReactNode } from 'react'
+import LoginForm from '../user/login-form'
+import UserCenter from '../user/user-center'
+import { useTranslation } from 'react-i18next'
+import { useNavigate } from 'react-router'
+import { useBoolean, useMount, useUnmount } from 'ahooks'
+import { appEvent } from '@/utils/event'
 import logoTitleSm from '@/assets/image/logo-title-sm.png'
 
 export const HeaderSetting = () => {
@@ -25,7 +25,7 @@ export const HeaderSetting = () => {
   useMount(() => {
     appEvent.on('login', () => {
       const currentPath = window.location.pathname
-      if(currentPath === '/login') {
+      if (currentPath === '/login') {
         return
       }
       const params = encodeURIComponent(currentPath)
@@ -99,11 +99,11 @@ export const HeaderSetting = () => {
       <Popover open={visible} onOpenChange={toggle}>
         <PopoverTrigger asChild>
           <span>
-            {
-              token ? (
-                <JknAvatar src={user?.avatar} title={user?.realname} className="size-8" />
-              ) : <JknIcon.Svg size={32} name="more" />
-            }
+            {token ? (
+              <JknAvatar src={user?.avatar} title={user?.realname} className="size-8" />
+            ) : (
+              <JknIcon.Svg size={32} name="more" />
+            )}
           </span>
         </PopoverTrigger>
         <PopoverContent align="start" side="right" sideOffset={10} className="w-[260px]">
@@ -111,67 +111,55 @@ export const HeaderSetting = () => {
             <img src={logoTitleSm} alt="logo" className="w-[143px] h-8" />
           </div>
           <div className="border-b-primary">
-            {
-              token ? (
-                <HeaderSettingCell
-                  icon={<JknAvatar src={user?.avatar} title={user?.realname} className="size-5" />}
-                  title={user?.realname}
-                  onClick={() => userCenter.modal.open()}
-                />
-              ) : null
-            }
+            {token ? (
+              <HeaderSettingCell
+                icon={<JknAvatar src={user?.avatar} title={user?.realname} className="size-5" />}
+                title={user?.realname}
+                onClick={() => userCenter.modal.open()}
+              />
+            ) : null}
             <HeaderSettingCell
               icon="home"
               title="返回官网"
-              onClick={() => { navigate('/home'); setFalse() }}
+              onClick={() => {
+                navigate('/home')
+                setFalse()
+              }}
             />
-            <HeaderSettingCell
-              icon="theme"
-              title="暗色主图"
-            />
+            <HeaderSettingCell icon="theme" title="暗色主图" />
             <HeaderSettingCell
               icon="setting"
               title="软件设置"
-              onClick={() => { navigate('/setting'); setFalse() }}
+              onClick={() => {
+                navigate('/setting')
+                setFalse()
+              }}
             />
-            <HeaderSettingCell
-              icon="language"
-              title="语言"
-            />
-            <HeaderSettingCell
-              icon="service"
-              title="客服"
-            />
+            <HeaderSettingCell icon="language" title="语言" />
+            <HeaderSettingCell icon="service" title="客服" />
           </div>
           <div>
-            {
-              token ? (
-                <HeaderSettingCell
-                  icon="login"
-                  title="退出"
-                  label=" "
-                  color="#D61B5F"
-                  onClick={onLogout}
-                />
-              ) : (
-                <HeaderSettingCell
-                  icon="login"
-                  title="登录"
-                  label=" "
-                  color="#2962FF"
-                  onClick={() => { navigate('/login'); setFalse() }}
-                />
-              )
-            }
+            {token ? (
+              <HeaderSettingCell icon="login" title="退出" label=" " color="#D61B5F" onClick={onLogout} />
+            ) : (
+              <HeaderSettingCell
+                icon="login"
+                title="登录"
+                label=" "
+                color="#2962FF"
+                onClick={() => {
+                  navigate('/login')
+                  setFalse()
+                }}
+              />
+            )}
           </div>
         </PopoverContent>
       </Popover>
       {/* {
         loginForm.context
       } */}
-      {
-        userCenter.context
-      }
+      {userCenter.context}
     </>
   )
 }
@@ -185,17 +173,19 @@ interface HeaderSettingCellProps {
 }
 const HeaderSettingCell = ({ icon, title, label, color, onClick }: HeaderSettingCellProps) => {
   return (
-    <div className="flex items-center px-2.5 w-full text-sm h-11 hover:bg-accent box-border cursor-pointer" style={{ color }} onClick={onClick} onKeyDown={() => { }}>
-      {
-        typeof icon === 'string' ? (
-          <JknIcon.Svg name={icon as IconName} size={20} />
-        ) : (
-          icon
-        )
-      }
+    <div
+      className="flex items-center px-2.5 w-full text-sm h-11 hover:bg-accent box-border cursor-pointer"
+      style={{ color }}
+      onClick={onClick}
+      onKeyDown={() => {}}
+    >
+      {typeof icon === 'string' ? <JknIcon.Svg name={icon as IconName} size={20} /> : icon}
       <span className="ml-2.5">{title}</span>
-      {label ? <span className="ml-auto">{label}</span> : <JknIcon.Svg name="arrow-right" className="ml-auto" size={8} />}
+      {label ? (
+        <span className="ml-auto">{label}</span>
+      ) : (
+        <JknIcon.Svg name="arrow-right" className="ml-auto" size={8} />
+      )}
     </div>
   )
 }
-

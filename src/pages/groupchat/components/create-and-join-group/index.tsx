@@ -30,7 +30,7 @@ const CreateGroup = () => {
     ),
     footer: null,
     className: 'w-[720px]',
-    onOpen: () => { },
+    onOpen: () => {},
     title: '创建社群',
     closeIcon: true
   })
@@ -97,16 +97,12 @@ const CreateGroup = () => {
             </DropdownMenuItem>
           )}
 
-          <DropdownMenuItem
-            onClick={() => joinGroup.current?.open()}
-          >
-            加入社群
-          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => joinGroup.current?.open()}>加入社群</DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
       {createGroup.context}
       {reCreateModal.context}
-      <JoinGroupContentModal ref={joinGroup} onSuccess={() => { }} />
+      <JoinGroupContentModal ref={joinGroup} onSuccess={() => {}} />
       {/* {joinGroup.context} */}
     </>
   )

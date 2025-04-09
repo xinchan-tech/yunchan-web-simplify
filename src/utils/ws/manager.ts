@@ -2,7 +2,7 @@ import mitt, { type Emitter } from 'mitt'
 import { Ws } from '.'
 import { useToken } from '@/store'
 import { createEvent } from '../event'
-import { AlarmType } from "@/api"
+import { AlarmType } from '@/api'
 
 export type MessageReceived<T> = {
   event: WsEvent
@@ -197,8 +197,8 @@ export class WsV2 {
     }
 
     const ins = WsV2.instance
-    
-    if(ins.token !== token){
+
+    if (ins.token !== token) {
       ins.close()
       WsV2.instance = new WsV2(token)
     }
@@ -210,6 +210,5 @@ export class WsV2 {
     return WsV2.instance
   }
 }
-
 
 export const wsManager = new WsManager(wsUrl)

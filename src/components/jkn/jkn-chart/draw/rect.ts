@@ -44,6 +44,3 @@ export const drawRectRel: DrawRectRelFunc = (params, { data }) => {
     }).draw(params.ctx)
   })
 }
-
-
-

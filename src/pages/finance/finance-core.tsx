@@ -25,7 +25,6 @@ import Decimal from 'decimal.js'
 import { mapValues } from 'radash'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
-
 type FinanceData = Awaited<ReturnType<typeof getStockFinanceTotal>>
 
 interface FinanceCoreProps {
@@ -36,7 +35,7 @@ export const FinanceCore = (props: FinanceCoreProps) => {
   const [queryParams] = useQueryParams<{ symbol: string }>()
 
   const symbol = queryParams.symbol ?? 'QQQ'
-  
+
   const [period, setPeriod] = useState<'quarter' | 'year'>('quarter')
   const [chartType, setChartType] = useState<'revenue' | 'incomeLoss' | 'cashFlowFree' | 'rate'>('revenue')
   const [_, setQueryParams] = useQueryParams()

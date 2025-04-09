@@ -1,8 +1,7 @@
-import { nanoid } from "nanoid"
-import { useState } from "react"
-import { createRoot } from "react-dom/client"
+import { nanoid } from 'nanoid'
+import { useState } from 'react'
+import { createRoot } from 'react-dom/client'
 import Viewer from 'react-viewer'
-
 
 export const JknImage = {
   preview: (src: string) => {
@@ -29,7 +28,7 @@ export const JknImage = {
   }
 }
 
-const ImagePreview = ({ src,afterClose }: { src: string; afterClose: () => void }) => {
+const ImagePreview = ({ src, afterClose }: { src: string; afterClose: () => void }) => {
   const [visible, setVisible] = useState(true)
 
   const handleClose = () => {
@@ -37,15 +36,7 @@ const ImagePreview = ({ src,afterClose }: { src: string; afterClose: () => void 
     setTimeout(() => {
       afterClose()
     }, 300)
-
   }
 
-  return (
-    <Viewer
-      visible={visible}
-      onClose={handleClose}
-      
-      images={[{ src:src, alt: '' }]}
-    />
-  )
+  return <Viewer visible={visible} onClose={handleClose} images={[{ src: src, alt: '' }]} />
 }

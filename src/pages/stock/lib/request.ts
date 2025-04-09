@@ -1,11 +1,15 @@
-import { type StockChartInterval, type StockRawRecord, getStockChartQuote, getStockChartV2, getStockTabData } from '@/api'
+import {
+  type StockChartInterval,
+  type StockRawRecord,
+  getStockChartQuote,
+  getStockChartV2,
+  getStockTabData
+} from '@/api'
 import { queryClient } from '@/utils/query-client'
 import { stockUtils } from '@/utils/stock'
 import { useQuery } from '@tanstack/react-query'
 import { useRef } from 'react'
 import { renderUtils } from './utils'
-
-
 
 export const useCandlesticks = (symbol: string, interval: StockChartInterval) => {
   const startAt = useRef<Nullable<string>>(renderUtils.getChartStartDate(interval))
@@ -30,7 +34,6 @@ export const useCandlesticks = (symbol: string, interval: StockChartInterval) =>
           time_format: 'int'
         }).then(r => r.data.list.map(v => [v[0], v[1], v[4], v[2], v[3], ...v.slice(5)]) as StockRawRecord[])
       }
-
 
       return getStockChartQuote(symbol, 'full-day', 'int')
     }

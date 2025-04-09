@@ -1,11 +1,5 @@
 import { type StockExtend, type UsStockColumn, getUsStocks } from '@/api'
-import {
-  CollectStar,
-  JknRcTable,
-  type JknRcTableProps,
-  StockView,
-  SubscribeSpan
-} from '@/components'
+import { CollectStar, JknRcTable, type JknRcTableProps, StockView, SubscribeSpan } from '@/components'
 import { useStockQuoteSubscribe, useTableData, useTableRowClickToStockTrading } from '@/hooks'
 import { stockUtils } from '@/utils/stock'
 import { useInfiniteQuery } from '@tanstack/react-query'
@@ -150,11 +144,13 @@ const PageTable = (props: PageTableProps) => {
         align: 'left',
         sort: true,
         width: '28.5%',
-        render: (_, row) => <div className='flex items-center h-[33px]'>
-          <CollectStar checked={row.collect === 1} code={row.symbol} />
-          <span className="mr-3"/>
-          <StockView name={row.name} code={row.symbol as string} showName />
-        </div>
+        render: (_, row) => (
+          <div className="flex items-center h-[33px]">
+            <CollectStar checked={row.collect === 1} code={row.symbol} />
+            <span className="mr-3" />
+            <StockView name={row.name} code={row.symbol as string} showName />
+          </div>
+        )
       },
       {
         title: '现价',
@@ -214,15 +210,15 @@ const PageTable = (props: PageTableProps) => {
         width: '15%',
         sort: true,
         render: (_, row) => (
-          <div className=''>
-          <SubscribeSpan.MarketValueBlink
-            trading="intraDay"
-            symbol={row.symbol}
-            initValue={row.total}
-            decimal={2}
-            totalShare={row.totalShare ?? 0}
-            showColor={false}
-          />
+          <div className="">
+            <SubscribeSpan.MarketValueBlink
+              trading="intraDay"
+              symbol={row.symbol}
+              initValue={row.total}
+              decimal={2}
+              totalShare={row.totalShare ?? 0}
+              showColor={false}
+            />
           </div>
         )
       },

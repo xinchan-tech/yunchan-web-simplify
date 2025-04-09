@@ -25,7 +25,16 @@ const DialogOverlay = React.forwardRef<
 ))
 DialogOverlay.displayName = DialogPrimitive.Overlay.displayName
 
-const DialogContext = React.createContext<{ drag: (content: { x: number, y: number }, originPoint: { x: number; y: number }, targetPoint: { x: number; y: number }) => void } | undefined>(undefined)
+const DialogContext = React.createContext<
+  | {
+      drag: (
+        content: { x: number; y: number },
+        originPoint: { x: number; y: number },
+        targetPoint: { x: number; y: number }
+      ) => void
+    }
+  | undefined
+>(undefined)
 
 const DialogContent = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Content>,
@@ -33,28 +42,35 @@ const DialogContent = React.forwardRef<
 >(({ className, children, ...props }, ref) => {
   const uid = React.useId()
   const ele = React.useRef<HTMLDivElement>()
-  const drag = React.useCallback((content: { x: number; y: number }, originPoint: { x: number; y: number }, targetPoint: { x: number; y: number }) => {
-    if(!ele.current || ele.current.id !== uid){
-      ele.current = document.getElementById(uid) as HTMLDivElement
-    }
+  const drag = React.useCallback(
+    (
+      content: { x: number; y: number },
+      originPoint: { x: number; y: number },
+      targetPoint: { x: number; y: number }
+    ) => {
+      if (!ele.current || ele.current.id !== uid) {
+        ele.current = document.getElementById(uid) as HTMLDivElement
+      }
 
-    const offset = {
-      x: targetPoint.x - originPoint.x,
-      y: targetPoint.y - originPoint.y
-    }
+      const offset = {
+        x: targetPoint.x - originPoint.x,
+        y: targetPoint.y - originPoint.y
+      }
 
-    const contentRect = {
-      left: content.x + offset.x,
-      top: content.y + offset.y
-    }
+      const contentRect = {
+        left: content.x + offset.x,
+        top: content.y + offset.y
+      }
 
-    if (ele.current) {
-      ele.current.style.left = `${contentRect.left}px`
-      ele.current.style.top = `${contentRect.top}px`
-      ele.current.style.transform = 'none'
-      ele.current.style.transition = 'none'
-    }
-  }, [uid])
+      if (ele.current) {
+        ele.current.style.left = `${contentRect.left}px`
+        ele.current.style.top = `${contentRect.top}px`
+        ele.current.style.transform = 'none'
+        ele.current.style.transition = 'none'
+      }
+    },
+    [uid]
+  )
   return (
     <DialogPortal>
       <DialogOverlay />
@@ -68,9 +84,7 @@ const DialogContent = React.forwardRef<
         )}
         {...props}
       >
-        <DialogContext.Provider value={{ drag }}>
-          {children}
-        </DialogContext.Provider>
+        <DialogContext.Provider value={{ drag }}>{children}</DialogContext.Provider>
       </DialogPrimitive.Content>
     </DialogPortal>
   )
@@ -99,17 +113,26 @@ const DialogHeader = ({ className, ...props }: React.HTMLAttributes<HTMLDivEleme
       const x = e.clientX - clickDownPoints.current.x
       const y = e.clientY - clickDownPoints.current.y
       if (Math.abs(x) > 5 || Math.abs(y) > 5) {
-        ctx.drag(contentPoints.current, { x: clickDownPoints.current.x, y: clickDownPoints.current.y }, { x: e.clientX, y: e.clientY })
+        ctx.drag(
+          contentPoints.current,
+          { x: clickDownPoints.current.x, y: clickDownPoints.current.y },
+          { x: e.clientX, y: e.clientY }
+        )
       }
     }
   }
 
   return (
-    <div className={cn('flex flex-col text-center sm:text-left ', className)} {...props}
+    <div
+      className={cn('flex flex-col text-center sm:text-left ', className)}
+      {...props}
       ref={ref}
       onMouseDown={onClickDown}
       onMouseMove={onMouseMove}
-      onMouseUp={() => { clickDownPoints.current = { x: 0, y: 0 }; contentPoints.current = { x: 0, y: 0 } }}
+      onMouseUp={() => {
+        clickDownPoints.current = { x: 0, y: 0 }
+        contentPoints.current = { x: 0, y: 0 }
+      }}
     />
   )
 }

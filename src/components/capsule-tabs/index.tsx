@@ -50,24 +50,22 @@ const TabItem = ({ value, label, disabled, className }: TabItemProps) => {
     <div
       className={cn(
         'flex h-[30px] p-[4px] items-center justify-center rounded-sm cursor-pointer transition-all duration-200 text-tertiary capsule-tab-item relative after:hidden',
-        className,
+        className
       )}
       data-checked={value === context.value}
       data-type={context.type}
       style={{
         background: isActive ? 'hsl(var(--accent))' : 'transparent',
-        color: isActive ? (context.activeColor || 'hsl(var(--foreground))') : '',
+        color: isActive ? context.activeColor || 'hsl(var(--foreground))' : '',
         // 激活状态下的模拟文字加粗效果
-        textShadow: isActive ? '0 0 0.65px currentColor, 0 0 0.65px currentColor' : 'none',
+        textShadow: isActive ? '0 0 0.65px currentColor, 0 0 0.65px currentColor' : 'none'
       }}
       onClick={() => {
         !disabled && context.onChange?.(value)
       }}
-      onKeyDown={() => { }}
+      onKeyDown={() => {}}
     >
-      <div className="relative">
-        {label}
-      </div>
+      <div className="relative">{label}</div>
     </div>
   )
 }

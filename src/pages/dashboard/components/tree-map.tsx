@@ -7,7 +7,7 @@ import { router } from '@/router'
 import { getStringWidth } from '@/utils/string'
 import Decimal from 'decimal.js'
 import { debounce } from 'radash'
-import { useLatestRef } from "@/hooks"
+import { useLatestRef } from '@/hooks'
 
 type TreeMapData = {
   name: string
@@ -217,8 +217,8 @@ const TreeMap = (props: TreeMapProps) => {
         }
 
         let textWidth = getStringWidth(text, `${textSize}px sans-serif`)
-        if(textWidth > rectWidth) {
-          textSize = textSize * rectWidth / textWidth
+        if (textWidth > rectWidth) {
+          textSize = (textSize * rectWidth) / textWidth
           textWidth = rectWidth
         }
         d.data.symbolSize = textSize

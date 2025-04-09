@@ -19,7 +19,6 @@ import dayjs from 'dayjs'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
-
 type TableDataType = ReturnType<typeof stockUtils.toStockWithExt>
 
 const tradingToKey = (trading: StockTrading) => {
@@ -38,11 +37,10 @@ const tradingToKey = (trading: StockTrading) => {
 const TopList = () => {
   const trading = useTime(s => s.getTrading())
   const [type, setType] = useState<string>(tradingToKey(trading))
-  
+
   const { t } = useTranslation()
   const { isToday } = useTime()
   const [list, { setList, onSort }] = useTableData<TableDataType>([], 'symbol')
-  
 
   const query = useQuery({
     queryKey: [getIncreaseTop.cacheKey, type],
@@ -99,7 +97,7 @@ const TopList = () => {
       dataIndex: 'name',
       align: 'left',
       sort: true,
-      render: (_, row) => <StockView className='min-h-[26px]' code={row.symbol} name={row.name} />
+      render: (_, row) => <StockView className="min-h-[26px]" code={row.symbol} name={row.name} />
     },
     {
       title: `${type === 'PQRM' ? '盘前' : type === 'PHRM' ? '盘后' : '现'}价`,
@@ -109,13 +107,7 @@ const TopList = () => {
       render: (_, row) => (
         <SubscribeSpan.PriceBlink
           showColor={false}
-          trading={
-            type === 'PQRM'
-              ? 'preMarket'
-              : type === 'PHRM'
-                ? 'afterHours'
-                : 'intraDay'
-          }
+          trading={type === 'PQRM' ? 'preMarket' : type === 'PHRM' ? 'afterHours' : 'intraDay'}
           symbol={row.symbol}
           initValue={row.close}
           initDirection={stockUtils.isUp(row)}
@@ -130,13 +122,7 @@ const TopList = () => {
       sort: true,
       render: (percent, row) => (
         <SubscribeSpan.PercentBlink
-          trading={
-            type === 'PQRM'
-              ? 'preMarket'
-              : type === 'PHRM'
-                ? 'afterHours'
-                : 'intraDay'
-          }
+          trading={type === 'PQRM' ? 'preMarket' : type === 'PHRM' ? 'afterHours' : 'intraDay'}
           symbol={row.symbol}
           showSign
           decimal={2}
@@ -153,13 +139,7 @@ const TopList = () => {
       render: (turnover, row) => (
         <SubscribeSpan.TurnoverBlink
           showColor={false}
-          trading={
-            type === 'PQRM'
-              ? 'preMarket'
-              : type === 'PHRM'
-                ? 'afterHours'
-                : 'intraDay'
-          }
+          trading={type === 'PQRM' ? 'preMarket' : type === 'PHRM' ? 'afterHours' : 'intraDay'}
           symbol={row.symbol}
           decimal={2}
           initValue={turnover}
@@ -174,13 +154,7 @@ const TopList = () => {
       sort: true,
       render: (marketValue, row) => (
         <SubscribeSpan.MarketValueBlink
-          trading={
-            type === 'PQRM'
-              ? 'preMarket'
-              : type === 'PHRM'
-                ? 'afterHours'
-                : 'intraDay'
-          }
+          trading={type === 'PQRM' ? 'preMarket' : type === 'PHRM' ? 'afterHours' : 'intraDay'}
           symbol={row.symbol}
           decimal={2}
           showColor={false}
@@ -232,8 +206,6 @@ const TopList = () => {
           onRow={onRowClick}
         />
       </div>
-
-
     </div>
   )
 }

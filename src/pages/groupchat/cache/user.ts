@@ -1,5 +1,5 @@
-import { assign } from "radash"
-import { ChatCache, CacheStoreName } from "./db"
+import { assign } from 'radash'
+import { ChatCache, CacheStoreName } from './db'
 
 type User = {
   avatar: string
@@ -40,18 +40,17 @@ class UserCache extends ChatCache {
     /**
      * 开启事务
      */
-    const tx = db.transaction(UserCache.USER_STORE, "readwrite")
+    const tx = db.transaction(UserCache.USER_STORE, 'readwrite')
     const store = tx.objectStore(UserCache.USER_STORE)
 
     await store.delete(data.map(u => this.getUserId(u)))
 
     await Promise.all(
-      data.map(async (user) => {
+      data.map(async user => {
         await store.add(user)
       })
     )
   }
-  
 }
 
 export const userCache = new UserCache()

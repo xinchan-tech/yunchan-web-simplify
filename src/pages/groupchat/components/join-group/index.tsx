@@ -13,16 +13,16 @@ import { useToast } from '@/hooks'
 import { useQuery } from '@tanstack/react-query'
 import WKSDK from 'wukongimjssdk'
 import { setExpireGroupInCache } from '../../chat-utils'
-import { createPortal } from "react-dom"
-import { GroupTag } from "../create-and-join-group/group-channel-card"
-import Decimal from "decimal.js"
+import { createPortal } from 'react-dom'
+import { GroupTag } from '../create-and-join-group/group-channel-card'
+import Decimal from 'decimal.js'
 
 const getDiscountByYearCompareMonth = (product: Awaited<ReturnType<typeof getChannelDetail>>['products']) => {
   const monthPrice = product.find(item => item.unit === '月')?.price
   const yearPrice = product.find(item => item.unit === '年')?.price
 
   if (monthPrice && yearPrice) {
-    return (Number(monthPrice) * 12 - Number(yearPrice))
+    return Number(monthPrice) * 12 - Number(yearPrice)
   }
 
   return 0
@@ -194,9 +194,7 @@ export const JoinGroup = (props: {
           </div>
         </div>
         <div className="text-center text-tertiary">{groupDetailData?.brief || ''}</div>
-        <div
-          className={cn('prod-list flex justify-center space-x-8')}
-        >
+        <div className={cn('prod-list flex justify-center space-x-8')}>
           {Array.isArray(groupDetailData?.products) &&
             groupDetailData.products.length > 0 &&
             groupDetailData.products.map(prod => {
@@ -208,43 +206,44 @@ export const JoinGroup = (props: {
                     console.log(12321)
                     setSelectedProdSn(prod.product_sn)
                   }}
-                  onKeyDown={() => { }}
+                  onKeyDown={() => {}}
                 >
                   <div className="prod-name text-center text-xl mb-2">{groupDetailData?.name}</div>
 
                   <div className="text-center mt-8">
                     <span className="prod-price ">$</span>
-                    <span className="prod-price ">
-                      {(Number(prod.price)).toFixed(2)}
-                    </span>
+                    <span className="prod-price ">{Number(prod.price).toFixed(2)}</span>
                     <span className="prod-unit ">/{prod.unit}</span>
                   </div>
 
-                  {
-                    prod.unit === '年' ? (
-                      <>
-                        <div className="text-center mt-3 text-sm text-tertiary"
-                          style={{
-                            textDecoration: getDiscountByYearCompareMonth(groupDetailData.products) > 0 ? 'line-through' : 'none'
-                          }}
-                        >
-                          <span>$</span>
-                          <span>{Decimal.create(prod.price).plus(getDiscountByYearCompareMonth(groupDetailData.products)).toFixed(2)}</span>
-                          <span>/{prod.unit}</span>
-                        </div>
+                  {prod.unit === '年' ? (
+                    <>
+                      <div
+                        className="text-center mt-3 text-sm text-tertiary"
+                        style={{
+                          textDecoration:
+                            getDiscountByYearCompareMonth(groupDetailData.products) > 0 ? 'line-through' : 'none'
+                        }}
+                      >
+                        <span>$</span>
+                        <span>
+                          {Decimal.create(prod.price)
+                            .plus(getDiscountByYearCompareMonth(groupDetailData.products))
+                            .toFixed(2)}
+                        </span>
+                        <span>/{prod.unit}</span>
+                      </div>
 
-                        <div className="mt-4 text-center inline-block mx-auto text-[#6A4C18] rounded-3xl px-3 py-1"
-                          style={{
-                            background: 'linear-gradient(83.9deg, #FADFB0 9.32%, #FECA90 52.73%, #EC9B51 103.69%)'
-                          }}
-                        >
-                          <span>
-                            折合${Decimal.create(prod.price).div(12).toFixed(2)}/月
-                          </span>
-                        </div>
-                      </>
-                    ) : null
-                  }
+                      <div
+                        className="mt-4 text-center inline-block mx-auto text-[#6A4C18] rounded-3xl px-3 py-1"
+                        style={{
+                          background: 'linear-gradient(83.9deg, #FADFB0 9.32%, #FECA90 52.73%, #EC9B51 103.69%)'
+                        }}
+                      >
+                        <span>折合${Decimal.create(prod.price).div(12).toFixed(2)}/月</span>
+                      </div>
+                    </>
+                  ) : null}
                 </div>
               )
             })}

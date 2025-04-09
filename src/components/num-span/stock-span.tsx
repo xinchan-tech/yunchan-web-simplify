@@ -125,7 +125,11 @@ export const PriceSubscribeSpan = memo(
             onChange={onChange}
             {...props}
           />
-          {value === zeroText ? null : <span data-direction={direction} className="text-xs">{direction === 'up' ? '↑' : '↓'}</span>}
+          {value === zeroText ? null : (
+            <span data-direction={direction} className="text-xs">
+              {direction === 'up' ? '↑' : '↓'}
+            </span>
+          )}
         </span>
       )
     }
@@ -151,7 +155,7 @@ interface PercentSubscribeSpanProps
   extends NumberSubscribeSpanProps,
     Omit<ComponentProps<typeof SubscribeSpan>, 'onChange' | 'formatter' | 'value'> {
   type?: 'percent' | 'amount'
-  nanText?: string,
+  nanText?: string
   onChange?: SubscribeSpanProps['onChange']
 }
 
@@ -183,7 +187,11 @@ export const PercentSubscribeSpan = memo(
       [decimal, zeroText, type, nanText]
     )
 
-    const { value, direction, onChange: _onChange } = useBaseSubscribe(initValue, initDirection, numberFormatter, onValueChange)
+    const {
+      value,
+      direction,
+      onChange: _onChange
+    } = useBaseSubscribe(initValue, initDirection, numberFormatter, onValueChange)
 
     const subscribeFormatter = useCallback<SubscribeSpanProps['formatter']>(
       data => {
@@ -195,12 +203,15 @@ export const PercentSubscribeSpan = memo(
       [numberFormatter, type]
     )
 
-    const __onChange = useCallback<NonNullable<SubscribeSpanProps['onChange']>>((e, v) => {
-      if (onChange) {
-        onChange(e, v)
-      }
-      _onChange(e, v)
-    }, [onChange, _onChange])
+    const __onChange = useCallback<NonNullable<SubscribeSpanProps['onChange']>>(
+      (e, v) => {
+        if (onChange) {
+          onChange(e, v)
+        }
+        _onChange(e, v)
+      },
+      [onChange, _onChange]
+    )
 
     return (
       <SubscribeSpan

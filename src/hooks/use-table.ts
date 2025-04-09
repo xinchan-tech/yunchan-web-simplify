@@ -1,7 +1,7 @@
 import { router } from '@/router'
 import { isNumber } from 'radash'
 import { useCallback, useRef, useState } from 'react'
-import { useNavigate } from "react-router"
+import { useNavigate } from 'react-router'
 
 type OrderKey<T = any> = keyof T | ((arg: T) => string)
 

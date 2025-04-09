@@ -50,15 +50,13 @@ export const gapIndicator: IndicatorTemplate<any, any> = {
       start: number
     }[] = []
 
- 
-
     let min = data.slice(-1)[0].low
     let max = data.slice(-1)[0].high
 
     data
       .reverse()
       .slice(1)
-      .forEach((d) => {
+      .forEach(d => {
         if (gap.length >= count) {
           return false
         }
@@ -90,7 +88,7 @@ export const gapIndicator: IndicatorTemplate<any, any> = {
           x: params.xAxis.convertTimestampToPixel(g.start),
           y: params.yAxis.convertToPixel(g.low),
           width: end - params.xAxis.convertTimestampToPixel(g.start),
-          height: params.yAxis.convertToPixel(g.high) - params.yAxis.convertToPixel(g.low),
+          height: params.yAxis.convertToPixel(g.high) - params.yAxis.convertToPixel(g.low)
         },
         styles: {
           color: 'rgba(127.5, 127.5, 127.5,0.2)',

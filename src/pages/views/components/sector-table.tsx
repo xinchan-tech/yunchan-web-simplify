@@ -4,7 +4,7 @@ import { useTableData } from '@/hooks'
 import { useQuery } from '@tanstack/react-query'
 import Decimal from 'decimal.js'
 import { useEffect, useMemo, useState } from 'react'
-import PlateStocks from "./plate-stocks"
+import PlateStocks from './plate-stocks'
 
 /**
  * SectorTable组件的属性类型
@@ -51,7 +51,6 @@ export type PlateDataType = {
  * @description 用于展示行业板块或概念板块的数据
  */
 const SectorTable = (props: SectorTableProps) => {
-
   const [showDetail, setShowDetail] = useState(0)
   // 获取板块数据
   const plateQuery = useQuery({
@@ -69,10 +68,12 @@ const SectorTable = (props: SectorTableProps) => {
   // 当数据更新时，更新表格数据
   useEffect(() => {
     if (plateQuery.data) {
-      setList(plateQuery.data.map(item => ({
-        ...item,
-        percent: item.change / 100
-      })))
+      setList(
+        plateQuery.data.map(item => ({
+          ...item,
+          percent: item.change / 100
+        }))
+      )
     }
   }, [plateQuery.data, setList])
 
@@ -112,40 +113,36 @@ const SectorTable = (props: SectorTableProps) => {
         sort: true,
         align: 'right',
         width: '33.3%',
-        render: (_, row) => (
-          <span className='inline-block leading-6'>
-            {Decimal.create(row.amount).toShortCN()}
-          </span>
-        )
-      },
+        render: (_, row) => <span className="inline-block leading-6">{Decimal.create(row.amount).toShortCN()}</span>
+      }
     ],
     []
   )
 
   return (
     <>
-      {
-        !showDetail ? (
-          <JknRcTable
-            headerHeight={61}
-            rowKey="id"
-            columns={columns}
-            data={list}
-            onSort={onSort}
-            isLoading={plateQuery.isLoading}
-            onRow={(row) => ({
-              onClick: () => setShowDetail(+row.id)
-            })}
-          />
-        ) : (
-          <div className="flex flex-col h-full">
-            <Button size="sm" variant="outline" className="w-12 mt-2" onClick={() => setShowDetail(0)}>返回</Button>
-            <div className="flex-1">
-              <PlateStocks plateId={showDetail} />
-            </div>
+      {!showDetail ? (
+        <JknRcTable
+          headerHeight={61}
+          rowKey="id"
+          columns={columns}
+          data={list}
+          onSort={onSort}
+          isLoading={plateQuery.isLoading}
+          onRow={row => ({
+            onClick: () => setShowDetail(+row.id)
+          })}
+        />
+      ) : (
+        <div className="flex flex-col h-full">
+          <Button size="sm" variant="outline" className="w-12 mt-2" onClick={() => setShowDetail(0)}>
+            返回
+          </Button>
+          <div className="flex-1">
+            <PlateStocks plateId={showDetail} />
           </div>
-        )
-      }
+        </div>
+      )}
     </>
   )
 }

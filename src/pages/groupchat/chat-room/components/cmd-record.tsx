@@ -1,13 +1,12 @@
-import { useQuery } from "@tanstack/react-query"
-import WKSDK, { type Message, type Channel } from "wukongimjssdk"
-import { fetchUserInChannel } from "../../lib/utils"
+import { useQuery } from '@tanstack/react-query'
+import WKSDK, { type Message, type Channel } from 'wukongimjssdk'
+import { fetchUserInChannel } from '../../lib/utils'
 
 interface CmdTextRecordProps {
   message: Message
 }
 
 export const CmdRecord = ({ message }: CmdTextRecordProps) => {
-
   const uid = WKSDK.shared().config.uid
   return (
     <div className="text-center text-xs text-tertiary my-2.5">

@@ -58,7 +58,6 @@ export const fetchUserInChannel = async (channel: Channel, userId: string) => {
   }
 }
 
-
 export const getUserNameAndAvatarFromMessage = async (message: Message) => {
   const { fromName, fromAvatar } = message.remoteExtra.extra || {}
 
@@ -76,7 +75,7 @@ export const getChannelDetailFromChannel = (channel?: Channel) => {
   if (!channel) return
   const info = WKSDK.shared().channelManager.getChannelInfo(channel)
 
-  if(!info) return
+  if (!info) return
 
   return info.orgData as Awaited<ReturnType<typeof getChannelDetail>>
 }

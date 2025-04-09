@@ -7,16 +7,16 @@ import AiAlarmForm from './ai-alarm-form'
 import AiAlarmSetting from './ai-alarm-setting'
 import PriceAlarmForm from './price-alarm-form'
 import { PriceAlarmSetting } from './price-alarm-setting'
-import { JknIcon } from "../jkn/jkn-icon"
-import { cn } from "@/utils/style"
+import { JknIcon } from '../jkn/jkn-icon'
+import { cn } from '@/utils/style'
 
 interface AiAlarmProps {
   code?: string
 }
 /**
  * @deprecated
- * @param props 
- * @returns 
+ * @param props
+ * @returns
  */
 export const AiAlarm = (props: PropsWithChildren<AiAlarmProps>) => {
   const [open, { setTrue, setFalse }] = useBoolean(false)
@@ -34,7 +34,7 @@ export const AiAlarm = (props: PropsWithChildren<AiAlarmProps>) => {
 
   return (
     <>
-      <div className="w-auto h-auto" onClick={setTrue} onKeyDown={() => { }}>
+      <div className="w-auto h-auto" onClick={setTrue} onKeyDown={() => {}}>
         {props.children}
       </div>
       {visible ? (
@@ -46,7 +46,7 @@ export const AiAlarm = (props: PropsWithChildren<AiAlarmProps>) => {
                   <DialogClose asChild>
                     <span
                       className="bg-[#F36059] box-border rounded-full cursor-pointer  hover:opacity-90 absolute -z-0 w-4 h-4 left-2 top-3 flex items-center justify-center"
-                      onKeyDown={() => { }}
+                      onKeyDown={() => {}}
                     >
                       <Cross2Icon className="scale-75" />
                     </span>
@@ -70,8 +70,8 @@ export const AiAlarm = (props: PropsWithChildren<AiAlarmProps>) => {
 
 /**
  * @deprecated
- * @param props 
- * @returns 
+ * @param props
+ * @returns
  */
 export const PriceAlarm = (props: PropsWithChildren<AiAlarmProps>) => {
   const [open, { setTrue, setFalse }] = useBoolean(false)
@@ -88,7 +88,7 @@ export const PriceAlarm = (props: PropsWithChildren<AiAlarmProps>) => {
   }, [open, setVisibleFalse, setVisibleTrue])
   return (
     <>
-      <div className="w-auto h-fit" onClick={setTrue} onKeyDown={() => { }}>
+      <div className="w-auto h-fit" onClick={setTrue} onKeyDown={() => {}}>
         {props.children}
       </div>
       {visible ? (
@@ -100,7 +100,7 @@ export const PriceAlarm = (props: PropsWithChildren<AiAlarmProps>) => {
                   <DialogClose asChild>
                     <span
                       className="bg-[#F36059] box-border rounded-full cursor-pointer  hover:opacity-90 absolute -z-0 w-4 h-4 left-2 top-3 flex items-center justify-center"
-                      onKeyDown={() => { }}
+                      onKeyDown={() => {}}
                     >
                       <Cross2Icon className="scale-75" />
                     </span>
@@ -122,7 +122,6 @@ export const PriceAlarm = (props: PropsWithChildren<AiAlarmProps>) => {
   )
 }
 
-
 export const StockAlarm = (props: PropsWithChildren<AiAlarmProps>) => {
   const [open, { setTrue, setFalse }] = useBoolean(false)
   const [visible, { setTrue: setVisibleTrue, setFalse: setVisibleFalse }] = useBoolean(false)
@@ -138,7 +137,7 @@ export const StockAlarm = (props: PropsWithChildren<AiAlarmProps>) => {
   }, [open, setVisibleFalse, setVisibleTrue])
   return (
     <>
-      <div className="w-auto h-fit" onClick={setTrue} onKeyDown={() => { }}>
+      <div className="w-auto h-fit" onClick={setTrue} onKeyDown={() => {}}>
         {props.children}
       </div>
       {visible ? (
@@ -147,15 +146,13 @@ export const StockAlarm = (props: PropsWithChildren<AiAlarmProps>) => {
             <DialogHeader>
               <DialogTitle asChild>
                 <div className="px-4 flex items-center">
-                  <div className="text-xl">
-                    创建警报
-                  </div>
+                  <div className="text-xl">创建警报</div>
                   <span
                     className={cn(
-                      'box-border rounded cursor-pointer flex items-center justify-center ml-auto w-5 h-5 hover:bg-accent',
+                      'box-border rounded cursor-pointer flex items-center justify-center ml-auto w-5 h-5 hover:bg-accent'
                     )}
                     onClick={setFalse}
-                    onKeyDown={() => { }}
+                    onKeyDown={() => {}}
                   >
                     <JknIcon.Svg name="close" className="w-3 h-3" />
                   </span>
@@ -174,7 +171,6 @@ export const StockAlarm = (props: PropsWithChildren<AiAlarmProps>) => {
     </>
   )
 }
-
 
 export { AiAlarmSetting, PriceAlarmSetting }
 

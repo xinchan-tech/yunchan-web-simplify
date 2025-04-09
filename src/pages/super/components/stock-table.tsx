@@ -11,7 +11,7 @@ import {
   SubscribeSpan
 } from '@/components'
 import { useCheckboxGroup, useTableData, useTableRowClickToStockTrading } from '@/hooks'
-import { useConfig } from "@/store"
+import { useConfig } from '@/store'
 import { stockUtils } from '@/utils/stock'
 import { cn } from '@/utils/style'
 import { nanoid } from 'nanoid'
@@ -189,7 +189,13 @@ const StockTable = (props: StockTableProps) => {
         align: 'center',
         width: 100,
         sort: true,
-        render: (score, row) => <Star.Rect total={5} count={score} activeColor={useConfig.getState().getStockColor(row.bull === '1', 'hex')} />
+        render: (score, row) => (
+          <Star.Rect
+            total={5}
+            count={score}
+            activeColor={useConfig.getState().getStockColor(row.bull === '1', 'hex')}
+          />
+        )
       }
     ],
     [props.onUpdate]
@@ -197,13 +203,21 @@ const StockTable = (props: StockTableProps) => {
 
   // const onRowClick = useTableRowClickToStockTrading('symbol')
 
-  return <JknRcTable rowKey="key" columns={columns} data={list} onRow={(r) => ({
-    onClick: () => {
-      stockUtils.gotoStockPage(r.symbol, {
-        interval: r.stock_cycle
-      })
-    }
-  })} onSort={onSort} />
+  return (
+    <JknRcTable
+      rowKey="key"
+      columns={columns}
+      data={list}
+      onRow={r => ({
+        onClick: () => {
+          stockUtils.gotoStockPage(r.symbol, {
+            interval: r.stock_cycle
+          })
+        }
+      })}
+      onSort={onSort}
+    />
+  )
 }
 
 export default StockTable

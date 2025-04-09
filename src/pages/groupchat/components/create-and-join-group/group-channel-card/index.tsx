@@ -32,9 +32,16 @@ export const GroupTag = (props: {
       {taglist.map((item, index) => {
         return (
           // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
-          <div key={item + index} className="group-tag text-sm"
+          <div
+            key={item + index}
+            className="group-tag text-sm"
             style={{
-              background: index === 0 ? 'rgba(34, 171, 148, 0.4)' : index === 1 ? 'rgba(41, 98, 255, 0.4)' : 'rgba(46, 46, 46, 1)',
+              background:
+                index === 0
+                  ? 'rgba(34, 171, 148, 0.4)'
+                  : index === 1
+                    ? 'rgba(41, 98, 255, 0.4)'
+                    : 'rgba(46, 46, 46, 1)',
               color: index === 0 ? '#22AB94' : index === 1 ? '#2962FF' : '#B8B8B8'
             }}
           >

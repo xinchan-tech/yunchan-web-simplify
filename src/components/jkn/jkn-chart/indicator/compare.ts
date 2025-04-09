@@ -77,8 +77,7 @@ export const compareIndicator: IndicatorTemplate<any, any> = {
 
     const k = base / result.data[validFrom]
 
- 
-    result.data.slice(realFrom, realTo + 1).forEach((item) => {
+    result.data.slice(realFrom, realTo + 1).forEach(item => {
       const y = item ? item * k : 0
       range.min = Math.min(range.min, y)
       range.max = Math.max(range.max, y)
@@ -89,22 +88,25 @@ export const compareIndicator: IndicatorTemplate<any, any> = {
   calc: async (_dataList, indicator) => {
     if (_dataList.length === 0) return []
 
+    const cache = indicator.extendData as Nullable<{
+      dataLen: number
+      interval: number
+      data: [
+        {
+          validIndex: number
+          data: KLineData[]
+          color: string
+        }
+      ]
+    }>
 
-    const cache = indicator.extendData as Nullable<{ dataLen: number, interval: number, data: [
-      {
-        validIndex: number
-        data: KLineData[],
-        color: string
-      }
-    ] }>
-
-    if(cache){
-      if(cache.dataLen === _dataList.length && cache.interval === indicator.calcParams[2]){
+    if (cache) {
+      if (cache.dataLen === _dataList.length && cache.interval === indicator.calcParams[2]) {
         console.warn('use cache')
         return cache.data
       }
     }
-   
+
     const [color, symbol, interval, startAt] = indicator.calcParams
     const queryKey = [
       getStockChartV2.cacheKey,
@@ -126,11 +128,11 @@ export const compareIndicator: IndicatorTemplate<any, any> = {
         })
       }
     })
-    
+
     if (!r.data.list.length) return []
-    
+
     const compareStockStart = r.data.list[0][0]! as unknown as number
- 
+
     const startInCandlesticksIndex = findNearestTime(_dataList, compareStockStart * 1000)
 
     if (!startInCandlesticksIndex || startInCandlesticksIndex?.index === -1) return []
@@ -170,7 +172,7 @@ export const compareIndicator: IndicatorTemplate<any, any> = {
     const result = indicator.result[0] as { validIndex: number; data: number[]; color: string }
 
     if (!result) return false
- 
+
     const Line = getFigureClass('line')! as FigureConstructor<LineAttrs, Partial<LineStyle>>
     const validFrom = realFrom > result.validIndex ? realFrom : result.validIndex
     const dataList = chart.getDataList()

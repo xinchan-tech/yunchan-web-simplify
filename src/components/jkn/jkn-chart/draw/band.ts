@@ -1,4 +1,4 @@
-import { type IndicatorDrawParams, getFigureClass, type FigureConstructor, type PolygonAttrs } from "jkn-kline-chart"
+import { type IndicatorDrawParams, getFigureClass, type FigureConstructor, type PolygonAttrs } from 'jkn-kline-chart'
 
 /**
  * 画带

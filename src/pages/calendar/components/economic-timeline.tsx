@@ -37,25 +37,29 @@ const EconomicContent: React.FC<{ group: EconomicDateGroup; isFirst?: boolean }>
 
   // 根据日期状态设置颜色
   const colors = {
-    date: isCurrentOrFuture ? "#FFFFFF" : "#575757",
-    title: isCurrentOrFuture ? "#DBDBDB" : "#575757",
-    time: isCurrentOrFuture ? "#808080" : "#575757"
+    date: isCurrentOrFuture ? '#FFFFFF' : '#575757',
+    title: isCurrentOrFuture ? '#DBDBDB' : '#575757',
+    time: isCurrentOrFuture ? '#808080' : '#575757'
   }
 
   return (
     <div>
       {/* 日期 - 当为第一个数据项时不使用mt-[-10px]样式 */}
       <div className={`text-xl ${isFirst ? '' : 'mt-[-8px]'}`} style={{ color: colors.date }}>
-        {dayjs(group.date).format("MM-DD W")}
+        {dayjs(group.date).format('MM-DD W')}
       </div>
       <div>
         {group.items.map((item, index) => (
           // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
           <div key={index} className="py-5">
             {/* 标题 */}
-            <div className="text-base" style={{ color: colors.title }}>{item.title}</div>
+            <div className="text-base" style={{ color: colors.title }}>
+              {item.title}
+            </div>
             {/* 发布时间 */}
-            <div className="text-sm mt-[10px]" style={{ color: colors.time }}>{dayjs(item.publishTime).format('HH:mm')}</div>
+            <div className="text-sm mt-[10px]" style={{ color: colors.time }}>
+              {dayjs(item.publishTime).format('HH:mm')}
+            </div>
           </div>
         ))}
       </div>
@@ -83,9 +87,8 @@ const EconomicTimeline: React.FC = () => {
     return data.map(eventGroup => {
       // 提取日期（假设所有values中的事件都在同一天）
       // 如果values为空，则使用当前日期
-      const date = eventGroup.values.length > 0 
-        ? eventGroup.values[0].datetime.split(' ')[0] 
-        : dayjs().format('YYYY-MM-DD')
+      const date =
+        eventGroup.values.length > 0 ? eventGroup.values[0].datetime.split(' ')[0] : dayjs().format('YYYY-MM-DD')
 
       // 转换为组件所需的数据项格式
       const items: EconomicDataItem[] = eventGroup.values.map(event => ({
@@ -95,7 +98,7 @@ const EconomicTimeline: React.FC = () => {
 
       return {
         date,
-        items,
+        items
       }
     })
   }, [data])

@@ -1,7 +1,7 @@
 import { router } from '@/router'
 import { useStockList } from '@/store'
 import { JknIcon } from '../jkn/jkn-icon'
-import { cn } from "@/utils/style"
+import { cn } from '@/utils/style'
 
 interface StockViewProps {
   code: string
@@ -9,7 +9,6 @@ interface StockViewProps {
   showName?: boolean
   iconSize?: number
   className?: string
-  
 }
 
 const StockView = ({ code, name, showName = false, iconSize = 24, className }: StockViewProps) => {
@@ -21,11 +20,16 @@ const StockView = ({ code, name, showName = false, iconSize = 24, className }: S
       className={cn('overflow-hidden flex items-center w-full', className)}
       onDoubleClick={() => router.navigate(`/stock/trading?symbol=${code}`)}
     >
-      <div className='flex items-center'>
+      <div className="flex items-center">
         {stock?.[0] ? (
           <JknIcon stock={stock?.[0]} className="mr-3" style={{ width: iconSize, height: iconSize }} />
         ) : (
-          <div className="mr-3 leading-6 text-center rounded-full bg-black" style={{ width: iconSize, height: iconSize }}>{code?.slice(0, 1)}</div>
+          <div
+            className="mr-3 leading-6 text-center rounded-full bg-black"
+            style={{ width: iconSize, height: iconSize }}
+          >
+            {code?.slice(0, 1)}
+          </div>
         )}
       </div>
       <div className="flex-1 overflow-hidden ">

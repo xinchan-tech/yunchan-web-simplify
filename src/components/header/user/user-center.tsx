@@ -22,7 +22,7 @@ import { useMutation, useQuery } from '@tanstack/react-query'
 import { useUnmount } from 'ahooks'
 import to from 'await-to-js'
 import copy from 'copy-to-clipboard'
-import dayjs from "dayjs"
+import dayjs from 'dayjs'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useFormContext } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
@@ -167,7 +167,7 @@ const UserCenter = () => {
               <span
                 className="text-xs text-tertiary text-gray-5 cursor-pointer"
                 onClick={() => edit.open()}
-                onKeyDown={() => { }}
+                onKeyDown={() => {}}
               >
                 &emsp;{t('edit')}
               </span>
@@ -180,7 +180,7 @@ const UserCenter = () => {
               <span
                 className="text-xs text-tertiary text-gray-5 cursor-pointer"
                 onClick={avatarForm.modal.open}
-                onKeyDown={() => { }}
+                onKeyDown={() => {}}
               >
                 &emsp;&nbsp;&nbsp;{t('edit')}
               </span>
@@ -213,7 +213,7 @@ const UserCenter = () => {
             <div className="bg-accent rounded-sm px-4 py-0.5">{user?.re_code}</div>
             <span
               className="ml-4 text-primary cursor-pointer"
-              onKeyDown={() => { }}
+              onKeyDown={() => {}}
               onClick={() => {
                 if (user?.share_url) {
                   copy(user.share_url)

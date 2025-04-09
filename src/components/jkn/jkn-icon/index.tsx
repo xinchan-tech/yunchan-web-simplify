@@ -108,7 +108,13 @@ interface JknSvgIconProps extends HtmlHTMLAttributes<SVGElement> {
 
 const JknSvgIcon = ({ name, title, size = 24, label, hoverable, className, style, ...props }: JknSvgIconProps) => {
   const icon = (
-    <svg width={size} height={size} className={cn(hoverable ? 'hover:bg-accent rounded cursor-pointer' : '', className)} style={{ pointerEvents: 'auto', ...style }} {...props}>
+    <svg
+      width={size}
+      height={size}
+      className={cn(hoverable ? 'hover:bg-accent rounded cursor-pointer' : '', className)}
+      style={{ pointerEvents: 'auto', ...style }}
+      {...props}
+    >
       <title>{title}</title>
       <use xlinkHref={`#icon-${name}`} />
     </svg>
@@ -128,7 +134,7 @@ const JknIconStock = ({ symbol, className, ...props }: JknIconStockProps) => {
   return (
     <>
       {stock?.[0] ? (
-        <JknIcon stock={stock[0]} className={cn('h-6 w-6 mr-3', className)}  {...props} />
+        <JknIcon stock={stock[0]} className={cn('h-6 w-6 mr-3', className)} {...props} />
       ) : (
         <div className={cn('h-6 w-6 mr-3 leading-6 text-center rounded-full bg-black', className)} {...props}>
           {symbol.slice(0, 1)}

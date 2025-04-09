@@ -55,7 +55,7 @@ export const backTestIndicator: IndicatorTemplate<any, any> = {
     const fromPixel = xAxis.convertToPixel(realFrom)
     const toPixel = xAxis.convertToPixel(realTo)
     const data = chart.getDataList()
-  
+
     let totalCount = 0
     let totalPrice = 0
     let totalDiff = 0

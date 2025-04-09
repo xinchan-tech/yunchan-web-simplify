@@ -1,6 +1,5 @@
-
-import { Tabs, TabsList, TabsTrigger } from "@/components"
-import { forwardRef } from "react"
+import { Tabs, TabsList, TabsTrigger } from '@/components'
+import { forwardRef } from 'react'
 
 interface FrequencySelectProps {
   value?: string

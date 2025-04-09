@@ -1,7 +1,5 @@
 import request from '@/utils/request'
-import type { User } from "./im"
-
-
+import type { User } from './im'
 
 export const getChatNameAndAvatar = async (params: {
   type: string
@@ -11,8 +9,6 @@ export const getChatNameAndAvatar = async (params: {
   return resp
 }
 getChatNameAndAvatar.cacheKey = 'groupChannels:getChatNameAndAvatar'
-
-
 
 // 加入群
 export const joinGroupService = async (id: string, params?: { product_sn: string; payment_type: string }) => {
@@ -49,8 +45,6 @@ export const applyCreateGroupService = async (params: createGroupRequest) => {
   const r = request.post('/chat/apply/save', params).then(res => res)
   return r
 }
-
-
 
 export type ImgLoginPayload = {
   device_flag: string

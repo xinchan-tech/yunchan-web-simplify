@@ -24,7 +24,10 @@ export class ChatCache {
 
         db.createObjectStore(CacheStoreName.CONVERSATION_STORE, { keyPath: 'id', autoIncrement: true })
 
-        const messageStore = db.createObjectStore(CacheStoreName.MESSAGE_STORE, { keyPath: 'messageID', autoIncrement: true })
+        const messageStore = db.createObjectStore(CacheStoreName.MESSAGE_STORE, {
+          keyPath: 'messageID',
+          autoIncrement: true
+        })
         messageStore.createIndex('channelId', 'channel.channelID')
 
         db.createObjectStore(CacheStoreName.USER_STORE, { keyPath: 'uid', autoIncrement: true })

@@ -18,18 +18,6 @@ const tradingToIntervalMap: Record<StockTrading, StockChartInterval> = {
   close: StockChartInterval.AFTER_HOURS
 }
 
-const intervalToTradingMap: Partial<Record<StockChartInterval, StockTrading>> = {
-  [StockChartInterval.INTRA_DAY]: 'intraDay',
-  [StockChartInterval.PRE_MARKET]: 'preMarket',
-  [StockChartInterval.AFTER_HOURS]: 'afterHours',
-  [StockChartInterval.DAY]: 'intraDay',
-  [StockChartInterval.FIVE_DAY]: 'intraDay',
-  [StockChartInterval.MONTH]: 'intraDay',
-  [StockChartInterval.QUARTER]: 'intraDay',
-  [StockChartInterval.HALF_YEAR]: 'intraDay',
-  [StockChartInterval.WEEK]: 'intraDay'
-}
-
 const LargeCap = () => {
   const [activeStock, setActiveStock] = useState<string>()
   const time = useTime()
@@ -130,15 +118,19 @@ const LargeCap = () => {
       <ScrollContainer onNextStock={onNextStock} onPrevStock={onPreStock}>
         {/* <div className=""> */}
         {stocks.map(stock => (
-          <StockBarItem key={stock.symbol} stock={stock} check={activeStock === stock.symbol} onActiveStockChange={onActiveStockChange} />
+          <StockBarItem
+            key={stock.symbol}
+            stock={stock}
+            check={activeStock === stock.symbol}
+            onActiveStockChange={onActiveStockChange}
+          />
         ))}
       </ScrollContainer>
 
       <div className="flex-1 relative">
-        <div onClick={onChartDoubleClick} onKeyDown={() => { }} className="w-full h-full box-border">
+        <div onClick={onChartDoubleClick} onKeyDown={() => {}} className="w-full h-full box-border">
           <LargeCapChart code={activeStock} type={stockType} />
         </div>
-
       </div>
     </div>
   )
@@ -151,7 +143,6 @@ interface StockBarItemProps {
 }
 
 const StockBarItem = ({ stock, check, onActiveStockChange }: StockBarItemProps) => {
-
   return (
     <div
       key={stock.name}
@@ -163,14 +154,16 @@ const StockBarItem = ({ stock, check, onActiveStockChange }: StockBarItemProps) 
         }
       )}
       onClick={() => onActiveStockChange(stock.symbol)}
-      onKeyDown={() => { }}
+      onKeyDown={() => {}}
     >
       <JknIcon.Stock symbol={stock.symbol} className="w-[28px] h-[28px]" />
       <div className="ml-3 flex flex-col">
         <span className="text-sm text-left">{stock.name}</span>
         <div className="flex items-center mt-1 space-x-2">
           <SubscribeSpan.Price
-            trading={['SPX', 'IXIC', 'DJI'].includes(stock.symbol) ? 'intraDay' : ['preMarket', 'intraDay', 'afterHours']}
+            trading={
+              ['SPX', 'IXIC', 'DJI'].includes(stock.symbol) ? 'intraDay' : ['preMarket', 'intraDay', 'afterHours']
+            }
             initValue={stock.close}
             symbol={stock.symbol}
             initDirection={stockUtils.isUp(stock)}
@@ -179,7 +172,9 @@ const StockBarItem = ({ stock, check, onActiveStockChange }: StockBarItemProps) 
           />
           <SubscribeSpan.Percent
             className="text-sm"
-            trading={['SPX', 'IXIC', 'DJI'].includes(stock.symbol) ? 'intraDay' : ['preMarket', 'intraDay', 'afterHours']}
+            trading={
+              ['SPX', 'IXIC', 'DJI'].includes(stock.symbol) ? 'intraDay' : ['preMarket', 'intraDay', 'afterHours']
+            }
             initValue={stockUtils.getPercent(stock)}
             symbol={stock.symbol}
             initDirection={stockUtils.isUp(stock)}
@@ -195,8 +190,6 @@ interface LargeCapChartProps {
   code?: string
   type: StockChartInterval
 }
-
-
 
 const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
   const chart = useRef<ComponentRef<typeof JknChart>>(null)
@@ -214,15 +207,18 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
         id: splitId
       })
     } else {
-      c?.createIndicator({
-        name: 'split-indicator',
-        id: splitId,
-        calcParams: [[tick.pre / (tick.total), (tick.post + tick.pre) / (tick.total)]],
-      }, true, {
-        id: ChartTypes.MAIN_PANE_ID
-      })
+      c?.createIndicator(
+        {
+          name: 'split-indicator',
+          id: splitId,
+          calcParams: [[tick.pre / tick.total, (tick.post + tick.pre) / tick.total]]
+        },
+        true,
+        {
+          id: ChartTypes.MAIN_PANE_ID
+        }
+      )
     }
-
 
     c?.setXAxisTick(tick.total)
     c?.setLeftMinVisibleBarCount(1)
@@ -268,8 +264,12 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
 
             return [
               { type: 'segment', color: preColor, offset: tick.pre },
-              { type: 'segment', color: Decimal.create(postData?.close).gt(postData?.prevClose ?? 0) ? upColor : downColor, offset: tick.post + tick.pre },
-              { type: 'segment', color: afterColor },
+              {
+                type: 'segment',
+                color: Decimal.create(postData?.close).gt(postData?.prevClose ?? 0) ? upColor : downColor,
+                offset: tick.post + tick.pre
+              },
+              { type: 'segment', color: afterColor }
             ]
           },
           backgroundColor(data) {
@@ -284,34 +284,48 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
 
             return [
               {
-                type: 'segment', offset: tick.pre, color: [{
-                  offset: 0,
-                  color: colorUtil.rgbaToString(colorUtil.hexToRGBA(preColor, 0))
-                }, {
-                  offset: 1,
-                  color: colorUtil.rgbaToString(colorUtil.hexToRGBA(preColor, 0.1))
-                }]
+                type: 'segment',
+                offset: tick.pre,
+                color: [
+                  {
+                    offset: 0,
+                    color: colorUtil.rgbaToString(colorUtil.hexToRGBA(preColor, 0))
+                  },
+                  {
+                    offset: 1,
+                    color: colorUtil.rgbaToString(colorUtil.hexToRGBA(preColor, 0.1))
+                  }
+                ]
               },
               {
-                type: 'segment', offset: tick.pre + tick.post, color: [{
-                  offset: 0,
-                  color: colorUtil.rgbaToString(colorUtil.hexToRGBA(color, 0.0))
-                }, {
-                  offset: 1,
-                  color: colorUtil.rgbaToString(colorUtil.hexToRGBA(color, 0.1))
-                }]
+                type: 'segment',
+                offset: tick.pre + tick.post,
+                color: [
+                  {
+                    offset: 0,
+                    color: colorUtil.rgbaToString(colorUtil.hexToRGBA(color, 0.0))
+                  },
+                  {
+                    offset: 1,
+                    color: colorUtil.rgbaToString(colorUtil.hexToRGBA(color, 0.1))
+                  }
+                ]
               },
               {
-                type: 'segment', color: [{
-                  offset: 0,
-                  color: colorUtil.rgbaToString(colorUtil.hexToRGBA(afterColor, 0.0))
-                }, {
-                  offset: 1,
-                  color: colorUtil.rgbaToString(colorUtil.hexToRGBA(afterColor, 0.1))
-                }]
-              },
+                type: 'segment',
+                color: [
+                  {
+                    offset: 0,
+                    color: colorUtil.rgbaToString(colorUtil.hexToRGBA(afterColor, 0.0))
+                  },
+                  {
+                    offset: 1,
+                    color: colorUtil.rgbaToString(colorUtil.hexToRGBA(afterColor, 0.1))
+                  }
+                ]
+              }
             ]
-          },
+          }
         },
         tooltip: {
           custom: [],
@@ -322,18 +336,16 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
             line: {
               type: 'full'
             },
-            text: {
-
-            },
+            text: {},
             color(data) {
               const lastData = data.slice(-1)[0]
-              return Decimal.create(lastData.close).gt(lastData.prevClose) ? colorUtil.rgbaToString(colorUtil.hexToRGBA(upColor, 1)) : colorUtil.rgbaToString(colorUtil.hexToRGBA(downColor, 1))
-            },
+              return Decimal.create(lastData.close).gt(lastData.prevClose)
+                ? colorUtil.rgbaToString(colorUtil.hexToRGBA(upColor, 1))
+                : colorUtil.rgbaToString(colorUtil.hexToRGBA(downColor, 1))
+            }
           }
         }
-      },
-
-
+      }
     })
 
     c?.setPaneOptions({
@@ -347,14 +359,13 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
     })
   }, [code])
 
-
-
   const candlesticks = useQuery({
     queryKey: [getStockChartQuote.cacheKey, code],
-    queryFn: () => getStockChartQuote(code!, ['IXIC', 'DJI', 'SPX'].includes(code!) ? StockChartInterval.INTRA_DAY : 'full-day'),
+    queryFn: () =>
+      getStockChartQuote(code!, ['IXIC', 'DJI', 'SPX'].includes(code!) ? StockChartInterval.INTRA_DAY : 'full-day'),
     enabled: !!code && type !== undefined,
-    placeholderData: () => ([]),
-    select: (list) => {
+    placeholderData: () => [],
+    select: list => {
       return list.map(s => stockUtils.toStock(s))
     }
   })
@@ -377,29 +388,38 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
     }
   }, [candlesticks])
 
-  useStockBarSubscribe(code ? [`${code}@quote`] : [], useCallback((data) => {
-    const c = chart.current?.getChart()
-    const stock = stockUtils.toStock(data.rawRecord)
-    const lastData = c?.getDataList()[c.getDataList().length - 1]
+  useStockBarSubscribe(
+    code ? [`${code}@quote`] : [],
+    useCallback(data => {
+      const c = chart.current?.getChart()
+      const stock = stockUtils.toStock(data.rawRecord)
+      const lastData = c?.getDataList()[c.getDataList().length - 1]
 
-    if (!lastData) {
-      chart.current?.applyNewData([stock])
-    } else {
-      if (chart.current?.isSameIntervalCandlestick(stock, StockChartInterval.ONE_MIN)) {
-        lastBarInInterval.current = stock
-        return
-      }
+      if (!lastData) {
+        chart.current?.applyNewData([stock])
+      } else {
+        if (chart.current?.isSameIntervalCandlestick(stock, StockChartInterval.ONE_MIN)) {
+          lastBarInInterval.current = stock
+          return
+        }
 
-      if (lastBarInInterval.current) {
-        chart.current?.appendCandlestick({
-          ...lastBarInInterval.current
-        }, StockChartInterval.ONE_MIN)
+        if (lastBarInInterval.current) {
+          chart.current?.appendCandlestick(
+            {
+              ...lastBarInInterval.current
+            },
+            StockChartInterval.ONE_MIN
+          )
+        }
+        chart.current?.appendCandlestick(
+          {
+            ...stock
+          },
+          StockChartInterval.ONE_MIN
+        )
       }
-      chart.current?.appendCandlestick({
-        ...stock
-      }, StockChartInterval.ONE_MIN)
-    }
-  }, []))
+    }, [])
+  )
 
   useEffect(() => {
     if (!code) return
@@ -409,11 +429,14 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
 
       if (!lastData) return
 
-      chart.current?.appendCandlestick({
-        ...lastData,
-        close: data.record.close,
-        prevClose: data.record.preClose
-      }, StockChartInterval.ONE_MIN)
+      chart.current?.appendCandlestick(
+        {
+          ...lastData,
+          close: data.record.close,
+          prevClose: data.record.preClose
+        },
+        StockChartInterval.ONE_MIN
+      )
     })
 
     return unSubscribe
@@ -432,7 +455,6 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
   //     prevQuote: data.record.preClose
   //   }, 1)
   // }, []))
-
 
   return <JknChart ref={chart} className="w-full h-full" showLogo />
 }

@@ -7,7 +7,6 @@ export const VerticalLineOverlay: OverlayTemplate = {
   needDefaultXAxisFigure: false,
   needDefaultYAxisFigure: false,
   createPointFigures: ({ coordinates, bounding, xAxis }) => {
-
     return {
       type: 'line',
       attrs: {

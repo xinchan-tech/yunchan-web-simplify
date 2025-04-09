@@ -42,7 +42,7 @@ const versions = [
   // { name: '旗舰达人', value: 'basic' },
   // { name: '量化精英', value: 'plus' },
   // { name: '聊天社群', value: 'group' },
-  { name: '特色软件', value: 'packages' },
+  { name: '特色软件', value: 'packages' }
   // { name: '增值包', value: 'increment' }
 ]
 
@@ -138,14 +138,12 @@ const MallPage = () => {
     <div className="flex flex-col items-center h-full overflow-auto w-full box-border bg-[#0B0404]">
       <div className="text-center text-[64px] font-bold mt-10">美股软件 服务方案</div>
       <div className="flex items-center justify-center mt-10 rounded-[6px] border border-solid p-[2px]">
-        {versions.map((v) => (
+        {versions.map(v => (
           <button
             key={v.value}
             className={cn(
               'w-32 h-10 text-center border border-solid text-[#DBDBDB] transition-all cursor-pointer',
-              v.value === version 
-                ? 'rounded-sm bg-[#1A1A1A] border-[#1A1A1A]'
-                : 'bg-transparent border-none'
+              v.value === version ? 'rounded-sm bg-[#1A1A1A] border-[#1A1A1A]' : 'bg-transparent border-none'
             )}
             onClick={() => setVersion(v.value as Version)}
           >
@@ -155,22 +153,18 @@ const MallPage = () => {
       </div>
       <div className="my-10">
         <div className="flex items-center space-x-[10px]">
-          <span className={cn(
-            "text-sm",
-            subscribeType === 'model_month' ? 'text-white font-medium' : 'text-[#DBDBDB]'
-          )}>
+          <span
+            className={cn('text-sm', subscribeType === 'model_month' ? 'text-white font-medium' : 'text-[#DBDBDB]')}
+          >
             月
           </span>
-          <Switch 
-            checked={subscribeType === 'model_year'} 
-            onCheckedChange={(checked) => {
-              setSubscribeType(checked ? 'model_year' : 'model_month');
+          <Switch
+            checked={subscribeType === 'model_year'}
+            onCheckedChange={checked => {
+              setSubscribeType(checked ? 'model_year' : 'model_month')
             }}
           />
-          <span className={cn(
-            "text-sm",
-            subscribeType === 'model_year' ? 'text-white font-medium' : 'text-[#DBDBDB]'
-          )}>
+          <span className={cn('text-sm', subscribeType === 'model_year' ? 'text-white font-medium' : 'text-[#DBDBDB]')}>
             年
           </span>
         </div>

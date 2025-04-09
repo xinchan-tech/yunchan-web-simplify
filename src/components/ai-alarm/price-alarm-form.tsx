@@ -1,7 +1,7 @@
 import { AiAlarmSetting, CapsuleTabs, Tabs, TabsList, TabsTrigger } from '@/components'
 import { useState } from 'react'
 import { PriceAlarmSetting } from './price-alarm-setting'
-import { PercentageAlarmSetting } from "./percent-alarm-setting"
+import { PercentageAlarmSetting } from './percent-alarm-setting'
 
 interface PriceAlarmFormProps {
   code?: string
@@ -34,7 +34,7 @@ const PriceAlarmForm = (props: PriceAlarmFormProps) => {
         {{
           3: <PriceAlarmSetting code={props.code} onClose={props.onClose} />,
           2: <PercentageAlarmSetting code={props.code} onClose={props.onClose} />,
-          1: <AiAlarmSetting code={props.code} onClose={props.onClose} />,
+          1: <AiAlarmSetting code={props.code} onClose={props.onClose} />
         }[active] ?? null}
       </div>
     </div>

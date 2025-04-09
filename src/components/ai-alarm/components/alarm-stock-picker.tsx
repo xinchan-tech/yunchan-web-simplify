@@ -1,9 +1,9 @@
-import { PopoverTrigger, Input, JknIcon, Popover, PopoverContent } from "@/components"
-import { JknVirtualList } from "@/components/jkn/jkn-virtual-list"
-import { useStockSearch } from "@/hooks"
-import { useStockList } from "@/store"
-import { cn } from "@/utils/style"
-import { useState } from "react"
+import { PopoverTrigger, Input, JknIcon, Popover, PopoverContent } from '@/components'
+import { JknVirtualList } from '@/components/jkn/jkn-virtual-list'
+import { useStockSearch } from '@/hooks'
+import { useStockList } from '@/store'
+import { cn } from '@/utils/style'
+import { useState } from 'react'
 
 interface AlarmStickPickerProps {
   value?: string
@@ -15,24 +15,30 @@ export const AlarmStockPicker = ({ value, onChange }: AlarmStickPickerProps) => 
   const [search, setSearch] = useState('')
   const [result] = useStockSearch(search)
   const [open, setOpen] = useState(false)
-  
+
   return (
     <Popover modal open={open} onOpenChange={v => !v && setOpen(false)}>
       <PopoverTrigger asChild>
         <div className="flex items-center h-[40px] ml-auto overflow-hidden flex-1">
-          <div className={cn(
-            'flex items-center border border-input border-solid rounded-md px-5 py-1.5 flex-1 overflow-hidden',
-            open && 'border-[3px] border-primary'
-          )} onClick={() => setOpen(true)} onKeyDown={() => { }}>
-            {
-              value ? (
-                <>
-                  <JknIcon.Stock symbol={value} className="w-6 h-6 mr-2" />
-                  <span>{value}</span>
-                  <span className="ml-2 text-tertiary text-xs w-64 overflow-hidden text-ellipsis whitespace-nowrap">{stockMap[value]?.[2]}</span>
-                </>
-              ) : <span className="text-tertiary text-xs">--</span>
-            }
+          <div
+            className={cn(
+              'flex items-center border border-input border-solid rounded-md px-5 py-1.5 flex-1 overflow-hidden',
+              open && 'border-[3px] border-primary'
+            )}
+            onClick={() => setOpen(true)}
+            onKeyDown={() => {}}
+          >
+            {value ? (
+              <>
+                <JknIcon.Stock symbol={value} className="w-6 h-6 mr-2" />
+                <span>{value}</span>
+                <span className="ml-2 text-tertiary text-xs w-64 overflow-hidden text-ellipsis whitespace-nowrap">
+                  {stockMap[value]?.[2]}
+                </span>
+              </>
+            ) : (
+              <span className="text-tertiary text-xs">--</span>
+            )}
             <JknIcon.Svg name="arrow-down" className="ml-auto text-tertiary" size={10} />
           </div>
         </div>
@@ -62,11 +68,13 @@ export const AlarmStockPicker = ({ value, onChange }: AlarmStickPickerProps) => 
                     onChange?.(symbol)
                     setOpen(false)
                   }}
-                  onKeyDown={() => { }}
+                  onKeyDown={() => {}}
                 >
                   <JknIcon.Stock symbol={symbol} className="w-6 h-6 mr-2 flex-shrink-0" />
                   <span>{symbol}</span>
-                  <span className="ml-2 text-tertiary text-xs overflow-hidden text-ellipsis whitespace-nowrap">{name}</span>
+                  <span className="ml-2 text-tertiary text-xs overflow-hidden text-ellipsis whitespace-nowrap">
+                    {name}
+                  </span>
                 </div>
               )}
             />

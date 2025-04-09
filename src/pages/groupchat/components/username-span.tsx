@@ -1,7 +1,7 @@
-import { useMount } from "ahooks"
-import { type HTMLAttributes, useEffect, useState } from "react"
-import { fetchUserInChannel } from "../lib/utils"
-import type { Channel } from "wukongimjssdk"
+import { useMount } from 'ahooks'
+import { type HTMLAttributes, useEffect, useState } from 'react'
+import { fetchUserInChannel } from '../lib/utils'
+import type { Channel } from 'wukongimjssdk'
 
 interface UsernameSpanProps extends HTMLAttributes<HTMLSpanElement> {
   uid: string
@@ -20,5 +20,10 @@ export const UsernameSpan = ({ uid, channel, colon, name, ...props }: UsernameSp
     })
   }, [uid, channel, name])
 
-  return <span {...props}>{userName}{colon && userName ? ': ' : ''}</span>
+  return (
+    <span {...props}>
+      {userName}
+      {colon && userName ? ': ' : ''}
+    </span>
+  )
 }

@@ -4,9 +4,9 @@ import { MainChart } from '../component/main-chart'
 import { chartEvent } from '../lib/event'
 import { chartManage, useChartManage } from '../lib/store'
 import { renderUtils } from '../lib/utils'
-import { CoilingBar } from "../component/chart-tool-bar"
-import { useQueryParams } from "@/hooks"
-import { AESCrypt } from "@/utils/string"
+import { CoilingBar } from '../component/chart-tool-bar'
+import { useQueryParams } from '@/hooks'
+import { AESCrypt } from '@/utils/string'
 
 interface KChartProps {
   onChangeLeftSide: () => void
@@ -32,7 +32,7 @@ export const KChart = (props: KChartProps) => {
 
     if (queryParams.q) {
       const q = JSON.parse(AESCrypt.decrypt(queryParams.q)) as { interval?: number }
-      if(q.interval !== undefined){
+      if (q.interval !== undefined) {
         chartManage.setInterval(q.interval)
       }
     }
@@ -41,8 +41,8 @@ export const KChart = (props: KChartProps) => {
   const onChangeActive = (index: number) => {
     chartManage.setActiveChart(getChartIdByIndex(index))
     const activeSymbol = chartManage.getChart(getChartIdByIndex(index))?.symbol
-    if(queryParams.symbol !== activeSymbol){
-      setQueryParams({ symbol: chartManage.getChart(getChartIdByIndex(index))?.symbol})
+    if (queryParams.symbol !== activeSymbol) {
+      setQueryParams({ symbol: chartManage.getChart(getChartIdByIndex(index))?.symbol })
     }
   }
 
@@ -56,7 +56,15 @@ export const KChart = (props: KChartProps) => {
       <div className={cn('flex-1 overflow-hidden main-chart', `main-chart-${viewMode}`)} id="stock-chart-container">
         {Array.from({ length: chartCount }).map((_, index, arr) => (
           // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
-          <div key={index} className={cn(`chart-item-${index + 1}`, (active === getChartIdByIndex(index) && arr.length > 1) ? 'active' : '')} onClick={() => onChangeActive(index)} onKeyDown={() => { }}>
+          <div
+            key={index}
+            className={cn(
+              `chart-item-${index + 1}`,
+              active === getChartIdByIndex(index) && arr.length > 1 ? 'active' : ''
+            )}
+            onClick={() => onChangeActive(index)}
+            onKeyDown={() => {}}
+          >
             <MainChart chartId={getChartIdByIndex(index)} />
           </div>
         ))}

@@ -23,11 +23,11 @@ export const drawPipe: DrawPipeFunc = (params, { data, color }) => {
   const Rect = getFigureClass('rect')! as FigureConstructor<RectAttrs, Partial<RectStyle>>
 
   const { bar } = params.chart.getBarSpace()
-  const {width: boundingWidth} = params.bounding
+  const { width: boundingWidth } = params.bounding
 
   const dataList = params.chart.getDataList()
 
-  if(!dataList.length){
+  if (!dataList.length) {
     return false
   }
 
@@ -41,8 +41,8 @@ export const drawPipe: DrawPipeFunc = (params, { data, color }) => {
   data.forEach(({ width, y, height, empty, position }) => {
     let _x = 0
     let _width = 0
-    if(position === 'right'){
-      if(lastX > boundingWidth){
+    if (position === 'right') {
+      if (lastX > boundingWidth) {
         const _offset = lastX - boundingWidth
         _width = width * bar - _offset
         _x = boundingWidth - _width
@@ -50,8 +50,8 @@ export const drawPipe: DrawPipeFunc = (params, { data, color }) => {
         _width = width * bar
         _x = boundingWidth - _width
       }
-    }else {
-      if(firstX < 0){
+    } else {
+      if (firstX < 0) {
         const _offset = Math.abs(firstX)
         _width = width * bar - _offset
         _x = 0
@@ -63,7 +63,7 @@ export const drawPipe: DrawPipeFunc = (params, { data, color }) => {
 
     const _y = params.yAxis.convertToPixel(y)
     const _height = params.yAxis.convertToPixel(y - height) - _y
-    
+
     new Rect({
       name: 'pipe',
       attrs: {

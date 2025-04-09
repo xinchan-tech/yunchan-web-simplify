@@ -6,14 +6,8 @@ import {
   getIndexRecommends,
   getUsStocks
 } from '@/api'
-import {
-  CollectStar,
-  JknRcTable,
-  type JknRcTableProps,
-  StockView,
-  SubscribeSpan
-} from '@/components'
-import {  useStockQuoteSubscribe, useTableData, useTableRowClickToStockTrading } from '@/hooks'
+import { CollectStar, JknRcTable, type JknRcTableProps, StockView, SubscribeSpan } from '@/components'
+import { useStockQuoteSubscribe, useTableData, useTableRowClickToStockTrading } from '@/hooks'
 import { stockUtils } from '@/utils/stock'
 import { useQuery } from '@tanstack/react-query'
 
@@ -169,11 +163,13 @@ const SingleTable = (props: SingleTableProps) => {
         align: 'left',
         width: '28.5%',
         sort: true,
-        render: (_, row) => <div className='flex items-center'>
-          <CollectStar checked={row.collect === 1} code={row.symbol} />
-          <span className="mr-3"/>
-          <StockView name={row.name} code={row.symbol as string} showName />
-        </div>
+        render: (_, row) => (
+          <div className="flex items-center">
+            <CollectStar checked={row.collect === 1} code={row.symbol} />
+            <span className="mr-3" />
+            <StockView name={row.name} code={row.symbol as string} showName />
+          </div>
+        )
       },
       {
         title: '现价',
@@ -251,7 +247,7 @@ const SingleTable = (props: SingleTableProps) => {
         align: 'right',
         sort: true,
         render: (_, row) => <span className="text-[14px]">{row.industry}</span>
-      },
+      }
     ],
     []
   )

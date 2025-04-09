@@ -81,7 +81,7 @@ export type MarkOverlayAttrs = {
   y: number
   date: string
   dateWidth?: number
-  title: string,
+  title: string
   cb: (data: any) => void
 }
 
@@ -139,7 +139,7 @@ export const markOverlayFigure: FigureTemplate<MarkOverlayAttrs> = {
     ctx.restore()
 
     cb({
-      x:  x - width / 2 + dateWidth,
+      x: x - width / 2 + dateWidth,
       y: padding[0] - 1,
       width: 15,
       height: 15

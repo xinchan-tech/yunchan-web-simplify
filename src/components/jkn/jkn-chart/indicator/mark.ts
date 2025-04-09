@@ -17,7 +17,7 @@ export const markIndicator: IndicatorTemplate<any, any> = {
     const { x, y } = e
     for (const item of markOverlayCache) {
       if (inRange(x, item.x, item.x + item.width) && inRange(y, item.y, item.y + item.height)) {
-        if(this.onClick){
+        if (this.onClick) {
           this.onClick(this.id as any)
         }
         return true

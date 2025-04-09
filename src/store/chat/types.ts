@@ -14,7 +14,6 @@ export enum ChatMessageType {
   Custom = 7,
   Notification = 8,
 
-
   Cmd = 99,
   System = '1002'
 }
@@ -22,7 +21,7 @@ export enum ChatMessageType {
 export enum ChatCmdType {
   MessageRevoke = 'messageRevoke',
   ChannelUpdate = 'channelUpdate',
-  SubscriberForbidden = 'forbidden',
+  SubscriberForbidden = 'forbidden'
 }
 
 export interface ChatConfig {

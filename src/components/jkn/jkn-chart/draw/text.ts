@@ -1,4 +1,10 @@
-import { type FigureConstructor, getFigureClass, type IndicatorDrawParams, type TextAttrs, type TextStyle } from 'jkn-kline-chart'
+import {
+  type FigureConstructor,
+  getFigureClass,
+  type IndicatorDrawParams,
+  type TextAttrs,
+  type TextStyle
+} from 'jkn-kline-chart'
 
 /**
  * 文本

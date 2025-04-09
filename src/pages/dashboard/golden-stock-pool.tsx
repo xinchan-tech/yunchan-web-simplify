@@ -57,7 +57,7 @@ const GoldenStockPool = () => {
       dataIndex: 'name',
       align: 'left',
       sort: true,
-      render: (name, row) => <StockView className='min-h-[26px]' code={row.symbol} name={name} />
+      render: (name, row) => <StockView className="min-h-[26px]" code={row.symbol} name={name} />
     },
     {
       title: '现价',
@@ -66,7 +66,12 @@ const GoldenStockPool = () => {
       width: '17%',
       sort: true,
       render: (close, row) => (
-        <SubscribeSpan.PriceBlink showColor={false} symbol={row.symbol} initValue={close} initDirection={stockUtils.isUp(row)} />
+        <SubscribeSpan.PriceBlink
+          showColor={false}
+          symbol={row.symbol}
+          initValue={close}
+          initDirection={stockUtils.isUp(row)}
+        />
       )
     },
     {
@@ -93,7 +98,7 @@ const GoldenStockPool = () => {
       sort: true,
       render: (turnover, row) => (
         <SubscribeSpan.TurnoverBlink
-        showColor={false}
+          showColor={false}
           symbol={row.symbol}
           decimal={2}
           initValue={turnover}

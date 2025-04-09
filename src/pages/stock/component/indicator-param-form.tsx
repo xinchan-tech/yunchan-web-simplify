@@ -1,10 +1,10 @@
-import { FormField, FormItem, FormLabel, FormControl, Input, FormDescription, FormMessage, Button } from "@/components"
-import { useZForm, useToast } from "@/hooks"
-import { useIndicator } from "@/store"
-import Decimal from "decimal.js"
-import { useState, useEffect } from "react"
-import { useFieldArray, Form, FormProvider } from "react-hook-form"
-import { z } from "zod"
+import { FormField, FormItem, FormLabel, FormControl, Input, FormDescription, FormMessage, Button } from '@/components'
+import { useZForm, useToast } from '@/hooks'
+import { useIndicator } from '@/store'
+import Decimal from 'decimal.js'
+import { useState, useEffect } from 'react'
+import { useFieldArray, Form, FormProvider } from 'react-hook-form'
+import { z } from 'zod'
 
 const indicatorParamsSchema = z.object({
   params: z.array(
@@ -86,7 +86,7 @@ export const IndicatorParamsForm = () => {
             className="data-[state=active]:bg-accent hover:!bg-primary py-2 w-60 px-2 box-border"
             data-state={indicator === item.id ? 'active' : ''}
             onClick={() => setIndicator(item.id)}
-            onKeyDown={() => { }}
+            onKeyDown={() => {}}
           >
             {item.name}
           </div>
@@ -134,7 +134,7 @@ export const IndicatorParamsForm = () => {
           <div
             className="hover:text-primary cursor-pointer mt-2 text-xs text-tertiary"
             onClick={onResetDefault}
-            onKeyDown={() => { }}
+            onKeyDown={() => {}}
           >
             恢复默认值
           </div>

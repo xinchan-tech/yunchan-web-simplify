@@ -1,7 +1,7 @@
 import { addAlarm, getAlarmConditionsList, getStockBaseCodeInfo } from '@/api'
 import { useToast, useZForm } from '@/hooks'
 import { stockUtils } from '@/utils/stock'
-import { cn } from "@/utils/style"
+import { cn } from '@/utils/style'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import to from 'await-to-js'
 import Decimal from 'decimal.js'
@@ -11,14 +11,14 @@ import { FormProvider, useFormContext } from 'react-hook-form'
 import { z } from 'zod'
 import { JknIcon } from '../jkn/jkn-icon'
 import { Button } from '../ui/button'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../ui/dropdown-menu"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../ui/dropdown-menu'
 import { FormControl, FormField, FormItem, FormLabel } from '../ui/form'
 import { Input } from '../ui/input'
-import { ScrollArea } from "../ui/scroll-area"
-import { Separator } from "../ui/separator"
-import { AlarmStockPicker } from "./components/alarm-stock-picker"
-import { DatePicker } from "./components/date-picker"
-import { NameInput } from "./components/name-input"
+import { ScrollArea } from '../ui/scroll-area'
+import { Separator } from '../ui/separator'
+import { AlarmStockPicker } from './components/alarm-stock-picker'
+import { DatePicker } from './components/date-picker'
+import { NameInput } from './components/name-input'
 
 const formSchema = z.object({
   symbol: z.string({ message: '股票代码错误' }).min(1, '股票代码错误'),
@@ -74,30 +74,40 @@ export const PercentageAlarmSetting = (props: PercentageAlarmSettingProps) => {
       name: query.data.name
     })
 
-    const rise: number[] = []
-    const fall: number[] = []
-
-    form.getValues('rise')?.map(v => {
-      const price = Decimal.create(v)
-      if (price.gt(stock.close)) {
-        rise.push(price.toNumber())
-      } else {
-        fall.push(price.toNumber())
+    const floatParams: {price: number, type: number; change_value: number}[] = []
+    const base = stock.close
+    form.getValues('rise')?.forEach(v => {
+      let price: Decimal
+      let type = 2
+      if(v.endsWith('%')){
+        price = Decimal.create(v.replace('%', ''))
+        type = 1
+      }else{
+        price = Decimal.create(v)
       }
+
+      const changeValue = type === 2 ? price.minus(base).toNumber() : price.minus(base).div(base).toNumber()
+
+      floatParams.push({
+        price: base,
+        type,
+        change_value: changeValue
+      })
     })
+
 
     const params = {
       symbol: form.getValues('symbol'),
-      type: 2,
+      type: 4,
+      expire_time: form.getValues('date'),
+      name: form.getValues('name'),
       condition: {
-        rise: rise,
-        fall: fall,
-        frequency: +form.getValues('frequency')
+        float_params: floatParams
       }
     }
 
-    if (rise.length + fall.length === 0) {
-      toast({ description: '股价设置条件必须要一个以上' })
+    if (floatParams.length === 0) {
+      toast({ description: '浮动警报设置条件必须要一个以上' })
       return
     }
 
@@ -110,7 +120,7 @@ export const PercentageAlarmSetting = (props: PercentageAlarmSettingProps) => {
 
     toast({ description: '添加成功' })
     queryClient.refetchQueries({
-      queryKey: [getAlarmConditionsList.cacheKey],
+      queryKey: [getAlarmConditionsList.cacheKey]
     })
   }
 
@@ -139,7 +149,7 @@ export const PercentageAlarmSetting = (props: PercentageAlarmSettingProps) => {
               name="rise"
               render={({ field }) => (
                 <FormItem className="pb-4 flex space-y-0">
-                  <FormLabel className="w-32 font-normal text-secondary text-base font-normal">浮动警报</FormLabel>
+                  <FormLabel className="w-32 text-secondary text-base font-normal">浮动警报</FormLabel>
                   <FormControl className="flex-1">
                     <PriceSetting mode="rise" value={field.value} onChange={field.onChange} />
                   </FormControl>
@@ -156,7 +166,7 @@ export const PercentageAlarmSetting = (props: PercentageAlarmSettingProps) => {
             render={({ field }) => (
               <FormItem className="pb-4 flex space-y-0  items-center">
                 <FormLabel className="w-32 text-base font-normal">警报名称</FormLabel>
-                <FormControl >
+                <FormControl>
                   <NameInput {...field} />
                 </FormControl>
               </FormItem>
@@ -187,7 +197,7 @@ export const PercentageAlarmSetting = (props: PercentageAlarmSettingProps) => {
             render={({ field }) => (
               <FormItem className="pb-4 flex space-y-0  items-center">
                 <FormLabel className="w-32 text-base font-normal">到期时间</FormLabel>
-                <FormControl >
+                <FormControl>
                   <DatePicker {...field} />
                 </FormControl>
               </FormItem>
@@ -207,7 +217,6 @@ export const PercentageAlarmSetting = (props: PercentageAlarmSettingProps) => {
   )
 }
 
-
 interface PriceSettingProps {
   value?: string[]
   onChange?: (value: string[]) => void
@@ -216,7 +225,7 @@ interface PriceSettingProps {
 const PriceSetting = forwardRef((props: PriceSettingProps, _) => {
   const form = useFormContext()
   const symbol = form.watch('symbol')
-  const [list, setList] = useState<{ value: string; id: string, type: 'price' | 'percent' }[]>([
+  const [list, setList] = useState<{ value: string; id: string; type: 'price' | 'percent' }[]>([
     { value: '', id: nanoid(8), type: 'percent' }
   ])
   const query = useQuery({
@@ -240,7 +249,10 @@ const PriceSetting = forwardRef((props: PriceSettingProps, _) => {
         .mul(0.95)
         .toFixed(2)
 
-      setList([{ value: up, id: nanoid(8), type: 'percent' }, { value: down, id: nanoid(8), type: 'percent' }])
+      setList([
+        { value: up, id: nanoid(8), type: 'percent' },
+        { value: down, id: nanoid(8), type: 'percent' }
+      ])
     }
   }, [query.data])
 
@@ -255,28 +267,29 @@ const PriceSetting = forwardRef((props: PriceSettingProps, _) => {
       name: query.data.name
     })
 
-
     if (type === 'price') {
       const r = Decimal.create(price).minus(stock.close).toNumber()
-      return <span className={cn(r > 0 ? 'text-stock-up' : 'text-stock-down')}>{`${r > 0 ? '+' : ''}${r.toFixed(2)}`}</span>
+      return (
+        <span className={cn(r > 0 ? 'text-stock-up' : 'text-stock-down')}>{`${r > 0 ? '+' : ''}${r.toFixed(2)}`}</span>
+      )
     }
 
     const r = Decimal.create(price).minus(stock.close).div(stock.close).mul(100).toNumber()
-    return <span className={cn(r > 0 ? 'text-stock-up' : 'text-stock-down')}>{`${r > 0 ? '+' : ''}${r.toFixed(2)}%`}</span>
+    return (
+      <span className={cn(r > 0 ? 'text-stock-up' : 'text-stock-down')}>{`${r > 0 ? '+' : ''}${r.toFixed(2)}%`}</span>
+    )
   }
 
   const onValueChange = (id: string, value: string) => {
     setList(list.map(item => (item.id === id ? { ...item, value } : item)))
   }
 
-
-
   const onChangeType = (id: string, type: 'price' | 'percent') => {
     setList(list.map(item => (item.id === id ? { ...item, type } : item)))
   }
 
   useEffect(() => {
-    props.onChange?.(list.filter(item => item.value).map(item => item.value))
+    props.onChange?.(list.filter(item => item.value).map(item => item.type === 'percent' ? (`${item.value}%`) : item.value))
   }, [list, props.onChange])
 
   const addListItem = () => {
@@ -295,16 +308,13 @@ const PriceSetting = forwardRef((props: PriceSettingProps, _) => {
             <div className="!ml-auto flex items-center rounded-sm  text-xs px-1 py-0.5 hover:bg-accent cursor-pointer text-secondary !mr-6">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <span>{
-                    item.type === 'price' ? (
-                      '价格差额'
-                    ) : (
-                      '涨跌比例'
-                    )
-                  }</span>
+                  <span>{item.type === 'price' ? '价格差额' : '涨跌比例'}</span>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
-                  <DropdownMenuItem data-checked={item.type === 'percent'} onClick={() => onChangeType(item.id, 'percent')}>
+                  <DropdownMenuItem
+                    data-checked={item.type === 'percent'}
+                    onClick={() => onChangeType(item.id, 'percent')}
+                  >
                     <span>按涨跌比例</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem data-checked={item.type === 'price'} onClick={() => onChangeType(item.id, 'price')}>
@@ -328,9 +338,17 @@ const PriceSetting = forwardRef((props: PriceSettingProps, _) => {
             </div>
 
             {index === 0 ? (
-              <JknIcon.Svg name="plus-circle" className="w-6 h-6 ml-2 text-tertiary hover:text-foreground cursor-pointer" onClick={addListItem} />
+              <JknIcon.Svg
+                name="plus-circle"
+                className="w-6 h-6 ml-2 text-tertiary hover:text-foreground cursor-pointer"
+                onClick={addListItem}
+              />
             ) : (
-              <JknIcon.Svg name="delete" className="w-6 h-6 ml-2 text-tertiary hover:text-foreground cursor-pointer" onClick={() => removeListItem(item.id)} />
+              <JknIcon.Svg
+                name="delete"
+                className="w-6 h-6 ml-2 text-tertiary hover:text-foreground cursor-pointer"
+                onClick={() => removeListItem(item.id)}
+              />
             )}
           </div>
         </div>
@@ -338,4 +356,3 @@ const PriceSetting = forwardRef((props: PriceSettingProps, _) => {
     </div>
   )
 })
-

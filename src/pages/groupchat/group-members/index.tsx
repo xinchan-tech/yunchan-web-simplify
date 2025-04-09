@@ -25,9 +25,7 @@ const GroupMembers = (props: { total: string | number }) => {
     <div className="h-full">
       <div className="group-notice p-2">
         <div className="flex items-center text-base text-foreground">群公告</div>
-        <div className="group-notice-content text-tertiary text-sm" >
-          {groupDetailData?.notice || ''}
-        </div>
+        <div className="group-notice-content text-tertiary text-sm">{groupDetailData?.notice || ''}</div>
       </div>
       <div className="group-members p-2 box-border">
         <div className="flex items-center text-base text-foreground">群成员({subscribers.length})</div>

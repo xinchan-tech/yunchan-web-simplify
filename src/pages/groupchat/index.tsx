@@ -3,25 +3,21 @@ import GroupChatLeftBar from './left-bar'
 
 import { chatConstants, chatManager, useToken, useUser } from '@/store'
 import { createContext, useEffect, useRef, useState } from 'react'
-import WKSDK, {
-  type Channel,
-  type Message
-} from 'wukongimjssdk'
+import WKSDK, { type Channel, type Message } from 'wukongimjssdk'
 
 import { useGroupChatStoreNew } from '@/store/group-chat-new'
-
 
 import { loginImService } from '@/api'
 
 import { Toaster } from '@/components'
 
 import { useMount } from 'ahooks'
-import { ChatRoom } from "./chat-room"
+import { ChatRoom } from './chat-room'
 import ChatInfoDrawer from './components/chat-info-drawer'
-import { initImDataSource } from "./lib/datasource"
-import { connectStatusListener } from "./lib/event"
+import { initImDataSource } from './lib/datasource'
+import { connectStatusListener } from './lib/event'
 import TextImgLive from './text-img-live'
-import { appEvent } from "@/utils/event"
+import { appEvent } from '@/utils/event'
 
 export type ReplyFn = (option: {
   message?: Message
@@ -33,12 +29,10 @@ export const GroupChatContext = createContext<{
   handleRevoke: (message: Message) => void
   syncSubscriber: (channel: Channel) => Promise<void>
 }>({
-  handleReply: () => { },
-  handleRevoke: () => { },
-  syncSubscriber: async () => { }
+  handleReply: () => {},
+  handleRevoke: () => {},
+  syncSubscriber: async () => {}
 })
-
-
 
 const COUNT_DOWN_NUM = 10
 
@@ -142,7 +136,6 @@ const GroupChatPage = () => {
   //   }
   // }
 
-
   // 阅读公告倒计时
   const [countdown, setCountdown] = useState(COUNT_DOWN_NUM)
 
@@ -182,7 +175,6 @@ const GroupChatPage = () => {
       // WKSDK.shared().chatManager.removeCMDListener(cmdListener)
       WKSDK.shared().disconnect()
     }
-
   }, [token, user?.username])
 
   // const syncSubscriber = async (channel: Channel) => {
@@ -202,7 +194,6 @@ const GroupChatPage = () => {
 
   const handleChannelSelect = (channel: Channel) => {
     // setLocatedMessageId('')
-
     // if (subscriberCache.has(channel.channelID)) {
     //   const members = subscriberCache.get(channel.channelID) || []
     //   setSubscribers(members)
@@ -217,7 +208,6 @@ const GroupChatPage = () => {
     //     }
     //   })
     // }
-
   }
 
   // // 初始化群聊列表和消息
@@ -235,7 +225,6 @@ const GroupChatPage = () => {
   //     }
   //   }
   // }
-
 
   useEffect(() => {
     window.document.title = '讨论社群'

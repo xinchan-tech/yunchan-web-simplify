@@ -464,9 +464,7 @@ type GetIncreaseTopV2Params = {
  * 热度前几名
  */
 export const getIncreaseTopV2 = async (params: GetIncreaseTopV2Params) => {
-  const r = await request
-    .get<GetIncreaseTopResult>('/stock-svc//home/hot/stocks', { params })
-    .then(r => r.data)
+  const r = await request.get<GetIncreaseTopResult>('/stock-svc//home/hot/stocks', { params }).then(r => r.data)
   return r
 }
 getIncreaseTopV2.cacheKey = 'stock-svc:home:hot:stocks'
@@ -560,11 +558,11 @@ type GetStockCollectsResult = {
  * 股票金池
  */
 export const getStockCollects = async (params: GetStockCollectsParams) => {
-  if(!params.page){
+  if (!params.page) {
     params.page = 1
   }
   const r = await request.get<GetStockCollectsResult>('/stock-svc/collect/stocks', { params }).then(r => {
-    if(r.data.items === null){
+    if (r.data.items === null) {
       r.data.items = []
     }
     return r.data
@@ -603,12 +601,11 @@ type GetStockCollectCatesResult = {
    * 是否选中
    */
   is_default: boolean
-  
+
   /**
    * 排序
    */
   sort: number
-
 }
 
 /**
@@ -623,7 +620,9 @@ getStockCollectCates.cacheKey = '/collect/cates'
  * 修改金池分类
  */
 export const updateStockCollectCate = (params: { id: string; name: string }) => {
-  return request.post('/stock-svc/collect/categories/update', { cate_id: params.id, name: params.name }).then(r => r.data)
+  return request
+    .post('/stock-svc/collect/categories/update', { cate_id: params.id, name: params.name })
+    .then(r => r.data)
 }
 
 /**
@@ -638,7 +637,7 @@ export const addStockCollectCate = (name: string) => {
  */
 export const removeStockCollectCate = (id: string | string[]) => {
   const ids = Array.isArray(id) ? id : [id]
-  return request.post('/stock-svc/collect/categories/delete',{ids} ).then(r => r.data)
+  return request.post('/stock-svc/collect/categories/delete', { ids }).then(r => r.data)
 }
 
 /**
@@ -659,7 +658,7 @@ export const addStockCollect = (params: { symbols: string[]; cate_ids: number[] 
 /**
  * 加入默认金池
  */
-export const addStockCollectDefault = ( symbols: string[] ) => {
+export const addStockCollectDefault = (symbols: string[]) => {
   return request.post('/stock-svc/collect/stocks/default', { symbols }).then(r => r.data)
 }
 
@@ -695,9 +694,8 @@ export const moveStockCollectBatch = (params: { collect_ids: number[]; cate_ids:
  * 股票金池分类排序
  */
 export const sortStockCollectCate = (id: string, sort: number) => {
-  return request.post<void>(`/stock-svc/collect/categories/${id}/setSort`, {sort}).then(r => r.data)
+  return request.post<void>(`/stock-svc/collect/categories/${id}/setSort`, { sort }).then(r => r.data)
 }
-
 
 /**
  * 股票：symbol
@@ -1559,6 +1557,7 @@ interface GetStockIndicatorsV2Result {
   id: string
   name: string
   indicators?: StockIndicator[]
+  icon: string
   items?: {
     id: string
     name: string
@@ -1567,7 +1566,6 @@ interface GetStockIndicatorsV2Result {
 }
 
 export const getStockIndicatorsV2 = () => {
-  
   return request.get<GetStockIndicatorsV2Result[]>('/stock-svc/v2/indicators').then(r => {
     const indicator: {
       id: string
@@ -1599,7 +1597,6 @@ export const getStockIndicatorsV2 = () => {
         })
       })
     })
-
 
     useIndicator.getState().mergeIndicatorParams(indicator)
     useIndicator.getState().setFormula(formula)
@@ -1637,7 +1634,6 @@ type GetStockIndicatorDataResult = {
     }
   }[]
 }
-
 
 /**
  * 获取用户自编指标绘图数据
@@ -1988,7 +1984,9 @@ type GetStockPushListResult = {
   datetime: number
 }
 export const getStockPushList = (key: string, extend?: StockExtend[]) => {
-  return request.get<GetStockPushListResult[]>('/stock-svc/ranking/stocks', { params: { key, extend } }).then(r => r.data)
+  return request
+    .get<GetStockPushListResult[]>('/stock-svc/ranking/stocks', { params: { key, extend } })
+    .then(r => r.data)
 }
 getStockPushList.cacheKey = 'push:list'
 
@@ -2006,7 +2004,9 @@ type GetPalTopResult = {
  */
 export const getPalTop = (params?: { date?: string; limit?: number }) => {
   return request
-    .get<GetPalTopResult[]>('/stock-svc/ranking/top/plates', { params: { date: params?.date, limit: params?.limit ?? 10 } })
+    .get<GetPalTopResult[]>('/stock-svc/ranking/top/plates', {
+      params: { date: params?.date, limit: params?.limit ?? 10 }
+    })
     .then(r => r.data)
 }
 getPalTop.cacheKey = 'pal:top'

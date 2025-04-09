@@ -1,7 +1,7 @@
 import { type StockSubscribeHandler, type SubscribeActionType, stockSubscribe } from '@/utils/stock'
 import { useEffect, useRef } from 'react'
 import { useLatestRef } from './use-latest-ref'
-import { useUnmount } from "ahooks"
+import { useUnmount } from 'ahooks'
 
 const useStockSubscribe = (action: SubscribeActionType, symbols: string[]) => {
   useEffect(() => {
@@ -17,20 +17,16 @@ const useStockSubscribe = (action: SubscribeActionType, symbols: string[]) => {
 export const useStockQuoteSubscribe = (symbols: string[], handler?: StockSubscribeHandler<'quote'>) => {
   // useStockSubscribe('quote', symbols)
   // const handlerRef = useRef(handler ?? (() => {}))
-
   // useEffect(() => {
   //   handlerRef.current = handler ?? (() => {})
-
   //   return () => {
   //     handlerRef.current = () => {}
   //   }
   // }, [handler])
-
   // useEffect(() => {
   //   const unSubscribe = stockSubscribe.on('quote', d => {
   //     handlerRef.current(d)
   //   })
-
   //   return () => {
   //     unSubscribe()
   //   }
@@ -68,7 +64,7 @@ export const useSnapshot = (symbol: string, handler: StockSubscribeHandler<'snap
   })
 }
 
-export const useSnapshotOnce = (symbol: string, handler: StockSubscribeHandler<'snapshot'>)=> {
+export const useSnapshotOnce = (symbol: string, handler: StockSubscribeHandler<'snapshot'>) => {
   const once = useRef(0)
   const unSubscribe = useRef<() => void>()
   const unSubscribeHandler = useRef<() => void>()
@@ -81,9 +77,9 @@ export const useSnapshotOnce = (symbol: string, handler: StockSubscribeHandler<'
   }, [symbol])
 
   useEffect(() => {
-    if(once.current) return
-    const _handler:  StockSubscribeHandler<'snapshot'> = (e) => {
-      if(e.data.symbol !== symbol) return
+    if (once.current) return
+    const _handler: StockSubscribeHandler<'snapshot'> = e => {
+      if (e.data.symbol !== symbol) return
       once.current = 1
       handler(e)
     }

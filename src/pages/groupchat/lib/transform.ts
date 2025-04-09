@@ -210,22 +210,22 @@ export const ConversationTransform = {
     WKSDK.shared().channelManager.setChannleInfoForCache(channelInfo)
 
     if (v.recents.length) {
-      console.log("🚀 ~ v.recents:", v.recents)
+      console.log('🚀 ~ v.recents:', v.recents)
 
       const m = v.recents.find((r: any) => {
         const _m = MessageTransform.toMessage(r)
 
-        if(_m.contentType !== ChatMessageType.Cmd){
+        if (_m.contentType !== ChatMessageType.Cmd) {
           return true
         }
 
-        if(_m.content.cmd === ChatCmdType.MessageRevoke){
+        if (_m.content.cmd === ChatCmdType.MessageRevoke) {
           return true
         }
 
         return false
       })
-      
+
       // const r = v.recents.find(r => r.)
       const message = MessageTransform.toMessage(m ?? v.recents[0])
       message.channel = conversation.channel

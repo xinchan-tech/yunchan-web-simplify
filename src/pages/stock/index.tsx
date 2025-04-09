@@ -2,7 +2,6 @@ import { useCallback, useState } from 'react'
 import { Outlet } from 'react-router'
 import { KChart } from './chart/k-chart'
 
-
 const StockPage = () => {
   const [leftVisible, setLeftVisible] = useState<'full' | 'half' | 'hide'>('full')
   const [rightVisible, setRightVisible] = useState<'full' | 'hide'>('full')

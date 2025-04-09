@@ -30,9 +30,16 @@ import {
   SubscribeSpan,
   withTooltip
 } from '@/components'
-import { usePropValue, useSnapshot, useSnapshotOnce, useStockQuoteSubscribe, useTableData, useTableRowClickToStockTrading } from '@/hooks'
+import {
+  usePropValue,
+  useSnapshot,
+  useSnapshotOnce,
+  useStockQuoteSubscribe,
+  useTableData,
+  useTableRowClickToStockTrading
+} from '@/hooks'
 import { useTime, useToken } from '@/store'
-import { dateUtils } from "@/utils/date"
+import { dateUtils } from '@/utils/date'
 import { type StockSubscribeHandler, stockUtils } from '@/utils/stock'
 import { cn } from '@/utils/style'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
@@ -40,7 +47,7 @@ import dayjs from 'dayjs'
 import Decimal from 'decimal.js'
 import Autoplay from 'embla-carousel-autoplay'
 import { nanoid } from 'nanoid'
-import type { TableProps } from "rc-table"
+import type { TableProps } from 'rc-table'
 import { memo, useCallback, useEffect, useMemo, useState } from 'react'
 import { chartManage, stockBaseCodeInfoExtend, useSymbolQuery } from '../lib'
 
@@ -59,7 +66,6 @@ const StockInfo = () => {
         <div className="flex-1 overflow-hidden mt-1">
           <StockRelated />
         </div>
-
       </div>
     </div>
   )
@@ -85,9 +91,12 @@ const StockBaseInfo = () => {
     [code]
   )
 
-  useSnapshotOnce(code, useCallback(e => {
-    setDataInfo(e.data)
-  }, []))
+  useSnapshotOnce(
+    code,
+    useCallback(e => {
+      setDataInfo(e.data)
+    }, [])
+  )
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
   useEffect(() => {
@@ -96,7 +105,7 @@ const StockBaseInfo = () => {
       prevClose: 0,
       dayUpdated: 0,
       extPrice: 0,
-      extUpdated: 0,
+      extUpdated: 0
     } as any)
   }, [code])
 
@@ -132,7 +141,9 @@ const StockBaseInfo = () => {
           <JknIcon.Stock symbol={code} />
           <span className="text-lg">{code}</span>
           &nbsp;
-          <span className="text-tertiary text-xs flex-1 overflow-hidden text-ellipsis whitespace-nowrap">{codeInfo.data?.name}</span>
+          <span className="text-tertiary text-xs flex-1 overflow-hidden text-ellipsis whitespace-nowrap">
+            {codeInfo.data?.name}
+          </span>
         </span>
         {codeInfo.data?.symbol ? (
           <CollectStar
@@ -162,7 +173,9 @@ const StockBaseInfo = () => {
           trading === 'preMarket' ? (
             <StockQuoteBar
               label="点击查看分时走势"
-              percent={dataInfo ? stockUtils.getPercent({ close: dataInfo.extPrice, prevClose: dataInfo.close }) : undefined}
+              percent={
+                dataInfo ? stockUtils.getPercent({ close: dataInfo.extPrice, prevClose: dataInfo.close }) : undefined
+              }
               close={dataInfo?.extPrice}
               prevClose={dataInfo?.close}
               time={dateUtils.toUsDay(dataInfo?.extUpdated ?? '0').format('MM/DD HH:mm')}
@@ -174,7 +187,9 @@ const StockBaseInfo = () => {
           ) : (
             <StockQuoteBar
               label="点击查看分时走势"
-              percent={dataInfo ? stockUtils.getPercent({ close: dataInfo.extPrice, prevClose: dataInfo.close }) : undefined}
+              percent={
+                dataInfo ? stockUtils.getPercent({ close: dataInfo.extPrice, prevClose: dataInfo.close }) : undefined
+              }
               close={dataInfo?.extPrice}
               prevClose={dataInfo?.close}
               time={dateUtils.toUsDay(dataInfo?.extUpdated ?? '0').format('MM/DD HH:mm')}
@@ -212,11 +227,19 @@ const StockQuoteBar = withTooltip(
 
     return (
       <div
-        className={cn('flex items-baseline flex-wrap px-2 box-border my-1 cursor-pointer text-tertiary', props.interval !== StockChartInterval.INTRA_DAY && 'text-sm')}
+        className={cn(
+          'flex items-baseline flex-wrap px-2 box-border my-1 cursor-pointer text-tertiary',
+          props.interval !== StockChartInterval.INTRA_DAY && 'text-sm'
+        )}
         onClick={onClick}
-        onKeyDown={() => { }}
+        onKeyDown={() => {}}
       >
-        <span className={cn('text-xl font-500 text-foreground', props.interval === StockChartInterval.INTRA_DAY && 'text-[32px]')}>
+        <span
+          className={cn(
+            'text-xl font-500 text-foreground',
+            props.interval === StockChartInterval.INTRA_DAY && 'text-[32px]'
+          )}
+        >
           <SubscribeSpan.Price
             symbol={symbol}
             arrow={false}
@@ -227,17 +250,16 @@ const StockQuoteBar = withTooltip(
             initValue={props.close}
             zeroText="0.000"
           />
-          {
-            !props.close ? null : (
-              <JknIcon.Svg
-                name={arrowUp ? 'stock-up' : 'stock-down'}
-                className={cn(
-                  arrowUp ? 'text-stock-up' : 'text-stock-down',
-                  'ml-1',
-                  props.interval === StockChartInterval.INTRA_DAY ? 'w-4 h-[18px]' : 'w-2.5 h-[11px] '
-                )} />
-            )
-          }
+          {!props.close ? null : (
+            <JknIcon.Svg
+              name={arrowUp ? 'stock-up' : 'stock-down'}
+              className={cn(
+                arrowUp ? 'text-stock-up' : 'text-stock-down',
+                'ml-1',
+                props.interval === StockChartInterval.INTRA_DAY ? 'w-4 h-[18px]' : 'w-2.5 h-[11px] '
+              )}
+            />
+          )}
         </span>
         &nbsp;&nbsp;
         <span>
@@ -246,7 +268,7 @@ const StockQuoteBar = withTooltip(
             symbol={symbol}
             trading={trading}
             decimal={3}
-            onChange={(v) => {
+            onChange={v => {
               setArrowUp(v.record.close - v.record.preClose > 0)
             }}
             showSign={props.percent !== Number.POSITIVE_INFINITY}
@@ -277,9 +299,7 @@ const StockQuoteBar = withTooltip(
             trading={trading}
             symbol={symbol}
             value={props.time}
-            formatter={v =>
-              dateUtils.toUsDay(v.record.time).format('MM/DD hh:mm')
-            }
+            formatter={v => dateUtils.toUsDay(v.record.time).format('MM/DD hh:mm')}
           />
         </span>
       </div>
@@ -303,18 +323,21 @@ const StockQuote = () => {
   //   queryFn: () => getStockBaseCodeInfo({ symbol: code, extend: stockBaseCodeInfoExtend })
   // })
 
-  useSnapshot(code, useCallback(e => {
-    setCodeInfo(s => {
-      const _s: any = s ?? {}
-      Object.keys(e.data).map((key: any) => {
-        if (e.data[key as keyof StockBaseInfoData] === undefined) {
-          return
-        }
-        _s[key] = e.data[key as keyof StockBaseInfoData]
+  useSnapshot(
+    code,
+    useCallback(e => {
+      setCodeInfo(s => {
+        const _s: any = s ?? {}
+        Object.keys(e.data).map((key: any) => {
+          if (e.data[key as keyof StockBaseInfoData] === undefined) {
+            return
+          }
+          _s[key] = e.data[key as keyof StockBaseInfoData]
+        })
+        return { ..._s }
       })
-      return {..._s}
-    })
-  }, []))
+    }, [])
+  )
 
   useEffect(() => {
     if (code !== codeInfo?.symbol) {
@@ -360,44 +383,38 @@ const StockQuote = () => {
           <span>换手率&nbsp;&nbsp;</span>
           <span>{Decimal.create(codeInfo?.turnover).mul(100).toFixed(2)}%</span>
         </div>
-        {
-          expanded ? (
-            <>
-              <div className="flex items-center justify-between">
-                <span>昨收价&nbsp;&nbsp;</span>
-                <span>{Decimal.create(codeInfo?.prevClose).toFixed(3)}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span>成交量&nbsp;&nbsp;</span>
-                <span>{Decimal.create(codeInfo?.dayVolume).toShortCN()}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span>市盈率&nbsp;&nbsp;</span>
-                <span>{codeInfo?.pe ? Decimal.create(codeInfo.pe).toFixed(2) : '--'}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span>市净率&nbsp;&nbsp;</span>
-                <span>{codeInfo?.pb ? Decimal.create(codeInfo.pb).toFixed(2) : '--'}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span>52周高&nbsp;&nbsp;</span>
-                <span>{Decimal.create(codeInfo?.w52High).toFixed(3)}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span>52周低&nbsp;&nbsp;</span>
-                <span>{Decimal.create(codeInfo?.w52Low).toFixed(3)}</span>
-              </div>
-
-
-            </>
-          ) : null
-        }
+        {expanded ? (
+          <>
+            <div className="flex items-center justify-between">
+              <span>昨收价&nbsp;&nbsp;</span>
+              <span>{Decimal.create(codeInfo?.prevClose).toFixed(3)}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span>成交量&nbsp;&nbsp;</span>
+              <span>{Decimal.create(codeInfo?.dayVolume).toShortCN()}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span>市盈率&nbsp;&nbsp;</span>
+              <span>{codeInfo?.pe ? Decimal.create(codeInfo.pe).toFixed(2) : '--'}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span>市净率&nbsp;&nbsp;</span>
+              <span>{codeInfo?.pb ? Decimal.create(codeInfo.pb).toFixed(2) : '--'}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span>52周高&nbsp;&nbsp;</span>
+              <span>{Decimal.create(codeInfo?.w52High).toFixed(3)}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span>52周低&nbsp;&nbsp;</span>
+              <span>{Decimal.create(codeInfo?.w52Low).toFixed(3)}</span>
+            </div>
+          </>
+        ) : null}
       </div>
       {codeInfo?.bubbleStatus && expanded ? (
         <div className="flex h-12">
-          <div className="w-1/2 flex items-center justify-center text-stock-green h-full">
-            估值泡沫
-          </div>
+          <div className="w-1/2 flex items-center justify-center text-stock-green h-full">估值泡沫</div>
           <div className="w-1/2 flex items-center justify-center text-stock-green h-full">
             <span className={cn(Decimal.create(codeInfo?.bubbleVal).gte(2) ? 'text-stock-down' : 'text-stock-up')}>
               {Decimal.create(codeInfo?.bubbleVal).toFixed(2)}({codeInfo?.bubbleStatus})
@@ -408,9 +425,10 @@ const StockQuote = () => {
 
       {
         <div className="w-full text-center">
-          <span className="bg-accent rounded-3xl w-6 h-3 inline-flex items-center justify-center cursor-pointer"
+          <span
+            className="bg-accent rounded-3xl w-6 h-3 inline-flex items-center justify-center cursor-pointer"
             onClick={() => setExpanded(!expanded)}
-            onKeyDown={() => { }}
+            onKeyDown={() => {}}
           >
             <JknIcon.Svg name="arrow-down" style={{ rotate: expanded ? '180deg' : '0deg' }} size={6} />
           </span>
@@ -457,7 +475,7 @@ const StockNews = () => {
                         key={nanoid()}
                         className={cn('flex-grow-0 flex-shrink-0 basis-full text-xs hover:bg-primary cursor-pointer')}
                         onClick={() => item.url && window.open(item.url)}
-                        onKeyDown={() => { }}
+                        onKeyDown={() => {}}
                       >
                         <div className="flex p-2 w-full box-border">
                           <JknIcon name="ic_notice" className="mr-2 mt-0.5" />
@@ -564,12 +582,7 @@ const StockRelated = () => {
         width: '30%',
         sort: true,
         render: (close, row) => (
-          <SubscribeSpan.PriceBlink
-            className="text-base"
-            symbol={row.symbol}
-            initValue={close}
-            showColor={false}
-          />
+          <SubscribeSpan.PriceBlink className="text-base" symbol={row.symbol} initValue={close} showColor={false} />
         )
       },
       {
@@ -605,7 +618,7 @@ const StockRelated = () => {
       <div className="flex px-3 py-2.5">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <div onClick={() => setMenuType('plates')} onKeyDown={() => { }}>
+            <div onClick={() => setMenuType('plates')} onKeyDown={() => {}}>
               <span className="text-lg font-normal">
                 {plates?.find(item => item.id === plateId)?.name ? (
                   <span className={cn(menuType === 'plates' && 'text-primary')}>
@@ -714,7 +727,6 @@ const StockBrief = () => {
   )
 }
 
-
 const GoldenStockPool = () => {
   const [type, setType] = useState('-1')
   const { token } = useToken()
@@ -752,7 +764,6 @@ const GoldenStockPool = () => {
 
   useStockQuoteSubscribe(query.data?.items?.map(d => d.symbol) ?? [])
 
-
   const columns: TableProps<ArrayItem<typeof list>>['columns'] = [
     {
       title: '名称代码',
@@ -768,7 +779,13 @@ const GoldenStockPool = () => {
       width: '30%',
       sort: true,
       render: (close, row) => (
-        <SubscribeSpan.PriceBlink className="text-base" symbol={row.symbol} initValue={close} initDirection={stockUtils.isUp(row)} showColor={false} />
+        <SubscribeSpan.PriceBlink
+          className="text-base"
+          symbol={row.symbol}
+          initValue={close}
+          initDirection={stockUtils.isUp(row)}
+          showColor={false}
+        />
       )
     },
     {

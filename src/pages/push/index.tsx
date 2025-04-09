@@ -1,5 +1,5 @@
-import { StockPushType, getStockPush, getStockPushList } from "@/api"
-import { getPushMenu } from "@/api/push"
+import { StockPushType, getStockPush, getStockPushList } from '@/api'
+import { getPushMenu } from '@/api/push'
 import {
   CapsuleTabs,
   JknIcon,
@@ -14,20 +14,16 @@ import {
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,
-  DropdownMenuItem,
-} from "@/components"
-import {
-  useStockQuoteSubscribe,
-  useTableData,
-  useTableRowClickToStockTrading,
-} from "@/hooks"
-import { useTime } from "@/store"
-import { dateUtils, getPrevTradingDays } from "@/utils/date"
-import { type Stock, stockUtils } from "@/utils/stock"
-import { useQuery, useQueryClient } from "@tanstack/react-query"
-import dayjs from "dayjs"
-import { nanoid } from "nanoid"
-import { useEffect, useRef, useState } from "react"
+  DropdownMenuItem
+} from '@/components'
+import { useStockQuoteSubscribe, useTableData, useTableRowClickToStockTrading } from '@/hooks'
+import { useTime } from '@/store'
+import { dateUtils, getPrevTradingDays } from '@/utils/date'
+import { type Stock, stockUtils } from '@/utils/stock'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import dayjs from 'dayjs'
+import { nanoid } from 'nanoid'
+import { useEffect, useRef, useState } from 'react'
 
 type TableDataType = Stock & {
   star: string
@@ -52,9 +48,7 @@ type TableDataType = Stock & {
 const getLastTime = () => {
   const usTime = useTime.getState().usTime
   const localTime = useTime.getState().localStamp
-  const localDate = dayjs(new Date().valueOf() - localTime + usTime).tz(
-    "America/New_York"
-  )
+  const localDate = dayjs(new Date().valueOf() - localTime + usTime).tz('America/New_York')
 
   if (localDate.isBefore(localDate.hour(9).minute(30).second(0))) {
     return getPrevTradingDays(localDate, 2)[0]
@@ -64,19 +58,19 @@ const getLastTime = () => {
 
 const getTableList = async (type: string, date?: string) => {
   let res: TableDataType[]
-  if (type === "JRGW") {
-    if (!date) throw new Error("date is required")
+  if (type === 'JRGW') {
+    if (!date) throw new Error('date is required')
     const r = await getStockPush({
       type: StockPushType.STOCK_KING,
       date,
-      extend: ["financials", "total_share", "collect", "basic_index"],
+      extend: ['financials', 'total_share', 'collect', 'basic_index']
     })
 
-    res = r?.map((item) => {
+    res = r?.map(item => {
       const stock = stockUtils.toStockWithExt(item.stock, {
         extend: item.extend,
         symbol: item.symbol,
-        name: item.name,
+        name: item.name
       }) as TableDataType
       stock.update_time = item.update_time
       stock.star = item.star
@@ -91,18 +85,13 @@ const getTableList = async (type: string, date?: string) => {
       return stock
     })
   } else {
-    const r = await getStockPushList(type, [
-      "financials",
-      "total_share",
-      "collect",
-      "basic_index",
-    ])
+    const r = await getStockPushList(type, ['financials', 'total_share', 'collect', 'basic_index'])
 
-    res = r.map((item) => {
+    res = r.map(item => {
       const stock = stockUtils.toStockWithExt(item.stock, {
         extend: item.extend,
         symbol: item.symbol,
-        name: item.name,
+        name: item.name
       }) as TableDataType
       stock.update_time = item.datetime.toString()
       stock.star = (item.score * (item.score * (item.bull === 0 ? -1 : 1))).toString()
@@ -122,14 +111,14 @@ const getTableList = async (type: string, date?: string) => {
 }
 
 const PushPage = () => {
-  const [activeType, setActiveType] = useState<string>("JRGW")
+  const [activeType, setActiveType] = useState<string>('JRGW')
   const [date, setDate] = useState(getLastTime())
-  const [list, { setList, onSort }] = useTableData<TableDataType>([], "id")
+  const [list, { setList, onSort }] = useTableData<TableDataType>([], 'id')
   const dates = useRef(getPrevTradingDays(date, 7).reverse())
 
   const menus = useQuery({
     queryKey: [getPushMenu.cacheKey],
-    queryFn: getPushMenu,
+    queryFn: getPushMenu
   })
 
   // const queryParams: Parameters<typeof getStockPush>[0] = {
@@ -140,7 +129,7 @@ const PushPage = () => {
 
   const query = useQuery({
     queryKey: [getStockPushList.cacheKey, activeType, date],
-    queryFn: () => getTableList(activeType, date),
+    queryFn: () => getTableList(activeType, date)
   })
   const queryClient = useQueryClient()
 
@@ -167,15 +156,15 @@ const PushPage = () => {
     setList(query.data ?? [])
   }, [query.data, setList])
 
-  useStockQuoteSubscribe(query.data?.map((v) => v.symbol) ?? [])
+  useStockQuoteSubscribe(query.data?.map(v => v.symbol) ?? [])
 
   const columns = (() => {
-    const common: JknRcTableProps<TableDataType>["columns"] = [
+    const common: JknRcTableProps<TableDataType>['columns'] = [
       {
-        title: "名称代码",
-        dataIndex: "symbol",
-        align: "left",
-        width: "25%",
+        title: '名称代码',
+        dataIndex: 'symbol',
+        align: 'left',
+        width: '25%',
         sort: true,
         render: (_, row) => (
           <div className="flex items-center">
@@ -183,13 +172,13 @@ const PushPage = () => {
             <span className="mr-3" />
             <StockView name={row.name} code={row.symbol as string} showName />
           </div>
-        ),
+        )
       },
       {
-        title: "现价",
-        dataIndex: "close",
-        align: "left",
-        width: "13.5%",
+        title: '现价',
+        dataIndex: 'close',
+        align: 'left',
+        width: '13.5%',
         sort: true,
         render: (v, row) => (
           <SubscribeSpan.PriceBlink
@@ -198,13 +187,13 @@ const PushPage = () => {
             initValue={v}
             initDirection={stockUtils.isUp(row)}
           />
-        ),
+        )
       },
       {
-        title: "涨跌幅%",
-        dataIndex: "percent",
-        align: "left",
-        width: "13.5%",
+        title: '涨跌幅%',
+        dataIndex: 'percent',
+        align: 'left',
+        width: '13.5%',
         sort: true,
         render: (percent, row) => (
           <SubscribeSpan.PercentBlink
@@ -214,13 +203,13 @@ const PushPage = () => {
             initValue={percent}
             initDirection={stockUtils.isUp(row)}
           />
-        ),
+        )
       },
       {
-        title: "成交额",
-        dataIndex: "turnover",
-        align: "left",
-        width: "13.5%",
+        title: '成交额',
+        dataIndex: 'turnover',
+        align: 'left',
+        width: '13.5%',
         sort: true,
         render: (turnover, row) => (
           <SubscribeSpan.TurnoverBlink
@@ -230,13 +219,13 @@ const PushPage = () => {
             initValue={turnover}
             initDirection
           />
-        ),
+        )
       },
       {
-        title: "总市值",
-        dataIndex: "marketValue",
-        align: "left",
-        width: "13.5%",
+        title: '总市值',
+        dataIndex: 'marketValue',
+        align: 'left',
+        width: '13.5%',
         sort: true,
         render: (marketValue, row) => (
           <SubscribeSpan.MarketValueBlink
@@ -246,80 +235,68 @@ const PushPage = () => {
             initValue={marketValue}
             totalShare={row.totalShare ?? 0}
           />
-        ),
+        )
       },
       {
-        title: `${activeType === "JRGW"
-          ? "股王指数"
-          : menus.data?.find((item) => item.key === activeType)?.name
-          }`,
-        dataIndex: "star",
-        align: "right",
+        title: `${activeType === 'JRGW' ? '股王指数' : menus.data?.find(item => item.key === activeType)?.name}`,
+        dataIndex: 'star',
+        align: 'right',
         sort: true,
         render: (v, row) =>
-          activeType === 'JRGW' ?
-            Array.from({ length: v }).map((_, i) => <JknIcon
-              className="w-[16px] h-[16px]"
-              // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
-              key={i}
-              name={"ic_fire_red"}
-            />) : <Star.Rect count={Math.abs(v)} activeColor={+row.bull === 1 ? "#22AB94" : "#F23645"} total={5} />,
-
-      },
+          activeType === 'JRGW' ? (
+            Array.from({ length: v }).map((_, i) => (
+              <JknIcon
+                className="w-[16px] h-[16px]"
+                // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
+                key={i}
+                name={'ic_fire_red'}
+              />
+            ))
+          ) : (
+            <Star.Rect count={Math.abs(v)} activeColor={+row.bull === 1 ? '#22AB94' : '#F23645'} total={5} />
+          )
+      }
     ]
 
-    if(activeType === "JRGW") {
-      (common as any[]).splice(5, 0,
-        {
-          title: "入选时间",
-          dataIndex: "create_time",
-          align: "left",
-          sort: true,
-          render: (create_time: number) => (
-            <span>{dateUtils.toUsDay(create_time).format("HH:mm")}</span>
-          ),
-        },)
+    if (activeType === 'JRGW') {
+      ;(common as any[]).splice(5, 0, {
+        title: '入选时间',
+        dataIndex: 'create_time',
+        align: 'left',
+        sort: true,
+        render: (create_time: number) => <span>{dateUtils.toUsDay(create_time).format('HH:mm')}</span>
+      })
     }
     return common
   })()
 
-
-  const onRowClick = useTableRowClickToStockTrading("symbol")
+  const onRowClick = useTableRowClickToStockTrading('symbol')
 
   return (
     <div className="h-full w-full overflow-hidden flex justify-center bg-black">
       <div className="h-full overflow-hidden flex flex-col w-table pt-[40px] stock-push box-border">
         <div className="flex items-center flex-shrink-0 pl-2">
-          <CapsuleTabs
-            activeKey={activeType}
-            onChange={(v) => setActiveType(v as StockPushType)}
-          >
+          <CapsuleTabs activeKey={activeType} onChange={v => setActiveType(v as StockPushType)}>
             <CapsuleTabs.Tab value="JRGW" label="今日股王" />
-            {menus.data?.map((item) => (
-              <CapsuleTabs.Tab
-                key={item.key}
-                value={item.key}
-                label={item.title}
-              />
+            {menus.data?.map(item => (
+              <CapsuleTabs.Tab key={item.key} value={item.key} label={item.title} />
             ))}
           </CapsuleTabs>
-          {activeType === "JRGW" ? (
+          {activeType === 'JRGW' ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <div className="border border-solid px-3 py-1 rounded text-base border-[#2E2E2E] text-[#808080] ml-auto">
-                  {dayjs(date).format("MM-DD W")}
+                  {dayjs(date).format('MM-DD W')}
                   &nbsp;
                   <JknIcon.Svg name="arrow-down" size={12} color="#808080" />
                 </div>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-fit">
-                {
-                  dates.current.map(item => (
-                    <DropdownMenuItem key={item} onClick={() => setDate(item)}>
-                      {dayjs(item).format("MM-DD W")}
-                    </DropdownMenuItem>
-                  ))
-                }
+                {dates.current.map(item => (
+                  <DropdownMenuItem key={item} onClick={() => setDate(item)}>
+                    {dayjs(item).format('MM-DD W')}
+                  </DropdownMenuItem>
+                ))}
               </DropdownMenuContent>
             </DropdownMenu>
           ) : null}
@@ -347,7 +324,8 @@ const PushPage = () => {
         </div>
       </div>
 
-      <style jsx global>{`
+      <style jsx global>
+        {`
         .stock-push .rc-table th {
           padding-top: 20px;
           padding-bottom: 20px;

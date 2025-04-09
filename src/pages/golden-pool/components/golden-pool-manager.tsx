@@ -1,6 +1,15 @@
-import type React from "react"
-import { useState, useEffect, type MouseEventHandler, type FC, type ReactNode, memo, PropsWithChildren, useRef } from "react"
-import { useQueryClient } from "@tanstack/react-query"
+import type React from 'react'
+import {
+  useState,
+  useEffect,
+  type MouseEventHandler,
+  type FC,
+  type ReactNode,
+  memo,
+  PropsWithChildren,
+  useRef
+} from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import {
   Button,
   Input,
@@ -12,20 +21,20 @@ import {
   DialogContent,
   DialogClose,
   DialogTrigger,
-  useModal,
-} from "@/components"
-import { useOptimisticUpdate, useToast } from "@/hooks"
+  useModal
+} from '@/components'
+import { useOptimisticUpdate, useToast } from '@/hooks'
 import {
   getStockCollectCates,
   removeStockCollectCate,
   updateStockCollectCate,
   addStockCollectCate,
-  sortStockCollectCate,
-} from "@/api"
-import { useQuery } from "@tanstack/react-query"
-import to from "await-to-js"
-import dayjs from "dayjs"
-import { useAuthorized } from "@/hooks"
+  sortStockCollectCate
+} from '@/api'
+import { useQuery } from '@tanstack/react-query'
+import to from 'await-to-js'
+import dayjs from 'dayjs'
+import { useAuthorized } from '@/hooks'
 
 /**
  * 金池管理器组件
@@ -35,21 +44,17 @@ import { useAuthorized } from "@/hooks"
 export const GoldenPoolManager = memo(() => {
   const { modal, context } = useModal({
     content: <GoldenPoolTable />,
-    title: "编辑",
+    title: '编辑',
     footer: null,
     closeIcon: true,
-    className: "w-[608px]",
-    onOpen: () => { },
+    className: 'w-[608px]',
+    onOpen: () => {}
   })
 
   return (
     <>
-      <div
-        className="cursor-pointer text-sm pr-2 flex items-center"
-        onClick={() => modal.open()}
-        onKeyDown={() => { }}
-      >
-        <JknIcon.Svg name={"edit-outline"} size={20} className="mr-2" color="#B8B8B8" />
+      <div className="cursor-pointer text-sm pr-2 flex items-center" onClick={() => modal.open()} onKeyDown={() => {}}>
+        <JknIcon.Svg name={'edit-outline'} size={20} className="mr-2" color="#B8B8B8" />
       </div>
       {context}
     </>
@@ -64,64 +69,52 @@ export const GoldenPoolManager = memo(() => {
 const GoldenPoolTable = () => {
   const cates = useQuery({
     queryKey: [getStockCollectCates.cacheKey],
-    queryFn: () => getStockCollectCates(),
+    queryFn: () => getStockCollectCates()
   })
 
-
-
-  const columns: JknRcTableProps["columns"] = [
-    { title: "名称", dataIndex: "name", align: "left", width: '30%' },
-    { title: "股票数量", dataIndex: "total", align: "left", width: '20%' },
+  const columns: JknRcTableProps['columns'] = [
+    { title: '名称', dataIndex: 'name', align: 'left', width: '30%' },
+    { title: '股票数量', dataIndex: 'total', align: 'left', width: '20%' },
     {
-      title: "创建时间",
-      dataIndex: "create_time",
-      align: "left",
+      title: '创建时间',
+      dataIndex: 'create_time',
+      align: 'left',
       width: '30%',
-      render: (v) => (v !== "0" ? dayjs(+v * 1000).format("YYYY-MM-DD") : "-"),
+      render: v => (v !== '0' ? dayjs(+v * 1000).format('YYYY-MM-DD') : '-')
     },
     {
-      title: "操作",
-      dataIndex: "opt",
-      align: "right",
+      title: '操作',
+      dataIndex: 'opt',
+      align: 'right',
       render: (_, row, index) =>
-        row.id !== "1" ? (
+        row.id !== '1' ? (
           <div className="flex items-center justify-end">
-            {
-              row.is_default ? (
-                null
-              ) : (
-                <GoldenPoolNameEdit id={row.id as string} onUpdate={cates.refetch}>
-                  <JknIcon.Svg name="edit" size={20} className="ml-1 p-1" color="#808080" label="重命名" hoverable />
-                </GoldenPoolNameEdit>
-              )
-            }
-            {
-              index !== 0 && index !== 1 ? (
-                <span
-                  className="cursor-pointer ml-3"
-                  onClick={() => sort.mutate({ id: row.id as string, sort: 1 })}
-                  onKeyDown={() => { }}
-                >
-                  <JknIcon.Svg name="top" size={20} className="ml-1 p-0.5" color="#808080" label="置顶" hoverable/>
-                </span>
-              ) : null
-            }
-            {
-              row.is_default ? (
-                null
-              ) : (
-                <span
-                  className="cursor-pointer ml-3"
-                  onClick={() => onDelete(row.id as string, row.name as string)}
-                  onKeyDown={() => { }}
-                >
-                  <JknIcon.Svg name="delete" size={20} className="ml-1 p-0.5" color="#808080" label="删除" hoverable/>
-                </span>
-              )
-            }
+            {row.is_default ? null : (
+              <GoldenPoolNameEdit id={row.id as string} onUpdate={cates.refetch}>
+                <JknIcon.Svg name="edit" size={20} className="ml-1 p-1" color="#808080" label="重命名" hoverable />
+              </GoldenPoolNameEdit>
+            )}
+            {index !== 0 && index !== 1 ? (
+              <span
+                className="cursor-pointer ml-3"
+                onClick={() => sort.mutate({ id: row.id as string, sort: 1 })}
+                onKeyDown={() => {}}
+              >
+                <JknIcon.Svg name="top" size={20} className="ml-1 p-0.5" color="#808080" label="置顶" hoverable />
+              </span>
+            ) : null}
+            {row.is_default ? null : (
+              <span
+                className="cursor-pointer ml-3"
+                onClick={() => onDelete(row.id as string, row.name as string)}
+                onKeyDown={() => {}}
+              >
+                <JknIcon.Svg name="delete" size={20} className="ml-1 p-0.5" color="#808080" label="删除" hoverable />
+              </span>
+            )}
           </div>
-        ) : null,
-    },
+        ) : null
+    }
   ]
 
   const { toast } = useToast()
@@ -135,14 +128,16 @@ const GoldenPoolTable = () => {
   const onDelete = async (id: string, name: string) => {
     JknAlert.confirm({
       cancelBtn: true,
-      okBtnVariant: "destructive",
+      okBtnVariant: 'destructive',
       content: (
         <div className="text-[#DBDBDB] text-center text-base">
-          确定删除该自选？<br/>删除后将取消自选里收藏股票，此操作不可撤销 
+          确定删除该自选？
+          <br />
+          删除后将取消自选里收藏股票，此操作不可撤销
         </div>
       ),
-      onAction: async (action) => {
-        if (action === "confirm") {
+      onAction: async action => {
+        if (action === 'confirm') {
           const [err] = await to(removeStockCollectCate(id))
 
           if (err) {
@@ -152,17 +147,17 @@ const GoldenPoolTable = () => {
 
           cates.refetch()
         }
-      },
+      }
     })
   }
 
   const sort = useOptimisticUpdate({
     cacheKey: [getStockCollectCates.cacheKey],
-    action: ({ id, sort }: { id: string, sort: number }) => {
+    action: ({ id, sort }: { id: string; sort: number }) => {
       return sortStockCollectCate(id, sort)
     },
     onOptimisticUpdate: ({ id, sort }, draft: NonNullable<typeof cates.data>) => {
-      const index = draft.findIndex((item) => item.id === id)
+      const index = draft.findIndex(item => item.id === id)
       if (index !== -1) {
         draft[index].sort = sort
         if (draft[sort - 1]) {
@@ -176,12 +171,7 @@ const GoldenPoolTable = () => {
   return (
     <div className="w-full overflow-hidden">
       <div className="h-[391px] w-full overflow-hidden pool-manager">
-        <JknRcTable
-          className="px-8"
-          columns={columns}
-          data={cates.data}
-          isLoading={cates.isLoading}
-        />
+        <JknRcTable className="px-8" columns={columns} data={cates.data} isLoading={cates.isLoading} />
       </div>
       <div className="flex justify-end text-center mr-8 mb-5">
         <GoldenPoolNameEdit onUpdate={cates.refetch}>
@@ -191,7 +181,8 @@ const GoldenPoolTable = () => {
         </GoldenPoolNameEdit>
       </div>
 
-      <style jsx global>{`
+      <style jsx global>
+        {`
         .pool-manager .rc-table th {
           padding-top: 20px;
           padding-bottom: 20px;
@@ -225,8 +216,8 @@ export const GoldenPoolNameEdit: FC<{
   children: ReactNode
   sideOffset?: number
   alignOffset?: number
-}> = (props) => {
-  const [name, setName] = useState(props.name || "")
+}> = props => {
+  const [name, setName] = useState(props.name || '')
   const [open, setOpen] = useState(false)
   const { toast } = useToast()
   const queryClient = useQueryClient()
@@ -235,16 +226,14 @@ export const GoldenPoolNameEdit: FC<{
   // 获取金池列表
   const collects = useQuery({
     queryKey: [getStockCollectCates.cacheKey],
-    queryFn: () => getStockCollectCates(),
+    queryFn: () => getStockCollectCates()
   })
 
   // 当编辑现有金池时，设置默认名称
   useEffect(() => {
     if (props.id && collects.data) {
       // 查找对应ID的金池
-      const currentPool = collects.data.find((pool: { id: string; name: string }) =>
-        pool.id === props.id
-      )
+      const currentPool = collects.data.find((pool: { id: string; name: string }) => pool.id === props.id)
 
       // 如果找到了，设置名称
       if (currentPool) {
@@ -260,7 +249,7 @@ export const GoldenPoolNameEdit: FC<{
   const onAction = async () => {
     if (!name) {
       toast({
-        title: "请输入金池名称"
+        title: '请输入金池名称'
       })
       return
     }
@@ -268,21 +257,21 @@ export const GoldenPoolNameEdit: FC<{
     const [err] = await to(
       props.id
         ? updateStockCollectCate({
-          id: props.id,
-          name,
-        })
+            id: props.id,
+            name
+          })
         : addStockCollectCate(name)
     )
 
     if (err) {
       toast({
-        title: err.message || "操作失败"
+        title: err.message || '操作失败'
       })
       return
     }
 
     toast({
-      title: props.id ? "重命名成功" : "新建成功",
+      title: props.id ? '重命名成功' : '新建成功'
     })
 
     // 关闭对话框
@@ -318,38 +307,28 @@ export const GoldenPoolNameEdit: FC<{
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button reset className="inline">
-          <div onClick={handleClick} onKeyDown={() => { }}>
+          <div onClick={handleClick} onKeyDown={() => {}}>
             {props.children}
           </div>
         </Button>
       </DialogTrigger>
-      <DialogContent
-        className="w-[300px] text-center rounded-2xl bg-[#1F1F1F] border-[#2E2E2E]"
-      >
-        <div className="text-center py-5">{props.id ? "重命名" : "新建自选"}</div>
+      <DialogContent className="w-[300px] text-center rounded-2xl bg-[#1F1F1F] border-[#2E2E2E]">
+        <div className="text-center py-5">{props.id ? '重命名' : '新建自选'}</div>
         <div className="mt-5 px-4">
           <Input
             className="pb-2 border-x-0 border-t-0 border-b border-[#2E2E2E] rounded-none placeholder:text-[#575757]"
             size="sm"
             placeholder="请输入金池名称"
             value={name}
-            onChange={(e) => setName(e.target.value)}
+            onChange={e => setName(e.target.value)}
           />
           <div className="flex justify-between mt-[10px] mb-5">
             <DialogClose asChild>
-              <Button
-                size="sm"
-                variant="outline"
-                className="w-[120px] h-9 border-[#DBDBDB]"
-              >
+              <Button size="sm" variant="outline" className="w-[120px] h-9 border-[#DBDBDB]">
                 取消
               </Button>
             </DialogClose>
-            <Button
-              size="sm"
-              className="w-[120px] h-9"
-              onClick={onAction}
-            >
+            <Button size="sm" className="w-[120px] h-9" onClick={onAction}>
               确定
             </Button>
           </div>

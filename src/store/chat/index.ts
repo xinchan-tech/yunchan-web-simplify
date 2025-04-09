@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import { type ChatChannelState, chatConstants, ChatMessageType, type ChatStore, ChatCmdType } from './types'
 import { Channel, ChannelInfo, ConnectStatus } from 'wukongimjssdk'
 import { createJSONStorage, persist } from 'zustand/middleware'
-import { useConfig } from "../config"
+import { useConfig } from '../config'
 
 const wsUrlPrefix = `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${window.location.host}`
 
@@ -47,9 +47,9 @@ export const chatManager = {
   getWsConfig: () => {
     const debug = useConfig.getState().debug
 
-    const wsConfig = {...useChatStore.getState().config}
+    const wsConfig = { ...useChatStore.getState().config }
 
-    if(debug){
+    if (debug) {
       wsConfig.addr = wsConfig.addr.replace('im-ws', 'im-ws-test')
     }
 

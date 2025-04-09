@@ -107,7 +107,6 @@ export class Ws {
     }
 
     this.ws.onmessage = (ev: MessageEvent) => {
-
       if (ev.data === 'pong' || ev.data === 'ping') {
         this.options.onBeat?.()
         return

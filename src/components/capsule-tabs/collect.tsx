@@ -5,7 +5,7 @@ import { type ComponentProps, memo, useCallback, useEffect, useState } from 'rea
 import { CapsuleTabs } from '.'
 import { JknIcon } from '../jkn/jkn-icon'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../ui/dropdown-menu'
-import { ScrollArea } from "../ui/scroll-area"
+import { ScrollArea } from '../ui/scroll-area'
 
 interface CollectCapsuleTabsProps extends ComponentProps<typeof CapsuleTabs> {
   onChange?: (key: string) => void
@@ -17,15 +17,17 @@ const useCollectSelect = (onChange?: (key: string) => void) => {
   const collects = useQuery({
     queryKey: [getStockCollectCates.cacheKey],
     queryFn: () => getStockCollectCates(),
-    initialData: [{
-      id: '-1',
-      name: '我的自选',
-      create_time: '',
-      active: 0,
-      total: '0',
-      is_default: true,
-      sort: 0
-    }],
+    initialData: [
+      {
+        id: '-1',
+        name: '我的自选',
+        create_time: '',
+        active: 0,
+        total: '0',
+        is_default: true,
+        sort: 0
+      }
+    ],
     enabled: !!token
   })
   const queryClient = useQueryClient()
@@ -34,25 +36,26 @@ const useCollectSelect = (onChange?: (key: string) => void) => {
     if (!token) {
       queryClient.setQueryData(
         [getStockCollectCates.cacheKey],
-        [{
-          id: '-1',
-          name: '我的自选',
-          create_time: '',
-          active: 0,
-          total: '0',
-          is_default: true,
-          sort: 0
-        }]
+        [
+          {
+            id: '-1',
+            name: '我的自选',
+            create_time: '',
+            active: 0,
+            total: '0',
+            is_default: true,
+            sort: 0
+          }
+        ]
       )
       setActiveStock('-1')
     }
   }, [token, queryClient.setQueryData])
 
   useEffect(() => {
-
     if (collects.data?.length && activeStock === '-1') {
       let defaultCate = collects.data.find(cate => cate.is_default)
-      if(!defaultCate) {
+      if (!defaultCate) {
         defaultCate = collects.data[0]
       }
       setActiveStock(defaultCate.id)

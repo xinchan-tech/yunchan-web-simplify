@@ -1,4 +1,4 @@
-import { useStockSearch } from "@/hooks"
+import { useStockSearch } from '@/hooks'
 import { useStockList } from '@/store'
 import { cn } from '@/utils/style'
 import { useBoolean, useLocalStorageState, useVirtualList } from 'ahooks'
@@ -51,20 +51,19 @@ const StockSelect = ({ onChange, className, width, ...props }: StockSelectProps)
       setTrue()
     }
   }
- 
+
   return (
     <div className="w-48" style={{ width }}>
-      <Popover modal open={open} onOpenChange={v => {
-        !v && setFalse()
-      }}>
+      <Popover
+        modal
+        open={open}
+        onOpenChange={v => {
+          !v && setFalse()
+        }}
+      >
         <PopoverAnchor asChild>
-          <div
-            className={cn(
-              'rounded-sm flex items-center px-2 bg-muted h-[38px]',
-              className
-            )}
-          >
-            <JknIcon.Svg className="w-5 h-5" color='#B8B8B8' name="search" />
+          <div className={cn('rounded-sm flex items-center px-2 bg-muted h-[38px]', className)}>
+            <JknIcon.Svg className="w-5 h-5" color="#B8B8B8" name="search" />
             <Input
               value={keyword}
               onChange={onSearch}
@@ -89,7 +88,7 @@ const StockSelect = ({ onChange, className, width, ...props }: StockSelectProps)
                     className="h-[49px] px-2 border-b-primary flex items-center hover:bg-accent cursor-pointer"
                     key={ele[1]}
                     onClick={() => _onClick(ele[1])}
-                    onKeyDown={() => { }}
+                    onKeyDown={() => {}}
                   >
                     <div className="flex-shrink-0">
                       {ele[0] ? (
@@ -145,7 +144,7 @@ const VirtualStockList = (props: VirtualStockListProps) => {
             className="h-[49px] px-2 border-0 border-b border-solid border-border flex items-center hover:bg-accent cursor-pointer w-48 box-border overflow-hidden"
             key={ele.index}
             onClick={() => props.onClick?.(ele.data[1])}
-            onKeyDown={() => { }}
+            onKeyDown={() => {}}
           >
             <div className="flex-shrink-0">
               {ele.data[0] ? (

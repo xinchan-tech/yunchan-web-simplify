@@ -1,35 +1,30 @@
-import * as React from "react"
-import { OTPInput, OTPInputContext } from "input-otp"
-import { cn } from "@/utils/style"
-import { MinusIcon } from "@radix-ui/react-icons"
+import * as React from 'react'
+import { OTPInput, OTPInputContext } from 'input-otp'
+import { cn } from '@/utils/style'
+import { MinusIcon } from '@radix-ui/react-icons'
 
-const InputOTP = React.forwardRef<
-  React.ElementRef<typeof OTPInput>,
-  React.ComponentPropsWithoutRef<typeof OTPInput>
->(({ className, containerClassName, ...props }, ref) => (
-  <OTPInput
-    ref={ref}
-    containerClassName={cn(
-      "flex items-center gap-2 has-[:disabled]:opacity-50",
-      containerClassName
-    )}
-    className={cn("disabled:cursor-not-allowed", className)}
-    {...props}
-  />
-))
-InputOTP.displayName = "InputOTP"
+const InputOTP = React.forwardRef<React.ElementRef<typeof OTPInput>, React.ComponentPropsWithoutRef<typeof OTPInput>>(
+  ({ className, containerClassName, ...props }, ref) => (
+    <OTPInput
+      ref={ref}
+      containerClassName={cn('flex items-center gap-2 has-[:disabled]:opacity-50', containerClassName)}
+      className={cn('disabled:cursor-not-allowed', className)}
+      {...props}
+    />
+  )
+)
+InputOTP.displayName = 'InputOTP'
 
-const InputOTPGroup = React.forwardRef<
-  React.ElementRef<"div">,
-  React.ComponentPropsWithoutRef<"div">
->(({ className, ...props }, ref) => (
-  <div ref={ref} className={cn("flex items-center space-x-[26px]", className)} {...props} />
-))
-InputOTPGroup.displayName = "InputOTPGroup"
+const InputOTPGroup = React.forwardRef<React.ElementRef<'div'>, React.ComponentPropsWithoutRef<'div'>>(
+  ({ className, ...props }, ref) => (
+    <div ref={ref} className={cn('flex items-center space-x-[26px]', className)} {...props} />
+  )
+)
+InputOTPGroup.displayName = 'InputOTPGroup'
 
 const InputOTPSlot = React.forwardRef<
-  React.ElementRef<"div">,
-  React.ComponentPropsWithoutRef<"div"> & { index: number }
+  React.ElementRef<'div'>,
+  React.ComponentPropsWithoutRef<'div'> & { index: number }
 >(({ index, className, ...props }, ref) => {
   const inputOTPContext = React.useContext(OTPInputContext)
   const { char, hasFakeCaret, isActive } = inputOTPContext.slots[index]
@@ -38,8 +33,8 @@ const InputOTPSlot = React.forwardRef<
     <div
       ref={ref}
       className={cn(
-        "relative flex w-10 h-11 items-center bg-accent justify-center border border-solid border-transparent rounded text-sm transition-all",
-        isActive && "z-10 border-foreground",
+        'relative flex w-10 h-11 items-center bg-accent justify-center border border-solid border-transparent rounded text-sm transition-all',
+        isActive && 'z-10 border-foreground',
         className
       )}
       {...props}
@@ -53,17 +48,16 @@ const InputOTPSlot = React.forwardRef<
     </div>
   )
 })
-InputOTPSlot.displayName = "InputOTPSlot"
+InputOTPSlot.displayName = 'InputOTPSlot'
 
-const InputOTPSeparator = React.forwardRef<
-  React.ElementRef<"div">,
-  React.ComponentPropsWithoutRef<"div">
->(({ ...props }, ref) => (
-  // biome-ignore lint/a11y/useSemanticElements: <explanation>
-  <div ref={ref} role="separator" {...props}>
-    <MinusIcon />
-  </div>
-))
-InputOTPSeparator.displayName = "InputOTPSeparator"
+const InputOTPSeparator = React.forwardRef<React.ElementRef<'div'>, React.ComponentPropsWithoutRef<'div'>>(
+  ({ ...props }, ref) => (
+    // biome-ignore lint/a11y/useSemanticElements: <explanation>
+    <div ref={ref} role="separator" {...props}>
+      <MinusIcon />
+    </div>
+  )
+)
+InputOTPSeparator.displayName = 'InputOTPSeparator'
 
 export { InputOTP, InputOTPGroup, InputOTPSlot, InputOTPSeparator }

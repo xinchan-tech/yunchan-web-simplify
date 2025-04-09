@@ -1,5 +1,5 @@
 import { useLatestRef } from '@/hooks'
-import { ChatMessageType } from "@/store"
+import { ChatMessageType } from '@/store'
 import { useEffect } from 'react'
 import WKSDK, {
   type Channel,
@@ -33,7 +33,7 @@ export const useCMDListener = (cb: MessageListener) => {
       console.log('cmd listener', message)
       lastFn.current(message)
     }
- 
+
     WKSDK.shared().chatManager.addCMDListener(listener)
     return () => {
       WKSDK.shared().chatManager.removeCMDListener(listener)
@@ -64,8 +64,8 @@ export const useSubscribesListener = (channel: Undefinable<Channel>, cb: Subscri
 export const useMessageStatusListener = (message: Message, cb: MessageStatusListener) => {
   const lastFn = useLatestRef(cb)
   useEffect(() => {
-    if(message.contentType === ChatMessageType.Cmd) return
-    if(message.status !== MessageStatus.Wait) return
+    if (message.contentType === ChatMessageType.Cmd) return
+    if (message.status !== MessageStatus.Wait) return
     const listener: MessageStatusListener = message => {
       lastFn.current(message)
     }

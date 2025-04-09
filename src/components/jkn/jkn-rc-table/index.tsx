@@ -7,7 +7,7 @@ import type { DefaultRecordType } from 'rc-table/lib/interface'
 import { type ReactNode, memo, useCallback, useMemo, useRef } from 'react'
 import { useImmer } from 'use-immer'
 import { withSort } from '../jkn-icon/with-sort'
-import { isNumber, isString } from "radash"
+import { isNumber, isString } from 'radash'
 
 export interface JknRcTableProps<T = any> extends TableProps<T> {
   headerHeight?: number
@@ -60,16 +60,15 @@ const _JknRcTable = <T extends DefaultRecordType = any>({
     const width = dom.current?.getBoundingClientRect().width
     return columns.map(column => {
       if (designWidth && width) {
-
         columns.forEach((item: any) => {
           if (item.children) return
 
           if (item.width) {
             if (isNumber(item.width)) {
-              item.width = item.width / designWidth * width
+              item.width = (item.width / designWidth) * width
             } else if (isString(item.width)) {
               if (item.width.endsWith('%')) {
-                item.width = Number(item.width.replace('%', '')) / 100 * width
+                item.width = (Number(item.width.replace('%', '')) / 100) * width
               } else if (item.width.endsWith('px')) {
                 item.width = Number(item.width.replace('px', ''))
               }
@@ -95,8 +94,6 @@ const _JknRcTable = <T extends DefaultRecordType = any>({
       return column
     })
   }, [columns, sort, onSort, designWidth, sortClear])
-
-
 
   const observerRef = useRef<IntersectionObserver | null>(null)
 
@@ -155,7 +152,9 @@ const _JknRcTable = <T extends DefaultRecordType = any>({
               </div>
             ) : emptyText ? (
               emptyText
-            ) : '没有更多的数据'
+            ) : (
+              '没有更多的数据'
+            )
           }
           getContainerWidth={(ele, width) => {
             // Minus border
@@ -177,7 +176,9 @@ const _JknRcTable = <T extends DefaultRecordType = any>({
               </div>
             ) : emptyText ? (
               emptyText
-            ) : '没有更多的数据'
+            ) : (
+              '没有更多的数据'
+            )
           }
           {...props}
         />

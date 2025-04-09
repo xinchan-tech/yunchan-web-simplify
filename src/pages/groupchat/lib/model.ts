@@ -1,4 +1,4 @@
-import type { getChannelDetail } from "@/api"
+import type { getChannelDetail } from '@/api'
 import { ChannelInfo, MessageText, Subscriber } from 'wukongimjssdk'
 
 export enum SubscriberType {
@@ -11,7 +11,6 @@ export class ChatSubscriber extends Subscriber {
   public forbidden = false
   public userType: SubscriberType = SubscriberType.ChannelMember
 
-
   get isChannelOwner() {
     return this.userType === SubscriberType.ChannelOwner
   }
@@ -19,7 +18,6 @@ export class ChatSubscriber extends Subscriber {
   get isChannelManager() {
     return this.userType === SubscriberType.ChannelManager
   }
-  
 }
 
 export const isMessageText = (message: any): message is MessageText => {

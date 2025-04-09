@@ -1,17 +1,11 @@
-import {
-  bindInviteCode,
-  getUser,
-  login,
-  loginByThird,
-  loginImService
-} from '@/api'
+import { bindInviteCode, getUser, login, loginByThird, loginImService } from '@/api'
 import { Button, Form, FormControl, FormField, FormItem, FormLabel, Input } from '@/components'
 import { useToast, useZForm } from '@/hooks'
 import { useToken } from '@/store'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import dayjs from 'dayjs'
 import { z } from 'zod'
-import { AppleLogin, GoogleLogin, WeChatLogin } from "./login-other"
+import { AppleLogin, GoogleLogin, WeChatLogin } from './login-other'
 
 interface LoginFormProps {
   afterLogin?: () => void
@@ -25,8 +19,9 @@ const loginSchema = z.object({
 
 type LoginForm = z.infer<typeof loginSchema>
 
-
-export const LoginForm = (props: LoginFormProps & { setPage: (page: 'login' | 'register' | 'resetPassword') => void }) => {
+export const LoginForm = (
+  props: LoginFormProps & { setPage: (page: 'login' | 'register' | 'resetPassword') => void }
+) => {
   const form = useZForm(loginSchema, { mobile: '', password: '' })
   const setToken = useToken(s => s.setToken)
   const { toast } = useToast()
@@ -112,7 +107,13 @@ export const LoginForm = (props: LoginFormProps & { setPage: (page: 'login' | 'r
                       type="password"
                     />
                   </FormControl>
-                  <div className="text-right text-sm cursor-pointer" onClick={() => props.setPage('resetPassword')} onKeyDown={() => { }}>忘记密码？</div>
+                  <div
+                    className="text-right text-sm cursor-pointer"
+                    onClick={() => props.setPage('resetPassword')}
+                    onKeyDown={() => {}}
+                  >
+                    忘记密码？
+                  </div>
                 </FormItem>
               )}
             />
@@ -133,7 +134,11 @@ export const LoginForm = (props: LoginFormProps & { setPage: (page: 'login' | 'r
           </div> */}
           <div className="text-center">
             还没有账号？
-            <span className="cursor-pointer text-primary" onClick={() => props.setPage('register')} onKeyDown={() => { }}>
+            <span
+              className="cursor-pointer text-primary"
+              onClick={() => props.setPage('register')}
+              onKeyDown={() => {}}
+            >
               立即注册
             </span>
           </div>
@@ -154,4 +159,3 @@ export const LoginForm = (props: LoginFormProps & { setPage: (page: 'login' | 'r
     </>
   )
 }
-

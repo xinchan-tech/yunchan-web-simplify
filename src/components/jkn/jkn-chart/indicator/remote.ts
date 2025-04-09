@@ -3,7 +3,7 @@ import { IndicatorUtils, type IndicatorData } from '@/utils/coiling'
 import { AESCrypt } from '@/utils/string'
 import { IndicatorSeries, type IndicatorTemplate } from 'jkn-kline-chart'
 import { candlestickToRaw } from '../utils'
-import { localIndicator } from "./local"
+import { localIndicator } from './local'
 
 type RemoteIndicatorExtend = {
   name: string

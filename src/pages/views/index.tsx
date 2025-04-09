@@ -1,15 +1,15 @@
-import { CapsuleTabs } from "@/components"
-import { useState } from "react"
-import PageTable from "./components/page-table"
-import SectorTable from "./components/sector-table"
-import SingleTable from "./single-table"
-import EtfTable from "./components/etf-table"
+import { CapsuleTabs } from '@/components'
+import { useState } from 'react'
+import PageTable from './components/page-table'
+import SectorTable from './components/sector-table'
+import SingleTable from './single-table'
+import EtfTable from './components/etf-table'
 
 /**
  * 视图组件：展示不同类型的股票数据
  */
 const Views = () => {
-  const [activeKey, setActiveKey] = useState("all")
+  const [activeKey, setActiveKey] = useState('all')
 
   return (
     <div className="h-full w-full overflow-hidden flex justify-center bg-black">
@@ -33,11 +33,10 @@ const Views = () => {
           </CapsuleTabs>
         </div>
         <div className="flex-1 overflow-hidden">
-          {!activeKey ||
-            ["all", "ixic", "spx", "dji"].includes(activeKey) ? (
+          {!activeKey || ['all', 'ixic', 'spx', 'dji'].includes(activeKey) ? (
             <PageTable type={activeKey} />
-          ) : ["industry", "concept"].includes(activeKey) ? (
-            <SectorTable type={activeKey === "industry" ? 1 : 2} />
+          ) : ['industry', 'concept'].includes(activeKey) ? (
+            <SectorTable type={activeKey === 'industry' ? 1 : 2} />
           ) : activeKey === 'etf' ? (
             <EtfTable type={activeKey} />
           ) : (
@@ -45,7 +44,8 @@ const Views = () => {
           )}
         </div>
       </div>
-      <style jsx global>{`
+      <style jsx global>
+        {`
         .stock-views .rc-table th {
           padding-top: 20px;
           padding-bottom: 20px;

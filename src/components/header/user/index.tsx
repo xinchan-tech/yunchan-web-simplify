@@ -1,4 +1,4 @@
-import { HeaderSetting } from "../setting"
+import { HeaderSetting } from '../setting'
 
 const HeaderUser = () => {
   return (

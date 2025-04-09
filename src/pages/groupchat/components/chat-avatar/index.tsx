@@ -1,10 +1,10 @@
-import { getChatNameAndAvatar } from "@/api"
-import { useChatStore } from "@/store"
+import { getChatNameAndAvatar } from '@/api'
+import { useChatStore } from '@/store'
 import { cn, colorUtil } from '@/utils/style'
-import { useQuery } from "@tanstack/react-query"
-import { useEffect, useState } from "react"
-import WKSDK from "wukongimjssdk"
-import { fetchUserInChannel } from "../../lib/utils"
+import { useQuery } from '@tanstack/react-query'
+import { useEffect, useState } from 'react'
+import WKSDK from 'wukongimjssdk'
+import { fetchUserInChannel } from '../../lib/utils'
 
 function userIdToColor(userId: string) {
   if (!userId) {
@@ -100,7 +100,6 @@ const UserAvatar = (props: UserAvatarProps) => {
     if (src) {
       setAvatar(src)
     } else {
-
       const channel = useChatStore.getState().lastChannel
       if (channel) {
         fetchUserInChannel(channel, uid).then(r => {
@@ -127,15 +126,20 @@ const UserAvatar = (props: UserAvatarProps) => {
   const borderRadius = shape === 'circle' ? '50%' : shape === 'square' ? '4px' : `${shape ?? 0}px`
 
   const styles = {
-    borderRadius, backgroundColor: colorUtil.stringToColor(name, 'hex'), width: size, height: size, display: 'flex', justifyContent: 'center', alignItems: 'center', color: '#fff'
+    borderRadius,
+    backgroundColor: colorUtil.stringToColor(name, 'hex'),
+    width: size,
+    height: size,
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    color: '#fff'
   }
 
   if (!avatar) {
     return (
       <div className={cn(className)} style={styles}>
-        {
-          name.slice(0, 1).toUpperCase()
-        }
+        {name.slice(0, 1).toUpperCase()}
       </div>
     )
   }

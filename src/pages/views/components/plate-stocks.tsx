@@ -56,11 +56,13 @@ const PlateStocks = (props: PlateStocksProps) => {
         align: 'left',
         sort: true,
         width: '28.5%',
-        render: (_, row) => <div className='flex items-center h-[33px]'>
-          <CollectStar checked={row.extend?.collect === 1} code={row.symbol} />
-          <span className="mr-3" />
-          <StockView name={row.name} code={row.symbol as string} showName />
-        </div>
+        render: (_, row) => (
+          <div className="flex items-center h-[33px]">
+            <CollectStar checked={row.extend?.collect === 1} code={row.symbol} />
+            <span className="mr-3" />
+            <StockView name={row.name} code={row.symbol as string} showName />
+          </div>
+        )
       },
       {
         title: '现价',
@@ -119,7 +121,7 @@ const PlateStocks = (props: PlateStocksProps) => {
         align: 'right',
         sort: true,
         render: (_, row) => (
-          <div className=''>
+          <div className="">
             <SubscribeSpan.MarketValueBlink
               trading="intraDay"
               symbol={row.symbol}
@@ -130,13 +132,14 @@ const PlateStocks = (props: PlateStocksProps) => {
             />
           </div>
         )
-      }, {
+      },
+      {
         title: '所属行业',
         dataIndex: 'industry',
         align: 'right',
         sort: true,
         render: (_, row) => <span className="text-[14px]">{row.industry}</span>
-      },
+      }
     ],
     []
   )

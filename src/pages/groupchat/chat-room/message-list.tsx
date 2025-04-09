@@ -1,23 +1,30 @@
-import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger, JknVirtualInfinite } from "@/components"
-import { ChatCmdType, chatConstants, ChatMessageType, useChatStore } from "@/store"
-import { useInfiniteQuery } from "@tanstack/react-query"
-import WKSDK, { type CMDContent, type Message, MessageStatus, PullMode, type Reply, type Subscriber } from "wukongimjssdk"
-import { TextRecord } from "./components/text-record"
-import ChatAvatar from "../components/chat-avatar"
-import { type ComponentRef, useCallback, useEffect, useRef, useState, type PropsWithChildren } from "react"
-import { getTimeFormatStr } from "../chat-utils"
-import { useCMDListener, useMessageListener, useMessageStatusListener, useSubscribesListener } from "../lib/hooks"
-import { useUpdate, useUpdateEffect } from "ahooks"
-import { RevokeRecord } from "./components/revoke-record"
-import { ImageRecord } from "./components/image-record"
-import { chatEvent } from "../lib/event"
-import { revokeMessage } from "@/api"
-import { isChannelManager, isChannelOwner, isRevokeMessage } from "../lib/utils"
-import { messageCache } from "../cache"
-import { useLatestRef } from "@/hooks"
-import { UsernameSpan } from "../components/username-span"
-import { CmdRecord } from "./components/cmd-record"
-import { SystemRecord } from "./components/system-record"
+import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger, JknVirtualInfinite } from '@/components'
+import { ChatCmdType, chatConstants, ChatMessageType, useChatStore } from '@/store'
+import { useInfiniteQuery } from '@tanstack/react-query'
+import WKSDK, {
+  type CMDContent,
+  type Message,
+  MessageStatus,
+  PullMode,
+  type Reply,
+  type Subscriber
+} from 'wukongimjssdk'
+import { TextRecord } from './components/text-record'
+import ChatAvatar from '../components/chat-avatar'
+import { type ComponentRef, useCallback, useEffect, useRef, useState, type PropsWithChildren } from 'react'
+import { getTimeFormatStr } from '../chat-utils'
+import { useCMDListener, useMessageListener, useMessageStatusListener, useSubscribesListener } from '../lib/hooks'
+import { useUpdate, useUpdateEffect } from 'ahooks'
+import { RevokeRecord } from './components/revoke-record'
+import { ImageRecord } from './components/image-record'
+import { chatEvent } from '../lib/event'
+import { revokeMessage } from '@/api'
+import { isChannelManager, isChannelOwner, isRevokeMessage } from '../lib/utils'
+import { messageCache } from '../cache'
+import { useLatestRef } from '@/hooks'
+import { UsernameSpan } from '../components/username-span'
+import { CmdRecord } from './components/cmd-record'
+import { SystemRecord } from './components/system-record'
 
 const mergePrevMessages = (oldData: Message[], newData: Message[]) => {
   const oldDataFirst = oldData[0]
@@ -46,14 +53,14 @@ const useMessages = () => {
         startMessageSeq: pageParam || 0,
         endMessageSeq: 0,
         limit: 40,
-        pullMode: PullMode.Down,
+        pullMode: PullMode.Down
       })
       return r
     },
-    
+
     initialPageParam: 0,
     getNextPageParam: () => undefined,
-    getPreviousPageParam: (firstPage) => {
+    getPreviousPageParam: firstPage => {
       const last = firstPage[0]
 
       if (!last) return undefined
@@ -63,13 +70,13 @@ const useMessages = () => {
       }
       return undefined
     },
-    select: (res) => {
+    select: res => {
       const data = res.pages.flat()
 
       const revokeMessage: Message[] = []
       const normalMessage: Message[] = []
 
-      data.forEach((msg) => {
+      data.forEach(msg => {
         if (msg.contentType === ChatMessageType.Cmd && msg.content.cmd === ChatCmdType.MessageRevoke) {
           revokeMessage.push(msg)
         } else {
@@ -89,7 +96,7 @@ const useMessages = () => {
         page: res.pageParams
       }
     },
-    enabled: !!channel,
+    enabled: !!channel
   })
 
   useUpdateEffect(() => {
@@ -160,13 +167,13 @@ export const ChatMessageList = () => {
   const { messages, fetchPreviousPage, hasMore, appendMessage, revokeMessage } = useMessages()
   const messagesLast = useLatestRef(messages)
   const scrollRef = useRef<ComponentRef<typeof JknVirtualInfinite>>(null)
-  useMessageListener((message) => {
+  useMessageListener(message => {
     if (message.channel.channelID !== channel?.channelID) return
     chatEvent.emit('messageUpdate', null)
     appendMessage(message)
   })
 
-  useCMDListener((cmd) => {
+  useCMDListener(cmd => {
     revokeMessage(cmd)
     chatEvent.emit('messageUpdate', null)
   })
@@ -246,7 +253,8 @@ export const ChatMessageList = () => {
     }
   }, [messages, messagesLast])
   return (
-    <JknVirtualInfinite className="w-full h-full chat-message-scroll-list"
+    <JknVirtualInfinite
+      className="w-full h-full chat-message-scroll-list"
       itemHeight={44}
       ref={scrollRef}
       rowKey="messageID"
@@ -256,19 +264,19 @@ export const ChatMessageList = () => {
       fetchMore={fetchPreviousPage}
       renderItem={(msg: Message) => (
         <ChatMessageRow key={msg.messageID} message={msg} onMessageSend={_onMessageSend}>
-          {
-            isRevokeMessage(msg) ? <RevokeRecord onReEdit={() => { }} revoker={msg.remoteExtra.revoker} channel={msg.channel} /> :
-              {
-                [ChatMessageType.Text]: <TextRecord message={msg} />,
-                // [ChatMessageType.Cmd]: <CmdRecord message={msg} />,
-                [ChatMessageType.Image]: <ImageRecord message={msg} />,
-                [ChatMessageType.System]: <SystemRecord message={msg} />,
-              }[msg.contentType] ?? null
-          }
+          {isRevokeMessage(msg) ? (
+            <RevokeRecord onReEdit={() => {}} revoker={msg.remoteExtra.revoker} channel={msg.channel} />
+          ) : (
+            ({
+              [ChatMessageType.Text]: <TextRecord message={msg} />,
+              // [ChatMessageType.Cmd]: <CmdRecord message={msg} />,
+              [ChatMessageType.Image]: <ImageRecord message={msg} />,
+              [ChatMessageType.System]: <SystemRecord message={msg} />
+            }[msg.contentType] ?? null)
+          )}
         </ChatMessageRow>
       )}
-    >
-    </JknVirtualInfinite>
+    ></JknVirtualInfinite>
   )
 }
 
@@ -283,7 +291,7 @@ const ChatMessageRow = ({ message, children, onMessageSend }: PropsWithChildren<
 
   const { fromName, fromAvatar } = message.remoteExtra.extra || {}
 
-  useMessageStatusListener(message, (msg) => {
+  useMessageStatusListener(message, msg => {
     if (message.clientSeq === msg.clientSeq) {
       message.status = msg.reasonCode === 1 ? MessageStatus.Normal : MessageStatus.Fail
       message.messageID = msg.messageID.toString()
@@ -295,21 +303,13 @@ const ChatMessageRow = ({ message, children, onMessageSend }: PropsWithChildren<
   })
 
   if (message.remoteExtra.revoke || +message.contentType === +ChatMessageType.System) {
-    return (
-      <div>
-        {children}
-      </div>
-    )
+    return <div>{children}</div>
   }
 
   const isSelfMessage = message.fromUID === uid
 
   if (message.contentType === ChatMessageType.Cmd) {
-    return (
-      <div className="py-1.5 text-xs text-tertiary text-center">
-        {children}
-      </div>
-    )
+    return <div className="py-1.5 text-xs text-tertiary text-center">{children}</div>
   }
 
   if (isSelfMessage) {
@@ -325,15 +325,15 @@ const ChatMessageRow = ({ message, children, onMessageSend }: PropsWithChildren<
             </div>
           </ChatMessageRowMenu>
           <div className="flex items-center space-x-1">
-            {
-              message.content.reply as Reply ? <ReplyMessage reply={message.content.reply as Reply} /> : null
-            }
+            {(message.content.reply as Reply) ? <ReplyMessage reply={message.content.reply as Reply} /> : null}
             <span className="text-xs text-tertiary scale-90 mt-1">
-              {
-                message.status === MessageStatus.Fail ? '发送失败' :
-                  message.status === MessageStatus.Wait ? '发送中...' :
-                    message.status === MessageStatus.Normal ? '已发送' : null
-              }
+              {message.status === MessageStatus.Fail
+                ? '发送失败'
+                : message.status === MessageStatus.Wait
+                  ? '发送中...'
+                  : message.status === MessageStatus.Normal
+                    ? '已发送'
+                    : null}
             </span>
           </div>
         </div>
@@ -356,11 +356,8 @@ const ChatMessageRow = ({ message, children, onMessageSend }: PropsWithChildren<
             {children}
           </div>
         </ChatMessageRowMenu>
-        {
-          message.content.reply as Reply ? <ReplyMessage reply={message.content.reply as Reply} /> : null
-        }
+        {(message.content.reply as Reply) ? <ReplyMessage reply={message.content.reply as Reply} /> : null}
       </div>
-
     </div>
   )
 }
@@ -373,12 +370,17 @@ interface ChatMessageRowMenuProps {
 
 const ChatMessageRowMenu = (props: PropsWithChildren<ChatMessageRowMenuProps>) => {
   const { message, children } = props
-  const [subscriber, setSubscriber] = useState<Nullable<Subscriber>>(WKSDK.shared().channelManager.getSubscribeOfMe(message.channel))
+  const [subscriber, setSubscriber] = useState<Nullable<Subscriber>>(
+    WKSDK.shared().channelManager.getSubscribeOfMe(message.channel)
+  )
 
-  useSubscribesListener(message.channel, useCallback(() => {
-    const s = WKSDK.shared().channelManager.getSubscribeOfMe(message.channel)
-    setSubscriber(s)
-  }, [message.channel]))
+  useSubscribesListener(
+    message.channel,
+    useCallback(() => {
+      const s = WKSDK.shared().channelManager.getSubscribeOfMe(message.channel)
+      setSubscriber(s)
+    }, [message.channel])
+  )
   // const onCopyMessage = () => {
   //   chatEvent.emit('copyMessage', { channelId: message.channel.channelID, message })
   // }
@@ -403,23 +405,19 @@ const ChatMessageRowMenu = (props: PropsWithChildren<ChatMessageRowMenuProps>) =
 
   return (
     <ContextMenu>
-      <ContextMenuTrigger asChild>
-        {children}
-      </ContextMenuTrigger>
+      <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
       <ContextMenuContent>
-        <ContextMenuItem onClick={onMentions} >
+        <ContextMenuItem onClick={onMentions}>
           <span>回复</span>
         </ContextMenuItem>
         <ContextMenuItem onClick={onReplyMessage}>
           <span>引用</span>
         </ContextMenuItem>
-        {
-          isChannelManager(subscriber!) || isChannelOwner(subscriber!) || subscriber?.uid === message.fromUID ? (
-            <ContextMenuItem onClick={onRevokeMessage}>
-              <span>撤回</span>
-            </ContextMenuItem>
-          ) : null
-        }
+        {isChannelManager(subscriber!) || isChannelOwner(subscriber!) || subscriber?.uid === message.fromUID ? (
+          <ContextMenuItem onClick={onRevokeMessage}>
+            <span>撤回</span>
+          </ContextMenuItem>
+        ) : null}
       </ContextMenuContent>
     </ContextMenu>
   )
@@ -433,11 +431,16 @@ const ReplyMessage = ({ reply }: ReplyMessageProps) => {
   return (
     <div className="bg-[#1c1d1f] p-1 box-border mt-1 rounded text-xs flex items-start max-w-full">
       <div>{reply?.fromName}: &nbsp;</div>
-      {reply?.content?.contentType ? {
-        [ChatMessageType.Text]: <div className="max-w-48">{(reply?.content as any).text}</div>,
-        [ChatMessageType.Image]: <div className="w-48 h-48"><img className="w-full h-full" src={(reply?.content as any).remoteUrl} alt="" /></div>,
-      }[reply?.content?.contentType] ?? null : null
-      }
+      {reply?.content?.contentType
+        ? ({
+            [ChatMessageType.Text]: <div className="max-w-48">{(reply?.content as any).text}</div>,
+            [ChatMessageType.Image]: (
+              <div className="w-48 h-48">
+                <img className="w-full h-full" src={(reply?.content as any).remoteUrl} alt="" />
+              </div>
+            )
+          }[reply?.content?.contentType] ?? null)
+        : null}
     </div>
   )
 }

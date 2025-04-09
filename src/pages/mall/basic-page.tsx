@@ -1,32 +1,26 @@
-import type { getMallProducts } from "@/api";
-import {
-  Button,
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-  JknIcon,
-} from "@/components";
-import { useToast } from "@/hooks";
-import { useConfig } from "@/store";
-import { cn } from "@/utils/style";
-import Decimal from "decimal.js";
-import { useEffect, useState } from "react";
-import { CheckIcon, CloseIcon, GradientCheckIcon } from "./components/mall-icon";
+import type { getMallProducts } from '@/api'
+import { Button, HoverCard, HoverCardContent, HoverCardTrigger, JknIcon } from '@/components'
+import { useToast } from '@/hooks'
+import { useConfig } from '@/store'
+import { cn } from '@/utils/style'
+import Decimal from 'decimal.js'
+import { useEffect, useState } from 'react'
+import { CheckIcon, CloseIcon, GradientCheckIcon } from './components/mall-icon'
 
 /**
  * 基础页面属性接口
  */
 interface BasicPageProps {
-  basic: Awaited<ReturnType<typeof getMallProducts>>["basic"];
-  type: string;
-  title: string;
+  basic: Awaited<ReturnType<typeof getMallProducts>>['basic']
+  type: string
+  title: string
   onSubmit: (form: {
-    productId: string;
-    name: string;
-    price: string;
-    model: string;
-    checked: boolean;
-  }) => void;
+    productId: string
+    name: string
+    price: string
+    model: string
+    checked: boolean
+  }) => void
 }
 
 /**
@@ -44,31 +38,31 @@ const PublicizeItem = ({
   isChannel
 }: {
   publicize: [number, string, any?]
-  index: number;
-  isActive: boolean;
-  isChannel: boolean;
+  index: number
+  isActive: boolean
+  isChannel: boolean
 }) => {
-  const isDisabled = publicize[0] === 0;
-  const publicizeName = publicize[1];
-  const isChannelActive = isActive && isChannel;
+  const isDisabled = publicize[0] === 0
+  const publicizeName = publicize[1]
+  const isChannelActive = isActive && isChannel
 
   return (
     <div className="flex items-center  space-x-2 text-base font-pingfang">
       <div className="flex items-center justify-center">
-      {isDisabled ? (
-        <CloseIcon />
-      ) : isChannelActive ? (
-        <GradientCheckIcon />
-      ) : (
-        <CheckIcon color={isActive ? "#FADFB0" : "#C0B8AA"} />
-      )}
+        {isDisabled ? (
+          <CloseIcon />
+        ) : isChannelActive ? (
+          <GradientCheckIcon />
+        ) : (
+          <CheckIcon color={isActive ? '#FADFB0' : '#C0B8AA'} />
+        )}
       </div>
 
       <span className="flex items-center text-nowrap ml-[10px]">
         <span
-          className={cn(isActive && isChannel && "gradient-text")}
+          className={cn(isActive && isChannel && 'gradient-text')}
           style={{
-            color: !isActive ? "#666666" : (!isChannel ? "#C0B8AA" : ""),
+            color: !isActive ? '#666666' : !isChannel ? '#C0B8AA' : '',
             opacity: isDisabled ? 0.4 : 1
           }}
         >
@@ -86,7 +80,7 @@ const PublicizeItem = ({
                 <div className="flex-1 border-0 border-r border-solid border-accent">
                   <div className="bg-accent">主图</div>
                   <div className="grid grid-cols-2 text-start gap-2 p-2">
-                    {(publicize[2].main as string).split(",").map((s) => (
+                    {(publicize[2].main as string).split(',').map(s => (
                       <span key={s}>{s}</span>
                     ))}
                   </div>
@@ -94,7 +88,7 @@ const PublicizeItem = ({
                 <div className="flex-1">
                   <div className="bg-accent">副图</div>
                   <div className="grid grid-cols-2 text-start gap-2 p-2">
-                    {(publicize[2].secondary as string).split(",").map((s) => (
+                    {(publicize[2].secondary as string).split(',').map(s => (
                       <span key={s}>{s}</span>
                     ))}
                   </div>
@@ -105,18 +99,18 @@ const PublicizeItem = ({
         ) : null}
       </span>
     </div>
-  );
-};
+  )
+}
 
 /**
  * 基础页面组件 - 展示产品列表
  * @param props 组件属性
  */
 export const BasicPage = (props: BasicPageProps) => {
-  const unit = props.type === "model_month" ? "月" : "年";
-  const hasChinaIp = useConfig((s) => s.ip === "CN");
-  const { toast } = useToast();
-  const [activeProductId, setActiveProductId] = useState<string | null>(null);
+  const unit = props.type === 'model_month' ? '月' : '年'
+  const hasChinaIp = useConfig(s => s.ip === 'CN')
+  const { toast } = useToast()
+  const [activeProductId, setActiveProductId] = useState<string | null>(null)
 
   /**
    * 处理购买操作
@@ -125,42 +119,42 @@ export const BasicPage = (props: BasicPageProps) => {
    * @param name 产品名称
    */
   const onBuy = (productId: string, price: string, name: string) => {
-    const product = props.basic.find((b) => b.id === productId);
+    const product = props.basic.find(b => b.id === productId)
     if (!product) {
-      return;
+      return
     }
 
     if (product.forbidden) {
       toast({
-        description: product.forbidden,
-      });
-      return;
+        description: product.forbidden
+      })
+      return
     }
 
-    setActiveProductId(productId);
+    setActiveProductId(productId)
 
     props.onSubmit({
       productId,
       name: `${props.title}-${name}`,
       price,
       model: props.type,
-      checked: false,
-    });
-  };
+      checked: false
+    })
+  }
 
   return (
     <div>
       <div className="flex justify-between space-x-[10px]">
-        {props.basic.map((product) => {
-          const isActive = activeProductId === product.id;
+        {props.basic.map(product => {
+          const isActive = activeProductId === product.id
 
           return (
             <div
               key={product.id}
               onFocus={() => {}}
               className={cn(
-                "relative w-[280px] p-[1px] rounded-2xl box-border space-y-[10px] transition-all duration-300",
-                isActive ? "active-card" : "default-card"
+                'relative w-[280px] p-[1px] rounded-2xl box-border space-y-[10px] transition-all duration-300',
+                isActive ? 'active-card' : 'default-card'
               )}
               onMouseOver={() => setActiveProductId(product.id)}
               onMouseLeave={() => setActiveProductId(null)}
@@ -168,30 +162,25 @@ export const BasicPage = (props: BasicPageProps) => {
               <div
                 className="py-10 px-5 rounded-2xl text-center cursor-pointer"
                 style={{
-                  background: isActive ? "#19130F" : "#0E0E0E"
+                  background: isActive ? '#19130F' : '#0E0E0E'
                 }}
               >
-                {product.is_hot === "1" ? (
+                {product.is_hot === '1' ? (
                   <div className="absolute right-[-3px] top-[-7px] w-[104px] h-[33px] flex items-center justify-center recommend-tag">
                     超值推荐
                   </div>
                 ) : null}
                 <div>
-                  <div className={cn("text-[20px]", isActive && "text-[#F5E1CF]")}>
-                    {product.name}
-                  </div>
+                  <div className={cn('text-[20px]', isActive && 'text-[#F5E1CF]')}>{product.name}</div>
                   <div className="flex items-end justify-center text-5xl pt-5">
-                    <span className={cn("price-text", isActive && "text-[#F5E1CF]")}>
+                    <span className={cn('price-text', isActive && 'text-[#F5E1CF]')}>
                       ${product[props.type as keyof typeof product]}
                     </span>
-                    <span className="text-base text-[#575757] font-pingfang">
-                      /{unit}
-                    </span>
+                    <span className="text-base text-[#575757] font-pingfang">/{unit}</span>
                   </div>
-                  {props.type !== "model_month" ? (
+                  {props.type !== 'model_month' ? (
                     <div className="pt-[10px] text-base text-[#575757] line-through">
-                      ${Decimal.create(+product.model_month * 12).toFixed(2)}/
-                      {unit}
+                      ${Decimal.create(+product.model_month * 12).toFixed(2)}/{unit}
                     </div>
                   ) : null}
                 </div>
@@ -200,23 +189,17 @@ export const BasicPage = (props: BasicPageProps) => {
                     block
                     size="lg"
                     className={cn(
-                      "w-[240px] h-12 rounded-[8px] font-pingfang text-xl bg-transparent border-[#666666] border border-solid",
-                      !isActive && "hover:bg-[#3a3a3a] "
+                      'w-[240px] h-12 rounded-[8px] font-pingfang text-xl bg-transparent border-[#666666] border border-solid',
+                      !isActive && 'hover:bg-[#3a3a3a] '
                     )}
                     style={{
-                      background: isActive
-                        ? "linear-gradient(to right, #FADFB0, #FECA90, #EC9B51)"
-                        : "",
-                      color: isActive ? "#6A4C18" : "#F5E1CF",
-                      fontWeight: isActive ? "bold" : "normal",
+                      background: isActive ? 'linear-gradient(to right, #FADFB0, #FECA90, #EC9B51)' : '',
+                      color: isActive ? '#6A4C18' : '#F5E1CF',
+                      fontWeight: isActive ? 'bold' : 'normal'
                     }}
-                    onClick={(e) => {
-                      e.stopPropagation(); // 阻止冒泡，避免触发卡片的点击事件
-                      onBuy(
-                        product.id,
-                        product[props.type as keyof typeof product] as string,
-                        product.name
-                      );
+                    onClick={e => {
+                      e.stopPropagation() // 阻止冒泡，避免触发卡片的点击事件
+                      onBuy(product.id, product[props.type as keyof typeof product] as string, product.name)
                     }}
                   >
                     立即开通
@@ -246,7 +229,7 @@ export const BasicPage = (props: BasicPageProps) => {
                 </div>
               </div>
             </div>
-          );
+          )
         })}
       </div>
       <style jsx>
@@ -300,5 +283,5 @@ export const BasicPage = (props: BasicPageProps) => {
         `}
       </style>
     </div>
-  );
-};
+  )
+}

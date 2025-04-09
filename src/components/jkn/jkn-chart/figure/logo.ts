@@ -16,7 +16,7 @@ let logoCache: Nullable<CanvasImageSource> = null
 export const LogoFigure: FigureTemplate<LogoAttrs> = {
   name: 'logo',
   draw: (ctx, attrs) => {
-    if(!logoCache){
+    if (!logoCache) {
       const img = new Image()
       img.src = stockLogo
       img.onload = () => {

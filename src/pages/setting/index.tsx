@@ -1,11 +1,30 @@
-import { updateUser } from "@/api"
-import { Button, Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, Input, JknIcon, Label, RadioGroup, RadioGroupItem, ScrollArea, Textarea } from '@/components'
+import { updateUser } from '@/api'
+import {
+  Button,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  Input,
+  JknIcon,
+  Label,
+  RadioGroup,
+  RadioGroupItem,
+  ScrollArea,
+  Textarea
+} from '@/components'
 import { useToast } from '@/hooks'
 import { useConfig, useUser } from '@/store'
 import { cn } from '@/utils/style'
-import { useMutation } from "@tanstack/react-query"
+import { useMutation } from '@tanstack/react-query'
 import { type PropsWithChildren, useState } from 'react'
-import { useChartManage } from "../stock/lib"
+import { useChartManage } from '../stock/lib'
 
 const SettingPage = () => {
   const config = useConfig()
@@ -42,19 +61,19 @@ const SettingPage = () => {
     <ScrollArea className="h-full bg-muted text-sm">
       <div className="mx-auto h-full w-[800px] relative">
         <div className="absolute border border-solid border-border translate-x-[-100%] -ml-10 top-10">
-          <div className="py-4 px-8 cursor-pointer" onClick={() => onScrollTo('系统设置')} onKeyDown={() => { }}>
+          <div className="py-4 px-8 cursor-pointer" onClick={() => onScrollTo('系统设置')} onKeyDown={() => {}}>
             {' '}
             系统设置
           </div>
-          <div className="py-4 px-8 cursor-pointer" onClick={() => onScrollTo('功能建议')} onKeyDown={() => { }}>
+          <div className="py-4 px-8 cursor-pointer" onClick={() => onScrollTo('功能建议')} onKeyDown={() => {}}>
             {' '}
             功能建议
           </div>
-          <div className="py-4 px-8 cursor-pointer" onClick={() => onScrollTo('合作联系')} onKeyDown={() => { }}>
+          <div className="py-4 px-8 cursor-pointer" onClick={() => onScrollTo('合作联系')} onKeyDown={() => {}}>
             {' '}
             合作联系
           </div>
-          <div className="py-4 px-8 cursor-pointer" onClick={() => onScrollTo('版本信息')} onKeyDown={() => { }}>
+          <div className="py-4 px-8 cursor-pointer" onClick={() => onScrollTo('版本信息')} onKeyDown={() => {}}>
             {' '}
             版本信息
           </div>
@@ -92,7 +111,7 @@ const SettingPage = () => {
                     config.setting.upOrDownColor === 'upGreenAndDownRed' && 'border-primary'
                   )}
                   onClick={() => config.setSetting({ upOrDownColor: 'upGreenAndDownRed' })}
-                  onKeyDown={() => { }}
+                  onKeyDown={() => {}}
                 >
                   <div className="flex items-center mb-1">
                     绿涨&emsp;
@@ -109,7 +128,7 @@ const SettingPage = () => {
                     config.setting.upOrDownColor === 'upRedAndDownGreen' && 'border-primary'
                   )}
                   onClick={() => config.setSetting({ upOrDownColor: 'upRedAndDownGreen' })}
-                  onKeyDown={() => { }}
+                  onKeyDown={() => {}}
                 >
                   <div className="flex items-center">
                     红涨&emsp;
@@ -218,13 +237,11 @@ const SettingPage = () => {
                     </div>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent>
-                    {
-                      [0, 1, 2, 3, 4, 5].map((item) => (
-                        <DropdownMenuItem key={item} onClick={() => config.setSetting({ gapShow: item.toString() })}>
-                          {item}
-                        </DropdownMenuItem>
-                      ))
-                    }
+                    {[0, 1, 2, 3, 4, 5].map(item => (
+                      <DropdownMenuItem key={item} onClick={() => config.setSetting({ gapShow: item.toString() })}>
+                        {item}
+                      </DropdownMenuItem>
+                    ))}
                   </DropdownMenuContent>
                 </DropdownMenu>
                 个
@@ -234,12 +251,11 @@ const SettingPage = () => {
             <SettingItem label="警报邮箱">
               <div>
                 <span>
-                  {user?.alarm_email ? (
-                    <span>{user.alarm_email}</span>
-                  ) : <span className="text-tertiary">未设置</span>
-                  }
+                  {user?.alarm_email ? <span>{user.alarm_email}</span> : <span className="text-tertiary">未设置</span>}
                   <AlarmEmailSetting>
-                    <Button size="mini" className="ml-2" onClick={() => { }}>{!user?.alarm_email ? '设置' : '修改'}</Button>
+                    <Button size="mini" className="ml-2" onClick={() => {}}>
+                      {!user?.alarm_email ? '设置' : '修改'}
+                    </Button>
                   </AlarmEmailSetting>
                 </span>
               </div>
@@ -289,20 +305,26 @@ const SettingPage = () => {
               </span>
             </div>
             {config.debug ? (
-              <div className="cursor-pointer" onClick={() => config.setDebug(false)} onKeyDown={() => { }}>
+              <div className="cursor-pointer" onClick={() => config.setDebug(false)} onKeyDown={() => {}}>
                 【test env】 x-test: true
               </div>
             ) : null}
           </div>
           <div className="flex flex-col space-y-2 items-start mb-8">
-            <Button variant="outline" size="mini" onClick={() => useChartManage.setState(useChartManage.getInitialState())}>清除个股缓存</Button>
+            <Button
+              variant="outline"
+              size="mini"
+              onClick={() => useChartManage.setState(useChartManage.getInitialState())}
+            >
+              清除个股缓存
+            </Button>
           </div>
           <SettingItem label="更多平台支持">
             <div className="flex items-center space-x-12 text-[#565656]">
               <div
                 className="cursor-pointer flex flex-col items-center space-y-2"
                 onClick={() => open('https://www.mgjkn.com/download')}
-                onKeyDown={() => { }}
+                onKeyDown={() => {}}
               >
                 <JknIcon name="ic_windows" className="w-12 h-12 rounded-none" />
                 <span>Windows</span>
@@ -310,7 +332,7 @@ const SettingPage = () => {
               <div
                 className="cursor-pointer flex flex-col items-center space-y-2"
                 onClick={() => open('https://www.mgjkn.com/download')}
-                onKeyDown={() => { }}
+                onKeyDown={() => {}}
               >
                 <JknIcon name="ic_macos" className="w-12 h-12 rounded-none" />
                 <span>MacOS</span>
@@ -318,7 +340,7 @@ const SettingPage = () => {
               <div
                 className="cursor-pointer flex flex-col items-center space-y-2"
                 onClick={() => open('https://www.mgjkn.com/download')}
-                onKeyDown={() => { }}
+                onKeyDown={() => {}}
               >
                 <JknIcon name="ic_ios" className="w-12 h-12 rounded-none" />
                 <span>iOS</span>
@@ -326,7 +348,7 @@ const SettingPage = () => {
               <div
                 className="cursor-pointer flex flex-col items-center space-y-2"
                 onClick={() => open('https://www.mgjkn.com/download')}
-                onKeyDown={() => { }}
+                onKeyDown={() => {}}
               >
                 <JknIcon name="ic_android" className="w-12 h-12 rounded-none" />
                 <span>Android</span>
@@ -370,7 +392,7 @@ const AlarmEmailSetting = ({ children }: PropsWithChildren) => {
       setOpen(false)
       refreshUser()
     },
-    onError: (e) => {
+    onError: e => {
       toast({
         description: e.message
       })
@@ -379,9 +401,7 @@ const AlarmEmailSetting = ({ children }: PropsWithChildren) => {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        {children}
-      </DialogTrigger>
+      <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="w-[320px]">
         <DialogHeader>
           <DialogTitle asChild>
@@ -395,7 +415,9 @@ const AlarmEmailSetting = ({ children }: PropsWithChildren) => {
           <Input value={email} onChange={v => setEmail(v.target.value)} />
         </div>
         <div className="mt-2 text-center mb-4">
-          <Button loading={saveEmail.isPending} onClick={() => saveEmail.mutate()}>保存</Button>
+          <Button loading={saveEmail.isPending} onClick={() => saveEmail.mutate()}>
+            保存
+          </Button>
         </div>
       </DialogContent>
     </Dialog>

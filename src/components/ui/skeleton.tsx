@@ -1,11 +1,16 @@
 import { cn } from '@/utils/style'
 import { nanoid } from 'nanoid'
+import { memo, useMemo } from 'react'
 
 /**
- * 
+ *
  */
 
-function Skeleton({ className, animation = true, ...props }: React.HTMLAttributes<HTMLDivElement> & { animation?: boolean }) {
+function Skeleton({
+  className,
+  animation = true,
+  ...props
+}: React.HTMLAttributes<HTMLDivElement> & { animation?: boolean }) {
   /**
    * 随机100 - 10的长度变化
    */
@@ -44,5 +49,16 @@ function Skeleton({ className, animation = true, ...props }: React.HTMLAttribute
     </>
   )
 }
+
+export const SkeletonLoading = memo(({ count }: { count: number }) => {
+  const arr = useMemo(() => Array.from({ length: count }, _ => nanoid(8)) as string[], [count])
+  return (
+    <div className="space-y-2">
+      {arr.map(s => (
+        <Skeleton key={s} className="h-6" />
+      ))}
+    </div>
+  )
+})
 
 export { Skeleton }

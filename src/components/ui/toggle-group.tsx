@@ -13,7 +13,7 @@ const ToggleGroupContext = React.createContext<VariantProps<typeof toggleVariant
 const ToggleGroup = React.forwardRef<
   React.ElementRef<typeof ToggleGroupPrimitive.Root>,
   React.ComponentPropsWithoutRef<typeof ToggleGroupPrimitive.Root> &
-  VariantProps<typeof toggleVariants> & { activeColor?: string, hoverColor?: string }
+    VariantProps<typeof toggleVariants> & { activeColor?: string; hoverColor?: string }
 >(({ className, variant, size, children, activeColor, hoverColor, style, ...props }, ref) => (
   <ToggleGroupPrimitive.Root
     ref={ref}
@@ -36,7 +36,7 @@ ToggleGroup.displayName = ToggleGroupPrimitive.Root.displayName
 const ToggleGroupItem = React.forwardRef<
   React.ElementRef<typeof ToggleGroupPrimitive.Item>,
   React.ComponentPropsWithoutRef<typeof ToggleGroupPrimitive.Item> &
-  VariantProps<typeof toggleVariants> & { activeColor?: string }
+    VariantProps<typeof toggleVariants> & { activeColor?: string }
 >(({ className, children, variant, size, activeColor, ...props }, ref) => {
   const context = React.useContext(ToggleGroupContext)
 

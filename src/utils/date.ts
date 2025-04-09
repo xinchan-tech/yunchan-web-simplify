@@ -1,7 +1,7 @@
 import { useConfig, useTime } from '@/store'
 import dayjs, { type Dayjs } from 'dayjs'
 import type { StockTrading } from './stock'
-import { m } from "node_modules/react-router/dist/production/fog-of-war-BDQTYoRQ.d.mts"
+import { m } from 'node_modules/react-router/dist/production/fog-of-war-BDQTYoRQ.d.mts'
 
 /**
  * 将小时和分钟转换为数字

@@ -1,7 +1,15 @@
-
-import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuSeparator, ContextMenuSub, ContextMenuSubContent, ContextMenuSubTrigger, ContextMenuTrigger } from "@/components"
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuSeparator,
+  ContextMenuSub,
+  ContextMenuSubContent,
+  ContextMenuSubTrigger,
+  ContextMenuTrigger
+} from '@/components'
 import type { PropsWithChildren } from 'react'
-import { chartManage, type ChartStore, MainYAxis, renderUtils } from "../lib"
+import { chartManage, type ChartStore, MainYAxis, renderUtils } from '../lib'
 
 interface ChartContextMenuProps {
   chartId: string
@@ -37,14 +45,9 @@ export const ChartContextMenu = (props: PropsWithChildren<ChartContextMenuProps>
   }
 
   return (
-
     <ContextMenu>
-      <ContextMenuTrigger asChild >
-        <div className="w-full h-full overflow-hidden flex flex-col">
-          {
-            props.children
-          }
-        </div>
+      <ContextMenuTrigger asChild>
+        <div className="w-full h-full overflow-hidden flex flex-col">{props.children}</div>
       </ContextMenuTrigger>
       <ContextMenuContent className="w-24 min-w-4 border border-solid border-dialog-border">
         <ContextMenuSub>
@@ -52,7 +55,9 @@ export const ChartContextMenu = (props: PropsWithChildren<ChartContextMenuProps>
           <ContextMenuSubContent className="w-24 min-w-4 border border-solid border-dialog-border" sideOffset={10}>
             <ContextMenuItem onClick={_setYAxis({ right: MainYAxis.Price })}>价格坐标</ContextMenuItem>
             <ContextMenuItem onClick={_setYAxis({ right: MainYAxis.Percentage })}>涨幅坐标</ContextMenuItem>
-            <ContextMenuItem onClick={_setYAxis({ left: MainYAxis.Price, right: MainYAxis.Percentage })}>双边坐标</ContextMenuItem>
+            <ContextMenuItem onClick={_setYAxis({ left: MainYAxis.Price, right: MainYAxis.Percentage })}>
+              双边坐标
+            </ContextMenuItem>
           </ContextMenuSubContent>
         </ContextMenuSub>
       </ContextMenuContent>

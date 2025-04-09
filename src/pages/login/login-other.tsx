@@ -1,12 +1,12 @@
-import { getWxLoginStatus } from "@/api"
-import { JknIcon, useModal } from "@/components"
-import { useToken } from "@/store"
-import { appEvent } from "@/utils/event"
-import { useMount, useUnmount } from "ahooks"
-import { uid } from "radash"
-import { useRef, useEffect } from "react"
+import { getWxLoginStatus } from '@/api'
+import { JknIcon, useModal } from '@/components'
+import { useToken } from '@/store'
+import { appEvent } from '@/utils/event'
+import { useMount, useUnmount } from 'ahooks'
+import { uid } from 'radash'
+import { useRef, useEffect } from 'react'
 import QRCode from 'qrcode'
-import { router } from "@/router"
+import { router } from '@/router'
 
 interface ThirdLoginFormProps {
   onLogin: (data: any) => void
@@ -27,7 +27,6 @@ type AppleLoginResult = {
   }
 }
 
-
 export const AppleLogin = (props: ThirdLoginFormProps) => {
   useMount(() => {
     window.AppleID.auth.init({
@@ -47,7 +46,7 @@ export const AppleLogin = (props: ThirdLoginFormProps) => {
   }
 
   return (
-    <div className="apple-login cursor-pointer" onClick={onClick} onKeyUp={() => { }}>
+    <div className="apple-login cursor-pointer" onClick={onClick} onKeyUp={() => {}}>
       <JknIcon name="apple-2" className="size-8" />
     </div>
   )
@@ -64,7 +63,7 @@ export const WeChatLogin = () => {
 
   return (
     <>
-      <div className="wechat-login w-8 h-8 cursor-pointer" onClick={modal.modal.open} onKeyUp={() => { }}>
+      <div className="wechat-login w-8 h-8 cursor-pointer" onClick={modal.modal.open} onKeyUp={() => {}}>
         <JknIcon name="wechat-2" className="size-8" />
       </div>
       {modal.context}
@@ -79,7 +78,7 @@ export const GoogleLogin = (props: ThirdLoginFormProps) => {
     onLoginRef.current = props.onLogin
 
     return () => {
-      onLoginRef.current = () => { }
+      onLoginRef.current = () => {}
     }
   }, [props.onLogin])
 
@@ -111,7 +110,7 @@ export const GoogleLogin = (props: ThirdLoginFormProps) => {
   }
   return (
     <div className="google-login cursor-pointer relative overflow-hidden size-8">
-      <div id="google-login-2" className="w-full h-full" onClick={checkGoogleScript} onKeyDown={() => { }} />
+      <div id="google-login-2" className="w-full h-full" onClick={checkGoogleScript} onKeyDown={() => {}} />
       <div className="bg-background w-full h-full absolute top-0 left-0 pointer-events-none">
         <JknIcon name="google-2" className="size-full" />
       </div>
@@ -170,9 +169,7 @@ const WxLoginForm = () => {
   return (
     <div className="h-[351px] flex flex-col items-center justify-center">
       <canvas id="wx-qrcode" className="w-[160px] h-[160px] rounded-[14px]" ref={canvas} />
-      <div className="mt-5">
-        请用微信扫码登录
-      </div>
+      <div className="mt-5">请用微信扫码登录</div>
     </div>
   )
 }

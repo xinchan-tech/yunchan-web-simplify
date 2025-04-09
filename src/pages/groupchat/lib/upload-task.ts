@@ -1,4 +1,4 @@
-import { uploadUtils } from "@/utils/oss"
+import { uploadUtils } from '@/utils/oss'
 import type { Canceler } from 'axios'
 import { nanoid } from 'nanoid'
 import { type MediaMessageContent, MessageTask, TaskStatus } from 'wukongimjssdk'

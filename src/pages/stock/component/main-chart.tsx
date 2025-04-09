@@ -1,9 +1,9 @@
 import type { StockRawRecord } from '@/api'
 import { ChartTypes, JknChart, JknIcon } from '@/components'
-import { useStockBarSubscribe } from "@/hooks"
-import { useConfig, useTime } from "@/store"
+import { useStockBarSubscribe } from '@/hooks'
+import { useConfig, useTime } from '@/store'
 import { type Stock, stockSubscribe, stockUtils } from '@/utils/stock'
-import { colorUtil } from "@/utils/style"
+import { colorUtil } from '@/utils/style'
 import { useMount, useUnmount } from 'ahooks'
 import qs from 'qs'
 import { type ComponentRef, useEffect, useRef, useState } from 'react'
@@ -11,7 +11,7 @@ import { chartEvent } from '../lib/event'
 import { useCandlesticks } from '../lib/request'
 import { ChartType, MainYAxis, chartManage, useChartManage } from '../lib/store'
 import { renderUtils } from '../lib/utils'
-import { BackTestBar } from "./back-test-bar"
+import { BackTestBar } from './back-test-bar'
 import { ChartContextMenu } from './chart-context-menu'
 
 interface MainChartProps {
@@ -23,10 +23,11 @@ const getSymbolByUrl = () => {
   return query.symbol as string
 }
 
-const convertToStock = (candlesticks: StockRawRecord[]) => candlesticks.map(c => {
-  c[6] = c[6]! / 10000
-  return stockUtils.toStock(c)
-})
+const convertToStock = (candlesticks: StockRawRecord[]) =>
+  candlesticks.map(c => {
+    c[6] = c[6]! / 10000
+    return stockUtils.toStock(c)
+  })
 
 export const MainChart = (props: MainChartProps) => {
   const [symbol, setSymbol] = useState(getSymbolByUrl())
@@ -42,7 +43,7 @@ export const MainChart = (props: MainChartProps) => {
   })
   const lastBarInInterval = useRef<Stock | null>(null)
 
-  useStockBarSubscribe([`${symbol}@${stockUtils.intervalToPeriod(chartStore.interval)}`], (data) => {
+  useStockBarSubscribe([`${symbol}@${stockUtils.intervalToPeriod(chartStore.interval)}`], data => {
     const mode = useChartManage.getState().chartStores[props.chartId].mode
     if (mode === 'backTest') return
     const trading = useTime.getState().getTrading()
@@ -72,14 +73,20 @@ export const MainChart = (props: MainChartProps) => {
       // }, interval)
     } else {
       // 用bar数据覆盖上一根k线quote的数据
-      if(lastBarInInterval.current) {
-        chartImp.current?.appendCandlestick({
-          ...lastBarInInterval.current
-        }, interval)
+      if (lastBarInInterval.current) {
+        chartImp.current?.appendCandlestick(
+          {
+            ...lastBarInInterval.current
+          },
+          interval
+        )
       }
-      chartImp.current?.appendCandlestick({
-        ...record
-      }, interval)
+      chartImp.current?.appendCandlestick(
+        {
+          ...record
+        },
+        interval
+      )
     }
   })
 
@@ -189,8 +196,6 @@ export const MainChart = (props: MainChartProps) => {
       chartImp.current?.createGapIndicator(Number.parseInt(gapShow))
     }
 
-
-
     // chartImp.current?.setLeftAxis(!!_store.yAxis.left)
     // chartImp.current?.setRightAxis(_store.yAxis.right === MainYAxis.Percentage ? 'percentage' : 'normal')
   })
@@ -230,7 +235,7 @@ export const MainChart = (props: MainChartProps) => {
   useEffect(() => {
     if (activeChartId !== props.chartId) return
 
-    const cancelSymbolEvent = chartEvent.on('symbolChange', (symbol) => {
+    const cancelSymbolEvent = chartEvent.on('symbolChange', symbol => {
       setSymbol(symbol)
       chartManage.setSymbol(symbol, props.chartId)
       chartManage.setMode('normal')
@@ -240,7 +245,7 @@ export const MainChart = (props: MainChartProps) => {
     //   chartImp.current?.setCoiling(coiling, use)
     // })
 
-    const cancelIntervalEvent = chartEvent.on('intervalChange', async (interval) => {
+    const cancelIntervalEvent = chartEvent.on('intervalChange', async interval => {
       if (renderUtils.isTimeIndexChart(interval)) {
         // chartManage.setType(ChartType.Area, props.chartId)
         chartImp.current?.setTimeShareChart(interval)
@@ -259,7 +264,7 @@ export const MainChart = (props: MainChartProps) => {
       })
     })
 
-    const cancelCharTypeEvent = chartEvent.on('chartTypeChange', (type) => {
+    const cancelCharTypeEvent = chartEvent.on('chartTypeChange', type => {
       chartImp.current?.setChartType(type === ChartType.Candle ? 'candle' : 'area')
     })
 
@@ -294,7 +299,6 @@ export const MainChart = (props: MainChartProps) => {
     const cancelStockCompareChange = chartEvent.on('stockCompareChange', ({ type, symbol }) => {
       if (chartImp.current === null) return
       if (type === 'add') {
-
         if (!stockCache.current.compare.has(symbol)) {
           if (!stockCache.current.rightAxisBeforePk) {
             stockCache.current.rightAxisBeforePk = {
@@ -303,7 +307,14 @@ export const MainChart = (props: MainChartProps) => {
           }
           const color = colorUtil.colorPalette[stockCache.current.compare.size]
 
-          stockCache.current.compare.set(symbol, chartImp.current?.createStockCompare(symbol, { color, interval: chartStore.interval, startAt: startAt.current ?? undefined }))
+          stockCache.current.compare.set(
+            symbol,
+            chartImp.current?.createStockCompare(symbol, {
+              color,
+              interval: chartStore.interval,
+              startAt: startAt.current ?? undefined
+            })
+          )
         }
       } else {
         stockCache.current.compare.delete(symbol)
@@ -321,16 +332,17 @@ export const MainChart = (props: MainChartProps) => {
           chartImp.current?.removeMarkOverlay(stockCache.current.mark)
         }
 
-        stockCache.current.mark = chartImp.current?.createMarkOverlay(symbol, params.type, params.mark, () => {
-          chartManage.removeMarkOverlay(props.chartId)
-        }) ?? ''
+        stockCache.current.mark =
+          chartImp.current?.createMarkOverlay(symbol, params.type, params.mark, () => {
+            chartManage.removeMarkOverlay(props.chartId)
+          }) ?? ''
       } else {
         chartImp.current?.removeMarkOverlay(stockCache.current.mark)
         stockCache.current.mark = ''
       }
     })
 
-    const cancelYAxisChange = chartEvent.on('yAxisChange', (type) => {
+    const cancelYAxisChange = chartEvent.on('yAxisChange', type => {
       console.log('yAxisChange', type)
       if (type.left) {
         chartImp.current?.setAxisType('double')
@@ -368,7 +380,6 @@ export const MainChart = (props: MainChartProps) => {
   //   }
   // }, [chartStore.mode])
 
-
   const onAddBackTestRecord = (record: any) => {
     chartImp.current?.createBackTestIndicator([record])
   }
@@ -389,33 +400,36 @@ export const MainChart = (props: MainChartProps) => {
     <ChartContextMenu chartId={props.chartId}>
       <div className="flex-1 overflow-hidden relative">
         <div className="absolute top-6 left-1/2 -translate-x-1/2 z-20 flex items-center space-x-4">
-          {
-            chartStore.overlayStock.map((item, index) => (
-              <div key={item.symbol} className="cursor-pointer text-xs text-transparent border border-solid border-transparent flex items-center hover:text-foreground hover:border-foreground box-border px-1.5 rounded">
-                <span className="size-2" style={{ background: colorUtil.colorPalette[index] }} />
-                <span className="text-foreground mx-2">{item.symbol}</span>
-                <JknIcon.Svg name="delete" size={12} onClick={() => chartManage.removeStockOverlay(item.symbol, props.chartId)} />
-              </div>
-            ))
-          }
+          {chartStore.overlayStock.map((item, index) => (
+            <div
+              key={item.symbol}
+              className="cursor-pointer text-xs text-transparent border border-solid border-transparent flex items-center hover:text-foreground hover:border-foreground box-border px-1.5 rounded"
+            >
+              <span className="size-2" style={{ background: colorUtil.colorPalette[index] }} />
+              <span className="text-foreground mx-2">{item.symbol}</span>
+              <JknIcon.Svg
+                name="delete"
+                size={12}
+                onClick={() => chartManage.removeStockOverlay(item.symbol, props.chartId)}
+              />
+            </div>
+          ))}
         </div>
         <JknChart className="w-full" showLogo ref={chartImp} />
       </div>
-      {
-        chartStore.mode === 'backTest' ? (
-          <div>
-            <BackTestBar
-              chartId={props.chartId}
-              candlesticks={candlesticks}
-              onNextCandlesticks={onNextBackTestLine}
-              onChangeCandlesticks={(d) => chartImp.current?.applyNewData(convertToStock(d))}
-              onAddBackTestRecord={onAddBackTestRecord}
-              onSetBackTestRecord={onSetBackTestRecord}
-              onPrevCandlesticks={onPrevBackTestLine}
-            />
-          </div>
-        ) : null
-      }
+      {chartStore.mode === 'backTest' ? (
+        <div>
+          <BackTestBar
+            chartId={props.chartId}
+            candlesticks={candlesticks}
+            onNextCandlesticks={onNextBackTestLine}
+            onChangeCandlesticks={d => chartImp.current?.applyNewData(convertToStock(d))}
+            onAddBackTestRecord={onAddBackTestRecord}
+            onSetBackTestRecord={onSetBackTestRecord}
+            onPrevCandlesticks={onPrevBackTestLine}
+          />
+        </div>
+      ) : null}
     </ChartContextMenu>
   )
 }

@@ -102,10 +102,11 @@ type AddAlarmParams = {
     fall?: number[]
     frequency?: number
     is_email?: '0' | '1'
+    float_params?: {price: number, type: number; change_value: number}[]
   }
 }
 export const addAlarm = async (params: AddAlarmParams) => {
-  return request.post('/alarm/add', params).then(r => r.data)
+  return request.post('/stock-svc/alarm/stocks', params).then(r => r.data)
 }
 
 type GetAlarmTypesResult = {
@@ -224,7 +225,18 @@ type PriceAlarmType = AlarmBaseType & {
   }
 }
 
-type GetAlarmConditionsListResult = AlarmAIType | PriceAlarmType
+type PercentAlarmType = AlarmBaseType & {
+  type: AlarmType.PERCENT
+  condition: {
+    float_param: {
+      price: number
+      type: number
+      change_value: number
+    }
+  }
+}
+
+type GetAlarmConditionsListResult = AlarmAIType | PriceAlarmType | PercentAlarmType
 
 /**
  * 警报列表

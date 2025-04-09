@@ -18,7 +18,7 @@ import {
   Separator,
   useModal
 } from '@/components'
-import { useLatestRef, useStack, useToast } from "@/hooks"
+import { useLatestRef, useStack, useToast } from '@/hooks'
 import { dateUtils } from '@/utils/date'
 import { stockUtils } from '@/utils/stock'
 import { cn } from '@/utils/style'
@@ -26,7 +26,7 @@ import { useUnmount } from 'ahooks'
 import dayjs from 'dayjs'
 import Decimal from 'decimal.js'
 import { memo, useRef, useState } from 'react'
-import { useChartManage } from "../lib"
+import { useChartManage } from '../lib'
 import { renderUtils } from '../lib/utils'
 
 const disabledDate = (d: Date, candlesticks: StockRawRecord[]) => {
@@ -45,7 +45,14 @@ interface BackTestBarProps {
   onNextCandlesticks: (candlestick: StockRawRecord) => void
   onPrevCandlesticks: (count: number) => void
   onChangeCandlesticks: (data: StockRawRecord[]) => void
-  onAddBackTestRecord: (record: { time: number; price: number; count: number; type: 'buy' | 'sell' | 'sellToZero' | 'buyToZero', index: number, cost: number }) => void
+  onAddBackTestRecord: (record: {
+    time: number
+    price: number
+    count: number
+    type: 'buy' | 'sell' | 'sellToZero' | 'buyToZero'
+    index: number
+    cost: number
+  }) => void
   onSetBackTestRecord: (records: any[]) => void
 }
 
@@ -70,9 +77,9 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
   const [timer, setTimer] = useState<number | null>(null)
 
   const currentKline = useRef<number>(-1)
-  const maxProfit = useStack<{ max: number, index: number }>([])
-  const profit = useStack<{ profit: number, index: number }>([])
-  const positiveProfitCount = useStack<{ count: number, index: number, total: number }>([])
+  const maxProfit = useStack<{ max: number; index: number }>([])
+  const profit = useStack<{ profit: number; index: number }>([])
+  const positiveProfitCount = useStack<{ count: number; index: number; total: number }>([])
   const [loading, setLoading] = useState<boolean>(false)
 
   const onDateChange = async (date?: string) => {
@@ -250,7 +257,6 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
 
     props.onAddBackTestRecord(record)
 
-
     const lastProfit = profit.peek()
     const lastMaxProfit = maxProfit.peek()
     const diffProfit = result - (lastProfit?.profit ?? 0)
@@ -274,14 +280,21 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
     if (result !== 0) {
       const lastPositiveProfitCount = positiveProfitCount.peek()
       if (lastPositiveProfitCount?.index !== currentKline.current) {
-        positiveProfitCount.push({ count: (lastPositiveProfitCount?.count ?? 0) + (diffProfit > 0 ? 1 : 0), index: currentKline.current, total: (lastPositiveProfitCount?.total ?? 0) + 1 })
+        positiveProfitCount.push({
+          count: (lastPositiveProfitCount?.count ?? 0) + (diffProfit > 0 ? 1 : 0),
+          index: currentKline.current,
+          total: (lastPositiveProfitCount?.total ?? 0) + 1
+        })
       } else {
         positiveProfitCount.pop()
-        positiveProfitCount.push({ count: lastPositiveProfitCount.count + (diffProfit > 0 ? 1 : 0), index: currentKline.current, total: (lastPositiveProfitCount?.total ?? 0) + 1 })
+        positiveProfitCount.push({
+          count: lastPositiveProfitCount.count + (diffProfit > 0 ? 1 : 0),
+          index: currentKline.current,
+          total: (lastPositiveProfitCount?.total ?? 0) + 1
+        })
       }
     }
   }
-
 
   const calcProfit = (record: TradeRecord) => {
     const count = Math.min(
@@ -378,9 +391,6 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
     //   })
     // })
 
-
-
-
     const lastProfit = profit.peek()
     const lastMaxProfit = maxProfit.peek()
     const diffProfit = result - (lastProfit?.profit ?? 0)
@@ -404,10 +414,18 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
     if (result !== 0) {
       const lastPositiveProfitCount = positiveProfitCount.peek()
       if (lastPositiveProfitCount?.index !== currentKline.current) {
-        positiveProfitCount.push({ count: (lastPositiveProfitCount?.count ?? 0) + (diffProfit > 0 ? 1 : 0), index: currentKline.current, total: (lastPositiveProfitCount?.total ?? 0) + 1 })
+        positiveProfitCount.push({
+          count: (lastPositiveProfitCount?.count ?? 0) + (diffProfit > 0 ? 1 : 0),
+          index: currentKline.current,
+          total: (lastPositiveProfitCount?.total ?? 0) + 1
+        })
       } else {
         positiveProfitCount.pop()
-        positiveProfitCount.push({ count: lastPositiveProfitCount.count + (diffProfit > 0 ? 1 : 0), index: currentKline.current, total: (lastPositiveProfitCount?.total ?? 0) + 1 })
+        positiveProfitCount.push({
+          count: lastPositiveProfitCount.count + (diffProfit > 0 ? 1 : 0),
+          index: currentKline.current,
+          total: (lastPositiveProfitCount?.total ?? 0) + 1
+        })
       }
     }
 
@@ -424,7 +442,7 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
       const symbol = useChartManage.getState().chartStores[props.chartId].symbol
       const timeIndex = useChartManage.getState().chartStores[props.chartId].interval
 
-      const total = Math.max(tradeRecord.buy.length , tradeRecord.sell.length)
+      const total = Math.max(tradeRecord.buy.length, tradeRecord.sell.length)
       return (
         <div className="text-center px-4 h-[444px] ">
           <div className="h-[108px] w-[100px] mx-auto mt-8">
@@ -436,9 +454,16 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
           </div>
           <div className="flex justify-between items-center mt-6 space-x-2 mx-auto w-[321px] h-[98px] border border-solid border-[#2E2E2E] rounded-lg">
             <div className="flex-1 rounded py-4">
-              <div className="text-sm text-tertiary mb-3">{Decimal.create(profit.peek()?.profit).gt(0) ? '现金盈利': '现金亏损'}</div>
+              <div className="text-sm text-tertiary mb-3">
+                {Decimal.create(profit.peek()?.profit).gt(0) ? '现金盈利' : '现金亏损'}
+              </div>
               <div>
-                <span className={cn('text-3xl', Decimal.create(profit.peek()?.profit).gt(0) ? 'text-stock-up' : 'text-stock-down')}>
+                <span
+                  className={cn(
+                    'text-3xl',
+                    Decimal.create(profit.peek()?.profit).gt(0) ? 'text-stock-up' : 'text-stock-down'
+                  )}
+                >
                   {Decimal.create(profit.peek()?.profit).toShort()}
                 </span>
                 <span> USD</span>
@@ -448,7 +473,12 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
             <div className="flex-1 rounded py-4">
               <div className="text-sm text-tertiary mb-3">成功率</div>
               <div>
-                <span className={cn('text-3xl', Decimal.create(positiveProfitCount.peek()?.count).gt(0) ? 'text-stock-up' : 'text-stock-down')}>
+                <span
+                  className={cn(
+                    'text-3xl',
+                    Decimal.create(positiveProfitCount.peek()?.count).gt(0) ? 'text-stock-up' : 'text-stock-down'
+                  )}
+                >
                   {' '}
                   {total > 0 ? Decimal.create(positiveProfitCount.peek()?.count).div(total).mul(100).toFixed(2) : 0}
                 </span>
@@ -456,7 +486,11 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
               </div>
             </div>
           </div>
-          <div className="w-[321px] h-[42px] border border-solid border-[#2E2E2E] rounded-[30px] text-center mx-auto mt-8 leading-[42px] text-sm cursor-pointer" onClick={() => resultModel.modal.close()} onKeyDown={() => { }}>
+          <div
+            className="w-[321px] h-[42px] border border-solid border-[#2E2E2E] rounded-[30px] text-center mx-auto mt-8 leading-[42px] text-sm cursor-pointer"
+            onClick={() => resultModel.modal.close()}
+            onKeyDown={() => {}}
+          >
             好的
           </div>
         </div>
@@ -473,19 +507,18 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
     positiveProfitCount.clear()
   })
 
-
-
   return (
     <div className="h-12 box-border grid grid-cols-3 text-xs px-2 w-full">
       <div />
       <div className="flex items-center justify-center text-sm">
         <div className="flex items-center space-x-2">
           <JknDatePicker onChange={onDateChange} disabled={d => disabledDate(d, props.candlesticks ?? [])}>
-            {
-              v => <div className="hover:bg-accent rounded-xs px-3 py-1 cursor-pointer flex items-center">
-                <JknIcon.Svg name="calendar-3" className="align-middle" size={20} />&nbsp;<span className="text-sm">{v ?? '选择日期'}
-                </span></div>
-            }
+            {v => (
+              <div className="hover:bg-accent rounded-xs px-3 py-1 cursor-pointer flex items-center">
+                <JknIcon.Svg name="calendar-3" className="align-middle" size={20} />
+                &nbsp;<span className="text-sm">{v ?? '选择日期'}</span>
+              </div>
+            )}
           </JknDatePicker>
         </div>
         <Separator orientation="vertical" className="h-4 w-[1px] mx-2" />
@@ -494,7 +527,7 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
             <div
               className="border cursor-pointer hover:bg-accent px-1 py-1 flex items-center rounded-xs"
               onClick={startBackTest}
-              onKeyDown={() => { }}
+              onKeyDown={() => {}}
             >
               <JknIcon.Svg name="play" size={16} label="开始" />
             </div>
@@ -502,9 +535,9 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
             <div
               className="border cursor-pointer hover:bg-accent rounded-xs px-1 py-1 flex items-center"
               onClick={stopBackTest}
-              onKeyDown={() => { }}
+              onKeyDown={() => {}}
             >
-              { /* TODO: 暂停ICON */}
+              {/* TODO: 暂停ICON */}
               <JknIcon name="ic_huice3" className="w-3 h-3" label="暂停" />
               &nbsp;
               <span>暂停</span>
@@ -513,14 +546,14 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
           <div
             className="border cursor-pointer hover:bg-accent px-1 py-1 flex items-center rounded-xs"
             onClick={toPrevLine}
-            onKeyDown={() => { }}
+            onKeyDown={() => {}}
           >
             <JknIcon.Svg name="play-pre" size={16} label="上一根K线" />
           </div>
           <div
             className="border cursor-pointer hover:bg-accent px-1 py-1 flex items-center rounded-xs"
             onClick={toNextLine}
-            onKeyDown={() => { }}
+            onKeyDown={() => {}}
           >
             <JknIcon.Svg name="play-x1" size={16} label="下一根K线" />
           </div>
@@ -531,7 +564,7 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
           <div
             className="border cursor-pointer hover:bg-accent px-1 py-1 flex items-center rounded-xs"
             onClick={toLastKLine}
-            onKeyDown={() => { }}
+            onKeyDown={() => {}}
           >
             <JknIcon.Svg name="play-x2" size={16} label="跳转到实时" />
           </div>
@@ -539,9 +572,16 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
       </div>
 
       <div className="flex items-center space-x-4 justify-end">
-        <span className="text-sm" data-direction={(profit.peek()?.profit ?? 0) > 0 ? 'up' : 'down'} data-direction-sign>{Decimal.create(profit.peek()?.profit ?? 0).toFixed(3)}</span>
+        <span className="text-sm" data-direction={(profit.peek()?.profit ?? 0) > 0 ? 'up' : 'down'} data-direction-sign>
+          {Decimal.create(profit.peek()?.profit ?? 0).toFixed(3)}
+        </span>
         <Separator orientation="vertical" className="h-4 w-[1px] mx-2" />
-        <Button size="sm" variant="destructive" className="bg-[#F23645] w-[72px] box-border h-8" onClick={() => action('sell')}>
+        <Button
+          size="sm"
+          variant="destructive"
+          className="bg-[#F23645] w-[72px] box-border h-8"
+          onClick={() => action('sell')}
+        >
           卖出
         </Button>
         <NumberInput value={number} onChange={setNumber} />
@@ -602,7 +642,6 @@ const BackTestSpeed = (props: { speed: number; onChange: (v: number) => void }) 
         回测速度
       </HoverCardContent>
     </HoverCard>
-
   )
 }
 
@@ -628,63 +667,63 @@ const NumberInput = (props: { value: number; onChange: (v: number) => void }) =>
           <div
             className="text-center border border-solid border-border rounded-sm leading-6 cursor-pointer hover:bg-accent"
             onClick={() => props.onChange(props.value + 1)}
-            onKeyDown={() => { }}
+            onKeyDown={() => {}}
           >
             1
           </div>
           <div
             className="text-center border border-solid border-border rounded-sm leading-6 cursor-pointer hover:bg-accent"
             onClick={() => props.onChange(props.value + 5)}
-            onKeyDown={() => { }}
+            onKeyDown={() => {}}
           >
             5
           </div>
           <div
             className="text-center border border-solid border-border rounded-sm leading-6 cursor-pointer hover:bg-accent"
             onClick={() => props.onChange(props.value + 25)}
-            onKeyDown={() => { }}
+            onKeyDown={() => {}}
           >
             25
           </div>
           <div
             className="text-center border border-solid border-border rounded-sm leading-6 cursor-pointer hover:bg-accent"
             onClick={() => props.onChange(props.value + 100)}
-            onKeyDown={() => { }}
+            onKeyDown={() => {}}
           >
             100
           </div>
           <div
             className="text-center border border-solid border-border rounded-sm leading-6 cursor-pointer hover:bg-accent"
             onClick={() => props.onChange(props.value + 500)}
-            onKeyDown={() => { }}
+            onKeyDown={() => {}}
           >
             500
           </div>
           <div
             className="text-center border border-solid border-border rounded-sm leading-6 cursor-pointer hover:bg-accent"
             onClick={() => props.onChange(props.value + 1000)}
-            onKeyDown={() => { }}
+            onKeyDown={() => {}}
           >
             1000
           </div>
           <div
             className="text-center border border-solid border-border rounded-sm leading-6 cursor-pointer hover:bg-accent"
             onClick={() => props.onChange(0)}
-            onKeyDown={() => { }}
+            onKeyDown={() => {}}
           >
             清零
           </div>
           <div
             className="text-center border border-solid border-border rounded-sm leading-6 cursor-pointer hover:bg-accent"
             onClick={() => props.onChange(props.value - 1)}
-            onKeyDown={() => { }}
+            onKeyDown={() => {}}
           >
             -
           </div>
           <div
             className="text-center border border-solid border-border rounded-sm leading-6 cursor-pointer hover:bg-accent"
             onClick={() => props.onChange(props.value + 1)}
-            onKeyDown={() => { }}
+            onKeyDown={() => {}}
           >
             +
           </div>

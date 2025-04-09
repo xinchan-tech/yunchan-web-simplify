@@ -14,20 +14,27 @@ import {
 } from 'jkn-kline-chart'
 import { debounce, uid } from 'radash'
 import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react'
-import { backTestLineFigure, backTestMarkFigure, compareLabelFigure, IconFigure, LogoFigure, markOverlayFigure } from './figure'
+import {
+  backTestLineFigure,
+  backTestMarkFigure,
+  compareLabelFigure,
+  IconFigure,
+  LogoFigure,
+  markOverlayFigure
+} from './figure'
 import { compareIndicator, gapIndicator, localIndicator } from './indicator'
 import { markIndicator } from './indicator/mark'
 import type { AxisPosition, Candlestick } from './types'
 import { ChartTypes, getStockColor, isSameInterval, transformCandleColor, transformTextColor } from './utils'
-import { backTestIndicator, type BackTestRecord } from "./indicator/back-test"
-import { CoilingIndicatorId } from "./coiling-calc"
-import { coilingIndicator } from "./indicator/coiling"
-import dayjs from "dayjs"
-import { LogoOverlay } from "./overlay"
-import { useMount, useUnmount } from "ahooks"
-import { VerticalLineOverlay } from "./overlay/line"
-import { SplitIndicator } from "./indicator/split"
-import Decimal from "decimal.js"
+import { backTestIndicator, type BackTestRecord } from './indicator/back-test'
+import { CoilingIndicatorId } from './coiling-calc'
+import { coilingIndicator } from './indicator/coiling'
+import dayjs from 'dayjs'
+import { LogoOverlay } from './overlay'
+import { useMount, useUnmount } from 'ahooks'
+import { VerticalLineOverlay } from './overlay/line'
+import { SplitIndicator } from './indicator/split'
+import Decimal from 'decimal.js'
 
 export { CoilingIndicatorId, ChartTypes }
 
@@ -78,14 +85,14 @@ interface JknChartIns {
   createSubIndicator: (params: IndicatorParams) => Nullable<string>
   setSubIndicator: (indicatorId: string, params: IndicatorParams) => void
   removeSubIndicator: (indicatorId: string) => void
-  createStockCompare: (symbol: string, params: { color: string, interval: number, startAt?: string }) => string
+  createStockCompare: (symbol: string, params: { color: string; interval: number; startAt?: string }) => string
   removeStockCompare: (symbol: string) => void
   setStockCompare: (indicatorId: string, params: Partial<{ color: string; interval: number; startAt: string }>) => void
   createMarkOverlay: (symbol: string, type: string, mark: string, cb: (data: any) => void) => string
   removeMarkOverlay: (indicatorId: string) => void
   setMarkOverlay: (mark: string) => void
-  createBackTestIndicator: (record: (Optional<BackTestRecord, 'num'>[])) => Nullable<string> | undefined
-  setBackTestIndicator: (record: (Optional<BackTestRecord, 'num'>[])) => boolean | undefined
+  createBackTestIndicator: (record: Optional<BackTestRecord, 'num'>[]) => Nullable<string> | undefined
+  setBackTestIndicator: (record: Optional<BackTestRecord, 'num'>[]) => boolean | undefined
   removeBackTestIndicator: () => void
   setDragEnable: (enable: boolean) => void
   getChart: () => Chart | null | undefined
@@ -106,7 +113,7 @@ const getAxisType = (chart: Chart) => {
   }
 
   if (pane?.axis?.name === 'percentage') {
-    if (pane?.leftAxis?.position !== 'none' as any) {
+    if (pane?.leftAxis?.position !== ('none' as any)) {
       return 'double'
     }
 
@@ -118,13 +125,16 @@ const getAxisType = (chart: Chart) => {
 
 const DEFAULT_AREA_BG_COLOR = {
   color: '#1677FF',
-  bg: [{
-    offset: 0,
-    color: colorUtil.rgbaToString(colorUtil.hexToRGBA('#1677FF', 0.01))
-  }, {
-    offset: 1,
-    color: colorUtil.rgbaToString(colorUtil.hexToRGBA('#1677FF', 0.2))
-  }],
+  bg: [
+    {
+      offset: 0,
+      color: colorUtil.rgbaToString(colorUtil.hexToRGBA('#1677FF', 0.01))
+    },
+    {
+      offset: 1,
+      color: colorUtil.rgbaToString(colorUtil.hexToRGBA('#1677FF', 0.2))
+    }
+  ]
 }
 
 export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartProps, ref) => {
@@ -176,18 +186,35 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
                 format = 'YYYY-MM-DD w'
               }
 
-
               const amount = current.close - current.prevClose
               const percent = (amount / current.prevClose) * 100
               const color = amount > 0 ? upColor : downColor
               return [
                 { title: { text: time.format(format), color: '#DBDBDB' }, value: '' },
-                { title: { text: '开：', color: '#DBDBDB' }, value: { text: current.open.toFixed(3), color: '#DBDBDB' } },
-                { title: { text: '高：', color: '#DBDBDB' }, value: { text: current.high.toFixed(3), color: '#DBDBDB' } },
-                { title: { text: '低：', color: '#DBDBDB' }, value: { text: current.low.toFixed(3), color: '#DBDBDB' } },
-                { title: { text: '收：', color: '#DBDBDB' }, value: { text: current.close.toFixed(3), color: '#DBDBDB' } },
-                { title: { text: '涨跌额：', color: '#DBDBDB' }, value: { text: `${amount > 0 ? '+' : ''}${amount.toFixed(3)}`, color } },
-                { title: { text: '涨跌幅：', color: '#DBDBDB' }, value: { text: `${percent > 0 ? '+' : ''}${percent.toFixed(2)}%`, color } },
+                {
+                  title: { text: '开：', color: '#DBDBDB' },
+                  value: { text: current.open.toFixed(3), color: '#DBDBDB' }
+                },
+                {
+                  title: { text: '高：', color: '#DBDBDB' },
+                  value: { text: current.high.toFixed(3), color: '#DBDBDB' }
+                },
+                {
+                  title: { text: '低：', color: '#DBDBDB' },
+                  value: { text: current.low.toFixed(3), color: '#DBDBDB' }
+                },
+                {
+                  title: { text: '收：', color: '#DBDBDB' },
+                  value: { text: current.close.toFixed(3), color: '#DBDBDB' }
+                },
+                {
+                  title: { text: '涨跌额：', color: '#DBDBDB' },
+                  value: { text: `${amount > 0 ? '+' : ''}${amount.toFixed(3)}`, color }
+                },
+                {
+                  title: { text: '涨跌幅：', color: '#DBDBDB' },
+                  value: { text: `${percent > 0 ? '+' : ''}${percent.toFixed(2)}%`, color }
+                }
               ]
             },
             text: {
@@ -209,13 +236,13 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
                 if (axisType === 'normal') {
                   return lastData.close > lastData.prevClose ? upColor : downColor
                 }
-                
+
                 const { from } = chart.getVisibleRange()
                 const firstData = data[from]
 
                 if (!firstData) return downColor
                 return lastData.close > firstData.open ? upColor : downColor
-              },
+              }
             },
             high: {
               color: '#E7C88D',
@@ -235,7 +262,7 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
               const range = chart.getVisibleRange()
               const startData = data[range.from]
               const chartType = getAxisType(chart)
-              
+
               if (chartType === 'normal') {
                 return transformTextColor(text, data.slice(0, range.to).pop()!, 'prevClose')
               }
@@ -272,7 +299,7 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
                 const range = chart.getVisibleRange()
                 const startData = data[range.from]
                 const chartType = getAxisType(chart)
-                
+
                 if (chartType === 'normal') {
                   return transformTextColor(text, data.slice(0, range.to).pop()!, 'prevClose')
                 }
@@ -288,7 +315,7 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
           options: {
             axis: {
               position: 'right' as AxisPosition,
-              name: 'normal',
+              name: 'normal'
             },
             leftAxis: {
               position: 'right' as AxisPosition
@@ -472,7 +499,7 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
       chart.current?.overrideIndicator({
         id: indicatorId,
         visible,
-        name: "local-indicator"
+        name: 'local-indicator'
       })
     },
     createSubIndicator(params) {
@@ -551,15 +578,15 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
     removeMarkOverlay: indicatorId => {
       chart.current?.removeIndicator({ id: indicatorId })
     },
-    setMarkOverlay: _mark => { },
-    createBackTestIndicator: (record) => {
+    setMarkOverlay: _mark => {},
+    createBackTestIndicator: record => {
       const id = 'back-test-indicator'
       if (chart.current?.getIndicators({ id: id }).length) {
         const _indicator = chart.current?.getIndicators({ id: id })[0]
         chart.current.overrideIndicator({
           name: 'back-test-indicator',
           id: id,
-          calcParams: [[..._indicator.calcParams[0] as any, ...record]],
+          calcParams: [[...(_indicator.calcParams[0] as any), ...record]]
         })
 
         return id
@@ -568,32 +595,35 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
         {
           name: 'back-test-indicator',
           id: 'back-test-indicator',
-          calcParams: [record],
+          calcParams: [record]
         },
         true,
         { id: ChartTypes.MAIN_PANE_ID }
       )
     },
-    setBackTestIndicator: (record) => {
+    setBackTestIndicator: record => {
       const id = 'back-test-indicator'
       return chart.current?.overrideIndicator({
         name: 'back-test-indicator',
         id: id,
-        calcParams: [record],
+        calcParams: [record]
       })
     },
     removeBackTestIndicator: () => {
       chart.current?.removeIndicator({ id: 'back-test-indicator' })
     },
-    setDragEnable: enable => {
-
-    },
+    setDragEnable: enable => {},
     getChart: () => chart.current,
-    setTimeShareChart: (interval) => {
+    setTimeShareChart: interval => {
       const { up: upColor, down: downColor } = getStockColor()
       const splitId = 'split-indicator-large-cap'
       if (interval !== undefined) {
-        if (![StockChartInterval.AFTER_HOURS, StockChartInterval.PRE_MARKET, StockChartInterval.INTRA_DAY].includes(interval)) return
+        if (
+          ![StockChartInterval.AFTER_HOURS, StockChartInterval.PRE_MARKET, StockChartInterval.INTRA_DAY].includes(
+            interval
+          )
+        )
+          return
         const PRE_NUMBER = 330
         const POST_NUMBER = 390
         const AFTER_NUMBER = 240
@@ -602,13 +632,22 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
         chart.current?.setLeftMinVisibleBarCount(1)
         chart.current?.setXAxisTick(count)
 
-        chart.current?.createIndicator({
-          name: 'split-indicator',
-          id: splitId,
-          calcParams: [[PRE_NUMBER / (PRE_NUMBER + POST_NUMBER + AFTER_NUMBER), (PRE_NUMBER + POST_NUMBER) / (PRE_NUMBER + POST_NUMBER + AFTER_NUMBER)]],
-        }, true, {
-          id: ChartTypes.MAIN_PANE_ID
-        })
+        chart.current?.createIndicator(
+          {
+            name: 'split-indicator',
+            id: splitId,
+            calcParams: [
+              [
+                PRE_NUMBER / (PRE_NUMBER + POST_NUMBER + AFTER_NUMBER),
+                (PRE_NUMBER + POST_NUMBER) / (PRE_NUMBER + POST_NUMBER + AFTER_NUMBER)
+              ]
+            ]
+          },
+          true,
+          {
+            id: ChartTypes.MAIN_PANE_ID
+          }
+        )
 
         // const type = getAxisType(chart.current!)
 
@@ -637,8 +676,12 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
 
                 return [
                   { type: 'segment', color: preColor, offset: PRE_NUMBER },
-                  { type: 'segment', color: Decimal.create(postData?.close).gt(postData?.prevClose ?? 0) ? upColor : downColor, offset: POST_NUMBER + PRE_NUMBER },
-                  { type: 'segment', color: afterColor },
+                  {
+                    type: 'segment',
+                    color: Decimal.create(postData?.close).gt(postData?.prevClose ?? 0) ? upColor : downColor,
+                    offset: POST_NUMBER + PRE_NUMBER
+                  },
+                  { type: 'segment', color: afterColor }
                 ]
               },
               backgroundColor(data) {
@@ -653,35 +696,49 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
 
                 return [
                   {
-                    type: 'segment', offset: PRE_NUMBER, color: [{
-                      offset: 0,
-                      color: colorUtil.rgbaToString(colorUtil.hexToRGBA(preColor, 0.01))
-                    }, {
-                      offset: 1,
-                      color: colorUtil.rgbaToString(colorUtil.hexToRGBA(preColor, 0.2))
-                    }]
+                    type: 'segment',
+                    offset: PRE_NUMBER,
+                    color: [
+                      {
+                        offset: 0,
+                        color: colorUtil.rgbaToString(colorUtil.hexToRGBA(preColor, 0.01))
+                      },
+                      {
+                        offset: 1,
+                        color: colorUtil.rgbaToString(colorUtil.hexToRGBA(preColor, 0.2))
+                      }
+                    ]
                   },
                   {
-                    type: 'segment', offset: POST_NUMBER + PRE_NUMBER, color: [{
-                      offset: 0,
-                      color: colorUtil.rgbaToString(colorUtil.hexToRGBA(color, 0.01))
-                    }, {
-                      offset: 1,
-                      color: colorUtil.rgbaToString(colorUtil.hexToRGBA(color, 0.2))
-                    }]
+                    type: 'segment',
+                    offset: POST_NUMBER + PRE_NUMBER,
+                    color: [
+                      {
+                        offset: 0,
+                        color: colorUtil.rgbaToString(colorUtil.hexToRGBA(color, 0.01))
+                      },
+                      {
+                        offset: 1,
+                        color: colorUtil.rgbaToString(colorUtil.hexToRGBA(color, 0.2))
+                      }
+                    ]
                   },
                   {
-                    type: 'segment', color: [{
-                      offset: 0,
-                      color: colorUtil.rgbaToString(colorUtil.hexToRGBA(afterColor, 0.01))
-                    }, {
-                      offset: 1,
-                      color: colorUtil.rgbaToString(colorUtil.hexToRGBA(afterColor, 0.2))
-                    }]
-                  },
+                    type: 'segment',
+                    color: [
+                      {
+                        offset: 0,
+                        color: colorUtil.rgbaToString(colorUtil.hexToRGBA(afterColor, 0.01))
+                      },
+                      {
+                        offset: 1,
+                        color: colorUtil.rgbaToString(colorUtil.hexToRGBA(afterColor, 0.2))
+                      }
+                    ]
+                  }
                 ]
-              },
-            },
+              }
+            }
           }
         })
       } else {
@@ -714,7 +771,7 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
         })
       }
     },
-    createGapIndicator: (count) => {
+    createGapIndicator: count => {
       chart.current?.createIndicator(
         {
           name: 'gap-indicator',
@@ -728,7 +785,7 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
     removeGapIndicator: () => {
       chart.current?.removeIndicator({ id: 'gap-indicator' })
     },
-    setGapIndicator: (count) => {
+    setGapIndicator: count => {
       chart.current?.overrideIndicator({
         name: 'gap-indicator',
         id: 'gap-indicator',
@@ -739,9 +796,11 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
 
   useEffect(() => {
     // 重置大小
-    const sizeObserver = new ResizeObserver(debounce({ delay: 20 }, () => {
-      chart.current?.resize()
-    }))
+    const sizeObserver = new ResizeObserver(
+      debounce({ delay: 20 }, () => {
+        chart.current?.resize()
+      })
+    )
 
     sizeObserver.observe(domRef.current!)
 
@@ -752,4 +811,3 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
 
   return <div className={cn('w-full h-full', props.className)} ref={domRef} />
 })
-

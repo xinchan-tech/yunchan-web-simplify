@@ -217,7 +217,6 @@ export const getChannelMembers = async (groupId: string, limit?: number) => {
 
 getChannelMembers.cacheKey = 'groupChannels:getGroupMembers'
 
-
 // 管理员设置
 export type setManagerServicePayload = {
   username: string
@@ -244,8 +243,6 @@ export const setChannelManager = async (data: setManagerServicePayload) => {
   return resp
 }
 
-
-
 // 禁言
 export type channelForbiddenParams = {
   channelId: string
@@ -271,7 +268,6 @@ export const setMemberForbidden = async (data: channelForbiddenParams) => {
   return resp
 }
 
-
 export const revokeMessage = async (params: {
   msg_id: number | string
 }) => {
@@ -284,7 +280,6 @@ export const revokeMessage = async (params: {
     .then(r => r.data)
   return r
 }
-
 
 export const readChannelNotice = (channelId: string) => {
   return request.post(`/channel/${channelId}/readNotice`).then(r => r.data)

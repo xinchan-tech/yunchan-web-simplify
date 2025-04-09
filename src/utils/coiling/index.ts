@@ -146,6 +146,5 @@ export class IndicatorUtils {
     } catch (e) {
       // console.error('计算失败:', calcId, e)
     }
-
   }
 }

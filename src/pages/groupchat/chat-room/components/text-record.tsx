@@ -1,19 +1,19 @@
-import { getChatNameAndAvatar } from "@/api"
-import { ChatMessageType, useStockList } from "@/store"
-import { useQueries, useQuery } from "@tanstack/react-query"
-import { Fragment, type ReactNode } from "react"
-import { type MessageText, WKSDK, type Message } from "wukongimjssdk"
-import { UsernameSpan } from "../../components/username-span"
+import { getChatNameAndAvatar } from '@/api'
+import { ChatMessageType, useStockList } from '@/store'
+import { useQueries, useQuery } from '@tanstack/react-query'
+import { Fragment, type ReactNode } from 'react'
+import { type MessageText, WKSDK, type Message } from 'wukongimjssdk'
+import { UsernameSpan } from '../../components/username-span'
 
 type TextSegment = {
   text: string
-  type: 'text' | 'stock' | 'hyperlink',
+  type: 'text' | 'stock' | 'hyperlink'
   startIndex: number
   endIndex: number
 }
 
 interface TextRecordProps {
-  message: Message,
+  message: Message
 }
 
 export const TextRecord = (props: TextRecordProps) => {
@@ -42,21 +42,20 @@ export const TextRecord = (props: TextRecordProps) => {
     return null
   }
 
-
   const getNormalText = (text: string) => {
     const segments: ReactNode[] = []
     text.split('\n').forEach((line, index, arr) => {
       segments.push(
-
         <Fragment key={`${line + index + message.messageID}fragment`}>
           {/* biome-ignore lint/security/noDangerouslySetInnerHtml: <explanation> */}
           {/* biome-ignore lint/security/noDangerouslySetInnerHtmlWithChildren: <explanation> */}
           {/* biome-ignore lint/suspicious/noArrayIndexKey: <explanation> */}
-          <span className="chat-text-item" key={line + index} dangerouslySetInnerHTML={{ __html: stockCodeParse(hyperlinkParse(line)) }} >
-          </span>
-          {
-            index !== arr.length - 1 && <br />
-          }
+          <span
+            className="chat-text-item"
+            key={line + index}
+            dangerouslySetInnerHTML={{ __html: stockCodeParse(hyperlinkParse(line)) }}
+          ></span>
+          {index !== arr.length - 1 && <br />}
         </Fragment>
       )
     })
@@ -67,7 +66,7 @@ export const TextRecord = (props: TextRecordProps) => {
           // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
           <span key={mention + index + message.messageID} className="text-[#FFC440]">
             <span>&nbsp;@</span>
-            <UsernameSpan uid={mention} channel={message.channel} >
+            <UsernameSpan uid={mention} channel={message.channel}>
               &nbsp;
             </UsernameSpan>
           </span>
@@ -78,13 +77,7 @@ export const TextRecord = (props: TextRecordProps) => {
     return segments
   }
 
-  return (
-    <>
-      {
-        getNormalText(message.content.text)
-      }
-    </>
-  )
+  return <>{getNormalText(message.content.text)}</>
 }
 
 /**
@@ -93,11 +86,9 @@ export const TextRecord = (props: TextRecordProps) => {
 const hyperlinkParse = (raw: string) => {
   const reg = /((http|https):\/\/)?([\w-]+\.)+[\w-]+(\/[\w- ./?%&=]*)?/g
 
-
-  return raw.replace(reg, (url) => {
+  return raw.replace(reg, url => {
     return `<a href="${url}" target="_blank">&nbsp;${url}&nbsp;</a>`
   })
-
 }
 
 /**
@@ -107,7 +98,7 @@ const hyperlinkParse = (raw: string) => {
 const stockCodeParse = (raw: string) => {
   const reg = /\$[A-Za-z0-9]{1,6}/g
 
-  return raw.replace(reg, (code) => {
+  return raw.replace(reg, code => {
     const stockMap = useStockList.getState().listMap
     if (stockMap[code.slice(1)]) {
       return `<span class="text-[#8CABFF] cursor-pointer" data-stock-code="${code.slice(1)}">${code}</span>`

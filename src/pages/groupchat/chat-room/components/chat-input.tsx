@@ -1,24 +1,27 @@
-import { JknIcon, PopoverContent, PopoverTrigger } from "@/components"
-import { Popover } from "@radix-ui/react-popover"
-import { forwardRef, type PropsWithChildren, useCallback, useEffect, useId, useImperativeHandle, useState } from "react"
+import { JknIcon, PopoverContent, PopoverTrigger } from '@/components'
+import { Popover } from '@radix-ui/react-popover'
+import { forwardRef, type PropsWithChildren, useCallback, useEffect, useId, useImperativeHandle, useState } from 'react'
 import Picker from '@emoji-mart/react'
 import emojiData from '@emoji-mart/data'
 import { useEditor, EditorContent, type JSONContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Image from '@tiptap/extension-image'
-import { type ChatEvent, chatEvent } from "../../lib/event"
-import { useImmer } from "use-immer"
-import { ChatMessageType } from "@/store"
-import { useSubscribesListener } from "../../lib/hooks"
-import { Reply, WKSDK, type Channel, type MessageContent } from "wukongimjssdk"
-import { hasForbidden } from "../../lib/utils"
+import { type ChatEvent, chatEvent } from '../../lib/event'
+import { useImmer } from 'use-immer'
+import { ChatMessageType } from '@/store'
+import { useSubscribesListener } from '../../lib/hooks'
+import { Reply, WKSDK, type Channel, type MessageContent } from 'wukongimjssdk'
+import { hasForbidden } from '../../lib/utils'
 
 interface ChatInputProps {
   channel?: Channel
-  onSubmit?: (text?: JSONContent, extra?: {
-    reply?: Reply,
-    mentions?: string[]
-  }) => void
+  onSubmit?: (
+    text?: JSONContent,
+    extra?: {
+      reply?: Reply
+      mentions?: string[]
+    }
+  ) => void
 }
 
 interface ChatInputInstance {
@@ -29,7 +32,8 @@ const extensions = [StarterKit, Image]
 
 export const ChatInput = forwardRef<ChatInputInstance, ChatInputProps>((props, ref) => {
   const [mentionList, setMentionList] = useImmer<{ name: string; uid: string }[]>([])
-  const [replyMessage, setReplyMessage] = useImmer<Nullable<{ name: string; text: string, uid: string, content: MessageContent }>>(null)
+  const [replyMessage, setReplyMessage] =
+    useImmer<Nullable<{ name: string; text: string; uid: string; content: MessageContent }>>(null)
 
   const editor = useEditor({
     extensions,
@@ -108,7 +112,6 @@ export const ChatInput = forwardRef<ChatInputInstance, ChatInputProps>((props, r
     setReplyMessage(null)
   }
 
-
   const onToolSelectEmoji = (e: string) => {
     if (!editor?.isEditable) return false
     editor?.commands.insertContent(e)
@@ -126,7 +129,6 @@ export const ChatInput = forwardRef<ChatInputInstance, ChatInputProps>((props, r
     editor?.commands.setImage({ src: fileUrl, title: name })
     editor?.commands.focus()
   }
-
 
   useEffect(() => {
     const mentionHandler = ({ userInfo, channelId }: ChatEvent['mentionUser']) => {
@@ -179,21 +181,26 @@ export const ChatInput = forwardRef<ChatInputInstance, ChatInputProps>((props, r
     }
   }, [props.channel?.channelID, setMentionList, editor, setReplyMessage])
 
-  useSubscribesListener(props.channel, useCallback((channel) => {
-    if (!props.channel!.isEqual(channel)) return
-    const me = WKSDK.shared().channelManager.getSubscribeOfMe(channel)
-    if (!me) {
-      editor?.setEditable(true)
-      return
-    }
-    if (hasForbidden(me)) {
-      editor?.commands.clearContent()
-      editor?.setEditable(false)
-    } else {
-      editor?.setEditable(true)
-    }
-  }, [props.channel, editor]))
-
+  useSubscribesListener(
+    props.channel,
+    useCallback(
+      channel => {
+        if (!props.channel!.isEqual(channel)) return
+        const me = WKSDK.shared().channelManager.getSubscribeOfMe(channel)
+        if (!me) {
+          editor?.setEditable(true)
+          return
+        }
+        if (hasForbidden(me)) {
+          editor?.commands.clearContent()
+          editor?.setEditable(false)
+        } else {
+          editor?.setEditable(true)
+        }
+      },
+      [props.channel, editor]
+    )
+  )
 
   useEffect(() => {
     editor?.commands.clearContent()
@@ -218,49 +225,42 @@ export const ChatInput = forwardRef<ChatInputInstance, ChatInputProps>((props, r
     } else {
       editor?.setEditable(true)
     }
-
   }, [props.channel, editor])
 
   return (
     <div className="chat-room-input h-[180px] relative">
-      {
-        mentionList.length ? (
-          <div className="flex items-center absolute text-sm left-0 -top-8 h-8 box-border px-3 leading-8 border-t-primary right-0 bg-[#0a0a0a]">
-            <JknIcon.Svg name="close" className="cursor-pointer" size={12} onClick={() => setMentionList([])} />
-            <span>&nbsp;&nbsp;回复用户: &nbsp;&nbsp;</span>
-            <div className="flex items-center space-x-4" >
-              {
-                mentionList.map(item => (
-                  <span key={item.uid}>@{item.name}</span>
-                ))
-              }
-            </div>
+      {mentionList.length ? (
+        <div className="flex items-center absolute text-sm left-0 -top-8 h-8 box-border px-3 leading-8 border-t-primary right-0 bg-[#0a0a0a]">
+          <JknIcon.Svg name="close" className="cursor-pointer" size={12} onClick={() => setMentionList([])} />
+          <span>&nbsp;&nbsp;回复用户: &nbsp;&nbsp;</span>
+          <div className="flex items-center space-x-4">
+            {mentionList.map(item => (
+              <span key={item.uid}>@{item.name}</span>
+            ))}
           </div>
-        ) : null
-      }
-      {
-        replyMessage ? (
-          <div className="flex items-center absolute text-sm left-0 -top-8 h-8 box-border px-3 leading-8 border-t-primary right-0 bg-[#0a0a0a]">
-            <JknIcon.Svg name="close" className="cursor-pointer" size={12} onClick={() => setReplyMessage(null)} />
-            <span>&nbsp;&nbsp;{replyMessage.name}: &nbsp;&nbsp;</span>
-            <div className="flex items-center space-x-4" >
-              {replyMessage.text}
-            </div>
-          </div>
-        ) : null
-      }
+        </div>
+      ) : null}
+      {replyMessage ? (
+        <div className="flex items-center absolute text-sm left-0 -top-8 h-8 box-border px-3 leading-8 border-t-primary right-0 bg-[#0a0a0a]">
+          <JknIcon.Svg name="close" className="cursor-pointer" size={12} onClick={() => setReplyMessage(null)} />
+          <span>&nbsp;&nbsp;{replyMessage.name}: &nbsp;&nbsp;</span>
+          <div className="flex items-center space-x-4">{replyMessage.text}</div>
+        </div>
+      ) : null}
       <div className="chat-room-input-box flex items-center space-x-4 h-[32px] box-border px-4 border-b-primary">
-        <ChatInputTool onSelectEmoji={onToolSelectEmoji} onImageUpload={onToolImageUpload} onDollarClick={onDollarClick} />
+        <ChatInputTool
+          onSelectEmoji={onToolSelectEmoji}
+          onImageUpload={onToolImageUpload}
+          onDollarClick={onDollarClick}
+        />
       </div>
       <div className="h-[148px] overflow-y-auto box-border p-1 relative ">
         <EditorContent className="h-[140px] px-2 box-border" editor={editor} />
-        {
-          !editor?.isEditable ? (
-            <div className="absolute inset-0 flex items-center justify-center left-0 right-0 top-0 bottom-0 box-border">
-              <div className="text-tertiary text-base">您已被禁言</div>
-            </div>
-          ) : null
-        }
+        {!editor?.isEditable ? (
+          <div className="absolute inset-0 flex items-center justify-center left-0 right-0 top-0 bottom-0 box-border">
+            <div className="text-tertiary text-base">您已被禁言</div>
+          </div>
+        ) : null}
       </div>
     </div>
   )
@@ -276,14 +276,20 @@ const ChatInputTool = ({ onSelectEmoji, onImageUpload, onDollarClick }: ChatInpu
   return (
     <div className="chat-room-input-box flex items-center space-x-4 h-[32px] box-border border-b-primary">
       <EmojiPicker onPicker={onSelectEmoji}>
-        <div className="flex items-center justify-center cursor-pointer text-tertiary"><JknIcon.Svg name="emoji" size={20} /></div>
+        <div className="flex items-center justify-center cursor-pointer text-tertiary">
+          <JknIcon.Svg name="emoji" size={20} />
+        </div>
       </EmojiPicker>
       <div className="flex items-center justify-center cursor-pointer text-tertiary">
         <ImagePicker onUpload={onImageUpload}>
           <JknIcon.Svg name="picture" size={20} />
         </ImagePicker>
       </div>
-      <div className="flex items-center justify-center cursor-pointer text-tertiary " onClick={onDollarClick} onKeyDown={() => { }}>
+      <div
+        className="flex items-center justify-center cursor-pointer text-tertiary "
+        onClick={onDollarClick}
+        onKeyDown={() => {}}
+      >
         <JknIcon.Svg name="dollar" size={20} />
       </div>
     </div>
@@ -309,12 +315,12 @@ const EmojiPicker = ({ children, onPicker }: PropsWithChildren<EmojiPicker>) => 
           onEmojiSelect={(emoji: any) => {
             onPicker(emoji.native)
             setVisible(false)
-          }} />
+          }}
+        />
       </PopoverContent>
     </Popover>
   )
 }
-
 
 interface ImagePickerProps {
   onUpload: (fileUrl: string, name: string) => void

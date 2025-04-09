@@ -1,8 +1,8 @@
-import { getAllStocks } from "@/api"
-import { useStockList } from "@/store"
-import { useQuery } from "@tanstack/react-query"
-import pako from "pako"
-import { useEffect, useMemo } from "react"
+import { getAllStocks } from '@/api'
+import { useStockList } from '@/store'
+import { useQuery } from '@tanstack/react-query'
+import pako from 'pako'
+import { useEffect, useMemo } from 'react'
 
 export const useStockSearch = (keyword: string) => {
   const stockList = useStockList(s => s.list)
@@ -49,7 +49,6 @@ export const useStockSearch = (keyword: string) => {
 
   return [result]
 }
-
 
 class TrieNode {
   children: Map<string, TrieNode>

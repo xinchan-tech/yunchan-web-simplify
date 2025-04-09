@@ -21,8 +21,8 @@ export const drawStickLine: DrawStockLineFunc = (params, { data, color }) => {
     _color = color[0]
     lineGradient = color.map((c, i) => [i / (color.length - 1), c])
   }
-  if(!data) return false
-  if(!Array.isArray(data)) return false
+  if (!data) return false
+  if (!Array.isArray(data)) return false
   data.forEach(item => {
     if (inRange(item.x, realFrom, realTo)) {
       const y = yAxis.convertToPixel(item.y1)

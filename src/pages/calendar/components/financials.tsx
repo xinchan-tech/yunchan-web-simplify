@@ -116,10 +116,10 @@ const StockFinancials = () => {
         render: (_, row) => (
           <div className="flex items-center h-[33px]">
             <CollectStar checked={row.collect === 1} code={row.code} />
-            <span className="mr-3"/>
+            <span className="mr-3" />
             <StockView name={row.name} code={row.code as string} showName />
           </div>
-        ),
+        )
       },
 
       {
@@ -179,7 +179,7 @@ const StockFinancials = () => {
         align: 'right',
         sort: true,
         render: (_: any, row) => <span className="text-[#808080]">{row.date}</span>
-      },
+      }
     ],
     []
   )
@@ -189,14 +189,14 @@ const StockFinancials = () => {
   return (
     <div className="h-full flex flex-col stock-calendar">
       <div className="flex items-center pt-5 pl-2">
-        <JknDatePicker onChange={(v) => v && setActive(v)}>
+        <JknDatePicker onChange={v => v && setActive(v)}>
           <Button variant="outline" className="h-8 px-2 text-base border-[#2E2E2E] text-[#808080]">
-            {dayjs(active).format("MM-DD W")}
+            {dayjs(active).format('MM-DD W')}
             <JknIcon.Svg name="arrow-down" size={8} color="#808080" />
           </Button>
         </JknDatePicker>
       </div>
-      
+
       <div className="flex-1 overflow-hidden">
         <JknRcTable
           headerHeight={48}
@@ -209,7 +209,8 @@ const StockFinancials = () => {
         />
       </div>
 
-      <style jsx global>{`
+      <style jsx global>
+        {`
         .stock-calendar .rc-table th {
           padding-top: 20px;
           padding-bottom: 20px;

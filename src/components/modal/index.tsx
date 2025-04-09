@@ -10,8 +10,8 @@ import { FormProvider, type UseFormReturn } from 'react-hook-form'
 import type { z } from 'zod'
 import { Button } from '../ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog'
-import { JknIcon } from "../jkn/jkn-icon"
-import { VisuallyHidden } from "@radix-ui/react-visually-hidden"
+import { JknIcon } from '../jkn/jkn-icon'
+import { VisuallyHidden } from '@radix-ui/react-visually-hidden'
 
 export interface UseModalAction {
   open: (...arg: unknown[]) => void
@@ -93,33 +93,34 @@ export const useModal = ({
     return (
       <Dialog open={modalVisible} onOpenChange={_onOpenChange}>
         <DialogContent className={cn('w-[680px]', className)} onPointerDownOutside={onPointerDownOutside}>
-          {
-            innerTitle ? (
+          {innerTitle ? (
+            <DialogHeader>
+              <DialogTitle asChild>
+                <div className="px-8 flex items-center pt-5 pb-[15px] border-solid border-x-0 border-t-0 border-b border-[#3D3D3D]">
+                  {innerTitle && <div className="text-xl">{innerTitle}</div>}
+                  {closeIcon && (
+                    <span
+                      className={cn(
+                        'box-border rounded cursor-pointer flex items-center justify-center ml-auto w-5 h-5 hover:bg-accent'
+                      )}
+                      onClick={toggleModalVisible}
+                      onKeyDown={() => {}}
+                    >
+                      <JknIcon.Svg name="close" className="w-3 h-3" />
+                    </span>
+                  )}
+                </div>
+              </DialogTitle>
+              <DialogDescription className="text-center" />
+            </DialogHeader>
+          ) : (
+            <VisuallyHidden>
               <DialogHeader>
-                <DialogTitle asChild>
-                  <div className="px-8 flex items-center pt-5 pb-[15px] border-solid border-x-0 border-t-0 border-b border-[#3D3D3D]">
-                    {innerTitle && (
-                      <div className="text-xl">
-                        {innerTitle}
-                      </div>
-                    )}
-                    {closeIcon && (
-                      <span
-                        className={cn(
-                          'box-border rounded cursor-pointer flex items-center justify-center ml-auto w-5 h-5 hover:bg-accent',
-                        )}
-                        onClick={toggleModalVisible}
-                        onKeyDown={() => { }}
-                      >
-                        <JknIcon.Svg name="close" className="w-3 h-3" />
-                      </span>
-                    )}
-                  </div>
-                </DialogTitle>
-                <DialogDescription className="text-center" />
+                {' '}
+                <DialogTitle />
               </DialogHeader>
-            ) : <VisuallyHidden><DialogHeader> <DialogTitle /></DialogHeader></VisuallyHidden>
-          }
+            </VisuallyHidden>
+          )}
           {isFunction(content) ? content({ ...modal, onOk: props.onOk }) : content}
           {footer === null ? null : footer === undefined ? (
             <DialogFooter className="m-4">
@@ -199,5 +200,3 @@ export const useFormModal = <T extends z.ZodTypeAny>({
     getFieldValue: form.getValues
   }
 }
-
-

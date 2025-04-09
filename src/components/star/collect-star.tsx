@@ -19,10 +19,9 @@ interface CollectStarProps
 const _CollectStar = memo((props: CollectStarProps) => {
   const [checked, setChecked] = usePropValue(props.checked)
 
-
   const action = useMutation({
     mutationFn: (checked: boolean) => {
-      if(checked){
+      if (checked) {
         return addStockCollectDefault([props.code])
       }
       return removeStockCollect({
@@ -30,7 +29,7 @@ const _CollectStar = memo((props: CollectStarProps) => {
         cate_ids: [1]
       })
     },
-    onMutate: async (checked) => {
+    onMutate: async checked => {
       setChecked(checked)
 
       props.onUpdate?.(checked)
@@ -78,7 +77,7 @@ const CollectList = (props: CollectListProps) => {
   const cateQuery = useQuery({
     queryKey: [getStockCollectCates.cacheKey],
     queryFn: () => getStockCollectCates(),
-    initialData: [{ id: '1', name: '我的自选', create_time: '', active: 0, total: '0', is_default: true, sort: 0 }],
+    initialData: [{ id: '1', name: '我的自选', create_time: '', active: 0, total: '0', is_default: true, sort: 0 }]
   })
 
   const updateCollectMutation = useMutation({
@@ -140,7 +139,7 @@ const CollectList = (props: CollectListProps) => {
           <div
             key={item.id}
             onClick={() => onCheck(item)}
-            onKeyDown={() => { }}
+            onKeyDown={() => {}}
             className="flex cursor-pointer items-center pl-4 space-x-4 hover:bg-primary py-1"
           >
             {<Checkbox checked={item.active === 1} />}

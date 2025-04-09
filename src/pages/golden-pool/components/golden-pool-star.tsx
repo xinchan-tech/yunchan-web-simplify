@@ -51,7 +51,7 @@ const _GoldenPoolStar = memo((props: GoldenPoolStarProps) => {
       setChecked(true)
       props.onUpdate?.({ symbol: props.code, collect: 1 })
     },
-    onError: (err) => {
+    onError: err => {
       setChecked(false)
       props.onUpdate?.({ symbol: props.code, collect: 0 })
       toast({
@@ -76,7 +76,7 @@ const _GoldenPoolStar = memo((props: GoldenPoolStarProps) => {
       setChecked(false)
       props.onUpdate?.({ symbol: props.code, collect: 0 })
     },
-    onError: (err) => {
+    onError: err => {
       setChecked(true)
       props.onUpdate?.({ symbol: props.code, collect: 1 })
       toast({
@@ -97,7 +97,7 @@ const _GoldenPoolStar = memo((props: GoldenPoolStarProps) => {
       // 取消收藏操作，打开确认窗口
       JknAlert.confirm({
         content: '确认取消该股票收藏？',
-        onAction: async (action) => {
+        onAction: async action => {
           if (action === 'confirm') {
             removeCollectMutation.mutate()
           }
@@ -161,7 +161,7 @@ const BatchStar = memo((props: BatchStarProps) => {
       // 触发更新回调
       props.onUpdate?.(false)
     },
-    onError: (err) => {
+    onError: err => {
       // 显示错误提示
       toast({
         description: '批量取消收藏失败：' + err.message
@@ -184,7 +184,7 @@ const BatchStar = memo((props: BatchStarProps) => {
       // 取消收藏操作，打开确认窗口
       JknAlert.confirm({
         content: '确认取消选中股票的收藏？',
-        onAction: async (action) => {
+        onAction: async action => {
           if (action === 'confirm') {
             // 用户确认取消收藏，执行取消收藏操作
             removeCollectMutation.mutate()

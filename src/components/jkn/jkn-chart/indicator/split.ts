@@ -31,15 +31,15 @@ export const SplitIndicator: IndicatorTemplate<any, any> = {
     const Line = getFigureClass('line')! as FigureConstructor<LineAttrs, Partial<LineStyle>>
     const dataList = chart.getDataList()
 
-    if(!dataList.length) return true
+    if (!dataList.length) return true
 
     const lastDrawX = xAxis.convertToPixel(dataList.length - 1)
 
     result.forEach(x => {
       const _x = bounding.width * x
 
-      if(_x > lastDrawX) return
-      
+      if (_x > lastDrawX) return
+
       new Line({
         name: 'mark-overlay',
         attrs: {

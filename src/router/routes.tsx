@@ -26,7 +26,6 @@ export const routes: RouteObject[] = [
             }
           },
           {
-
             path: '/stock/alarm',
             Component: lazy(() => import('@/pages/stock-alarm')),
             handle: {
@@ -34,7 +33,6 @@ export const routes: RouteObject[] = [
             }
           },
           {
-
             path: '/stock/*',
             Component: lazy(() => import('@/pages/stock/info')),
             handle: {
@@ -153,12 +151,11 @@ export const routes: RouteObject[] = [
     children: [
       {
         index: true,
-        Component: lazy(() => import('@/pages/home/home')),
+        Component: lazy(() => import('@/pages/home/home'))
       },
       {
         path: 'features',
-        Component: lazy(() => import('@/pages/home/features')),
-
+        Component: lazy(() => import('@/pages/home/features'))
       }
     ],
     handle: {

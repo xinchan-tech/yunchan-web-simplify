@@ -1,9 +1,9 @@
-import { useState } from "react"
-import { LoginForm } from "./login"
-import { RegisterForm } from "./register"
-import { ResetForm } from "./reset"
-import { useNavigate } from "react-router"
-import { useQueryParams } from "@/hooks"
+import { useState } from 'react'
+import { LoginForm } from './login'
+import { RegisterForm } from './register'
+import { ResetForm } from './reset'
+import { useNavigate } from 'react-router'
+import { useQueryParams } from '@/hooks'
 
 const LoginPage = () => {
   const [page, setPage] = useState<'login' | 'register' | 'resetPassword'>('login')
@@ -18,9 +18,8 @@ const LoginPage = () => {
         {{
           login: <LoginForm setPage={setPage} afterLogin={onNav} />,
           register: <RegisterForm setPage={setPage} />,
-          resetPassword: <ResetForm setPage={setPage} afterLogin={onNav} />,
-        }[page] ?? <LoginForm setPage={setPage} afterLogin={onNav} />
-        }
+          resetPassword: <ResetForm setPage={setPage} afterLogin={onNav} />
+        }[page] ?? <LoginForm setPage={setPage} afterLogin={onNav} />}
       </div>
     </div>
   )

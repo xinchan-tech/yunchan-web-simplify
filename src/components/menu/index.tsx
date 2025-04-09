@@ -63,7 +63,7 @@ const Menu = () => {
         icon: <JknIcon.Svg name="message" size={24} />,
         title: '消息',
         path: '/message'
-      },
+      }
       // {
       //   icon: <JknIcon.Svg name="shout" size={24} />,
       //   title: '大V快评',
@@ -102,7 +102,7 @@ const Menu = () => {
         <div className="text-center cursor-pointer hover:text-primary" key={item.title}>
           <div
             onClick={() => onNav(item.path)}
-            onKeyDown={() => { }}
+            onKeyDown={() => {}}
             className={cn(
               'flex flex-col items-center hover:bg-accent w-8 h-[28px] justify-center rounded-xs',
               pathname === item.path && 'bg-primary/30'
@@ -110,9 +110,7 @@ const Menu = () => {
           >
             <div className={cn('flex', pathname === item.path ? 'text-primary' : '')}>{item.icon}</div>
           </div>
-          <span className={cn('text-xs', pathname === item.path ? 'text-primary' : '')}>
-            {item.title}
-          </span>
+          <span className={cn('text-xs', pathname === item.path ? 'text-primary' : '')}>{item.title}</span>
         </div>
       ))}
       <style jsx>{`

@@ -5,7 +5,7 @@ import { produce } from 'immer'
 type UseOptimisticUpdateOptions<P, T extends (params: P) => void> = {
   cacheKey: FetchQueryOptions['queryKey']
   onOptimisticUpdate: (params: P, data: any) => any
-  action: T,
+  action: T
   onSuccess?: () => void
 }
 
@@ -20,9 +20,8 @@ export const useOptimisticUpdate = <P = any, T extends (params: P) => void = (pa
       const previous = queryClient.getQueryData(opts.cacheKey)
 
       if (previous) {
-        queryClient.setQueryData(
-          opts.cacheKey,
-          () =>  produce(previous, draft => {
+        queryClient.setQueryData(opts.cacheKey, () =>
+          produce(previous, draft => {
             opts.onOptimisticUpdate(params, draft)
           })
         )

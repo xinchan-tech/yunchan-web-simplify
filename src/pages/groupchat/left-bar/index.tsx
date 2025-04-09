@@ -9,8 +9,8 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { useEffect, useRef } from 'react'
 import WKSDK from 'wukongimjssdk'
 import { JoinGroupContent } from '../components/create-and-join-group/join-group-content'
-import { useGroupChatStoreNew } from "@/store/group-chat-new"
-import { useToast } from "@/hooks"
+import { useGroupChatStoreNew } from '@/store/group-chat-new'
+import { useToast } from '@/hooks'
 
 const GroupChatLeftBar = (props: {
   indexTab: 'chat' | 'live'
@@ -22,15 +22,15 @@ const GroupChatLeftBar = (props: {
     icon: IconName
     value: 'chat' | 'live'
   }> = [
-      {
-        icon: 'group',
-        value: 'chat'
-      },
-      {
-        icon: 'live',
-        value: 'live'
-      }
-    ]
+    {
+      icon: 'group',
+      value: 'chat'
+    },
+    {
+      icon: 'live',
+      value: 'live'
+    }
+  ]
 
   const channel = useRef<BroadcastChannel>()
   useEffect(() => {
@@ -182,7 +182,7 @@ const SettingForm = (props: SettingFormProps) => {
     const format = value
     if (timeFormat.timezone === 'us' && format === 'ago') {
       toast({
-        description: '美东时间只支持显示完整时间',
+        description: '美东时间只支持显示完整时间'
       })
 
       return
@@ -200,7 +200,7 @@ const SettingForm = (props: SettingFormProps) => {
               <div
                 className="bg-accent rounded px-4 py-2 cursor-pointer"
                 onClick={props.onChannelChange}
-                onKeyDown={() => { }}
+                onKeyDown={() => {}}
               >
                 更换社群
               </div>
@@ -217,26 +217,42 @@ const SettingForm = (props: SettingFormProps) => {
         <span className="text-tertiary">时间显示</span>
         <div className="space-y-4">
           <div>
-            <RadioGroup className="flex items-center space-x-4" value={timeFormat.timezone} onValueChange={onTimeZoneChange}>
+            <RadioGroup
+              className="flex items-center space-x-4"
+              value={timeFormat.timezone}
+              onValueChange={onTimeZoneChange}
+            >
               <div className="flex items-center">
                 <RadioGroupItem value="local" id="chat-group-time-zone-local" />
-                <Label className="ml-2" htmlFor="chat-group-time-zone-local">本地时间</Label>
+                <Label className="ml-2" htmlFor="chat-group-time-zone-local">
+                  本地时间
+                </Label>
               </div>
               <div className="flex items-center">
                 <RadioGroupItem value="us" id="chat-group-time-zone-us" />
-                <Label className="ml-2" htmlFor="chat-group-time-zone-us">美东时间</Label>
+                <Label className="ml-2" htmlFor="chat-group-time-zone-us">
+                  美东时间
+                </Label>
               </div>
             </RadioGroup>
           </div>
           <div>
-            <RadioGroup className="flex items-center space-x-4" value={timeFormat.format} onValueChange={onFormatChange}>
+            <RadioGroup
+              className="flex items-center space-x-4"
+              value={timeFormat.format}
+              onValueChange={onFormatChange}
+            >
               <div className="flex items-center">
                 <RadioGroupItem value="ago" id="chat-group-time-format-ago" />
-                <Label className="ml-2" htmlFor="chat-group-time-format-ago">相对时间</Label>
+                <Label className="ml-2" htmlFor="chat-group-time-format-ago">
+                  相对时间
+                </Label>
               </div>
               <div className="flex items-center">
                 <RadioGroupItem value="time" id="chat-group-time-format-time" />
-                <Label className="ml-2" htmlFor="chat-group-time-format-time">完整时间</Label>
+                <Label className="ml-2" htmlFor="chat-group-time-format-time">
+                  完整时间
+                </Label>
               </div>
             </RadioGroup>
           </div>
