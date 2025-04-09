@@ -71,8 +71,8 @@ export const LoginForm = (
 
   return (
     <>
-      <div className="pt-[140px] h-full w-[371px] box-border flex flex-col">
-        <p className="text-[32px] mb-16">欢迎登录</p>
+      <div className="login-content h-full w-[371px] box-border flex flex-col">
+        <p className="text-[32px] mb-12">欢迎登录</p>
         <Form {...form}>
           <form className="space-y-5 text-foreground">
             <FormField
@@ -119,7 +119,7 @@ export const LoginForm = (
             />
           </form>
           <Button
-            className="mt-10"
+            className="mt-6"
             onClick={() => loginMutation.mutate({ type: 'username', data: {} })}
             block
             size="xl"
@@ -143,7 +143,7 @@ export const LoginForm = (
             </span>
           </div>
         </div>
-        <div className="px-4 other-login mt-16">
+        <div className="px-4 other-login mt-10">
           <div className="flex items-center mb-2">
             <span className="border-0 border-b border-solid border-accent flex-1" />
             <span className="text-secondary mx-3 text-m">或其他登录方式</span>

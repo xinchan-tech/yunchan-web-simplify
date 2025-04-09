@@ -178,8 +178,8 @@ export const ResetForm = (props: {
             </div>
             <span>返回</span>
           </div>
-          <div className="h-full w-[371px] pt-[80px] box-border flex flex-col leading-none text-foreground mx-auto">
-            <p className="text-[32px] mb-16">
+          <div className="h-full w-[371px] login-title box-border flex flex-col leading-none text-foreground mx-auto">
+            <p className="text-[32px] mb-10">
               {step === 1 ? (
                 <>
                   <span>找回密码</span>
@@ -347,7 +347,7 @@ export const ResetForm = (props: {
                     </span>
                   </div>
                 </div>
-                <div className="px-4 other-login mt-16">
+                <div className="px-4 other-login mt-12">
                   <div className="flex items-center mb-2">
                     <span className="border-0 border-b border-solid border-accent flex-1" />
                     <span className="text-secondary mx-3 text-m">或其他登录方式</span>

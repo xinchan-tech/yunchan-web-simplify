@@ -184,7 +184,7 @@ const StockFinancials = () => {
     []
   )
 
-  const onRowClick = useTableRowClickToStockTrading('symbol')
+  const onRowClick = useTableRowClickToStockTrading('code')
 
   return (
     <div className="h-full flex flex-col stock-calendar">

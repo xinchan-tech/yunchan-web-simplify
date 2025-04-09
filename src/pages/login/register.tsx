@@ -1,4 +1,4 @@
-import { forgotPassword, registerByEmail, sendEmailCode } from '@/api'
+import { registerByEmail, sendEmailCode } from '@/api'
 import {
   Button,
   FormControl,
@@ -18,7 +18,6 @@ import { useCheckbox, useToast, useZForm } from '@/hooks'
 import { cn } from '@/utils/style'
 import { useMutation } from '@tanstack/react-query'
 import { useCountDown, useCounter } from 'ahooks'
-import to from 'await-to-js'
 import { REGEXP_ONLY_DIGITS } from 'input-otp'
 import { useState } from 'react'
 import { FormProvider, type SubmitErrorHandler } from 'react-hook-form'
@@ -123,8 +122,8 @@ export const RegisterForm = (props: {
             </div>
             <span>返回</span>
           </div>
-          <div className="h-full w-[371px] pt-[80px] box-border flex flex-col leading-none text-foreground mx-auto">
-            <p className="text-[32px] mb-16">
+          <div className="h-full w-[371px] login-title box-border flex flex-col leading-none text-foreground mx-auto">
+            <p className="text-[32px] mb-10">
               <span>输入邮箱验证码</span>
               <br />
               <span className="mt-3 text-base text-tertiary">验证码已发送至{form.getValues('username')}</span>
@@ -177,8 +176,8 @@ export const RegisterForm = (props: {
           </div>
         </div>
       ) : (
-        <div className="pt-[140px] h-full w-[371px] box-border flex flex-col leading-none text-foreground">
-          <p className="text-[32px] mb-16">
+        <div className="login-content h-full w-[371px] box-border flex flex-col leading-none text-foreground">
+          <p className="text-[32px] mb-10">
             <span>创建账号</span>
             <br />
             <span className="mt-3 text-base text-tertiary">请输入您用于注册的邮箱地址</span>

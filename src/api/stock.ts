@@ -464,7 +464,7 @@ type GetIncreaseTopV2Params = {
  * 热度前几名
  */
 export const getIncreaseTopV2 = async (params: GetIncreaseTopV2Params) => {
-  const r = await request.get<GetIncreaseTopResult>('/stock-svc//home/hot/stocks', { params }).then(r => r.data)
+  const r = await request.get<GetIncreaseTopResult>('/stock-svc/home/hot/stocks', { params }).then(r => r.data)
   return r
 }
 getIncreaseTopV2.cacheKey = 'stock-svc:home:hot:stocks'

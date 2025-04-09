@@ -96,14 +96,28 @@ const _JknRcTable = <T extends DefaultRecordType = any>({
   }, [columns, sort, onSort, designWidth, sortClear])
 
   const observerRef = useRef<IntersectionObserver | null>(null)
+  const resizeObserverRef = useRef<ResizeObserver | null>(null)
 
   useMount(() => {
     if (!dom.current) return
-    const { width, height } = dom.current!.getBoundingClientRect()
-    setContainer(draft => {
-      draft.width = width
-      draft.height = height
+    // const { width, height } = dom.current!.getBoundingClientRect()
+    // setContainer(draft => {
+    //   draft.width = width
+    //   draft.height = height
+    // })
+
+    const resizeObserver = new ResizeObserver(entries => {
+      for (const entry of entries) {
+        const { width, height } = entry.contentRect
+        // console.log(111)
+        setContainer(draft => {
+          draft.width = width
+          draft.height = height
+        })
+      }
     })
+    resizeObserver.observe(dom.current!)
+    resizeObserverRef.current = resizeObserver
 
     if (infiniteScroll?.enabled) {
       const table = dom.current!.querySelector('.rc-table-body table')!
