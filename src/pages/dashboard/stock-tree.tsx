@@ -113,24 +113,26 @@ const StockTree = () => {
   }, [query.data])
 
   const subscribeHandler: StockSubscribeHandler<'quote'> = useCallback(
-    data => {
-      if (stockUtils.getTrading(data.record.time) !== 'intraDay') return
-      if (!subscribeStocks.includes(data.topic)) return
+    d => {
+      Object.values(d).forEach(data => {
+        if (stockUtils.getTrading(data.record.time) !== 'intraDay') return
+        if (!subscribeStocks.includes(data.topic)) return
 
-      setTreeData(s => {
-        for (const node of s) {
-          for (const child of node.children) {
-            if (child.name === data.topic) {
-              child.data = Decimal.create(data.record.percent).mul(100).toDP(3).toNumber()
-              const _color = getColorByStep(child.data / 100)
-              if (child.color !== _color) {
-                child.color = _color
+        setTreeData(s => {
+          for (const node of s) {
+            for (const child of node.children) {
+              if (child.name === data.topic) {
+                child.data = Decimal.create(data.record.percent).mul(100).toDP(3).toNumber()
+                const _color = getColorByStep(child.data / 100)
+                if (child.color !== _color) {
+                  child.color = _color
+                }
+                return [...s]
               }
-              return [...s]
             }
           }
-        }
-        return [...s]
+          return [...s]
+        })
       })
     },
     [subscribeStocks]
