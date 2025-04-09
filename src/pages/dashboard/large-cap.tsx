@@ -400,6 +400,10 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
       } else {
         if (chart.current?.isSameIntervalCandlestick(stock, StockChartInterval.ONE_MIN)) {
           lastBarInInterval.current = stock
+          chart.current?.appendCandlestick({
+            ...stock,
+            close: lastData?.close ?? stock.close,
+          }, StockChartInterval.ONE_MIN)
           return
         }
 
@@ -432,8 +436,7 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
       chart.current?.appendCandlestick(
         {
           ...lastData,
-          close: data.record.close,
-          prevClose: data.record.preClose
+          close: data.record.close
         },
         StockChartInterval.ONE_MIN
       )

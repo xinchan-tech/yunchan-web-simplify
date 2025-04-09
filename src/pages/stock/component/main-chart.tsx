@@ -57,20 +57,18 @@ export const MainChart = (props: MainChartProps) => {
       return
     }
 
-    // console.log('stock bar subscribe ********************')
-    // console.log(dateUtils.toUsDay(data.rawRecord[0]! as unknown as number).format('YYYY-MM-DD HH:mm:ss'))
-    // console.log(trading, renderUtils.shouldUpdateChart(trading, chartStore.interval), chartImp.current?.isSameIntervalCandlestick(record, chartStore.interval))
-    // console.log(data)
-    // console.log('stock bar subscribe end ********************')
     if (!renderUtils.shouldUpdateChart(trading, interval)) {
       return
     }
 
+    const lastData = chartImp.current?.getChart()?.getDataList()?.slice(-1)[0]
+
     if (chartImp.current?.isSameIntervalCandlestick(record, interval)) {
       lastBarInInterval.current = record
-      // chartImp.current?.appendCandlestick({
-      //   ...record
-      // }, interval)
+      chartImp.current?.appendCandlestick({
+        ...record,
+        close: lastData?.close ?? record.close,
+      }, interval)
     } else {
       // 用bar数据覆盖上一根k线quote的数据
       if (lastBarInInterval.current) {
@@ -107,8 +105,7 @@ export const MainChart = (props: MainChartProps) => {
 
       const newData = {
         ...lastData,
-        close: data.record.close,
-        prevClose: data.record.preClose
+        close: data.record.close
       }
 
       chartImp.current?.appendCandlestick(newData, chartStore.interval)

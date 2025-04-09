@@ -4,7 +4,7 @@ import { stockUtils } from '@/utils/stock'
 import { cn } from '@/utils/style'
 import { useQuery } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
-import { NumSpanSubscribe, SubscribeSpan } from '../num-span'
+import { SubscribeSpan } from '../num-span'
 
 // const codes = ['IXIC', 'SPX', 'DJI']
 export const StockBar = () => {
