@@ -46,8 +46,8 @@ export const StockBar = () => {
               initDirection={item.percent > 0}
               decimal={3}
               arrow
+              showSign
             />
-            {/* <JknIcon className="w-4 h-4 -mb-0.5" name={item.percent >= 0 ? 'ic_price_up_green' : 'ic_price_down_red'} /> */}
             &emsp;
             <SubscribeSpan.Percent
               symbol={item.code}
@@ -55,6 +55,7 @@ export const StockBar = () => {
               initValue={item.offset}
               initDirection={item.percent > 0}
               decimal={3}
+              showSign
             />
             &emsp;
             <SubscribeSpan.Percent
@@ -62,6 +63,7 @@ export const StockBar = () => {
               initValue={item.percent * 100}
               initDirection={item.percent >= 0}
               decimal={2}
+              showSign
             />
             &emsp;
           </span>
