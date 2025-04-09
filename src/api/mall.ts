@@ -95,3 +95,12 @@ export const getPaymentTypes = () => {
 }
 
 getPaymentTypes.cacheKey = 'mall:paymentTypes'
+
+
+/**
+ * 账单列表
+ */
+export const getPaymentList = () => {
+  return request.get<any>('/user/getPayment').then(r => r.data) 
+}
+getPaymentList.cacheKey = 'mall:paymentList'

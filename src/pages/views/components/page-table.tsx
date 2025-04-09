@@ -4,7 +4,7 @@ import { useStockQuoteSubscribe, useTableData, useTableRowClickToStockTrading } 
 import { stockUtils } from '@/utils/stock'
 import { useInfiniteQuery } from '@tanstack/react-query'
 
-import { useEffect, useMemo } from 'react'
+import { useCallback, useEffect, useMemo } from 'react'
 import { useImmer } from 'use-immer'
 
 interface PageTableProps {
@@ -134,7 +134,9 @@ const PageTable = (props: PageTableProps) => {
     }
   }
 
-  useStockQuoteSubscribe(query.data?.pages.flatMap(o => o.items).map(item => item.symbol) ?? [])
+  // useStockQuoteSubscribe(query.data?.pages.flatMap(o => o.items).map(item => item.symbol) ?? [], useCallback(() => {
+
+  // }, [sort]))
 
   const columns = useMemo<JknRcTableProps<TableDataType>['columns']>(
     () => [
@@ -230,7 +232,7 @@ const PageTable = (props: PageTableProps) => {
         render: (_, row) => <div className="text-[14px]">{row.industry}</div>
       }
     ],
-    [list, query.refetch]
+    []
   )
 
   const onRowClick = useTableRowClickToStockTrading('symbol')

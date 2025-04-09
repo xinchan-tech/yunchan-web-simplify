@@ -97,13 +97,6 @@ export const routes: RouteObject[] = [
           title: '系统设置'
         }
       },
-      // {
-      //   path: '/stock/:type',
-      //   Component: lazy(() => import('@/pages/stock')),
-      //   handle: {
-      //     title: '个股盘口'
-      //   }
-      // },
 
       {
         path: '/push',
@@ -134,6 +127,30 @@ export const routes: RouteObject[] = [
         Component: lazy(() => import('@/pages/login')),
         handle: {
           title: '登录'
+        }
+      },
+
+      {
+        path: '/user',
+        Component: lazy(() => import('@/pages/user')),
+        children: [
+          {
+            index: true,
+            Component: lazy(() => import('@/pages/user/user-center')),
+            handle: {
+              title: ''
+            }
+          },
+          {
+            path: 'bills',
+            Component: lazy(() => import('@/pages/user/bills')),
+            handle: {
+              title: '账单管理'
+            }
+          }
+        ],
+        handle: {
+          title: '个人中心'
         }
       }
     ]

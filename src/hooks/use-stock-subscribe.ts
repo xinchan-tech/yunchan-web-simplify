@@ -1,5 +1,5 @@
-import { type StockSubscribeHandler, type SubscribeActionType, stockSubscribe } from '@/utils/stock'
-import { useEffect, useRef } from 'react'
+import { type QuoteBuffer, type StockSubscribeHandler, type SubscribeActionType, stockSubscribe } from '@/utils/stock'
+import { useEffect, useMemo, useRef } from 'react'
 import { useLatestRef } from './use-latest-ref'
 import { useUnmount } from 'ahooks'
 
@@ -14,23 +14,39 @@ const useStockSubscribe = (action: SubscribeActionType, symbols: string[]) => {
   }, [action, symbols])
 }
 
-export const useStockQuoteSubscribe = (symbols: string[], handler?: StockSubscribeHandler<'quote'>) => {
-  // useStockSubscribe('quote', symbols)
-  // const handlerRef = useRef(handler ?? (() => {}))
-  // useEffect(() => {
-  //   handlerRef.current = handler ?? (() => {})
-  //   return () => {
-  //     handlerRef.current = () => {}
-  //   }
-  // }, [handler])
-  // useEffect(() => {
-  //   const unSubscribe = stockSubscribe.on('quote', d => {
-  //     handlerRef.current(d)
-  //   })
-  //   return () => {
-  //     unSubscribe()
-  //   }
-  // }, [])
+/**
+ * 不会发送实际的订阅请求，用来处理收到的数据
+ * @param symbols
+ * @param handler
+ */
+export const useStockQuoteSubscribe = (symbols: string[], handler?: (params: QuoteBuffer) => void) => {
+  const symbolsMap = useMemo(() => {
+    const map = new Set<string>()
+    symbols.forEach(symbol => {
+      map.add(symbol)
+    })
+    return map
+  }, [symbols])
+
+  useEffect(() => {
+    if (!symbolsMap.size) return
+    if (!handler) return
+    console.log('quote subscribe', symbolsMap)
+    const _handler: (params: QuoteBuffer) => void = e => {
+      const r: QuoteBuffer = {}
+      Object.keys(e).forEach(key => {
+        if(symbolsMap.has(key)) {
+          r[key] = e[key]
+        }
+      })
+      handler?.(r)
+    }
+    const unsubscribe = stockSubscribe.on('quote', _handler)
+
+    return () => {
+      unsubscribe()
+    }
+  }, [symbolsMap, handler])
 }
 
 export const useStockBarSubscribe = (symbols: string[], handler: StockSubscribeHandler<'bar'>) => {

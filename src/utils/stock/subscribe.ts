@@ -124,11 +124,13 @@ const snapshotActionResultParser = (data: any) => {
 
 export type StockSubscribeHandler<T extends SubscribeActionType> = T extends 'bar'
   ? (data: ReturnType<typeof barActionResultParser>) => void
-  : T extends 'quote'
-    ? (data: ReturnType<typeof quoteActionResultParser>) => void
+  : T extends 'quoteTopic'
+    ? (data: ReturnType<typeof quoteActionResultParser>) => void:
+    T extends 'quote'
+    ? (data: QuoteBuffer) => void
     : (data: ReturnType<typeof snapshotActionResultParser>) => void
 
-export type SubscribeActionType = 'bar' | 'quote' | '' | 'snapshot'
+export type SubscribeActionType = 'bar' | 'quote' | '' | 'snapshot' | 'quoteTopic'
 
 type BufferItem = {
   action: string
@@ -138,7 +140,7 @@ type BufferItem = {
 /**
  * quote 时间窗口buffer结构
  */
-type QuoteBuffer = Record<string, ReturnType<typeof quoteActionResultParser>>
+export type QuoteBuffer = Record<string, ReturnType<typeof quoteActionResultParser>>
 
 /**
  * snapshot 时间窗口buffer结构
@@ -433,7 +435,7 @@ class StockSubscribe {
    */
   private startBufferHandle() {
     let count = this.bufferHandleLength
-    const quoteBuffer = Object.entries(this.quoteBuffer)
+    const quoteBuffer = this.quoteBuffer
     this.quoteBuffer = {}
 
     while (count > 0 && this.buffer.length > 0) {
@@ -448,10 +450,10 @@ class StockSubscribe {
       count--
     }
 
-    quoteBuffer.forEach(([topic, data]) => {
+    Object.entries(quoteBuffer).forEach(([topic, data]) => {
       this.subscribed.emit(`${topic}:quote`, data)
-      this.subscribed.emit(topic, data)
     })
+    this.subscribed.emit('quote', quoteBuffer)
 
     const snapshotBuffer = Object.entries(this.snapshotBuffer)
     this.snapshotBuffer = {}
