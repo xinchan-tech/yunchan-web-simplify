@@ -3,6 +3,7 @@ import { Ws } from '.'
 import { useToken } from '@/store'
 import { createEvent } from '../event'
 import { AlarmType } from '@/api'
+import { sysConfig } from '@/utils/config.ts'
 
 export type MessageReceived<T> = {
   event: WsEvent
@@ -15,7 +16,7 @@ const wsProtocol = document.location.protocol === 'https:' ? 'wss' : 'ws'
 
 const wsUrl = `${wsProtocol}://${window.location.hostname}${window.location.port ? `:${window.location.port}` : ''}${import.meta.env.PUBLIC_BASE_WS_URL}`
 
-const wsUrlV2 = `${wsProtocol}://${window.location.hostname}${window.location.port ? `:${window.location.port}` : ''}${import.meta.env.PUBLIC_BASE_WS_URL_V2}`
+const wsUrlV2 = sysConfig.PUBLIC_BASE_WS_URL_V2
 
 type WsEvent =
   | 'connect'

@@ -72,7 +72,7 @@ export default defineConfig({
     }
   },
   tools: {
-    rspack(_, { appendPlugins, addRules }) {
+    rspack(_, { appendPlugins }) {
       if (process.env.NODE_ENV === 'production') {
         appendPlugins(
           new RsdoctorRspackPlugin({

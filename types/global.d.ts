@@ -65,6 +65,8 @@ interface Window {
   }>
 
   stockSubscribe: any
+
+  _sysConfig: any
 }
 
 /**

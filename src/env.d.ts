@@ -10,4 +10,6 @@ interface ImportMetaEnv {
   readonly PUBLIC_BASE_APPLE_REDIRECT_URI: string
   readonly PUBLIC_BASE_AES_KEY: string
   readonly PUBLIC_BASE_AES_IV: string
+  readonly OSS_ACCESSKEYID: string
+  readonly OSS_ACCESS_KEY_SECRET: string
 }
