@@ -126,3 +126,15 @@ export const getPaymentList = () => {
   return request.get<GetPaymentListResult>('/user/getPayment').then(r => r.data) 
 }
 getPaymentList.cacheKey = 'mall:paymentList'
+
+/**
+ * 取消订阅
+ */
+export const cancelSubscription = (subscriptionId: string, type: 'product' | 'channel') => {
+  const form = new URLSearchParams()
+  form.append('id', subscriptionId)
+  form.append('type', type)
+  return request
+    .post<{ success: boolean }>('/user/unsubscribe', form)
+    .then(r => r.data);
+}

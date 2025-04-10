@@ -31,6 +31,11 @@ $dark-table-body-background: transparent;
   align-items: center;
   justify-self: unset;
 }
+
+.jkn-rc-table[data-border="false"] .rc-table-cell{
+  border-bottom: none;
+}
+
 .rc-table {
   position: relative;
   box-sizing: border-box;

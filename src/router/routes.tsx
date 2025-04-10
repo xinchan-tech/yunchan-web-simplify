@@ -147,6 +147,20 @@ export const routes: RouteObject[] = [
             handle: {
               title: '账单管理'
             }
+          },
+          {
+            path: 'invite',
+            Component: lazy(() => import('@/pages/user/invite')),
+            handle: {
+              title: '邀请好友'
+            }
+          },
+          {
+            path: 'subscribe',
+            Component: lazy(() => import('@/pages/user/subscribe')),
+            handle: {
+              title: '订阅管理'
+            }
           }
         ],
         handle: {

@@ -1,5 +1,5 @@
 import { getUser, updateUser } from "@/api"
-import { Button, FormControl, FormField, FormItem, FormLabel, Input, JknAvatar, JknIcon, Separator, useFormModal, useModal } from "@/components"
+import { Button, FormControl, FormField, FormItem, FormLabel, Input, JknAlert, JknAvatar, JknIcon, Separator, useFormModal, useModal } from "@/components"
 import { parseUserPermission, useUser } from "@/store"
 import { uploadUtils } from "@/utils/oss"
 import { useMutation, useQuery } from "@tanstack/react-query"
@@ -186,9 +186,7 @@ const UserCenter = () => {
               onClick={() => {
                 if (user?.id) {
                   copy(user.id)
-                  toast({
-                    description: '复制成功'
-                  })
+                  JknAlert.success('复制成功')
                 }
               }}
             >
@@ -210,16 +208,9 @@ const UserCenter = () => {
           <span className="text-lg">邀请好友</span>
           <div className="ml-auto text-[#808080]">
             <Button className="bg-accent text-foreground rounded w-[72px] ml-5"
-              onClick={() => {
-                if (user?.shareUrl) {
-                  copy(user.shareUrl)
-                  toast({
-                    description: '复制成功'
-                  })
-                }
-              }}
+              onClick={() => navigate('/user/invite')}
             >
-              复制
+              前往
             </Button>
           </div>
         </div>
@@ -227,7 +218,7 @@ const UserCenter = () => {
         <div className="flex items-center">
           <span className="text-lg">订阅管理</span>
           <div className="ml-auto text-[#808080]">
-            <Button className="bg-accent text-foreground rounded w-[72px] ml-5">
+            <Button className="bg-accent text-foreground rounded w-[72px] ml-5" onClick={() => navigate('/user/subscribe')}>
               前往
             </Button>
           </div>

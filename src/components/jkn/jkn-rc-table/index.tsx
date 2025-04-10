@@ -15,6 +15,7 @@ export interface JknRcTableProps<T = any> extends TableProps<T> {
   virtual?: boolean
   fixedTable?: boolean
   designWidth?: number
+  border?: boolean
   onSort?: (columnKey: keyof T, order: 'asc' | 'desc' | undefined) => void
   infiniteScroll?: {
     enabled?: boolean
@@ -30,6 +31,7 @@ const _JknRcTable = <T extends DefaultRecordType = any>({
   emptyText,
   isLoading,
   virtual,
+  border = true,
   infiniteScroll,
   designWidth,
   sortClear = false,
@@ -60,6 +62,7 @@ const _JknRcTable = <T extends DefaultRecordType = any>({
   const _columns = useMemo(() => {
     if (!columns) return columns
     const width = dom.current?.getBoundingClientRect().width
+    
     return columns.map(column => {
       if (designWidth && width) {
         columns.forEach((item: any) => {
@@ -155,7 +158,7 @@ const _JknRcTable = <T extends DefaultRecordType = any>({
   })
 
   return (
-    <div className="jkn-rc-table overflow-hidden h-full w-full" ref={dom}>
+    <div className="jkn-rc-table overflow-hidden h-full w-full" ref={dom} data-border={border}>
       {virtual ? (
         <VirtualTable
           columns={_columns}

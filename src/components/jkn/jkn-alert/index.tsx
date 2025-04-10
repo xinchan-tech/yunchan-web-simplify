@@ -28,6 +28,11 @@ type AlertOptions = {
   okBtnVariant?: ButtonProps['variant']
 }
 
+type PureAlertOptions = {
+  content: ReactNode
+  duration?: number
+}
+
 export const JknAlert = {
   info({ content, title, onAction, cancelBtn, okBtnText, closeIcon, okBtnVariant }: AlertOptions) {
     let rootEl = document.getElementById('alert-wrapper')
@@ -65,6 +70,30 @@ export const JknAlert = {
 
   confirm(args: AlertOptions) {
     return JknAlert.info({ cancelBtn: true, ...args })
+  },
+
+  success(args: PureAlertOptions | string) {
+    let _args = {} as PureAlertOptions
+    if (typeof args === 'string') {
+      _args = { content: args }
+    }
+    const { content, duration } = _args
+
+    const _content = (
+      <div className="text-center flex flex-col items-center">
+        <div className="size-8 rounded-full border border-solid border-foreground flex items-center justify-center">
+          <JknIcon.Svg name="check" size={16} className="" />
+        </div>
+        <div className="text-center mt-2.5">
+          {content}
+        </div>
+      </div>
+    )
+
+    toast({
+      content: _content,
+      duration
+    })
   }
 }
 
@@ -145,5 +174,73 @@ const AlertComponent = (props: AlertDialogProps) => {
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
+  )
+}
+
+interface PureAlertComponentProps {
+  content: ReactNode
+  afterClose?: () => void
+  duration?: number
+}
+
+const PureAlertComponent = (props: PureAlertComponentProps) => {
+  const [open, { setTrue, setFalse }] = useBoolean(false)
+
+  const waitAction = async () => {
+    setFalse()
+
+    setTimeout(() => {
+      props.afterClose?.()
+    }, 250)
+  }
+
+  useMount(() => {
+    setTrue()
+
+    setTimeout(() => {
+      waitAction()
+    }, props.duration || (3 * 1000))
+  })
+
+  return (
+    <AlertDialog open={open}>
+      <AlertDialogContent className="w-fit px-5 py-4 rounded-[12px] min-w-[102px] min-h-[102px] flex items-center justify-center box-border">
+        <VisuallyHidden>
+          <AlertDialogHeader>
+            <AlertDialogTitle/>
+          </AlertDialogHeader>
+        </VisuallyHidden>
+        <AlertDialogDescription className="text-center p-0">{props.content}</AlertDialogDescription>
+      </AlertDialogContent>
+    </AlertDialog>
+  )
+}
+
+const toast = (props: PureAlertOptions) => {
+  let rootEl = document.getElementById('alert-pure-wrapper')
+
+  if (!rootEl) {
+    const el = document.createElement('div')
+    el.id = 'alert-pure-wrapper'
+    document.body.appendChild(el)
+    rootEl = el
+  }
+
+  const container = document.createElement('div')
+  rootEl.appendChild(container)
+  container.id = `alert-${nanoid(8)}`
+
+  const root = createRoot(container)
+
+  const destroy = () => {
+    // root.unmount()
+  }
+
+  root.render(
+    <PureAlertComponent
+      content={props.content}
+      duration={props.duration}
+      afterClose={destroy}
+    />
   )
 }

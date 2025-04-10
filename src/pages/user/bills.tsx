@@ -1,8 +1,10 @@
 import { getPaymentList } from "@/api"
-import { JknRcTable } from "@/components"
+import { JknRcTable, Separator } from "@/components"
 import { useQuery } from "@tanstack/react-query"
 import dayjs from "dayjs"
 import type { TableProps } from "rc-table"
+
+type TableDataType = ArrayItem<Awaited<ReturnType<typeof getPaymentList>>['product']>
 
 const Bills = () => {
   const bills = useQuery({
@@ -10,44 +12,47 @@ const Bills = () => {
     queryFn: getPaymentList
   })
 
-  const columns: TableProps['columns'] = [
+  const columns: TableProps<TableDataType>['columns'] = [
     {
       title: '产品类型',
-      align: 'center',
+      align: 'left',
+      width: 134,
       dataIndex: 'name'
     },
     {
       title: '订单号',
-      align: 'center',
+      align: 'left',
+      width: 240,
       dataIndex: 'id'
     },
     {
       title: '支付方式',
-      align: 'center',
+      align: 'left',
+      width: 125,
       dataIndex: 'platform'
     },
     {
       title: '金额',
-      align: 'center',
+      align: 'left',
+      width: 130,
       dataIndex: 'price',
       render: (text) => <span>${text}</span>
     },
     {
       title: '购买时间',
-      align: 'center',
+      align: 'left',
+      width: 226,
       dataIndex: 'create_time',
-      render: (text) => <span>{dayjs(+text * 1000).format('YYYY-MM-DD HH:mm:ss')}</span>
+      render: (text) => <span className="leading-10" >{dayjs(+text * 1000).format('YYYY/MM/DD HH:mm:ss')}</span>
     },
     {
       title: '状态',
       dataIndex: 'status_text',
-      align: 'center',
+      align: 'left',
       render: (text) => (
         <span>
           {{
-            未生效: text,
-            已生效: <span className="text-green-500">{text}</span>,
-            已失效: <span className="text-red-500">{text}</span>,
+            已到期: <span className="text-destructive">{text}</span>
           }[text as string] ?? text}
         </span>
       )
@@ -56,9 +61,10 @@ const Bills = () => {
 
   return (
     <div className="h-full overflow-hidden flex flex-col">
-      <div className="text-[32px] mb-5">账单</div>
-      <div className="flex-1 leading-none">
-        <JknRcTable data={bills.data?.product || []} rowKey="id" columns={columns}  />
+      <div className="text-[32px]">账单</div>
+      <Separator className="my-10" />
+      <div className="flex-1 leading-none ">
+        <JknRcTable data={bills.data?.product || []} rowClassName={(v) => v.status_text === '已取消' ? 'text-[#808080]': ''} rowKey="id" columns={columns} isLoading={bills.isLoading} border={false}  />
       </div>
     </div>
   )
