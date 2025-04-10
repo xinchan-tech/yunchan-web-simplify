@@ -1,5 +1,5 @@
 import { isNumber } from 'radash'
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { useStockQuoteSubscribe } from "./use-stock-subscribe"
 import type { QuoteBuffer } from "@/utils/stock"
@@ -85,12 +85,16 @@ export const useTableData = <T extends Record<string, any>>(data: T[], _?: Order
   return [list, { setList: _setList, onSort, updateList }] as const
 }
 
-export const useTableSortDataWithWs = <T extends Record<string, any>>(data: T[], symbols: string[], key: OrderKey<T>) => {
+export const useTableSortDataWithWs = <T extends Record<string, any>>(data: T[], symbolKey: keyof T, key: OrderKey<T>) => {
   const [list, setList] = useState<T[]>(data)
   const initList = useRef<T[]>([])
   const lastOrder = useRef<{ field?: keyof T; order?: 'asc' | 'desc' }>({ field: undefined, order: undefined })
   const keysSort = useRef<string[]>([])
   const lastSortTime = useRef<number>(Date.now())
+
+  const symbols = useMemo(() =>{
+      return list.map(v =>v[symbolKey] as string)
+  }, [list, symbolKey])
 
   const _setList = useCallback((data: T[]) => {
     initList.current = [...data]
@@ -129,17 +133,22 @@ export const useTableSortDataWithWs = <T extends Record<string, any>>(data: T[],
     Object.keys(e).forEach(item => {
       const v = initList.current.find((v: any) => item === v[key] as string) as any
 
-      if(!v) return 
+      if(!v) return
 
-      if(item[field as any] === undefined) return
+      if(field === 'percent'){
+        v[field as any] = e[item].record.changePercent
+      }else{
+        if((e[item].record as any)[field] === undefined) return
 
-      v[field as any] = item[field as any]
+        v[field as any] = (e[item].record as any)[field]
+      }
     })
 
     if(Date.now() - lastSortTime.current > 2000) {
+
       lastSortTime.current = Date.now()
-      setList(s => {
-        const r = sortData(s, field, lastOrder.current.order!)
+      setList(() => {
+        const r = sortData(initList.current, field, lastOrder.current.order!)
         keysSort.current = r.map(o => o[key as string])
         return r
       })
@@ -150,7 +159,7 @@ export const useTableSortDataWithWs = <T extends Record<string, any>>(data: T[],
   return [list, { setList: _setList, onSort, updateList }] as const
 }
 
-export const useTableRowClickToStockTrading = (symbolField: string, interval?: number) => {
+export const useTableRowClickToStockTrading = (symbolField: string, _interval?: number) => {
   const navigate = useNavigate()
   return useCallback(
     (record: any) => {

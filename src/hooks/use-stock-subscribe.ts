@@ -31,7 +31,7 @@ export const useStockQuoteSubscribe = (symbols: string[], handler?: (params: Quo
   useEffect(() => {
     if (!symbolsMap.size) return
     if (!handler) return
-    console.log('quote subscribe', symbolsMap)
+
     const _handler: (params: QuoteBuffer) => void = e => {
       const r: QuoteBuffer = {}
       Object.keys(e).forEach(key => {

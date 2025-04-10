@@ -9,10 +9,11 @@ import qs from 'qs'
 import { type ComponentRef, useEffect, useRef, useState } from 'react'
 import { chartEvent } from '../lib/event'
 import { useCandlesticks } from '../lib/request'
-import { ChartType, MainYAxis, chartManage, useChartManage } from '../lib/store'
+import { chartManage, ChartType, MainYAxis, useChartManage } from '../lib/store'
 import { renderUtils } from '../lib/utils'
 import { BackTestBar } from './back-test-bar'
 import { ChartContextMenu } from './chart-context-menu'
+import { dateUtils } from '@/utils/date.ts'
 
 interface MainChartProps {
   chartId: string
@@ -46,9 +47,9 @@ export const MainChart = (props: MainChartProps) => {
   useStockBarSubscribe([`${symbol}@${stockUtils.intervalToPeriod(chartStore.interval)}`], data => {
     const mode = useChartManage.getState().chartStores[props.chartId].mode
     if (mode === 'backTest') return
-    const trading = useTime.getState().getTrading()
     const interval = useChartManage.getState().chartStores[props.chartId].interval
     const record = stockUtils.toStock(data.rawRecord)
+    const trading = stockUtils.getTrading(record.timestamp)
     const symbol = useChartManage.getState().chartStores[props.chartId].symbol
     const [_symbol] = data.topic.split('@')
     if (_symbol !== symbol) {
@@ -58,6 +59,13 @@ export const MainChart = (props: MainChartProps) => {
     }
 
     if (!renderUtils.shouldUpdateChart(trading, interval)) {
+      // if(lastBarInInterval.current){
+      //   if(trading === 'afterHours' && stockUtils.getTrading(lastBarInInterval.current.timestamp) === 'intraDay'){
+      //     chartImp.current?.appendCandlestick({
+      //       ...lastBarInInterval.current
+      //     }, interval)
+      //   }
+      // }
       return
     }
 
@@ -65,10 +73,17 @@ export const MainChart = (props: MainChartProps) => {
 
     if (chartImp.current?.isSameIntervalCandlestick(record, interval)) {
       lastBarInInterval.current = record
-      chartImp.current?.appendCandlestick({
-        ...record,
-        close: lastData?.close ?? record.close,
-      }, interval)
+      const ss = dateUtils.toUsDay(record.timestamp).format('ss')
+      if(ss === '59'){
+        chartImp.current?.appendCandlestick({
+          ...record
+        }, interval)
+      }else{
+        chartImp.current?.appendCandlestick({
+          ...record,
+          close: lastData?.close ?? record.close,
+        }, interval)
+      }
     } else {
       // 用bar数据覆盖上一根k线quote的数据
       if (lastBarInInterval.current) {
@@ -78,6 +93,7 @@ export const MainChart = (props: MainChartProps) => {
           },
           interval
         )
+        lastBarInInterval.current = null
       }
       chartImp.current?.appendCandlestick(
         {
@@ -89,7 +105,7 @@ export const MainChart = (props: MainChartProps) => {
   })
 
   useEffect(() => {
-    const unSubscribe = stockSubscribe.onQuoteTopic(symbol, data => {
+    return stockSubscribe.onQuoteTopic(symbol, data => {
       const trading = useTime.getState().getTrading()
       const mode = useChartManage.getState().chartStores[props.chartId].mode
       if (mode === 'backTest') return
@@ -110,8 +126,6 @@ export const MainChart = (props: MainChartProps) => {
 
       chartImp.current?.appendCandlestick(newData, chartStore.interval)
     })
-
-    return unSubscribe
   }, [chartStore.interval, symbol, props.chartId])
 
   /**

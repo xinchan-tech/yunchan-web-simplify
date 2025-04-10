@@ -1,4 +1,4 @@
-import { IncreaseTopStatus, getIncreaseTop, getIncreaseTopV2 } from '@/api'
+import {  getIncreaseTopV2 } from '@/api'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,12 +10,10 @@ import {
   StockView,
   SubscribeSpan
 } from '@/components'
-import { useStockQuoteSubscribe, useTableData, useTableRowClickToStockTrading } from '@/hooks'
+import { useStockQuoteSubscribe, useTableRowClickToStockTrading, useTableSortDataWithWs } from '@/hooks'
 import { useTime } from '@/store'
-import { dateToWeek } from '@/utils/date'
 import { type StockTrading, stockUtils } from '@/utils/stock'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import dayjs from 'dayjs'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -39,11 +37,10 @@ const TopList = () => {
   const [type, setType] = useState<string>(tradingToKey(trading))
 
   const { t } = useTranslation()
-  const { isToday } = useTime()
-  const [list, { setList, onSort }] = useTableData<TableDataType>([], 'symbol')
+  const [list, { setList, onSort }] = useTableSortDataWithWs<TableDataType>([], 'symbol', 'symbol')
 
   const query = useQuery({
-    queryKey: [getIncreaseTop.cacheKey, type],
+    queryKey: [getIncreaseTopV2.cacheKey, type],
     queryFn: () => getIncreaseTopV2({ key: type as any, extend: ['total_share', 'stock_before', 'stock_after'] }),
     refetchInterval: 30 * 1000
   })
@@ -86,8 +83,8 @@ const TopList = () => {
 
   const onTypeChange = (s: string) => {
     setType(s)
-    queryClient.invalidateQueries({ queryKey: [getIncreaseTop.cacheKey, s] })
-  }
+    queryClient.invalidateQueries({queryKey: [getIncreaseTopV2.cacheKey, s]}).then()
+   }
 
   useStockQuoteSubscribe(query.data?.map(d => d.symbol) ?? [])
 

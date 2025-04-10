@@ -1,15 +1,14 @@
 import {
   StockChartInterval,
   getStockBaseCodeInfo,
-  getStockBrief,
+  // getStockBrief,
   getStockCollects,
   getStockNotice,
-  getStockQuote,
+  // getStockQuote,
   getStockRelated,
   getStockTrades
 } from '@/api'
 import {
-  Button,
   Carousel,
   CarouselContent,
   CollectDropdownMenu,
@@ -78,7 +77,7 @@ type StockBaseInfoData = Parameters<StockSubscribeHandler<'snapshot'>>[0]['data'
 const StockBaseInfo = () => {
   const code = useSymbolQuery()
   const trading = useTime(s => s.getTrading())
-  const [dataTrading, setDataTrading] = useState<Nullable<string>>(undefined)
+  // const [dataTrading, setDataTrading] = useState<Nullable<string>>(undefined)
 
   const [dataInfo, setDataInfo] = useState<Nullable<StockBaseInfoData>>()
 
@@ -311,10 +310,10 @@ const StockQuote = () => {
   const [expanded, setExpanded] = useState(false)
   const code = useSymbolQuery()
 
-  const quote = useQuery({
-    queryKey: [getStockQuote.cacheKey, code],
-    queryFn: () => getStockQuote(code)
-  })
+  // const quote = useQuery({
+  //   queryKey: [getStockQuote.cacheKey, code],
+  //   queryFn: () => getStockQuote(code)
+  // })
 
   const [codeInfo, setCodeInfo] = useState<StockBaseInfoData>()
 
@@ -681,51 +680,51 @@ const StockRelated = () => {
 /**
  * 股票简介
  */
-const StockBrief = () => {
-  const code = useSymbolQuery()
-
-  const { data: brief } = useQuery({
-    queryKey: [getStockBrief.cacheKey, code],
-    queryFn: () => getStockBrief(code)
-  })
-
-  return (
-    <div className="text-secondary text-sm py-4 space-y-4">
-      <div className="text-sm px-2">概况</div>
-      <div className="flex items-center px-2 w-full overflow-hidden">
-        <span className="w-16 flex-shrink-0">公司名称</span>
-        <span className="text-foreground">{brief?.name ?? '-'}</span>
-      </div>
-      <div className="flex items-center px-2 w-full overflow-hidden">
-        <span className="w-16 flex-shrink-0">所属行业</span>
-        <span className="text-foreground">{brief?.sic_description ?? '-'}</span>
-      </div>
-      <div className="flex items-center px-2 w-full overflow-hidden">
-        <span className="w-16 flex-shrink-0">成立时间</span>
-        <span className="text-foreground">{brief?.list_date ?? '-'}</span>
-      </div>
-      <div className="flex items-center px-2 w-full overflow-hidden">
-        <span className="w-16 flex-shrink-0">员工人数</span>
-        <span className="text-foreground">{brief?.total_employees ?? '-'}</span>
-      </div>
-      <div className="flex items-center px-2 w-full overflow-hidden">
-        <span className="w-16 flex-shrink-0">公司网站</span>
-        <span className="text-foreground">{brief?.homepage_url ?? '-'}</span>
-      </div>
-      <div className="flex items-center px-2 w-full overflow-hidden">
-        <span className="w-16 flex-shrink-0">联系电话</span>
-        <span className="text-foreground">{brief?.phone_number ?? '-'}</span>
-      </div>
-      <div className="flex items-center px-2 w-full overflow-hidden">
-        <span className="w-16 flex-shrink-0">证券类型</span>
-        <span className="text-foreground">{brief?.market ?? '-'}</span>
-      </div>
-      <Separator />
-      <div className="text-sm px-2">简介</div>
-      <div className="text-foreground px-2">{brief?.description ?? '-'}</div>
-    </div>
-  )
-}
+// const StockBrief = () => {
+//   const code = useSymbolQuery()
+//
+//   const { data: brief } = useQuery({
+//     queryKey: [getStockBrief.cacheKey, code],
+//     queryFn: () => getStockBrief(code)
+//   })
+//
+//   return (
+//     <div className="text-secondary text-sm py-4 space-y-4">
+//       <div className="text-sm px-2">概况</div>
+//       <div className="flex items-center px-2 w-full overflow-hidden">
+//         <span className="w-16 flex-shrink-0">公司名称</span>
+//         <span className="text-foreground">{brief?.name ?? '-'}</span>
+//       </div>
+//       <div className="flex items-center px-2 w-full overflow-hidden">
+//         <span className="w-16 flex-shrink-0">所属行业</span>
+//         <span className="text-foreground">{brief?.sic_description ?? '-'}</span>
+//       </div>
+//       <div className="flex items-center px-2 w-full overflow-hidden">
+//         <span className="w-16 flex-shrink-0">成立时间</span>
+//         <span className="text-foreground">{brief?.list_date ?? '-'}</span>
+//       </div>
+//       <div className="flex items-center px-2 w-full overflow-hidden">
+//         <span className="w-16 flex-shrink-0">员工人数</span>
+//         <span className="text-foreground">{brief?.total_employees ?? '-'}</span>
+//       </div>
+//       <div className="flex items-center px-2 w-full overflow-hidden">
+//         <span className="w-16 flex-shrink-0">公司网站</span>
+//         <span className="text-foreground">{brief?.homepage_url ?? '-'}</span>
+//       </div>
+//       <div className="flex items-center px-2 w-full overflow-hidden">
+//         <span className="w-16 flex-shrink-0">联系电话</span>
+//         <span className="text-foreground">{brief?.phone_number ?? '-'}</span>
+//       </div>
+//       <div className="flex items-center px-2 w-full overflow-hidden">
+//         <span className="w-16 flex-shrink-0">证券类型</span>
+//         <span className="text-foreground">{brief?.market ?? '-'}</span>
+//       </div>
+//       <Separator />
+//       <div className="text-sm px-2">简介</div>
+//       <div className="text-foreground px-2">{brief?.description ?? '-'}</div>
+//     </div>
+//   )
+// }
 
 const GoldenStockPool = () => {
   const [type, setType] = useState('-1')
