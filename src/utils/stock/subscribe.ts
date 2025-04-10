@@ -330,7 +330,7 @@ class StockSubscribe {
   /**
    * @returns cancelTopic
    */
-  public onQuoteTopic(symbol: string, handler: StockSubscribeHandler<'quote'>) {
+  public onQuoteTopic(symbol: string, handler: StockSubscribeHandler<'quoteTopic'>) {
     this.subscribe('quote', [symbol])
     this.subscribed.on(`${symbol}:quote`, handler)
     // console.log(this.subscribeTopic)
@@ -340,7 +340,7 @@ class StockSubscribe {
     }
   }
 
-  public offQuoteTopic(topic: string, handler: StockSubscribeHandler<'quote'>) {
+  public offQuoteTopic(topic: string, handler: StockSubscribeHandler<'quoteTopic'>) {
     this.subscribed.off(`${topic}:quote`, handler)
   }
 

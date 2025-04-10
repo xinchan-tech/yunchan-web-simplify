@@ -1,7 +1,8 @@
-import { AiAlarmSetting, CapsuleTabs, Tabs, TabsList, TabsTrigger } from '@/components'
+import { Tabs, TabsList, TabsTrigger } from '@/components'
 import { useState } from 'react'
 import { PriceAlarmSetting } from './price-alarm-setting'
 import { PercentageAlarmSetting } from './percent-alarm-setting'
+import AiAlarmSetting from "./ai-alarm-setting"
 
 interface PriceAlarmFormProps {
   code?: string

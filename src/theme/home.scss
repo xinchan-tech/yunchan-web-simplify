@@ -6,8 +6,18 @@
   background-image: radial-gradient(38.18% 60.36% at 6.37% 95.31%, rgb(250, 46, 121) 0%, rgb(159, 4, 61) 22%, rgb(115, 4, 44) 44%, rgb(10, 10, 10) 100%);
 }
 
-.home-content-w-1 {
-  width: 840px;
+$base-width: 840px;
+@media screen and (max-width: 840px) {
+  .home-content-w-1 {
+    width: $base-width;
+  }
+}
+
+@media screen and (min-width: 840px) {
+  .home-content-w-1 {
+    width: 80%;
+    max-width: $base-width * 1.5;
+  }
 }
 
 .linear-gradient-1 {
@@ -15,9 +25,30 @@
 }
 
 .home-content {
-  summary::marker {
-    display: none;
-    unicode-bidi: normal;
+  summary{
+    &::marker, &::-webkit-details-marker  {
+      width: 0;
+      margin-right: 0;
+      background: none;
+      color: transparent;
+      display: none;
+    }
+
+    &::after{
+      content: '';
+      background: url('@/assets/home/qa-expand.png') no-repeat center center /cover;
+      width: 20px;
+      height: 20px;
+      float: right;
+    }
+
+    margin-left: -28px;
+  }
+
+  details[open]{
+    summary::after{
+      background: url('@/assets/home/qa-unexpand.png') no-repeat center center /cover;
+    }
   }
 }
 

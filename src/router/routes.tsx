@@ -83,13 +83,13 @@ export const routes: RouteObject[] = [
           title: '大V快评'
         }
       },
-      {
-        path: '/alarm',
-        Component: lazy(() => import('@/pages/alarm')),
-        handle: {
-          title: 'AI警报'
-        }
-      },
+      // {
+      //   path: '/alarm',
+      //   Component: lazy(() => import('@/pages/alarm')),
+      //   handle: {
+      //     title: 'AI警报'
+      //   }
+      // },
       {
         path: '/setting',
         Component: lazy(() => import('@/pages/setting')),
@@ -187,6 +187,10 @@ export const routes: RouteObject[] = [
       {
         path: 'features',
         Component: lazy(() => import('@/pages/home/features'))
+      },
+      {
+        path: 'cookies',
+        Component: lazy(() => import('@/pages/home/cookies'))
       }
     ],
     handle: {

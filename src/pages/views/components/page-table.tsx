@@ -1,8 +1,8 @@
 import { type StockExtend, type UsStockColumn, getUsStocks } from '@/api'
-import { CollectStar, JknRcTable, type JknRcTableProps, StockView, SubscribeSpan } from '@/components'
-import { useStockQuoteSubscribe, useTableData, useTableRowClickToStockTrading } from '@/hooks'
+import { CollectStar, JknPagination, JknRcTable, type JknRcTableProps, Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious, StockView, SubscribeSpan } from '@/components'
+import { usePagination, useStockQuoteSubscribe, useTableData, useTableRowClickToStockTrading } from '@/hooks'
 import { stockUtils } from '@/utils/stock'
-import { useInfiniteQuery } from '@tanstack/react-query'
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 
 import { useCallback, useEffect, useMemo } from 'react'
 import { useImmer } from 'use-immer'
@@ -43,25 +43,25 @@ const PageTable = (props: PageTableProps) => {
     column: 'total_mv',
     order: 'desc'
   })
-  const queryFn = (page: number) => {
+
+  const { pagination, onPageChange, onPageSizeChange, total, onTotalChange } = usePagination()
+
+  const queryFn = () => {
     const extend: StockExtend[] = ['basic_index', 'stock_before', 'stock_after', 'total_share', 'collect', 'financials']
     return getUsStocks({
       type: props.type === 'all' ? undefined : props.type,
       column: sort.column,
-      limit: 50,
-      page,
+      limit: pagination.pageSize,
+      page: pagination.page,
       order: sort.order,
       extend
     })
   }
 
-  const query = useInfiniteQuery({
-    queryKey: [getUsStocks.cacheKey, props.type, sort],
-    queryFn: params => queryFn(params.pageParam),
-    initialPageParam: 1,
-    getNextPageParam: lastPage => {
-      return lastPage.last < lastPage.current ? undefined : lastPage.current + 1
-    }
+
+  const query = useQuery({
+    queryKey: [getUsStocks.cacheKey, props.type, sort, pagination],
+    queryFn: () => queryFn(),
   })
 
   const [list, { setList, onSort }] = useTableData<TableDataType>([], 'symbol')
@@ -69,12 +69,12 @@ const PageTable = (props: PageTableProps) => {
   useEffect(() => {
     const r: TableDataType[] = []
 
-    if (!query.data?.pages) {
+    if (!query.data) {
       setList([])
       return
     }
 
-    const allPage = query.data.pages.flatMap(o => o.items)
+    const allPage = query.data.items
 
     for (const item of allPage) {
       // const [lastData, beforeData, afterData] = stockUtils.toStock(item)
@@ -104,8 +104,10 @@ const PageTable = (props: PageTableProps) => {
       })
     }
 
+    onTotalChange(query.data.total_items)
+
     setList(r)
-  }, [query.data, setList])
+  }, [query.data, setList, onTotalChange])
 
   const onSortChange: JknRcTableProps<TableDataType>['onSort'] = (columnKey, sort) => {
     if (!props.type || ['all', 'ixic', 'spx', 'dji', 'etf'].includes(props.type)) {
@@ -238,20 +240,22 @@ const PageTable = (props: PageTableProps) => {
   const onRowClick = useTableRowClickToStockTrading('symbol')
 
   return (
-    <JknRcTable
-      headerHeight={61}
-      isLoading={query.isLoading}
-      columns={columns}
-      rowKey="symbol"
-      data={list}
-      onSort={onSortChange}
-      onRow={onRowClick}
-      infiniteScroll={{
-        enabled: true,
-        fetchMore: () => !query.isFetchingNextPage && query.fetchNextPage(),
-        hasMore: query.hasNextPage
-      }}
-    />
+    <div className="h-full flex flex-col">
+      <div className="flex-1 overflow-hidden">
+        <JknRcTable
+          headerHeight={61}
+          isLoading={query.isLoading}
+          columns={columns}
+          rowKey="symbol"
+          data={list}
+          onSort={onSortChange}
+          onRow={onRowClick}
+        />
+      </div>
+      <div>
+        <JknPagination {...pagination} onPageChange={onPageChange} onPageSizeChange={onPageSizeChange} total={total} />
+      </div>
+    </div>
   )
 }
 

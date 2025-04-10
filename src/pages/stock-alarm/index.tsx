@@ -153,7 +153,7 @@ const StockAlarmList = () => {
         <SortButton
           list={[
             { label: '代码(A到Z)', order: 'asc', field: 'symbol' },
-            { label: '代码(A到Z)', order: 'desc', field: 'symbol' },
+            { label: '代码(Z到A)', order: 'desc', field: 'symbol' },
             { label: '创建时间(从旧到新)', order: 'asc', field: 'create_time' },
             { label: '创建时间(从新到旧)', order: 'desc', field: 'create_time' }
           ]}

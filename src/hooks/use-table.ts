@@ -1,7 +1,8 @@
-import { router } from '@/router'
 import { isNumber } from 'radash'
 import { useCallback, useRef, useState } from 'react'
 import { useNavigate } from 'react-router'
+import { useStockQuoteSubscribe } from "./use-stock-subscribe"
+import type { QuoteBuffer } from "@/utils/stock"
 
 type OrderKey<T = any> = keyof T | ((arg: T) => string)
 
@@ -80,6 +81,71 @@ export const useTableData = <T extends Record<string, any>>(data: T[], _?: Order
       return sortData(s, columnKey, order)
     })
   }, [])
+
+  return [list, { setList: _setList, onSort, updateList }] as const
+}
+
+export const useTableSortDataWithWs = <T extends Record<string, any>>(data: T[], symbols: string[], key: OrderKey<T>) => {
+  const [list, setList] = useState<T[]>(data)
+  const initList = useRef<T[]>([])
+  const lastOrder = useRef<{ field?: keyof T; order?: 'asc' | 'desc' }>({ field: undefined, order: undefined })
+  const keysSort = useRef<string[]>([])
+  const lastSortTime = useRef<number>(Date.now())
+
+  const _setList = useCallback((data: T[]) => {
+    initList.current = [...data]
+
+    if (lastOrder.current.field && lastOrder.current.order) {
+      setList(sortData(data, lastOrder.current.field, lastOrder.current.order))
+    } else {
+      setList(data)
+    }
+  }, [])
+
+  
+
+  const updateList = useCallback(setList, [])
+
+  const onSort = useCallback((columnKey: keyof T, order: 'asc' | 'desc' | undefined) => {
+    if (!order) {
+      lastOrder.current = { field: undefined, order: undefined }
+      setList([...initList.current])
+      keysSort.current = initList.current.map(o => o[key as string])
+      return
+    }
+
+    lastOrder.current = { field: columnKey, order }
+    setList(s => {
+      const r = sortData(s, columnKey, order)
+      keysSort.current = r.map(o => o[key as string]) 
+      return r
+    })
+  }, [key])
+
+
+  useStockQuoteSubscribe(symbols, useCallback((e: QuoteBuffer) => {
+    if(!lastOrder.current.order || !lastOrder.current.field) return
+    const field = lastOrder.current.field
+    Object.keys(e).forEach(item => {
+      const v = initList.current.find((v: any) => item === v[key] as string) as any
+
+      if(!v) return 
+
+      if(item[field as any] === undefined) return
+
+      v[field as any] = item[field as any]
+    })
+
+    if(Date.now() - lastSortTime.current > 2000) {
+      lastSortTime.current = Date.now()
+      setList(s => {
+        const r = sortData(s, field, lastOrder.current.order!)
+        keysSort.current = r.map(o => o[key as string])
+        return r
+      })
+    }
+
+  }, [key]))
 
   return [list, { setList: _setList, onSort, updateList }] as const
 }

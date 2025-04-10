@@ -1,6 +1,5 @@
 import {
   addStockIndicatorCollect,
-  getStockIndicators,
   getStockIndicatorsV2,
   getStockTabList,
   removeStockCollectCate,

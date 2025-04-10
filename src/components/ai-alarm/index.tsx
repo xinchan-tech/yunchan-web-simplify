@@ -1,125 +1,13 @@
-import { Cross2Icon } from '@radix-ui/react-icons'
+import { cn } from '@/utils/style'
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden'
 import { useBoolean } from 'ahooks'
 import { type PropsWithChildren, useEffect } from 'react'
-import { Dialog, DialogClose, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '../ui/dialog'
-import AiAlarmForm from './ai-alarm-form'
-import AiAlarmSetting from './ai-alarm-setting'
-import PriceAlarmForm from './price-alarm-form'
-import { PriceAlarmSetting } from './price-alarm-setting'
 import { JknIcon } from '../jkn/jkn-icon'
-import { cn } from '@/utils/style'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '../ui/dialog'
+import PriceAlarmForm from './price-alarm-form'
 
 interface AiAlarmProps {
   code?: string
-}
-/**
- * @deprecated
- * @param props
- * @returns
- */
-export const AiAlarm = (props: PropsWithChildren<AiAlarmProps>) => {
-  const [open, { setTrue, setFalse }] = useBoolean(false)
-  const [visible, { setTrue: setVisibleTrue, setFalse: setVisibleFalse }] = useBoolean(false)
-
-  useEffect(() => {
-    if (open) {
-      setVisibleTrue()
-    } else {
-      setTimeout(() => {
-        setVisibleFalse()
-      }, 250)
-    }
-  }, [open, setVisibleFalse, setVisibleTrue])
-
-  return (
-    <>
-      <div className="w-auto h-auto" onClick={setTrue} onKeyDown={() => {}}>
-        {props.children}
-      </div>
-      {visible ? (
-        <Dialog open={open} onOpenChange={v => !v && setFalse()} modal={true}>
-          <DialogContent className="w-[900px]">
-            <DialogHeader>
-              <DialogTitle asChild>
-                <div className="title text-center h-10" style={{}}>
-                  <DialogClose asChild>
-                    <span
-                      className="bg-[#F36059] box-border rounded-full cursor-pointer  hover:opacity-90 absolute -z-0 w-4 h-4 left-2 top-3 flex items-center justify-center"
-                      onKeyDown={() => {}}
-                    >
-                      <Cross2Icon className="scale-75" />
-                    </span>
-                  </DialogClose>
-                  <span className="leading-[40px]">AI警报设置</span>
-                </div>
-              </DialogTitle>
-              <VisuallyHidden>
-                <DialogDescription />
-              </VisuallyHidden>
-            </DialogHeader>
-            <div>
-              <AiAlarmForm code={props.code} />
-            </div>
-          </DialogContent>
-        </Dialog>
-      ) : null}
-    </>
-  )
-}
-
-/**
- * @deprecated
- * @param props
- * @returns
- */
-export const PriceAlarm = (props: PropsWithChildren<AiAlarmProps>) => {
-  const [open, { setTrue, setFalse }] = useBoolean(false)
-  const [visible, { setTrue: setVisibleTrue, setFalse: setVisibleFalse }] = useBoolean(false)
-
-  useEffect(() => {
-    if (open) {
-      setVisibleTrue()
-    } else {
-      setTimeout(() => {
-        setVisibleFalse()
-      }, 250)
-    }
-  }, [open, setVisibleFalse, setVisibleTrue])
-  return (
-    <>
-      <div className="w-auto h-fit" onClick={setTrue} onKeyDown={() => {}}>
-        {props.children}
-      </div>
-      {visible ? (
-        <Dialog open={open} onOpenChange={v => !v && setFalse()} modal={true}>
-          <DialogContent className="w-[900px]">
-            <DialogHeader>
-              <DialogTitle asChild>
-                <div className="title text-center h-10" style={{}}>
-                  <DialogClose asChild>
-                    <span
-                      className="bg-[#F36059] box-border rounded-full cursor-pointer  hover:opacity-90 absolute -z-0 w-4 h-4 left-2 top-3 flex items-center justify-center"
-                      onKeyDown={() => {}}
-                    >
-                      <Cross2Icon className="scale-75" />
-                    </span>
-                  </DialogClose>
-                  <span className="leading-[40px]">股价警报设置</span>
-                </div>
-              </DialogTitle>
-              <VisuallyHidden>
-                <DialogDescription />
-              </VisuallyHidden>
-            </DialogHeader>
-            <div>
-              <PriceAlarmForm code={props.code} />
-            </div>
-          </DialogContent>
-        </Dialog>
-      ) : null}
-    </>
-  )
 }
 
 export const StockAlarm = (props: PropsWithChildren<AiAlarmProps>) => {
@@ -142,7 +30,7 @@ export const StockAlarm = (props: PropsWithChildren<AiAlarmProps>) => {
       </div>
       {visible ? (
         <Dialog open={open} onOpenChange={v => !v && setFalse()} modal={true}>
-          <DialogContent className="w-[600px] overflow-hidden">
+          <DialogContent className="w-[600px] overflow-hidden" onOpenAutoFocus={(e) => e.preventDefault()}>
             <DialogHeader>
               <DialogTitle asChild>
                 <div className="px-4 flex items-center">
@@ -171,7 +59,5 @@ export const StockAlarm = (props: PropsWithChildren<AiAlarmProps>) => {
     </>
   )
 }
-
-export { AiAlarmSetting, PriceAlarmSetting }
 
 export * from './ai-alarm-notice'

@@ -91,8 +91,8 @@ export const useModal = ({
   const render = () => {
     if (!visible) return null
     return (
-      <Dialog open={modalVisible} onOpenChange={_onOpenChange}>
-        <DialogContent className={cn('w-[680px]', className)} onPointerDownOutside={onPointerDownOutside}>
+      <Dialog open={modalVisible} onOpenChange={_onOpenChange} modal>
+        <DialogContent className={cn('w-[680px]', className)} onPointerDownOutside={onPointerDownOutside} onOpenAutoFocus={(e) => e.preventDefault()}>
           {innerTitle ? (
             <DialogHeader>
               <DialogTitle asChild>

@@ -177,8 +177,8 @@ export const NumSpan = ({
 interface NumSpanSubscribeProps extends Omit<NumSpanProps, 'value'> {
   code: string
   field:
-    | keyof Parameters<StockSubscribeHandler<'quote'>>[0]['record']
-    | ((data: Parameters<StockSubscribeHandler<'quote'>>[0]['record']) => number | string | undefined)
+    | keyof Parameters<StockSubscribeHandler<'quoteTopic'>>[0]['record']
+    | ((data: Parameters<StockSubscribeHandler<'quoteTopic'>>[0]['record']) => number | string | undefined)
   value?: number | string
   subscribe?: boolean
 }
@@ -245,7 +245,7 @@ interface SubscribeSpanProps extends Omit<HTMLAttributes<HTMLSpanElement>, 'onCh
   value: number | string | undefined
   visibleOptimization?: boolean
   symbol: string
-  formatter: (data: Parameters<StockSubscribeHandler<'quote'>>[0]) => number | string | undefined
+  formatter: (data: Parameters<StockSubscribeHandler<'quoteTopic'>>[0]) => number | string | undefined
   /**
    * 周期
    */
@@ -255,7 +255,7 @@ interface SubscribeSpanProps extends Omit<HTMLAttributes<HTMLSpanElement>, 'onCh
    */
   subscribe?: boolean
   onChange?: (
-    data: Parameters<StockSubscribeHandler<'quote'>>[0],
+    data: Parameters<StockSubscribeHandler<'quoteTopic'>>[0],
     extra: { changeDirection?: 'up' | 'down'; lastValue?: string | number; newValue?: number | string }
   ) => void
 }

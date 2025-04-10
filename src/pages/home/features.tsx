@@ -14,7 +14,7 @@ const FeaturesPage = () => {
   return (
     <div className="pt-24">
       <div className="py-12" style={{ backgroundImage: 'var(--wp--preset--gradient--gradient-one)' }}>
-        <img src={Home3} alt="home-3" className="w-[1000px] mx-auto block" />
+        <img src={Home3} alt="home-3" className="home-content-w-1 mx-auto block" />
       </div>
       <div className="py-12" style={{ backgroundImage: 'var(--wp--preset--gradient--gradient-ten)' }}>
         <img src={Home4} alt="home-4" className="home-content-w-1 mx-auto block" />
@@ -46,7 +46,7 @@ const FeaturesPage = () => {
           立即加入
         </Button>
       </div>
-      <div></div>
+  
       {/* <div className="py-12">
         <img src={Home11} alt="home-11" className="home-content-w-1 mx-auto block" />
       </div> */}
