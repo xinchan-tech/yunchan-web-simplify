@@ -298,7 +298,7 @@ const StockQuoteBar = withTooltip(
             trading={trading}
             symbol={symbol}
             value={props.time}
-            formatter={v => dateUtils.toUsDay(v.record.time).format('MM/DD hh:mm')}
+            formatter={v => dateUtils.toUsDay(v.record.time).format('MM/DD HH:mm')}
           />
         </span>
       </div>
