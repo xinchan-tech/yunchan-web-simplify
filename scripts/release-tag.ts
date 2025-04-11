@@ -43,7 +43,8 @@ export const pluginReleaseTag = (options: ReleaseTagOptions): RsbuildPlugin => (
           JSON.stringify(
             {
               version,
-              packageVersion: packageJson.version
+              packageVersion: packageJson.version,
+              branch: execSync('git rev-parse --abbrev-ref HEAD').toString().trim(), 
             },
             null,
             2

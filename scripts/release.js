@@ -2,6 +2,8 @@ const fs = require('node:fs')
 const path = require('node:path')
 const { NodeSSH } = require('node-ssh')
 const cliProgress = require('cli-progress')
+const {execSync} = require('node:child_process')
+const {createRsbuild} = require('@rsbuild/core')
 const c = require('ansi-colors')
 
 const ssh = new NodeSSH()
@@ -38,10 +40,55 @@ const findAllFiles = dir => {
   return result
 }
 
+const preCheckGitBranch = () => {
+  const currentBranch = execSync('git rev-parse --abbrev-ref HEAD').toString().trim()
+  
+  if(currentBranch !== 'release') {
+    console.log(c.red('发布请切换到 release 分支'))
+    return false
+  }
+  
+  return true
+}
+
+const preCheckBuildOnBranch = () => {
+  const releaseFilePath = path.resolve(__dirname, '../dist/release-tag.json')
+
+  if(!fs.existsSync(releaseFilePath)) {
+    console.log(c.red('请先执行 build 命令'))
+    return false
+  }
+
+  const releaseFile = fs.readFileSync(releaseFilePath, 'utf-8')
+
+  const releaseTag = JSON.parse(releaseFile)
+
+  if(releaseTag.branch !== 'release') {
+    console.log(c.red('非release分支构建, 请切换到 release 分支'))
+    return false
+  }
+
+  return true
+}
+
+
 /**
  * 上传文件
  */
 ;(async () => {
+  
+  if(!preCheckGitBranch()) {
+    return
+  }
+
+  const rsBuild = createRsbuild()
+
+  await rsBuild.build()
+
+  if(!preCheckBuildOnBranch()){
+    return
+  }
+
   const allFiles = findAllFiles(distPath)
   progress.start(allFiles.length - 1, 0, { filename: path.basename(distPath) })
 
@@ -70,3 +117,6 @@ const findAllFiles = dir => {
 
   ssh.dispose()
 })()
+
+
+
