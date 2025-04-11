@@ -168,3 +168,5 @@ type CoilingPivotExt = Omit<CoilingPivot, 'segmentNum' | 'mark' | 'positive'> & 
    */
   level: number
 }
+
+type OrderSort = 'asc' | 'desc'

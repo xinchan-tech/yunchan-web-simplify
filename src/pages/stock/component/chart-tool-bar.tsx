@@ -408,7 +408,7 @@ export const IndicatorModal = (props: { onClickParams: () => void }) => {
 
   const indicators = useMemo(() => {
     if (!indicator.data) return []
-    const allList: StockIndicator[] = []
+    const allList: (StockIndicator & {isMain: boolean})[] = []
 
     if (search) {
       const keyMap = new Set<string>()
@@ -418,7 +418,10 @@ export const IndicatorModal = (props: { onClickParams: () => void }) => {
             if (!o.name?.includes(search)) return
             if(keyMap.has(o.id)) return
             keyMap.add(o.id)
-            allList.push(o)
+            allList.push({
+              ...o,
+              isMain: i.name === '主图'
+            })
           })
         })
       })
@@ -433,7 +436,10 @@ export const IndicatorModal = (props: { onClickParams: () => void }) => {
         if (!t) return []
 
         t.indicators?.forEach(i => {
-          allList.push(i)
+          allList.push({
+            ...i,
+            isMain: t.name === '主图'
+          })
         })
       }
     }
@@ -442,13 +448,15 @@ export const IndicatorModal = (props: { onClickParams: () => void }) => {
 
   const [_, toastNotAuth] = useAuthorized()
 
-  const onCheck = (i: StockIndicator) => {
+  const onCheck = (i: ArrayItem<typeof indicators>) => {
     if (!i.authorized) {
       toastNotAuth()
       return
     }
 
-    if (type === 'main') {
+    const isMain = i.isMain
+
+    if (isMain) {
       if (mainIndicators.find(ii => ii.id === i.id)) {
         if (+i.type === 21) {
           chartManage.setSystem(undefined)

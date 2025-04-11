@@ -33,7 +33,8 @@ const MessageCenter = () => {
   const chatsQueryKey = [getChatContacts.cacheKey]
   const chats = useQuery({
     queryKey: chatsQueryKey,
-    queryFn: () => getChatContacts()
+    queryFn: () => getChatContacts(),
+    select: data => data.filter(contact => contact.uid !== '0')
   })
 
   const markAsReadMutation = useMutation({

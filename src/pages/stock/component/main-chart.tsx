@@ -59,13 +59,13 @@ export const MainChart = (props: MainChartProps) => {
     }
 
     if (!renderUtils.shouldUpdateChart(trading, interval)) {
-      // if(lastBarInInterval.current){
-      //   if(trading === 'afterHours' && stockUtils.getTrading(lastBarInInterval.current.timestamp) === 'intraDay'){
-      //     chartImp.current?.appendCandlestick({
-      //       ...lastBarInInterval.current
-      //     }, interval)
-      //   }
-      // }
+      if(lastBarInInterval.current){
+        if(trading === 'afterHours' && stockUtils.getTrading(lastBarInInterval.current.timestamp) === 'intraDay'){
+          chartImp.current?.appendCandlestick({
+            ...lastBarInInterval.current
+          }, interval)
+        }
+      }
       return
     }
 
@@ -73,15 +73,14 @@ export const MainChart = (props: MainChartProps) => {
 
     if (chartImp.current?.isSameIntervalCandlestick(record, interval)) {
       lastBarInInterval.current = record
-      const ss = dateUtils.toUsDay(record.timestamp).format('ss')
-      if(ss === '59'){
-        chartImp.current?.appendCandlestick({
-          ...record
-        }, interval)
-      }else{
+      if(trading === 'intraDay'){
         chartImp.current?.appendCandlestick({
           ...record,
           close: lastData?.close ?? record.close,
+        }, interval)
+      }else{
+        chartImp.current?.appendCandlestick({
+          ...record
         }, interval)
       }
     } else {
@@ -118,10 +117,16 @@ export const MainChart = (props: MainChartProps) => {
       const lastData = chart?.getDataList()?.slice(-1)[0]
 
       if (!lastData) return
-
       const newData = {
         ...lastData,
         close: data.record.close
+      }
+
+      if(newData.high < newData.close){
+        newData.high = newData.close
+      }
+      if(newData.low > newData.close){
+        newData.low = newData.close
       }
 
       chartImp.current?.appendCandlestick(newData, chartStore.interval)
