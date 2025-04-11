@@ -451,7 +451,7 @@ const SystemMessageContent = (props: SystemMessageContentProps) => {
           </div>
         )}
         className="w-full h-full"
-      ></JknVirtualInfinite>
+      />
       <style jsx>
         {`
         .message-content-right::after {
