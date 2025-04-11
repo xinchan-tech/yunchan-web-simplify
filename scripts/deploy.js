@@ -46,7 +46,7 @@ const findAllFiles = dir => {
   progress.start(allFiles.length - 1, 0, { filename: path.basename(distPath) })
 
   await ssh.connect({
-    host: '18.144.135.209',
+    host: '13.56.79.177',
     username: 'ec2-user',
     privateKey: fs.readFileSync(privateKeyPath, 'utf8')
   })

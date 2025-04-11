@@ -74,13 +74,13 @@ export default defineConfig({
   tools: {
     rspack(_, { appendPlugins }) {
       if (process.env.NODE_ENV === 'production') {
-        appendPlugins(
-          new RsdoctorRspackPlugin({
-            supports: {
-              generateTileGraph: true
-            }
-          })
-        )
+        // appendPlugins(
+        //   new RsdoctorRspackPlugin({
+        //     supports: {
+        //       generateTileGraph: true
+        //     }
+        //   })
+        // )
       }
 
       appendPlugins(new CompressionPlugin({}))
