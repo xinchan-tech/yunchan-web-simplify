@@ -2,6 +2,7 @@ import type { StockRawRecord } from '@/api'
 import mitt from 'mitt'
 import { uid } from 'radash'
 import { Ws } from '../ws'
+import { sysConfig } from "../config"
 
 const barActionResultParser = (data: any) => {
   const action = data.ev as string
@@ -469,5 +470,5 @@ class StockSubscribe {
 
 const token = uid(14)
 
-export const stockSubscribe = new StockSubscribe(`${import.meta.env.PUBLIC_BASE_WS_STOCK_URL}?token=${token}`)
+export const stockSubscribe = new StockSubscribe(`${sysConfig.PUBLIC_BASE_WS_STOCK_URL}?token=${token}`)
 window.stockSubscribe = stockSubscribe

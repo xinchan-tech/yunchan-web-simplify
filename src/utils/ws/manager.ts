@@ -1,9 +1,10 @@
 import mitt, { type Emitter } from 'mitt'
 import { Ws } from '.'
-import { useToken } from '@/store'
+// import { useToken } from '@/store'
 import { createEvent } from '../event'
-import { AlarmType } from '@/api'
+// import { AlarmType } from '@/api'
 import { sysConfig } from '@/utils/config.ts'
+import type { AlarmType } from "@/api"
 
 export type MessageReceived<T> = {
   event: WsEvent
@@ -95,28 +96,28 @@ export type EventResult<T extends WsEvent> = T extends 'default'
           : MessageReceived<any>
 
 export class WsManager {
-  private url: string
-  private ws: Ws
+  // private url: string
+  private ws: Nullable<Ws>
   private event: Emitter<Record<WsEvent, any>>
-  constructor(url: string) {
-    this.url = url
+  constructor(_url: string) {
+    // this.url = url
     this.event = mitt<Record<WsEvent, any>>()
-    this.ws = new Ws(this.url, {
-      onClose: ev => {
-        this.event.emit('close', ev)
-      },
-      onError: ev => {
-        this.event.emit('error', ev)
-      },
-      onMessage: ev => {
-        const data = JSON.parse(ev.data) as MessageReceived<any>
+    // this.ws = new Ws(this.url, {
+    //   onClose: ev => {
+    //     this.event.emit('close', ev)
+    //   },
+    //   onError: ev => {
+    //     this.event.emit('error', ev)
+    //   },
+    //   onMessage: ev => {
+    //     const data = JSON.parse(ev.data) as MessageReceived<any>
 
-        this.event.emit(data.event, data)
-      },
-      onOpen: ev => {
-        this.event.emit('connect', ev)
-      }
-    })
+    //     this.event.emit(data.event, data)
+    //   },
+    //   onOpen: ev => {
+    //     this.event.emit('connect', ev)
+    //   }
+    // })
   }
 
   public on<T extends WsEvent>(event: T, handler: (data: EventResult<T>) => void) {
@@ -132,7 +133,7 @@ export class WsManager {
   }
 
   public send(data: any) {
-    this.ws.send(data)
+    this.ws?.send(data)
   }
 }
 

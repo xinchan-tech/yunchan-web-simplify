@@ -1,9 +1,10 @@
 import { useConfig, useToken } from '@/store'
 import axios from 'axios'
 import { appEvent } from './event'
+import { sysConfig } from "./config"
 
 const request = axios.create()
-request.defaults.baseURL = import.meta.env.PUBLIC_BASE_API_URL
+request.defaults.baseURL = sysConfig.PUBLIC_BASE_API_URL
 
 request.interceptors.request.use(config => {
   const token = useToken.getState().token
