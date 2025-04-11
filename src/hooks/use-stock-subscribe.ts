@@ -35,7 +35,7 @@ export const useStockQuoteSubscribe = (symbols: string[], handler?: (params: Quo
     const _handler: (params: QuoteBuffer) => void = e => {
       const r: QuoteBuffer = {}
       Object.keys(e).forEach(key => {
-        if(symbolsMap.has(key)) {
+        if (symbolsMap.has(key)) {
           r[key] = e[key]
         }
       })
@@ -66,7 +66,7 @@ export const useSnapshot = (symbol: string, handler: StockSubscribeHandler<'snap
 
   useEffect(() => {
     if (!symbol) return
-    unSubscribe.current = stockSubscribe.snapshot(symbol)
+    unSubscribe.current = stockSubscribe.subscribe('snapshot', [symbol])
   }, [symbol])
 
   useEffect(() => {
@@ -87,7 +87,7 @@ export const useSnapshotOnce = (symbol: string, handler: StockSubscribeHandler<'
 
   useEffect(() => {
     if (!symbol) return
-    const unsubscribe = stockSubscribe.snapshot(symbol)
+    const unsubscribe = stockSubscribe.subscribe('snapshot', [symbol])
     unSubscribe.current = unsubscribe
     once.current = 0
   }, [symbol])

@@ -2,16 +2,14 @@ import { useState } from 'react'
 import { LoginForm } from './login'
 import { RegisterForm } from './register'
 import { ResetForm } from './reset'
-import { useNavigate } from 'react-router'
 import { useQueryParams } from '@/hooks'
 import './login.scss'
 
 const LoginPage = () => {
   const [page, setPage] = useState<'login' | 'register' | 'resetPassword'>('login')
-  const navigate = useNavigate()
   const [params] = useQueryParams<{ redirect?: string }>()
   const onNav = () => {
-    navigate(params.redirect || '/')
+    window.location.href = params.redirect || '/'
   }
   return (
     <div className="bg-background w-full h-full rounded-xs overflow-y-auto">

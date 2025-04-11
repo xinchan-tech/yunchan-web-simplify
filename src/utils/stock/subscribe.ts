@@ -2,7 +2,8 @@ import type { StockRawRecord } from '@/api'
 import mitt from 'mitt'
 import { uid } from 'radash'
 import { Ws } from '../ws'
-import { sysConfig } from "../config"
+import { sysConfig } from '../config'
+import { useToken } from '@/store'
 
 const barActionResultParser = (data: any) => {
   const action = data.ev as string
@@ -126,12 +127,12 @@ const snapshotActionResultParser = (data: any) => {
 export type StockSubscribeHandler<T extends SubscribeActionType> = T extends 'bar'
   ? (data: ReturnType<typeof barActionResultParser>) => void
   : T extends 'quoteTopic'
-    ? (data: ReturnType<typeof quoteActionResultParser>) => void:
-    T extends 'quote'
-    ? (data: QuoteBuffer) => void
-    : (data: ReturnType<typeof snapshotActionResultParser>) => void
+    ? (data: ReturnType<typeof quoteActionResultParser>) => void
+    : T extends 'quote'
+      ? (data: QuoteBuffer) => void
+      : (data: ReturnType<typeof snapshotActionResultParser>) => void
 
-export type SubscribeActionType = 'bar' | 'quote' | '' | 'snapshot' | 'quoteTopic'
+export type SubscribeActionType = 'bar' | 'quote' | '' | 'snapshot' | 'quoteTopic' | 'rank_subscribe'
 
 type BufferItem = {
   action: string
@@ -148,7 +149,10 @@ export type QuoteBuffer = Record<string, ReturnType<typeof quoteActionResultPars
  */
 type SnapshotBuffer = Record<string, ReturnType<typeof snapshotActionResultParser>>
 
+type RankSortKey = 'Amount' | 'Change' | 'Volume' | 'Close' | 'MarketCap'
+
 class StockSubscribe {
+  private static instance: StockSubscribe
   private subscribed = mitt<Record<string, any>>()
   private subscribeTopic: {
     [key: string]: {
@@ -164,6 +168,14 @@ class StockSubscribe {
   private quoteBuffer: QuoteBuffer
   private snapshotBuffer: SnapshotBuffer
   private lastBeat: number
+
+  static get() {
+    const token = useToken.getState().token || uid(14)
+    if (!StockSubscribe.instance) {
+      StockSubscribe.instance = new StockSubscribe(`${sysConfig.PUBLIC_BASE_WS_STOCK_URL}?token=${token}`)
+    }
+    return StockSubscribe.instance
+  }
 
   constructor(url: string) {
     this.url = url
@@ -207,6 +219,9 @@ class StockSubscribe {
     this.startCheckWsStatus()
   }
 
+  /**
+   * 重新订阅
+   */
   private reSubscribe() {
     const quote: string[] = []
     const bar: string[] = []
@@ -222,31 +237,31 @@ class StockSubscribe {
       if (action === 'bar') {
         bar.push(symbol)
       }
+
+      if (action === 'snapshot') {
+        this.snapshot(symbol)
+      }
     }
 
     if (quote.length) {
-      this.ws.send({
-        action: 'quote_add_symbols',
-        cid: this.cid,
-        params: quote
-      })
+      this.subscribe('quote', quote)
     }
 
     if (bar.length) {
-      this.ws.send({
-        action: 'bar_add_symbols',
-        cid: this.cid,
-        params: bar
-      })
+      this.subscribe('bar', bar)
     }
   }
 
   public subscribe(action: SubscribeActionType, params: string[]) {
+    if (action === 'snapshot' && params.length > 0) {
+      return this.snapshot(params[0])
+    }
+
     const _action = `${action}_add_symbols`
     const _params: string[] = []
 
-    if (Object.keys(this.subscribeTopic).filter(topic => topic.startsWith('quote')).length > 100) {
-      console.warn('股票价格订阅数大于100， 取消订阅')
+    if (Object.keys(this.subscribeTopic).filter(topic => topic.startsWith('quote')).length > 1000) {
+      console.warn('股票价格订阅数大于1000， 取消订阅')
       return () => {}
     }
 
@@ -282,7 +297,34 @@ class StockSubscribe {
     })
   }
 
-  public snapshot(symbol: string) {
+  /**
+   * 订阅排行榜
+   */
+  public subscribeRank(params: {key: RankSortKey, sort: OrderSort, limit: string}) {
+    const action = 'rank_subscribe'
+
+    this.ws.send({
+      action: action,
+      cid: this.cid,
+      params
+    })
+  }
+
+  public unsubscribeRank() {
+    const action = 'rank_unsubscribe'
+    if(!this) return
+    this.ws.send({
+      action: action,
+      cid: this.cid
+    })
+  }
+
+  /**
+   * 订阅快照
+   * @param symbol
+   * @returns
+   */
+  private snapshot(symbol: string) {
     const action = 'snapshot'
     const topic = `${action}:${symbol}`
 
@@ -303,15 +345,20 @@ class StockSubscribe {
     }
   }
 
-  public unsubscribeSnapshot() {
+  /**
+   * 取消快照订阅
+   */
+  private unsubscribeSnapshot() {
     this.ws.send({
       action: 'snapshot_unsubscribe',
       cid: this.cid
     })
   }
 
-  // public onceShap
-
+  /**
+   * 取消所有订阅
+   * @param code
+   */
   public unsubscribeAll(code: string) {
     this.subscribed.off(code)
   }
@@ -329,12 +376,13 @@ class StockSubscribe {
   }
 
   /**
+   * 单独订阅某个股票的quote
    * @returns cancelTopic
    */
   public onQuoteTopic(symbol: string, handler: StockSubscribeHandler<'quoteTopic'>) {
     this.subscribe('quote', [symbol])
     this.subscribed.on(`${symbol}:quote`, handler)
-    // console.log(this.subscribeTopic)
+
     return () => {
       this.offQuoteTopic(symbol, handler)
       this.unsubscribe('quote', [symbol])
@@ -343,39 +391,6 @@ class StockSubscribe {
 
   public offQuoteTopic(topic: string, handler: StockSubscribeHandler<'quoteTopic'>) {
     this.subscribed.off(`${topic}:quote`, handler)
-  }
-
-  /**
-   * @returns cancelTopic
-   */
-  public onBarTopic(symbolWithPeriod: string, handler: StockSubscribeHandler<'bar'>) {
-    // if (!this.hasBarTopicSubscribe(symbolWithPeriod)) {
-    //   this.subscribe('bar', [symbolWithPeriod])
-    // }
-    this.subscribed.on(`${symbolWithPeriod}:bar`, handler)
-
-    return () => {
-      this.offBarTopic(symbolWithPeriod, handler)
-      // this.unsubscribe('bar', [symbolWithPeriod])
-    }
-  }
-
-  public offBarTopic(topic: string, handler: StockSubscribeHandler<'bar'>) {
-    this.subscribed.off(`${topic}:bar`, handler)
-  }
-
-  /**
-   *
-   * @returns
-   */
-  private hasQuoteTopicSubscribe(symbol: string) {
-    const topic = `quote:${symbol}`
-    return this.subscribeTopic[topic]?.count > 0
-  }
-
-  private hasBarTopicSubscribe(symbolWithPeriod: string) {
-    const topic = `bar:${symbolWithPeriod}`
-    return this.subscribeTopic[topic]?.count > 0
   }
 
   private unSubscribeStockIdle() {
@@ -468,7 +483,5 @@ class StockSubscribe {
   }
 }
 
-const token = uid(14)
-
-export const stockSubscribe = new StockSubscribe(`${sysConfig.PUBLIC_BASE_WS_STOCK_URL}?token=${token}`)
+export const stockSubscribe = StockSubscribe.get()
 window.stockSubscribe = stockSubscribe
