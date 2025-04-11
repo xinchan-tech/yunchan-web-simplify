@@ -3,7 +3,7 @@ import { useIndicator } from '@/store'
 import { type IndicatorData, IndicatorUtils } from '@/utils/coiling'
 import { AESCrypt } from '@/utils/string'
 import Decimal from 'decimal.js'
-import { IndicatorSeries, type IndicatorTemplate } from 'jkn-kline-chart'
+import { IndicatorSeries, type IndicatorTemplate } from '@/plugins/jkn-kline-chart'
 import { isNumber } from 'radash'
 import { calcBottomSignal, calculateTradingPoint } from '../coiling-calc'
 import {

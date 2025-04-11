@@ -5,7 +5,7 @@ import {
   type RectAttrs,
   type RectStyle,
   getFigureClass
-} from 'jkn-kline-chart'
+} from '@/plugins/jkn-kline-chart'
 
 type PipeShape = {
   color: string

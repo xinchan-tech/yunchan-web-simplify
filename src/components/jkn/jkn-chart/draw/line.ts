@@ -9,7 +9,7 @@ import {
   LineType,
   type PolygonStyle,
   PolygonType
-} from 'jkn-kline-chart'
+} from '@/plugins/jkn-kline-chart'
 
 /**
  * 线或者点

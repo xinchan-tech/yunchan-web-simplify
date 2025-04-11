@@ -11,7 +11,7 @@ import {
   registerFigure,
   registerIndicator,
   registerOverlay
-} from 'jkn-kline-chart'
+} from '@/plugins/jkn-kline-chart'
 import { debounce, uid } from 'radash'
 import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react'
 import {
@@ -35,6 +35,7 @@ import { useMount, useUnmount } from 'ahooks'
 import { VerticalLineOverlay } from './overlay/line'
 import { SplitIndicator } from './indicator/split'
 import Decimal from 'decimal.js'
+import stockLogo from '@/assets/image/today-chart-x1.png'
 
 export { CoilingIndicatorId, ChartTypes }
 
@@ -329,11 +330,7 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
     chart.current?.setPrecision({ price: 3 })
 
     if (props.showLogo) {
-      chart.current?.createOverlay({
-        name: 'logoOverlay',
-        paneId: ChartTypes.MAIN_PANE_ID,
-        points: [{ dataIndex: 0, value: 0 }]
-      })
+      chart.current?.setLogo(stockLogo)
     }
   })
 

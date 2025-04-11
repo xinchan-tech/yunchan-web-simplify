@@ -1,5 +1,5 @@
 import type { IndicatorDataType } from '@/utils/coiling/transform'
-import { type IndicatorDrawParams, getFigureClass } from 'jkn-kline-chart'
+import { type IndicatorDrawParams, getFigureClass } from '@/plugins/jkn-kline-chart'
 import { inRange, isArray } from 'radash'
 
 /**

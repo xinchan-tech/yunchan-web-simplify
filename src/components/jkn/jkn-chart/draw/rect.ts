@@ -4,7 +4,7 @@ import {
   type RectAttrs,
   type RectStyle,
   getFigureClass
-} from 'jkn-kline-chart'
+} from '@/plugins/jkn-kline-chart'
 
 /**
  * 线或者点

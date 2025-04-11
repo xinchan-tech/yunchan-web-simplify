@@ -1,4 +1,4 @@
-import type { FigureTemplate } from 'jkn-kline-chart'
+import type { FigureTemplate } from '@/plugins/jkn-kline-chart'
 import deleteSvg from '@/assets/svg/delete-2.svg'
 
 const iconContext = import.meta.webpackContext('@/assets/icon/script_icons')

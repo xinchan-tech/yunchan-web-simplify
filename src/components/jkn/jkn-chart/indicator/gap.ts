@@ -7,7 +7,7 @@ import {
   type RectAttrs,
   type RectStyle,
   type IndicatorTemplate
-} from 'jkn-kline-chart'
+} from '@/plugins/jkn-kline-chart'
 
 export const gapIndicator: IndicatorTemplate<any, any> = {
   name: 'gap-indicator',

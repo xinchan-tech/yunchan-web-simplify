@@ -1,4 +1,4 @@
-import { type FigureConstructor, getFigureClass, IndicatorSeries, type IndicatorTemplate } from 'jkn-kline-chart'
+import { type FigureConstructor, getFigureClass, IndicatorSeries, type IndicatorTemplate } from '@/plugins/jkn-kline-chart'
 import type { BackTestLineAttrs, BackTestLineStyles, BackTestMarkAttrs, BackTestMarkStyles } from '../figure'
 import { inRange } from 'radash'
 

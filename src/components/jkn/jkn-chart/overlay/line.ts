@@ -1,4 +1,4 @@
-import { LineType, type OverlayTemplate } from 'jkn-kline-chart'
+import { LineType, type OverlayTemplate } from '@/plugins/jkn-kline-chart'
 
 export const VerticalLineOverlay: OverlayTemplate = {
   name: 'VerticalLineOverlay',

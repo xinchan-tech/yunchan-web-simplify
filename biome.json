@@ -49,6 +49,6 @@
     }
   },
   "files": {
-    "ignore": ["examples", "src/app.tsx", "src/components/menu/menu-right.tsx"]
+    "ignore": ["examples", "src/app.tsx", "src/components/menu/menu-right.tsx", "src/plugins/jkn-kline-chart"]
   }
 }

@@ -1,4 +1,4 @@
-import type { OverlayTemplate } from 'jkn-kline-chart'
+import type { OverlayTemplate } from '@/plugins/jkn-kline-chart'
 
 export const OverMarkOverlay: OverlayTemplate = {
   name: 'overMarkOverlay',

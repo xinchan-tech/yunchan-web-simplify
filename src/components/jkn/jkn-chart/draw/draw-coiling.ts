@@ -11,7 +11,7 @@ import {
   PolygonType,
   type TextAttrs,
   type TextStyle
-} from 'jkn-kline-chart'
+} from '@/plugins/jkn-kline-chart'
 import { inRange } from 'radash'
 import type { CoilingCalcResult } from '../coiling-calc'
 import type { DrawFunc } from '../types'

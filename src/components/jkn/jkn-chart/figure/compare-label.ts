@@ -1,4 +1,4 @@
-import type { FigureTemplate } from 'jkn-kline-chart'
+import type { FigureTemplate } from '@/plugins/jkn-kline-chart'
 
 export type CompareLabelAttrs = {
   x: number

@@ -49,8 +49,6 @@ const StockFinancials = () => {
       })
   })
 
-  const { checked, onChange, setCheckedAll, getIsChecked } = useCheckboxGroup([])
-
   useEffect(() => {
     if (!active && query.data?.dates?.length) {
       setActive(query.data.dates[0])

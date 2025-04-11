@@ -1,7 +1,7 @@
 import { getStockTabData } from '@/api'
 import { dateUtils } from '@/utils/date'
 import { queryClient } from '@/utils/query-client'
-import { type FigureConstructor, IndicatorSeries, type IndicatorTemplate, getFigureClass } from 'jkn-kline-chart'
+import { type FigureConstructor, IndicatorSeries, type IndicatorTemplate, getFigureClass } from '@/plugins/jkn-kline-chart'
 import { inRange } from 'radash'
 import type { MarkOverlayAttrs } from '../figure'
 import { findEqualTime } from '../utils'

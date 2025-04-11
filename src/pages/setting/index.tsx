@@ -304,11 +304,11 @@ const SettingPage = () => {
                 {__RELEASE_TAG__}
               </span>
             </div>
-            {config.debug ? (
+            {/* {config.debug ? (
               <div className="cursor-pointer" onClick={() => config.setDebug(false)} onKeyDown={() => {}}>
                 【test env】 x-test: true
               </div>
-            ) : null}
+            ) : null} */}
           </div>
           <div className="flex flex-col space-y-2 items-start mb-8">
             <Button

@@ -6,7 +6,7 @@ import {
   type LineStyle,
   type IndicatorTemplate,
   LineType
-} from 'jkn-kline-chart'
+} from '@/plugins/jkn-kline-chart'
 
 export const SplitIndicator: IndicatorTemplate<any, any> = {
   name: 'split-indicator',

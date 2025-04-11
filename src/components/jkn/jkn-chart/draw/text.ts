@@ -4,7 +4,7 @@ import {
   type IndicatorDrawParams,
   type TextAttrs,
   type TextStyle
-} from 'jkn-kline-chart'
+} from '@/plugins/jkn-kline-chart'
 
 /**
  * 文本

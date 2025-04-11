@@ -9,7 +9,7 @@ import {
   type LineAttrs,
   type LineStyle,
   getFigureClass
-} from 'jkn-kline-chart'
+} from '@/plugins/jkn-kline-chart'
 import type { Candlestick } from '../types'
 
 const findNearestTime = (data: Candlestick[], time: number, gte?: boolean) => {

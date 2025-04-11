@@ -1,4 +1,4 @@
-import type { IndicatorTemplate } from 'jkn-kline-chart'
+import type { IndicatorTemplate } from '@/plugins/jkn-kline-chart'
 import { candlestickToRaw } from '../utils'
 import {
   calcCoilingPivots,

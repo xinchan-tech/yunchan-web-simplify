@@ -8,19 +8,15 @@ import { CoilingBar } from '../component/chart-tool-bar'
 import { useQueryParams } from '@/hooks'
 import { AESCrypt } from '@/utils/string'
 
-interface KChartProps {
-  onChangeLeftSide: () => void
-  leftSideVisible: 'full' | 'half' | 'hide'
-  onChangeRightSize: () => void
-  rightSideVisible: 'full' | 'hide'
-}
+// biome-ignore lint/suspicious/noEmptyInterface: <explanation>
+interface KChartProps { }
 
 const getChartIdByIndex = (index: number) => `chart-${index}`
 
 /**
  * @examples
  */
-export const KChart = (props: KChartProps) => {
+export const KChart = (_props: KChartProps) => {
   // const currentSymbol = useChartManage(s => s.currentSymbol)
   const viewMode = useChartManage(s => s.viewMode)
   // const symbol = useSymbolQuery()
@@ -55,15 +51,15 @@ export const KChart = (props: KChartProps) => {
       </div>
       <div className={cn('flex-1 overflow-hidden main-chart', `main-chart-${viewMode}`)} id="stock-chart-container">
         {Array.from({ length: chartCount }).map((_, index, arr) => (
-          // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
           <div
+            // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
             key={index}
             className={cn(
               `chart-item-${index + 1}`,
               active === getChartIdByIndex(index) && arr.length > 1 ? 'active' : ''
             )}
             onClick={() => onChangeActive(index)}
-            onKeyDown={() => {}}
+            onKeyDown={() => { }}
           >
             <MainChart chartId={getChartIdByIndex(index)} />
           </div>
