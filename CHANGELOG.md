@@ -1,5 +1,15 @@
 # Changelog
 
+## [2.1.1](https://github.com/xinchan-gx/yunchan-web/compare/2.1.0...2.1.1) (2025-04-11)
+
+### ✨ Features | 新功能
+
+* 更新股票订阅功能，添加排行榜订阅，优化快照订阅逻辑，调整相关类型定义 ([d202751](https://github.com/xinchan-gx/yunchan-web/commit/d2027515982ec6bad4bea543646ffe47a271e9e3))
+
+### 🐛 Bug Fixes | Bug 修复
+
+* 修复SystemMessageContent组件的JknVirtualInfinite标签闭合问题 ([40ba5f1](https://github.com/xinchan-gx/yunchan-web/commit/40ba5f1b1d981c4ab46f961be050557e28e7adc2))
+
 ## [2.1.0](https://github.com/xinchan-gx/yunchan-web/compare/2.0.0...2.1.0) (2025-04-11)
 
 ### ✨ Features | 新功能
