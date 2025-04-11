@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.1.0](https://github.com/xinchan-gx/yunchan-web/compare/2.0.0...2.1.0) (2025-04-11)
+
+### ✨ Features | 新功能
+
+* 更新开发环境配置，修改API和WebSocket URL，调整发布脚本中的SSH主机地址 ([61f95ad](https://github.com/xinchan-gx/yunchan-web/commit/61f95addbb9afbe67e54685dbe856fb1abc083b5))
+* 更新首页图片高度，优化常见问题部分样式，调整邀请页面显示邀请码功能 ([b3ebd0f](https://github.com/xinchan-gx/yunchan-web/commit/b3ebd0f131d6561d08f0285ab273b4cc8841b4fb))
+* 添加发布前检查，确保在release分支构建并存在release-tag.json文件 ([d6646fd](https://github.com/xinchan-gx/yunchan-web/commit/d6646fdaa450e0c60717e303516aa8146e62afff))
+
 ## [2.0.0](https://github.com/xinchan-gx/yunchan-web/compare/1.22.0...2.0.0) (2025-04-11)
 
 ### ✨ Features | 新功能
