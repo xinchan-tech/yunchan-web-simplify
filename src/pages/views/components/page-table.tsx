@@ -70,6 +70,7 @@ const PageTable = (props: PageTableProps) => {
       amount: 'Amount',
       total_mv: 'MarketCap'
     }
+
     stockSubscribe.subscribeRank({
       limit: `${(pagination.page - 1) * pagination.pageSize}~${pagination.pageSize * pagination.page}`,
       sort: sort.order,
@@ -167,7 +168,7 @@ const PageTable = (props: PageTableProps) => {
         dataIndex: 'name',
         align: 'left',
         sort: true,
-        width: '28.5%',
+        width: '15%',
         render: (_, row) => (
           <div className="flex items-center h-[33px]">
             <CollectStar checked={row.collect === 1} code={row.symbol} />
@@ -180,7 +181,7 @@ const PageTable = (props: PageTableProps) => {
         title: '现价',
         dataIndex: 'price',
         align: 'left',
-        width: '13.5%',
+        width: '10%',
         sort: true,
         render: (_, row) => (
           <SubscribeSpan.PriceBlink
@@ -242,6 +243,50 @@ const PageTable = (props: PageTableProps) => {
               decimal={2}
               totalShare={row.totalShare ?? 0}
               showColor={false}
+            />
+          </div>
+        )
+      },
+      {
+        title: '盘前涨跌幅',
+        dataIndex: 'prePercent',
+        align: 'left',
+        width: '10%',
+        sort: true,
+        render: (_, row) => (
+          <div className="">
+            <SubscribeSpan.PercentBlink
+              trading="preMarket"
+              symbol={row.symbol}
+              initValue={row.prePercent}
+              decimal={2}
+              showSign
+              initDirection={row.prePercent > 0}
+              zeroText="0.00%"
+              nanText="--"
+              showColor={true}
+            />
+          </div>
+        )
+      },
+      {
+        title: '盘后涨跌幅',
+        dataIndex: 'afterPercent',
+        align: 'left',
+        width: '10%',
+        sort: true,
+        render: (_, row) => (
+          <div className="">
+            <SubscribeSpan.PercentBlink
+              trading="afterHours"
+              symbol={row.symbol}
+              initValue={row.afterPercent}
+              decimal={2}
+              showSign
+              initDirection={row.afterPercent > 0}
+              zeroText="0.00%"
+              nanText="--"
+              showColor={true}
             />
           </div>
         )

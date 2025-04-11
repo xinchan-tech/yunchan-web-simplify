@@ -9470,6 +9470,9 @@ var CandleAreaView = /** @class */ (function (_super) {
                     areaStartX = x;
                 }
                 coordinates.push({ x: x, y: y });
+                if (Number.isNaN(y)) {
+                    return;
+                }
                 minY = Math.min(minY, y);
                 if (data.dataIndex === lastDataIndex) {
                     ripplePointCoordinate = { x: x, y: y };
@@ -9537,6 +9540,7 @@ var CandleAreaView = /** @class */ (function (_super) {
                                 });
                             }
                             catch (e) {
+                                console.log(e);
                             }
                             color = gradient_1;
                         }
@@ -11410,12 +11414,27 @@ var percentage = {
         return (value - range.realFrom) / range.realRange * range.range + range.from;
     },
     createRange: function (_a) {
-        var chart = _a.chart, defaultRange = _a.defaultRange;
+        var _b, _c;
+        var chart = _a.chart, defaultRange = _a.defaultRange, paneId = _a.paneId;
         var kLineDataList = chart.getDataList();
         var visibleRange = chart.getVisibleRange();
         var kLineData = kLineDataList[visibleRange.from];
         if (isValid(kLineData)) {
-            var prevData = kLineData.open;
+            var options = chart.getPaneOptions(paneId);
+            if (isArray(options)) {
+                options = (_b = options.find(function (option) { return option.id === paneId; })) !== null && _b !== void 0 ? _b : null;
+            }
+            var k = 'open';
+            if (isValid(options)) {
+                if (((_c = options.axis) === null || _c === void 0 ? void 0 : _c.value) === 'prevClose') {
+                    k = 'prevClose';
+                    // kLineData = kLineDataList[visibleRange.to]
+                    // if (!isValid(kLineData)) {
+                    //   return defaultRange
+                    // }
+                }
+            }
+            var prevData = kLineData[k];
             var from = defaultRange.from, to = defaultRange.to, range = defaultRange.range;
             var realFrom = (defaultRange.from - prevData) / prevData * 100;
             var realTo = (defaultRange.to - prevData) / prevData * 100;

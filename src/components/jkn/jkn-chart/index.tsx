@@ -140,7 +140,7 @@ const DEFAULT_AREA_BG_COLOR = {
 
 export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartProps, ref) => {
   const domRef = useRef<HTMLDivElement>(null)
-
+  const isTimeShare = useRef(false)
   const chart = useRef<Chart | null>()
 
   useMount(() => {
@@ -237,6 +237,10 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
                 if (axisType === 'normal') {
                   return lastData.close > lastData.prevClose ? upColor : downColor
                 }
+                
+                if (isTimeShare.current){
+                  return lastData.close > lastData.prevClose ? upColor : downColor
+                }
 
                 const { from } = chart.getVisibleRange()
                 const firstData = data[from]
@@ -267,6 +271,11 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
               if (chartType === 'normal') {
                 return transformTextColor(text, data.slice(0, range.to).pop()!, 'prevClose')
               }
+
+              if (isTimeShare.current){
+                return transformTextColor(text, data.slice(0, range.to).pop()!, 'prevClose')
+              }
+
               return transformTextColor(text, startData, 'open')
             }
           },
@@ -304,6 +313,11 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
                 if (chartType === 'normal') {
                   return transformTextColor(text, data.slice(0, range.to).pop()!, 'prevClose')
                 }
+
+                if (isTimeShare.current){
+                  return transformTextColor(text, data.slice(0, range.to).pop()!, 'prevClose')
+                }
+
                 return transformTextColor(text, startData, 'open')
               }
             }
@@ -619,13 +633,15 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
           ![StockChartInterval.AFTER_HOURS, StockChartInterval.PRE_MARKET, StockChartInterval.INTRA_DAY].includes(
             interval
           )
-        )
+        ){
+          isTimeShare.current = false
           return
+        }
         const PRE_NUMBER = 330
         const POST_NUMBER = 390
         const AFTER_NUMBER = 240
         const count = PRE_NUMBER + POST_NUMBER + AFTER_NUMBER
-
+        isTimeShare.current = true
         chart.current?.setLeftMinVisibleBarCount(1)
         chart.current?.setXAxisTick(count)
 
@@ -651,7 +667,8 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
         chart.current?.setPaneOptions({
           id: ChartTypes.MAIN_PANE_ID,
           axis: {
-            name: 'percentage'
+            name: 'percentage',
+            value: 'prevClose'
           },
           leftAxis: {
             position: 'left' as AxisPosition
@@ -742,6 +759,7 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
         chart.current?.removeIndicator({
           id: splitId
         })
+        isTimeShare.current = false
         chart.current?.setXAxisTick(-1)
         chart.current?.setOffsetRightDistance(80)
         chart.current?.setStyles({
@@ -759,11 +777,10 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
         //   }
         // })
 
-        const type = getAxisType(chart.current!)
         chart.current?.setPaneOptions({
           id: ChartTypes.MAIN_PANE_ID,
           axis: {
-            value: type === 'double' ? 'close' : 'prevClose'
+            value: undefined
           }
         })
       }

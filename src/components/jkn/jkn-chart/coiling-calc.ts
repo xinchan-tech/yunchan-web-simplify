@@ -51,6 +51,10 @@ const SEGMENT_NUM_LIMIT = 7
  * @param coiling 缠论数据
  * @param points 笔端点
  * @description 中枢数据格式, 具体算法查看examples/coiling.js/readPivots
+ * rgba(8, 153, 129, 0.6) 绿 
+ * rgba(41, 98, 255, 0.6) 蓝
+ * rgba(242, 54, 69, 0.6) 红
+ * rgba(156, 39, 176, 0.6) 紫
  */
 export const calcCoilingPivots = (pivots: CoilingData['pivots'] | undefined) => {
   if (!pivots) return []
@@ -154,9 +158,9 @@ export const calcTradePoints = (coiling: CoilingData['class_1_trade_points']) =>
     let color = ''
 
     if (v.buy) {
-      color = v.large ? '#22AB94' : '#2962FF'
+      color = v.large ? '#22AB94' : 'rgba(41, 98, 255, 1)'
     } else {
-      color = v.large ? '#F23645' : '#9C27B0'
+      color = v.large ? 'rgba(242, 54, 69, 1)' : '#D500F9'
     }
 
     return {
