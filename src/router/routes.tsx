@@ -155,6 +155,13 @@ export const routes: RouteObject[] = [
               title: '邀请好友'
             }
           },
+          // {
+          //   path: 'invite',
+          //   Component: lazy(() => import('@/pages/user/invite')),
+          //   handle: {
+          //     title: '邀请规则'
+          //   }
+          // },
           {
             path: 'subscribe',
             Component: lazy(() => import('@/pages/user/subscribe')),

@@ -1,5 +1,5 @@
 import { cancelSubscription, getPaymentList } from "@/api"
-import { Button, SkeletonLoading } from "@/components"
+import { Button, ScrollArea, SkeletonLoading } from "@/components"
 import { useMutation, useQuery } from "@tanstack/react-query"
 import dayjs from "dayjs"
 import { useNavigate } from "react-router"
@@ -33,7 +33,7 @@ const Subscribe = () => {
       bills.refetch()
     },
     onError: (err) => {
-        
+
     }
   })
 
@@ -44,31 +44,33 @@ const Subscribe = () => {
         bills.isLoading ? (
           <SkeletonLoading count={12} />
         ) : (
-          <div className="space-y-5">
-            {
-              bills.data?.product.map(item => (
-                <div key={item.id} className="border border-solid border-[#4A4A4A] rounded-[12px] box-border px-5 py-5">
-                  <div className="flex items-center w-[420px] box-border text-xl mb-2.5">
-                    <span>{item.name}({calcExpireDay(item.expire_time)})</span>
-                  </div>
-                  <div className="text-[#808080] text-sm"> 到期时间: {dayjs(+item.expire_time * 1000).format('YYYY/MM/DD')}</div>
-                  {
-                    item.status === '2' ? (
-                      <div className="mt-5 space-x-2.5">
-                        {
-                          item.name !== '国王版' ? (
-                            <Button size="lg" className="rounded-[6px] w-[96px] bg-white" onClick={() => navigate('/mall')}>升级方案</Button>
-                          ) : null
-                        }
+          <ScrollArea className="flex-1">
+            <div className="space-y-5">
+              {
+                bills.data?.product.map(item => (
+                  <div key={item.id} className="border border-solid border-[#4A4A4A] rounded-[12px] box-border px-5 py-5">
+                    <div className="flex items-center w-[420px] box-border text-xl mb-2.5">
+                      <span>{item.name}({calcExpireDay(item.expire_time)})</span>
+                    </div>
+                    <div className="text-[#808080] text-sm"> 到期时间: {dayjs(+item.expire_time * 1000).format('YYYY/MM/DD')}</div>
+                    {
+                      item.status === '2' ? (
+                        <div className="mt-5 space-x-2.5">
+                          {
+                            item.name !== '国王版' ? (
+                              <Button size="lg" className="rounded-[6px] w-[96px] bg-white" onClick={() => navigate('/mall')}>升级方案</Button>
+                            ) : null
+                          }
 
-                        <Button size="lg" variant="outline" className="h-[42px] rounded-[6px] w-[96px]" loading={cancel.isPending} onClick={() => cancel.mutate(item.id)}>取消订阅</Button>
-                      </div>
-                    ) : null
-                  }
-                </div>
-              ))
-            }
-          </div>
+                          <Button size="lg" variant="outline" className="h-[42px] rounded-[6px] w-[96px]" loading={cancel.isPending} onClick={() => cancel.mutate(item.id)}>取消订阅</Button>
+                        </div>
+                      ) : null
+                    }
+                  </div>
+                ))
+              }
+            </div>
+          </ScrollArea>
         )
       }
     </div>

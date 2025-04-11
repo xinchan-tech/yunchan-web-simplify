@@ -17,7 +17,7 @@ const Home = () => {
           </div>
         </div>
         <div >
-          <img src={StockKing} alt="" className="h-[476px]" />
+          <img src={StockKing} alt="" className="h-[860px]" />
         </div>
       </div>
       <div className="mx-auto home-section-bg-1 py-24">
@@ -25,22 +25,22 @@ const Home = () => {
           <img src={Home2} alt="ios-download" className="size-full" />
         </div>
       </div>
-      <div className="home-section-bg-2 pb-32 home-qa">
-        <div className="home-content-w-1 mx-auto px-12 box-border space-y-12">
-          <p className="mb-24 text-center text-[44px]">常见问题</p>
-          <details className="text-2xl border-0 border-b border-solid border-[#575757] pb-10" open>
-            <summary>TodayChart 提供什么服务</summary>
+      <div className="home-section-bg-2 pb-32 home-qa font-light">
+        <div className="max-w-[1000px] mx-auto px-12 box-border space-y-12">
+          <p className="mb-24 text-center text-[44px] ">常见问题</p>
+          <details className="text-2xl border-0 border-b border-solid border-[#575757] pb-10" >
+            <summary className="text-[28px] font-bold">TodayChart 提供什么服务</summary>
             <div className="text-xl mt-10 ">
               <div className="font-light">
                 <span>TodayChart ，专注美股图表，Ai轻量化级别。</span><br />
                 <span>我们NO Trading ！只有趋势图 ！15秒轻松锁定牛熊股✨</span>
               </div>
 
-              <div className="my-5">
-                <JknIcon name="huojian" />&nbsp;<span className="gradient-text">核心功能</span>
+              <div className="my-5 flex items-center">
+                <JknIcon name="huojian" className="size-[28px]" />&nbsp;<span className="gradient-text text-2xl">核心功能</span>
               </div>
 
-              <div className="flex mb-2 space-x-5">
+              <div className="flex mb-2 space-x-5 ">
                 <div className="flex items-center">
                   <div className="rounded-[5px] w-[18px] h-[18px] bg-[#028934] border border-solid border-[#83C877] text-center  box-border mr-1">
                     <JknIcon.Svg name="check" size={10} className="mb-2" />
@@ -106,8 +106,8 @@ const Home = () => {
               </div>
             </div>
           </details>
-          <details className="text-2xl border-0 border-b border-solid border-[#575757] pb-10" open>
-            <summary>软件遇到问题，怎么快速解决？</summary>
+          <details className="text-2xl border-0 border-b border-solid border-[#575757] pb-10" >
+            <summary className="text-[28px] font-bold">软件遇到问题，怎么快速解决？</summary>
             <div className="text-xl mt-10 ">
               <div className="font-light">
                 <span>别慌！</span><br />
@@ -115,8 +115,8 @@ const Home = () => {
               </div>
             </div>
           </details>
-          <details className="text-2xl border-0 border-b border-solid border-[#575757] pb-10" open>
-            <summary>讨论社群是什么？</summary>
+          <details className="text-2xl border-0 border-b border-solid border-[#575757] pb-10" >
+            <summary className="text-[28px] font-bold">讨论社群是什么？</summary>
             <div className="text-xl mt-10 ">
               <div className="font-light">
                 <span>软件“群聊”功能 。</span><br />
@@ -128,12 +128,12 @@ const Home = () => {
                 <div className="mt-5 mb-2 font-bold">
                   功能特点
                 </div>
-                <span>用户可以在里面，自由讨论，交流观点、共享策略。新手也可以与高手一起征战华尔街，躺着学技术，躺着听策略，新手也能逆袭。</span>
+                <span>用户可以在里面，自由讨论，交流观点、共享策略。<br/>新手也可以与高手一起征战华尔街，躺着学技术，躺着听策略，新手也能逆袭。</span>
               </div>
             </div>
           </details>
-          <details className="text-2xl border-0 border-b border-solid border-[#575757] pb-10" open>
-            <summary>分享佣金计划！</summary>
+          <details className="text-2xl border-0 border-b border-solid border-[#575757] pb-10" >
+            <summary className="text-[28px] font-bold">分享佣金计划！</summary>
             <div className="text-xl mt-10 ">
               <div className="font-light">
                 <div className="mt-5 mb-2 font-bold">

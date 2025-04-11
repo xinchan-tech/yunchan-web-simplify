@@ -245,7 +245,7 @@ export const RegisterForm = (props: {
                 )}
               />
 
-              <FormField
+              {/* <FormField
                 control={form.control}
                 name="inv"
                 render={({ field }) => (
@@ -269,7 +269,7 @@ export const RegisterForm = (props: {
                     ) : null}
                   </FormItem>
                 )}
-              />
+              /> */}
 
               <div className="!mt-10">
                 <FormItem className="flex items-center space-y-0">

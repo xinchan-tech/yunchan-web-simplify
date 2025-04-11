@@ -5,7 +5,8 @@ import copy from 'copy-to-clipboard'
 
 const Invite = () => {
   const shareUrl = useUser(s => s.user?.share_url)
-  const { toast } = useToast()
+  const reCode = useUser(s => s.user?.re_code)
+
   return (
     <div className="h-full overflow-hidden flex flex-col text-white">
       <div className="text-[32px] leading-[44px]">
@@ -25,7 +26,18 @@ const Invite = () => {
         </HoverCard>
       </div>
 
-      <div className="text-foreground mt-10">
+      <div className="text-foreground mt-10 space-y-2.5">
+        <div className="bg-[#151515] flex items-center w-[420px] box-border px-1 py-2.5">
+          <span>邀请码</span>
+          <span className="ml-auto line-clamp-1 text-tertiary mr-2">{reCode}</span>
+          <JknIcon.Svg name="copy" className="text-tertiary cursor-pointer" size={20} onClick={() => {
+            if (reCode) {
+              copy(reCode)
+              JknAlert.success('复制成功')
+            }
+          }} />
+        </div>
+
         <div className="bg-[#151515] flex items-center w-[420px] box-border px-1 py-2.5">
           <span>邀请链接</span>
           <span className="ml-auto w-[200px] line-clamp-1 text-tertiary">{shareUrl}</span>

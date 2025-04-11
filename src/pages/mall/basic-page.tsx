@@ -110,7 +110,7 @@ export const BasicPage = (props: BasicPageProps) => {
   const unit = props.type === 'model_month' ? '月' : '年'
   const hasChinaIp = useConfig(s => s.ip === 'CN')
   const { toast } = useToast()
-  const [activeProductId, setActiveProductId] = useState<string | null>(null)
+  const [activeProductId, setActiveProductId] = useState<string | null>('33')
 
   /**
    * 处理购买操作
@@ -157,7 +157,7 @@ export const BasicPage = (props: BasicPageProps) => {
                 isActive ? 'active-card' : 'default-card'
               )}
               onMouseOver={() => setActiveProductId(product.id)}
-              onMouseLeave={() => setActiveProductId(null)}
+              onMouseLeave={() => setActiveProductId('33')}
             >
               <div
                 className="py-10 px-5 rounded-2xl text-center cursor-pointer"

@@ -37,12 +37,12 @@ $base-width: 840px;
     &::after{
       content: '';
       background: url('@/assets/home/qa-expand.png') no-repeat center center /cover;
-      width: 20px;
-      height: 20px;
+      width: 40px;
+      height: 40px;
       float: right;
     }
 
-    margin-left: -28px;
+    margin-left: -20px;
   }
 
   details[open]{

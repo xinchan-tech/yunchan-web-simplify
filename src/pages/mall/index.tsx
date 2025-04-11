@@ -139,7 +139,7 @@ const MallPage = () => {
       <div className="text-center text-[64px] font-bold mt-10">美股软件 服务方案</div>
       <div className="flex items-center justify-center mt-10 rounded-[6px] border border-solid p-[2px]">
         {versions.map(v => (
-          <button
+          <Button
             key={v.value}
             className={cn(
               'w-32 h-10 text-center border border-solid text-[#DBDBDB] transition-all cursor-pointer',
@@ -148,7 +148,7 @@ const MallPage = () => {
             onClick={() => setVersion(v.value as Version)}
           >
             {v.name}
-          </button>
+          </Button>
         ))}
       </div>
       <div className="my-10">
