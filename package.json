@@ -4,6 +4,7 @@
   "version": "2.0.0",
   "scripts": {
     "build": "rsbuild build",
+    "build:test": "rsbuild build --env-mode test",
     "check": "biome check --write",
     "dev": "rsbuild dev --open",
     "format": "biome format --write",
