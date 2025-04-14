@@ -527,6 +527,7 @@ type GetStockCollectsResult = {
     id: string
     symbol: string
     name: string
+    sort: number
     create_time: string
     stock: StockRawRecord
     extend?: Record<StockExtendResult, unknown>
@@ -695,6 +696,13 @@ export const moveStockCollectBatch = (params: { collect_ids: number[]; cate_ids:
  */
 export const sortStockCollectCate = (id: string, sort: number) => {
   return request.post<void>(`/stock-svc/collect/categories/${id}/setSort`, { sort }).then(r => r.data)
+}
+
+/**
+ * 股票金池排序
+ */
+export const sortStockCollect = (id: string, sort: number) => {
+  return request.post<void>(`/stock-svc/collect/stocks/${id}/setSort`, { sort }).then(r => r.data)
 }
 
 /**
