@@ -1,8 +1,8 @@
 import { isNumber } from 'radash'
 import { useCallback, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router'
-import { useStockQuoteSubscribe } from "./use-stock-subscribe"
-import type { QuoteBuffer } from "@/utils/stock"
+import { useStockQuoteSubscribe } from './use-stock-subscribe'
+import type { QuoteBuffer } from '@/utils/stock'
 
 type OrderKey<T = any> = keyof T | ((arg: T) => string)
 
@@ -85,19 +85,25 @@ export const useTableData = <T extends Record<string, any>>(data: T[], _?: Order
   return [list, { setList: _setList, onSort, updateList }] as const
 }
 
-export const useTableSortDataWithWs = <T extends Record<string, any>>(data: T[], symbolKey: keyof T, key: OrderKey<T>) => {
+export const useTableSortDataWithWs = <T extends Record<string, any>>(
+  data: T[],
+  options: {
+    transform?: (data: T) => T
+  }
+) => {
+  const { transform } = options
   const [list, setList] = useState<T[]>(data)
   const initList = useRef<T[]>([])
   const lastOrder = useRef<{ field?: keyof T; order?: 'asc' | 'desc' }>({ field: undefined, order: undefined })
-  const keysSort = useRef<string[]>([])
-  const lastSortTime = useRef<number>(Date.now())
+  const listOrderByRowKey = useRef<T[]>([])
 
-  const symbols = useMemo(() =>{
-      return list.map(v =>v[symbolKey] as string)
-  }, [list, symbolKey])
+  const symbols = useMemo(() => {
+    return Array.from(new Set(list.map(item => item.symbol)))
+  }, [list])
 
   const _setList = useCallback((data: T[]) => {
     initList.current = [...data]
+    listOrderByRowKey.current = sortData(data, 'symbol', 'asc')
 
     if (lastOrder.current.field && lastOrder.current.order) {
       setList(sortData(data, lastOrder.current.field, lastOrder.current.order))
@@ -106,55 +112,57 @@ export const useTableSortDataWithWs = <T extends Record<string, any>>(data: T[],
     }
   }, [])
 
-  
-
   const updateList = useCallback(setList, [])
 
-  const onSort = useCallback((columnKey: keyof T, order: 'asc' | 'desc' | undefined) => {
-    if (!order) {
-      lastOrder.current = { field: undefined, order: undefined }
-      setList([...initList.current])
-      keysSort.current = initList.current.map(o => o[key as string])
-      return
-    }
-
-    lastOrder.current = { field: columnKey, order }
-    setList(s => {
-      const r = sortData(s, columnKey, order)
-      keysSort.current = r.map(o => o[key as string]) 
-      return r
-    })
-  }, [key])
-
-
-  useStockQuoteSubscribe(symbols, useCallback((e: QuoteBuffer) => {
-    if(!lastOrder.current.order || !lastOrder.current.field) return
-    const field = lastOrder.current.field
-    Object.keys(e).forEach(item => {
-      const v = initList.current.find((v: any) => item === v[key] as string) as any
-
-      if(!v) return
-
-      if(field === 'percent'){
-        v[field as any] = e[item].record.changePercent
-      }else{
-        if((e[item].record as any)[field] === undefined) return
-
-        v[field as any] = (e[item].record as any)[field]
+  const onSort = useCallback(
+    (columnKey: keyof T, order: 'asc' | 'desc' | undefined) => {
+      if (!order) {
+        lastOrder.current = { field: undefined, order: undefined }
+        setList([...initList.current])
+        return
       }
-    })
 
-    if(Date.now() - lastSortTime.current > 2000) {
-
-      lastSortTime.current = Date.now()
-      setList(() => {
-        const r = sortData(initList.current, field, lastOrder.current.order!)
-        keysSort.current = r.map(o => o[key as string])
+      lastOrder.current = { field: columnKey, order }
+      setList(s => {
+        const r = sortData(s, columnKey, order)
         return r
       })
-    }
+    },
+    []
+  )
 
-  }, [key]))
+  useStockQuoteSubscribe(
+    symbols,
+    useCallback(
+      (e: QuoteBuffer) => {
+        if (!lastOrder.current.order || !lastOrder.current.field) return
+        // const field = lastOrder.current.field
+        // Object.keys(e).forEach(item => {
+        //   const v = initList.current.find((v: any) => item === (v[key] as string)) as any
+
+        //   if (!v) return
+
+        //   if (field === 'percent') {
+        //     v[field as any] = e[item].record.changePercent
+        //   } else {
+        //     if ((e[item].record as any)[field] === undefined) return
+
+        //     v[field as any] = (e[item].record as any)[field]
+        //   }
+        // })
+
+        // if (Date.now() - lastSortTime.current > 2000) {
+        //   lastSortTime.current = Date.now()
+        //   setList(() => {
+        //     const r = sortData(initList.current, field, lastOrder.current.order!)
+        //     keysSort.current = r.map(o => o[key as string])
+        //     return r
+        //   })
+        // }
+      },
+      []
+    )
+  )
 
   return [list, { setList: _setList, onSort, updateList }] as const
 }

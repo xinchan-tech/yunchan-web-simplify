@@ -59,26 +59,26 @@ const PageTable = (props: PageTableProps) => {
     })
   }
 
-  useEffect(() => {
-    if(!['close', 'increase', 'amount', 'total'].includes(sort.column)) {
-      return 
-    }
+  // useEffect(() => {
+  //   if(!['close', 'increase', 'amount', 'total'].includes(sort.column)) {
+  //     return 
+  //   }
 
-    const columnMap: Record<string, string> = {
-      close: 'Close',
-      increase: 'Change',
-      amount: 'Amount',
-      total_mv: 'MarketCap'
-    }
+  //   const columnMap: Record<string, string> = {
+  //     close: 'Close',
+  //     increase: 'Change',
+  //     amount: 'Amount',
+  //     total_mv: 'MarketCap'
+  //   }
 
-    stockSubscribe.subscribeRank({
-      limit: `${(pagination.page - 1) * pagination.pageSize}~${pagination.pageSize * pagination.page}`,
-      sort: sort.order,
-      key: columnMap[sort.column] as any
-    })
+  //   stockSubscribe.subscribeRank({
+  //     limit: `${(pagination.page - 1) * pagination.pageSize}~${pagination.pageSize * pagination.page}`,
+  //     sort: sort.order,
+  //     key: columnMap[sort.column] as any
+  //   })
 
-    return stockSubscribe.unsubscribeRank
-  }, [pagination, sort])
+  //   return stockSubscribe.unsubscribeRank
+  // }, [pagination, sort])
 
   const query = useQuery({
     queryKey: [getUsStocks.cacheKey, props.type, sort, pagination],

@@ -23,7 +23,7 @@ const Bills = () => {
       title: '订单号',
       align: 'left',
       width: 240,
-      dataIndex: 'id'
+      dataIndex: 'order_sn'
     },
     {
       title: '支付方式',
