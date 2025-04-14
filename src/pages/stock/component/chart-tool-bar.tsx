@@ -137,7 +137,7 @@ export const CoilingBar = () => {
 
   return (
     <>
-      {system
+      {!system
         ? coilingList?.map(c => {
           const render = () => {
             switch (c.id) {
@@ -171,7 +171,7 @@ export const CoilingBar = () => {
                       checked={coiling.includes(c.id)}
                       uncheckedIcon="chart-coiling-bs"
                       checkedIcon="chart-coiling-bs-active"
-                      className="h-4 w-4 rounded mr-1"
+                      className="h-4 w-4 rounded-none mr-1"
                     />
                     <span style={{ color: coiling.includes(c.id) ? '#DBDBDB' : '#575757' }}>{c.name}</span>
                   </span>

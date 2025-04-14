@@ -8293,9 +8293,9 @@ var CrosshairLineView = /** @class */ (function (_super) {
     return CrosshairLineView;
 }(View));
 
-var deleteIcon = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACQAAAAkCAYAAADhAJiYAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAFGSURBVHgB7ZbBccIwEEU/SQ45Jh04HSQ3juokpIKMb9xiVxDnmGM6SAe4BDqAEujA/B0Ew9gevCujAWb0ZtYWK0vsrr4XgERiHBMYKcvyvWmaisMnxeN5URQVDNzBCIMplMEIXzDyADuZXJj5yepyvoE+8APmCsWmN0tm983bDAEZGqj4PXnbed92ULRy7nPaI+Iydc5NanLs7GiIop354RszWCIC3NfxtqB9ysfjuT4NZX5RlGD83rUfdiRxdaLuC2gjF1/WKHDvVz9ct+f6+tAPdg1twYWIzF/b0XnLRPVU/zOHU8RDTuGXCc9hRTqu77qj0O5zE6K+KMEBsfwrMa1fS8iv/Z7M6FeRNDRECmiIqwtozFu2NvpVBAfEXvNi8Wu5XQ0x8wyBWNZqjqymOdrqDP+P/oce0FToQ7ORgpqWI5GIzBY7yF0NguYWcgAAAABJRU5ErkJggg==';
-var eyeCloseIcon = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACQAAAAkCAYAAADhAJiYAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAALCSURBVHgB7VftcRoxEF0xKcAdWO4gV0GOCuxUEKggTgXcVWBTAVABTgUcFZhUYKUDOiD7fE+D7riTztiTHx7ejEZIWr19p119IHLBBZ8MRv4ziqKwWm34+6Y9/kXOgBLlWt1qQW21XHFor2XHslW7px4xqF0X9+AVUrIrY8zPw+FwHwhIwWmZ69zHDjFj7XNnCSrLEkKKQEilZcvaeWKI1uqr1Cv3g7Zj1kkxSUF0sKYDL6TU/koGgPOvAjFCMVXfHBMhswERcmPazokBgqw0xQBOIis06iHCsj+TCAmavVOMkzp0O7Y39JEWREMQYalXEvmat4hBmLRk5OwVZSJEK21PJO08lzqRkdxPQ3aTtpdSJ/3JuAmMsCI+TCD+LnEhELGWZkhEBu4m7cfcO9ohJZCnjZA9BERTiYuxcpofoRhgmgg1fPicWvjOV0F6zsy0msjxq/YSBwh8jmUdYoBZjIA+EAXUd9rGgSuGX/viVTO+MSJv7ygmPGccnfhNcZPaEDqOsK0pLBtxMrBMiSGsHMPUFoPV9XeZt5WEIBwnc3ItIOg3x3ImdgpO3pjACUHwecvmFoIKElpJxJ0ELiaGIc1ps5M0Zp5H5xYjJhe+GPW9T66IICvNBF4FYnI5pkCZ2hy4tOGTzddVD88hDDywmTEXUmL6UKntOGYQXE/ALzxR8GMUGKBjzuaGzvvEOC147fmzxMORPCUGHGs2Sy8GMB3GS2kd60Oug6FIXU+mZ5Kf8GG7ibzhxb3jZdtA3/MDQrKPFMMEfqaYVZcYIPbIb7/0nJwBhmihT+CcXfPYTjYRkva/A8t6KfUXVhIXkkudixN2DXp19gl6kdObvJDjw104hh32R5qir6V+VoSn/rymTV7a0ZA5aebMBIwU9o3OLZ13YU8hj0OEeBg5E9wxVurX4jW7/0r9IdW5yX/BBe/FP16ocqq/UMdPAAAAAElFTkSuQmCC';
-var eyeIcon = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACQAAAAbCAYAAAAULC3gAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAKOSURBVHgBzVbhldowDJYzAd3ATHB0gvomKEzQY4KjE5BMwDHB0QmgE+BOUDpB0wmODag+LDe+NIkV7s/pPT0ntiR/kiXLRO+MDN1AZVlOeJgz3zFb5kmyfGL+xexZrqaRNAoQb+B4WDM7pYpn/sZ6O6W8DlAHkDOFSHxnruU/0oz5E4UIRoLMvSZiWUBsZMPDKgGyZX7i+XNGz1JwAI7Y62bGlOv1uqJbAEme7KmJyjZMDwPpsbMSYCDPvOyLlukxYnk4UvCsFgOe3kCsj6PcJzY7j9AowKjOXgnK5myblgLC+1MUTqKQy5UJNaV/UuYWIjUTUB9TnaIl/5ygXwwZBxBmyL+IE/D8BXOyaZ9eDduyhxVw9B+gqqqQdHNSHJNsCBAPMoVoevnG3FEB6l72clLJDSCemF8ul1LmFoqciaUMIFOWR9ixwVTmsLYZMiB7LOV3JXcdmVaiVajrjCHI/ZbfaRt8Ej3k1AdFTq0EPOSmReKtz4ERsjJ29iqZi/MzyhDLP1E4bjjwXNDrxjiGhvRGXZ6pHgAtxYCT8OXoJKPtStykZYBqypAUkxPZqpAzXsj6JiZXH4n8gUKE9imo5I4B7XLFgds7KaavkDfJIs7ykfRlHwsB5AVgzJmxNv4VU/umhoAbYRBGvrSWdhS8PSvBHPg/nlC2dSwUYY+RAYC61LWaI/W0jnfXXIsOpasgNb3mKE+Ht4JxpHB06IEGRTRPdxXk1x5XxLa87YGG0o5XiqeBxm0ob7Ck5rVXM+MJ6jW5xU48shMAEi/Rbe6u0z7yLb0ucxDuoh/UXJQkG0PmM4WkjUA8hdL2lCEVoATYA4Uyd0oVrwVyE6BISXtAFO6SJeTFHwpRO4zNN9Bf3IhbvJ2jjAcAAAAASUVORK5CYII=';
+var deleteIcon = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACQAAAAkCAYAAADhAJiYAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAFeSURBVHgB7ZbfbYMwEMbPKAN0BLpBu0Gf+LdE0wkSJggblI6QDfqCgKcyQjdIRugCQL+TWikiVjkbWSWSf5K55DD25/NhjsjjWYYiQ9q2fYYpx3G8E3TPkyQpyYCADIGQQiiGlFIHMmRD5oR8wcr/jG7TNKNU+CXGEXKNdpXIk1eYrc0KxRMrVcZxnE/9gUbMAUL2LsUwPEdd18XUv9F03LINguAxiqJPcgCEPCFCH5hjh7/F5T1dDoV8cSWGSdO0Y6vbhdUl9ZUghPKLLYeVHFFV1cPPz/P03lUODcPwxgca7zHOEnIJtuw49Wlfewjh435HjuBd6Pv+mGXZnkzhE5cbLUQ6zvqT+r+xFoTwn7hJ/VJsvva/hIZ+ET6H5vCC5lidoCVv2dnQL8JaEIr8exO/lNvNIdRHIVli8qxkyzo0roFPS+sjjPE+12c2QiiiXmBmBxLQofjLyeNxzDfq4IWzWwL7OAAAAABJRU5ErkJggg==';
+var eyeIcon = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACQAAAAkCAYAAADhAJiYAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAM2SURBVHgB7VdLctpAEB2pUv6tfIPgG8AJAhv/NoETxD6ByQlMThBzApMTyNnw2wAnMDmBlRt4xWcB5D3R41LGmhkZUlm4eFWURqNR91P3m+5BqR12eGcI1H9Gp9MpBEEw4Pj8/PzEfP5BbQAYLcPoZwx5LaxWq2POY/yM8RjD8XK5HF1eXj5YyBTwi7Ns545QFEXHR0dHNxjWNYEciPFrIhJ3JhnYqFxcXMQbEer3+zcw0EgRGWI84pXGtWGSPjg4KKp15L5wjo4TRznIeAnRweHhYUQHKSLfYGyockAIHqfIKCFjfd9KKB1iamOxWFybmvDBSJOGM0Jh1iRSVAzD8FEMUaClLcnEkjoKPpmnj1yEuBAvD6gX/H5Mp1Pr17yFDNMEcZdok/P0kUUqsBniizBypfzOKeAiohgzinl2E9a0RPSvnr8QEgEnacLih7Ozs5qLCL8OJCL1d0py76ZerxfheZXrkIVSrVZ75vxLykDmuzY0mUyulTsqScgdZLibrl2p3tvbo49EU6hv93o+FLa3uFxp45qtDXB8n9JYySQj97cuG5VKhVW9JtW92u1268l7kvOn1Fe1XIZS65NQG3Umxu6spTbFiW9DIBhVrItIjLs51I0OaPnICApKImmS4dzp6elY+ple6wS0ynLS5Acw8kzZT3lWprCVH28WsAvik42aGRqF+/v7DbVughTXrc+Admojw5QqaTWz2Wzssyc+Ezuw0QhFXBURV12LywazHUi9iuVZWUuAPc+3OaRp12X9Our6YbvdrkOQ3PoK1xK14CPjAKtyxUOGdexRbr/yiJL41gtQZTnRFLYDCb2NDNN0wl2p1rVEIxbjTjK0JUU1iaQmQwQZi1+V9byHqzzwtafM4wd0pF/4Z7uJSDdu3I7ZbM01mccPhjyjAm9L5oaa0RU+iwxhPeSbJz1lOZT7ICm6B5ky73FtQq/WnRw4jJj/DgpybUnuh8pNRJ+rrxJHOU+dNg09KaOTAw19cBfEuOdp8leaNOY+4ldN/zNhVObzecNXl3yElKkZKQUk9kl5apE0yyaq9V0eIk5CeSA7hvWkyKhwDve/1Tpaw03Fv8MO2+IP0teMV99KlJoAAAAASUVORK5CYII=';
+var eyeCloseIcon = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACQAAAAkCAYAAADhAJiYAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAMlSURBVHgB7VdJctpAFG3JVS4PG3ID+QTGJ4i08rCJOUHiEwSfwHAC8AlMTgDZMG1QTgA5QcgJwoZpAeQ9/EU1KqFu4Y3LxatSqSV1/37/95+k1AEHfDA4ag/U6/XcycnJveM4l7i81WqV0z4P8Pwb9/D29naoMiIToVar5YPAE4a+5ZIQ5H6AWM1yvh2hOBGMR9hogOFPjIfL5XK0Eeg4eVyf8f1eEzHEc2BjMSOhTqdTgbBiRASbP89ms2qhUBipdCU8KiCKeLK+dH19XVb7EKKfnJ6e1pVYhUTm83nJRCSOXq+XgwJFIUbwGB92WSuRELWDgJ561WwoAkL1BnS73TyUqmsyE4/QsSAT7BMtSbCRvUVIjqkvCwbT6TQwHRHXnJ+fe4vFgkczsPEtkKKl8iSFPa70Na4++ezs7EVjX0gTTiLtdvsFCvzDUfSpOcd8Jw6dCFqEsrkH9xI/3WBjIUTTEyaWlMUxxUxPMAWQvC/PmWTgXkX0PfL92kLNZvNeyCjXdQsmn9FCmVn54ubm5gpXwLGQ8yCnkiZDLPXAMdMKc91ats4UH8qYWEoTJPP/iKCLOHl+B5k+ywn845PJp2CMIskzx00mkwtX0zY0kRF4ck+sVaL5+j3qXd4gS93d3VXVa27K0YdJKKf2gGFdpuQZAaRG7vHx8QPNhWcfEVI0LYLWAxl6SdEUlQx5HCoDGEwyn5Ytu0EQsD4V5Hslcq5d4Hwo0KCJmU90UlqOIWqm4GD2joIJHB45fxP2sA7P8rvaL+xDXDzCyGcyydCDaStTgxQn+LYCcStB6NfYpxqi6zEtumI5qIEcFJ3QNiFWZlT0TelgRjWZXbrH/NHR0Wg8Hg9tSg2yM8kklo53V1zd+CLJI4GSWkMBdD71djK+jaJOigCSYbH11xPR7SGTPmdt0HhESHhPUdcJhDimnYXb2MKCWEnr9ta5Qln8UQgRRm0x+ith14nMnJrrbJv8eJgryUW/pNlfgxujLnHOFzb72u9RKKEdmvbK+hv0TcLct1xiTWQvQhGi8oDN8rDI5UYYShA6x7+4D9A9NrL62wEHfEj8BzEdMkGDYLeWAAAAAElFTkSuQmCC';
 var expendDown = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAGCAYAAAD37n+BAAABYmlUWHRYTUw6Y29tLmFkb2JlLnhtcAAAAAAAPD94cGFja2V0IGJlZ2luPSLvu78iIGlkPSJXNU0wTXBDZWhpSHpyZVN6TlRjemtjOWQiPz4KPHg6eG1wbWV0YSB4bWxuczp4PSJhZG9iZTpuczptZXRhLyIgeDp4bXB0az0iWE1QIENvcmUgNi4wLjAiPgogPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4KICA8cmRmOkRlc2NyaXB0aW9uIHJkZjphYm91dD0iIgogICAgeG1sbnM6dGlmZj0iaHR0cDovL25zLmFkb2JlLmNvbS90aWZmLzEuMC8iCiAgIHRpZmY6T3JpZW50YXRpb249IjEiLz4KIDwvcmRmOlJERj4KPC94OnhtcG1ldGE+Cjw/eHBhY2tldCBlbmQ9InIiPz4iLqjnAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAACnSURBVHgBbZDNDQIhEIV3INwtAQ4cONqB28HagZ24VmALWoElaAceCYGELcEC+HGGrAnZOAmZYd6XgTcQQogDBud8VEotw5+IMcqc85NqVkoZaq2t4ZybtrD3/pBSehNDLBNC7PFypwZj7IHAuYOppsk7YoiFTpwxNRgAbjQN82mVL1rruWn98+hnQvCKoFxbHzxHhF8/BrZ/ttZKXEAziL5GY8zS618wC1FM6xC1ggAAAABJRU5ErkJggg==';
 var expendUp = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAGCAYAAAD37n+BAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAACnSURBVHgBbU/bDcIwDGzSBTpCKiUDsAHdoGzACkwATMAKMAFsABvwHSVSMgL/eXGu8hFVtXRy7DufLqxblXNOpJTe9O77fhrH0bc8bwdjzD7G+C2lCAIdaq3nzQOIz2jkPED8qBCc82fllmKIMIQQboyxY91dlVKXakJ9EYO/I+KJWWsdOWH3Aw4Qf9oI4OecMxkKwHMMHQ48su/WYiop5Qt/mUhD2j+rL2DcCUjpAwAAAABJRU5ErkJggg==';
 
@@ -8709,7 +8709,7 @@ var IndicatorTooltipView = /** @class */ (function (_super) {
                     activeStyles.paddingBottom = 3;
                     activeStyles.paddingTop = 3;
                     activeStyles.paddingLeft = 4;
-                    activeStyles.paddingRight = (isValid(action) && action.length !== 0) ? 22 * action.length : 4;
+                    activeStyles.paddingRight = (isValid(action) && action.length !== 0) ? 26 * action.length : 4;
                 }
                 var textX = coordinate.x + marginLeft_4 + titleTextWidth - ((_b = activeStyles.paddingLeft) !== null && _b !== void 0 ? _b : 0);
                 var textY = coordinate.y + marginTop_4 - ((_c = activeStyles.paddingTop) !== null && _c !== void 0 ? _c : 0);
@@ -8722,7 +8722,7 @@ var IndicatorTooltipView = /** @class */ (function (_super) {
                     mouseClickEvent: _this._boundActionClickEvent({ paneId: paneId_3, indicator: indicator }, IndicatorEventTarget.Click)
                 })) === null || _d === void 0 ? void 0 : _d.draw(ctx);
                 if (active && isValid(action) && action.length !== 0) {
-                    var _x_1 = textX + valueTextWidth + 2;
+                    var _x_1 = textX + valueTextWidth + 4;
                     action.forEach(function (ac) {
                         if (ac === 'visible') {
                             var iconImage_1 = new window.Image();
@@ -8732,7 +8732,7 @@ var IndicatorTooltipView = /** @class */ (function (_super) {
                                 var _a;
                                 (_a = _this.createFigure({
                                     name: 'img',
-                                    attrs: { x: _xx_1, y: textY + 3, width: 12, height: 12, img: iconImage_1 },
+                                    attrs: { x: _xx_1, y: textY + 2, width: 16, height: 14, img: iconImage_1 },
                                     styles: __assign({ color: value.color, size: size_4, family: family_2, weight: weight_2 }, activeStyles)
                                 }, {
                                     mouseClickEvent: _this._boundActionClickEvent({ paneId: paneId_3, indicator: indicator }, indicator.visible ? IndicatorEventTarget.Invisible : IndicatorEventTarget.Visible)
@@ -8747,14 +8747,14 @@ var IndicatorTooltipView = /** @class */ (function (_super) {
                                 var _a;
                                 (_a = _this.createFigure({
                                     name: 'img',
-                                    attrs: { x: _xx_2, y: textY + 3, width: 12, height: 12, img: iconImage_2 },
+                                    attrs: { x: _xx_2, y: textY + 2, width: 14, height: 14, img: iconImage_2 },
                                     styles: __assign({ color: value.color, size: size_4, family: family_2, weight: weight_2 }, activeStyles)
                                 }, {
                                     mouseClickEvent: _this._boundActionClickEvent({ paneId: paneId_3, indicator: indicator }, IndicatorEventTarget.Delete)
                                 })) === null || _a === void 0 ? void 0 : _a.draw(ctx);
                             };
                         }
-                        _x_1 += 14 + 6;
+                        _x_1 += 14 + 8;
                     });
                 }
                 coordinate.x += (marginLeft_4 + totalTextWidth + marginRight_4 + ((_e = activeStyles.paddingRight) !== null && _e !== void 0 ? _e : 0));

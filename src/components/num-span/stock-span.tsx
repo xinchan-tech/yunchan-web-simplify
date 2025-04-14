@@ -177,7 +177,6 @@ export const PercentSubscribeSpan = memo(
       (v?: number | string) => {
         if (type === 'percent') {
           if ((Number.isNaN(v) || !Number.isFinite(v)) && nanText) {
-            console.log(nanText)
             return nanText
           }
           const r = BaseNumberFormatter(+(v || 0) * 100, decimal, zeroText)

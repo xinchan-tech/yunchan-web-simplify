@@ -476,21 +476,6 @@ const AlarmRecordItem = ({ symbol, data, onDelete }: AlarmRecordItemProps) => {
         </div>
       </div>
       {data.type === AlarmType.AI ? (
-        // <div
-        //   className={cn(
-        //     data.condition.bull === '1' ? 'text-stock-up' : 'text-stock-down',
-        //     'flex items-center space-x-1 mt-2.5'
-        //   )}
-        // >
-        //   {Array.from({ length: 5 }).map((_, i) => (
-        //     <span
-        //       // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
-        //       key={i}
-        //       className="w-[6px] h-2.5 rounded-[1px]"
-        //       style={{ background: data.condition.score_total > i ? 'currentColor' : '#2E2E2E' }}
-        //     />
-        //   ))}
-        // </div>
         <div className="text-left mt-1">
           <Star.Rect total={5} className="w-[6px] h-2.5 rounded-[1px] !mr-[1px]" activeColor={data.condition.bull === '1' ? useConfig.getState().getStockColor(true, 'hex') : useConfig.getState().getStockColor(false, 'hex')} count={4} />
         </div>
@@ -498,7 +483,7 @@ const AlarmRecordItem = ({ symbol, data, onDelete }: AlarmRecordItemProps) => {
       <div className="text-tertiary text-xs text-left mt-1">
         {data.alarm_time ? <span>触发时间 {dateUtils.toUsDay(data.alarm_time).format('MM/DD w HH:mm')}</span> : null}
         &emsp;
-        {data.condition.frequency === 1 ? '持续提醒' : '仅提醒一次'}
+        {/* {data.condition.frequency === 1 ? '持续提醒' : '仅提醒一次'} */}
       </div>
       <style jsx>
         {`

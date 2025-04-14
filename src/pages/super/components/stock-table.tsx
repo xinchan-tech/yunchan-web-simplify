@@ -1,21 +1,18 @@
 import type { getStockSelection } from '@/api'
 import {
-  AiAlarm,
   CollectStar,
-  JknCheckbox,
-  JknIcon,
   JknRcTable,
   type JknRcTableProps,
   Star,
   StockView,
   SubscribeSpan
 } from '@/components'
-import { useCheckboxGroup, useTableData, useTableRowClickToStockTrading } from '@/hooks'
+import { useTableData } from '@/hooks'
 import { useConfig } from '@/store'
 import { stockUtils } from '@/utils/stock'
 import { cn } from '@/utils/style'
 import { nanoid } from 'nanoid'
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 type TableDataType = {
   index: number
@@ -86,6 +83,44 @@ const StockTable = (props: StockTableProps) => {
     )
   }, [props.data, setList])
 
+  const [sortExt, setSortExt] = useState('')
+  const _onSort: typeof onSort = (column, order) => {
+    if(column === 'close'){
+      if(!sortExt){
+        setSortExt('close')
+        onSort('close', order)
+        return 
+      }
+
+      if(sortExt === 'close' && order === 'desc'){
+        onSort('close', order)
+        return
+      }
+
+      if(sortExt === 'close' && order === 'asc'){
+        setSortExt('percent')
+        onSort('percent', order)
+
+        return
+      }
+
+      if(sortExt === 'percent' && order === 'desc'){
+        onSort('percent', order)
+        return
+      }
+
+
+      if(sortExt === 'percent' && order === 'asc'){
+        setSortExt('close')
+        onSort('close', order)
+        return
+      }
+
+    }
+    setSortExt('')
+    onSort(column, order)
+  }
+
   const columns: JknRcTableProps<TableDataType>['columns'] = useMemo(
     () => [
       {
@@ -107,7 +142,7 @@ const StockTable = (props: StockTableProps) => {
         width: 90,
         align: 'center',
         sort: true,
-        render: stock_cycle => stockUtils.intervalToStr(stock_cycle)
+        render: stock_cycle => <span>{stockUtils.intervalToStr(stock_cycle)}</span>
       },
       {
         title: '信号类型',
@@ -138,13 +173,13 @@ const StockTable = (props: StockTableProps) => {
       },
 
       {
-        title: '现价/涨跌幅',
+        title: <span><span className={cn(sortExt === 'close' && 'text-stock-up')}>现价</span>/<span className={cn(sortExt === 'percent' && 'text-stock-up')}>涨跌幅</span></span>,
         dataIndex: 'close',
         width: 140,
         align: 'left',
         sort: true,
         render: (close, row) => (
-          <>
+          <div>
             <SubscribeSpan.PriceBlink
               trading="intraDay"
               symbol={row.symbol}
@@ -164,7 +199,7 @@ const StockTable = (props: StockTableProps) => {
               initDirection={(row.percent ?? 0) >= 0}
               nanText="--"
             />
-          </>
+          </div>
         )
       },
       {
@@ -190,15 +225,17 @@ const StockTable = (props: StockTableProps) => {
         width: 100,
         sort: true,
         render: (score, row) => (
-          <Star.Rect
-            total={5}
-            count={score}
-            activeColor={useConfig.getState().getStockColor(row.bull === '1', 'hex')}
-          />
+          <div>
+            <Star.Rect
+              total={5}
+              count={score}
+              activeColor={useConfig.getState().getStockColor(row.bull === '1', 'hex')}
+            />
+          </div>
         )
       }
     ],
-    [props.onUpdate]
+    [props.onUpdate, sortExt]
   )
 
   // const onRowClick = useTableRowClickToStockTrading('symbol')
@@ -207,6 +244,8 @@ const StockTable = (props: StockTableProps) => {
     <JknRcTable
       rowKey="key"
       columns={columns}
+      virtual
+      border={false}
       data={list}
       onRow={r => ({
         onClick: () => {
@@ -215,7 +254,7 @@ const StockTable = (props: StockTableProps) => {
           })
         }
       })}
-      onSort={onSort}
+      onSort={_onSort}
     />
   )
 }

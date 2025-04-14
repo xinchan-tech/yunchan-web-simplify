@@ -1,5 +1,6 @@
 import { registerByEmail, sendEmailCode } from '@/api'
 import {
+  AgreementTerms,
   Button,
   FormControl,
   FormDescription,
@@ -12,7 +13,8 @@ import {
   InputOTPGroup,
   InputOTPSlot,
   JknCheckbox,
-  JknIcon
+  JknIcon,
+  useModal
 } from '@/components'
 import { useCheckbox, useToast, useZForm } from '@/hooks'
 import { cn } from '@/utils/style'
@@ -52,8 +54,23 @@ export const RegisterForm = (props: {
     })
   }
 
+  const agreementModal = useModal({
+    title: undefined,
+    content: (
+      <div className="w-full h-[600px] box-border p-10 overflow-y-auto">
+        <AgreementTerms />
+      </div>
+    ),
+    footer: <div className="text-center my-4"><Button className="px-4" onClick={() => agreementModal.modal.close()}>确&nbsp;认</Button></div>
+  })
+
   const sendCode = useMutation({
     mutationFn: async () => {
+      console.log(checked)
+      if (!checked) {
+        throw new Error('请先阅读并接受《服务条款》')
+      }
+
       const r = await form.trigger('username')
       if (!r) {
         toast({
@@ -116,7 +133,7 @@ export const RegisterForm = (props: {
     <>
       {step >= 2 ? (
         <div className="w-[960px] mx-auto pt-[60px]">
-          <div className="flex items-center" onClick={() => prevStep()} onKeyDown={() => {}}>
+          <div className="flex items-center" onClick={() => prevStep()} onKeyDown={() => { }}>
             <div className="size-8 rounded bg-accent flex items-center justify-center mr-2">
               <JknIcon.Svg name="arrow-left" size={10} className="" />
             </div>
@@ -161,7 +178,7 @@ export const RegisterForm = (props: {
                 <span
                   className="text-tertiary cursor-pointer"
                   onClick={() => !time && sendCode.mutate()}
-                  onKeyDown={() => {}}
+                  onKeyDown={() => { }}
                 >
                   <span className={cn(!time && 'text-primary')}>重发</span>
                   {time ? (
@@ -276,7 +293,7 @@ export const RegisterForm = (props: {
                   <JknCheckbox checked={checked} onClick={toggle} className="text-sm" />
                   &nbsp;
                   <span className="text-sm text-secondary">
-                    我已阅读并接受<span className="text-primary cursor-pointer">《软件服务条款》</span>
+                    我已阅读并接受<span className="text-primary cursor-pointer" onClick={() => agreementModal.modal.open()} onKeyDown={() => { }}>《软件服务条款》</span>
                   </span>
                 </FormItem>
                 <Button className="mt-4" block loading={sendCode.isPending}>
@@ -290,13 +307,16 @@ export const RegisterForm = (props: {
                 <span
                   className="cursor-pointer text-primary"
                   onClick={() => props.setPage('login')}
-                  onKeyDown={() => {}}
+                  onKeyDown={() => { }}
                 >
                   立即登录
                 </span>
               </div>
             </div>
           </FormProvider>
+          {
+            agreementModal.context
+          }
         </div>
       )}
     </>

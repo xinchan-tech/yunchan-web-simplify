@@ -96,7 +96,7 @@ export const useModal = ({
           {innerTitle ? (
             <DialogHeader>
               <DialogTitle asChild>
-                <div className="px-8 flex items-center pt-5 pb-[15px] border-solid border-x-0 border-t-0 border-b border-[#3D3D3D]">
+                <div className="px-5 flex items-center pt-5 pb-[15px]  border-[#3D3D3D]">
                   {innerTitle && <div className="text-xl">{innerTitle}</div>}
                   {closeIcon && (
                     <span
