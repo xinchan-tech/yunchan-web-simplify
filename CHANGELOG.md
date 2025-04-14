@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.2.1](https://github.com/xinchan-gx/yunchan-web/compare/2.2.0...2.2.1) (2025-04-14)
+
+### 🐛 Bug Fixes | Bug 修复
+
+* 修复CoilingBar组件中的条件渲染逻辑 ([305c5a2](https://github.com/xinchan-gx/yunchan-web/commit/305c5a279e8db13e20c0d583c7fc58da1a6a9992))
+
 ## [2.2.0](https://github.com/xinchan-gx/yunchan-web/compare/2.1.1...2.2.0) (2025-04-14)
 
 ### ✨ Features | 新功能
