@@ -6,7 +6,7 @@ $dark-table-row-hover: #1B1B1B;
 $dark-table-body-background: transparent;
 
 .rc-table-tbody-virtual {
-  border-left: 1px solid $dark-table-border-color;
+  border-left: none;
 }
 .rc-table-tbody-virtual * {
   box-sizing: border-box;
@@ -18,18 +18,24 @@ $dark-table-body-background: transparent;
 }
 .rc-table-tbody-virtual .rc-table-row-extra .rc-table-cell {
   background: transparent !important;
-
 }
 .rc-table-tbody-virtual .rc-table-cell {
+  > div, > span {
+    flex: 1;
+    overflow: hidden;
+  }
+
+  overflow: hidden;
   flex: 0 0 var(--virtual-width);
   width: var(--virtual-width);
   padding: 2px 4px 2px 2px;
   box-sizing: border-box;
-  border-right: 1px solid $dark-table-border-color;
+  border-right: none;
   border-bottom: 1px solid $dark-table-border-color;
   display: flex;
   align-items: center;
   justify-self: unset;
+  height: 50px;
 }
 
 .jkn-rc-table[data-border="false"] .rc-table-cell{

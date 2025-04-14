@@ -12,7 +12,7 @@ const StockPage = () => {
   const widthInit = useRef(width)
 
   const onResizeEnd = useCallback((d: { width: number }) => {
-    setWidth(w => `${Math.min(d.width + Number.parseFloat(w ?? '0'), 1240)}px`)
+    setWidth(w => `${Math.max(0, Math.min(d.width + Number.parseFloat(w ?? '0'), 1024))}px`)
   }, [setWidth])
 
   return (
@@ -22,6 +22,8 @@ const StockPage = () => {
       </div>
       <Resizable
         onResizeStop={(_, __, ___, d) => onResizeEnd(d)}
+        minWidth={1}
+        maxWidth={1024}
         defaultSize={{
           width: widthInit.current,
         }}

@@ -183,8 +183,8 @@ export const drawCoilingTradePoint: DrawCoilingTradePointFunc = ({ ctx, xAxis, y
   coilingData.forEach(p => {
     const y = yAxis.convertToPixel(p.price)
     const x = xAxis.convertToPixel(p.index)
-    const height = y + (!p.buy ? -1 : 1) * 30
-    const cy = height + (!p.buy ? -1 : 1) * 14
+    const height = y + (!p.buy ? -1 : 1) * 40
+    const cy = height + (!p.buy ? -1 : 1) * 18
 
     new Line({
       name: 'line',
@@ -205,7 +205,7 @@ export const drawCoilingTradePoint: DrawCoilingTradePointFunc = ({ ctx, xAxis, y
       attrs: {
         x: x,
         y: cy,
-        r: 14
+        r: 18
       },
       styles: {
         borderColor: p.color,

@@ -1,8 +1,11 @@
-import { PopoverTrigger, Input, JknIcon, Popover, PopoverContent } from '@/components'
+import { getStockBaseCodeInfo } from "@/api"
+import { PopoverTrigger, Input, JknIcon, Popover, PopoverContent, SubscribeSpan } from '@/components'
 import { JknVirtualList } from '@/components/jkn/jkn-virtual-list'
 import { useStockSearch } from '@/hooks'
 import { useStockList } from '@/store'
+import { stockUtils } from "@/utils/stock"
 import { cn } from '@/utils/style'
+import { useQuery } from "@tanstack/react-query"
 import { useState } from 'react'
 
 interface AlarmStickPickerProps {
@@ -15,6 +18,17 @@ export const AlarmStockPicker = ({ value, onChange }: AlarmStickPickerProps) => 
   const [search, setSearch] = useState('')
   const [result] = useStockSearch(search)
   const [open, setOpen] = useState(false)
+
+  const query = useQuery({
+    queryKey: [getStockBaseCodeInfo.cacheKey, value, ['total_share']],
+    queryFn: () => getStockBaseCodeInfo({ symbol: value!, extend: ['total_share'] }),
+    enabled: !!value,
+    select: data => data ? stockUtils.toStock(data.stock, {
+      extend: data.extend,
+      symbol: data.symbol,
+      name: data.name
+    }) : null
+  })
 
   return (
     <Popover modal open={open} onOpenChange={v => !v && setOpen(false)}>
@@ -32,9 +46,17 @@ export const AlarmStockPicker = ({ value, onChange }: AlarmStickPickerProps) => 
               <>
                 <JknIcon.Stock symbol={value} className="w-6 h-6 mr-2" />
                 <span>{value}</span>
-                <span className="ml-2 text-tertiary text-xs w-64 overflow-hidden text-ellipsis whitespace-nowrap">
+                <span className="ml-2 text-tertiary text-xs flex-1 overflow-hidden line-clamp-1">
                   {stockMap[value]?.[2]}
                 </span>
+                {
+                  query.data ? (
+                    <div className="mr-1">
+                      <SubscribeSpan.Price trading="intraDay" symbol={query.data.symbol} initValue={query.data.close} showColor={false}  />&nbsp;
+                      <SubscribeSpan.Percent trading="intraDay" symbol={query.data.symbol} initValue={query.data.close} showColor={true} initDirection={query.data.close - query.data.prevClose > 0} />
+                    </div>
+                  ): null
+                }
               </>
             ) : (
               <span className="text-tertiary text-xs">--</span>

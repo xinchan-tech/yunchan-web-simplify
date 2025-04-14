@@ -197,7 +197,7 @@ const StockFinancials = () => {
 
       <div className="flex-1 overflow-hidden">
         <JknRcTable
-          headerHeight={48}
+          headerHeight={61}
           onSort={onSort}
           isLoading={query.isLoading}
           onRow={onRowClick}

@@ -124,13 +124,36 @@ const snapshotActionResultParser = (data: any) => {
   }
 }
 
+const rankActionResultParser = (data: any) => {
+  const action = data.ev as string
+  const r = data.ls as Record<number, number[]>
+
+  return {
+    action,
+    topic: action as string,
+    data: Object.entries(r).map(([key, value]) => {
+      const [symbol, close, percent, volume, turnover, marketValue] = value
+      return {
+        rank: Number.parseInt(key),
+        symbol: String(symbol),
+        close: close,
+        percent,
+        volume,
+        turnover,
+        marketValue
+      }
+    })
+  }
+}
+
 export type StockSubscribeHandler<T extends SubscribeActionType> = T extends 'bar'
   ? (data: ReturnType<typeof barActionResultParser>) => void
   : T extends 'quoteTopic'
     ? (data: ReturnType<typeof quoteActionResultParser>) => void
     : T extends 'quote'
-      ? (data: QuoteBuffer) => void
-      : (data: ReturnType<typeof snapshotActionResultParser>) => void
+      ? (data: QuoteBuffer) => void 
+      : T extends 'rank_subscribe' ? (data: ReturnType<typeof rankActionResultParser>) => void
+      : (data: ReturnType<typeof snapshotActionResultParser>) => void 
 
 export type SubscribeActionType = 'bar' | 'quote' | '' | 'snapshot' | 'quoteTopic' | 'rank_subscribe'
 
@@ -148,6 +171,10 @@ export type QuoteBuffer = Record<string, ReturnType<typeof quoteActionResultPars
  * snapshot 时间窗口buffer结构
  */
 type SnapshotBuffer = Record<string, ReturnType<typeof snapshotActionResultParser>>
+/**
+ * 排行榜buffer结构
+ */
+type RankBuffer = Record<string, ReturnType<typeof rankActionResultParser>>
 
 type RankSortKey = 'Amount' | 'Change' | 'Volume' | 'Close' | 'MarketCap'
 
@@ -167,6 +194,7 @@ class StockSubscribe {
   private bufferMax: number
   private quoteBuffer: QuoteBuffer
   private snapshotBuffer: SnapshotBuffer
+  private rankBuffer: RankBuffer
   private lastBeat: number
 
   static get() {
@@ -186,6 +214,7 @@ class StockSubscribe {
     this.bufferMax = 20000
     this.quoteBuffer = {}
     this.snapshotBuffer = {}
+    this.rankBuffer = {}
     this.lastBeat = Date.now()
 
     this.ws = new Ws(`${this.url}&cid=${this.cid}`, {
@@ -198,6 +227,13 @@ class StockSubscribe {
             this.snapshotBuffer[parserData.topic] = parserData
             return
           }
+
+          if (data.ev === 'rank') {
+            const parserData = rankActionResultParser(data)
+            this.rankBuffer[parserData.topic] = parserData
+            return
+          }
+          
           if (data.b) {
             const parserData = barActionResultParser(data)
             this.buffer.push({ action: parserData.topic, data: parserData })
@@ -210,7 +246,8 @@ class StockSubscribe {
           }
         }
       },
-      onOpen: () => {
+      onReconnect: () => {
+        console.warn('reconnect stock ws')
         this.reSubscribe()
       }
     })
@@ -239,16 +276,28 @@ class StockSubscribe {
       }
 
       if (action === 'snapshot') {
-        this.snapshot(symbol)
+        this.ws.send({
+          action: `${action}_subscribe`,
+          cid: this.cid,
+          params: symbol
+        })
       }
     }
 
     if (quote.length) {
-      this.subscribe('quote', quote)
+      this.ws.send({
+        action: 'quote_add_symbols',
+        cid: this.cid,
+        params: quote
+      })
     }
 
     if (bar.length) {
-      this.subscribe('bar', bar)
+      this.ws.send({
+        action: 'bar_add_symbols',
+        cid: this.cid,
+        params: bar
+      })
     }
   }
 
@@ -332,27 +381,35 @@ class StockSubscribe {
       this.subscribeTopic[topic].count++
     } else {
       this.subscribeTopic[topic] = { count: 1 }
+      this.ws.send({
+        action: `${action}_subscribe`,
+        cid: this.cid,
+        params: symbol
+      })
     }
 
-    this.ws.send({
-      action: `${action}_subscribe`,
-      cid: this.cid,
-      params: symbol
-    })
-
     return () => {
-      this.unsubscribeSnapshot()
+      this.unsubscribeSnapshot(symbol)
     }
   }
 
   /**
    * 取消快照订阅
    */
-  private unsubscribeSnapshot() {
-    this.ws.send({
-      action: 'snapshot_unsubscribe',
-      cid: this.cid
-    })
+  private unsubscribeSnapshot(symbol: string) {
+    const topic = `snapshot:${symbol}`
+    if (this.subscribeTopic[topic]) {
+      this.subscribeTopic[topic].count--
+    }
+
+    if (this.subscribeTopic[topic].count <= 0) {
+      delete this.subscribeTopic[topic]
+      this.ws.send({
+        action: 'snapshot_unsubscribe',
+        cid: this.cid,
+        params: symbol
+      })
+    }
   }
 
   /**
@@ -474,6 +531,12 @@ class StockSubscribe {
     const snapshotBuffer = Object.entries(this.snapshotBuffer)
     this.snapshotBuffer = {}
     snapshotBuffer.forEach(([topic, data]) => {
+      this.subscribed.emit(topic, data)
+    })
+
+    const rankBuffer = Object.entries(this.rankBuffer)
+    this.rankBuffer = {}
+    rankBuffer.forEach(([topic, data]) => {
       this.subscribed.emit(topic, data)
     })
 

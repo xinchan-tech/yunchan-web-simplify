@@ -6,6 +6,7 @@ type WsOptions = {
   onClose?: (ev: CloseEvent) => void
   onOpen?: (ev: Event) => void
   onBeat?: () => void
+  onReconnect?: () => void
   beat?: boolean
 }
 
@@ -86,8 +87,14 @@ export class Ws {
     this.ws.onopen = (ev: Event) => {
       const endTime = Date.now().valueOf()
       this.delay = endTime - startTime
-      this.handleOpen()
+
+      if(this.retryCount > 0){
+        this.options.onReconnect?.()
+      }
+
       this.options.onOpen?.(ev)
+      this.handleOpen()
+      
     }
 
     this.ws.onclose = (ev: CloseEvent) => {
