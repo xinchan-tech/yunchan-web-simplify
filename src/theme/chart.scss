@@ -1,0 +1,91 @@
+.main-chart {
+     display: grid;
+     grid-template-columns: 1fr;
+     grid-template-rows: 1fr;
+}
+
+.main-chart-single {
+     grid-template-areas: 'chart-1';
+}
+
+.main-chart-double {
+     grid-template-areas: 'chart-1 chart-2';
+     grid-template-columns: 50% 50%;
+}
+
+.main-chart-double-vertical {
+     grid-template-areas:
+          'chart-1'
+          'chart-2';
+     grid-template-rows: 50% 50%;
+     grid-template-columns: 1fr;
+}
+
+.main-chart-three-left-single {
+     grid-template-areas:
+          'chart-1 chart-2'
+          'chart-1 chart-3';
+     grid-template-rows: 50% 50%;
+     grid-template-columns: 50% 50%;
+}
+
+.main-chart-three-right-single {
+     grid-template-areas:
+          'chart-2 chart-1'
+          'chart-3 chart-1';
+     grid-template-rows: 50% 50%;
+     grid-template-columns: 50% 50%;
+}
+
+.main-chart-three-vertical-top-single {
+     grid-template-areas:
+          'chart-1 chart-1'
+          'chart-2 chart-3';
+     grid-template-rows: 50% 50%;
+     grid-template-columns: 50% 50%;
+}
+
+.main-chart-three-vertical-bottom-single {
+     grid-template-areas:
+          'chart-2 chart-3'
+          'chart-1 chart-1';
+     grid-template-rows: 50% 50%;
+     grid-template-columns: 50% 50%;
+}
+
+.main-chart-four {
+     grid-template-areas:
+          'chart-1 chart-2'
+          'chart-3 chart-4';
+     grid-template-rows: 50% 50%;
+     grid-template-columns: 50% 50%;
+}
+
+.main-chart-six {
+     grid-template-areas:
+          'chart-1 chart-2 chart-3'
+          'chart-4 chart-5 chart-6';
+     grid-template-rows: 50% 50%;
+     grid-template-columns: 33.3% 33.3% 33.3%;
+}
+
+.main-chart-nine {
+     grid-template-areas:
+          'chart-1 chart-2 chart-3'
+          'chart-4 chart-5 chart-6'
+          'chart-7 chart-8 chart-9';
+     grid-template-rows: 33.33% 33.33% 33.33%;
+     grid-template-columns: 33.33% 33.33% 33.33%;
+}
+
+@for $i from 1 through 10 {
+     .chart-item-#{$i} {
+          overflow: hidden;
+          grid-area: chart-#{$i};
+          border: 1px solid transparent;
+
+          &.active {
+               border: 1px solid #3156f5;
+          }
+     }
+}

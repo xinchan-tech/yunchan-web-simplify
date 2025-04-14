@@ -1,0 +1,9 @@
+serverAddr = "18.144.135.209"
+serverPort = 19998
+auth.token = "jkn2024"
+
+[[proxies]]
+name = "web"
+type = "http"
+localPort = 3000
+customDomains = ["web.mgjkn.com"]

@@ -1,0 +1,332 @@
+<html>
+    <head>
+    </head>
+    <body style="background-color: rgba(20, 21, 25, 250);">
+		<script type="text/javascript" src="js/jquery-3.2.0.min.js"></script>
+		<script type="text/javascript" src="js/qrcode.js"></script>
+		
+		<script src="https://accounts.google.com/gsi/client" async></script>
+        <script type="text/javascript" src="https://appleid.cdn-apple.com/appleauth/static/jsapi/appleid/1/en_US/appleid.auth.js"></script>
+		
+		<div class="logo">
+			<img class="imag" src="images/applogo.png"/>
+		</div>
+		
+		<div class="container">
+			<!-- 苹果 -->
+			<div id="appleid-signin" data-color="white" data-border="true" data-type="sign in" ></div>
+			<!-- 微信授权 -->
+			<div id="wechat" style="display: none;">
+				<div id="loginBtn">
+					<div class="icon-container">
+						<img src="images/wxlogo.png" style="width: 30px;margin-left: 5px;"/>
+					</div>
+					<div class="text-container">
+					    微信扫码登录
+					</div>
+				</div>
+			</div>
+			
+			<!-- 谷歌登录 -->
+			<div id="google_btn">
+				<div class="text-container" style="background-color:rgba(20, 21, 25, 250);">
+				    无法连接到Google
+				</div>
+			</div>
+		</div>
+		<!-- 二维码 -->
+		<div class="container">
+			<div class="right_qrcode_div" id="qrcode"></div>
+		</div>
+		<div class="overlay" id="overlay"></div>
+		
+    </body>
+	<!-- 谷歌 -->
+	<script>
+	  function handleLogin() {
+	    google.accounts.id.initialize({
+	      client_id: '1084914910896-skncl8a34m47fe8toeak808pvrdn18vr.apps.googleusercontent.com',
+	      context: 'signin',
+	      ux_mode: 'redirect',
+		  login_uri: "https://us.mgjkn.com/login/auto",
+	    });
+	    const parent = document.getElementById('google_btn');
+	    google.accounts.id.renderButton(parent,  {
+		  theme: 'filled_blue', // 主题颜色
+		  size: 'icon', // 大小
+		  width: '180px', // 宽度
+		});
+	  }
+	  window.onload = handleLogin;
+	</script>
+	<!-- 微信 -->
+	<script>
+		var s_id = generateRandomString(10);
+		document.addEventListener('DOMContentLoaded', function() {
+		    // 获取按钮和二维码div
+		    var loginBtn = document.getElementById('loginBtn');
+		    var qrcodeDiv = document.getElementById('qrcode');
+			var overlay = document.getElementById('overlay');
+		
+		    // 添加点击事件监听器
+		    loginBtn.addEventListener('click', function() {
+		        // 显示二维码div
+		        qrcodeDiv.style.display = 'block';
+				overlay.style.display = 'block'; // 显示遮罩层
+		    });
+			overlay.addEventListener('click', function() {
+			    qrcodeDiv.style.display = 'none'; // 隐藏二维码
+			    overlay.style.display = 'none'; // 隐藏遮罩层
+			});
+		
+		    var appleidSignin = document.getElementById('appleid-signin');
+		    var googleBtn = document.getElementById('google_btn');
+		
+		    appleidSignin.addEventListener('click', function() {
+		        // 隐藏
+		        qrcodeDiv.style.display = 'none';
+		    });
+		
+		    googleBtn.addEventListener('click', function() {
+		        qrcodeDiv.style.display = 'none';
+		    });
+		});
+		document.getElementById('loginBtn').addEventListener('click', function() {
+			qrcode = new QRCode(document.getElementById("qrcode"), {
+				width : 250,
+				height : 250,
+				colorDark : "#000000",		// 码颜色
+				colorLight : "#FFFFFF",  	// 背景色
+				margin : "0",
+				correctLevel : QRCode.CorrectLevel.Q
+			});
+		
+			shengcheng(s_id)
+			// 检查是否已经在轮询
+			if (!window.polling) {
+			    // 设置轮询变量
+			    window.polling = true;
+			    // 开始轮询
+			    fetchData();
+			    // 设置定时器，每5秒执行一次fetchData函数
+			    setInterval(fetchData, 5000);
+			}
+		});
+		function fetchData() {
+			$.ajax({
+				url: 'https://us.mgjkn.com/login/wxRedirect?s_id='+s_id, // 你的接口地址
+				type: 'GET', // 请求方法，根据实际情况修改
+				dataType: 'json', // 返回的数据格式
+				success: function(response) {
+					// 请求成功后的处理逻辑
+					console.log(response);
+					if(response.data.url != ''){
+						 window.location.href = response.data.url;
+					}
+					// 这里可以根据返回的数据进行处理
+				},
+				error: function(xhr, status, error) {
+					// 请求失败后的处理逻辑
+					console.error(error);
+				}
+			});
+		}
+			
+		// 统一生成二维码
+		function shengcheng(s_id){
+			qrcode.clear();
+			$('#qrcode').empty();
+			// 尺寸
+			var chicun = 160;
+			var url = 'https://us.mgjkn.com/login/wx?s_id='+s_id+'&inv_code='+inv_code;
+			// 容错率
+			var correctLevel = QRCode.CorrectLevel.Q;
+			// 生成二维码
+			qrcode = new QRCode(document.getElementById("qrcode"), {
+				text: url,
+				width : chicun,
+				height : chicun,
+				colorDark : "#000000",		// 码颜色
+				colorLight : "#FFFFFF",  	// 背景色
+				margin : 20,			// 码边距
+				correctLevel : correctLevel,			// 容错率
+			});
+			// 码边距
+			var margin = 20;
+			if( margin > 0 ){
+		
+				$('#qrcode').css( { width : ( parseInt(chicun) + margin ) , height : ( parseInt(chicun) + margin ) } );
+				$('#qrcode img').css( { width : chicun , height : chicun , padding : margin/2 } );
+			} else {
+				$('#qrcode').css( { width : chicun , height : chicun } );
+			}
+			// logo
+			var qrcode_logo = 'images/wxlogo.png';
+			if( qrcode_logo ){
+				qrcode.logo(qrcode_logo);
+			}
+		}
+		
+		function generateRandomString(length) {
+		    var result = '';
+		    var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+		    var charactersLength = characters.length;
+		    for ( var i = 0; i < length; i++ ) {
+		        result += characters.charAt(Math.floor(Math.random() * charactersLength));
+		    }
+		    return result;
+		}
+			
+	</script>
+	<!-- 苹果 -->
+	<script type="text/javascript">
+	    const queryString = window.location.search;
+	    const urlParams = new URLSearchParams(queryString);
+		//邀请码
+		var inv_code = urlParams.get('inv_code');
+		
+		if (urlParams.get('platform') == 'apple') {
+			document.getElementById('appleid-signin').style.display = 'block';
+		}else if (urlParams.get('platform') == 'google') {
+			document.getElementById('google_btn').style.display = 'block';
+		}else if(urlParams.get('platform') == 'wechat'){
+			document.getElementById('wechat').style.display = 'block';
+		}else{
+			document.getElementById('appleid-signin').style.display = 'block';
+			document.getElementById('wechat').style.display = 'block';
+			document.getElementById('google_btn').style.display = 'block';
+		}
+		// AppleID.auth.init({
+		// 	clientId: urlParams.get('clientId'),
+		// 	redirectURI: urlParams.get('redirectUrl'),
+		// 	scope: urlParams.get('scope'),
+		// 	state: urlParams.get('state'),
+		// 	nonce: urlParams.get('nonce')
+		// });
+	    AppleID.auth.init({
+	        clientId: 'com.jkn.app.web',
+	        redirectURI: 'mgjkn://appleLogin',
+	        scope: 'email',
+	        state: 'https://www.mgjkn.com/main',
+	        nonce: 'xxx'
+	    });
+		
+	</script>
+
+</html>
+
+<style>
+	.logo {
+		 display: flex;
+		 justify-content: center;
+		 align-items: center;
+		 height: 10vh;
+		 margin-top: 2.75rem;
+	 }
+	 .container {
+	     display: flex;
+	     justify-content: center;
+	     align-items: center;
+	     height: 15vh;
+	     margin-top: 3.75rem;
+	 }
+	 
+	 /* 单个按钮样式 */
+	 #appleid-signin, #google_btn, #wechat {
+		 /* padding: 5px 8px; */
+	     font-size: 16px;
+	     cursor: pointer;
+	     background-color: #1a73e8;
+	     color: white;
+	     border: none;
+	     border-radius: 5px;
+	     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* 添加阴影 */
+	     margin: 0 10px; /* 添加按钮之间的间距 */
+	     transition: background-color 0.3s, box-shadow 0.3s; 
+	     text-align: center; 
+	     width: 180px; /* 设置按钮宽度 */
+		 display: none;
+	 }
+	 
+	 #appleid-signin {
+		 height: 40px;
+	     background-color: #000000; /* 黑色背景 */
+	 }
+	 
+	 #google_btn {
+	     /* background-color: #4285F4; /* 蓝色背景 */ 
+	 }
+	 
+	 #loginBtn {
+		justify-content: space-between; /* 水平方向上内容两端对齐，图标在左 */
+		font-size: 16px;
+		cursor: pointer;
+		background-color: #1a73e8;
+		border-radius: 4px;
+		height: 40px; /* 设置按钮高度 */
+		width: 180px;
+		display: flex; /* 居中内容 */
+		align-items: center;
+		color: white; 
+		text-align: center;
+		transition: background-color 0.3s, box-shadow 0.3s;
+	 }
+	 
+	 .icon-container {
+	     /* 图标容器设置宽度，确保图标不会超出按钮框的左边界 */
+	     width: 30px; /* 图标宽度，根据实际图标大小调整 */
+	     height: 30px; /* 图标高度，根据实际图标大小调整 */
+	     display: flex; /* 使用flex布局 */
+	 }
+	 
+	 .text-container {
+	     /* 文字容器设置flex: 1，这样它会填充剩余的空间 */
+	     flex: 1; /* 让文字容器填充剩余的空间 */
+	     text-align: center; /* 文字居中 */
+	 }
+
+	 
+	 /* 鼠标悬停效果 */
+	 #appleid-signin:hover, #google_btn:hover, #loginBtn:hover {
+	     background-color: #0b5ada; 
+	     box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2); 
+	 }
+	 
+	 #appleid-signin:focus, #google_btn:focus, #loginBtn:focus {
+	     outline: none;
+	     box-shadow: 0 0 0 2px #1a73e8; 
+	 }
+	 
+	.right_qrcode_div {
+		position: fixed; /* 使用固定定位 */
+		top: 50%;
+		left: 50%; 
+		transform: translate(-50%, -50%); /* 通过变换偏移自身宽度和高度的一半，实现完全居中 */
+		text-align: center;
+		width: 200px;
+		height: 200px;
+		background-color: #FFFFFF;
+		z-index: 1000; /* 设置较高的z-index使其在最上层 */
+		margin: 0; /* 移除原有的上边距 */
+		display: none; 
+	}
+
+	.right_qrcode_div img {
+		width: 100%;
+		height: auto;
+	}
+	/* 遮罩层样式 */
+	.overlay {
+		position: fixed;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		background-color: rgba(20, 21, 25, 0.5); /* 与body背景颜色相同，但透明度更高 */
+		display: none; /* 默认不显示 */
+		z-index: 999;
+	}
+
+</style>
+
+

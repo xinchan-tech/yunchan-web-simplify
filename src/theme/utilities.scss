@@ -1,0 +1,49 @@
+@layer utilities {
+  .border-style-primary {
+    @apply border border-solid border-border;
+  }
+
+  .border-b-primary {
+    border-bottom: 1px solid hsl(var(--border));
+  }
+
+  .border-r-primary {
+    border-right: 1px solid hsl(var(--border));
+  }
+
+  .border-l-primary {
+    border-left: 1px solid hsl(var(--border));
+  }
+
+  .border-t-primary {
+    border-top: 1px solid hsl(var(--border));
+  }
+
+  .border-style-secondary {
+    @apply border border-solid border-secondary;
+  }
+
+  .icon-checked {
+    filter: invert(50%) sepia(96%) saturate(6798%) hue-rotate(227deg) brightness(99%) contrast(94%);
+  }
+
+  .border-b-default {
+    border-bottom: 1px solid hsl(var(--border));
+  }
+
+  .box-shadow-dropdown {
+    box-shadow: 0px 4px 4px 0px #00000040;
+  }
+
+  .w-table {
+    width: 1200px;
+  }
+
+  .w-page-content {
+    width: 1200px;
+  }
+
+  .w-page {
+    max-width: 980px;
+  }
+}

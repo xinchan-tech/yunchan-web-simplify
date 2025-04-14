@@ -1,0 +1,31 @@
+@use './theme.scss' as theme;
+
+:export {
+  colorStockGreen: theme.$colorStockGreen;
+  colorStockRed: theme.$colorStockRed;
+  background: theme.$background;
+  foreground: theme.$foreground;
+  muted: theme.$muted;
+  mutedForeground: theme.$mutedForeground;
+  popover: theme.$popover;
+  popoverForeground: theme.$popoverForeground;
+  borderColor: theme.$borderColor;
+  input: theme.$input;
+  card: theme.$card;
+  cardForeground: theme.$cardForeground;
+  primary: theme.$primary;
+  primaryForeground: theme.$primaryForeground;
+  secondary: theme.$secondary;
+  secondaryForeground: theme.$secondaryForeground;
+  accent: theme.$accent;
+  accentForeground: theme.$accentForeground;
+  destructive: theme.$destructive;
+  destructiveForeground: theme.$destructiveForeground;
+  ring: theme.$ring;
+  radius: theme.$radius;
+  activeColor: theme.$active-color;
+  text: theme.$text;
+  textSecondary: theme.$textSecondary;
+  textTertiary: theme.$textTertiary;
+  gray: theme.$gray;
+}

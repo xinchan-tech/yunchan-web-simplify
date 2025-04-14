@@ -1,0 +1,383 @@
+import {
+  type StockExtend,
+  getStockCollectCates,
+  getStockCollects,
+  moveStockCollectBatch,
+  removeStockCollect
+} from '@/api'
+import {
+  Button,
+  CollectCapsuleTabs,
+  JknAlert,
+  JknCheckbox,
+  JknIcon,
+  JknRcTable,
+  type JknRcTableProps,
+  Star,
+  StockView,
+  SubscribeSpan
+} from '@/components'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger
+} from '@/components/ui/dropdown-menu'
+import {
+  useCheckboxGroup,
+  useOptimisticUpdate,
+  useStockQuoteSubscribe,
+  useTableData,
+  useTableRowClickToStockTrading,
+  useToast
+} from '@/hooks'
+import { GoldenPoolManager, GoldenPoolNameEdit } from '@/pages/golden-pool/components/golden-pool-manager'
+import { stockUtils } from '@/utils/stock'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import to from 'await-to-js'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+
+const baseExtends: StockExtend[] = ['total_share', 'basic_index', 'day_basic', 'alarm_ai', 'alarm_all', 'financials']
+
+type TableDataType = ReturnType<typeof stockUtils.toStockWithExt> & {
+  id: string
+}
+
+const GoldenPool = () => {
+  const { toast } = useToast()
+  const queryClient = useQueryClient()
+  const [activeStockCollectCate, setActiveStockCollectCate] = useState('1')
+  const [collectIds, setCollectIds] = useState<string[]>([])
+
+  const { checked, onChange: onCheckChange, setCheckedAll, getIsChecked: isChecked } = useCheckboxGroup([])
+
+  const collects = useQuery({
+    queryKey: [getStockCollects.cacheKey, activeStockCollectCate],
+    queryFn: () =>
+      getStockCollects({
+        cate_id: +activeStockCollectCate,
+        limit: 300,
+        extend: baseExtends
+      })
+  })
+
+  const [list, { setList, onSort }] = useTableData<TableDataType>([], 'symbol')
+
+  useStockQuoteSubscribe(list.map(item => item.symbol))
+
+  useEffect(() => {
+    const stockList =
+      collects.data?.items.map(o => ({
+        ...stockUtils.toStockWithExt(o.stock, {
+          extend: o.extend,
+          name: o.name,
+          symbol: o.symbol
+        }),
+        collect: 1,
+        id: o.id
+      })) ?? []
+
+    setList(stockList)
+
+    // 更新 checked 数组，使其包含表格中所有的 collect_id 集合
+    if (stockList.length > 0) {
+      const allCollectIds = stockList.map(item => item.id)
+      setCollectIds(allCollectIds)
+    }
+  }, [collects.data, setList])
+
+  const onActiveStockChange = (v: string) => {
+    setActiveStockCollectCate(v)
+  }
+
+  const isAllChecked = useMemo(() => {
+    return collectIds.length > 0 && collectIds.every(id => isChecked(id))
+  }, [collectIds, isChecked])
+
+  const handleCheckAll = useCallback(
+    (checked: boolean) => {
+      if (checked) {
+        // 全选：传入所有 collect_id
+        setCheckedAll(collectIds)
+      } else {
+        // 取消全选：传入空数组
+        setCheckedAll([])
+      }
+    },
+    [collectIds, setCheckedAll]
+  )
+
+  const removeFav = useOptimisticUpdate({
+    cacheKey: [getStockCollects.cacheKey, activeStockCollectCate],
+    action: (code: string[]) => {
+      return removeStockCollect({
+        symbols: code,
+        cate_ids: [+activeStockCollectCate || 1]
+      })
+    },
+    onOptimisticUpdate: (code: string[], draft: NonNullable<typeof collects.data>) => {
+      draft.items = draft.items.filter(item => !code.some(c => c === item.symbol))
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [getStockCollectCates.cacheKey] })
+    }
+  })
+
+  const handleRemoveFav = useCallback(
+    (symbol: string[]) => {
+      JknAlert.confirm({
+        content: symbol.length > 1 ? `确定批量取消${symbol.length}支股票收藏?` : '确认取消该股票收藏？',
+        onAction: async action => {
+          if (action === 'confirm') {
+            removeFav.mutate(symbol)
+          }
+          return true
+        }
+      })
+    },
+    [removeFav.mutate]
+  )
+
+  const columns: JknRcTableProps<TableDataType>['columns'] = useMemo(
+    () => [
+      {
+        title: (
+          <div className="inline-flex items-center whitespace-nowrap">
+            <span className="inline-flex items-center">
+              <Star checked={true} onChange={() => handleRemoveFav(list.map(item => item.symbol))} />
+            </span>
+            <span className="mr-3" />
+            <span className="inline-flex items-center">名称代码</span>
+          </div>
+        ),
+        dataIndex: 'name',
+        align: 'left',
+        width: '23.5%',
+        sort: true,
+        render: (_, row) => (
+          <div className="flex items-center h-[33px]">
+            <div className="flex justify-center items-center">
+              <Star checked={true} onChange={() => handleRemoveFav([row.symbol])} />
+            </div>
+            <span className="mr-3" />
+            <StockView name={row.name} code={row.symbol as string} showName />
+          </div>
+        )
+      },
+      {
+        title: '现价',
+        dataIndex: 'close',
+        align: 'left',
+        width: '11.2%',
+        sort: true,
+        render: (_, row) => (
+          <SubscribeSpan.PriceBlink
+            showColor={false}
+            symbol={row.symbol}
+            decimal={2}
+            initValue={row.close}
+            initDirection={stockUtils.isUp(row)}
+          />
+        )
+      },
+      {
+        title: '涨跌幅',
+        dataIndex: 'percent',
+        align: 'left',
+        width: '11.2%',
+        sort: true,
+        render: (_, row) => (
+          <SubscribeSpan.PercentBlink
+            symbol={row.symbol}
+            decimal={2}
+            initValue={stockUtils.getPercent(row)}
+            initDirection={stockUtils.isUp(row)}
+          />
+        )
+      },
+      {
+        title: '成交额',
+        dataIndex: 'turnover',
+        align: 'left',
+        width: '11.2%',
+        sort: true,
+        render: (_, row) => (
+          <SubscribeSpan.TurnoverBlink showColor={false} symbol={row.symbol} decimal={2} initValue={row.turnover} />
+        )
+      },
+      {
+        title: '总市值',
+        dataIndex: 'marketValue',
+        align: 'left',
+        width: '19.5%',
+        sort: true,
+        render: (_, row) => (
+          <SubscribeSpan.MarketValue
+            showColor={false}
+            symbol={row.symbol}
+            decimal={2}
+            initValue={stockUtils.getMarketValue(row)}
+            totalShare={row.totalShare ?? 0}
+          />
+        )
+      },
+      {
+        title: '所属行业',
+        dataIndex: 'industry',
+        align: 'left',
+        sort: true,
+        render: (_, row) => <span className="text-[14px]">{row.industry}</span>
+      },
+      {
+        title: (
+          <div className="flex items-center justify-end pr-1">
+            <JknCheckbox className="w-5 h-5" checked={isAllChecked} onCheckedChange={handleCheckAll} />
+          </div>
+        ),
+        dataIndex: 'check',
+        align: 'right',
+        width: '5%',
+        render: (_, row) => (
+          <div className="flex items-center justify-end pr-1" onClick={e => e.stopPropagation()} onKeyDown={() => {}}>
+            <JknCheckbox
+              className="w-5 h-5"
+              checked={isChecked(row.id)}
+              onCheckedChange={v => onCheckChange(row.id, v)}
+            />
+          </div>
+        )
+      }
+    ],
+    [isAllChecked, handleRemoveFav, isChecked, list, onCheckChange, handleCheckAll]
+  )
+
+  const onRowClick = useTableRowClickToStockTrading('symbol')
+
+  const GoldenPoolCateList = ({ checked, onUpdate }: { checked: string[]; onUpdate: () => void }) => {
+    const cates = useQuery({
+      queryKey: [getStockCollectCates.cacheKey],
+      queryFn: () => getStockCollectCates()
+    })
+
+    const moveToGoldenPool = async (cateId: string) => {
+      if (checked.length === 0) {
+        toast({ description: '请先选择股票' })
+        return
+      }
+
+      const [err] = await to(
+        moveStockCollectBatch({
+          collect_ids: checked.map(id => Number(id)),
+          cate_ids: [Number(cateId)]
+        })
+      )
+
+      if (err) {
+        toast({ description: err.message })
+        return
+      }
+
+      toast({ description: '移动成功' })
+
+      onUpdate?.()
+    }
+
+    if (cates.isLoading || !cates.data) {
+      return null
+    }
+
+    return (
+      <>
+        {cates.data.map(cate => (
+          <DropdownMenuItem key={cate.id} onClick={() => moveToGoldenPool(cate.id)}>
+            {cate.name}
+          </DropdownMenuItem>
+        ))}
+      </>
+    )
+  }
+
+  return (
+    <div className="h-full w-full overflow-hidden flex justify-center bg-black">
+      <div className="h-full overflow-hidden flex flex-col w-table pt-[40px] golden-pool">
+        <div className="flex items-center justify-center flex-shrink-0">
+          <div className="flex-1 overflow-x-auto pl-2">
+            <CollectCapsuleTabs activeKey={activeStockCollectCate} onChange={onActiveStockChange} />
+          </div>
+          <div className="text-secondary">
+            <GoldenPoolManager />
+          </div>
+        </div>
+        <div className="flex items-center justify-end flex-shrink-0">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="h-9 mr-4 px-5 border-[#2E2E2E] text-[#808080]">
+                移动至
+                <JknIcon.Svg name="arrow-down" size={8} className="" color="#808080" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-40 bg-[#1F1F1F] text-[#B8B8B8] [&>*:hover]:bg-[#2E2E2E]">
+              <div className="relative" onClick={e => e.stopPropagation()} onKeyDown={() => {}}>
+                <GoldenPoolNameEdit
+                  onUpdate={() => {
+                    queryClient.invalidateQueries({ queryKey: [getStockCollectCates.cacheKey] })
+                  }}
+                >
+                  <DropdownMenuItem
+                    onSelect={e => {
+                      // 阻止 DropdownMenu 的默认关闭行为
+                      e.preventDefault()
+                    }}
+                  >
+                    <span>新建分组</span>
+                  </DropdownMenuItem>
+                </GoldenPoolNameEdit>
+              </div>
+              <DropdownMenuSeparator className="bg-[#2E2E2E]" />
+              <GoldenPoolCateList
+                checked={checked}
+                onUpdate={() => {
+                  collects.refetch()
+                  queryClient.invalidateQueries({ queryKey: [getStockCollectCates.cacheKey] })
+                }}
+              />
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+        <div className="flex-1 overflow-hidden">
+          <JknRcTable
+            headerHeight={48}
+            isLoading={collects.isLoading}
+            rowKey="symbol"
+            columns={columns}
+            data={list}
+            onRow={onRowClick}
+            onSort={onSort}
+          />
+        </div>
+        <style jsx>
+          {`
+            .golden-pool :global(.ant-checkbox-inner) {
+              border-color: var(--text-tertiary-color);
+            }
+
+            .golden-pool :global(.ant-checkbox-checked .ant-checkbox-inner) {
+              border-color: #388bff;
+            }
+        `}
+        </style>
+        <style jsx global>
+          {`
+          .golden-pool .rc-table th {
+            padding-top: 20px;
+            padding-bottom: 20px;
+          }
+        `}
+        </style>
+      </div>
+    </div>
+  )
+}
+
+export default GoldenPool

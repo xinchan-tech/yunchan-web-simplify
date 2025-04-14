@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Coiling WebAssembly Test</title>
+</head>
+<body>
+    <h1>缠论计算测试</h1>
+    <input type="text" name="ticker" placeholder="股票代码">
+    <input type="text" name="interval" placeholder="周期">
+    <button type="button" id="calc_btn">计算</button>
+    <script src="coiling.js"></script>
+    <script src="jquery-3.4.1.min.js"></script>
+    <script>
+
+        CoilingModule().then(Module => {
+            $('#calc_btn').on('click', function () {
+                const ticker = $('input[name=ticker]').val();
+                const interval = $('input[name=interval]').val();
+
+                console.log($('input[name=ticker]').val());
+
+                $.ajax({
+                    url: 'https://us.mgjkn.com/stock/chart?ticker=' + ticker + '&interval=' + interval + '&start_at=2023-10-29&_tr=1737517264_316756&gzencode=false',
+                    dataType: 'json',
+                    success(res) {
+                        if (res.status == 1) {
+                            var candlesticks = res.data.history;
+                            for (let i = 0; i < candlesticks.length; i++) {
+                                candlesticks[i][0] = Math.floor(Date.parse(candlesticks[i][0]) / 1000)
+                            }
+                            // console.log(candlesticks.length);
+
+                            // 调用 WebAssembly 函数 coiling_calculate
+                            const start = performance.now();
+                            const result = Module.coiling_calculate(candlesticks, candlesticks.length, interval);
+                            const end = performance.now();
+
+                            // 计算耗时
+                            const timeElapsed = end - start;
+                            console.log(`C++ 函数调用耗时：${timeElapsed} 毫秒`);
+
+                            // 输出结果
+                            console.log(result);
+                        }
+                    },
+                    error() {
+                        console.log('error');
+                    }
+                })
+            })
+
+        });
+
+        
+     
+    </script>
+</body>
+</html>

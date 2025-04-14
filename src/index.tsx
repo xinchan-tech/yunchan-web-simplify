@@ -1,0 +1,39 @@
+import ReactDOM from 'react-dom/client'
+import { scan } from 'react-scan'
+import '@/plugins/dayjs-plugin'
+import '@/utils/i18n'
+import { QueryClientProvider } from '@tanstack/react-query'
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
+import { StrictMode, Suspense } from 'react'
+import '@/plugins/decimal-plugin'
+import {} from '@/utils/stock'
+import { RouterProvider } from 'react-router'
+import { router } from './router'
+import './app.scss'
+import { queryClient } from './utils/query-client.ts'
+import { IndicatorUtils } from './utils/coiling/index.ts'
+
+if (typeof window !== 'undefined' && import.meta.env.MODE === 'development') {
+  scan({
+    enabled: true
+    // log: true, // logs render info to console (default: false)
+  })
+}
+// initDataSource()
+
+IndicatorUtils.init()
+
+const rootEl = document.getElementById('root')
+if (rootEl) {
+  const root = ReactDOM.createRoot(rootEl)
+  root.render(
+    <StrictMode>
+      <QueryClientProvider client={queryClient}>
+        <Suspense fallback={<div />}>
+          <RouterProvider router={router} />
+        </Suspense>
+        <ReactQueryDevtools initialIsOpen={false} />
+      </QueryClientProvider>
+    </StrictMode>
+  )
+}

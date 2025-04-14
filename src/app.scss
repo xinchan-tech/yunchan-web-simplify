@@ -1,0 +1,334 @@
+@use '@/theme/utilities';
+@use '@/theme/theme' as theme;
+@use '@/theme/table';
+@use '@/theme/chart';
+@use '@/theme/home';
+@use 'sass:math';
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+
+  /**
+   * Base theme colors
+   * TODO: HSL to HEX
+   */
+  :root {
+    /** 股票绿色 */
+    --color-stock-green: #{theme.$colorStockGreen};
+    /** 股票红色 */
+    --color-stock-red: #{theme.$colorStockRed};
+    --background: 0 0% 100%;
+    --foreground: 0 0% 100%;
+    --muted: 210 40.0% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --popover: 225 9% 9%;
+    --popover-foreground: 0 0% 100%;
+    --border: 0 0% 20%;
+    --input: 0 0 20%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 47.4% 11.2%;
+    --primary: 224 100% 58%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 225 9% 9%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 354 100% 60%;
+    --destructive-foreground: 210 40% 98%;
+    --ring: 215 20.2% 65.1%;
+    --radius: 0.25rem;
+    --active-color: 229 91% 58%;
+    --stock-up-color: var(--color-stock-green);
+    --stock-down-color: var(--color-stock-red);
+    --text: 0 0% 100%;
+    --text-secondary: 0 0% 72%;
+  }
+
+  .dark {
+    /**
+      * Dark theme colors
+      */
+    --background: 0 0% 6%;
+    --foreground: 0 0% 86%;
+    --muted: 0 0% 12%;
+    --muted-foreground: 0 0% 100%;
+    --accent: 0 0% 18%;
+    --accent-foreground: 210 40% 98%;
+    --popover: 0 0% 12%;
+    --popover-foreground: var(--foreground);
+    --border: 0 0% 24%;
+    --input: 227 8% 34%;
+    --card: 224 71% 4%;
+    --card-foreground: 213 31% 91%;
+    --secondary: 222.2 47.4% 11.2%;
+    --secondary-foreground: 210 40% 98%;
+    --destructive: 354 100% 60%;
+    --destructive-foreground: 210 40% 98%;
+    --dialog-border: 0 0% 13.73%;
+    --ring: 216 34% 17%;
+    --radius: 0.5rem;
+    --active-color: 229 91% 58%;
+    --text-secondary: 0 0% 72.16%;
+    --text-tertiary: 0 0% 40%;
+    --table: var(--muted);
+    --table-header: 220 5% 12%;
+    --chat-background: #141414;
+  }
+}
+
+.stock-color-reverse {
+  --stock-up-color: var(--color-stock-red);
+  --stock-down-color: var(--color-stock-green);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+html {
+  font-size: 16px;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Segoe UI", Helvetica, Arial, "PingFang SC", "Microsoft YaHei", "WenQuanYi Micro Hei", sans-serif;
+}
+
+* {
+  user-select: none;
+  -moz-user-select: none;
+  -webkit-user-select: none;
+}
+
+body {
+  margin: 0;
+  color: hsl(var(--foreground));
+  overflow-y: hidden;
+  overflow-x: auto;
+  font-size: 16px;
+
+  :focus-visible {
+    outline: none;
+  }
+}
+
+#root {
+  overflow-y: hidden;
+}
+
+:root {
+  //涨幅颜色
+  scrollbar-width: 'thin';
+  scrollbar-gutter: 'stable';
+}
+
+// 隐藏全局scrollbar
+::-webkit-scrollbar {
+  display: none;
+}
+
+.stock-blink {
+  animation-duration: 0.3s;
+
+  &[data-blink="up"] {
+    animation-name: stock-blink-up;
+  }
+
+  &[data-blink="down"] {
+    animation-name: stock-blink-down;
+  }
+}
+
+.rc-table-cell {
+  animation-duration: 0.3s;
+
+  &[data-blink="up"] {
+    animation-name: stock-blink-up;
+  }
+
+  &[data-blink="down"] {
+    animation-name: stock-blink-down;
+  }
+}
+
+.stock-blink-gradient {
+  animation-duration: 0.3s;
+
+  &[data-blink="up"] {
+    animation-name: stock-blink-gradient-up;
+  }
+
+  &[data-blink="down"] {
+    animation-name: stock-blink-gradient-down;
+  }
+}
+
+@keyframes stock-blink-up {
+  0% {
+    background: transparent;
+  }
+
+  50% {
+    background: hsl(var(--stock-up-color) / 0.2);
+  }
+
+  100% {
+    background: transparent;
+  }
+}
+
+@keyframes stock-blink-down {
+  0% {
+    background: transparent;
+  }
+
+  50% {
+    background: hsl(var(--stock-down-color) / 0.2);
+  }
+
+  100% {
+    background: transparent;
+  }
+}
+
+@keyframes stock-blink-gradient-up {
+  0% {
+    background: transparent;
+  }
+
+  50% {
+    background: linear-gradient(-90deg, hsl(var(--stock-up-color) / 0.2), transparent);
+  }
+
+  100% {
+    background: transparent;
+  }
+}
+
+@keyframes stock-blink-gradient-down {
+  0% {
+    background: transparent;
+  }
+
+  50% {
+    background: linear-gradient(-90deg, hsl(var(--stock-down-color) / 0.2), transparent);
+  }
+
+  100% {
+    background: transparent;
+  }
+}
+
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+span[data-direction="up"] {
+  color: hsl(var(--stock-up-color));
+}
+
+span[data-direction="down"] {
+  color: hsl(var(--stock-down-color));
+}
+
+div[data-direction-bg="up"] {
+  background: hsl(var(--stock-up-color));
+
+  span[data-direction-sign="true"]::before {
+    content: "+";
+  }
+}
+
+div[data-direction-bg="down"] {
+  background: hsl(var(--stock-down-color));
+}
+
+div[data-direction-nan="true"] {
+  background: transparent;
+}
+
+span[data-direction-show="false"][data-direction] {
+  color: inherit;
+}
+
+span[data-direction-sign="true"][data-direction="up"]::before {
+  content: "+";
+}
+
+.capsule-tabs .capsule-tab-item[data-type="text"][data-checked="true"]::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  border-radius: 30px;
+  background: currentColor;
+}
+
+.tabs-item-line {
+  &[data-state="active"]::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    border-radius: 30px;
+    background: currentColor;
+  }
+}
+
+.tiptap.ProseMirror {
+  p {
+    margin: 0;
+  }
+}
+
+.chat-text-item {
+  a,
+  a:link,
+  a:visited,
+  a:hover,
+  a:active {
+    text-decoration: none;
+    color: #8CABFF;
+  }
+}
+
+.chat-message-scroll-list {
+  .scroll-area-viewport > div {
+    display: block !important;
+  }
+}
+
+.jkn-dialog{
+  div[data-orientation="vertical"][data-state="visible"] {
+    opacity: 0.75;
+  }
+}
+
+.react-viewer-mask {
+  background-color: rgba(0, 0, 0, 0.8) !important;
+}
+
+a,
+a:link,
+a:visited,
+a:hover,
+a:active {
+  text-decoration: none;
+  color: currentColor;
+}
