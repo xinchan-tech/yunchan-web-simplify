@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.2.2](https://github.com/xinchan-gx/yunchan-web/compare/2.2.1...2.2.2) (2025-04-14)
+
+### ✨ Features | 新功能
+
+* 更新API参数，优化股票订阅逻辑，调整表格组件样式和功能 ([241558d](https://github.com/xinchan-gx/yunchan-web/commit/241558d58c4bae25a01bd8d00236cc3984fdb488))
+* 添加DndKit库支持，实现股票金池的拖拽排序功能，优化订阅页面的支付状态验证 ([46c3fcc](https://github.com/xinchan-gx/yunchan-web/commit/46c3fcca6c43bf95bf0888cfd6fd14080a4835b7))
+* 移除@preact/signals-react依赖，更新相关类型定义，优化表格组件的排序逻辑 ([48c7d38](https://github.com/xinchan-gx/yunchan-web/commit/48c7d38f8348b3ecbc7fd94610b775beef191333))
+
 ## [2.2.1](https://github.com/xinchan-gx/yunchan-web/compare/2.2.0...2.2.1) (2025-04-14)
 
 ### 🐛 Bug Fixes | Bug 修复
