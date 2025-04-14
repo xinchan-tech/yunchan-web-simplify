@@ -762,7 +762,7 @@ type GetUsStocksResult = {
  * 全部美股
  */
 export const getUsStocks = async (params: GetUsStocksParams) => {
-  const r = await request.get<GetUsStocksResult>('/stock/cutom/getUsStocks', { params: params }).then(r => r.data)
+  const r = await request.get<GetUsStocksResult>('/stock-svc/stocks', { params: params }).then(r => r.data)
   return r
 }
 getUsStocks.cacheKey = 'stock:cutom:getUsStocks'

@@ -151,9 +151,10 @@ export type StockSubscribeHandler<T extends SubscribeActionType> = T extends 'ba
   : T extends 'quoteTopic'
     ? (data: ReturnType<typeof quoteActionResultParser>) => void
     : T extends 'quote'
-      ? (data: QuoteBuffer) => void 
-      : T extends 'rank_subscribe' ? (data: ReturnType<typeof rankActionResultParser>) => void
-      : (data: ReturnType<typeof snapshotActionResultParser>) => void 
+      ? (data: QuoteBuffer) => void
+      : T extends 'rank_subscribe'
+        ? (data: ReturnType<typeof rankActionResultParser>) => void
+        : (data: ReturnType<typeof snapshotActionResultParser>) => void
 
 export type SubscribeActionType = 'bar' | 'quote' | '' | 'snapshot' | 'quoteTopic' | 'rank_subscribe'
 
@@ -233,7 +234,7 @@ class StockSubscribe {
             this.rankBuffer[parserData.topic] = parserData
             return
           }
-          
+
           if (data.b) {
             const parserData = barActionResultParser(data)
             this.buffer.push({ action: parserData.topic, data: parserData })
@@ -349,7 +350,7 @@ class StockSubscribe {
   /**
    * 订阅排行榜
    */
-  public subscribeRank(params: {key: RankSortKey, sort: OrderSort, limit: string}) {
+  public subscribeRank(params: { key: RankSortKey; sort: OrderSort; limit: string }) {
     const action = 'rank_subscribe'
 
     this.ws.send({
@@ -361,7 +362,7 @@ class StockSubscribe {
 
   public unsubscribeRank() {
     const action = 'rank_unsubscribe'
-    if(!this) return
+    if (!this) return
     this.ws.send({
       action: action,
       cid: this.cid
@@ -389,27 +390,34 @@ class StockSubscribe {
     }
 
     return () => {
-      this.unsubscribeSnapshot(symbol)
+      this.cleanSnapshot(symbol)
+    }
+  }
+
+  /**
+   * 清除快照订阅，不发送ws
+   */
+  private cleanSnapshot(symbol: string) {
+    const topic = `snapshot:${symbol}`
+    if (this.subscribeTopic[topic]) {
+      this.subscribeTopic[topic].count--
     }
   }
 
   /**
    * 取消快照订阅
    */
-  private unsubscribeSnapshot(symbol: string) {
-    const topic = `snapshot:${symbol}`
-    if (this.subscribeTopic[topic]) {
-      this.subscribeTopic[topic].count--
-    }
+  public unsubscribeSnapshot() {
+    Object.keys(this.subscribeTopic).forEach(key => {
+      if (key.startsWith('snapshot')) {
+        delete this.subscribeTopic[key]
+      }
+    })
 
-    if (this.subscribeTopic[topic].count <= 0) {
-      delete this.subscribeTopic[topic]
-      this.ws.send({
-        action: 'snapshot_unsubscribe',
-        cid: this.cid,
-        params: symbol
-      })
-    }
+    this.ws.send({
+      action: 'snapshot_unsubscribe',
+      cid: this.cid
+    })
   }
 
   /**

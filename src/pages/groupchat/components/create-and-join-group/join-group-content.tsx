@@ -34,23 +34,15 @@ type GroupCategory = {
 export const JoinGroupContent = (props: { onSuccess: () => void; type?: string }) => {
   const [currentCategory, setCurrentCategory] = useState<GroupCategoryValue>('1')
   const [keywords, setKeywords] = useState<string>()
-  const { conversationWraps } = useGroupChatShortStore()
   const [curGroupData, setCurGroupData] = useState<GroupData | null>(null)
   const { toast } = useToast()
-  console.log(111)
-  const category: GroupCategory[] = [
-    {
-      label: '热门',
-      value: '1'
-    }
-  ]
 
   const option = {
     queryKey: [getChatChannels.cacheKey, currentCategory, keywords],
     queryFn: () => {
       let params: getChatChannelsParams = {
         type: currentCategory,
-        keywords
+        account: keywords
       }
       if (props.type === 'change') {
         if (!keywords) {
@@ -59,7 +51,7 @@ export const JoinGroupContent = (props: { onSuccess: () => void; type?: string }
 
         params = {
           type: currentCategory,
-          re_code: keywords
+          account: keywords
         }
       }
       return getChatChannels(params)
@@ -68,14 +60,6 @@ export const JoinGroupContent = (props: { onSuccess: () => void; type?: string }
   const [openJoinMask, setOpenJoinMask] = useState(false)
 
   const { data, isFetching } = useQuery(option)
-
-  const judgeIsJoined = (account: string) => {
-    let res = false
-    if (Array.isArray(conversationWraps) && conversationWraps.length > 0) {
-      res = conversationWraps.some(wrap => wrap.channel.channelID === account)
-    }
-    return res
-  }
 
   const [changeGroupLoading, setChangeGroupLoading] = useState(false)
   const handleChangeGroup = (data: GroupChannelItem) => {
@@ -105,47 +89,12 @@ export const JoinGroupContent = (props: { onSuccess: () => void; type?: string }
           <JknIcon name="hot-fire" />
           <span>热门</span>
           <JknSearchInput
-            rootClassName="border border-solid rounded-lg border-border text-tertiary w-[324px] ml-auto"
+            rootClassName="border border-solid rounded-lg border-border text-tertiary w-[324px] ml-auto bg-transparent"
             className="placeholder:text-secondary"
             placeholder={props.type === 'change' ? '请输入邀请码' : '请输入群名称'}
             onSearch={v => setKeywords(v)}
           />
         </div>
-        {/* <div className="flex justify-center">
-          <div className=" border-dialog-border rounded-sm  bg-accent top-area-search  w-[600px]">
-            <Input
-              className="border-none placeholder:text-tertiary"
-              placeholder={props.type === 'change' ? '请输入邀请码' : '请输入群名称'}
-              onKeyDown={e => {
-                if (e.key === 'Enter') {
-                  setKeywords(e.currentTarget.value)
-                }
-              }}
-              size={'sm'}
-            />
-          </div>
-        </div> */}
-        {/* {props.type !== 'change' && (
-          <div className="flex tag-conts">
-            {category.map((item: GroupCategory) => (
-              <div
-                onClick={() => {
-                  setCurrentCategory(item.value)
-                }}
-                onKeyDown={event => {
-                  if (event.key === 'Enter' || event.key === ' ') {
-                    // Enter or Space key
-                    setCurrentCategory(item.value)
-                  }
-                }}
-                key={item.value}
-                className={cn('mr-4 tag-cont-item', item.value === currentCategory && 'tag-active')}
-              >
-                {item.label}
-              </div>
-            ))}
-          </div>
-        )} */}
       </div>
       <div className="bottom-area">
         {(data || []).map((channel: GroupChannelItem) => {
@@ -190,7 +139,6 @@ export const JoinGroupContent = (props: { onSuccess: () => void; type?: string }
         }
         .top-area {
           height: 50px;
-          background-color: rgb(20, 21, 25);
           border-bottom: 1px solid hsl(var(--border));
         }
         .top-area-search {
