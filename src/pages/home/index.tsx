@@ -1,12 +1,13 @@
 import AndroidDownload from '@/assets/image/android-download.png'
 import IosDownload from '@/assets/image/ios-download.png'
 import LogoTitle from '@/assets/image/logo-title-sm.png'
-import PcDownload from '@/assets/image/pc-download.png'
-import { JknIcon, StockSelect } from '@/components'
+import ApkDownload from '@/assets/image/apk-download.png'
+import { JknAlert, JknIcon, StockSelect } from '@/components'
 import { HeaderSetting } from '@/components/header/setting'
 import { useToken, useUser } from '@/store'
 import { cn } from "@/utils/style"
 import { Link, Outlet, useLocation, useNavigate } from 'react-router'
+import { sysConfig } from "@/utils/config"
 
 const HomePage = () => {
   const hasAuthorized = useUser(s => s.hasAuthorized())
@@ -20,6 +21,10 @@ const HomePage = () => {
 
   const gotoDashboard = () => {
     navigate('/home')
+  }
+
+  const toast = () => {
+    JknAlert.toast('即将推出，敬请期待')
   }
 
   return (
@@ -39,6 +44,9 @@ const HomePage = () => {
           <Link to="/stock?symbol=QQQ" className="home-navigate-item hover:text-primary">
             行情
           </Link>
+          <a href="#download" className="home-navigate-item hover:text-primary">
+            下载
+          </a>
         </div>
         <div className="flex items-center space-x-4">
           {token ? (
@@ -84,16 +92,24 @@ const HomePage = () => {
             <Link to="/mall">反馈安全漏洞</Link>
           </div>
           <div className="home-footer-item flex flex-col space-y-1">
-            <p className="text-white text-xl">下载</p>
-            {/* <Link to="/home">
-              <img src={PcDownload} alt="logo" className="h-[46px] w-[196px]" />
-            </Link> */}
-            <Link to="/home">
+            <p className="text-white text-xl" id="download">下载</p>
+            {
+              sysConfig.OS === 'ios' ? (
+                <span onClick={() => JknAlert.toast('iOS 版本即将推出，敬请期待')} onKeyDown={() => { }}>
+                  <img src={ApkDownload} alt="logo" className="h-[46px] w-[196px]" />
+                </span>
+              ) : (
+                <a href="https://xinmei-downloads.s3.us-east-1.amazonaws.com/todaychart_v1.0.0.apk">
+                  <img src={ApkDownload} alt="logo" className="h-[46px] w-[196px]" />
+                </a>
+              )
+            }
+            <span onClick={toast} onKeyDown={() => { }}>
               <img src={AndroidDownload} alt="logo" className="h-[46px] w-[196px]" />
-            </Link>
-            <Link to="/home">
+            </span>
+            <span onClick={toast} onKeyDown={() => { }}>
               <img src={IosDownload} alt="logo" className="h-[46px] w-[196px]" />
-            </Link>
+            </span>
           </div>
         </div>
       </div>
