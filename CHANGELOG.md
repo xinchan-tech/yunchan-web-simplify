@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.2.0](https://github.com/xinchan-gx/yunchan-web/compare/2.1.1...2.2.0) (2025-04-14)
+
+### ✨ Features | 新功能
+
+* 更新AlarmStockPicker组件，添加股票基本信息查询，优化样式和功能 ([2612f55](https://github.com/xinchan-gx/yunchan-web/commit/2612f559f6656778d9e93d718e366665a3d9cd28))
+* 添加测试环境配置文件，包含API和WebSocket URL ([8691054](https://github.com/xinchan-gx/yunchan-web/commit/8691054a74d57e0d0d5d4220dfe5fe39fc618b63))
+* update header user component to display environment info in non-production builds ([7ebd731](https://github.com/xinchan-gx/yunchan-web/commit/7ebd73115770245eaf5fa5d63f7119c687d8812b))
+
 ## [2.1.1](https://github.com/xinchan-gx/yunchan-web/compare/2.1.0...2.1.1) (2025-04-11)
 
 ### ✨ Features | 新功能
