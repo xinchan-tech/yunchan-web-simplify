@@ -137,7 +137,7 @@ export const CoilingBar = () => {
 
   return (
     <>
-      {!system
+      {system
         ? coilingList?.map(c => {
           const render = () => {
             switch (c.id) {
