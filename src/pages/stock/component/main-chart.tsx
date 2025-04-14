@@ -358,8 +358,7 @@ export const MainChart = (props: MainChartProps) => {
       }
     })
 
-    const cancelYAxisChange = chartEvent.on('yAxisChange', type => {
-      console.log('yAxisChange', type)
+  const cancelYAxisChange = chartEvent.on('yAxisChange', type => {
       if (type.left) {
         chartImp.current?.setAxisType('double')
       } else if (type.right === MainYAxis.Percentage) {

@@ -110,6 +110,7 @@ type PaymentBillProduct = {
   platform: string
   create_time: string
   status_text: string
+  order_sn: string
   subscribe_status_text: string
 }
 

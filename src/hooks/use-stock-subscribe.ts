@@ -67,6 +67,10 @@ export const useSnapshot = (symbol: string, handler: StockSubscribeHandler<'snap
   useEffect(() => {
     if (!symbol) return
     unSubscribe.current = stockSubscribe.subscribe('snapshot', [symbol])
+
+    return () => {
+      unSubscribe.current?.()
+    }
   }, [symbol])
 
   useEffect(() => {
@@ -76,7 +80,7 @@ export const useSnapshot = (symbol: string, handler: StockSubscribeHandler<'snap
   }, [handler])
 
   useUnmount(() => {
-    unSubscribe.current?.()
+    stockSubscribe.unsubscribeSnapshot()
   })
 }
 
@@ -90,6 +94,11 @@ export const useSnapshotOnce = (symbol: string, handler: StockSubscribeHandler<'
     const unsubscribe = stockSubscribe.subscribe('snapshot', [symbol])
     unSubscribe.current = unsubscribe
     once.current = 0
+
+
+    return () => {
+      unsubscribe()
+    }
   }, [symbol])
 
   useEffect(() => {
@@ -106,6 +115,6 @@ export const useSnapshotOnce = (symbol: string, handler: StockSubscribeHandler<'
   }, [handler, symbol])
 
   useUnmount(() => {
-    unSubscribe.current?.()
+    stockSubscribe.unsubscribeSnapshot()
   })
 }

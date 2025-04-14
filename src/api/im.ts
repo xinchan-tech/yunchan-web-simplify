@@ -6,7 +6,7 @@ export type getChatChannelsParams = {
   keywords?: string
   page?: string
   'order[price]'?: 'ASC' | 'DESC'
-  re_code?: string
+  account?: string
 }
 
 export type GroupChannelItem = {

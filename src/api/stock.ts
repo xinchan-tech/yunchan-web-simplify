@@ -527,6 +527,7 @@ type GetStockCollectsResult = {
     id: string
     symbol: string
     name: string
+    sort: number
     create_time: string
     stock: StockRawRecord
     extend?: Record<StockExtendResult, unknown>
@@ -698,6 +699,13 @@ export const sortStockCollectCate = (id: string, sort: number) => {
 }
 
 /**
+ * 股票金池排序
+ */
+export const sortStockCollect = (id: string, sort: number) => {
+  return request.post<void>(`/stock-svc/collect/stocks/${id}/setSort`, { sort }).then(r => r.data)
+}
+
+/**
  * 股票：symbol
  * 现价：'close',
  * 成交额： 'amount',
@@ -754,7 +762,7 @@ type GetUsStocksResult = {
  * 全部美股
  */
 export const getUsStocks = async (params: GetUsStocksParams) => {
-  const r = await request.get<GetUsStocksResult>('/stock/cutom/getUsStocks', { params: params }).then(r => r.data)
+  const r = await request.get<GetUsStocksResult>('/stock-svc/stocks', { params: params }).then(r => r.data)
   return r
 }
 getUsStocks.cacheKey = 'stock:cutom:getUsStocks'

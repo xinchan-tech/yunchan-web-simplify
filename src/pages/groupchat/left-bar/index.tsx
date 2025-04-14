@@ -48,7 +48,7 @@ const GroupChatLeftBar = (props: {
   }, [setUser])
 
   const onChannelChange = () => {
-    if (user?.in_channel_status !== '1') return
+    // if (user?.in_channel_status !== '1') return
 
     changeGroupModal.modal.open()
   }

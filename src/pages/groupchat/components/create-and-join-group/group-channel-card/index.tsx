@@ -94,8 +94,8 @@ const GroupChannelCard = (props: {
       </div>
       <div className="group-price">
         <div className="flex w-full justify-center mb-2  items-baseline">
-          <span className="text-2xl font-bold">${data.price}</span>
-          <span className="text-sm">/月</span>
+          {/* <span className="text-2xl font-bold">${data.price}</span>
+          <span className="text-sm">/月</span> */}
         </div>
         <div className="flex w-full justify-center ">
           <Button

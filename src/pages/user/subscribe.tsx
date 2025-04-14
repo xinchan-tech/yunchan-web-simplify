@@ -32,10 +32,22 @@ const Subscribe = () => {
     onSuccess: () => {
       bills.refetch()
     },
-    onError: (err) => {
+    onError: () => {
 
     }
   })
+
+  const isValidPayment = (item: ArrayItem<NonNullable<typeof bills.data>['product']>) => {
+    if (calcExpireDay(item.expire_time) === '已过期') {
+      return false
+    }
+
+    if (item.subscribe_status === '3' || item.subscribe_status === '1') {
+      return false
+    }
+
+    return true
+  }
 
   return (
     <div className="h-full overflow-hidden flex flex-col text-white">
@@ -54,7 +66,7 @@ const Subscribe = () => {
                     </div>
                     <div className="text-[#808080] text-sm"> 到期时间: {dayjs(+item.expire_time * 1000).format('YYYY/MM/DD')}</div>
                     {
-                      item.status === '2' ? (
+                      isValidPayment(item) ? (
                         <div className="mt-5 space-x-2.5">
                           {
                             item.name !== '国王版' ? (
@@ -62,7 +74,11 @@ const Subscribe = () => {
                             ) : null
                           }
 
-                          <Button size="lg" variant="outline" className="h-[42px] rounded-[6px] w-[96px]" loading={cancel.isPending} onClick={() => cancel.mutate(item.id)}>取消订阅</Button>
+                          {
+                            item.subscribe_status !== '0' ? (
+                              <Button size="lg" variant="outline" className="h-[42px] rounded-[6px] w-[96px]" loading={cancel.isPending} onClick={() => cancel.mutate(item.id)}>取消订阅</Button>
+                            ) : null
+                          }
                         </div>
                       ) : null
                     }

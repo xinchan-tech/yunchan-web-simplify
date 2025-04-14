@@ -1,4 +1,4 @@
-import {  getIncreaseTopV2 } from '@/api'
+import { getIncreaseTopV2 } from '@/api'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,7 +10,7 @@ import {
   StockView,
   SubscribeSpan
 } from '@/components'
-import { useStockQuoteSubscribe, useTableRowClickToStockTrading, useTableSortDataWithWs } from '@/hooks'
+import { type SortTableDataTransform, useTableRowClickToStockTrading, useTableSortDataWithWs } from '@/hooks'
 import { useTime } from '@/store'
 import { type StockTrading, stockUtils } from '@/utils/stock'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
@@ -32,12 +32,22 @@ const tradingToKey = (trading: StockTrading) => {
   }
 }
 
+const transform: SortTableDataTransform<TableDataType> = (row, { record }) => {
+  row.close = record.close
+  row.percent = record.percent
+  row.turnover = record.turnover
+  row.marketValue = record.close * (row.totalShare ?? 0)
+  return row
+}
+
 const TopList = () => {
   const trading = useTime(s => s.getTrading())
   const [type, setType] = useState<string>(tradingToKey(trading))
 
   const { t } = useTranslation()
-  const [list, { setList, onSort }] = useTableSortDataWithWs<TableDataType>([], 'symbol', 'symbol')
+  const [list, { setList, onSort }] = useTableSortDataWithWs<TableDataType>([], {
+    transform
+  })
 
   const query = useQuery({
     queryKey: [getIncreaseTopV2.cacheKey, type],
@@ -83,10 +93,8 @@ const TopList = () => {
 
   const onTypeChange = (s: string) => {
     setType(s)
-    queryClient.invalidateQueries({queryKey: [getIncreaseTopV2.cacheKey, s]}).then()
-   }
-
-  useStockQuoteSubscribe(query.data?.map(d => d.symbol) ?? [])
+    queryClient.invalidateQueries({ queryKey: [getIncreaseTopV2.cacheKey, s] }).then()
+  }
 
   const columns: JknRcTableProps<TableDataType>['columns'] = [
     {

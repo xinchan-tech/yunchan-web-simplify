@@ -21,15 +21,6 @@ const Views = () => {
             <CapsuleTabs.Tab label="概念板块" value="concept" />
             <CapsuleTabs.Tab label="ETF" value="etf" />
             <CapsuleTabs.Tab label="中概股" value="china" />
-            {/* <CapsuleTabs.Tab label="纳指成份" value="ixic" /> */}
-            {/* <CapsuleTabs.Tab label="标普成分" value="spx" /> */}
-            {/* <CapsuleTabs.Tab label="道指成分" value="dji" /> */}
-            {/* <CapsuleTabs.Tab label="昨日多强榜↑" value="yesterday_bull" /> */}
-            {/* <CapsuleTabs.Tab label="昨日空强榜↓" value="yesterday_bear" /> */}
-            {/* <CapsuleTabs.Tab label="3日涨幅榜↑" value="short_amp_up" /> */}
-            {/* <CapsuleTabs.Tab label="3日跌幅榜↓" value="short_amp_d" /> */}
-            {/* <CapsuleTabs.Tab label="跳空涨跌榜" value="gap" /> */}
-            {/* <CapsuleTabs.Tab label="昨日放量榜" value="release" /> */}
           </CapsuleTabs>
         </div>
         <div className="flex-1 overflow-hidden">

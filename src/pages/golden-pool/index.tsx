@@ -3,7 +3,8 @@ import {
   getStockCollectCates,
   getStockCollects,
   moveStockCollectBatch,
-  removeStockCollect
+  removeStockCollect,
+  sortStockCollect
 } from '@/api'
 import {
   Button,
@@ -34,6 +35,16 @@ import {
 } from '@/hooks'
 import { GoldenPoolManager, GoldenPoolNameEdit } from '@/pages/golden-pool/components/golden-pool-manager'
 import { stockUtils } from '@/utils/stock'
+import type { DragEndEvent } from '@dnd-kit/core'
+import { DndContext, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
+import { restrictToVerticalAxis } from '@dnd-kit/modifiers'
+import {
+  SortableContext,
+  arrayMove,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import to from 'await-to-js'
 import { useCallback, useEffect, useMemo, useState } from 'react'
@@ -42,6 +53,12 @@ const baseExtends: StockExtend[] = ['total_share', 'basic_index', 'day_basic', '
 
 type TableDataType = ReturnType<typeof stockUtils.toStockWithExt> & {
   id: string
+  sort: number
+}
+
+
+interface RowProps extends React.HTMLAttributes<HTMLTableRowElement> {
+  'data-row-key': string
 }
 
 const GoldenPool = () => {
@@ -75,7 +92,8 @@ const GoldenPool = () => {
           symbol: o.symbol
         }),
         collect: 1,
-        id: o.id
+        id: o.id,
+        sort: o.sort
       })) ?? []
 
     setList(stockList)
@@ -239,7 +257,7 @@ const GoldenPool = () => {
         align: 'right',
         width: '5%',
         render: (_, row) => (
-          <div className="flex items-center justify-end pr-1" onClick={e => e.stopPropagation()} onKeyDown={() => {}}>
+          <div className="flex items-center justify-end pr-1" onClick={e => e.stopPropagation()} onKeyDown={() => { }}>
             <JknCheckbox
               className="w-5 h-5"
               checked={isChecked(row.id)}
@@ -298,6 +316,42 @@ const GoldenPool = () => {
     )
   }
 
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        // https://docs.dndkit.com/api-documentation/sensors/pointer#activation-constraints
+        distance: 1,
+      },
+    }),
+  )
+
+  const onDragEnd = ({ active, over }: DragEndEvent) => {
+    if (active.id !== over?.id) {
+      const activeIndex = list.findIndex((i) => i.id === active.id)
+      const overIndex = list.findIndex((i) => i.id === over?.id)
+      setList(arrayMove(list, activeIndex, overIndex))
+
+      sortStockCollect(active.id as string, overIndex)
+    }
+  }
+
+
+  const Row: React.FC<Readonly<RowProps>> = (props) => {
+    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+      id: props['data-row-key'],
+    })
+
+    const style: React.CSSProperties = {
+      ...props.style,
+      transform: CSS.Translate.toString(transform),
+      transition,
+      cursor: 'move',
+      ...(isDragging ? { position: 'relative', zIndex: 9999 } : {}),
+    }
+
+    return <tr {...props} ref={setNodeRef} style={style} {...attributes} {...listeners} />
+  }
+
   return (
     <div className="h-full w-full overflow-hidden flex justify-center bg-black">
       <div className="h-full overflow-hidden flex flex-col w-table pt-[40px] golden-pool">
@@ -318,7 +372,7 @@ const GoldenPool = () => {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-40 bg-[#1F1F1F] text-[#B8B8B8] [&>*:hover]:bg-[#2E2E2E]">
-              <div className="relative" onClick={e => e.stopPropagation()} onKeyDown={() => {}}>
+              <div className="relative" onClick={e => e.stopPropagation()} onKeyDown={() => { }}>
                 <GoldenPoolNameEdit
                   onUpdate={() => {
                     queryClient.invalidateQueries({ queryKey: [getStockCollectCates.cacheKey] })
@@ -346,15 +400,35 @@ const GoldenPool = () => {
           </DropdownMenu>
         </div>
         <div className="flex-1 overflow-hidden">
-          <JknRcTable
-            headerHeight={48}
-            isLoading={collects.isLoading}
-            rowKey="symbol"
-            columns={columns}
-            data={list}
-            onRow={onRowClick}
-            onSort={onSort}
-          />
+          <DndContext sensors={sensors} modifiers={[restrictToVerticalAxis]} onDragEnd={onDragEnd}>
+            <SortableContext
+              // rowKey array
+              items={list.map(i => i.id)}
+              strategy={verticalListSortingStrategy}
+            >
+              <JknRcTable
+                headerHeight={61}
+                isLoading={collects.isLoading}
+                rowKey="id"
+                components={{
+                  body: { row: Row },
+                }}
+                columns={columns}
+                data={list}
+                onRow={onRowClick}
+                onSort={onSort}
+              />
+              {/* <Table<DataType>
+                components={{
+                  body: { row: Row },
+                }}
+                rowKey="key"
+                columns={columns}
+                dataSource={dataSource}
+              /> */}
+            </SortableContext>
+          </DndContext>
+
         </div>
         <style jsx>
           {`

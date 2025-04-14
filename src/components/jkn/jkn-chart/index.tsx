@@ -237,7 +237,7 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
                 if (axisType === 'normal') {
                   return lastData.close > lastData.prevClose ? upColor : downColor
                 }
-                
+      
                 if (isTimeShare.current){
                   return lastData.close > lastData.prevClose ? upColor : downColor
                 }
@@ -681,7 +681,7 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
             area: {
               lineColor: data => {
                 const postData = data.slice(0, POST_NUMBER + PRE_NUMBER).pop()
-                const lastData = data[data.length]
+                const lastData = data[data.length - 1]
 
                 const lastColor = Decimal.create(lastData?.close).gt(lastData?.prevClose ?? 0) ? upColor : downColor
                 const preColor = data.length > PRE_NUMBER ? '#50535E' : lastColor
@@ -700,7 +700,7 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
               },
               backgroundColor(data) {
                 const postData = data.slice(0, POST_NUMBER + PRE_NUMBER).pop()
-                const lastData = data[data.length]
+                const lastData = data[data.length - 1]
                 const lastColor = Decimal.create(lastData?.close).gt(lastData?.prevClose ?? 0) ? upColor : downColor
 
                 const color = Decimal.create(postData?.close).gt(postData?.prevClose ?? 0) ? upColor : downColor
