@@ -59,8 +59,8 @@ export const MainChart = (props: MainChartProps) => {
     }
 
     if (!renderUtils.shouldUpdateChart(trading, interval)) {
-      if(lastBarInInterval.current){
-        if(trading === 'afterHours' && stockUtils.getTrading(lastBarInInterval.current.timestamp) === 'intraDay'){
+      if (lastBarInInterval.current) {
+        if (trading === 'afterHours' && stockUtils.getTrading(lastBarInInterval.current.timestamp) === 'intraDay') {
           chartImp.current?.appendCandlestick({
             ...lastBarInInterval.current
           }, interval)
@@ -73,12 +73,12 @@ export const MainChart = (props: MainChartProps) => {
 
     if (chartImp.current?.isSameIntervalCandlestick(record, interval)) {
       lastBarInInterval.current = record
-      if(trading === 'intraDay'){
+      if (trading === 'intraDay') {
         chartImp.current?.appendCandlestick({
           ...record,
           close: lastData?.close ?? record.close,
         }, interval)
-      }else{
+      } else {
         chartImp.current?.appendCandlestick({
           ...record
         }, interval)
@@ -122,10 +122,10 @@ export const MainChart = (props: MainChartProps) => {
         close: data.record.close
       }
 
-      if(newData.high < newData.close){
+      if (newData.high < newData.close) {
         newData.high = newData.close
       }
-      if(newData.low > newData.close){
+      if (newData.low > newData.close) {
         newData.low = newData.close
       }
 
@@ -257,12 +257,7 @@ export const MainChart = (props: MainChartProps) => {
       chartManage.setMode('normal')
     })
 
-    // const cancelCoilingEvent = chartEvent.on('coilingChange', ({ type, coiling }) => {
-    //   chartImp.current?.setCoiling(coiling, use)
-    // })
-
     const cancelIntervalEvent = chartEvent.on('intervalChange', async interval => {
-      console.log(interval)
       if (renderUtils.isTimeIndexChart(interval)) {
         // chartManage.setType(ChartType.Area, props.chartId)
         chartImp.current?.setTimeShareChart(interval)
@@ -358,7 +353,7 @@ export const MainChart = (props: MainChartProps) => {
       }
     })
 
-  const cancelYAxisChange = chartEvent.on('yAxisChange', type => {
+    const cancelYAxisChange = chartEvent.on('yAxisChange', type => {
       if (type.left) {
         chartImp.current?.setAxisType('double')
       } else if (type.right === MainYAxis.Percentage) {
@@ -371,6 +366,13 @@ export const MainChart = (props: MainChartProps) => {
       // chartImp.current?.setRightAxis(type.right === MainYAxis.Percentage ? 'percentage' : 'normal')
     })
 
+    const cancelDrawStart = chartEvent.on('drawStart', type => {
+      chartImp.current?.createOverlay(type, type => {
+        chartEvent.get().emit('drawEnd', type)
+        return true
+      })
+    })
+
     return () => {
       cancelSymbolEvent()
       // cancelCoilingEvent()
@@ -381,6 +383,7 @@ export const MainChart = (props: MainChartProps) => {
       cancelMarkChange()
       cancelIntervalEvent()
       cancelYAxisChange()
+      cancelDrawStart()
     }
   }, [activeChartId, props.chartId, chartStore.interval, symbol, startAt])
 
