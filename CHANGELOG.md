@@ -1,5 +1,14 @@
 # Changelog
 
+## [2.2.4](https://github.com/xinchan-gx/yunchan-web/compare/2.2.3...2.2.4) (2025-04-15)
+
+### ✨ Features | 新功能
+
+* 调整股票订阅缓冲处理的超时时间，从300ms减少到100ms ([c5209b1](https://github.com/xinchan-gx/yunchan-web/commit/c5209b162370348909384a1e5644b5e0f7d6095c))
+* 更新路由前缀为/app，调整相关导航和链接 ([c6b5872](https://github.com/xinchan-gx/yunchan-web/commit/c6b5872a8d478d08c11d5a86dafad4e221d2e803))
+* 添加邀请代码处理逻辑，优化用户邀请体验 ([085442e](https://github.com/xinchan-gx/yunchan-web/commit/085442e235408cb5d9750db91369acfcbaecfe55))
+* 添加APK下载支持，更新系统配置以检测操作系统类型 ([bc370cb](https://github.com/xinchan-gx/yunchan-web/commit/bc370cb09324dd4a09d6e95d014f5a785f18ff53))
+
 ## [2.2.3](https://github.com/xinchan-gx/yunchan-web/compare/2.2.2...2.2.3) (2025-04-15)
 
 ## [2.2.2](https://github.com/xinchan-gx/yunchan-web/compare/2.2.1...2.2.2) (2025-04-14)
