@@ -550,7 +550,7 @@ class StockSubscribe {
 
     setTimeout(() => {
       this.startBufferHandle()
-    }, 300)
+    }, 100)
   }
 }
 
