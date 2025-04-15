@@ -105,6 +105,8 @@ export const MainChart = (props: MainChartProps) => {
 
   useEffect(() => {
     return stockSubscribe.onQuoteTopic(symbol, data => {
+      const _symbol = useChartManage.getState().chartStores[props.chartId].symbol
+      if(data.topic !== _symbol) return
       const trading = useTime.getState().getTrading()
       const mode = useChartManage.getState().chartStores[props.chartId].mode
       if (mode === 'backTest') return
