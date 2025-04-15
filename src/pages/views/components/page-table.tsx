@@ -60,8 +60,8 @@ const PageTable = (props: PageTableProps) => {
   }
 
   useEffect(() => {
-    if(!['close', 'increase', 'amount', 'total'].includes(sort.column)) {
-      return 
+    if (!['close', 'increase', 'amount', 'total'].includes(sort.column)) {
+      return
     }
 
     const columnMap: Record<string, string> = {
@@ -164,6 +164,20 @@ const PageTable = (props: PageTableProps) => {
   const columns = useMemo<JknRcTableProps<TableDataType>['columns']>(
     () => [
       {
+        title: '',
+        dataIndex: 'collect',
+        align: 'center',
+        width: '4%',
+        render: (_, row) => <CollectStar checked={row.collect === 1} code={row.symbol} />
+      },
+      {
+        title: '',
+        dataIndex: 'index',
+        align: 'center',
+        width: '4%',
+        render: (_, _row, index) => <span>{index + 1}</span>
+      },
+      {
         title: '名称代码',
         dataIndex: 'name',
         align: 'left',
@@ -171,8 +185,6 @@ const PageTable = (props: PageTableProps) => {
         width: '15%',
         render: (_, row) => (
           <div className="flex items-center h-[33px]">
-            <CollectStar checked={row.collect === 1} code={row.symbol} />
-            <span className="mr-3" />
             <StockView name={row.name} code={row.symbol as string} showName />
           </div>
         )
@@ -198,7 +210,7 @@ const PageTable = (props: PageTableProps) => {
         title: '涨跌幅',
         dataIndex: 'percent',
         align: 'left',
-        width: '13.5%',
+        width: '11.5%',
         sort: true,
         render: (_, row) => (
           <SubscribeSpan.PercentBlink
@@ -216,7 +228,7 @@ const PageTable = (props: PageTableProps) => {
         title: '成交额',
         dataIndex: 'amount',
         align: 'left',
-        width: '13.5%',
+        width: '12%',
         sort: true,
         render: (_, row) => (
           <SubscribeSpan.TurnoverBlink
@@ -232,7 +244,7 @@ const PageTable = (props: PageTableProps) => {
         title: '总市值',
         dataIndex: 'total',
         align: 'left',
-        width: '15%',
+        width: '12%',
         sort: true,
         render: (_, row) => (
           <div className="">

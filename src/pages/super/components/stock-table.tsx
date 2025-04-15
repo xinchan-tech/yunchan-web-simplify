@@ -85,32 +85,32 @@ const StockTable = (props: StockTableProps) => {
 
   const [sortExt, setSortExt] = useState('')
   const _onSort: typeof onSort = (column, order) => {
-    if(column === 'close'){
-      if(!sortExt){
+    if (column === 'close') {
+      if (!sortExt) {
         setSortExt('close')
-        onSort('close', order)
-        return 
-      }
-
-      if(sortExt === 'close' && order === 'desc'){
         onSort('close', order)
         return
       }
 
-      if(sortExt === 'close' && order === 'asc'){
+      if (sortExt === 'close' && order === 'desc') {
+        onSort('close', order)
+        return
+      }
+
+      if (sortExt === 'close' && order === 'asc') {
         setSortExt('percent')
         onSort('percent', order)
 
         return
       }
 
-      if(sortExt === 'percent' && order === 'desc'){
+      if (sortExt === 'percent' && order === 'desc') {
         onSort('percent', order)
         return
       }
 
 
-      if(sortExt === 'percent' && order === 'asc'){
+      if (sortExt === 'percent' && order === 'asc') {
         setSortExt('close')
         onSort('close', order)
         return
@@ -124,14 +124,27 @@ const StockTable = (props: StockTableProps) => {
   const columns: JknRcTableProps<TableDataType>['columns'] = useMemo(
     () => [
       {
+        title: '',
+        dataIndex: 'collect',
+        align: 'center',
+        width: 30,
+        render: (_, row) => <CollectStar checked={row.collect === 1} code={row.symbol} />
+      },
+      {
+        title: '',
+        dataIndex: 'index',
+        align: 'center',
+        width: 30,
+        render: (_, _row, index) => <span>{index + 1}</span>
+      },
+      {
         title: '名称代码',
         dataIndex: 'name',
-        width: 130,
+        width: 80,
         align: 'left',
         sort: true,
         render: (name, row) => (
           <div className="flex items-center space-x-2">
-            <CollectStar onUpdate={props.onUpdate} checked={row.collect === 1} code={row.symbol} />
             <StockView name={name} code={row.symbol} showName />
           </div>
         )
@@ -235,7 +248,7 @@ const StockTable = (props: StockTableProps) => {
         )
       }
     ],
-    [props.onUpdate, sortExt]
+    [sortExt]
   )
 
   // const onRowClick = useTableRowClickToStockTrading('symbol')

@@ -290,11 +290,25 @@ type PriceAlarmRecord = BaseAlarmRecord & {
   }
 }
 
+type PercentAlarmRecord = BaseAlarmRecord & {
+  type: AlarmType.PERCENT
+  condition: {
+    data: {
+      pnl_percent: number
+      pnl_price: number
+      trigger_price: number
+      trigger_type: number
+      base_price: number
+    }
+  }
+}
+
+
 /**
  * 触发警报日志列表
  */
 export const getAlarmLogsList = async (params: GetAlarmLogsParams) => {
-  return request.get<Page<PriceAlarmRecord | AiAlarmRecord>>('/stock-svc/alarm/logs', { params }).then(r => r.data)
+  return request.get<Page<PriceAlarmRecord | AiAlarmRecord | PercentAlarmRecord>>('/stock-svc/alarm/logs', { params }).then(r => r.data)
 }
 getAlarmLogsList.cacheKey = 'stock-svc:alarms:logs'
 

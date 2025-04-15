@@ -35,7 +35,7 @@ export const withSort = <T = any>(Component: ComponentType<T>) => {
           onSort(field, 'asc')
         }
       } else {
-        onSort(field, 'asc')
+        onSort(field, 'desc')
       }
     }
 

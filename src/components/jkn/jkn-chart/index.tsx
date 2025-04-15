@@ -770,12 +770,7 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
             }
           }
         })
-        // chart.current?.setPaneOptions({
-        //   id: ChartTypes.MAIN_PANE_ID,
-        //   axis: {
-        //     value: undefined
-        //   }
-        // })
+
 
         chart.current?.setPaneOptions({
           id: ChartTypes.MAIN_PANE_ID,

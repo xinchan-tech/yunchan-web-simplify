@@ -262,6 +262,7 @@ export const MainChart = (props: MainChartProps) => {
     // })
 
     const cancelIntervalEvent = chartEvent.on('intervalChange', async interval => {
+      console.log(interval)
       if (renderUtils.isTimeIndexChart(interval)) {
         // chartManage.setType(ChartType.Area, props.chartId)
         chartImp.current?.setTimeShareChart(interval)
@@ -272,7 +273,6 @@ export const MainChart = (props: MainChartProps) => {
       }
       chartManage.setMode('normal')
       Array.from(stockCache.current.compare.entries()).forEach(([_, indicatorId]) => {
-        console.log(indicatorId)
         chartImp.current?.setStockCompare(indicatorId, {
           interval,
           startAt: renderUtils.getChartStartDate(interval)

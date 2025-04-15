@@ -1,11 +1,11 @@
+import { AlarmType } from '@/api'
 import { useConfig, useToken } from '@/store'
+import { dateUtils } from '@/utils/date'
+import { stockUtils } from '@/utils/stock'
 import { type WsSubscribeType, WsV2 } from '@/utils/ws'
 import { memo, useEffect } from 'react'
+import { Toaster, toast } from 'sonner'
 import { JknIcon, Sonner, Star } from '..'
-import { toast, Toaster } from 'sonner'
-import { AlarmType } from '@/api'
-import { stockUtils } from '@/utils/stock'
-import { dateUtils } from '@/utils/date'
 
 export const AlarmSubscribe = memo(() => {
   const token = useToken(s => s.token)
@@ -54,7 +54,7 @@ const AlarmContent = ({ data, onClose }: AlarmContentProps) => {
   }
 
   return (
-    <div className="flex leading-none font-normal w-full cursor-pointer" onClick={() => onClick()} onKeyDown={() => {}}>
+    <div className="flex leading-none font-normal w-full cursor-pointer" onClick={() => onClick()} onKeyDown={() => { }}>
       <div className="h-[110px] w-[60px] rounded-l-[8px] bg-[#4DD0E133] flex flex-shrink-0">
         <JknIcon.Svg name="alarm-2" size={20} className="m-auto text-[#4DD0E1]" />
       </div>
@@ -94,6 +94,26 @@ const AlarmContent = ({ data, onClose }: AlarmContentProps) => {
                 <span>{data.bull === '1' ? '↑' : '↓'}</span>
               </span>
               <span className="bg-accent py-0.5 rounded text-xs px-1">股价</span>
+            </>
+          ) : null}
+
+          {data.type === AlarmType.PERCENT ? (
+            <>
+              <span data-direction={data.pnl_percent > 0 ? 'up' : 'down'}>
+                <span>止损触发价</span>
+                {data.base_price}
+                <span>{data.pnl_percent > 0 ? '↑' : '↓'}</span>&nbsp;
+                <span className="text-foreground">
+                  {
+                    data.trigger_type === 1 ?  (
+                      `盈亏比例${(data.pnl_percent * 100).toFixed(2)}%`
+                    ): (
+                      `盈亏金额${(data.pnl_price)}`
+                    )
+                  }
+                </span>
+              </span>
+              <span className="bg-accent py-0.5 rounded text-xs px-1">浮动</span>
             </>
           ) : null}
         </div>
