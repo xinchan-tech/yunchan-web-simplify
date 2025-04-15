@@ -8,6 +8,8 @@ import { useToken, useUser } from '@/store'
 import { cn } from "@/utils/style"
 import { Link, Outlet, useLocation, useNavigate } from 'react-router'
 import { sysConfig } from "@/utils/config"
+import qs from "qs"
+import { useMount } from "ahooks"
 
 const HomePage = () => {
   const hasAuthorized = useUser(s => s.hasAuthorized())
@@ -26,6 +28,20 @@ const HomePage = () => {
   const toast = () => {
     JknAlert.toast('即将推出，敬请期待')
   }
+
+  useMount(() => {
+    const query = qs.parse(window.location.search, { ignoreQueryPrefix: true })
+    if (query.code) {
+      const current = new Date().getTime()
+      const codeObj = {
+        code: query.code,
+        cid: query.cid,
+        timestamp: current
+      }
+
+      localStorage.setItem('invite-code', JSON.stringify(codeObj))
+    }
+  })
 
   return (
     <div className="home-container h-screen w-full overflow-y-auto bg-[#0A0A0A]">

@@ -104,20 +104,6 @@ const MallPage = () => {
     onOk: async () => {}
   })
 
-  useMount(() => {
-    const query = qs.parse(window.location.search, { ignoreQueryPrefix: true })
-    if (query.code) {
-      const current = new Date().getTime()
-      const codeObj = {
-        code: query.code,
-        cid: query.cid,
-        timestamp: current
-      }
-
-      localStorage.setItem('invite-code', JSON.stringify(codeObj))
-    }
-  })
-
   const token = useToken(s => s.token)
 
   const _onOpenCashier = (values: z.infer<typeof productForm>) => {

@@ -24,6 +24,7 @@ import { router, routes } from './router'
 import { chatConstants, useConfig, useToken, useUser } from './store'
 import { ChartToolBar } from "./pages/stock/component/chart-tool-bar"
 import { AlarmSubscribe } from "./components/ai-alarm/alarm-subscribe"
+import qs from "qs"
 
 export const CHAT_STOCK_JUMP = 'chat_stock_jump'
 export const CHAT_TO_APP_REFRESH_USER = 'chat_to_app_refresh_user'
@@ -155,6 +156,20 @@ const App = () => {
       appEvent.off('logout', handler)
     }
   }, [navigate])
+
+  useMount(() => {
+    const query = qs.parse(window.location.search, { ignoreQueryPrefix: true })
+    if (query.code) {
+      const current = new Date().getTime()
+      const codeObj = {
+        code: query.code,
+        cid: query.cid,
+        timestamp: current
+      }
+
+      localStorage.setItem('invite-code', JSON.stringify(codeObj))
+    }
+  })
 
 
   return (
