@@ -430,7 +430,7 @@ export const stockUtils = {
       query.q = AESCrypt.encrypt(JSON.stringify({ interval }))
     }
 
-    router.navigate(`/stock?${qs.stringify(query)}`)
+    router.navigate(`/app/stock?${qs.stringify(query)}`)
   },
 
   parseTime

@@ -1,7 +1,7 @@
 import { type EditGroupPayload, editGroupService, getChannelDetail, getChannelMembers } from '@/api'
 import { useQuery } from '@tanstack/react-query'
 
-import { Textarea, useModal } from '@/components'
+import { JknAlert, Textarea, useModal } from '@/components'
 import { JknIcon } from '@/components'
 import FullScreenLoading from '@/components/loading'
 import { useToast } from '@/hooks'
@@ -11,6 +11,8 @@ import WKSDK, { type Channel } from 'wukongimjssdk'
 import AliyunOssUploader from '../components/aliyun-oss-uploader'
 import ChatAvatar from '../components/chat-avatar'
 import { GroupTag } from '../components/create-and-join-group/group-channel-card'
+import { useUser } from "@/store"
+import copy from "copy-to-clipboard"
 
 const UpdateGroupInfo = (props: {
   group: Channel
@@ -21,16 +23,16 @@ const UpdateGroupInfo = (props: {
     queryFn: () => {
       return getChannelDetail(props.group.channelID)
     },
-    queryKey: [getChannelDetail.key]
+    queryKey: [getChannelDetail.cacheKey]
   }
   const queryDetail = useQuery(options)
   const [previewAvatar, setPreviewAvatar] = useState('')
-
+  const shareUrl = useUser(s => s.user?.share_url)
   const groipMemberOptions = {
     queryFn: () => {
       return getChannelMembers(props.group.channelID, props.total)
     },
-    queryKey: [getChannelMembers.key]
+    queryKey: [getChannelMembers.cacheKey]
   }
   const { toast } = useToast()
   const memberDetail = useQuery(groipMemberOptions)
@@ -209,7 +211,16 @@ const UpdateGroupInfo = (props: {
         </div>
         <div className="flex white-line-gap mt-6">
           <div className="flex-1 text-center leading-[50px]">人数上限：{queryDetail.data?.max_num || '--'}人</div>
-          <div className="flex-1 text-center leading-[50px]">价格：{getPrice()}</div>
+          <div className="flex items-center w-[420px] box-border px-1 py-2.5">
+            <span>邀请链接</span>
+            <span className="ml-auto w-[200px] line-clamp-1 text-tertiary">{shareUrl}</span>
+            <JknIcon.Svg name="copy" className="text-tertiary cursor-pointer" size={20} onClick={() => {
+              if (shareUrl) {
+                copy(`${shareUrl}&cid=${props.group.channelID}`)
+                JknAlert.success('复制成功')
+              }
+            }} />
+          </div>
         </div>
       </div>
       <div className="bottom-area flex pl-5 pr-5 justify-between">

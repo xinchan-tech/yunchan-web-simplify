@@ -174,7 +174,7 @@ export const useTableRowClickToStockTrading = (symbolField: string, _interval?: 
   return useCallback(
     (record: any) => {
       return {
-        onClick: () => navigate(`/stock?symbol=${record[symbolField]}`)
+        onClick: () => navigate(`/app/stock?symbol=${record[symbolField]}`)
       }
     },
     [symbolField, navigate]

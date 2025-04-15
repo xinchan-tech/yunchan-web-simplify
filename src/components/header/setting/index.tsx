@@ -25,11 +25,11 @@ export const HeaderSetting = () => {
   useMount(() => {
     appEvent.on('login', () => {
       const currentPath = window.location.pathname
-      if (currentPath === '/login') {
+      if (currentPath === '/app/login') {
         return
       }
       const params = encodeURIComponent(currentPath)
-      navigate(`/login?redirect=${params}`)
+      navigate(`/app/login?redirect=${params}`)
       return
     })
   })
@@ -57,7 +57,7 @@ export const HeaderSetting = () => {
           removeToken()
           const path = window.location.pathname
           if (path !== '/') {
-            if (path.startsWith('/home')) {
+            if (path.startsWith('/app')) {
               window.location.href = path
             } else {
               window.location.href = '/'
@@ -122,7 +122,7 @@ export const HeaderSetting = () => {
               icon="home"
               title="返回官网"
               onClick={() => {
-                navigate('/home')
+                navigate('/')
                 setFalse()
               }}
             />
@@ -131,7 +131,7 @@ export const HeaderSetting = () => {
               icon="setting"
               title="软件设置"
               onClick={() => {
-                navigate('/setting')
+                navigate('/app/setting')
                 setFalse()
               }}
             />
@@ -148,7 +148,7 @@ export const HeaderSetting = () => {
                 label=" "
                 color="#2962FF"
                 onClick={() => {
-                  navigate('/login')
+                  navigate('/app/login')
                   setFalse()
                 }}
               />

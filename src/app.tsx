@@ -128,7 +128,7 @@ const App = () => {
     channel.current.onmessage = event => {
       if (event.data.type === CHAT_STOCK_JUMP) {
         if (event.data.payload) {
-          navigate(`/stock?symbol=${event.data.payload}`)
+          navigate(`/app/stock?symbol=${event.data.payload}`)
         }
       } else if (event.data.type === CHAT_TO_APP_REFRESH_USER) {
         refreshUser()
@@ -167,12 +167,12 @@ const App = () => {
         <div className="box-border px-2.5 flex items-center h-11">
           <HeaderUser />
           {
-            path.pathname.startsWith('/stock') ? (
+            path.pathname.startsWith('/app/stock') ? (
               <ChartToolBar />
             ) : null
           }
           <div className="ml-auto">
-            <StockSelect className="rounded-[300px] px-3 bg-[#2E2E2E]" onChange={(s) => navigate(`/stock?symbol=${s}`)} />
+            <StockSelect className="rounded-[300px] px-3 bg-[#2E2E2E]" onChange={(s) => navigate(`/app/stock?symbol=${s}`)} />
           </div>
         </div>
         <div className="flex-1 overflow-hidden flex bg-accent">
@@ -315,7 +315,7 @@ const AppTitle = () => {
       .find(r => r.path === '/')!
       .children!.find(r => (pathname === '/' ? r.index : r.path === pathname))
 
-    if (pathname.startsWith('/stock')) {
+    if (pathname.startsWith('/app/stock')) {
       if (pathname.includes('trading')) {
         return '个股盘口'
       }

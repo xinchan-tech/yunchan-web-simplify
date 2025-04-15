@@ -33,12 +33,12 @@ const MenuRight = () => {
     {
       icon: <JknIcon.Svg name="stock" size={24} />,
       title: '图表',
-      path: '/stock'
+      path: '/app/stock'
     },
     {
       icon: <JknIcon.Svg name="push" size={24} />,
       title: '榜单',
-      path: '/push'
+      path: '/app/push'
     },
     // {
     //   icon: <JknIcon.Svg name="financial" size={24} />,
@@ -48,7 +48,7 @@ const MenuRight = () => {
     {
       icon: <JknIcon.Svg name="alarm" size={24} />,
       title: '警报',
-      path: '/stock/alarm'
+      path: '/app/stock/alarm'
     },
     {
       icon: <JknIcon.Svg name="group" size={24} />,
@@ -83,7 +83,7 @@ const MenuRight = () => {
         )
         return
       } else {
-        onNav("/mall")
+        onNav("/app/mall")
         return
       }
     }
@@ -91,12 +91,12 @@ const MenuRight = () => {
 
 
 
-    if (path.startsWith('/stock')) {
+    if (path.startsWith('/app/stock')) {
       const search = new URLSearchParams(window.location.search)
       const symbol = search.get('symbol') ?? 'QQQ'
 
-      if(window.location.pathname.startsWith('/stock/alarm') && pathname === '/stock/alarm'){
-        router.navigate(`/stock?symbol=${symbol}`)
+      if(window.location.pathname.startsWith('/app/stock/alarm') && pathname === '/app/stock/alarm'){
+        router.navigate(`/app/stock?symbol=${symbol}`)
         return
 
       }

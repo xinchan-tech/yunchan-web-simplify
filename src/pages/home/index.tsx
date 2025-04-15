@@ -20,7 +20,7 @@ const HomePage = () => {
   }
 
   const gotoDashboard = () => {
-    navigate('/home')
+    navigate('/')
   }
 
   const toast = () => {
@@ -34,14 +34,14 @@ const HomePage = () => {
           <img src={LogoTitle} alt="logo" className="size-full" />
         </div>
         <div className="flex items-center space-x-12">
-          <StockSelect className="rounded-[300px] bg-[#2E2E2E] px-3" onChange={v => navigate(`/stock?symbol=${v}`)} />
-          <Link to="/mall" className="home-navigate-item hover:text-primary">
+          <StockSelect className="rounded-[300px] bg-[#2E2E2E] px-3" onChange={v => navigate(`/app/stock?symbol=${v}`)} />
+          <Link to="/app/mall" className="home-navigate-item hover:text-primary">
             价格
           </Link>
-          <Link to="/home/features" className={cn('home-navigate-item hover:text-primary', location.pathname === '/home/features' && '!text-primary')}>
+          <Link to="/features" className={cn('home-navigate-item hover:text-primary', location.pathname === '/features' && '!text-primary')}>
             特色功能
           </Link>
-          <Link to="/stock?symbol=QQQ" className="home-navigate-item hover:text-primary">
+          <Link to="/app/stock?symbol=QQQ" className="home-navigate-item hover:text-primary">
             行情
           </Link>
           <a href="#download" className="home-navigate-item hover:text-primary">
@@ -55,7 +55,7 @@ const HomePage = () => {
             <JknIcon.Svg name="user" size={24} className="cursor-pointer" onClick={gotoLogin} />
           )}
           <Link
-            to="/mall"
+            to="/app/mall"
             className="linear-gradient-1 w-[76px] h-[36px] rounded-lg text-white font-bold text-sm cursor-pointer flex items-center justify-center !ml-10"
           >
             开通会员
@@ -79,17 +79,17 @@ const HomePage = () => {
         <div className="text-sm text-[#808080] flex justify-between">
           <div className="home-footer-item flex flex-col space-y-4">
             <p className="text-white text-xl mb-10">关于我们</p>
-            <Link to="/home">牛人招募</Link>
-            <Link to="/home">分享佣金</Link>
-            <Link to="/home">Ai-轻量化</Link>
-            <Link to="/mall">价格计划</Link>
+            <Link to="/">牛人招募</Link>
+            <Link to="/">分享佣金</Link>
+            <Link to="/">Ai-轻量化</Link>
+            <Link to="/app/mall">价格计划</Link>
           </div>
           <div className="home-footer-item flex flex-col space-y-4">
             <p className="text-white text-xl mb-9">用户协议</p>
-            <Link to="/home">隐私政策</Link>
-            <Link to="/home/cookies">Cookies政策</Link>
-            <Link to="/home">免责声明</Link>
-            <Link to="/mall">反馈安全漏洞</Link>
+            <Link to="/">隐私政策</Link>
+            <Link to="/cookies">Cookies政策</Link>
+            <Link to="/">免责声明</Link>
+            <Link to="/">反馈安全漏洞</Link>
           </div>
           <div className="home-footer-item flex flex-col space-y-1">
             <p className="text-white text-xl" id="download">下载</p>

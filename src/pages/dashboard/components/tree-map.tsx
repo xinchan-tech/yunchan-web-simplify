@@ -144,7 +144,7 @@ const TreeMap = (props: TreeMapProps) => {
       .attr('height', d => d.y1 - d.y0)
       .attr('fill', d => d.data.color ?? 'transport')
       .on('click', (_, d) => {
-        router.navigate(`/stock?symbol=${d.data.name}`)
+        router.navigate(`/app/stock?symbol=${d.data.name}`)
       })
   }
 
@@ -235,7 +235,7 @@ const TreeMap = (props: TreeMapProps) => {
       .attr('fill', 'white')
       .attr('style', 'user-select: none;')
       .on('click', (_, d) => {
-        router.navigate(`/stock/trading?symbol=${d.data.name}`)
+        router.navigate(`/app/stock/trading?symbol=${d.data.name}`)
       })
   }
 
@@ -278,7 +278,7 @@ const TreeMap = (props: TreeMapProps) => {
       .attr('fill', () => '#fff')
       .attr('style', 'user-select: none;') // corrected 'sty' to 'style' and added 'user-select: none;'
       .on('click', (_, d) => {
-        router.navigate(`/stock/trading?symbol=${d.data.name}`)
+        router.navigate(`/app/stock/trading?symbol=${d.data.name}`)
       })
   }
 
