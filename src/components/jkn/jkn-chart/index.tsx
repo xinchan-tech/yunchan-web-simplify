@@ -249,8 +249,8 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
                   return lastData.close > lastData.prevClose ? upColor : downColor
                 }
 
-                const { from } = chart.getVisibleRange()
-                const firstData = data[from]
+                const { realFrom } = chart.getVisibleRange()
+                const firstData = data[realFrom]
 
                 if (!firstData) return downColor
                 return lastData.close > firstData.open ? upColor : downColor
@@ -272,7 +272,7 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
             color: (_ctx, text, chart) => {
               const data = chart.getDataList()
               const range = chart.getVisibleRange()
-              const startData = data[range.from]
+              const startData = data[range.realFrom]
               const chartType = getAxisType(chart)
 
               if (chartType === 'normal') {
@@ -324,7 +324,6 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
                 if (isTimeShare.current){
                   return transformTextColor(text, data.slice(0, range.to).pop()!, 'prevClose')
                 }
-
                 return transformTextColor(text, startData, 'open')
               }
             }

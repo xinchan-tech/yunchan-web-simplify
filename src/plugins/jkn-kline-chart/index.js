@@ -11417,7 +11417,7 @@ var percentage = {
         var chart = _a.chart, defaultRange = _a.defaultRange, paneId = _a.paneId;
         var kLineDataList = chart.getDataList();
         var visibleRange = chart.getVisibleRange();
-        var kLineData = kLineDataList[visibleRange.from];
+        var kLineData = kLineDataList[visibleRange.realFrom];
         if (isValid(kLineData)) {
             var options = chart.getPaneOptions(paneId);
             if (isArray(options)) {
