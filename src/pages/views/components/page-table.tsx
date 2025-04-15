@@ -59,51 +59,51 @@ const PageTable = (props: PageTableProps) => {
     })
   }
 
-  useEffect(() => {
-    if (!['close', 'increase', 'amount', 'total'].includes(sort.column)) {
-      return
-    }
+  // useEffect(() => {
+  //   if (!['close', 'increase', 'amount', 'total'].includes(sort.column)) {
+  //     return
+  //   }
 
-    const columnMap: Record<string, string> = {
-      close: 'Close',
-      increase: 'Change',
-      amount: 'Amount',
-      total_mv: 'MarketCap'
-    }
+  //   const columnMap: Record<string, string> = {
+  //     close: 'Close',
+  //     increase: 'Change',
+  //     amount: 'Amount',
+  //     total_mv: 'MarketCap'
+  //   }
 
-    stockSubscribe.subscribeRank({
-      limit: `${(pagination.page - 1) * pagination.pageSize}~${pagination.pageSize * pagination.page}`,
-      sort: sort.order,
-      key: columnMap[sort.column] as any
-    })
+  //   stockSubscribe.subscribeRank({
+  //     limit: `${(pagination.page - 1) * pagination.pageSize}~${pagination.pageSize * pagination.page}`,
+  //     sort: sort.order,
+  //     key: columnMap[sort.column] as any
+  //   })
 
-    const cancel = stockSubscribe.on('rank_subscribe', (data) => {
-      console.log(data)
-      if(Object.keys(data).length > 0){
-        setList((s: TableDataType[]) => {
-          Object.keys(data.data).forEach((key) => {
-            const index = Number(key)
+  //   const cancel = stockSubscribe.on('rank_subscribe', (data) => {
+  //     console.log(data)
+  //     if(Object.keys(data).length > 0){
+  //       setList((s: TableDataType[]) => {
+  //         Object.keys(data.data).forEach((key) => {
+  //           const index = Number(key)
 
-            if(s[index]){
-              s[index].price = data.data[key as any].close
-              s[index].percent = data.data[key as any].percent
-              s[index].symbol = data.data[key as any].symbol
-              s[index].amount = data.data[key as any].turnover
-              s[index].total = data.data[key as any].marketValue
-            }
-          })
+  //           if(s[index]){
+  //             s[index].price = data.data[key as any].close
+  //             s[index].percent = data.data[key as any].percent
+  //             s[index].symbol = data.data[key as any].symbol
+  //             s[index].amount = data.data[key as any].turnover
+  //             s[index].total = data.data[key as any].marketValue
+  //           }
+  //         })
 
-          console.log([...s])
-          return [...s]
-        })
-      }
-    })
+  //         console.log([...s])
+  //         return [...s]
+  //       })
+  //     }
+  //   })
 
-    return () => { 
-      stockSubscribe.unsubscribeRank() 
-      cancel() 
-    }
-  }, [pagination, sort])
+  //   return () => { 
+  //     stockSubscribe.unsubscribeRank() 
+  //     cancel() 
+  //   }
+  // }, [pagination, sort])
 
   const query = useQuery({
     queryKey: [getUsStocks.cacheKey, props.type, sort, pagination],
