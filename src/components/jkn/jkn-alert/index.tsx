@@ -94,6 +94,30 @@ export const JknAlert = {
       content: _content,
       duration
     })
+  },
+
+  toast(args: PureAlertOptions | string) {
+    let _args = {} as PureAlertOptions
+    if (typeof args === 'string') {
+      _args = { content: args }
+    }
+    const { content, duration } = _args
+
+    const _content = (
+      <div className="text-center flex flex-col items-center">
+        <div className="size-8 rounded-full border border-solid border-foreground flex items-center justify-center">
+          <JknIcon.Svg name="check" size={16} className="" />
+        </div>
+        <div className="text-center mt-2.5">
+          {content}
+        </div>
+      </div>
+    )
+
+    toast({
+      content: _content,
+      duration
+    })
   }
 }
 

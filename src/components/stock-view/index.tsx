@@ -18,7 +18,7 @@ const StockView = ({ code, name, showName = false, iconSize = 24, className }: S
   return (
     <div
       className={cn('overflow-hidden flex items-center w-full', className)}
-      onDoubleClick={() => router.navigate(`/stock/trading?symbol=${code}`)}
+      onDoubleClick={() => router.navigate(`/app/stock/trading?symbol=${code}`)}
     >
       <div className="flex items-center">
         {stock?.[0] ? (

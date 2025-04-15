@@ -4,7 +4,7 @@ import { useCallback } from 'react'
 
 export const HeaderMall = () => {
   const onClick = useCallback(() => {
-    router.navigate('/mall')
+    router.navigate('/app/mall')
   }, [])
   return (
     <div

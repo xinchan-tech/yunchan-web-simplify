@@ -70,7 +70,7 @@ const Subscribe = () => {
                         <div className="mt-5 space-x-2.5">
                           {
                             item.name !== '国王版' ? (
-                              <Button size="lg" className="rounded-[6px] w-[96px] bg-white" onClick={() => navigate('/mall')}>升级方案</Button>
+                              <Button size="lg" className="rounded-[6px] w-[96px] bg-white" onClick={() => navigate('/app/mall')}>升级方案</Button>
                             ) : null
                           }
 

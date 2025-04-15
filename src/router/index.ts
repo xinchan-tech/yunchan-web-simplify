@@ -5,18 +5,15 @@ import { appEvent } from '@/utils/event'
 
 export const router = createBrowserRouter(routes)
 
-export const routeWhiteList = ['/mall', '/', '/login', '/home', '/home/features', '/home/cookies']
+export const routeWhiteList = ['/app/mall', '/app', '/app/login', '/', '/features', '/cookies']
 
 router.subscribe(() => {
   const pathName = window.location.pathname
   const user = useUser.getState().user
   if (!user?.authorized.length) {
-    if(pathName.startsWith('/home')){
-      return
-    }
     if (!routeWhiteList.some(route => route === pathName)) {
       appEvent.emit('toast', { message: '暂无相关权限，请联系客服' })
-      router.navigate('/')
+      router.navigate('/app')
     }
   }
 })

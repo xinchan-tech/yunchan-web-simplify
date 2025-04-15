@@ -1,12 +1,15 @@
 import AndroidDownload from '@/assets/image/android-download.png'
 import IosDownload from '@/assets/image/ios-download.png'
 import LogoTitle from '@/assets/image/logo-title-sm.png'
-import PcDownload from '@/assets/image/pc-download.png'
-import { JknIcon, StockSelect } from '@/components'
+import ApkDownload from '@/assets/image/apk-download.png'
+import { JknAlert, JknIcon, StockSelect } from '@/components'
 import { HeaderSetting } from '@/components/header/setting'
 import { useToken, useUser } from '@/store'
 import { cn } from "@/utils/style"
 import { Link, Outlet, useLocation, useNavigate } from 'react-router'
+import { sysConfig } from "@/utils/config"
+import qs from "qs"
+import { useMount } from "ahooks"
 
 const HomePage = () => {
   const hasAuthorized = useUser(s => s.hasAuthorized())
@@ -19,8 +22,26 @@ const HomePage = () => {
   }
 
   const gotoDashboard = () => {
-    navigate('/home')
+    navigate('/')
   }
+
+  const toast = () => {
+    JknAlert.toast('即将推出，敬请期待')
+  }
+
+  useMount(() => {
+    const query = qs.parse(window.location.search, { ignoreQueryPrefix: true })
+    if (query.code) {
+      const current = new Date().getTime()
+      const codeObj = {
+        code: query.code,
+        cid: query.cid,
+        timestamp: current
+      }
+
+      localStorage.setItem('invite-code', JSON.stringify(codeObj))
+    }
+  })
 
   return (
     <div className="home-container h-screen w-full overflow-y-auto bg-[#0A0A0A]">
@@ -29,16 +50,19 @@ const HomePage = () => {
           <img src={LogoTitle} alt="logo" className="size-full" />
         </div>
         <div className="flex items-center space-x-12">
-          <StockSelect className="rounded-[300px] bg-[#2E2E2E] px-3" onChange={v => navigate(`/stock?symbol=${v}`)} />
-          <Link to="/mall" className="home-navigate-item hover:text-primary">
+          <StockSelect className="rounded-[300px] bg-[#2E2E2E] px-3" onChange={v => navigate(`/app/stock?symbol=${v}`)} />
+          <Link to="/app/mall" className="home-navigate-item hover:text-primary">
             价格
           </Link>
-          <Link to="/home/features" className={cn('home-navigate-item hover:text-primary', location.pathname === '/home/features' && '!text-primary')}>
+          <Link to="/features" className={cn('home-navigate-item hover:text-primary', location.pathname === '/features' && '!text-primary')}>
             特色功能
           </Link>
-          <Link to="/stock?symbol=QQQ" className="home-navigate-item hover:text-primary">
+          <Link to="/app/stock?symbol=QQQ" className="home-navigate-item hover:text-primary">
             行情
           </Link>
+          <a href="#download" className="home-navigate-item hover:text-primary">
+            下载
+          </a>
         </div>
         <div className="flex items-center space-x-4">
           {token ? (
@@ -47,7 +71,7 @@ const HomePage = () => {
             <JknIcon.Svg name="user" size={24} className="cursor-pointer" onClick={gotoLogin} />
           )}
           <Link
-            to="/mall"
+            to="/app/mall"
             className="linear-gradient-1 w-[76px] h-[36px] rounded-lg text-white font-bold text-sm cursor-pointer flex items-center justify-center !ml-10"
           >
             开通会员
@@ -71,29 +95,37 @@ const HomePage = () => {
         <div className="text-sm text-[#808080] flex justify-between">
           <div className="home-footer-item flex flex-col space-y-4">
             <p className="text-white text-xl mb-10">关于我们</p>
-            <Link to="/home">牛人招募</Link>
-            <Link to="/home">分享佣金</Link>
-            <Link to="/home">Ai-轻量化</Link>
-            <Link to="/mall">价格计划</Link>
+            <Link to="/">牛人招募</Link>
+            <Link to="/">分享佣金</Link>
+            <Link to="/">Ai-轻量化</Link>
+            <Link to="/app/mall">价格计划</Link>
           </div>
           <div className="home-footer-item flex flex-col space-y-4">
             <p className="text-white text-xl mb-9">用户协议</p>
-            <Link to="/home">隐私政策</Link>
-            <Link to="/home/cookies">Cookies政策</Link>
-            <Link to="/home">免责声明</Link>
-            <Link to="/mall">反馈安全漏洞</Link>
+            <Link to="/">隐私政策</Link>
+            <Link to="/cookies">Cookies政策</Link>
+            <Link to="/">免责声明</Link>
+            <Link to="/">反馈安全漏洞</Link>
           </div>
           <div className="home-footer-item flex flex-col space-y-1">
-            <p className="text-white text-xl">下载</p>
-            {/* <Link to="/home">
-              <img src={PcDownload} alt="logo" className="h-[46px] w-[196px]" />
-            </Link> */}
-            <Link to="/home">
+            <p className="text-white text-xl" id="download">下载</p>
+            {
+              sysConfig.OS === 'ios' ? (
+                <span onClick={() => JknAlert.toast('iOS 版本即将推出，敬请期待')} onKeyDown={() => { }}>
+                  <img src={ApkDownload} alt="logo" className="h-[46px] w-[196px]" />
+                </span>
+              ) : (
+                <a href="https://xinmei-downloads.s3.us-east-1.amazonaws.com/todaychart_v1.0.0.apk">
+                  <img src={ApkDownload} alt="logo" className="h-[46px] w-[196px]" />
+                </a>
+              )
+            }
+            <span onClick={toast} onKeyDown={() => { }}>
               <img src={AndroidDownload} alt="logo" className="h-[46px] w-[196px]" />
-            </Link>
-            <Link to="/home">
+            </span>
+            <span onClick={toast} onKeyDown={() => { }}>
               <img src={IosDownload} alt="logo" className="h-[46px] w-[196px]" />
-            </Link>
+            </span>
           </div>
         </div>
       </div>

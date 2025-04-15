@@ -56,7 +56,7 @@ const LargeCap = () => {
 
   const navigate = useNavigate()
   const onChartDoubleClick = useCallback(() => {
-    navigate(`/stock/trading?symbol=${activeStock}`)
+    navigate(`/app/stock/trading?symbol=${activeStock}`)
   }, [activeStock, navigate])
 
   const { t } = useTranslation()

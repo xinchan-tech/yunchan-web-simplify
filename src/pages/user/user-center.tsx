@@ -141,7 +141,7 @@ const UserCenter = () => {
               }
             </div>
           </div>
-          <div className="bg-[#E8D9B9] rounded-[30px] text-[#6A4C18] w-[120px] h-[36px] leading-[36px] text-center cursor-pointer" onClick={() => navigate('/mall')} onKeyDown={() => { }}>
+          <div className="bg-[#E8D9B9] rounded-[30px] text-[#6A4C18] w-[120px] h-[36px] leading-[36px] text-center cursor-pointer" onClick={() => navigate('/app/mall')} onKeyDown={() => { }}>
             {
               packages ? '立即续费' : '立即购买'
             }

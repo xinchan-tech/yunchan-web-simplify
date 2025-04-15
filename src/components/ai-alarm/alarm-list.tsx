@@ -308,7 +308,7 @@ const GroupAlarm = (props: AlarmItemProps) => {
         rowKey="symbol"
         onRow={row => ({
           onClick: () => props.onChange?.(row.symbol),
-          onDoubleClick: () => router.navigate(`/stock/trading?symbol=${row.symbol}`)
+          onDoubleClick: () => router.navigate(`/app/stock/trading?symbol=${row.symbol}`)
         })}
         data={list}
         columns={columns}

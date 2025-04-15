@@ -24,6 +24,7 @@ import { router, routes } from './router'
 import { chatConstants, useConfig, useToken, useUser } from './store'
 import { ChartToolBar } from "./pages/stock/component/chart-tool-bar"
 import { AlarmSubscribe } from "./components/ai-alarm/alarm-subscribe"
+import qs from "qs"
 
 export const CHAT_STOCK_JUMP = 'chat_stock_jump'
 export const CHAT_TO_APP_REFRESH_USER = 'chat_to_app_refresh_user'
@@ -128,7 +129,7 @@ const App = () => {
     channel.current.onmessage = event => {
       if (event.data.type === CHAT_STOCK_JUMP) {
         if (event.data.payload) {
-          navigate(`/stock?symbol=${event.data.payload}`)
+          navigate(`/app/stock?symbol=${event.data.payload}`)
         }
       } else if (event.data.type === CHAT_TO_APP_REFRESH_USER) {
         refreshUser()
@@ -156,6 +157,20 @@ const App = () => {
     }
   }, [navigate])
 
+  useMount(() => {
+    const query = qs.parse(window.location.search, { ignoreQueryPrefix: true })
+    if (query.code) {
+      const current = new Date().getTime()
+      const codeObj = {
+        code: query.code,
+        cid: query.cid,
+        timestamp: current
+      }
+
+      localStorage.setItem('invite-code', JSON.stringify(codeObj))
+    }
+  })
+
 
   return (
     <div className="container-layout dark">
@@ -167,12 +182,12 @@ const App = () => {
         <div className="box-border px-2.5 flex items-center h-11">
           <HeaderUser />
           {
-            path.pathname.startsWith('/stock') ? (
+            path.pathname.startsWith('/app/stock') ? (
               <ChartToolBar />
             ) : null
           }
           <div className="ml-auto">
-            <StockSelect className="rounded-[300px] px-3 bg-[#2E2E2E]" onChange={(s) => navigate(`/stock?symbol=${s}`)} />
+            <StockSelect className="rounded-[300px] px-3 bg-[#2E2E2E]" onChange={(s) => navigate(`/app/stock?symbol=${s}`)} />
           </div>
         </div>
         <div className="flex-1 overflow-hidden flex bg-accent">
@@ -315,7 +330,7 @@ const AppTitle = () => {
       .find(r => r.path === '/')!
       .children!.find(r => (pathname === '/' ? r.index : r.path === pathname))
 
-    if (pathname.startsWith('/stock')) {
+    if (pathname.startsWith('/app/stock')) {
       if (pathname.includes('trading')) {
         return '个股盘口'
       }

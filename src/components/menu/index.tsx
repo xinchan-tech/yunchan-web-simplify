@@ -32,22 +32,22 @@ const Menu = () => {
       {
         icon: <JknIcon.Svg name="dashboard" size={24} />,
         title: '首页',
-        path: '/'
+        path: '/app'
       },
       {
         icon: <JknIcon.Svg name="views" size={24} />,
         title: '行情',
-        path: '/views'
+        path: '/app/views'
       },
       {
         icon: <JknIcon.Svg name="pool" size={24} />,
         title: '自选',
-        path: '/golden'
+        path: '/app/golden'
       },
       {
         icon: <JknIcon.Svg name="picker" size={24} />,
         title: '选股',
-        path: '/super'
+        path: '/app/super'
       },
       // {
       //   icon: <JknIcon.Svg name="ai-alarm" size={24} />,
@@ -57,12 +57,12 @@ const Menu = () => {
       {
         icon: <JknIcon.Svg name="calendar" size={24} />,
         title: '日历',
-        path: '/calendar'
+        path: '/app/calendar'
       },
       {
         icon: <JknIcon.Svg name="message" size={24} />,
         title: '消息',
-        path: '/message'
+        path: '/app/message'
       }
       // {
       //   icon: <JknIcon.Svg name="shout" size={24} />,
@@ -81,14 +81,14 @@ const Menu = () => {
   const [auth, toastNotAuth] = useAuthorized('vcomment')
 
   const onNav = (path: string) => {
-    if (!token && path !== '/' && path !== '/setting') {
+    if (!token && path !== '/app' && path !== '/app/setting') {
       toast({
         title: '请先登录'
       })
       return
     }
 
-    if (path === '/shout' && !auth()) {
+    if (path === '/app/shout' && !auth()) {
       toastNotAuth()
       return
     }

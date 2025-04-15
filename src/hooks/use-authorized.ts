@@ -53,7 +53,7 @@ export const useAuthorized = <T extends Authorized>(
           clearTimeout(globalRedirectTimer)
         }
         globalRedirectTimer = window.setTimeout(() => {
-          router.navigate('/mall')
+          router.navigate('/app/mall')
         }, 3000)
       }
     },
