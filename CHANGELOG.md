@@ -1,5 +1,7 @@
 # Changelog
 
+## [2.2.3](https://github.com/xinchan-gx/yunchan-web/compare/2.2.2...2.2.3) (2025-04-15)
+
 ## [2.2.2](https://github.com/xinchan-gx/yunchan-web/compare/2.2.1...2.2.2) (2025-04-14)
 
 ### ✨ Features | 新功能
