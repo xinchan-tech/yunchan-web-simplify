@@ -205,7 +205,7 @@ export const routes: RouteObject[] = [
     }
   },
   {
-    path: '/(.*)',
+    path: '*',
     element: <Navigate to="/app" />,
     handle: {
       title: ''
