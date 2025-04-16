@@ -3,6 +3,7 @@ import { useCallback, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { useStockQuoteSubscribe } from './use-stock-subscribe'
 import type { QuoteBuffer, StockSubscribeHandler } from '@/utils/stock'
+import { useLatestRef } from "./use-latest-ref"
 
 type OrderKey<T = any> = keyof T | ((arg: T) => string)
 
@@ -54,10 +55,17 @@ const sortData = <T extends Record<string, any>>(s: T[], columnKey: keyof T, ord
 
 export const useTableData = <T extends Record<string, any>>(data: T[], _?: OrderKey<T>) => {
   const [list, setList] = useState<T[]>(data)
+  const listLast = useLatestRef(list)
   const initList = useRef<T[]>([])
   const lastOrder = useRef<{ field?: keyof T; order?: 'asc' | 'desc' }>({ field: undefined, order: undefined })
 
-  const _setList = useCallback((data: T[]) => {
+  const _setList = useCallback((cb: T[] | ((d: T[]) => T[])) => {
+    let data: typeof cb = cb
+    if (typeof cb === 'function') {
+      data = cb(listLast.current)
+    }else{
+      data = cb
+    }
     initList.current = [...data]
 
     if (lastOrder.current.field && lastOrder.current.order) {
@@ -65,7 +73,7 @@ export const useTableData = <T extends Record<string, any>>(data: T[], _?: Order
     } else {
       setList(data)
     }
-  }, [])
+  }, [listLast])
 
   const updateList = useCallback(setList, [])
 

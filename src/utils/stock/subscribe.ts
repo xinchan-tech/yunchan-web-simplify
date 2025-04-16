@@ -544,8 +544,8 @@ class StockSubscribe {
 
     const rankBuffer = Object.entries(this.rankBuffer)
     this.rankBuffer = {}
-    rankBuffer.forEach(([topic, data]) => {
-      this.subscribed.emit(topic, data)
+    rankBuffer.forEach(([_,data]) => {
+      this.subscribed.emit('rank_subscribe', data)
     })
 
     setTimeout(() => {

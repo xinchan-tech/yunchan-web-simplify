@@ -137,6 +137,17 @@ export interface ChartManageStore {
    */
   chartStores: Record<string, ChartStore>
   /**
+   * 画线工具
+   */
+  drawTool: boolean
+  /**
+   * toolBar
+   */
+  drawToolBar: {
+    icon: string
+    label: string
+  }[]
+  /**
    * getActiveChart
    */
   getActiveChart: () => ChartStore
@@ -184,6 +195,8 @@ export const useChartManage = create<ChartManageStore>()(
       viewMode: 'single',
       activeChartId: 'chart-0',
       currentSymbol: 'QQQ',
+      drawTool: false,
+      drawToolBar: [],
       chartStores: {
         'chart-0': createDefaultChartStore('chart-0')
       },
@@ -213,6 +226,11 @@ export const chartManage = {
   setActiveChart: (chartId: string) => {
     useChartManage.setState({
       activeChartId: chartId
+    })
+  },
+  showDrawTool: (show: boolean) => {
+    useChartManage.setState({
+      drawTool: show
     })
   },
   getChart: (chartId: string): Nullable<ChartStore> => {

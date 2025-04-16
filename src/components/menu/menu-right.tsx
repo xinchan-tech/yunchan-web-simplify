@@ -53,7 +53,7 @@ const MenuRight = () => {
     {
       icon: <JknIcon.Svg name="group" size={24} />,
       title: "群聊",
-      path: "/chat-group",
+      path: "/chat",
     },
   ]
 
@@ -67,7 +67,7 @@ const MenuRight = () => {
       return
     }
 
-    if (path === "/chat-group") {
+    if (path === "/chat") {
       if (user?.permission && user.permission.chat === true) {
         if (useConfig.getState().ip === 'CN') {
           JknAlert.info({

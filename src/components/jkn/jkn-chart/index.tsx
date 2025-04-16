@@ -12,7 +12,7 @@ import {
   registerIndicator,
   registerOverlay
 } from '@/plugins/jkn-kline-chart'
-import { debounce, uid } from 'radash'
+import { debounce } from 'radash'
 import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react'
 import {
   backTestLineFigure,
@@ -30,14 +30,13 @@ import { backTestIndicator, type BackTestRecord } from './indicator/back-test'
 import { CoilingIndicatorId } from './coiling-calc'
 import { coilingIndicator } from './indicator/coiling'
 import dayjs from 'dayjs'
-import { LogoOverlay } from './overlay'
 import { useMount, useUnmount } from 'ahooks'
-import { VerticalLineOverlay } from './overlay/line'
 import { SplitIndicator } from './indicator/split'
 import Decimal from 'decimal.js'
 import stockLogo from '@/assets/image/today-chart-x1.png'
+import { type ChartOverlayType, ParallelOverlay, LineOverlay, LogoOverlay, HorizontalLineOverlay, VerticalLineOverlay, ArrowOverlay, RayOverlay, ChannelOverlay, RectangleOverlay } from './overlay'
 
-export { CoilingIndicatorId, ChartTypes }
+export { CoilingIndicatorId, ChartTypes, type ChartOverlayType }
 
 registerIndicator(coilingIndicator)
 registerIndicator(localIndicator)
@@ -53,7 +52,14 @@ registerFigure(markOverlayFigure)
 registerFigure(LogoFigure)
 registerFigure(compareLabelFigure)
 registerOverlay(LogoOverlay)
+registerOverlay(ParallelOverlay)
+registerOverlay(LineOverlay)
+registerOverlay(HorizontalLineOverlay)
 registerOverlay(VerticalLineOverlay)
+registerOverlay(ArrowOverlay)
+registerOverlay(RayOverlay)
+registerOverlay(ChannelOverlay)
+registerOverlay(RectangleOverlay)
 
 interface JknChartProps {
   className?: string
@@ -101,6 +107,7 @@ interface JknChartIns {
   createGapIndicator: (count: number) => void
   removeGapIndicator: () => void
   setGapIndicator: (count: number) => void
+  createOverlay: (type: ChartOverlayType, onEnd: (type: ChartOverlayType) => boolean) => void
 }
 
 const getAxisType = (chart: Chart) => {
@@ -242,8 +249,8 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
                   return lastData.close > lastData.prevClose ? upColor : downColor
                 }
 
-                const { from } = chart.getVisibleRange()
-                const firstData = data[from]
+                const { realFrom } = chart.getVisibleRange()
+                const firstData = data[realFrom]
 
                 if (!firstData) return downColor
                 return lastData.close > firstData.open ? upColor : downColor
@@ -265,7 +272,7 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
             color: (_ctx, text, chart) => {
               const data = chart.getDataList()
               const range = chart.getVisibleRange()
-              const startData = data[range.from]
+              const startData = data[range.realFrom]
               const chartType = getAxisType(chart)
 
               if (chartType === 'normal') {
@@ -317,7 +324,6 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
                 if (isTimeShare.current){
                   return transformTextColor(text, data.slice(0, range.to).pop()!, 'prevClose')
                 }
-
                 return transformTextColor(text, startData, 'open')
               }
             }
@@ -770,12 +776,7 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
             }
           }
         })
-        // chart.current?.setPaneOptions({
-        //   id: ChartTypes.MAIN_PANE_ID,
-        //   axis: {
-        //     value: undefined
-        //   }
-        // })
+
 
         chart.current?.setPaneOptions({
           id: ChartTypes.MAIN_PANE_ID,
@@ -804,6 +805,12 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
         name: 'gap-indicator',
         id: 'gap-indicator',
         calcParams: [count]
+      })
+    },
+    createOverlay: (type, cb) => {
+      chart.current?.createOverlay({
+        name: type,
+        onDrawEnd: () => cb(type)
       })
     }
   }))

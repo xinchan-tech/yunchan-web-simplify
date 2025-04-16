@@ -1,5 +1,6 @@
 import mitt from 'mitt'
 import type { ChartStore, ChartType, CoilingIndicatorId, Indicator } from './store'
+import type { ChartOverlayType } from "@/components"
 
 export type ChartEvents = {
   symbolChange: string
@@ -33,6 +34,9 @@ export type ChartEvents = {
   }
   showIndicatorSetting: string
   yAxisChange: ChartStore['yAxis']
+  drawStart: ChartOverlayType
+  drawEnd: ChartOverlayType
+  drawCancel: ChartOverlayType
 }
 
 export const chartEvent = {

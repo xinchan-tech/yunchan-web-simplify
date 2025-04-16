@@ -272,26 +272,6 @@ const AlarmsTypeSelect = forwardRef((props: AlarmsTypeSelectProps, _) => {
   return (
     <>
       <div className="flex-1 flex flex-col">
-        {/* <div className="py-3 ml-3">
-          {data?.children?.map(item => (
-            <div
-              key={item.id}
-              className={cn(
-                'h-10 leading-10 w-40 mb-2 relative text-center rounded-sm text-secondary transition-all cursor-pointer bg-accent',
-                method?.id === item.id && 'bg-primary text-foreground'
-              )}
-              onClick={() => setMethod(item)}
-              onKeyDown={() => { }}
-            >
-              {item.name}
-              {method?.id === item.id && props.value?.length && props.value.length > 0 ? (
-                <div className="bg-stock-down rounded-full absolute -right-2 -top-2 w-4 h-4 text-xs">
-                  {props.value?.length}
-                </div>
-              ) : null}
-            </div>
-          ))}
-        </div> */}
         <div className="py-2">
           {method?.children?.map(item => (
             <div key={item.id} className="flex mb-4">

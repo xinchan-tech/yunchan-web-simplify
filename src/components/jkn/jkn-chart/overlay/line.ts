@@ -1,28 +1,51 @@
-import { LineType, type OverlayTemplate } from '@/plugins/jkn-kline-chart'
+import type { OverlayTemplate } from '@/plugins/jkn-kline-chart'
+import { getLinearYFromCoordinates } from "../utils"
 
-export const VerticalLineOverlay: OverlayTemplate = {
-  name: 'VerticalLineOverlay',
-  totalStep: 1,
-  lock: true,
+export const LineOverlay: OverlayTemplate = {
+  name: 'line',
+  totalStep: 3,
+  needDefaultPointFigure: true,
   needDefaultXAxisFigure: false,
   needDefaultYAxisFigure: false,
-  createPointFigures: ({ coordinates, bounding, xAxis }) => {
-    return {
-      type: 'line',
-      attrs: {
-        coordinates: [
-          { x: xAxis?.convertToPixel(40), y: 0 },
+  createPointFigures: ({ coordinates, bounding }) => {
+    if (coordinates.length === 2) {
+      if (coordinates[0].x === coordinates[1].x) {
+        return [
           {
-            x: xAxis?.convertToPixel(coordinates[0].x),
-            y: bounding.height
+            type: 'line',
+            attrs: {
+              coordinates: [
+                {
+                  x: coordinates[0].x,
+                  y: 0
+                },
+                {
+                  x: coordinates[0].x,
+                  y: bounding.height
+                }
+              ]
+            }
           }
         ]
-      },
-      styles: {
-        color: '#2E2E2E',
-        style: LineType.Dashed,
-        dashValue: [5, 20]
       }
+      return [
+        {
+          type: 'line',
+          attrs: {
+            coordinates: [
+              {
+                x: 0,
+                y: getLinearYFromCoordinates(coordinates[0], coordinates[1], { x: 0, y: coordinates[0].y })
+              },
+              {
+                x: bounding.width,
+                y: getLinearYFromCoordinates(coordinates[0], coordinates[1], { x: bounding.width, y: coordinates[0].y })
+              }
+            ]
+          }
+        }
+      ]
     }
+    return []
   }
 }

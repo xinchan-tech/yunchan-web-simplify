@@ -151,6 +151,11 @@ type AlarmMessage = {
     score_total: number
     alarm_time: number
     hdly: string
+    pnl_percent: number
+    pnl_price: number
+    trigger_price: number
+    trigger_type: number
+    base_price: number
   }
 }
 

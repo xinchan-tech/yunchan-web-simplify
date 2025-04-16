@@ -1,10 +1,7 @@
 import { getStockFinancials } from '@/api'
 import {
-  AiAlarm,
   Button,
-  CapsuleTabs,
   CollectStar,
-  JknCheckbox,
   JknDatePicker,
   JknIcon,
   JknRcTable,
@@ -12,7 +9,7 @@ import {
   StockView,
   SubscribeSpan
 } from '@/components'
-import { useCheckboxGroup, useTableData, useTableRowClickToStockTrading } from '@/hooks'
+import { useTableData, useTableRowClickToStockTrading } from '@/hooks'
 import { stockUtils } from '@/utils/stock'
 import { useQuery } from '@tanstack/react-query'
 import dayjs from 'dayjs'
@@ -106,6 +103,20 @@ const StockFinancials = () => {
   const columns: JknRcTableProps<TableDataType>['columns'] = useMemo(
     () => [
       {
+        title: '',
+        dataIndex: 'collect',
+        align: 'center',
+        width: '4%',
+        render: (_, row) => <CollectStar checked={row.collect === 1} code={row.code} />
+      },
+      {
+        title: '',
+        dataIndex: 'index',
+        align: 'center',
+        width: '4%',
+        render: (_, _row, index) => <span>{index + 1}</span>
+      },
+      {
         title: '名称代码',
         dataIndex: 'code',
         align: 'left',
@@ -113,8 +124,6 @@ const StockFinancials = () => {
         sort: true,
         render: (_, row) => (
           <div className="flex items-center h-[33px]">
-            <CollectStar checked={row.collect === 1} code={row.code} />
-            <span className="mr-3" />
             <StockView name={row.name} code={row.code as string} showName />
           </div>
         )

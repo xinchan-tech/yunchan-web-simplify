@@ -210,7 +210,6 @@ export const ConversationTransform = {
     WKSDK.shared().channelManager.setChannleInfoForCache(channelInfo)
 
     if (v.recents.length) {
-      console.log('🚀 ~ v.recents:', v.recents)
 
       const m = v.recents.find((r: any) => {
         const _m = MessageTransform.toMessage(r)

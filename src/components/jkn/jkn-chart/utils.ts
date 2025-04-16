@@ -3,6 +3,7 @@ import { useConfig } from '@/store'
 import type { Candlestick } from './types'
 import type { StockTrading } from '@/utils/stock'
 import dayjs from 'dayjs'
+import type { Coordinate } from "@/plugins/jkn-kline-chart"
 
 export enum ChartTypes {
   MAIN_PANE_ID = 'candle_pane',
@@ -123,4 +124,34 @@ export const getTickNumberByTrading = (trading: StockTrading) => {
   }
 
   return end.diff(start, 'minute')
+}
+
+
+
+export function getLinearYFromSlopeIntercept (kb: Nullable<number[]>, coordinate: Coordinate): number {
+  if (kb !== null) {
+    return coordinate.x * kb![0] + kb![1]
+  }
+  return coordinate.y
+}
+
+/**
+ * 获取点在两点决定的一次函数上的y值
+ * @param coordinate1
+ * @param coordinate2
+ * @param targetCoordinate
+ */
+export function getLinearYFromCoordinates (coordinate1: Coordinate, coordinate2: Coordinate, targetCoordinate: Coordinate): number {
+  const kb = getLinearSlopeIntercept(coordinate1, coordinate2)
+  return getLinearYFromSlopeIntercept(kb, targetCoordinate)
+}
+
+export function getLinearSlopeIntercept (coordinate1: Coordinate, coordinate2: Coordinate): Nullable<number[]> {
+  const difX = coordinate1.x - coordinate2.x
+  if (difX !== 0) {
+    const k = (coordinate1.y - coordinate2.y) / difX
+    const b = coordinate1.y - k * coordinate1.x
+    return [k, b]
+  }
+  return null
 }

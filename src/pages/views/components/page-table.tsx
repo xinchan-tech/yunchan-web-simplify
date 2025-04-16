@@ -59,26 +59,51 @@ const PageTable = (props: PageTableProps) => {
     })
   }
 
-  useEffect(() => {
-    if(!['close', 'increase', 'amount', 'total'].includes(sort.column)) {
-      return 
-    }
+  // useEffect(() => {
+  //   if (!['close', 'increase', 'amount', 'total'].includes(sort.column)) {
+  //     return
+  //   }
 
-    const columnMap: Record<string, string> = {
-      close: 'Close',
-      increase: 'Change',
-      amount: 'Amount',
-      total_mv: 'MarketCap'
-    }
+  //   const columnMap: Record<string, string> = {
+  //     close: 'Close',
+  //     increase: 'Change',
+  //     amount: 'Amount',
+  //     total_mv: 'MarketCap'
+  //   }
 
-    stockSubscribe.subscribeRank({
-      limit: `${(pagination.page - 1) * pagination.pageSize}~${pagination.pageSize * pagination.page}`,
-      sort: sort.order,
-      key: columnMap[sort.column] as any
-    })
+  //   stockSubscribe.subscribeRank({
+  //     limit: `${(pagination.page - 1) * pagination.pageSize}~${pagination.pageSize * pagination.page}`,
+  //     sort: sort.order,
+  //     key: columnMap[sort.column] as any
+  //   })
 
-    return stockSubscribe.unsubscribeRank
-  }, [pagination, sort])
+  //   const cancel = stockSubscribe.on('rank_subscribe', (data) => {
+  //     console.log(data)
+  //     if(Object.keys(data).length > 0){
+  //       setList((s: TableDataType[]) => {
+  //         Object.keys(data.data).forEach((key) => {
+  //           const index = Number(key)
+
+  //           if(s[index]){
+  //             s[index].price = data.data[key as any].close
+  //             s[index].percent = data.data[key as any].percent
+  //             s[index].symbol = data.data[key as any].symbol
+  //             s[index].amount = data.data[key as any].turnover
+  //             s[index].total = data.data[key as any].marketValue
+  //           }
+  //         })
+
+  //         console.log([...s])
+  //         return [...s]
+  //       })
+  //     }
+  //   })
+
+  //   return () => { 
+  //     stockSubscribe.unsubscribeRank() 
+  //     cancel() 
+  //   }
+  // }, [pagination, sort])
 
   const query = useQuery({
     queryKey: [getUsStocks.cacheKey, props.type, sort, pagination],
@@ -164,6 +189,20 @@ const PageTable = (props: PageTableProps) => {
   const columns = useMemo<JknRcTableProps<TableDataType>['columns']>(
     () => [
       {
+        title: '',
+        dataIndex: 'collect',
+        align: 'center',
+        width: '4%',
+        render: (_, row) => <CollectStar checked={row.collect === 1} code={row.symbol} />
+      },
+      {
+        title: '',
+        dataIndex: 'index',
+        align: 'center',
+        width: '4%',
+        render: (_, _row, index) => <span>{index + 1}</span>
+      },
+      {
         title: '名称代码',
         dataIndex: 'name',
         align: 'left',
@@ -171,8 +210,6 @@ const PageTable = (props: PageTableProps) => {
         width: '15%',
         render: (_, row) => (
           <div className="flex items-center h-[33px]">
-            <CollectStar checked={row.collect === 1} code={row.symbol} />
-            <span className="mr-3" />
             <StockView name={row.name} code={row.symbol as string} showName />
           </div>
         )
@@ -198,7 +235,7 @@ const PageTable = (props: PageTableProps) => {
         title: '涨跌幅',
         dataIndex: 'percent',
         align: 'left',
-        width: '13.5%',
+        width: '11.5%',
         sort: true,
         render: (_, row) => (
           <SubscribeSpan.PercentBlink
@@ -216,7 +253,7 @@ const PageTable = (props: PageTableProps) => {
         title: '成交额',
         dataIndex: 'amount',
         align: 'left',
-        width: '13.5%',
+        width: '12%',
         sort: true,
         render: (_, row) => (
           <SubscribeSpan.TurnoverBlink
@@ -232,7 +269,7 @@ const PageTable = (props: PageTableProps) => {
         title: '总市值',
         dataIndex: 'total',
         align: 'left',
-        width: '15%',
+        width: '12%',
         sort: true,
         render: (_, row) => (
           <div className="">

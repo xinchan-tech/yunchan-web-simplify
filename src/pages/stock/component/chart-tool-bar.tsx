@@ -39,6 +39,7 @@ import { useLocalStorageState, useVirtualList } from 'ahooks'
 import { cn } from '@/utils/style'
 import { chartEvent } from '../lib/event'
 import { IndicatorParamsForm } from './indicator-param-form'
+import { sysConfig } from "@/utils/config"
 
 const WrapperLabel = ({ children, label }: PropsWithChildren<{ label: string | ReactNode }>) => {
   return (
@@ -94,6 +95,14 @@ export const ChartToolBar = () => {
         <Separator orientation="vertical" className="h-2 w-[1px] bg-accent mx-1" />
         <AlarmPicker />
         <Separator orientation="vertical" className="h-2 w-[1px] bg-accent mx-1" />
+        {
+          sysConfig.PUBLIC_BASE_BUILD_ENV !== 'PRODUCTION' ? (
+            <>
+              <DrawTool />
+              <Separator orientation="vertical" className="h-2 w-[1px] bg-accent mx-1" />
+            </>
+          ) : null
+        }
         <WrapperLabel label="股票回测">
           <div>
             <BackTest />
@@ -408,7 +417,7 @@ export const IndicatorModal = (props: { onClickParams: () => void }) => {
 
   const indicators = useMemo(() => {
     if (!indicator.data) return []
-    const allList: (StockIndicator & {isMain: boolean})[] = []
+    const allList: (StockIndicator & { isMain: boolean })[] = []
 
     if (search) {
       const keyMap = new Set<string>()
@@ -416,7 +425,7 @@ export const IndicatorModal = (props: { onClickParams: () => void }) => {
         t.items?.forEach(i => {
           i.indicators?.forEach(o => {
             if (!o.name?.includes(search)) return
-            if(keyMap.has(o.id)) return
+            if (keyMap.has(o.id)) return
             keyMap.add(o.id)
             allList.push({
               ...o,
@@ -1017,6 +1026,25 @@ const BackTest = () => {
       <JknIcon.Svg name="chart-back-test" size={20} />
       &nbsp;
       <span>回测</span>
+    </div>
+  )
+}
+
+
+const DrawTool = () => {
+  const showDrawTool = useChartManage(s => s.drawTool)
+  return (
+    <div
+      className={cn(
+        'cursor-pointer hover:bg-accent h-full rounded px-3 box-border flex items-center text-sm py-2 data-[active=true]:text-primary',
+      )}
+      data-active={showDrawTool}
+      onClick={() => chartManage.showDrawTool(!showDrawTool)}
+      onKeyDown={() => { }}
+    >
+      <JknIcon.Svg name="draw-tool" size={20} />
+      &nbsp;
+      <span>画线工具</span>
     </div>
   )
 }

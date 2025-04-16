@@ -127,17 +127,17 @@ export const PercentageAlarmSetting = (props: PercentageAlarmSettingProps) => {
       return
     }
 
-    // const [err] = await to(addAlarm(params))
+    const [err] = await to(addAlarm(params))
 
-    // if (err) {
-    //   toast({ description: err.message })
-    //   return
-    // }
+    if (err) {
+      toast({ description: err.message })
+      return
+    }
 
-    // toast({ description: '添加成功' })
-    // queryClient.refetchQueries({
-    //   queryKey: [getAlarmConditionsList.cacheKey]
-    // })
+    toast({ description: '添加成功' })
+    queryClient.refetchQueries({
+      queryKey: [getAlarmConditionsList.cacheKey]
+    })
   }
 
   return (

@@ -7,6 +7,7 @@ import { renderUtils } from '../lib/utils'
 import { CoilingBar } from '../component/chart-tool-bar'
 import { useQueryParams } from '@/hooks'
 import { AESCrypt } from '@/utils/string'
+import { DrawToolBox } from "../component/draw-tool-box"
 
 // biome-ignore lint/suspicious/noEmptyInterface: <explanation>
 interface KChartProps { }
@@ -22,6 +23,7 @@ export const KChart = (_props: KChartProps) => {
   // const symbol = useSymbolQuery()
   const [queryParams, setQueryParams] = useQueryParams<{ symbol: string; q?: string }>()
   const active = useChartManage(s => s.activeChartId)
+  const drawTool = useChartManage(s => s.drawTool)
 
   useEffect(() => {
     chartEvent.get().emit('symbolChange', queryParams.symbol ?? 'QQQ')
@@ -45,7 +47,12 @@ export const KChart = (_props: KChartProps) => {
   const chartCount = useMemo(() => renderUtils.getViewMode(viewMode), [viewMode])
 
   return (
-    <div className="h-full overflow-hidden flex flex-col bg-background">
+    <div className="h-full overflow-hidden flex flex-col bg-background relative">
+      {
+        drawTool ? (
+          <DrawToolBox />
+        ) : null
+      }
       <div className="text-foreground text-sm flex items-center px-4 space-x-4 pt-1">
         <CoilingBar />
       </div>

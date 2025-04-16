@@ -160,12 +160,24 @@ const GoldenPool = () => {
   const columns: JknRcTableProps<TableDataType>['columns'] = useMemo(
     () => [
       {
+        title: '',
+        dataIndex: 'collect',
+        align: 'center',
+        width: 40,
+        render: () => <span className="inline-flex items-center">
+          <Star checked={true} onChange={() => handleRemoveFav(list.map(item => item.symbol))} />
+        </span>
+      },
+      {
+        title: '',
+        dataIndex: 'index',
+        align: 'center',
+        width: 40,
+        render: (_, _row, index) => <span>{index + 1}</span>
+      },
+      {
         title: (
           <div className="inline-flex items-center whitespace-nowrap">
-            <span className="inline-flex items-center">
-              <Star checked={true} onChange={() => handleRemoveFav(list.map(item => item.symbol))} />
-            </span>
-            <span className="mr-3" />
             <span className="inline-flex items-center">名称代码</span>
           </div>
         ),
@@ -175,10 +187,6 @@ const GoldenPool = () => {
         sort: true,
         render: (_, row) => (
           <div className="flex items-center h-[33px]">
-            <div className="flex justify-center items-center">
-              <Star checked={true} onChange={() => handleRemoveFav([row.symbol])} />
-            </div>
-            <span className="mr-3" />
             <StockView name={row.name} code={row.symbol as string} showName />
           </div>
         )
@@ -410,6 +418,7 @@ const GoldenPool = () => {
                 headerHeight={61}
                 isLoading={collects.isLoading}
                 rowKey="id"
+                border={false}
                 components={{
                   body: { row: Row },
                 }}
