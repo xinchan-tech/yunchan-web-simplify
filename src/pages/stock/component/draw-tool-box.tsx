@@ -8,6 +8,7 @@ import { chartEvent } from '../lib/event'
 const defaultBar: {
   icon: ChartOverlayType
   label: string
+  tool?: string[]
 }[] = [
   {
     icon: 'line',
@@ -56,26 +57,58 @@ const defaultBar: {
 ]
 
 export const DrawToolBox = () => {
-  const [pos, setPos] = useState({ x: 24, y: 240 })
+  const [boxPoint, setBoxPoint] = useState({ x: 24, y: 240 })
+  const [settingPoint, setSettingPoint] = useState({ x: 24, y: 24 })
+  const [drawActive, setDrawActive] = useState<Nullable<ChartOverlayType>>()
+  const [drawSelect, setDrawSelect] = useState<Nullable<ChartOverlayType>>()
 
   const onDragEnd = (event: DragEndEvent) => {
     const { active, over } = event
 
-    if (active.id !== over?.id) {
-      setPos({
-        x: event.delta.x + pos.x,
-        y: event.delta.y + pos.y
-      })
+    if (over?.id === 'draggable-draw-tool') {
+      if (active.id !== over?.id) {
+        setBoxPoint({
+          x: event.delta.x + boxPoint.x,
+          y: event.delta.y + boxPoint.y
+        })
+      }
     }
 
-    if (over?.id === 'draggable-draw-tool') {
-      return
+    if (over?.id === 'draggable-draw-setting') {
+      if (active.id !== over?.id) {
+        setSettingPoint({
+          x: event.delta.x + settingPoint.x,
+          y: event.delta.y + settingPoint.y
+        })
+      }
     }
   }
 
+  useEffect(() => {
+    return chartEvent.on('drawEnd', () => {
+      setDrawActive(undefined)
+    })
+  }, [])
+  useEffect(() => {
+    return chartEvent.on('drawStart', e => {
+      setDrawActive(e)
+    })
+  }, [])
+  useEffect(() => {
+    return chartEvent.on('drawCancel', () => {
+      setDrawSelect(undefined)
+    })
+  }, [])
+  useEffect(() => {
+    return chartEvent.on('drawSelect', e => {
+      setDrawSelect(e)
+    })
+  }, [])
+
+  console.log(drawActive)
   return (
     <DndContext onDragEnd={onDragEnd}>
-      <DrawToolContainer pos={pos}>
+      <DrawToolContainer pos={boxPoint}>
         <div className="border-b-primary border-0 w-full !border-dashed my-2.5" />
         <div className="">
           <DrawToolBar />
@@ -85,7 +118,11 @@ export const DrawToolBox = () => {
           <DrawToolAction />
         </div>
       </DrawToolContainer>
-
+      {
+        drawActive || drawSelect ? (
+          <DrawSettingBar pos={settingPoint} type={drawSelect! || drawActive!} />
+        ): null
+      }
     </DndContext>
   )
 }
@@ -125,8 +162,34 @@ const DrawToolContainer = ({ pos, children }: PropsWithChildren<{ pos: { x: numb
   )
 }
 
-const DrawSettingBar = () => {
-  
+const DrawSettingBar = ({ pos, type }: { pos: { x: number; y: number }, type: ChartOverlayType }) => {
+  const { attributes, listeners, setNodeRef, transform } = useDraggable({
+    id: 'draggable-draw-setting'
+  })
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    position: 'absolute' as any,
+    left: pos.x,
+    top: pos.y
+  }
+
+  return (
+    <div ref={setNodeRef} className="bg-muted z-10 box-border p-2.5 rounded flex items-center" style={style}>
+      <div className="grid grid-cols-2 gap-2">
+        <div
+          {...listeners}
+          {...attributes}
+          className="text-tertiary hover:text-foreground hover:cursor-pointer flex items-center justify-center"
+        >
+          <JknIcon.Svg name="draggable" className="w-3 h-4" />
+        </div>
+      </div>
+      <div>
+        
+      </div>
+    </div>
+  )
 }
 
 const DrawToolBar = () => {

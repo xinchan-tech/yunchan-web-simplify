@@ -37,6 +37,7 @@ export type ChartEvents = {
   drawStart: ChartOverlayType
   drawEnd: ChartOverlayType
   drawCancel: ChartOverlayType
+  drawSelect: ChartOverlayType
 }
 
 export const chartEvent = {
