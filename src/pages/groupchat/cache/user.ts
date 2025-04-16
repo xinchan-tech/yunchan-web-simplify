@@ -43,7 +43,7 @@ class UserCache extends ChatCache {
     const tx = db.transaction(UserCache.USER_STORE, 'readwrite')
     const store = tx.objectStore(UserCache.USER_STORE)
 
-    await store.delete(data.map(u => this.getUserId(u)))
+    await Promise.all(data.map(item => store.delete(this.getUserId(item))))
 
     await Promise.all(
       data.map(async user => {

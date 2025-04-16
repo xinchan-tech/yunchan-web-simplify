@@ -37,7 +37,7 @@ class ConversationCache extends ChatCache {
 
   async updateBatch(data: Conversation[]) {
     const db = await this.getDb()
-    const conversations = await this.getConversations()
+    const conversations = await db.getAll(ConversationCache.CONVERSATION_STORE)
 
     /**
      * 开启事务
@@ -47,7 +47,7 @@ class ConversationCache extends ChatCache {
 
     await Promise.all(
       conversations.map(async c => {
-        store.delete(this.getConversationId(c))
+        store.delete(c.channel.channelID)
       })
     )
 
@@ -70,7 +70,7 @@ class ConversationCache extends ChatCache {
 
   async getConversations() {
     const db = await this.getDb()
-
+    
     return (
       (await db.getAll(ConversationCache.CONVERSATION_STORE))?.map(c => {
         return ConversationTransform.toConversationCls(c)

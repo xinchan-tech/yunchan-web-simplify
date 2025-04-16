@@ -34,6 +34,8 @@ export const GroupChatContext = createContext<{
   syncSubscriber: async () => {}
 })
 
+window.WKSDK = WKSDK
+
 const COUNT_DOWN_NUM = 10
 
 const GroupChatPage = () => {
