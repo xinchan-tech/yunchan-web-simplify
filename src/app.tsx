@@ -12,13 +12,10 @@ import {
   AuthGuard,
   Footer,
   HeaderUser,
-  JknAlert,
-  MallPackages,
   Menu,
   MenuRight,
   StockSelect,
-  Toaster,
-  useModal
+  Toaster
 } from './components'
 
 import { useJoinGroupByInviteCode } from "./pages/groupchat/hooks"
@@ -41,9 +38,8 @@ const App = () => {
   const hasSelected = useConfig(s => s.hasSelected)
   const token = useToken(s => s.token)
   const refreshUser = useUser(s => s.refreshUser)
-  const { t, i18n } = useTranslation()
+  const { i18n } = useTranslation()
   const setUser = useUser(s => s.setUser)
-  const notLogin = useRef(0)
   const queryClient = useQueryClient()
   const path = useLocation()
 

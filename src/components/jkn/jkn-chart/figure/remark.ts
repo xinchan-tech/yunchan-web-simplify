@@ -11,6 +11,15 @@ export type FigureStyles = {
   color?: string
 }
 
+type RemarkAttrsExt = RemarkAttrs & {
+  shape: {
+    x: number
+    y: number
+    width: number
+    height: number
+  }
+}
+
 /**
  *
  */
@@ -19,8 +28,8 @@ export const RemarkFigure: FigureTemplate<RemarkAttrs, FigureStyles> = {
   draw: (ctx, attrs, styles) => {
     const { coordinates, text, fontSize = 16 } = attrs
     const { color = '#fff' } = styles
-    console.log(coordinates, text)
-    let textMax = 32
+    const padding = [6, 6]
+    let textMax = 128
     let height = fontSize
     ctx.font = `${fontSize}px sans-serif`
 
@@ -36,7 +45,7 @@ export const RemarkFigure: FigureTemplate<RemarkAttrs, FigureStyles> = {
     ctx.beginPath()
     ctx.fillStyle = color
 
-    drawRoundedRect(ctx, x, y, textMax, height, 4)
+    drawRoundedRect(ctx, x, y, textMax + padding[1] * 2, height + padding[0] * 2, 4)
     ctx.fill()
 
     /**
@@ -47,37 +56,13 @@ export const RemarkFigure: FigureTemplate<RemarkAttrs, FigureStyles> = {
     const centerX = x + textMax / 2
     const centerY = y + height / 2
 
-    // Calculate the direction vector from (x1, y1) to the center
-    const dx = centerX - x1
-    const dy = centerY - y1
-    const length = Math.sqrt(dx * dx + dy * dy)
+    const radius = Math.sqrt((centerX - x1) ** 2 + (centerY - y1) ** 2)
+    const angle = Math.atan2(centerY - y1, centerX - x1)
+    const arcLength = 20 / radius // Calculate the angle for the arc length
 
-    // Normalize the direction vector
-    const nx = dx / length
-    const ny = dy / length
-
-    // Perpendicular vector for the arrowhead
-    const px = -ny
-    const py = nx
-
-    // Arrowhead points
-    const arrowLength = 10
-    const arrowX1 = x1 + px * arrowLength
-    const arrowY1 = y1 + py * arrowLength
-    const arrowX2 = x1 - px * arrowLength
-    const arrowY2 = y1 - py * arrowLength
-
-    // Draw the line from (x1, y1) to the center
-    // ctx.beginPath()
-    // ctx.moveTo(x1, y1)
-    // ctx.lineTo(centerX, centerY)
-    // ctx.stroke()
-
-    // Draw the arrowhead
     ctx.beginPath()
     ctx.moveTo(x1, y1)
-    ctx.lineTo(arrowX1, arrowY1)
-    ctx.lineTo(arrowX2, arrowY2)
+    ctx.arc(x1, y1, radius, angle - arcLength / 2, angle + arcLength / 2)
     ctx.closePath()
     ctx.fill()
 
@@ -102,21 +87,27 @@ export const RemarkFigure: FigureTemplate<RemarkAttrs, FigureStyles> = {
      * 画文本
      */
     ctx.fillStyle = '#000'
-    ctx.textAlign = 'center'
-    ctx.textBaseline = 'middle'
     text.forEach((t, i) => {
-      ctx.fillText(t, centerX, centerY + (i - 1) * fontSize)
+      ctx.fillText(t, x + padding[1], y - (i - 1) * fontSize - padding[0])
     })
     ctx.fillStyle = color
+
+    ;(attrs as RemarkAttrsExt).shape = {
+      x: x,
+      y: y,
+      width: textMax + padding[1] * 2,
+      height: height + padding[0] * 2
+    }
   },
   checkEventOn: (coordinate, attrs) => {
-    const { coordinates } = attrs
-    const { x, y } = coordinates[1]
-    const { x: x1, y: y1 } = coordinates[0]
+    const { shape } = attrs as RemarkAttrsExt
+    const { x, y, width, height } = shape
 
     return (
-      (coordinate.x > x - 10 && coordinate.x < x + 10 && coordinate.y > y - 10 && coordinate.y < y + 10) ||
-      (coordinate.x > x1 - 10 && coordinate.x < x1 + 10 && coordinate.y > y1 - 10 && coordinate.y < y1 + 10)
+      coordinate.x >= x &&
+      coordinate.x <= x + width &&
+      coordinate.y >= y &&
+      coordinate.y <= y + height
     )
   }
 }

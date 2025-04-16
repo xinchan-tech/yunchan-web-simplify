@@ -85,6 +85,7 @@ export const DrawToolBox = () => {
           <DrawToolAction />
         </div>
       </DrawToolContainer>
+
     </DndContext>
   )
 }
@@ -122,6 +123,10 @@ const DrawToolContainer = ({ pos, children }: PropsWithChildren<{ pos: { x: numb
       {children}
     </div>
   )
+}
+
+const DrawSettingBar = () => {
+  
 }
 
 const DrawToolBar = () => {
