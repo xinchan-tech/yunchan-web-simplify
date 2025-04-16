@@ -125,10 +125,11 @@ export const MainChart = (props: MainChartProps) => {
       }
 
       if (newData.high < newData.close) {
-        newData.high = newData.close
+        newData.close = newData.high
       }
+      
       if (newData.low > newData.close) {
-        newData.low = newData.close
+        newData.close = newData.low
       }
 
       chartImp.current?.appendCandlestick(newData, chartStore.interval)
