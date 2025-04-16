@@ -110,7 +110,7 @@ const PageTable = (props: PageTableProps) => {
     queryFn: () => queryFn(),
   })
 
-  const [list, { setList, onSort }] = useTableData<TableDataType>([], 'symbol')
+  const [list, { setList, onSort, cleanSort }] = useTableData<TableDataType>([], 'symbol')
 
   useEffect(() => {
     const r: TableDataType[] = []
@@ -177,6 +177,8 @@ const PageTable = (props: PageTableProps) => {
         column: sort !== undefined ? columnMap[columnKey as string] : 'total_mv',
         order: sort === undefined ? 'desc' : sort
       })
+      cleanSort()
+
     } else {
       onSort(columnKey, sort)
     }
