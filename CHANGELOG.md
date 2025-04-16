@@ -1,5 +1,18 @@
 # Changelog
 
+## [2.2.5](https://github.com/xinchan-gx/yunchan-web/compare/2.2.4...2.2.5) (2025-04-16)
+
+### ✨ Features | 新功能
+
+* 更新可见范围的索引以使用 realFrom 属性 ([c4b1080](https://github.com/xinchan-gx/yunchan-web/commit/c4b1080b6e5e3a4fc6c024788ef38919a460ab4a))
+* 更新群聊路径为 "/chat"，修正导航逻辑 ([b978ad4](https://github.com/xinchan-gx/yunchan-web/commit/b978ad44fff3a233ec4897552cf98244e09152ac))
+* 更新数据库版本至4并优化路由路径匹配 ([08c794e](https://github.com/xinchan-gx/yunchan-web/commit/08c794e60e6dd9f2646e49f31b4e6222c6709a0a))
+* 添加对股票主题的有效性检查以优化数据订阅 ([3395177](https://github.com/xinchan-gx/yunchan-web/commit/33951779b4a141156815bc9f1a992a5b4d0912e2))
+* 优化对会话和用户数据的批量更新逻辑，简化删除操作 ([602a8e0](https://github.com/xinchan-gx/yunchan-web/commit/602a8e0a58986030b33067982f5e7577b6df4f90))
+* 在 getPercentUnsafe 方法中添加对 prevClose 的有效性检查 ([bff56b3](https://github.com/xinchan-gx/yunchan-web/commit/bff56b3659c6efd0eb21a7397980f9a86eac0009))
+* 注释掉股票排名订阅的 useEffect 逻辑以进行后续优化 ([6728332](https://github.com/xinchan-gx/yunchan-web/commit/6728332c58f0b06b9405a24c87e9a9808638e1d8))
+* add drawing tools and functionality to the stock chart ([ade4710](https://github.com/xinchan-gx/yunchan-web/commit/ade4710429f3d0f8f3431ccce933ebc2c82c87de))
+
 ## [2.2.4](https://github.com/xinchan-gx/yunchan-web/compare/2.2.3...2.2.4) (2025-04-15)
 
 ### ✨ Features | 新功能
