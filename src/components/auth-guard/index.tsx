@@ -43,6 +43,8 @@ export const AuthGuard = (props: PropsWithChildren) => {
     content: (
       <MallPackages
         showMore={() => {
+          mall.modal.close()
+          navigate('/app/mall')
           /* Add your show more logic here */
         }}
       />

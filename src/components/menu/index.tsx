@@ -1,9 +1,7 @@
-import { useAuthorized, useToast } from '@/hooks'
+import { useAuthorized } from '@/hooks'
 import { router } from '@/router'
-import { useToken } from '@/store'
 import { cn } from '@/utils/style'
-import { Settings } from 'lucide-react'
-import { Fragment, type ReactNode, useEffect, useMemo, useState } from 'react'
+import { type ReactNode, useEffect, useMemo, useState } from 'react'
 import { JknIcon } from '../jkn/jkn-icon'
 
 type MenuItem = {
