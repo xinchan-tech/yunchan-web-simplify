@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.2.6](https://github.com/xinchan-gx/yunchan-web/compare/2.2.5...2.2.6) (2025-04-16)
+
+### ✨ Features | 新功能
+
+* 添加 cleanSort 方法以重置排序状态，并在页面表格组件中使用 ([57ca6d2](https://github.com/xinchan-gx/yunchan-web/commit/57ca6d213d9c9c0c6e8efe94f5ae15ce1cd9d822))
+
 ## [2.2.5](https://github.com/xinchan-gx/yunchan-web/compare/2.2.4...2.2.5) (2025-04-16)
 
 ### ✨ Features | 新功能
