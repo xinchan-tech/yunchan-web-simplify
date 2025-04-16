@@ -1,9 +1,9 @@
 import { JknIcon, ToggleGroup, ToggleGroupItem } from '@/components'
 import { useAuthorized } from '@/hooks'
+import { cn } from '@/utils/style'
 import { useMount, useUnmount } from 'ahooks'
 import { useContext, useRef, useState } from 'react'
 import { SuperStockContext } from '../ctx'
-import { cn } from '@/utils/style'
 
 type StockKLineType = {
   authorized: 0 | 1

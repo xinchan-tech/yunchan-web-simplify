@@ -2,8 +2,8 @@ import WKSDK, { Channel, ChannelTypePerson, type Message, ChannelInfo, ChannelTy
 
 import { getChatNameAndAvatar } from '@/api'
 import { useGroupChatStoreNew } from '@/store/group-chat-new'
-import dayjs from 'dayjs'
 import { dateUtils } from '@/utils/date'
+import dayjs from 'dayjs'
 
 // 缓存单聊头像名称信息
 export const setPersonChannelCache = (fromUID: string) => {

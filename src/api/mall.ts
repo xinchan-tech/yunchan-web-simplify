@@ -96,7 +96,6 @@ export const getPaymentTypes = () => {
 
 getPaymentTypes.cacheKey = 'mall:paymentTypes'
 
-
 type PaymentBillProduct = {
   id: string
   name: string
@@ -114,7 +113,6 @@ type PaymentBillProduct = {
   subscribe_status_text: string
 }
 
-
 export interface GetPaymentListResult {
   product: PaymentBillProduct[]
   channel: any[]
@@ -124,7 +122,7 @@ export interface GetPaymentListResult {
  * 账单列表
  */
 export const getPaymentList = () => {
-  return request.get<GetPaymentListResult>('/user/getPayment').then(r => r.data) 
+  return request.get<GetPaymentListResult>('/user/getPayment').then(r => r.data)
 }
 getPaymentList.cacheKey = 'mall:paymentList'
 
@@ -135,7 +133,5 @@ export const cancelSubscription = (subscriptionId: string, type: 'product' | 'ch
   const form = new URLSearchParams()
   form.append('id', subscriptionId)
   form.append('type', type)
-  return request
-    .post<{ success: boolean }>('/user/unsubscribe', form)
-    .then(r => r.data);
+  return request.post<{ success: boolean }>('/user/unsubscribe', form).then(r => r.data)
 }

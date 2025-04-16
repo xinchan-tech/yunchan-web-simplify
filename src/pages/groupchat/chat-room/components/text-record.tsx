@@ -2,7 +2,7 @@ import { getChatNameAndAvatar } from '@/api'
 import { ChatMessageType, useStockList } from '@/store'
 import { useQueries, useQuery } from '@tanstack/react-query'
 import { Fragment, type ReactNode } from 'react'
-import { type MessageText, WKSDK, type Message } from 'wukongimjssdk'
+import { type Message, type MessageText, WKSDK } from 'wukongimjssdk'
 import { UsernameSpan } from '../../components/username-span'
 
 type TextSegment = {

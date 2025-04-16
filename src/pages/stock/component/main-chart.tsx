@@ -2,6 +2,7 @@ import type { StockRawRecord } from '@/api'
 import { ChartTypes, JknChart, JknIcon } from '@/components'
 import { useStockBarSubscribe } from '@/hooks'
 import { useConfig, useTime } from '@/store'
+import { dateUtils } from '@/utils/date.ts'
 import { type Stock, stockSubscribe, stockUtils } from '@/utils/stock'
 import { colorUtil } from '@/utils/style'
 import { useMount, useUnmount } from 'ahooks'
@@ -9,11 +10,10 @@ import qs from 'qs'
 import { type ComponentRef, useEffect, useRef, useState } from 'react'
 import { chartEvent } from '../lib/event'
 import { useCandlesticks } from '../lib/request'
-import { chartManage, ChartType, MainYAxis, useChartManage } from '../lib/store'
+import { ChartType, MainYAxis, chartManage, useChartManage } from '../lib/store'
 import { renderUtils } from '../lib/utils'
 import { BackTestBar } from './back-test-bar'
 import { ChartContextMenu } from './chart-context-menu'
-import { dateUtils } from '@/utils/date.ts'
 
 interface MainChartProps {
   chartId: string
@@ -61,9 +61,12 @@ export const MainChart = (props: MainChartProps) => {
     if (!renderUtils.shouldUpdateChart(trading, interval)) {
       if (lastBarInInterval.current) {
         if (trading === 'afterHours' && stockUtils.getTrading(lastBarInInterval.current.timestamp) === 'intraDay') {
-          chartImp.current?.appendCandlestick({
-            ...lastBarInInterval.current
-          }, interval)
+          chartImp.current?.appendCandlestick(
+            {
+              ...lastBarInInterval.current
+            },
+            interval
+          )
         }
       }
       return
@@ -74,14 +77,20 @@ export const MainChart = (props: MainChartProps) => {
     if (chartImp.current?.isSameIntervalCandlestick(record, interval)) {
       lastBarInInterval.current = record
       if (trading === 'intraDay') {
-        chartImp.current?.appendCandlestick({
-          ...record,
-          close: lastData?.close ?? record.close,
-        }, interval)
+        chartImp.current?.appendCandlestick(
+          {
+            ...record,
+            close: lastData?.close ?? record.close
+          },
+          interval
+        )
       } else {
-        chartImp.current?.appendCandlestick({
-          ...record
-        }, interval)
+        chartImp.current?.appendCandlestick(
+          {
+            ...record
+          },
+          interval
+        )
       }
     } else {
       // 用bar数据覆盖上一根k线quote的数据
@@ -106,7 +115,7 @@ export const MainChart = (props: MainChartProps) => {
   useEffect(() => {
     return stockSubscribe.onQuoteTopic(symbol, data => {
       const _symbol = useChartManage.getState().chartStores[props.chartId].symbol
-      if(data.topic !== _symbol) return
+      if (data.topic !== _symbol) return
       const trading = useTime.getState().getTrading()
       const mode = useChartManage.getState().chartStores[props.chartId].mode
       if (mode === 'backTest') return
@@ -119,6 +128,7 @@ export const MainChart = (props: MainChartProps) => {
       const lastData = chart?.getDataList()?.slice(-1)[0]
 
       if (!lastData) return
+
       const newData = {
         ...lastData,
         close: data.record.close

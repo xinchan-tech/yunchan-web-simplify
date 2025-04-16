@@ -1,8 +1,16 @@
-import { DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Pagination, PaginationContent, PaginationItem, PaginationPrevious, PaginationLink, PaginationEllipsis, PaginationNext } from "@/components/ui/pagination"
-import { DropdownMenu } from "@radix-ui/react-dropdown-menu"
-import { useMemo } from "react"
-import { JknIcon } from "../jkn-icon"
+import { DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious
+} from '@/components/ui/pagination'
+import { DropdownMenu } from '@radix-ui/react-dropdown-menu'
+import { useMemo } from 'react'
+import { JknIcon } from '../jkn-icon'
 
 interface JknPaginationProps {
   total: number
@@ -32,7 +40,9 @@ export const JknPagination = (props: JknPaginationProps) => {
     if (totalPage <= SHOW_MAX_PAGE || page < SHOW_MAX_PAGE - 1) {
       return (
         <PaginationItem>
-          <PaginationLink isActive={page === 1} onClick={() => onClickPage(1)}>1</PaginationLink>
+          <PaginationLink isActive={page === 1} onClick={() => onClickPage(1)}>
+            1
+          </PaginationLink>
         </PaginationItem>
       )
     }
@@ -40,7 +50,9 @@ export const JknPagination = (props: JknPaginationProps) => {
     return (
       <>
         <PaginationItem>
-          <PaginationLink isActive={page === 1} onClick={() => onClickPage(1)}>1</PaginationLink>
+          <PaginationLink isActive={page === 1} onClick={() => onClickPage(1)}>
+            1
+          </PaginationLink>
         </PaginationItem>
         <PaginationItem>
           <PaginationEllipsis />
@@ -56,13 +68,14 @@ export const JknPagination = (props: JknPaginationProps) => {
           {Array.from({ length: SHOW_MAX_PAGE - 2 }, (_, i) => (
             // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
             <PaginationItem key={i}>
-              <PaginationLink isActive={page === i + 2} onClick={() => onClickPage(i + 2)}>{i + 2}</PaginationLink>
+              <PaginationLink isActive={page === i + 2} onClick={() => onClickPage(i + 2)}>
+                {i + 2}
+              </PaginationLink>
             </PaginationItem>
           ))}
         </>
       )
     }
-
 
     if (page < totalPage - SHOW_MAX_PAGE + 2) {
       return (
@@ -70,7 +83,9 @@ export const JknPagination = (props: JknPaginationProps) => {
           {Array.from({ length: SHOW_MAX_PAGE - 2 }, (_, i) => (
             // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
             <PaginationItem key={i}>
-              <PaginationLink isActive={page === page + i - 1} onClick={() => onClickPage(page + i - 1)}>{(page + i - 1)}</PaginationLink>
+              <PaginationLink isActive={page === page + i - 1} onClick={() => onClickPage(page + i - 1)}>
+                {page + i - 1}
+              </PaginationLink>
             </PaginationItem>
           ))}
         </>
@@ -82,7 +97,12 @@ export const JknPagination = (props: JknPaginationProps) => {
         {Array.from({ length: SHOW_MAX_PAGE - 1 }, (_, i) => (
           // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
           <PaginationItem key={i}>
-            <PaginationLink isActive={page === totalPage - SHOW_MAX_PAGE + i + 1} onClick={() => onClickPage(totalPage - SHOW_MAX_PAGE + i + 1)}>{(totalPage - SHOW_MAX_PAGE + i + 1)}</PaginationLink>
+            <PaginationLink
+              isActive={page === totalPage - SHOW_MAX_PAGE + i + 1}
+              onClick={() => onClickPage(totalPage - SHOW_MAX_PAGE + i + 1)}
+            >
+              {totalPage - SHOW_MAX_PAGE + i + 1}
+            </PaginationLink>
           </PaginationItem>
         ))}
       </>
@@ -90,10 +110,12 @@ export const JknPagination = (props: JknPaginationProps) => {
   }
 
   const renderEnd = () => {
-    if (totalPage <= SHOW_MAX_PAGE || page > (totalPage - SHOW_MAX_PAGE + 1)) {
+    if (totalPage <= SHOW_MAX_PAGE || page > totalPage - SHOW_MAX_PAGE + 1) {
       return (
         <PaginationItem>
-          <PaginationLink isActive={page === totalPage} onClick={() => onClickPage(totalPage)}>{totalPage}</PaginationLink>
+          <PaginationLink isActive={page === totalPage} onClick={() => onClickPage(totalPage)}>
+            {totalPage}
+          </PaginationLink>
         </PaginationItem>
       )
     }
@@ -104,13 +126,13 @@ export const JknPagination = (props: JknPaginationProps) => {
           <PaginationEllipsis />
         </PaginationItem>
         <PaginationItem>
-          <PaginationLink isActive={page === totalPage} onClick={() => onClickPage(totalPage)}>{totalPage}</PaginationLink>
+          <PaginationLink isActive={page === totalPage} onClick={() => onClickPage(totalPage)}>
+            {totalPage}
+          </PaginationLink>
         </PaginationItem>
       </>
     )
   }
-
-
 
   return (
     <Pagination className="text-foreground">
@@ -124,7 +146,7 @@ export const JknPagination = (props: JknPaginationProps) => {
             </div>
           </DropdownMenuTrigger>
           <DropdownMenuContent>
-            {pageSizes.map((size) => (
+            {pageSizes.map(size => (
               <DropdownMenuItem data-checked={size === pageSize} key={size} onClick={() => onPageSizeChange(size)}>
                 {size}
               </DropdownMenuItem>
@@ -136,25 +158,17 @@ export const JknPagination = (props: JknPaginationProps) => {
         <PaginationItem>
           <PaginationPrevious onClick={() => onClickPage(page - 1)} />
         </PaginationItem>
-        {
-          total === 0 ? (
-            <PaginationItem>
-              <PaginationLink >0</PaginationLink>
-            </PaginationItem>
-          ) : (
-            <>
-              {
-                renderStart()
-              }
-              {
-                renderCenter()
-              }
-              {
-                renderEnd()
-              }
-            </>
-          )
-        }
+        {total === 0 ? (
+          <PaginationItem>
+            <PaginationLink>0</PaginationLink>
+          </PaginationItem>
+        ) : (
+          <>
+            {renderStart()}
+            {renderCenter()}
+            {renderEnd()}
+          </>
+        )}
         <PaginationItem>
           <PaginationNext onClick={() => onClickPage(page + 1)} />
         </PaginationItem>

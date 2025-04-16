@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react"
+import { useCallback, useState } from 'react'
 import { useImmer } from 'use-immer'
 
 type UsePaginationOpts = {
@@ -13,19 +13,24 @@ export const usePagination = (opts?: UsePaginationOpts) => {
   })
   const [total, setTotal] = useState(0)
 
+  const onPageChange = useCallback(
+    (page: number) => {
+      setPagination(draft => {
+        draft.page = page
+      })
+    },
+    [setPagination]
+  )
 
-  const onPageChange = useCallback((page: number) => {
-    setPagination(draft => {
-      draft.page = page
-    })
-  }, [setPagination])
-
-  const onPageSizeChange = useCallback((pageSize: number) => {
-    setPagination(draft => {
-      draft.pageSize = pageSize
-      draft.page = 1
-    })
-  }, [setPagination])
+  const onPageSizeChange = useCallback(
+    (pageSize: number) => {
+      setPagination(draft => {
+        draft.pageSize = pageSize
+        draft.page = 1
+      })
+    },
+    [setPagination]
+  )
 
   const onTotalChange = useCallback((total: number) => {
     setTotal(total)

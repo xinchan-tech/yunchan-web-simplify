@@ -1,11 +1,11 @@
-import * as React from 'react'
-import { cn } from '@/utils/style'
-import { Button } from '@/components/ui/button'
-import { ArrowLeftIcon, ArrowRightIcon } from '@radix-ui/react-icons'
-import useEmblaCarousel, { type UseEmblaCarouselType } from 'embla-carousel-react'
-import Decimal from 'decimal.js'
-import { SelectCheckIcon } from './super-icon'
 import { JknIcon } from '@/components/jkn/jkn-icon'
+import { Button } from '@/components/ui/button'
+import { cn } from '@/utils/style'
+import { ArrowLeftIcon, ArrowRightIcon } from '@radix-ui/react-icons'
+import Decimal from 'decimal.js'
+import useEmblaCarousel, { type UseEmblaCarouselType } from 'embla-carousel-react'
+import * as React from 'react'
+import { SelectCheckIcon } from './super-icon'
 
 /**
  * 经济数据项类型定义

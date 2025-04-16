@@ -38,12 +38,7 @@ import { stockUtils } from '@/utils/stock'
 import type { DragEndEvent } from '@dnd-kit/core'
 import { DndContext, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
 import { restrictToVerticalAxis } from '@dnd-kit/modifiers'
-import {
-  SortableContext,
-  arrayMove,
-  useSortable,
-  verticalListSortingStrategy,
-} from '@dnd-kit/sortable'
+import { SortableContext, arrayMove, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import to from 'await-to-js'
@@ -55,7 +50,6 @@ type TableDataType = ReturnType<typeof stockUtils.toStockWithExt> & {
   id: string
   sort: number
 }
-
 
 interface RowProps extends React.HTMLAttributes<HTMLTableRowElement> {
   'data-row-key': string
@@ -164,9 +158,11 @@ const GoldenPool = () => {
         dataIndex: 'collect',
         align: 'center',
         width: 40,
-        render: () => <span className="inline-flex items-center">
-          <Star checked={true} onChange={() => handleRemoveFav(list.map(item => item.symbol))} />
-        </span>
+        render: () => (
+          <span className="inline-flex items-center">
+            <Star checked={true} onChange={() => handleRemoveFav(list.map(item => item.symbol))} />
+          </span>
+        )
       },
       {
         title: '',
@@ -265,7 +261,7 @@ const GoldenPool = () => {
         align: 'right',
         width: '5%',
         render: (_, row) => (
-          <div className="flex items-center justify-end pr-1" onClick={e => e.stopPropagation()} onKeyDown={() => { }}>
+          <div className="flex items-center justify-end pr-1" onClick={e => e.stopPropagation()} onKeyDown={() => {}}>
             <JknCheckbox
               className="w-5 h-5"
               checked={isChecked(row.id)}
@@ -328,25 +324,24 @@ const GoldenPool = () => {
     useSensor(PointerSensor, {
       activationConstraint: {
         // https://docs.dndkit.com/api-documentation/sensors/pointer#activation-constraints
-        distance: 1,
-      },
-    }),
+        distance: 1
+      }
+    })
   )
 
   const onDragEnd = ({ active, over }: DragEndEvent) => {
     if (active.id !== over?.id) {
-      const activeIndex = list.findIndex((i) => i.id === active.id)
-      const overIndex = list.findIndex((i) => i.id === over?.id)
+      const activeIndex = list.findIndex(i => i.id === active.id)
+      const overIndex = list.findIndex(i => i.id === over?.id)
       setList(arrayMove(list, activeIndex, overIndex))
 
       sortStockCollect(active.id as string, overIndex)
     }
   }
 
-
-  const Row: React.FC<Readonly<RowProps>> = (props) => {
+  const Row: React.FC<Readonly<RowProps>> = props => {
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-      id: props['data-row-key'],
+      id: props['data-row-key']
     })
 
     const style: React.CSSProperties = {
@@ -354,7 +349,7 @@ const GoldenPool = () => {
       transform: CSS.Translate.toString(transform),
       transition,
       cursor: 'move',
-      ...(isDragging ? { position: 'relative', zIndex: 9999 } : {}),
+      ...(isDragging ? { position: 'relative', zIndex: 9999 } : {})
     }
 
     return <tr {...props} ref={setNodeRef} style={style} {...attributes} {...listeners} />
@@ -380,7 +375,7 @@ const GoldenPool = () => {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-40 bg-[#1F1F1F] text-[#B8B8B8] [&>*:hover]:bg-[#2E2E2E]">
-              <div className="relative" onClick={e => e.stopPropagation()} onKeyDown={() => { }}>
+              <div className="relative" onClick={e => e.stopPropagation()} onKeyDown={() => {}}>
                 <GoldenPoolNameEdit
                   onUpdate={() => {
                     queryClient.invalidateQueries({ queryKey: [getStockCollectCates.cacheKey] })
@@ -420,7 +415,7 @@ const GoldenPool = () => {
                 rowKey="id"
                 border={false}
                 components={{
-                  body: { row: Row },
+                  body: { row: Row }
                 }}
                 columns={columns}
                 data={list}
@@ -437,7 +432,6 @@ const GoldenPool = () => {
               /> */}
             </SortableContext>
           </DndContext>
-
         </div>
         <style jsx>
           {`

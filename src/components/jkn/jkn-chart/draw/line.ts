@@ -1,15 +1,15 @@
-import type { IndicatorData } from '@/utils/coiling'
 import {
   type CircleAttrs,
   type FigureConstructor,
-  getFigureClass,
   type IndicatorDrawParams,
   type LineAttrs,
   type LineStyle,
   LineType,
   type PolygonStyle,
-  PolygonType
+  PolygonType,
+  getFigureClass
 } from '@/plugins/jkn-kline-chart'
+import type { IndicatorData } from '@/utils/coiling'
 
 /**
  * 线或者点

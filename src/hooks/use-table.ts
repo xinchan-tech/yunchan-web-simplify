@@ -1,9 +1,9 @@
+import type { QuoteBuffer, StockSubscribeHandler } from '@/utils/stock'
 import { isNumber } from 'radash'
 import { useCallback, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router'
+import { useLatestRef } from './use-latest-ref'
 import { useStockQuoteSubscribe } from './use-stock-subscribe'
-import type { QuoteBuffer, StockSubscribeHandler } from '@/utils/stock'
-import { useLatestRef } from "./use-latest-ref"
 
 type OrderKey<T = any> = keyof T | ((arg: T) => string)
 
@@ -59,21 +59,24 @@ export const useTableData = <T extends Record<string, any>>(data: T[], _?: Order
   const initList = useRef<T[]>([])
   const lastOrder = useRef<{ field?: keyof T; order?: 'asc' | 'desc' }>({ field: undefined, order: undefined })
 
-  const _setList = useCallback((cb: T[] | ((d: T[]) => T[])) => {
-    let data: typeof cb = cb
-    if (typeof cb === 'function') {
-      data = cb(listLast.current)
-    }else{
-      data = cb
-    }
-    initList.current = [...data]
+  const _setList = useCallback(
+    (cb: T[] | ((d: T[]) => T[])) => {
+      let data: typeof cb = cb
+      if (typeof cb === 'function') {
+        data = cb(listLast.current)
+      } else {
+        data = cb
+      }
+      initList.current = [...data]
 
-    if (lastOrder.current.field && lastOrder.current.order) {
-      setList(sortData(data, lastOrder.current.field, lastOrder.current.order))
-    } else {
-      setList(data)
-    }
-  }, [listLast])
+      if (lastOrder.current.field && lastOrder.current.order) {
+        setList(sortData(data, lastOrder.current.field, lastOrder.current.order))
+      } else {
+        setList(data)
+      }
+    },
+    [listLast]
+  )
 
   const updateList = useCallback(setList, [])
 
@@ -102,7 +105,10 @@ type SortTableType = {
   [key: string]: any
 }
 
-export type SortTableDataTransform<T extends SortTableType> = (src: T, data: Parameters<StockSubscribeHandler<'quoteTopic'>>[0]) => T
+export type SortTableDataTransform<T extends SortTableType> = (
+  src: T,
+  data: Parameters<StockSubscribeHandler<'quoteTopic'>>[0]
+) => T
 
 export const useTableSortDataWithWs = <T extends SortTableType>(
   data: T[],
@@ -133,22 +139,19 @@ export const useTableSortDataWithWs = <T extends SortTableType>(
 
   const updateList = useCallback(setList, [])
 
-  const onSort = useCallback(
-    (columnKey: keyof T, order: 'asc' | 'desc' | undefined) => {
-      if (!order) {
-        lastOrder.current = { field: undefined, order: undefined }
-        setList([...initList.current])
-        return
-      }
+  const onSort = useCallback((columnKey: keyof T, order: 'asc' | 'desc' | undefined) => {
+    if (!order) {
+      lastOrder.current = { field: undefined, order: undefined }
+      setList([...initList.current])
+      return
+    }
 
-      lastOrder.current = { field: columnKey, order }
-      setList(s => {
-        const r = sortData(s, columnKey, order)
-        return r
-      })
-    },
-    []
-  )
+    lastOrder.current = { field: columnKey, order }
+    setList(s => {
+      const r = sortData(s, columnKey, order)
+      return r
+    })
+  }, [])
 
   useStockQuoteSubscribe(
     symbols,
@@ -160,12 +163,10 @@ export const useTableSortDataWithWs = <T extends SortTableType>(
         Object.keys(e).forEach(item => {
           const index = binarySearch(listOrderByRowKey.current, item)
 
-          if(index === -1) return
+          if (index === -1) return
 
           listOrderByRowKey.current[index] = options.transform(listOrderByRowKey.current[index], e[item])
         })
-
-
 
         if (Date.now() - lastSortTime.current > 2000) {
           lastSortTime.current = Date.now()
@@ -205,7 +206,7 @@ export const binarySearch = (list: SortTableType[], symbol: string) => {
     if (list[mid].symbol === symbol) {
       return mid
     }
-    
+
     if (list[mid].symbol < symbol) {
       low = mid + 1
     } else {

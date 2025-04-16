@@ -38,8 +38,8 @@ const DialogContext = React.createContext<
 
 const DialogContent = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Content>,
-  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content>
->(({ className, children, ...props }, ref) => {
+  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> & { background?: string }
+>(({ className, children, background, ...props }, ref) => {
   const uid = React.useId()
   const ele = React.useRef<HTMLDivElement>()
   const drag = React.useCallback(
@@ -71,9 +71,10 @@ const DialogContent = React.forwardRef<
     },
     [uid]
   )
+
   return (
     <DialogPortal>
-      <DialogOverlay />
+      <DialogOverlay style={{ background }} />
       <DialogPrimitive.Content
         ref={ref}
         id={uid}

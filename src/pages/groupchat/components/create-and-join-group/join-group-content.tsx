@@ -1,4 +1,4 @@
-import { type ComponentProps, forwardRef, type PropsWithChildren, useImperativeHandle, useRef, useState } from 'react'
+import { type ComponentProps, type PropsWithChildren, forwardRef, useImperativeHandle, useRef, useState } from 'react'
 
 import { getChatChannels, joinGroupByInviteCode } from '@/api'
 import type { GroupChannelItem, getChatChannelsParams } from '@/api'
@@ -19,10 +19,10 @@ import { useToast } from '@/hooks'
 import { useGroupChatShortStore } from '@/store/group-chat-new'
 import { cn } from '@/utils/style'
 import { useQuery } from '@tanstack/react-query'
+import { createPortal } from 'react-dom'
 import type { GroupData } from '../../group-channel'
 import { JoinGroup } from '../join-group'
 import GroupChannelCard from './group-channel-card'
-import { createPortal } from 'react-dom'
 
 type GroupCategoryValue = '1' | '2' | '3'
 

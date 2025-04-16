@@ -6,8 +6,8 @@ import WKSDK, {
   type SubscriberChangeListener,
   type CMDContent,
   type MessageListener,
-  MessageStatusListener,
-  Message,
+  type MessageStatusListener,
+  type Message,
   MessageStatus
 } from 'wukongimjssdk'
 

@@ -18,14 +18,15 @@ export const IntroPage = (props: IntroPageProps) => {
   return (
     <>
       <div className="w-[1150px] mb-12">
-        <div className="grid text-[#808080] font-pingfang py-6 sticky top-0 z-10 bg-[#0B0404]"
+        <div
+          className="grid text-[#808080] font-pingfang py-6 sticky top-0 z-10 bg-[#0B0404]"
           style={{
             gridTemplateColumns: `minmax(240px, 1fr) repeat(${columnCount - 1}, 180px)`,
             gap: '20px'
-          }}>
+          }}
+        >
           {props.intro.slice(0, 1).map((category, cate_index) => (
             <React.Fragment key={category.id}>
-
               {/* 分类下的每个项目 */}
               {category.items.slice(0, 1).map(item => (
                 <React.Fragment key={item.title}>
@@ -70,7 +71,6 @@ export const IntroPage = (props: IntroPageProps) => {
           {/* 遍历每个分类 */}
           {props.intro.slice(1).map((category, cate_index) => (
             <React.Fragment key={category.id}>
-
               {/* 分类下的每个项目 */}
               {category.items.slice(1).map(item => (
                 <React.Fragment key={item.title}>

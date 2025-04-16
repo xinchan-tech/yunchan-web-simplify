@@ -1,21 +1,21 @@
 import type { StockRawRecord } from '@/api'
 import { useIndicator } from '@/store'
+import { nanoid } from 'nanoid'
 import { chain, isEmpty, isPromise, listify } from 'radash'
 import { stockUtils } from '../stock'
 import {
-  type IndicatorRawData,
   type IndicatorData,
+  type IndicatorRawData,
   drawBandTransform,
   drawGradientTransform,
   drawIconTransform,
   drawLineTransform,
   drawNumberTransform,
+  drawPipeTransform,
   drawRectRelTransform,
   drawStickLineTransform,
-  drawTextTransform,
-  drawPipeTransform
+  drawTextTransform
 } from './transform'
-import { nanoid } from 'nanoid'
 
 export type { IndicatorData } from './transform'
 

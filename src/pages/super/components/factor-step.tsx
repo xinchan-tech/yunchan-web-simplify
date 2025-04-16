@@ -2,10 +2,10 @@ import type { StockCategory } from '@/api'
 import { JknIcon, ToggleGroup, ToggleGroupItem } from '@/components'
 import { useAuthorized } from '@/hooks'
 import { appEvent } from '@/utils/event'
+import { cn } from '@/utils/style'
 import { useMount, useUnmount } from 'ahooks'
 import { useContext, useRef, useState } from 'react'
 import { SuperStockContext } from '../ctx'
-import { cn } from '@/utils/style'
 
 const FactorStep = () => {
   const ctx = useContext(SuperStockContext)

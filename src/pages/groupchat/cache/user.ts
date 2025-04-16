@@ -1,5 +1,5 @@
 import { assign } from 'radash'
-import { ChatCache, CacheStoreName } from './db'
+import { CacheStoreName, ChatCache } from './db'
 
 type User = {
   avatar: string

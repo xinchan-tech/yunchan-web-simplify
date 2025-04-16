@@ -1,9 +1,10 @@
 import { getStockIndicatorData } from '@/api'
+import { drawRect } from '@/pages/stock/lib/drawer'
+import { IndicatorSeries, type IndicatorTemplate } from '@/plugins/jkn-kline-chart'
 import { useIndicator } from '@/store'
 import { type IndicatorData, IndicatorUtils } from '@/utils/coiling'
 import { AESCrypt } from '@/utils/string'
 import Decimal from 'decimal.js'
-import { IndicatorSeries, type IndicatorTemplate } from '@/plugins/jkn-kline-chart'
 import { isNumber } from 'radash'
 import { calcBottomSignal, calculateTradingPoint } from '../coiling-calc'
 import {
@@ -16,10 +17,9 @@ import {
   drawStickLine,
   drawText
 } from '../draw'
-import { candlestickToRaw } from '../utils'
-import { drawRect } from '@/pages/stock/lib/drawer'
-import { drawRectRel } from '../draw/rect'
 import { drawPipe } from '../draw/pipe'
+import { drawRectRel } from '../draw/rect'
+import { candlestickToRaw } from '../utils'
 
 type LocalIndicatorExtend = {
   name: string

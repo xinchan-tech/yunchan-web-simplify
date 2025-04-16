@@ -1,11 +1,11 @@
 import {
   type FigureConstructor,
-  getFigureClass,
   IndicatorSeries,
+  type IndicatorTemplate,
   type LineAttrs,
   type LineStyle,
-  type IndicatorTemplate,
-  LineType
+  LineType,
+  getFigureClass
 } from '@/plugins/jkn-kline-chart'
 
 export const SplitIndicator: IndicatorTemplate<any, any> = {

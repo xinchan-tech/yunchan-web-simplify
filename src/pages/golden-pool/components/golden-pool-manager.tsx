@@ -1,40 +1,40 @@
-import type React from 'react'
 import {
-  useState,
-  useEffect,
-  type MouseEventHandler,
-  type FC,
-  type ReactNode,
-  memo,
-  PropsWithChildren,
-  useRef
-} from 'react'
-import { useQueryClient } from '@tanstack/react-query'
+  addStockCollectCate,
+  getStockCollectCates,
+  removeStockCollectCate,
+  sortStockCollectCate,
+  updateStockCollectCate
+} from '@/api'
 import {
   Button,
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogTrigger,
   Input,
   JknAlert,
   JknIcon,
   JknRcTable,
   type JknRcTableProps,
-  Dialog,
-  DialogContent,
-  DialogClose,
-  DialogTrigger,
   useModal
 } from '@/components'
 import { useOptimisticUpdate, useToast } from '@/hooks'
-import {
-  getStockCollectCates,
-  removeStockCollectCate,
-  updateStockCollectCate,
-  addStockCollectCate,
-  sortStockCollectCate
-} from '@/api'
+import { useAuthorized } from '@/hooks'
+import { useQueryClient } from '@tanstack/react-query'
 import { useQuery } from '@tanstack/react-query'
 import to from 'await-to-js'
 import dayjs from 'dayjs'
-import { useAuthorized } from '@/hooks'
+import type React from 'react'
+import {
+  type FC,
+  type MouseEventHandler,
+  PropsWithChildren,
+  type ReactNode,
+  memo,
+  useEffect,
+  useRef,
+  useState
+} from 'react'
 
 /**
  * 金池管理器组件

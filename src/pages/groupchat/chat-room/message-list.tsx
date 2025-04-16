@@ -1,6 +1,10 @@
+import { revokeMessage } from '@/api'
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger, JknVirtualInfinite } from '@/components'
-import { ChatCmdType, chatConstants, ChatMessageType, useChatStore } from '@/store'
+import { useLatestRef } from '@/hooks'
+import { ChatCmdType, ChatMessageType, chatConstants, useChatStore } from '@/store'
 import { useInfiniteQuery } from '@tanstack/react-query'
+import { useUpdate, useUpdateEffect } from 'ahooks'
+import { type ComponentRef, type PropsWithChildren, useCallback, useEffect, useRef, useState } from 'react'
 import WKSDK, {
   type CMDContent,
   type Message,
@@ -9,22 +13,18 @@ import WKSDK, {
   type Reply,
   type Subscriber
 } from 'wukongimjssdk'
-import { TextRecord } from './components/text-record'
-import ChatAvatar from '../components/chat-avatar'
-import { type ComponentRef, useCallback, useEffect, useRef, useState, type PropsWithChildren } from 'react'
-import { getTimeFormatStr } from '../chat-utils'
-import { useCMDListener, useMessageListener, useMessageStatusListener, useSubscribesListener } from '../lib/hooks'
-import { useUpdate, useUpdateEffect } from 'ahooks'
-import { RevokeRecord } from './components/revoke-record'
-import { ImageRecord } from './components/image-record'
-import { chatEvent } from '../lib/event'
-import { revokeMessage } from '@/api'
-import { isChannelManager, isChannelOwner, isRevokeMessage } from '../lib/utils'
 import { messageCache } from '../cache'
-import { useLatestRef } from '@/hooks'
+import { getTimeFormatStr } from '../chat-utils'
+import ChatAvatar from '../components/chat-avatar'
 import { UsernameSpan } from '../components/username-span'
+import { chatEvent } from '../lib/event'
+import { useCMDListener, useMessageListener, useMessageStatusListener, useSubscribesListener } from '../lib/hooks'
+import { isChannelManager, isChannelOwner, isRevokeMessage } from '../lib/utils'
 import { CmdRecord } from './components/cmd-record'
+import { ImageRecord } from './components/image-record'
+import { RevokeRecord } from './components/revoke-record'
 import { SystemRecord } from './components/system-record'
+import { TextRecord } from './components/text-record'
 
 const mergePrevMessages = (oldData: Message[], newData: Message[]) => {
   const oldDataFirst = oldData[0]

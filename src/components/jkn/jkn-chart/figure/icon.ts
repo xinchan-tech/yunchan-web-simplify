@@ -1,5 +1,6 @@
-import type { FigureTemplate } from '@/plugins/jkn-kline-chart'
 import deleteSvg from '@/assets/svg/delete-2.svg'
+import type { FigureTemplate } from '@/plugins/jkn-kline-chart'
+import { drawRoundedRect } from '../utils'
 
 const iconContext = import.meta.webpackContext('@/assets/icon/script_icons')
 
@@ -44,36 +45,6 @@ export const IconFigure: FigureTemplate<IconAttrs> = {
     const { width, height } = attrs
     return Math.abs(x * height) + Math.abs(y * width) <= (width * height) / 2
   }
-}
-
-const drawRoundedRect = (
-  ctx: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  width: number,
-  height: number,
-  radius: number | [number, number, number, number]
-) => {
-  let leftTop = 0
-  let rightTop = 0
-  let rightBottom = 0
-  let leftBottom = 0
-  if (Array.isArray(radius)) {
-    ;[leftTop, rightTop, rightBottom, leftBottom] = radius
-  } else {
-    leftTop = rightTop = rightBottom = leftBottom = radius
-  }
-  ctx.beginPath()
-  ctx.moveTo(x + leftTop, y)
-  ctx.arcTo(x + width, y, x + width, y + rightTop, rightTop)
-  ctx.lineTo(x + width, y + height - rightBottom)
-  ctx.arcTo(x + width, y + height, x + width - rightBottom, y + height, rightBottom)
-  ctx.lineTo(x + leftBottom, y + height)
-  ctx.arcTo(x, y + height, x, y + height - leftBottom, leftBottom)
-  ctx.lineTo(x, y + leftTop)
-  ctx.arcTo(x, y, x + leftTop, y, leftTop)
-  ctx.closePath()
-  ctx.fill()
 }
 
 export type MarkOverlayAttrs = {

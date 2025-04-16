@@ -1,10 +1,10 @@
 import { StockChartInterval } from '@/api'
+import { appEvent } from '@/utils/event'
 import { produce } from 'immer'
 import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
 import { chartEvent } from './event'
 import { renderUtils } from './utils'
-import { appEvent } from '@/utils/event'
 
 type ViewMode =
   | 'single'

@@ -29,7 +29,6 @@ import { useBoolean, useMount, useUnmount } from 'ahooks'
 import to from 'await-to-js'
 import copy from 'copy-to-clipboard'
 import QRCode from 'qrcode'
-import qs from 'qs'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useFormContext } from 'react-hook-form'
 import { z } from 'zod'
@@ -215,7 +214,10 @@ const gotoPayPage = (url: string) => {
   document.body.removeChild(a)
 }
 
-//收银台
+/**
+ * TODO: 使用@/components/mall-dialog/Cashier替换
+ * @returns
+ */
 const CashierPage = () => {
   const form = useFormContext()
   const name = form.getValues('name')

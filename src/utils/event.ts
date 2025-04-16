@@ -5,6 +5,7 @@ type Events = {
   toast: { message: string }
   cleanPickerStockMethod: unknown
   cleanPickerStockFactor: unknown
+  notAuth: unknown
   logout: unknown
 }
 

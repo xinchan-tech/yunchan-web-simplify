@@ -1,6 +1,11 @@
-import { type FigureConstructor, getFigureClass, IndicatorSeries, type IndicatorTemplate } from '@/plugins/jkn-kline-chart'
-import type { BackTestLineAttrs, BackTestLineStyles, BackTestMarkAttrs, BackTestMarkStyles } from '../figure'
+import {
+  type FigureConstructor,
+  IndicatorSeries,
+  type IndicatorTemplate,
+  getFigureClass
+} from '@/plugins/jkn-kline-chart'
 import { inRange } from 'radash'
+import type { BackTestLineAttrs, BackTestLineStyles, BackTestMarkAttrs, BackTestMarkStyles } from '../figure'
 
 export type BackTestRecord = {
   time: number

@@ -1,13 +1,13 @@
 import { JknInfiniteArea, ScrollArea, Skeleton } from '@/components'
-import { useVirtualizer, type VirtualItem } from '@tanstack/react-virtual'
+import { type VirtualItem, useVirtualizer } from '@tanstack/react-virtual'
 import { useVirtualList } from 'ahooks'
 import {
   type ComponentProps,
   type ComponentRef,
   type ForwardedRef,
+  type ReactNode,
   forwardRef,
   memo,
-  type ReactNode,
   useImperativeHandle,
   useLayoutEffect,
   useRef

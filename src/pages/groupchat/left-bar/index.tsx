@@ -6,11 +6,11 @@ import ChatAvatar from '../components/chat-avatar'
 
 import { APP_TO_CHAT_REFRESH_USER, CHAT_TO_APP_REFRESH_USER } from '@/app'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { useToast } from '@/hooks'
+import { useGroupChatStoreNew } from '@/store/group-chat-new'
 import { useEffect, useRef } from 'react'
 import WKSDK from 'wukongimjssdk'
 import { JoinGroupContent } from '../components/create-and-join-group/join-group-content'
-import { useGroupChatStoreNew } from '@/store/group-chat-new'
-import { useToast } from '@/hooks'
 
 const GroupChatLeftBar = (props: {
   indexTab: 'chat' | 'live'

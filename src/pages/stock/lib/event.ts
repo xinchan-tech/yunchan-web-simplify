@@ -1,6 +1,6 @@
+import type { ChartOverlayType } from '@/components'
 import mitt from 'mitt'
 import type { ChartStore, ChartType, CoilingIndicatorId, Indicator } from './store'
-import type { ChartOverlayType } from "@/components"
 
 export type ChartEvents = {
   symbolChange: string

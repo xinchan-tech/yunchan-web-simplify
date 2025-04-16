@@ -1,9 +1,23 @@
 import { type StockExtend, type UsStockColumn, getUsStocks } from '@/api'
-import { CollectStar, JknPagination, JknRcTable, type JknRcTableProps, Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious, StockView, SubscribeSpan } from '@/components'
+import {
+  CollectStar,
+  JknPagination,
+  JknRcTable,
+  type JknRcTableProps,
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+  StockView,
+  SubscribeSpan
+} from '@/components'
 import { usePagination, useStockQuoteSubscribe, useTableData, useTableRowClickToStockTrading } from '@/hooks'
 import { stockSubscribe, stockUtils } from '@/utils/stock'
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
-import { useUnmount } from "ahooks"
+import { useUnmount } from 'ahooks'
 
 import { useCallback, useEffect, useMemo } from 'react'
 import { useImmer } from 'use-immer'
@@ -99,15 +113,15 @@ const PageTable = (props: PageTableProps) => {
   //     }
   //   })
 
-  //   return () => { 
-  //     stockSubscribe.unsubscribeRank() 
-  //     cancel() 
+  //   return () => {
+  //     stockSubscribe.unsubscribeRank()
+  //     cancel()
   //   }
   // }, [pagination, sort])
 
   const query = useQuery({
     queryKey: [getUsStocks.cacheKey, props.type, sort, pagination],
-    queryFn: () => queryFn(),
+    queryFn: () => queryFn()
   })
 
   const [list, { setList, onSort, cleanSort }] = useTableData<TableDataType>([], 'symbol')

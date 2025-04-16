@@ -278,7 +278,7 @@ const EtfTable = (props: PageTableProps) => {
             />
           </div>
         )
-      },
+      }
     ],
     []
   )

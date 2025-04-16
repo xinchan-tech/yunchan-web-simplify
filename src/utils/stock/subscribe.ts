@@ -1,9 +1,9 @@
 import type { StockRawRecord } from '@/api'
+import { useToken } from '@/store'
 import mitt from 'mitt'
 import { uid } from 'radash'
-import { Ws } from '../ws'
 import { sysConfig } from '../config'
-import { useToken } from '@/store'
+import { Ws } from '../ws'
 
 const barActionResultParser = (data: any) => {
   const action = data.ev as string
@@ -544,7 +544,7 @@ class StockSubscribe {
 
     const rankBuffer = Object.entries(this.rankBuffer)
     this.rankBuffer = {}
-    rankBuffer.forEach(([_,data]) => {
+    rankBuffer.forEach(([_, data]) => {
       this.subscribed.emit('rank_subscribe', data)
     })
 

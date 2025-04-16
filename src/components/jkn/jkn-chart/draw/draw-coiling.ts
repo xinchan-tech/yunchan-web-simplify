@@ -1,17 +1,17 @@
 import type { StockRawRecord } from '@/api'
-import type { IndicatorData } from '@/utils/coiling'
-import type { IndicatorDataType } from '@/utils/coiling/transform'
 import {
   type CircleAttrs,
   type FigureConstructor,
-  getFigureClass,
   type IndicatorDrawParams,
   type LineAttrs,
   type PolygonStyle,
   PolygonType,
   type TextAttrs,
-  type TextStyle
+  type TextStyle,
+  getFigureClass
 } from '@/plugins/jkn-kline-chart'
+import type { IndicatorData } from '@/utils/coiling'
+import type { IndicatorDataType } from '@/utils/coiling/transform'
 import { inRange } from 'radash'
 import type { CoilingCalcResult } from '../coiling-calc'
 import type { DrawFunc } from '../types'

@@ -1,12 +1,12 @@
 import { getWxLoginStatus } from '@/api'
 import { JknIcon, useModal } from '@/components'
+import { router } from '@/router'
 import { useToken } from '@/store'
 import { appEvent } from '@/utils/event'
 import { useMount, useUnmount } from 'ahooks'
-import { uid } from 'radash'
-import { useRef, useEffect } from 'react'
 import QRCode from 'qrcode'
-import { router } from '@/router'
+import { uid } from 'radash'
+import { useEffect, useRef } from 'react'
 
 interface ThirdLoginFormProps {
   onLogin: (data: any) => void

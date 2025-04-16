@@ -11,13 +11,13 @@ import { loginImService } from '@/api'
 
 import { Toaster } from '@/components'
 
+import { appEvent } from '@/utils/event'
 import { useMount } from 'ahooks'
 import { ChatRoom } from './chat-room'
 import ChatInfoDrawer from './components/chat-info-drawer'
 import { initImDataSource } from './lib/datasource'
 import { connectStatusListener } from './lib/event'
 import TextImgLive from './text-img-live'
-import { appEvent } from '@/utils/event'
 
 export type ReplyFn = (option: {
   message?: Message

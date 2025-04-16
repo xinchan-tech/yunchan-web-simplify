@@ -14,8 +14,6 @@ type MenuItem = {
 
 const Menu = () => {
   const [pathname, setPathname] = useState(router.state.location.pathname)
-  const { token } = useToken()
-  const { toast } = useToast()
 
   useEffect(() => {
     const s = router.subscribe(s => {
@@ -60,7 +58,7 @@ const Menu = () => {
         path: '/app/calendar'
       },
       {
-        icon: <JknIcon.Svg name="message" size={24} />,
+        icon: <JknIcon.Svg name="chat-message" size={24} />,
         title: '消息',
         path: '/app/message'
       }
@@ -81,13 +79,6 @@ const Menu = () => {
   const [auth, toastNotAuth] = useAuthorized('vcomment')
 
   const onNav = (path: string) => {
-    if (!token && path !== '/app' && path !== '/app/setting') {
-      toast({
-        title: '请先登录'
-      })
-      return
-    }
-
     if (path === '/app/shout' && !auth()) {
       toastNotAuth()
       return

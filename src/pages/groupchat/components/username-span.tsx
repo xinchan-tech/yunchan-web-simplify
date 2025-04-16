@@ -1,7 +1,7 @@
 import { useMount } from 'ahooks'
 import { type HTMLAttributes, useEffect, useState } from 'react'
-import { fetchUserInChannel } from '../lib/utils'
 import type { Channel } from 'wukongimjssdk'
+import { fetchUserInChannel } from '../lib/utils'
 
 interface UsernameSpanProps extends HTMLAttributes<HTMLSpanElement> {
   uid: string

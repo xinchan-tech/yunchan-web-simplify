@@ -1,12 +1,5 @@
 import type { getStockSelection } from '@/api'
-import {
-  CollectStar,
-  JknRcTable,
-  type JknRcTableProps,
-  Star,
-  StockView,
-  SubscribeSpan
-} from '@/components'
+import { CollectStar, JknRcTable, type JknRcTableProps, Star, StockView, SubscribeSpan } from '@/components'
 import { useTableData } from '@/hooks'
 import { useConfig } from '@/store'
 import { stockUtils } from '@/utils/stock'
@@ -109,13 +102,11 @@ const StockTable = (props: StockTableProps) => {
         return
       }
 
-
       if (sortExt === 'percent' && order === 'asc') {
         setSortExt('close')
         onSort('close', order)
         return
       }
-
     }
     setSortExt('')
     onSort(column, order)
@@ -186,7 +177,12 @@ const StockTable = (props: StockTableProps) => {
       },
 
       {
-        title: <span><span className={cn(sortExt === 'close' && 'text-stock-up')}>现价</span>/<span className={cn(sortExt === 'percent' && 'text-stock-up')}>涨跌幅</span></span>,
+        title: (
+          <span>
+            <span className={cn(sortExt === 'close' && 'text-stock-up')}>现价</span>/
+            <span className={cn(sortExt === 'percent' && 'text-stock-up')}>涨跌幅</span>
+          </span>
+        ),
         dataIndex: 'close',
         width: 140,
         align: 'left',

@@ -2,16 +2,16 @@ import { usePropValue } from '@/hooks'
 import { useConfig } from '@/store'
 import { cn } from '@/utils/style'
 import type { DialogContentProps } from '@radix-ui/react-dialog'
+import { VisuallyHidden } from '@radix-ui/react-visually-hidden'
 import { isFunction } from '@tanstack/react-table'
 import { useBoolean, useUpdateEffect } from 'ahooks'
 import to from 'await-to-js'
 import { type ReactNode, useCallback } from 'react'
 import { FormProvider, type UseFormReturn } from 'react-hook-form'
 import type { z } from 'zod'
+import { JknIcon } from '../jkn/jkn-icon'
 import { Button } from '../ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog'
-import { JknIcon } from '../jkn/jkn-icon'
-import { VisuallyHidden } from '@radix-ui/react-visually-hidden'
 
 export interface UseModalAction {
   open: (...arg: unknown[]) => void
@@ -29,6 +29,7 @@ export interface UseModalProps {
   onOk?: (...arg: any[]) => void
   confirmLoading?: boolean
   closeOnMaskClick?: boolean
+  background?: string
 }
 
 export const useModal = ({
@@ -39,6 +40,7 @@ export const useModal = ({
   className,
   footer,
   confirmLoading,
+  background,
   ...props
 }: UseModalProps) => {
   const [modalVisible, { toggle: toggleModalVisible }] = useBoolean(false)
@@ -92,7 +94,12 @@ export const useModal = ({
     if (!visible) return null
     return (
       <Dialog open={modalVisible} onOpenChange={_onOpenChange} modal>
-        <DialogContent className={cn('w-[680px]', className)} onPointerDownOutside={onPointerDownOutside} onOpenAutoFocus={(e) => e.preventDefault()}>
+        <DialogContent
+          background={background}
+          className={cn('w-[680px]', className)}
+          onPointerDownOutside={onPointerDownOutside}
+          onOpenAutoFocus={e => e.preventDefault()}
+        >
           {innerTitle ? (
             <DialogHeader>
               <DialogTitle asChild>

@@ -47,11 +47,11 @@ import dayjs from 'dayjs'
 import Decimal from 'decimal.js'
 import Autoplay from 'embla-carousel-autoplay'
 import { nanoid } from 'nanoid'
+import { listify } from 'radash'
 import type { TableProps } from 'rc-table'
 import { memo, useCallback, useEffect, useMemo, useState } from 'react'
+import { useNavigate } from 'react-router'
 import { chartManage, stockBaseCodeInfoExtend, useSymbolQuery } from '../lib'
-import { listify } from "radash"
-import { useNavigate } from "react-router"
 
 const StockInfo = () => {
   return (
@@ -234,7 +234,7 @@ const StockQuoteBar = withTooltip(
           props.interval !== StockChartInterval.INTRA_DAY && 'text-sm'
         )}
         onClick={onClick}
-        onKeyDown={() => { }}
+        onKeyDown={() => {}}
       >
         <span
           className={cn(
@@ -430,7 +430,7 @@ const StockQuote = () => {
           <span
             className="bg-accent rounded-3xl w-6 h-3 inline-flex items-center justify-center cursor-pointer"
             onClick={() => setExpanded(!expanded)}
-            onKeyDown={() => { }}
+            onKeyDown={() => {}}
           >
             <JknIcon.Svg name="arrow-down" style={{ rotate: expanded ? '180deg' : '0deg' }} size={6} />
           </span>
@@ -475,7 +475,6 @@ const StockNews = () => {
       dateGroup[date].push(item)
     })
 
-
     return listify(dateGroup, (k, v) => ({ date: k, event: v }))
   }, [newList.data])
 
@@ -488,13 +487,21 @@ const StockNews = () => {
           <div className="bg-[#3d3152] flex w-full rounded-lg items-center px-2 py-1 box-border">
             <HoverCard openDelay={100}>
               <HoverCardTrigger>
-                <JknIcon.Svg name="message" className="mr-2 mt-0.5 text-[#A77FED]" size={14}  />
+                <JknIcon.Svg name="message" className="mr-2 mt-0.5 text-[#A77FED]" size={14} />
               </HoverCardTrigger>
-              <HoverCardContent side="left" align="start" className="w-80 p-0 rounded flex overflow-hidden bg-[#1F1F1F]" sideOffset={40} alignOffset={-120}>
+              <HoverCardContent
+                side="left"
+                align="start"
+                className="w-80 p-0 rounded flex overflow-hidden bg-[#1F1F1F]"
+                sideOffset={40}
+                alignOffset={-120}
+              >
                 <div className="items-stretch w-1 bg-[#A77FED]" />
                 <div className="box-border p-5 flex-1">
                   <div className="flex items-center">
-                    <span className="size-6 rounded-full border border-solid border-[#A77FED] text-center text-[#A77FED]"><JknIcon.Svg name="message" className="mt-[5px]" size={14} /></span>
+                    <span className="size-6 rounded-full border border-solid border-[#A77FED] text-center text-[#A77FED]">
+                      <JknIcon.Svg name="message" className="mt-[5px]" size={14} />
+                    </span>
                     &nbsp; &nbsp;<span className="text-lg font-bold">最新消息</span>
                   </div>
                   <div className="">
@@ -502,38 +509,34 @@ const StockNews = () => {
                       <div
                         key={item.date}
                         className={cn('flex-grow-0 flex-shrink-0 basis-full mt-4')}
-                        onKeyDown={() => { }}
+                        onKeyDown={() => {}}
                       >
                         <div>
                           <span className="">{item.date}</span>
-                          {
-                            item.event.map((event) => (
-                              <div key={event.title ?? nanoid(4)} className="flex flex-col mt-3">
-                                <span className="w-full line-clamp-1">{event.title.slice(14)}</span>
-                                <span className="text-sm text-tertiary mt-1">
-                                  发布于&nbsp;
-                                  <JknIcon name="ic_us" className="size-3" />&nbsp;
-                                  {
-                                    dateUtils.toUsDay(event.time).format('美东时间 M月D日 w HH:mm')
-                                  }
-                                </span>
-                              </div>
-                            ))
-                          }
+                          {item.event.map(event => (
+                            <div key={event.title ?? nanoid(4)} className="flex flex-col mt-3">
+                              <span className="w-full line-clamp-1">{event.title.slice(14)}</span>
+                              <span className="text-sm text-tertiary mt-1">
+                                发布于&nbsp;
+                                <JknIcon name="ic_us" className="size-3" />
+                                &nbsp;
+                                {dateUtils.toUsDay(event.time).format('美东时间 M月D日 w HH:mm')}
+                              </span>
+                            </div>
+                          ))}
                         </div>
-                        {
-                          index !== arr.length - 1 ? (
-                            <Separator className="mt-4"  />
-                          ): null
-                        }
+                        {index !== arr.length - 1 ? <Separator className="mt-4" /> : null}
                       </div>
                     ))}
                   </div>
-                  {
-                    newGroup.length > 2 ? (
-                      <Button className="bg-[#3D3D3D] text-foreground mt-4 px-4 text-sm" onClick={() => navigate('/calendar')}>查看更多</Button>
-                    ): null
-                  }
+                  {newGroup.length > 2 ? (
+                    <Button
+                      className="bg-[#3D3D3D] text-foreground mt-4 px-4 text-sm"
+                      onClick={() => navigate('/calendar')}
+                    >
+                      查看更多
+                    </Button>
+                  ) : null}
                 </div>
               </HoverCardContent>
             </HoverCard>
@@ -667,12 +670,10 @@ const StockRelated = () => {
       <div className="flex px-3 py-2.5">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <div onClick={() => setMenuType('plates')} onKeyDown={() => { }}>
+            <div onClick={() => setMenuType('plates')} onKeyDown={() => {}}>
               <span className="text-lg font-bold">
                 {plates?.find(item => item.id === plateId)?.name ? (
-                  <span>
-                    {plates?.find(item => item.id === plateId)?.name}
-                  </span>
+                  <span>{plates?.find(item => item.id === plateId)?.name}</span>
                 ) : (
                   '相关股票'
                 )}

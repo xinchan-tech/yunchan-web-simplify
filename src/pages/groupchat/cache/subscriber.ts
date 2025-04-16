@@ -1,8 +1,8 @@
 import { openDB } from 'idb'
-import { CacheStoreName, ChatCache } from './db'
+import { assign } from 'radash'
 import type { Subscriber } from 'wukongimjssdk'
 import { SubscriberTransform } from '../lib/transform'
-import { assign } from 'radash'
+import { CacheStoreName, ChatCache } from './db'
 
 class SubscriberCache extends ChatCache {
   public static SUBSCRIBER_STORE = CacheStoreName.SUBSCRIBER_STORE

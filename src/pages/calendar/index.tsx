@@ -1,10 +1,10 @@
 import { CapsuleTabs } from '@/components'
 import { useState } from 'react'
+import EconomicTimeline from './components/economic-timeline'
 import { FedInterestRateDecision } from './components/fed-interest-rate-decision'
 import StockFinancials from './components/financials'
 import StockHolidays from './components/holidays'
 import { WitchingDay } from './components/witching-day'
-import EconomicTimeline from './components/economic-timeline'
 
 const StockCalendar = () => {
   const [active, setActive] = useState('financials')

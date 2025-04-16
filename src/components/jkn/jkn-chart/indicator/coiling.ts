@@ -1,15 +1,15 @@
 import type { IndicatorTemplate } from '@/plugins/jkn-kline-chart'
-import { candlestickToRaw } from '../utils'
+import { IndicatorUtils } from '@/utils/coiling'
 import {
+  type CoilingCalcResult,
+  CoilingIndicatorId,
   calcCoilingPivots,
   calcCoilingPivotsExpands,
   calcTradePoints,
-  calculateMA,
-  type CoilingCalcResult,
-  CoilingIndicatorId
+  calculateMA
 } from '../coiling-calc'
 import { drawCoilingMA, drawCoilingPen, drawCoilingPivot, drawCoilingTradePoint } from '../draw/draw-coiling'
-import { IndicatorUtils } from '@/utils/coiling'
+import { candlestickToRaw } from '../utils'
 
 /**
  * 笔

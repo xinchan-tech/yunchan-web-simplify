@@ -51,7 +51,7 @@ const SEGMENT_NUM_LIMIT = 7
  * @param coiling 缠论数据
  * @param points 笔端点
  * @description 中枢数据格式, 具体算法查看examples/coiling.js/readPivots
- * rgba(8, 153, 129, 0.6) 绿 
+ * rgba(8, 153, 129, 0.6) 绿
  * rgba(41, 98, 255, 0.6) 蓝
  * rgba(242, 54, 69, 0.6) 红
  * rgba(156, 39, 176, 0.6) 紫

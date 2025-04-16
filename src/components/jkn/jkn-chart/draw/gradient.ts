@@ -1,4 +1,9 @@
-import { type FigureConstructor, getFigureClass, type PolygonAttrs, type IndicatorDrawParams } from '@/plugins/jkn-kline-chart'
+import {
+  type FigureConstructor,
+  type IndicatorDrawParams,
+  type PolygonAttrs,
+  getFigureClass
+} from '@/plugins/jkn-kline-chart'
 
 /**
  * 渐变色块

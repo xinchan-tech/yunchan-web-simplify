@@ -1,9 +1,9 @@
 import type { StockRawRecord } from '@/api'
+import type { Coordinate } from '@/plugins/jkn-kline-chart'
 import { useConfig } from '@/store'
-import type { Candlestick } from './types'
 import type { StockTrading } from '@/utils/stock'
 import dayjs from 'dayjs'
-import type { Coordinate } from "@/plugins/jkn-kline-chart"
+import type { Candlestick } from './types'
 
 export enum ChartTypes {
   MAIN_PANE_ID = 'candle_pane',
@@ -126,9 +126,7 @@ export const getTickNumberByTrading = (trading: StockTrading) => {
   return end.diff(start, 'minute')
 }
 
-
-
-export function getLinearYFromSlopeIntercept (kb: Nullable<number[]>, coordinate: Coordinate): number {
+export function getLinearYFromSlopeIntercept(kb: Nullable<number[]>, coordinate: Coordinate): number {
   if (kb !== null) {
     return coordinate.x * kb![0] + kb![1]
   }
@@ -141,12 +139,16 @@ export function getLinearYFromSlopeIntercept (kb: Nullable<number[]>, coordinate
  * @param coordinate2
  * @param targetCoordinate
  */
-export function getLinearYFromCoordinates (coordinate1: Coordinate, coordinate2: Coordinate, targetCoordinate: Coordinate): number {
+export function getLinearYFromCoordinates(
+  coordinate1: Coordinate,
+  coordinate2: Coordinate,
+  targetCoordinate: Coordinate
+): number {
   const kb = getLinearSlopeIntercept(coordinate1, coordinate2)
   return getLinearYFromSlopeIntercept(kb, targetCoordinate)
 }
 
-export function getLinearSlopeIntercept (coordinate1: Coordinate, coordinate2: Coordinate): Nullable<number[]> {
+export function getLinearSlopeIntercept(coordinate1: Coordinate, coordinate2: Coordinate): Nullable<number[]> {
   const difX = coordinate1.x - coordinate2.x
   if (difX !== 0) {
     const k = (coordinate1.y - coordinate2.y) / difX
@@ -154,4 +156,34 @@ export function getLinearSlopeIntercept (coordinate1: Coordinate, coordinate2: C
     return [k, b]
   }
   return null
+}
+
+export const drawRoundedRect = (
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  radius: number | [number, number, number, number]
+) => {
+  let leftTop = 0
+  let rightTop = 0
+  let rightBottom = 0
+  let leftBottom = 0
+  if (Array.isArray(radius)) {
+    ;[leftTop, rightTop, rightBottom, leftBottom] = radius
+  } else {
+    leftTop = rightTop = rightBottom = leftBottom = radius
+  }
+  ctx.beginPath()
+  ctx.moveTo(x + leftTop, y)
+  ctx.arcTo(x + width, y, x + width, y + rightTop, rightTop)
+  ctx.lineTo(x + width, y + height - rightBottom)
+  ctx.arcTo(x + width, y + height, x + width - rightBottom, y + height, rightBottom)
+  ctx.lineTo(x + leftBottom, y + height)
+  ctx.arcTo(x, y + height, x, y + height - leftBottom, leftBottom)
+  ctx.lineTo(x, y + leftTop)
+  ctx.arcTo(x, y, x + leftTop, y, leftTop)
+  ctx.closePath()
+  ctx.fill()
 }

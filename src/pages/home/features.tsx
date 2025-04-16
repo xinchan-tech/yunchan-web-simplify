@@ -46,7 +46,7 @@ const FeaturesPage = () => {
           立即加入
         </Button>
       </div>
-  
+
       {/* <div className="py-12">
         <img src={Home11} alt="home-11" className="home-content-w-1 mx-auto block" />
       </div> */}

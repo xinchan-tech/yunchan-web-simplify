@@ -26,14 +26,14 @@ import {
   TabsTrigger
 } from '@/components'
 import { useQueryParams, useToast } from '@/hooks'
-import { useConfig } from "@/store"
+import { useConfig } from '@/store'
 import { dateUtils } from '@/utils/date'
 import { stockUtils } from '@/utils/stock'
 import { cn } from '@/utils/style'
 import { WsV2 } from '@/utils/ws'
 import { useInfiniteQuery } from '@tanstack/react-query'
 import to from 'await-to-js'
-import Decimal from "decimal.js"
+import Decimal from 'decimal.js'
 import { Fragment, type KeyboardEventHandler, useEffect, useState } from 'react'
 
 const StockAlarmPage = () => {
@@ -205,7 +205,10 @@ const AlarmItem = ({ symbol, data, onDelete }: AlarmItemProps) => {
     if (data.type === AlarmType.PERCENT) {
       const triggerStr = data.condition.float_param.type === 1 ? '盈亏比例' : '盈亏金额'
       const value = data.condition.float_param.change_value
-      const triggerValue = triggerStr === '盈亏比例' ? (data.condition.float_param.price * (1 + value)) : (value + data.condition.float_param.price)
+      const triggerValue =
+        triggerStr === '盈亏比例'
+          ? data.condition.float_param.price * (1 + value)
+          : value + data.condition.float_param.price
       return (
         <span data-direction={value > 0 ? 'up' : 'down'}>
           止损起始点&nbsp;
@@ -227,8 +230,6 @@ const AlarmItem = ({ symbol, data, onDelete }: AlarmItemProps) => {
       )
     }
 
-
-
     return null
   }
 
@@ -246,7 +247,7 @@ const AlarmItem = ({ symbol, data, onDelete }: AlarmItemProps) => {
     <div
       className="alarm-list-item text-foreground px-5 py-3 leading-none text-sm border-b-primary hover:bg-[#1B1B1B]"
       onClick={onNav}
-      onKeyDown={() => { }}
+      onKeyDown={() => {}}
     >
       <div className="flex items-center w-full relative">
         <JknIcon.Stock symbol={symbol} className="w-4 h-4 leading-4 mr-1" />
@@ -267,36 +268,30 @@ const AlarmItem = ({ symbol, data, onDelete }: AlarmItemProps) => {
           {/* <JknIcon.Svg name="edit" size={16} className="cursor-pointer p-1 rounded hover:bg-accent" /> */}
         </div>
       </div>
-      {
-        data.type === AlarmType.PERCENT ? (
-          <div className="text-left mt-2">股价起始点{data.condition.float_param.price}</div>
-        ) : null
-      }
+      {data.type === AlarmType.PERCENT ? (
+        <div className="text-left mt-2">股价起始点{data.condition.float_param.price}</div>
+      ) : null}
       <div className="text-tertiary text-xs text-left mt-2.5">
         <span>
           添加时间&nbsp;
           {dateUtils.toUsDay(data.create_time).format('MM/DD w HH:mm')}
         </span>
         &emsp;
-        {
-          data.type !== AlarmType.PERCENT ? (
-            <span>
-              <span className="text-secondary">频率·</span>
-              {data.condition.frequency === 1 ? '持续提醒' : '仅提醒一次'}
-            </span>
-          ) : (
-            <span>
-              {data.condition.float_param.type === 1 ? '按涨跌比' : '按涨跌金额'}
-              {
-                data.condition.float_param.type === 1 ? (
-                  <span>{Decimal.create(data.condition.float_param.change_value).mul(100).toFixed(2)}%</span>
-                ) : (
-                  <span>{data.condition.float_param.change_value}</span>
-                )
-              }
-            </span>
-          )
-        }
+        {data.type !== AlarmType.PERCENT ? (
+          <span>
+            <span className="text-secondary">频率·</span>
+            {data.condition.frequency === 1 ? '持续提醒' : '仅提醒一次'}
+          </span>
+        ) : (
+          <span>
+            {data.condition.float_param.type === 1 ? '按涨跌比' : '按涨跌金额'}
+            {data.condition.float_param.type === 1 ? (
+              <span>{Decimal.create(data.condition.float_param.change_value).mul(100).toFixed(2)}%</span>
+            ) : (
+              <span>{data.condition.float_param.change_value}</span>
+            )}
+          </span>
+        )}
       </div>
       {data.expire_time ? (
         <div className="text-tertiary text-xs text-left mt-2.5">
@@ -485,7 +480,7 @@ const AlarmRecordItem = ({ symbol, data, onDelete }: AlarmRecordItemProps) => {
     <div
       className="alarm-list-item text-foreground px-5 py-3 leading-none text-sm border-b-primary hover:bg-[#1B1B1B]"
       onClick={onClick}
-      onKeyDown={() => { }}
+      onKeyDown={() => {}}
     >
       <div className="flex items-center w-full relative">
         <JknIcon.Stock symbol={symbol} className="w-4 h-4 leading-4 mr-1" />
@@ -508,24 +503,29 @@ const AlarmRecordItem = ({ symbol, data, onDelete }: AlarmRecordItemProps) => {
       </div>
       {data.type === AlarmType.AI ? (
         <div className="text-left mt-1">
-          <Star.Rect total={5} className="w-[6px] h-2.5 rounded-[1px] !mr-[1px]" activeColor={data.condition.bull === '1' ? useConfig.getState().getStockColor(true, 'hex') : useConfig.getState().getStockColor(false, 'hex')} count={4} />
+          <Star.Rect
+            total={5}
+            className="w-[6px] h-2.5 rounded-[1px] !mr-[1px]"
+            activeColor={
+              data.condition.bull === '1'
+                ? useConfig.getState().getStockColor(true, 'hex')
+                : useConfig.getState().getStockColor(false, 'hex')
+            }
+            count={4}
+          />
         </div>
       ) : null}
       <div className="text-tertiary text-xs text-left mt-1">
-        {
-          data.type === AlarmType.PERCENT ? (
-            <span>
-              {data.condition.data.trigger_type === 1 ? '盈亏比例' : '盈亏金额'}
-              {
-                data.condition.data.trigger_type === 1 ? (
-                  <span>{Decimal.create(data.condition.data.pnl_percent).mul(100).toFixed(2)}%</span>
-                ) : (
-                  <span>{data.condition.data.pnl_price}</span>
-                )
-              }
-            </span>
-          ) : null
-        }
+        {data.type === AlarmType.PERCENT ? (
+          <span>
+            {data.condition.data.trigger_type === 1 ? '盈亏比例' : '盈亏金额'}
+            {data.condition.data.trigger_type === 1 ? (
+              <span>{Decimal.create(data.condition.data.pnl_percent).mul(100).toFixed(2)}%</span>
+            ) : (
+              <span>{data.condition.data.pnl_price}</span>
+            )}
+          </span>
+        ) : null}
         {data.alarm_time ? <span>触发时间 {dateUtils.toUsDay(data.alarm_time).format('MM/DD w HH:mm')}</span> : null}
         &emsp;
         {/* {data.condition.frequency === 1 ? '持续提醒' : '仅提醒一次'} */}

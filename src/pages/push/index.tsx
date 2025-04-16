@@ -2,17 +2,17 @@ import { StockPushType, getStockPush, getStockPushList } from '@/api'
 import { getPushMenu } from '@/api/push'
 import {
   CapsuleTabs,
+  CollectStar,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
   JknIcon,
   JknRcTable,
   type JknRcTableProps,
-  StockView,
-  SubscribeSpan,
-  CollectStar,
   Star,
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem
+  StockView,
+  SubscribeSpan
 } from '@/components'
 import { useStockQuoteSubscribe, useTableData, useTableRowClickToStockTrading } from '@/hooks'
 import { useTime } from '@/store'
@@ -253,28 +253,27 @@ const PushPage = () => {
         align: 'right',
         sort: true,
         width: '12%',
-        render: (v, row) =>
+        render: (v, row) => (
           <div>
-            {
-              activeType === 'JRGW' ? (
-                Array.from({ length: v }).map((_, i) => (
-                  <JknIcon
-                    className="w-[16px] h-[16px]"
-                    // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
-                    key={i}
-                    name={'ic_fire_red'}
-                  />
-                ))
-              ) : (
-                <Star.Rect count={Math.abs(v)} activeColor={+row.bull === 1 ? '#22AB94' : '#F23645'} total={5} />
-              )
-            }
+            {activeType === 'JRGW' ? (
+              Array.from({ length: v }).map((_, i) => (
+                <JknIcon
+                  className="w-[16px] h-[16px]"
+                  // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
+                  key={i}
+                  name={'ic_fire_red'}
+                />
+              ))
+            ) : (
+              <Star.Rect count={Math.abs(v)} activeColor={+row.bull === 1 ? '#22AB94' : '#F23645'} total={5} />
+            )}
           </div>
+        )
       }
     ]
 
     if (activeType === 'JRGW') {
-      ; (common as any[]).splice(5, 0, {
+      ;(common as any[]).splice(5, 0, {
         title: '入选时间',
         dataIndex: 'create_time',
         align: 'left',

@@ -3,13 +3,13 @@ import { useModal } from '@/components'
 import { chatManager, useChatStore } from '@/store'
 import { useQuery } from '@tanstack/react-query'
 import type { JSONContent } from '@tiptap/react'
+import { useCountDown } from 'ahooks'
+import { useEffect } from 'react'
 import { ConnectStatus, Mention, MessageImage, MessageText, type Reply, WKSDK } from 'wukongimjssdk'
+import { getChannelDetailFromChannel } from '../lib/utils'
 import { ChannelMembers } from './channel-members'
 import { ChatInput } from './components/chat-input'
 import { ChatMessageList } from './message-list'
-import { useCountDown } from 'ahooks'
-import { useEffect } from 'react'
-import { getChannelDetailFromChannel } from '../lib/utils'
 
 export const ChatRoom = () => {
   const channel = useChatStore(state => state.lastChannel)

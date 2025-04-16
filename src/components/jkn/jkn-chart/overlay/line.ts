@@ -1,5 +1,5 @@
 import type { OverlayTemplate } from '@/plugins/jkn-kline-chart'
-import { getLinearYFromCoordinates } from "../utils"
+import { getLinearYFromCoordinates } from '../utils'
 
 export const LineOverlay: OverlayTemplate = {
   name: 'line',
