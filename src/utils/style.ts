@@ -4,6 +4,30 @@ import { twMerge } from 'tailwind-merge'
 
 export const cn = (...args: ClassValue[]) => twMerge(clsx(args))
 
+export declare namespace ColorType {
+  export type HSB = {
+    h: number
+    s: number
+    b: number
+  }
+  export type HSL = {
+    h: number
+    s: number
+    l: number
+  }
+  export type RGB = {
+    r: number
+    g: number
+    b: number
+  }
+  export type RGBA = {
+    r: number
+    g: number
+    b: number
+    a: number
+  }
+}
+
 export const colorUtil = {
   /**
    * 颜色盘
@@ -45,6 +69,54 @@ export const colorUtil = {
   rgbaToString(rgba?: { r: number; g: number; b: number; a: number }) {
     if (!rgba) return ''
     return `rgba(${rgba.r}, ${rgba.g}, ${rgba.b}, ${rgba.a})`
+  },
+  hsbToHex(hsb: ColorType.HSB) {
+    const rgb = this.hsbToRGB(hsb)
+    if (!rgb) return ''
+    return this.rgbToHex(rgb)
+  },
+  hsbToRGB(hsb: ColorType.HSB) {
+    const { h, s, b:_b } = hsb
+    const saturation = s / 100
+    const brightness = _b / 100
+    const chroma = brightness * saturation
+    const x = chroma * (1 - Math.abs(((h / 60) % 2) - 1))
+    const m = brightness - chroma
+
+    let r = 0
+    let g = 0
+    let b = 0
+    if (h >= 0 && h < 60) {
+      r = chroma
+      g = x
+      b = 0
+    } else if (h >= 60 && h < 120) {
+      r = x
+      g = chroma
+      b = 0
+    } else if (h >= 120 && h < 180) {
+      r = 0
+      g = chroma
+      b = x
+    } else if (h >= 180 && h < 240) {
+      r = 0
+      g = x
+      b = chroma
+    } else if (h >= 240 && h < 300) {
+      r = x
+      g = 0
+      b = chroma
+    } else if (h >= 300 && h < 360) {
+      r = chroma
+      g = 0
+      b = x
+    }
+
+    return {
+      r: Math.round((r + m) * 255),
+      g: Math.round((g + m) * 255),
+      b: Math.round((b + m) * 255)
+    }
   },
   hslToRGB(hsl: string) {
     const result = /^(\d+),\s*([\d.]+)%,\s*([\d.]+)%$/i.exec(hsl)
