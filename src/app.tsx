@@ -29,7 +29,7 @@ import qs from "qs"
 export const CHAT_STOCK_JUMP = 'chat_stock_jump'
 export const CHAT_TO_APP_REFRESH_USER = 'chat_to_app_refresh_user'
 export const APP_TO_CHAT_REFRESH_USER = 'app_to_chat_refresh_user'
-
+console.log(import.meta.env.MODE)
 
 const App = () => {
   const setConsults = useConfig(s => s.setConsults)

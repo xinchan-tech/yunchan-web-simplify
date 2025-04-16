@@ -90,7 +90,11 @@ export const useTableData = <T extends Record<string, any>>(data: T[], _?: Order
     })
   }, [])
 
-  return [list, { setList: _setList, onSort, updateList }] as const
+  const cleanSort = useCallback(() => {
+    lastOrder.current = { field: undefined, order: undefined }
+  }, [])
+
+  return [list, { setList: _setList, onSort, updateList, cleanSort }] as const
 }
 
 type SortTableType = {
