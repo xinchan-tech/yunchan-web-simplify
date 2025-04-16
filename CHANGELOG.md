@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.2.7](https://github.com/xinchan-gx/yunchan-web/compare/2.2.6...2.2.7) (2025-04-16)
+
+### 🐛 Bug Fixes | Bug 修复
+
+* 修正蜡烛图数据的高低值逻辑，确保收盘价正确反映最高和最低值 ([f2d623e](https://github.com/xinchan-gx/yunchan-web/commit/f2d623e8070227771701f5282f0f56583b61d54b))
+
 ## [2.2.6](https://github.com/xinchan-gx/yunchan-web/compare/2.2.5...2.2.6) (2025-04-16)
 
 ### ✨ Features | 新功能
