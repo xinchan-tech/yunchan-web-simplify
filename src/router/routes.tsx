@@ -173,7 +173,7 @@ export const routes: RouteObject[] = [
         handle: {
           title: '个人中心'
         }
-      }
+      },
     ]
   },
   {
@@ -182,6 +182,13 @@ export const routes: RouteObject[] = [
     handle: {
       title: '讨论社群'
     }
+  },
+
+  {
+    path: '/assets',
+    element: <div/>,
+    Component: lazy(() => import('@/pages/assets/wallet')),
+    children: []
   },
   {
     path: '/home',
