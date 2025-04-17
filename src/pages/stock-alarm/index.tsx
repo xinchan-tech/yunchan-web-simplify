@@ -273,7 +273,7 @@ const AlarmItem = ({ symbol, data, onDelete }: AlarmItemProps) => {
       ) : null}
       <div className="text-tertiary text-xs text-left mt-2.5">
         <span>
-          添加时间&nbsp;
+          添加时间&nbsp;美东&nbsp;
           {dateUtils.toUsDay(data.create_time).format('MM/DD w HH:mm')}
         </span>
         &emsp;
@@ -426,12 +426,13 @@ interface AlarmRecordItemProps {
 }
 const AlarmRecordItem = ({ symbol, data, onDelete }: AlarmRecordItemProps) => {
   const onClick = () => {
-    if (data.stock_cycle) {
-      stockUtils.gotoStockPage(symbol, { interval: data.stock_cycle })
-    } else {
+    if(data.type === AlarmType.AI){
+      stockUtils.gotoStockPage(symbol, { interval: data.condition.coiling.param.stock_cycle })
+    }else {
       stockUtils.gotoStockPage(symbol, { interval: StockChartInterval.DAY })
     }
   }
+  
   const renderTrigger = () => {
     if (data.type === AlarmType.AI) {
       const cyc = stockUtils.intervalToStr(data.condition.coiling.param.stock_cycle)
@@ -526,7 +527,7 @@ const AlarmRecordItem = ({ symbol, data, onDelete }: AlarmRecordItemProps) => {
             )}
           </span>
         ) : null}
-        {data.alarm_time ? <span>触发时间 {dateUtils.toUsDay(data.alarm_time).format('MM/DD w HH:mm')}</span> : null}
+        {data.alarm_time ? <span>触发时间&nbsp;美东&nbsp;{dateUtils.toUsDay(data.alarm_time).format('MM/DD w HH:mm')}</span> : null}
         &emsp;
         {/* {data.condition.frequency === 1 ? '持续提醒' : '仅提醒一次'} */}
       </div>

@@ -5,6 +5,7 @@ import { useConfig } from '@/store'
 import { stockUtils } from '@/utils/stock'
 import { cn } from '@/utils/style'
 import { nanoid } from 'nanoid'
+import { isNumber } from "radash"
 import { useEffect, useMemo, useState } from 'react'
 
 type TableDataType = {
@@ -53,6 +54,7 @@ const StockTable = (props: StockTableProps) => {
           symbol: item.symbol,
           name: item.name
         })
+ 
         return {
           index: index++,
           key: nanoid(),

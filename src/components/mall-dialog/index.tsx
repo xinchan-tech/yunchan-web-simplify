@@ -390,7 +390,7 @@ export const Cashier = (props: CashierProps) => {
 
   const openPay = (url: string) => {
     if (type === 'wechat') {
-      qrCode.modal.open()
+      // qrCode.modal.open()
     } else {
       gotoPayPage(url)
     }

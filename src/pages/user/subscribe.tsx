@@ -40,7 +40,7 @@ const Subscribe = () => {
       return false
     }
 
-    if (item.subscribe_status === '3' || item.subscribe_status === '1') {
+    if ( item.subscribe_status === '1') {
       return false
     }
 
@@ -78,7 +78,7 @@ const Subscribe = () => {
                       </Button>
                     ) : null}
 
-                    {item.subscribe_status !== '0' ? (
+                    {item.subscribe_status !== '0' && item.subscribe_status !== '3' ? (
                       <Button
                         size="lg"
                         variant="outline"

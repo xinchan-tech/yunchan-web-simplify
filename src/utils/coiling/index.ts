@@ -139,12 +139,8 @@ export class IndicatorUtils {
     const _data = data.map((item: StockRawRecord) => {
       return [Math.floor(stockUtils.parseTime(item[0]) / 1000), ...item.slice(1)] as unknown as StockRawRecord
     }, true)
-    try {
-      const r = await module.coiling_calculate(_data, data.length - 100, interval)
-      // console.log('计算id:', calcId, r)
-      return r
-    } catch (e) {
-      // console.error('计算失败:', calcId, e)
-    }
+    const r = await module.coiling_calculate(_data, data.length - 100, interval)
+    // console.log('计算id:', calcId, r)
+    return r
   }
 }

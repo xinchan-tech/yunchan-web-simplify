@@ -210,7 +210,7 @@ const UserCenter = () => {
         <div className="flex items-center">
           <span className="text-lg">账单明细</span>
           <div className="ml-auto text-[#808080]">
-            <Button className="bg-accent text-foreground rounded w-[72px] ml-5" onClick={() => navigate('/user/bills')}>
+            <Button className="bg-accent text-foreground rounded w-[72px] ml-5" onClick={() => navigate('/app/user/bills')}>
               查看
             </Button>
           </div>
@@ -221,7 +221,7 @@ const UserCenter = () => {
           <div className="ml-auto text-[#808080]">
             <Button
               className="bg-accent text-foreground rounded w-[72px] ml-5"
-              onClick={() => navigate('/user/invite')}
+              onClick={() => navigate('/app/user/invite')}
             >
               前往
             </Button>
@@ -233,7 +233,7 @@ const UserCenter = () => {
           <div className="ml-auto text-[#808080]">
             <Button
               className="bg-accent text-foreground rounded w-[72px] ml-5"
-              onClick={() => navigate('/user/subscribe')}
+              onClick={() => navigate('/app/user/subscribe')}
             >
               前往
             </Button>

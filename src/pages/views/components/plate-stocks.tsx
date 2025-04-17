@@ -1,9 +1,6 @@
 import { getPlateStocks } from '@/api'
 import {
-  AiAlarm,
   CollectStar,
-  JknCheckbox,
-  JknIcon,
   JknRcTable,
   type JknRcTableProps,
   StockView,
@@ -51,6 +48,20 @@ const PlateStocks = (props: PlateStocksProps) => {
   const columns = useMemo<JknRcTableProps<TableDataType>['columns']>(
     () => [
       {
+        title: '',
+        dataIndex: 'collect',
+        align: 'center',
+        width: '4%',
+        render: (_, row) => <CollectStar checked={row.extend?.collect === 1} code={row.symbol} />
+      },
+      {
+        title: '',
+        dataIndex: 'index',
+        align: 'center',
+        width: '5%',
+        render: (_, _row, index) => <span onClick={(e) => {e.preventDefault();e.stopPropagation()}} onKeyDown={() => void 0}>{index + 1}</span>
+      },
+      {
         title: '名称代码',
         dataIndex: 'name',
         align: 'left',
@@ -58,8 +69,6 @@ const PlateStocks = (props: PlateStocksProps) => {
         width: '28.5%',
         render: (_, row) => (
           <div className="flex items-center h-[33px]">
-            <CollectStar checked={row.extend?.collect === 1} code={row.symbol} />
-            <span className="mr-3" />
             <StockView name={row.name} code={row.symbol as string} showName />
           </div>
         )

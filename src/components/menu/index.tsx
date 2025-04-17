@@ -88,10 +88,10 @@ const Menu = () => {
   return (
     <div className="h-full flex flex-col items-center w-full px-0.5 box-border space-y-2.5 text-foreground">
       {menus.map(item => (
-        <div className="text-center cursor-pointer hover:text-primary" key={item.title}>
+        <div className="text-center cursor-pointer hover:text-primary" key={item.title}
+          onClick={() => onNav(item.path)}
+          onKeyDown={() => { }}>
           <div
-            onClick={() => onNav(item.path)}
-            onKeyDown={() => {}}
             className={cn(
               'flex flex-col items-center hover:bg-accent w-8 h-[28px] justify-center rounded-xs',
               pathname === item.path && 'bg-primary/30'

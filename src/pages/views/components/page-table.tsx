@@ -182,7 +182,7 @@ const PageTable = (props: PageTableProps) => {
         turnoverRate: 'turnover_rate'
       }
 
-      if (columnKey === 'name' || columnKey === 'industry' || columnKey === 'pe' || columnKey === 'pb') {
+      if (columnKey === 'symbol' || columnKey === 'industry' || columnKey === 'pe' || columnKey === 'pb') {
         onSort(columnKey, sort)
         return
       }
@@ -215,12 +215,12 @@ const PageTable = (props: PageTableProps) => {
         title: '',
         dataIndex: 'index',
         align: 'center',
-        width: '4%',
-        render: (_, _row, index) => <span>{index + 1}</span>
+        width: '5%',
+        render: (_, _row, index) => <span onClick={(e) => {e.preventDefault();e.stopPropagation()}} onKeyDown={() => void 0}>{index + 1 + ((pagination.page - 1 )* pagination.pageSize)}</span>
       },
       {
         title: '名称代码',
-        dataIndex: 'name',
+        dataIndex: 'symbol',
         align: 'left',
         sort: true,
         width: '15%',
@@ -352,7 +352,7 @@ const PageTable = (props: PageTableProps) => {
         render: (_, row) => <div className="text-[14px]">{row.industry}</div>
       }
     ],
-    []
+    [pagination]
   )
 
   const onRowClick = useTableRowClickToStockTrading('symbol')

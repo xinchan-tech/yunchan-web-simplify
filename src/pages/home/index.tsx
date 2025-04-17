@@ -55,7 +55,7 @@ const HomePage = () => {
             onChange={v => navigate(`/app/stock?symbol=${v}`)}
           />
           <Link to="/app/mall" className="home-navigate-item hover:text-primary">
-            价格
+            VIP订阅
           </Link>
           <Link
             to="/features"
@@ -67,7 +67,7 @@ const HomePage = () => {
             特色功能
           </Link>
           <Link to="/app/stock?symbol=QQQ" className="home-navigate-item hover:text-primary">
-            行情
+            K线图表
           </Link>
           <a href="#download" className="home-navigate-item hover:text-primary">
             下载

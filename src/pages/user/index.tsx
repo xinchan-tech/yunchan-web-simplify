@@ -7,12 +7,12 @@ const UserPage = () => {
   const { pathname } = useLocation()
 
   const title = useMemo(() => {
-    if (pathname === '/user') return ['个人中心']
+    if (pathname === '/app/user') return ['个人中心']
     const subPath = pathname.split('/')[2]
 
     const route = routes
-      .find(r => r.path === '/')
-      ?.children!.find(r => r.path === '/user')
+      .find(r => r.path === '/app')
+      ?.children!.find(r => r.path === '/app/user')
       ?.children?.find(r => r.path === subPath)
 
     return ['个人中心', route?.handle?.title]
@@ -26,7 +26,7 @@ const UserPage = () => {
           <div className="space-x-2 flex items-center mb-10 flex-shrink-0">
             {title.map((item, index) => (
               <Fragment key={item}>
-                {index === title.length - 1 ? <span className="">{item}</span> : <Link to={'/user'}>{item}</Link>}
+                {index === title.length - 1 ? <span className="">{item}</span> : <Link to={'/app/user'}>{item}</Link>}
                 {index === title.length - 1 ? null : <JknIcon.Svg name="arrow-right" size={10} />}
               </Fragment>
             ))}

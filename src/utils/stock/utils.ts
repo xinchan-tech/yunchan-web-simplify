@@ -270,7 +270,7 @@ export const stockUtils = {
    * 涨幅 能返回infinity和NaN
    */
   getPercentUnsafe: (stock: Stock, decimal?: number, percent?: boolean): number => {
-    if (!isNumber(stock.prevClose)) return Number.NEGATIVE_INFINITY
+    if (!isNumber(+stock.prevClose)) return Number.NEGATIVE_INFINITY
     let n = Decimal.create(stock.close).minus(stock.prevClose).div(stock.prevClose)
 
     if (percent) {

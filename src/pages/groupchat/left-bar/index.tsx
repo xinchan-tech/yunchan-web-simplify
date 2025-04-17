@@ -56,7 +56,7 @@ const GroupChatLeftBar = (props: {
   const settingModal = useModal({
     title: '设置',
     closeIcon: true,
-    content: <SettingForm onChannelChange={onChannelChange} />,
+    content: <SettingForm onChannelChange={onChannelChange} canChangeChannel={user?.in_channel_status === '1'} />,
     className: 'w-[500px]',
     onOk: () => settingModal.modal.close()
   })
@@ -165,6 +165,7 @@ const GroupChatLeftBar = (props: {
 
 interface SettingFormProps {
   onChannelChange: () => void
+  canChangeChannel: boolean
 }
 
 const SettingForm = (props: SettingFormProps) => {
@@ -198,7 +199,12 @@ const SettingForm = (props: SettingFormProps) => {
           <Tooltip>
             <TooltipTrigger asChild>
               <div
-                className="bg-accent rounded px-4 py-2 cursor-pointer"
+                className={
+                  cn(
+                    'bg-accent rounded px-4 py-2 cursor-pointer',
+                    props.canChangeChannel ? 'bg-primary' : 'bg-accent'
+                  )
+                }
                 onClick={props.onChannelChange}
                 onKeyDown={() => {}}
               >

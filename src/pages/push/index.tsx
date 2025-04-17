@@ -92,7 +92,7 @@ const getTableList = async (type: string, date?: string) => {
         name: item.name
       }) as TableDataType
       stock.update_time = item.datetime.toString()
-      stock.star = (item.score * (item.score * (item.bull === 0 ? -1 : 1))).toString()
+      stock.star = (item.score * (item.bull === 0 ? -1 : 1)).toString()
       stock.id = item.symbol
       stock.warning = (item.type - 1).toString()
       stock.percent = stockUtils.getPercent(stock)
@@ -170,7 +170,7 @@ const PushPage = () => {
         dataIndex: 'index',
         align: 'center',
         width: '5%',
-        render: (_, _row, index) => <span>{index + 1}</span>
+        render: (_, _row, index) => <span onClick={(e) => {e.preventDefault();e.stopPropagation()}} onKeyDown={() => void 0}>{index + 1}</span>
       },
       {
         title: '名称代码',
@@ -273,7 +273,7 @@ const PushPage = () => {
     ]
 
     if (activeType === 'JRGW') {
-      ;(common as any[]).splice(5, 0, {
+      ;(common as any[]).splice(7, 0, {
         title: '入选时间',
         dataIndex: 'create_time',
         align: 'left',

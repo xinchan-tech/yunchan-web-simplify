@@ -98,15 +98,15 @@ export const drawCoilingPivot: DrawCoilingFunc = ({ ctx, xAxis, yAxis, indicator
     new Text({
       name: 'text',
       attrs: {
-        x: endPoints[0] + 24,
+        x: endPoints[0] + 12,
         y: startPoints[1],
-        text: '',
+        text: mark,
         align: 'center',
         baseline: 'bottom'
       },
       styles: {
         color: p.color,
-        size: 24,
+        size: 16,
         weight: 600
       }
     }).draw(ctx)

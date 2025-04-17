@@ -171,36 +171,38 @@ const StockBaseInfo = () => {
           interval={StockChartInterval.INTRA_DAY}
         />
 
-        {trading !== 'intraDay' ? (
-          trading === 'preMarket' ? (
-            <StockQuoteBar
-              label="点击查看分时走势"
-              percent={
-                dataInfo ? stockUtils.getPercent({ close: dataInfo.extPrice, prevClose: dataInfo.close }) : undefined
-              }
-              close={dataInfo?.extPrice}
-              prevClose={dataInfo?.close}
-              time={dateUtils.toUsDay(dataInfo?.extUpdated ?? '0').format('MM/DD HH:mm')}
-              tradingLabel="盘前价"
-              side="bottom"
-              contentClassName="text-xs"
-              interval={StockChartInterval.PRE_MARKET}
-            />
-          ) : (
-            <StockQuoteBar
-              label="点击查看分时走势"
-              percent={
-                dataInfo ? stockUtils.getPercent({ close: dataInfo.extPrice, prevClose: dataInfo.close }) : undefined
-              }
-              close={dataInfo?.extPrice}
-              prevClose={dataInfo?.close}
-              time={dateUtils.toUsDay(dataInfo?.extUpdated ?? '0').format('MM/DD HH:mm')}
-              tradingLabel="盘后价"
-              side="bottom"
-              contentClassName="text-xs"
-              interval={StockChartInterval.AFTER_HOURS}
-            />
-          )
+        {!['IXIC', 'SPX', 'DJI'].includes(code) ? (
+          trading !== 'intraDay' ? (
+            trading === 'preMarket' ? (
+              <StockQuoteBar
+                label="点击查看分时走势"
+                percent={
+                  dataInfo ? stockUtils.getPercent({ close: dataInfo.extPrice, prevClose: dataInfo.close }) : undefined
+                }
+                close={dataInfo?.extPrice}
+                prevClose={dataInfo?.close}
+                time={dateUtils.toUsDay(dataInfo?.extUpdated ?? '0').format('MM/DD HH:mm')}
+                tradingLabel="盘前价"
+                side="bottom"
+                contentClassName="text-xs"
+                interval={StockChartInterval.PRE_MARKET}
+              />
+            ) : (
+              <StockQuoteBar
+                label="点击查看分时走势"
+                percent={
+                  dataInfo ? stockUtils.getPercent({ close: dataInfo.extPrice, prevClose: dataInfo.close }) : undefined
+                }
+                close={dataInfo?.extPrice}
+                prevClose={dataInfo?.close}
+                time={dateUtils.toUsDay(dataInfo?.extUpdated ?? '0').format('MM/DD HH:mm')}
+                tradingLabel="盘后价"
+                side="bottom"
+                contentClassName="text-xs"
+                interval={StockChartInterval.AFTER_HOURS}
+              />
+            )
+          ) : null
         ) : null}
       </div>
     </>
@@ -234,7 +236,7 @@ const StockQuoteBar = withTooltip(
           props.interval !== StockChartInterval.INTRA_DAY && 'text-sm'
         )}
         onClick={onClick}
-        onKeyDown={() => {}}
+        onKeyDown={() => { }}
       >
         <span
           className={cn(
@@ -430,7 +432,7 @@ const StockQuote = () => {
           <span
             className="bg-accent rounded-3xl w-6 h-3 inline-flex items-center justify-center cursor-pointer"
             onClick={() => setExpanded(!expanded)}
-            onKeyDown={() => {}}
+            onKeyDown={() => { }}
           >
             <JknIcon.Svg name="arrow-down" style={{ rotate: expanded ? '180deg' : '0deg' }} size={6} />
           </span>
@@ -480,6 +482,8 @@ const StockNews = () => {
 
   const navigate = useNavigate()
 
+  const [expand, setExpand] = useState(false)
+
   return (
     <>
       {newList.data ? (
@@ -505,11 +509,11 @@ const StockNews = () => {
                     &nbsp; &nbsp;<span className="text-lg font-bold">最新消息</span>
                   </div>
                   <div className="">
-                    {newGroup.slice(0, 2).map((item, index, arr) => (
+                    {newGroup.slice(0, expand ? newGroup.length : 2).map((item, index, arr) => (
                       <div
                         key={item.date}
                         className={cn('flex-grow-0 flex-shrink-0 basis-full mt-4')}
-                        onKeyDown={() => {}}
+                        onKeyDown={() => { }}
                       >
                         <div>
                           <span className="">{item.date}</span>
@@ -532,7 +536,7 @@ const StockNews = () => {
                   {newGroup.length > 2 ? (
                     <Button
                       className="bg-[#3D3D3D] text-foreground mt-4 px-4 text-sm"
-                      onClick={() => navigate('/calendar')}
+                      onClick={() => navigate('/app/calendar')}
                     >
                       查看更多
                     </Button>
@@ -670,7 +674,7 @@ const StockRelated = () => {
       <div className="flex px-3 py-2.5">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <div onClick={() => setMenuType('plates')} onKeyDown={() => {}}>
+            <div onClick={() => setMenuType('plates')} onKeyDown={() => { }}>
               <span className="text-lg font-bold">
                 {plates?.find(item => item.id === plateId)?.name ? (
                   <span>{plates?.find(item => item.id === plateId)?.name}</span>

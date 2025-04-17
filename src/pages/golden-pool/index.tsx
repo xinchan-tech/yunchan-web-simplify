@@ -154,13 +154,13 @@ const GoldenPool = () => {
   const columns: JknRcTableProps<TableDataType>['columns'] = useMemo(
     () => [
       {
-        title: '',
+        title: <Star checked={list.length > 0} onChange={() => handleRemoveFav(list.map(item => item.symbol))} />,
         dataIndex: 'collect',
         align: 'center',
         width: 40,
-        render: () => (
+        render: (_, row) => (
           <span className="inline-flex items-center">
-            <Star checked={true} onChange={() => handleRemoveFav(list.map(item => item.symbol))} />
+            <Star checked={true} onChange={() => handleRemoveFav([row.symbol])} />
           </span>
         )
       },
@@ -168,8 +168,8 @@ const GoldenPool = () => {
         title: '',
         dataIndex: 'index',
         align: 'center',
-        width: 40,
-        render: (_, _row, index) => <span>{index + 1}</span>
+        width: 60,
+        render: (_, _row, index) => <span onClick={(e) => {e.preventDefault();e.stopPropagation()}} onKeyDown={() => void 0}>{index + 1}</span>
       },
       {
         title: (
@@ -212,6 +212,7 @@ const GoldenPool = () => {
         render: (_, row) => (
           <SubscribeSpan.PercentBlink
             symbol={row.symbol}
+            showSign
             decimal={2}
             initValue={stockUtils.getPercent(row)}
             initDirection={stockUtils.isUp(row)}

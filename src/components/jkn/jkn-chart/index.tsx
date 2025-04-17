@@ -196,6 +196,13 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
             color: '#202123'
           }
         },
+        indicator: {
+          tooltip: {
+            text: {
+              color: '#DBDBDB'
+            }
+          }
+        },
         candle: {
           bar: {
             color: transformCandleColor,
@@ -258,7 +265,7 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
               ]
             },
             text: {
-              color: '#808080'
+              color: '#DBDBDB'
             }
           },
           priceMark: {
