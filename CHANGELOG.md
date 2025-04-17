@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.2.8](https://github.com/xinchan-gx/yunchan-web/compare/2.2.7...2.2.8) (2025-04-17)
+
+### ✨ Features | 新功能
+
+* 更新 AuthGuard 中的导航逻辑，优化 CollectDropdownMenu 以支持计数属性 ([fe17341](https://github.com/xinchan-gx/yunchan-web/commit/fe17341159bca66d2983f8c9fc6998dc2f514ee2))
+* 更新 DrawToolBox 组件以支持拖拽功能，并添加事件处理逻辑 ([6a7fb9a](https://github.com/xinchan-gx/yunchan-web/commit/6a7fb9ab7b325c69cd890d88e3258de8bb8c3d92))
+* 更新多个组件以优化功能和用户体验，修复样式和逻辑问题 ([aea2681](https://github.com/xinchan-gx/yunchan-web/commit/aea26815d49d7311858ac828e7c11ba39220edf5))
+* 扩展 RemarkAttrs 类型，优化绘制逻辑以支持文本边距和箭头绘制 ([4986288](https://github.com/xinchan-gx/yunchan-web/commit/49862889222287fd50c9fdbe488e37011277d631))
+* 添加 JknColorPicker 组件，支持 HSB 颜色选择功能 ([ac83e0a](https://github.com/xinchan-gx/yunchan-web/commit/ac83e0a872dfe429d340041db5a0d60d4b0ad862))
+* Enhance drawing tools with color picker and line style options ([6bc101d](https://github.com/xinchan-gx/yunchan-web/commit/6bc101dab8ed78e5b23429c3a36a3139fbe7ba2b))
+
 ## [2.2.7](https://github.com/xinchan-gx/yunchan-web/compare/2.2.6...2.2.7) (2025-04-16)
 
 ### 🐛 Bug Fixes | Bug 修复
