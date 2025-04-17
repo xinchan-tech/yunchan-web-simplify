@@ -1,6 +1,6 @@
-import { memo, useMemo, useState } from 'react'
-import { nanoid } from 'nanoid'
 import { cn } from '@/utils/style'
+import { nanoid } from 'nanoid'
+import { memo, useMemo, useState } from 'react'
 
 interface StarRectProps {
   className?: string

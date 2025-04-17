@@ -1,6 +1,4 @@
 import { getStockChartV2 } from '@/api'
-import { queryClient } from '@/utils/query-client'
-import { stockUtils } from '@/utils/stock'
 import {
   type FigureConstructor,
   IndicatorSeries,
@@ -10,6 +8,8 @@ import {
   type LineStyle,
   getFigureClass
 } from '@/plugins/jkn-kline-chart'
+import { queryClient } from '@/utils/query-client'
+import { stockUtils } from '@/utils/stock'
 import type { Candlestick } from '../types'
 
 const findNearestTime = (data: Candlestick[], time: number, gte?: boolean) => {

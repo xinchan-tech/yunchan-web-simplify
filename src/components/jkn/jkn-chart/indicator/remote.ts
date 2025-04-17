@@ -1,7 +1,7 @@
-import { useIndicator } from '@/store'
-import { IndicatorUtils, type IndicatorData } from '@/utils/coiling'
-import { AESCrypt } from '@/utils/string'
 import { IndicatorSeries, type IndicatorTemplate } from '@/plugins/jkn-kline-chart'
+import { useIndicator } from '@/store'
+import { type IndicatorData, IndicatorUtils } from '@/utils/coiling'
+import { AESCrypt } from '@/utils/string'
 import { candlestickToRaw } from '../utils'
 import { localIndicator } from './local'
 

@@ -1,13 +1,13 @@
 import { StockChartInterval, type StockExtendResultMap, StockPeriod, type StockRawRecord } from '@/api'
+import { router } from '@/router'
 import dayjs from 'dayjs'
 import Decimal from 'decimal.js'
+import qs from 'qs'
 import { isNumber } from 'radash'
 import { dateUtils } from '../date'
+import { AESCrypt } from '../string'
 import { type Stock, StockRecord, type StockResultRecord, type StockTrading, type StockWithExt } from './stock'
 import type { StockSubscribeHandler } from './subscribe'
-import { AESCrypt } from '../string'
-import { router } from '@/router'
-import qs from 'qs'
 
 /**
  * 判断时间数据
@@ -270,7 +270,7 @@ export const stockUtils = {
    * 涨幅 能返回infinity和NaN
    */
   getPercentUnsafe: (stock: Stock, decimal?: number, percent?: boolean): number => {
-    if(!isNumber(stock.prevClose)) return Number.NEGATIVE_INFINITY
+    if (!isNumber(+stock.prevClose)) return Number.NEGATIVE_INFINITY
     let n = Decimal.create(stock.close).minus(stock.prevClose).div(stock.prevClose)
 
     if (percent) {

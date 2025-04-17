@@ -27,7 +27,7 @@ import { getTimeFormatStr } from '../chat-utils'
 import CreateGroup from '../components/create-and-join-group'
 import { UsernameSpan } from '../components/username-span'
 import { useCMDListener } from '../lib/hooks'
-import UpdateGroupInfo from "./updateGroupInfo"
+import UpdateGroupInfo from './updateGroupInfo'
 
 export type GroupData = {
   id: string
@@ -239,11 +239,7 @@ const GroupChannel = (props: {
   const updateGroupInfoModal = useModal({
     content: (
       <>
-
-        <UpdateGroupInfo
-          group={lastChannel!}
-        />
-
+        <UpdateGroupInfo group={lastChannel!} />
       </>
     ),
     title: '社群信息',
@@ -277,7 +273,7 @@ const GroupChannel = (props: {
               c.channel.channelID === lastChannel?.channelID && 'actived'
             )}
             onClick={() => onChannelSelect(c)}
-            onKeyDown={() => { }}
+            onKeyDown={() => {}}
           >
             <div className="group-avatar rounded-md flex items-center text-ellipsis justify-center relative">
               <ChatAvatar
@@ -294,8 +290,6 @@ const GroupChannel = (props: {
                   {c.unread > 99 ? '99+' : c.unread}
                 </div>
               ) : null}
-
-
             </div>
             <div className="group-data flex-1 overflow-hidden">
               <div className="group-title flex  justify-between">
@@ -307,22 +301,20 @@ const GroupChannel = (props: {
                     {c.channelInfo?.title || ''}
                   </div>
                 </div>
-                {
-                  lastChannel?.channelID === c.channel.channelID ? (
-                    <div
-                      onClick={e => {
-                        e.stopPropagation()
-                        updateGroupInfoModal.modal.open()
-                      }}
-                      onKeyDown={() => {
-                        updateGroupInfoModal.modal.open()
-                      }}
-                      className="oper-icons ml-auto"
-                    >
-                      <JknIcon name="settings_shallow" className="rounded-none size-4" />
-                    </div>
-                  ) : null
-                }
+                {lastChannel?.channelID === c.channel.channelID ? (
+                  <div
+                    onClick={e => {
+                      e.stopPropagation()
+                      updateGroupInfoModal.modal.open()
+                    }}
+                    onKeyDown={() => {
+                      updateGroupInfoModal.modal.open()
+                    }}
+                    className="oper-icons ml-auto"
+                  >
+                    <JknIcon name="settings_shallow" className="rounded-none size-4" />
+                  </div>
+                ) : null}
               </div>
               <div className="group-last-msg flex justify-between items-center">
                 <div className="flex-1 text-xs text-tertiary line-clamp-1">

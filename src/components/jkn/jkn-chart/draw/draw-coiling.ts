@@ -1,17 +1,17 @@
 import type { StockRawRecord } from '@/api'
-import type { IndicatorData } from '@/utils/coiling'
-import type { IndicatorDataType } from '@/utils/coiling/transform'
 import {
   type CircleAttrs,
   type FigureConstructor,
-  getFigureClass,
   type IndicatorDrawParams,
   type LineAttrs,
   type PolygonStyle,
   PolygonType,
   type TextAttrs,
-  type TextStyle
+  type TextStyle,
+  getFigureClass
 } from '@/plugins/jkn-kline-chart'
+import type { IndicatorData } from '@/utils/coiling'
+import type { IndicatorDataType } from '@/utils/coiling/transform'
 import { inRange } from 'radash'
 import type { CoilingCalcResult } from '../coiling-calc'
 import type { DrawFunc } from '../types'
@@ -98,15 +98,15 @@ export const drawCoilingPivot: DrawCoilingFunc = ({ ctx, xAxis, yAxis, indicator
     new Text({
       name: 'text',
       attrs: {
-        x: endPoints[0] + 24,
+        x: endPoints[0] + 12,
         y: startPoints[1],
-        text: '',
+        text: mark,
         align: 'center',
         baseline: 'bottom'
       },
       styles: {
         color: p.color,
-        size: 24,
+        size: 16,
         weight: 600
       }
     }).draw(ctx)

@@ -1,6 +1,8 @@
+import type { ChartOverlayType } from '@/components'
+import type { DrawOverlayParams } from "@/components/jkn/jkn-chart/types"
+import type { OverlayEvent } from "@/plugins/jkn-kline-chart"
 import mitt from 'mitt'
 import type { ChartStore, ChartType, CoilingIndicatorId, Indicator } from './store'
-import type { ChartOverlayType } from "@/components"
 
 export type ChartEvents = {
   symbolChange: string
@@ -34,9 +36,31 @@ export type ChartEvents = {
   }
   showIndicatorSetting: string
   yAxisChange: ChartStore['yAxis']
-  drawStart: ChartOverlayType
+  drawStart: {
+    type: ChartOverlayType,
+    params: DrawOverlayParams
+  }
   drawEnd: ChartOverlayType
   drawCancel: ChartOverlayType
+  drawSelect: {
+    type: ChartOverlayType
+    e: OverlayEvent<DrawOverlayParams>
+  }
+  drawDeSelect: {
+    type: ChartOverlayType
+    e: OverlayEvent<DrawOverlayParams>
+  }
+  drawChange: {
+    id: string
+    params: DrawOverlayParams
+  }
+  drawLock: {
+    id?: string
+    lock: boolean
+  }
+  drawDelete: {
+    id?: string
+  }
 }
 
 export const chartEvent = {

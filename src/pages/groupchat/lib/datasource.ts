@@ -17,9 +17,9 @@ import WKSDK, {
   type PullMode,
   Subscriber
 } from 'wukongimjssdk'
+import { userCache } from '../cache/user'
 import { ConversationTransform, MessageTransform } from './transform'
 import { MediaMessageUploadTask } from './upload-task'
-import { userCache } from '../cache/user'
 
 /**
  * 请求频道资料数据源

@@ -70,7 +70,7 @@ class ConversationCache extends ChatCache {
 
   async getConversations() {
     const db = await this.getDb()
-    
+
     return (
       (await db.getAll(ConversationCache.CONVERSATION_STORE))?.map(c => {
         return ConversationTransform.toConversationCls(c)

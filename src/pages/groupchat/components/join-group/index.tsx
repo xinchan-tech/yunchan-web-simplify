@@ -11,11 +11,11 @@ import { Checkbox } from '@/components'
 import FullScreenLoading from '@/components/loading'
 import { useToast } from '@/hooks'
 import { useQuery } from '@tanstack/react-query'
+import Decimal from 'decimal.js'
+import { createPortal } from 'react-dom'
 import WKSDK from 'wukongimjssdk'
 import { setExpireGroupInCache } from '../../chat-utils'
-import { createPortal } from 'react-dom'
 import { GroupTag } from '../create-and-join-group/group-channel-card'
-import Decimal from 'decimal.js'
 
 const getDiscountByYearCompareMonth = (product: Awaited<ReturnType<typeof getChannelDetail>>['products']) => {
   const monthPrice = product.find(item => item.unit === '月')?.price

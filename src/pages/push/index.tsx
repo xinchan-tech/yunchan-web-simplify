@@ -2,17 +2,17 @@ import { StockPushType, getStockPush, getStockPushList } from '@/api'
 import { getPushMenu } from '@/api/push'
 import {
   CapsuleTabs,
+  CollectStar,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
   JknIcon,
   JknRcTable,
   type JknRcTableProps,
-  StockView,
-  SubscribeSpan,
-  CollectStar,
   Star,
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem
+  StockView,
+  SubscribeSpan
 } from '@/components'
 import { useStockQuoteSubscribe, useTableData, useTableRowClickToStockTrading } from '@/hooks'
 import { useTime } from '@/store'
@@ -92,7 +92,7 @@ const getTableList = async (type: string, date?: string) => {
         name: item.name
       }) as TableDataType
       stock.update_time = item.datetime.toString()
-      stock.star = (item.score * (item.score * (item.bull === 0 ? -1 : 1))).toString()
+      stock.star = (item.score * (item.bull === 0 ? -1 : 1)).toString()
       stock.id = item.symbol
       stock.warning = (item.type - 1).toString()
       stock.percent = stockUtils.getPercent(stock)
@@ -170,7 +170,7 @@ const PushPage = () => {
         dataIndex: 'index',
         align: 'center',
         width: '5%',
-        render: (_, _row, index) => <span>{index + 1}</span>
+        render: (_, _row, index) => <span onClick={(e) => {e.preventDefault();e.stopPropagation()}} onKeyDown={() => void 0}>{index + 1}</span>
       },
       {
         title: '名称代码',
@@ -253,28 +253,27 @@ const PushPage = () => {
         align: 'right',
         sort: true,
         width: '12%',
-        render: (v, row) =>
+        render: (v, row) => (
           <div>
-            {
-              activeType === 'JRGW' ? (
-                Array.from({ length: v }).map((_, i) => (
-                  <JknIcon
-                    className="w-[16px] h-[16px]"
-                    // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
-                    key={i}
-                    name={'ic_fire_red'}
-                  />
-                ))
-              ) : (
-                <Star.Rect count={Math.abs(v)} activeColor={+row.bull === 1 ? '#22AB94' : '#F23645'} total={5} />
-              )
-            }
+            {activeType === 'JRGW' ? (
+              Array.from({ length: v }).map((_, i) => (
+                <JknIcon
+                  className="w-[16px] h-[16px]"
+                  // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
+                  key={i}
+                  name={'ic_fire_red'}
+                />
+              ))
+            ) : (
+              <Star.Rect count={Math.abs(v)} activeColor={+row.bull === 1 ? '#22AB94' : '#F23645'} total={5} />
+            )}
           </div>
+        )
       }
     ]
 
     if (activeType === 'JRGW') {
-      ; (common as any[]).splice(5, 0, {
+      ;(common as any[]).splice(7, 0, {
         title: '入选时间',
         dataIndex: 'create_time',
         align: 'left',

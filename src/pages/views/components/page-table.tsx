@@ -1,9 +1,23 @@
 import { type StockExtend, type UsStockColumn, getUsStocks } from '@/api'
-import { CollectStar, JknPagination, JknRcTable, type JknRcTableProps, Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious, StockView, SubscribeSpan } from '@/components'
+import {
+  CollectStar,
+  JknPagination,
+  JknRcTable,
+  type JknRcTableProps,
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+  StockView,
+  SubscribeSpan
+} from '@/components'
 import { usePagination, useStockQuoteSubscribe, useTableData, useTableRowClickToStockTrading } from '@/hooks'
 import { stockSubscribe, stockUtils } from '@/utils/stock'
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
-import { useUnmount } from "ahooks"
+import { useUnmount } from 'ahooks'
 
 import { useCallback, useEffect, useMemo } from 'react'
 import { useImmer } from 'use-immer'
@@ -99,15 +113,15 @@ const PageTable = (props: PageTableProps) => {
   //     }
   //   })
 
-  //   return () => { 
-  //     stockSubscribe.unsubscribeRank() 
-  //     cancel() 
+  //   return () => {
+  //     stockSubscribe.unsubscribeRank()
+  //     cancel()
   //   }
   // }, [pagination, sort])
 
   const query = useQuery({
     queryKey: [getUsStocks.cacheKey, props.type, sort, pagination],
-    queryFn: () => queryFn(),
+    queryFn: () => queryFn()
   })
 
   const [list, { setList, onSort, cleanSort }] = useTableData<TableDataType>([], 'symbol')
@@ -168,7 +182,7 @@ const PageTable = (props: PageTableProps) => {
         turnoverRate: 'turnover_rate'
       }
 
-      if (columnKey === 'name' || columnKey === 'industry' || columnKey === 'pe' || columnKey === 'pb') {
+      if (columnKey === 'symbol' || columnKey === 'industry' || columnKey === 'pe' || columnKey === 'pb') {
         onSort(columnKey, sort)
         return
       }
@@ -201,12 +215,12 @@ const PageTable = (props: PageTableProps) => {
         title: '',
         dataIndex: 'index',
         align: 'center',
-        width: '4%',
-        render: (_, _row, index) => <span>{index + 1}</span>
+        width: '5%',
+        render: (_, _row, index) => <span onClick={(e) => {e.preventDefault();e.stopPropagation()}} onKeyDown={() => void 0}>{index + 1 + ((pagination.page - 1 )* pagination.pageSize)}</span>
       },
       {
         title: '名称代码',
-        dataIndex: 'name',
+        dataIndex: 'symbol',
         align: 'left',
         sort: true,
         width: '15%',
@@ -338,7 +352,7 @@ const PageTable = (props: PageTableProps) => {
         render: (_, row) => <div className="text-[14px]">{row.industry}</div>
       }
     ],
-    []
+    [pagination]
   )
 
   const onRowClick = useTableRowClickToStockTrading('symbol')

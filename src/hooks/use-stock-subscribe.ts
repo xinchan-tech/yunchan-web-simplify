@@ -1,7 +1,7 @@
 import { type QuoteBuffer, type StockSubscribeHandler, type SubscribeActionType, stockSubscribe } from '@/utils/stock'
+import { useUnmount } from 'ahooks'
 import { useEffect, useMemo, useRef } from 'react'
 import { useLatestRef } from './use-latest-ref'
-import { useUnmount } from 'ahooks'
 
 const useStockSubscribe = (action: SubscribeActionType, symbols: string[]) => {
   useEffect(() => {
@@ -94,7 +94,6 @@ export const useSnapshotOnce = (symbol: string, handler: StockSubscribeHandler<'
     const unsubscribe = stockSubscribe.subscribe('snapshot', [symbol])
     unSubscribe.current = unsubscribe
     once.current = 0
-
 
     return () => {
       unsubscribe()

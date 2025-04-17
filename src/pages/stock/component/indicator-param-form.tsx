@@ -1,9 +1,9 @@
-import { FormField, FormItem, FormLabel, FormControl, Input, FormDescription, FormMessage, Button } from '@/components'
-import { useZForm, useToast } from '@/hooks'
+import { Button, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage, Input } from '@/components'
+import { useToast, useZForm } from '@/hooks'
 import { useIndicator } from '@/store'
 import Decimal from 'decimal.js'
-import { useState, useEffect } from 'react'
-import { useFieldArray, Form, FormProvider } from 'react-hook-form'
+import { useEffect, useState } from 'react'
+import { Form, FormProvider, useFieldArray } from 'react-hook-form'
 import { z } from 'zod'
 
 const indicatorParamsSchema = z.object({

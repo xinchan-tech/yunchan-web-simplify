@@ -5,14 +5,14 @@ import { JknAlert, Textarea, useModal } from '@/components'
 import { JknIcon } from '@/components'
 import FullScreenLoading from '@/components/loading'
 import { useToast } from '@/hooks'
+import { useUser } from '@/store'
 import { useGroupChatShortStore, useGroupChatStoreNew } from '@/store/group-chat-new'
+import copy from 'copy-to-clipboard'
 import { useEffect, useRef, useState } from 'react'
 import WKSDK, { type Channel } from 'wukongimjssdk'
 import AliyunOssUploader from '../components/aliyun-oss-uploader'
 import ChatAvatar from '../components/chat-avatar'
 import { GroupTag } from '../components/create-and-join-group/group-channel-card'
-import { useUser } from "@/store"
-import copy from "copy-to-clipboard"
 
 const UpdateGroupInfo = (props: {
   group: Channel
@@ -214,12 +214,17 @@ const UpdateGroupInfo = (props: {
           <div className="flex items-center w-[420px] box-border px-1 py-2.5">
             <span>邀请链接</span>
             <span className="ml-auto w-[200px] line-clamp-1 text-tertiary">{shareUrl}</span>
-            <JknIcon.Svg name="copy" className="text-tertiary cursor-pointer" size={20} onClick={() => {
-              if (shareUrl) {
-                copy(`${shareUrl}&cid=${props.group.channelID}`)
-                JknAlert.success('复制成功')
-              }
-            }} />
+            <JknIcon.Svg
+              name="copy"
+              className="text-tertiary cursor-pointer"
+              size={20}
+              onClick={() => {
+                if (shareUrl) {
+                  copy(`${shareUrl}&cid=${props.group.channelID}`)
+                  JknAlert.success('复制成功')
+                }
+              }}
+            />
           </div>
         </div>
       </div>

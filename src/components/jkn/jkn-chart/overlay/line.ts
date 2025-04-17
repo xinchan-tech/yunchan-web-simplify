@@ -1,13 +1,15 @@
 import type { OverlayTemplate } from '@/plugins/jkn-kline-chart'
-import { getLinearYFromCoordinates } from "../utils"
+import { drawOverlayParamsToFigureStyle, getLinearYFromCoordinates } from '../utils'
+import type { DrawOverlayParams } from '../types'
 
-export const LineOverlay: OverlayTemplate = {
+export const LineOverlay: OverlayTemplate<DrawOverlayParams> = {
   name: 'line',
   totalStep: 3,
   needDefaultPointFigure: true,
   needDefaultXAxisFigure: false,
   needDefaultYAxisFigure: false,
-  createPointFigures: ({ coordinates, bounding }) => {
+  createPointFigures: ({ coordinates, bounding, overlay }) => {
+    const styles = drawOverlayParamsToFigureStyle('line', overlay.extendData)
     if (coordinates.length === 2) {
       if (coordinates[0].x === coordinates[1].x) {
         return [
@@ -24,6 +26,9 @@ export const LineOverlay: OverlayTemplate = {
                   y: bounding.height
                 }
               ]
+            },
+            styles: {
+              ...styles
             }
           }
         ]
@@ -42,7 +47,8 @@ export const LineOverlay: OverlayTemplate = {
                 y: getLinearYFromCoordinates(coordinates[0], coordinates[1], { x: bounding.width, y: coordinates[0].y })
               }
             ]
-          }
+          },
+          styles: styles
         }
       ]
     }

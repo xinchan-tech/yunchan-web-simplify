@@ -26,12 +26,12 @@ import { useToast, useZForm } from '@/hooks'
 import { useToken } from '@/store'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useCountDown, useCounter } from 'ahooks'
+import dayjs from 'dayjs'
 import { REGEXP_ONLY_DIGITS } from 'input-otp'
 import { useState } from 'react'
 import { FormProvider, type SubmitErrorHandler } from 'react-hook-form'
 import { z } from 'zod'
 import { AppleLogin, GoogleLogin, WeChatLogin } from './login-other'
-import dayjs from 'dayjs'
 
 const resetFormSchema = z
   .object({

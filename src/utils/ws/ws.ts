@@ -88,13 +88,12 @@ export class Ws {
       const endTime = Date.now().valueOf()
       this.delay = endTime - startTime
 
-      if(this.retryCount > 0){
+      if (this.retryCount > 0) {
         this.options.onReconnect?.()
       }
 
       this.options.onOpen?.(ev)
       this.handleOpen()
-      
     }
 
     this.ws.onclose = (ev: CloseEvent) => {

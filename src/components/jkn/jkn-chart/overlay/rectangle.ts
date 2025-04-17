@@ -1,5 +1,5 @@
 import type { OverlayTemplate } from '@/plugins/jkn-kline-chart'
-import { PolygonType } from "@/plugins/jkn-kline-chart"
+import { PolygonType } from '@/plugins/jkn-kline-chart'
 
 export const RectangleOverlay: OverlayTemplate = {
   name: 'rectangle',

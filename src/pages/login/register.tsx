@@ -61,7 +61,13 @@ export const RegisterForm = (props: {
         <AgreementTerms />
       </div>
     ),
-    footer: <div className="text-center my-4"><Button className="px-4" onClick={() => agreementModal.modal.close()}>确&nbsp;认</Button></div>
+    footer: (
+      <div className="text-center my-4">
+        <Button className="px-4" onClick={() => agreementModal.modal.close()}>
+          确&nbsp;认
+        </Button>
+      </div>
+    )
   })
 
   const sendCode = useMutation({
@@ -133,7 +139,7 @@ export const RegisterForm = (props: {
     <>
       {step >= 2 ? (
         <div className="w-[960px] mx-auto pt-[60px]">
-          <div className="flex items-center" onClick={() => prevStep()} onKeyDown={() => { }}>
+          <div className="flex items-center" onClick={() => prevStep()} onKeyDown={() => {}}>
             <div className="size-8 rounded bg-accent flex items-center justify-center mr-2">
               <JknIcon.Svg name="arrow-left" size={10} className="" />
             </div>
@@ -178,7 +184,7 @@ export const RegisterForm = (props: {
                 <span
                   className="text-tertiary cursor-pointer"
                   onClick={() => !time && sendCode.mutate()}
-                  onKeyDown={() => { }}
+                  onKeyDown={() => {}}
                 >
                   <span className={cn(!time && 'text-primary')}>重发</span>
                   {time ? (
@@ -293,7 +299,14 @@ export const RegisterForm = (props: {
                   <JknCheckbox checked={checked} onClick={toggle} className="text-sm" />
                   &nbsp;
                   <span className="text-sm text-secondary">
-                    我已阅读并接受<span className="text-primary cursor-pointer" onClick={() => agreementModal.modal.open()} onKeyDown={() => { }}>《软件服务条款》</span>
+                    我已阅读并接受
+                    <span
+                      className="text-primary cursor-pointer"
+                      onClick={() => agreementModal.modal.open()}
+                      onKeyDown={() => {}}
+                    >
+                      《软件服务条款》
+                    </span>
                   </span>
                 </FormItem>
                 <Button className="mt-4" block loading={sendCode.isPending}>
@@ -307,16 +320,14 @@ export const RegisterForm = (props: {
                 <span
                   className="cursor-pointer text-primary"
                   onClick={() => props.setPage('login')}
-                  onKeyDown={() => { }}
+                  onKeyDown={() => {}}
                 >
                   立即登录
                 </span>
               </div>
             </div>
           </FormProvider>
-          {
-            agreementModal.context
-          }
+          {agreementModal.context}
         </div>
       )}
     </>

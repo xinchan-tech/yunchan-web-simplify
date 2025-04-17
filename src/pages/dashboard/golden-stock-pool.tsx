@@ -12,7 +12,7 @@ type TableDataType = ReturnType<typeof stockUtils.toStockWithExt>
 
 const GoldenStockPool = () => {
   const [type, setType] = useState('1')
-  const { token } = useToken()
+  // const { token } = useToken()
   const [list, { setList, onSort }] = useTableData<TableDataType>([], 'symbol')
 
   const query = useQuery({
@@ -33,8 +33,7 @@ const GoldenStockPool = () => {
           'stock_before'
         ],
         limit: 300
-      }),
-    enabled: !!token
+      })
   })
 
   useEffect(() => {
@@ -129,25 +128,18 @@ const GoldenStockPool = () => {
   return (
     <div className="w-full h-full flex flex-col overflow-hidden font-pingfang">
       <div className="flex items-center border-b-default">
-        <CollectDropdownMenu activeKey={type} onChange={setType} />
+        <CollectDropdownMenu activeKey={type} onChange={setType} count={list.length} />
       </div>
       <div className="flex-1 overflow-hidden">
-        {token ? (
-          <JknRcTable
-            isLoading={query.isLoading}
-            columns={columns}
-            data={list}
-            onSort={onSort}
-            rowKey="symbol"
-            className="w-full"
-            onRow={onRowClick}
-          />
-        ) : (
-          <div className="w-full text-center mt-40">
-            <div className="mb-4 text-secondary">尚未登录账号</div>
-            <Button onClick={onLogin}>登录账号</Button>
-          </div>
-        )}
+        <JknRcTable
+          isLoading={query.isLoading}
+          columns={columns}
+          data={list}
+          onSort={onSort}
+          rowKey="symbol"
+          className="w-full"
+          onRow={onRowClick}
+        />
       </div>
     </div>
   )

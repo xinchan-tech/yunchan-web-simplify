@@ -1,9 +1,7 @@
-import { useAuthorized, useToast } from '@/hooks'
+import { useAuthorized } from '@/hooks'
 import { router } from '@/router'
-import { useToken } from '@/store'
 import { cn } from '@/utils/style'
-import { Settings } from 'lucide-react'
-import { Fragment, type ReactNode, useEffect, useMemo, useState } from 'react'
+import { type ReactNode, useEffect, useMemo, useState } from 'react'
 import { JknIcon } from '../jkn/jkn-icon'
 
 type MenuItem = {
@@ -14,8 +12,6 @@ type MenuItem = {
 
 const Menu = () => {
   const [pathname, setPathname] = useState(router.state.location.pathname)
-  const { token } = useToken()
-  const { toast } = useToast()
 
   useEffect(() => {
     const s = router.subscribe(s => {
@@ -60,7 +56,7 @@ const Menu = () => {
         path: '/app/calendar'
       },
       {
-        icon: <JknIcon.Svg name="message" size={24} />,
+        icon: <JknIcon.Svg name="chat-message" size={24} />,
         title: '消息',
         path: '/app/message'
       }
@@ -81,13 +77,6 @@ const Menu = () => {
   const [auth, toastNotAuth] = useAuthorized('vcomment')
 
   const onNav = (path: string) => {
-    if (!token && path !== '/app' && path !== '/app/setting') {
-      toast({
-        title: '请先登录'
-      })
-      return
-    }
-
     if (path === '/app/shout' && !auth()) {
       toastNotAuth()
       return
@@ -99,10 +88,10 @@ const Menu = () => {
   return (
     <div className="h-full flex flex-col items-center w-full px-0.5 box-border space-y-2.5 text-foreground">
       {menus.map(item => (
-        <div className="text-center cursor-pointer hover:text-primary" key={item.title}>
+        <div className="text-center cursor-pointer hover:text-primary" key={item.title}
+          onClick={() => onNav(item.path)}
+          onKeyDown={() => { }}>
           <div
-            onClick={() => onNav(item.path)}
-            onKeyDown={() => {}}
             className={cn(
               'flex flex-col items-center hover:bg-accent w-8 h-[28px] justify-center rounded-xs',
               pathname === item.path && 'bg-primary/30'

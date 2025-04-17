@@ -84,9 +84,7 @@ export const JknAlert = {
         <div className="size-8 rounded-full border border-solid border-foreground flex items-center justify-center">
           <JknIcon.Svg name="check" size={16} className="" />
         </div>
-        <div className="text-center mt-2.5">
-          {content}
-        </div>
+        <div className="text-center mt-2.5">{content}</div>
       </div>
     )
 
@@ -108,9 +106,7 @@ export const JknAlert = {
         <div className="size-8 rounded-full border border-solid border-foreground flex items-center justify-center">
           <JknIcon.Svg name="check" size={16} className="" />
         </div>
-        <div className="text-center mt-2.5">
-          {content}
-        </div>
+        <div className="text-center mt-2.5">{content}</div>
       </div>
     )
 
@@ -221,9 +217,12 @@ const PureAlertComponent = (props: PureAlertComponentProps) => {
   useMount(() => {
     setTrue()
 
-    setTimeout(() => {
-      waitAction()
-    }, props.duration || (3 * 1000))
+    setTimeout(
+      () => {
+        waitAction()
+      },
+      props.duration || 3 * 1000
+    )
   })
 
   return (
@@ -231,7 +230,7 @@ const PureAlertComponent = (props: PureAlertComponentProps) => {
       <AlertDialogContent className="w-fit px-5 py-4 rounded-[12px] min-w-[102px] min-h-[102px] flex items-center justify-center box-border">
         <VisuallyHidden>
           <AlertDialogHeader>
-            <AlertDialogTitle/>
+            <AlertDialogTitle />
           </AlertDialogHeader>
         </VisuallyHidden>
         <AlertDialogDescription className="text-center p-0">{props.content}</AlertDialogDescription>
@@ -260,11 +259,5 @@ const toast = (props: PureAlertOptions) => {
     // root.unmount()
   }
 
-  root.render(
-    <PureAlertComponent
-      content={props.content}
-      duration={props.duration}
-      afterClose={destroy}
-    />
-  )
+  root.render(<PureAlertComponent content={props.content} duration={props.duration} afterClose={destroy} />)
 }

@@ -1,42 +1,59 @@
 import { StockChartInterval } from '@/api'
-import { useIndicator } from '@/store'
-import { dateUtils } from '@/utils/date'
-import { cn, colorUtil } from '@/utils/style'
+import stockLogo from '@/assets/image/today-chart-x1.png'
 import {
   type CandleType,
   type Chart,
   type LayoutChildType,
+  type OverlayEvent,
   dispose,
   init,
   registerFigure,
   registerIndicator,
   registerOverlay
 } from '@/plugins/jkn-kline-chart'
+import { useIndicator } from '@/store'
+import { dateUtils } from '@/utils/date'
+import { cn, colorUtil } from '@/utils/style'
+import { useMount, useUnmount } from 'ahooks'
+import dayjs from 'dayjs'
+import Decimal from 'decimal.js'
+import { nanoid } from "nanoid"
 import { debounce } from 'radash'
 import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react'
+import { CoilingIndicatorId } from './coiling-calc'
 import {
+  IconFigure,
+  LogoFigure,
+  RemarkFigure,
   backTestLineFigure,
   backTestMarkFigure,
   compareLabelFigure,
-  IconFigure,
-  LogoFigure,
   markOverlayFigure
 } from './figure'
 import { compareIndicator, gapIndicator, localIndicator } from './indicator'
-import { markIndicator } from './indicator/mark'
-import type { AxisPosition, Candlestick } from './types'
-import { ChartTypes, getStockColor, isSameInterval, transformCandleColor, transformTextColor } from './utils'
-import { backTestIndicator, type BackTestRecord } from './indicator/back-test'
-import { CoilingIndicatorId } from './coiling-calc'
+import { type BackTestRecord, backTestIndicator } from './indicator/back-test'
 import { coilingIndicator } from './indicator/coiling'
-import dayjs from 'dayjs'
-import { useMount, useUnmount } from 'ahooks'
+import { markIndicator } from './indicator/mark'
 import { SplitIndicator } from './indicator/split'
-import Decimal from 'decimal.js'
-import stockLogo from '@/assets/image/today-chart-x1.png'
-import { type ChartOverlayType, ParallelOverlay, LineOverlay, LogoOverlay, HorizontalLineOverlay, VerticalLineOverlay, ArrowOverlay, RayOverlay, ChannelOverlay, RectangleOverlay } from './overlay'
+import {
+  ArrowOverlay,
+  ChannelOverlay,
+  type ChartOverlayType,
+  GoldOverlay,
+  HorizontalLineOverlay,
+  LineOverlay,
+  LogoOverlay,
+  ParallelOverlay,
+  RayOverlay,
+  RectangleOverlay,
+  RemarkOverlay,
+  TimeOverlay,
+  VerticalLineOverlay
+} from './overlay'
+import type { AxisPosition, Candlestick, DrawOverlayParams } from './types'
+import { ChartTypes, getStockColor, isSameInterval, transformCandleColor, transformTextColor } from './utils'
 
-export { CoilingIndicatorId, ChartTypes, type ChartOverlayType }
+export { ChartTypes, CoilingIndicatorId, type ChartOverlayType }
 
 registerIndicator(coilingIndicator)
 registerIndicator(localIndicator)
@@ -51,6 +68,7 @@ registerFigure(IconFigure)
 registerFigure(markOverlayFigure)
 registerFigure(LogoFigure)
 registerFigure(compareLabelFigure)
+registerFigure(RemarkFigure)
 registerOverlay(LogoOverlay)
 registerOverlay(ParallelOverlay)
 registerOverlay(LineOverlay)
@@ -60,6 +78,9 @@ registerOverlay(ArrowOverlay)
 registerOverlay(RayOverlay)
 registerOverlay(ChannelOverlay)
 registerOverlay(RectangleOverlay)
+registerOverlay(GoldOverlay)
+registerOverlay(TimeOverlay)
+registerOverlay(RemarkOverlay)
 
 interface JknChartProps {
   className?: string
@@ -73,6 +94,7 @@ type IndicatorParams = {
   name: string
   isRemote?: boolean
 }
+
 
 interface JknChartIns {
   applyNewData: Chart['applyNewData']
@@ -107,7 +129,17 @@ interface JknChartIns {
   createGapIndicator: (count: number) => void
   removeGapIndicator: () => void
   setGapIndicator: (count: number) => void
-  createOverlay: (type: ChartOverlayType, onEnd: (type: ChartOverlayType) => boolean) => void
+  createOverlay: (type: ChartOverlayType, options: {
+    onEnd: (type: ChartOverlayType) => boolean
+    onStart: (type: ChartOverlayType, e: OverlayEvent<DrawOverlayParams>) => boolean
+    onSelect: (type: ChartOverlayType, e: OverlayEvent<DrawOverlayParams>) => boolean
+    onDeSelect: (type: ChartOverlayType, e: OverlayEvent<DrawOverlayParams>) => boolean
+    params: DrawOverlayParams
+  }) => void
+  setOverlay: (id: string, params: DrawOverlayParams) => void
+  lockOverlay: (id?: string) => void
+  unlockOverlay: (id?: string) => void
+  removeOverlay: (id?: string) => void
 }
 
 const getAxisType = (chart: Chart) => {
@@ -162,6 +194,13 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
           },
           vertical: {
             color: '#202123'
+          }
+        },
+        indicator: {
+          tooltip: {
+            text: {
+              color: '#DBDBDB'
+            }
           }
         },
         candle: {
@@ -226,7 +265,7 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
               ]
             },
             text: {
-              color: '#808080'
+              color: '#DBDBDB'
             }
           },
           priceMark: {
@@ -244,8 +283,8 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
                 if (axisType === 'normal') {
                   return lastData.close > lastData.prevClose ? upColor : downColor
                 }
-      
-                if (isTimeShare.current){
+
+                if (isTimeShare.current) {
                   return lastData.close > lastData.prevClose ? upColor : downColor
                 }
 
@@ -279,7 +318,7 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
                 return transformTextColor(text, data.slice(0, range.to).pop()!, 'prevClose')
               }
 
-              if (isTimeShare.current){
+              if (isTimeShare.current) {
                 return transformTextColor(text, data.slice(0, range.to).pop()!, 'prevClose')
               }
 
@@ -321,7 +360,7 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
                   return transformTextColor(text, data.slice(0, range.to).pop()!, 'prevClose')
                 }
 
-                if (isTimeShare.current){
+                if (isTimeShare.current) {
                   return transformTextColor(text, data.slice(0, range.to).pop()!, 'prevClose')
                 }
                 return transformTextColor(text, startData, 'open')
@@ -595,7 +634,7 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
     removeMarkOverlay: indicatorId => {
       chart.current?.removeIndicator({ id: indicatorId })
     },
-    setMarkOverlay: _mark => {},
+    setMarkOverlay: _mark => { },
     createBackTestIndicator: record => {
       const id = 'back-test-indicator'
       if (chart.current?.getIndicators({ id: id }).length) {
@@ -629,7 +668,7 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
     removeBackTestIndicator: () => {
       chart.current?.removeIndicator({ id: 'back-test-indicator' })
     },
-    setDragEnable: enable => {},
+    setDragEnable: enable => { },
     getChart: () => chart.current,
     setTimeShareChart: interval => {
       const { up: upColor, down: downColor } = getStockColor()
@@ -639,7 +678,7 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
           ![StockChartInterval.AFTER_HOURS, StockChartInterval.PRE_MARKET, StockChartInterval.INTRA_DAY].includes(
             interval
           )
-        ){
+        ) {
           isTimeShare.current = false
           return
         }
@@ -777,7 +816,6 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
           }
         })
 
-
         chart.current?.setPaneOptions({
           id: ChartTypes.MAIN_PANE_ID,
           axis: {
@@ -807,11 +845,83 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
         calcParams: [count]
       })
     },
-    createOverlay: (type, cb) => {
+    createOverlay: (type, opts) => {
+      const uid = `overlay-${nanoid(8)}`
       chart.current?.createOverlay({
+        id: uid,
         name: type,
-        onDrawEnd: () => cb(type)
+        onDrawEnd: () => opts.onEnd(type),
+        onDrawStart: (e) => {
+          return opts.onStart(type, e as OverlayEvent<DrawOverlayParams>)
+        },
+        onSelected: (e) => opts.onSelect(type, e as OverlayEvent<DrawOverlayParams>),
+        onDeselected: (e) => opts.onDeSelect(type, e as OverlayEvent<DrawOverlayParams>),
+        extendData: opts.params
       })
+    },
+    setOverlay: (id, params) => {
+      chart.current?.overrideOverlay({
+        id,
+        extendData: params
+      })
+    },
+    lockOverlay: id => {
+      if(!id) {
+        const overlays = chart.current?.getOverlays()
+        if (!overlays) return
+
+        overlays.forEach(overlay => {
+          chart.current?.overrideOverlay({
+            id: overlay.id,
+            lock: true
+          })
+        })
+        return
+      }
+
+      const overlay = chart.current?.getOverlays({ id })[0]
+
+      if (!overlay) return
+
+      chart.current?.overrideOverlay({
+        id: overlay.id,
+        lock: true
+      })
+    },
+    unlockOverlay: id => {
+      if(!id) {
+        const overlays = chart.current?.getOverlays()
+        if (!overlays) return
+
+        overlays.forEach(overlay => {
+          chart.current?.overrideOverlay({
+            id: overlay.id,
+            lock: false
+          })
+        })
+        return
+      }
+      const overlay = chart.current?.getOverlays({ id })[0]
+
+      if (!overlay) return
+
+      chart.current?.overrideOverlay({
+        id: overlay.id,
+        lock: false
+      })
+    },
+    removeOverlay: id => {
+      if (!id) {
+        const overlays = chart.current?.getOverlays()
+        if (!overlays) return
+
+        overlays.forEach(overlay => {
+          chart.current?.removeOverlay({ id: overlay.id })
+        })
+
+        return
+      }
+      chart.current?.removeOverlay({ id })
     }
   }))
 

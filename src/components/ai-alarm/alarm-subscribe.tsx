@@ -54,7 +54,7 @@ const AlarmContent = ({ data, onClose }: AlarmContentProps) => {
   }
 
   return (
-    <div className="flex leading-none font-normal w-full cursor-pointer" onClick={() => onClick()} onKeyDown={() => { }}>
+    <div className="flex leading-none font-normal w-full cursor-pointer" onClick={() => onClick()} onKeyDown={() => {}}>
       <div className="h-[110px] w-[60px] rounded-l-[8px] bg-[#4DD0E133] flex flex-shrink-0">
         <JknIcon.Svg name="alarm-2" size={20} className="m-auto text-[#4DD0E1]" />
       </div>
@@ -104,13 +104,9 @@ const AlarmContent = ({ data, onClose }: AlarmContentProps) => {
                 {data.base_price}
                 <span>{data.pnl_percent > 0 ? '↑' : '↓'}</span>&nbsp;
                 <span className="text-foreground">
-                  {
-                    data.trigger_type === 1 ?  (
-                      `盈亏比例${(data.pnl_percent * 100).toFixed(2)}%`
-                    ): (
-                      `盈亏金额${(data.pnl_price)}`
-                    )
-                  }
+                  {data.trigger_type === 1
+                    ? `盈亏比例${(data.pnl_percent * 100).toFixed(2)}%`
+                    : `盈亏金额${data.pnl_price}`}
                 </span>
               </span>
               <span className="bg-accent py-0.5 rounded text-xs px-1">浮动</span>

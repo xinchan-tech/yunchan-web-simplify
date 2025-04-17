@@ -1,9 +1,9 @@
 import { CapsuleTabs } from '@/components'
 import { useState } from 'react'
+import EtfTable from './components/etf-table'
 import PageTable from './components/page-table'
 import SectorTable from './components/sector-table'
 import SingleTable from './single-table'
-import EtfTable from './components/etf-table'
 
 /**
  * 视图组件：展示不同类型的股票数据

@@ -149,8 +149,8 @@ const EtfTable = (props: PageTableProps) => {
         title: '',
         dataIndex: 'index',
         align: 'center',
-        width: '4%',
-        render: (_, _row, index) => <span>{index + 1}</span>
+        width: '5%',
+        render: (_, _row, index) => <span onClick={(e) => {e.preventDefault();e.stopPropagation()}} onKeyDown={() => void 0}>{index + 1}</span>
       },
       {
         title: '名称代码',
@@ -160,8 +160,6 @@ const EtfTable = (props: PageTableProps) => {
         width: '23%',
         render: (_, row) => (
           <div className="flex items-center h-[33px]">
-            <CollectStar checked={row.collect === 1} code={row.symbol} />
-            <span className="mr-3" />
             <StockView name={row.name} code={row.symbol as string} showName />
           </div>
         )
@@ -220,7 +218,8 @@ const EtfTable = (props: PageTableProps) => {
       {
         title: '总市值',
         dataIndex: 'total',
-        align: 'right',
+        align: 'left',
+        width: '10%',
         sort: true,
         render: (_, row) => (
           <div className="">
@@ -278,7 +277,7 @@ const EtfTable = (props: PageTableProps) => {
             />
           </div>
         )
-      },
+      }
     ],
     []
   )

@@ -96,9 +96,10 @@ export const CollectCapsuleTabs = ({ onChange, ...props }: CollectCapsuleTabsPro
 interface CollectDropdownMenuProps {
   onChange?: (key: string) => void
   activeKey?: string
+  count?: number
 }
 
-export const CollectDropdownMenu = memo(({ onChange, ...props }: CollectDropdownMenuProps) => {
+export const CollectDropdownMenu = memo(({ onChange, count, ...props }: CollectDropdownMenuProps) => {
   const { collects, _onChange } = useCollectSelect(onChange)
 
   const activeCollect = collects.data?.find(cate => cate.id === props.activeKey)
@@ -108,7 +109,7 @@ export const CollectDropdownMenu = memo(({ onChange, ...props }: CollectDropdown
       <DropdownMenuTrigger asChild>
         <div className="flex items-center space-x-2 px-3 py-2.5 text-lg font-bold font-pingfang">
           <span>
-            {activeCollect?.name ?? '-'}({activeCollect?.total ?? 0})
+            {activeCollect?.name ?? '-'}({count ?? activeCollect?.total ?? 0})
           </span>
           <JknIcon.Svg name="arrow-down" size={12} />
         </div>

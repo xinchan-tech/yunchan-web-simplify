@@ -1,8 +1,8 @@
-import * as React from 'react'
 import * as TabsPrimitive from '@radix-ui/react-tabs'
+import * as React from 'react'
 
 import { cn } from '@/utils/style'
-import { cva, type VariantProps } from 'class-variance-authority'
+import { type VariantProps, cva } from 'class-variance-authority'
 
 const tabsVariants = cva('inline-flex  items-stretch justify-center rounded text-muted-foreground', {
   variants: {

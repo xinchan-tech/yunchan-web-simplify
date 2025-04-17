@@ -2,8 +2,8 @@ import { execSync } from 'node:child_process'
 import fs from 'node:fs'
 import path from 'node:path'
 import type { RsbuildPlugin } from '@rsbuild/core'
-import packageJson from '../package.json'
 import dayjs from 'dayjs'
+import packageJson from '../package.json'
 const c = require('ansi-colors')
 
 export type ReleaseTagOptions = {
@@ -44,7 +44,7 @@ export const pluginReleaseTag = (options: ReleaseTagOptions): RsbuildPlugin => (
             {
               version,
               packageVersion: packageJson.version,
-              branch: execSync('git rev-parse --abbrev-ref HEAD').toString().trim(), 
+              branch: execSync('git rev-parse --abbrev-ref HEAD').toString().trim()
             },
             null,
             2

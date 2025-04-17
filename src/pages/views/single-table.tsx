@@ -169,7 +169,7 @@ const SingleTable = (props: SingleTableProps) => {
         dataIndex: 'index',
         align: 'center',
         width: '4%',
-        render: (_, _row, index) => <span>{index + 1}</span>
+        render: (_, _row, index) => <span onClick={(e) => {e.preventDefault();e.stopPropagation()}} onKeyDown={() => void 0}>{index + 1}</span>
       },
       {
         title: '名称代码',

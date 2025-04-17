@@ -1,6 +1,7 @@
-import React, { ReactNode, useRef, useEffect } from 'react'
 import { JknIcon } from '@/components'
 import { cn } from '@/utils/style'
+import type React from 'react'
+import { type ReactNode, useEffect, useRef } from 'react'
 
 /**
  * JknTimeline组件属性接口

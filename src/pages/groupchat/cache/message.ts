@@ -1,6 +1,6 @@
 import type { Channel, Message } from 'wukongimjssdk'
-import { CacheStoreName, ChatCache } from './db'
 import { MessageTransform } from '../lib/transform'
+import { CacheStoreName, ChatCache } from './db'
 
 class MessageCache extends ChatCache {
   public static MESSAGE_STORE = CacheStoreName.MESSAGE_STORE

@@ -2,7 +2,7 @@ import { StockChartInterval, getLargeCapIndexes, getStockChartQuote } from '@/ap
 import { ChartTypes, JknChart, JknIcon, SubscribeSpan } from '@/components'
 import { useSnapshotOnce, useStockBarSubscribe, useStockQuoteSubscribe } from '@/hooks'
 import { useConfig, useTime } from '@/store'
-import { type Stock, stockSubscribe, type StockTrading, stockUtils } from '@/utils/stock'
+import { type Stock, type StockTrading, stockSubscribe, stockUtils } from '@/utils/stock'
 import { cn, colorUtil } from '@/utils/style'
 import { useQuery } from '@tanstack/react-query'
 import Decimal from 'decimal.js'
@@ -400,10 +400,13 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
       } else {
         if (chart.current?.isSameIntervalCandlestick(stock, StockChartInterval.ONE_MIN)) {
           lastBarInInterval.current = stock
-          chart.current?.appendCandlestick({
-            ...stock,
-            close: lastData?.close ?? stock.close,
-          }, StockChartInterval.ONE_MIN)
+          chart.current?.appendCandlestick(
+            {
+              ...stock,
+              close: lastData?.close ?? stock.close
+            },
+            StockChartInterval.ONE_MIN
+          )
           return
         }
 

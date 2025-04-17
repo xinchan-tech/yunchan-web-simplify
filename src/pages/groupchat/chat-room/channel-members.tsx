@@ -8,19 +8,19 @@ import {
   ScrollArea,
   Skeleton
 } from '@/components'
+import { useToast } from '@/hooks'
 import { ChatCmdType, useChatStore, useUser } from '@/store'
 import { useQuery } from '@tanstack/react-query'
+import to from 'await-to-js'
+import { nanoid } from 'nanoid'
+import { useCallback, useEffect } from 'react'
+import { useImmer } from 'use-immer'
 import WKSDK, { type CMDContent, type Subscriber } from 'wukongimjssdk'
+import { subscriberCache } from '../cache'
 import ChatAvatar from '../components/chat-avatar'
 import { chatEvent } from '../lib/event'
-import to from 'await-to-js'
-import { useToast } from '@/hooks'
 import { useCMDListener, useSubscribesListener } from '../lib/hooks'
-import { useCallback, useEffect } from 'react'
 import { hasForbidden, isChannelManager, isChannelOwner } from '../lib/utils'
-import { nanoid } from 'nanoid'
-import { subscriberCache } from '../cache'
-import { useImmer } from 'use-immer'
 
 interface ChannelMembersProps {
   owner: string

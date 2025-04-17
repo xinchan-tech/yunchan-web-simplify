@@ -10,8 +10,8 @@ import {} from '@/utils/stock'
 import { RouterProvider } from 'react-router'
 import { router } from './router'
 import './app.scss'
-import { queryClient } from './utils/query-client.ts'
 import { IndicatorUtils } from './utils/coiling/index.ts'
+import { queryClient } from './utils/query-client.ts'
 
 if (typeof window !== 'undefined' && import.meta.env.MODE === 'development') {
   scan({

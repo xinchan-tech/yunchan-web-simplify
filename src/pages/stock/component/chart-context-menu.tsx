@@ -9,7 +9,7 @@ import {
   ContextMenuTrigger
 } from '@/components'
 import type { PropsWithChildren } from 'react'
-import { chartManage, type ChartStore, MainYAxis, renderUtils } from '../lib'
+import { type ChartStore, MainYAxis, chartManage, renderUtils } from '../lib'
 
 interface ChartContextMenuProps {
   chartId: string

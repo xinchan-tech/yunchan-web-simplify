@@ -1,10 +1,10 @@
+import type { AlarmType } from '@/api'
+// import { AlarmType } from '@/api'
+import { sysConfig } from '@/utils/config.ts'
 import mitt, { type Emitter } from 'mitt'
 import { Ws } from '.'
 // import { useToken } from '@/store'
 import { createEvent } from '../event'
-// import { AlarmType } from '@/api'
-import { sysConfig } from '@/utils/config.ts'
-import type { AlarmType } from "@/api"
 
 export type MessageReceived<T> = {
   event: WsEvent

@@ -1,8 +1,8 @@
-import { cn } from "@/utils/style"
+import { useToast } from "@/hooks"
 import { router } from "@/router"
-import { ReactNode, useEffect, useState } from "react"
 import { useConfig, useToken, useUser } from "@/store"
-import { useAuthorized, useToast } from "@/hooks"
+import { cn } from "@/utils/style"
+import { ReactNode, useEffect, useState } from "react"
 import { JknAlert, JknIcon } from ".."
 
 type MenuItem = {
@@ -95,7 +95,7 @@ const MenuRight = () => {
       const search = new URLSearchParams(window.location.search)
       const symbol = search.get('symbol') ?? 'QQQ'
 
-      if(window.location.pathname.startsWith('/app/stock/alarm') && pathname === '/app/stock/alarm'){
+      if (window.location.pathname.startsWith('/app/stock/alarm') && pathname === '/app/stock/alarm') {
         router.navigate(`/app/stock?symbol=${symbol}`)
         return
 
@@ -109,10 +109,10 @@ const MenuRight = () => {
   return (
     <div className="px-0.5 box-border space-y-3 pt-3 flex h-full flex-col items-center text-secondary">
       {menus.map(item => (
-        <div className="text-center" key={item.title}>
+
+        <div className="text-center  cursor-pointer hover:text-primary" key={item.title} onClick={() => onNav(item.path)}
+          onKeyDown={() => { }}>
           <div
-            onClick={() => onNav(item.path)}
-            onKeyDown={() => { }}
             className={cn("flex flex-col items-center cursor-pointer hover:bg-accent w-8 h-[28px] justify-center rounded-xs", pathname === item.path && 'bg-primary/30')}
           >
             <div className={cn('flex', pathname === item.path ? 'text-primary' : '')}>

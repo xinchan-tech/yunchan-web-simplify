@@ -2,7 +2,7 @@ import { getChatNameAndAvatar } from '@/api'
 import { ChatMessageType, useStockList } from '@/store'
 import { useQueries, useQuery } from '@tanstack/react-query'
 import { Fragment, type ReactNode } from 'react'
-import { type MessageText, WKSDK, type Message } from 'wukongimjssdk'
+import { type Message, type MessageText, WKSDK } from 'wukongimjssdk'
 import { UsernameSpan } from '../../components/username-span'
 
 type TextSegment = {
@@ -96,7 +96,7 @@ const hyperlinkParse = (raw: string) => {
  * $开头
  */
 const stockCodeParse = (raw: string) => {
-  const reg = /\$[A-Za-z0-9]{1,6}/g
+  const reg = /\$[A-Za-z\.]{1,6}/g
 
   return raw.replace(reg, code => {
     const stockMap = useStockList.getState().listMap

@@ -74,7 +74,7 @@ export const PercentageAlarmSetting = (props: PercentageAlarmSettingProps) => {
       name: query.data.name
     })
 
-    const floatParams: { price: number, type: number; change_value: number }[] = []
+    const floatParams: { price: number; type: number; change_value: number }[] = []
     const base = stock.close
 
     form.getValues('rise')?.forEach(v => {
@@ -110,7 +110,6 @@ export const PercentageAlarmSetting = (props: PercentageAlarmSettingProps) => {
         change_value: price.toNumber()
       })
     })
-
 
     const params = {
       symbol: form.getValues('symbol'),
@@ -261,11 +260,14 @@ const PriceSetting = forwardRef((props: PriceSettingProps, _) => {
     queryKey: [getStockBaseCodeInfo.cacheKey, symbol, ['total_share']],
     queryFn: () => getStockBaseCodeInfo({ symbol: symbol, extend: ['total_share'] }),
     enabled: !!symbol,
-    select: data => data ? stockUtils.toStock(data.stock, {
-      extend: data.extend,
-      symbol: data.symbol,
-      name: data.name
-    }) : null
+    select: data =>
+      data
+        ? stockUtils.toStock(data.stock, {
+            extend: data.extend,
+            symbol: data.symbol,
+            name: data.name
+          })
+        : null
   })
 
   useEffect(() => {
@@ -277,17 +279,14 @@ const PriceSetting = forwardRef((props: PriceSettingProps, _) => {
       // })
       const v = '5'
 
-      setList([
-        { value: v, id: nanoid(8), type: 'percent' },
-      ])
+      setList([{ value: v, id: nanoid(8), type: 'percent' }])
     }
   }, [query.data])
 
-
   const onValueChange = (id: string, value: string) => {
-    if(value === '-' || Number.parseFloat(value) < 0) {
+    if (value === '-' || Number.parseFloat(value) < 0) {
       setList(list.map(item => (item.id === id ? { ...item, value: '' } : item)))
-      return 
+      return
     }
     setList(list.map(item => (item.id === id ? { ...item, value } : item)))
   }
@@ -297,7 +296,9 @@ const PriceSetting = forwardRef((props: PriceSettingProps, _) => {
   }
 
   useEffect(() => {
-    props.onChange?.(list.filter(item => item.value).map(item => item.type === 'percent' ? (`${item.value}%`) : item.value))
+    props.onChange?.(
+      list.filter(item => item.value).map(item => (item.type === 'percent' ? `${item.value}%` : item.value))
+    )
   }, [list, props.onChange])
 
   const addListItem = () => {
@@ -310,18 +311,18 @@ const PriceSetting = forwardRef((props: PriceSettingProps, _) => {
 
   const calcPrice = (price: string, type: 'price' | 'percent') => {
     if (type === 'percent') {
-      const v = Decimal.create(query.data?.close ?? 0).mul(1 + ((props.mode === 'rise' ? 1 : -1) * (+price / 100))).toNumber()
+      const v = Decimal.create(query.data?.close ?? 0)
+        .mul(1 + (props.mode === 'rise' ? 1 : -1) * (+price / 100))
+        .toNumber()
 
-      return (
-        <span className={cn(props.mode === 'fall' ? 'text-stock-up' : 'text-stock-down')}>{v.toFixed(2)}</span>
-      )
+      return <span className={cn(props.mode === 'fall' ? 'text-stock-up' : 'text-stock-down')}>{v.toFixed(2)}</span>
     }
 
-    const v = Decimal.create(query.data?.close ?? 0).plus((props.mode === 'rise' ? 1 : -1) * (+price)).toNumber()
+    const v = Decimal.create(query.data?.close ?? 0)
+      .plus((props.mode === 'rise' ? 1 : -1) * +price)
+      .toNumber()
 
-    return (
-      <span className={cn(props.mode === 'fall' ? 'text-stock-up' : 'text-stock-down')}>{v.toFixed(2)}</span>
-    )
+    return <span className={cn(props.mode === 'fall' ? 'text-stock-up' : 'text-stock-down')}>{v.toFixed(2)}</span>
   }
 
   return (
@@ -329,13 +330,17 @@ const PriceSetting = forwardRef((props: PriceSettingProps, _) => {
       {list.map((item, index) => (
         <div key={item.id} className="flex flex-col">
           <div className={cn('text-tertiary flex items-center space-x-2 my-2')}>
-            {
-              props.mode === 'rise' ? (
-                <span className="text-stock-up">上涨追踪<JknIcon.Svg name="stock-up" size={12} /></span>
-              ) : (
-                <span className="text-stock-down">下跌追踪<JknIcon.Svg name="stock-down" size={12} /></span>
-              )
-            }
+            {props.mode === 'rise' ? (
+              <span className="text-stock-up">
+                上涨追踪
+                <JknIcon.Svg name="stock-up" size={12} />
+              </span>
+            ) : (
+              <span className="text-stock-down">
+                下跌追踪
+                <JknIcon.Svg name="stock-down" size={12} />
+              </span>
+            )}
             <div className="!ml-auto flex items-center rounded-sm  text-xs px-1 py-0.5 hover:bg-accent cursor-pointer text-secondary !mr-6">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -359,21 +364,17 @@ const PriceSetting = forwardRef((props: PriceSettingProps, _) => {
           <div className="flex items-center overflow-hidden w-full">
             <div className="border border-solid border-input rounded flex items-center pr-2 box-border">
               <span className="text-center text-tertiary pl-2">
-                {
-                  props.mode === 'rise' ? (
-                    item.type === 'price' ? (
-                      <span>按回撤价格</span>
-                    ) : (
-                      <span>按回撤比例</span>
-                    )
+                {props.mode === 'rise' ? (
+                  item.type === 'price' ? (
+                    <span>按回撤价格</span>
                   ) : (
-                    item.type === 'price' ? (
-                      <span>按反弹价格</span>
-                    ) : (
-                      <span>按反弹比例</span>
-                    )
+                    <span>按回撤比例</span>
                   )
-                }
+                ) : item.type === 'price' ? (
+                  <span>按反弹价格</span>
+                ) : (
+                  <span>按反弹比例</span>
+                )}
               </span>
               <Separator className="h-4 w-[1px] bg-border ml-2" />
               <Input
@@ -383,18 +384,10 @@ const PriceSetting = forwardRef((props: PriceSettingProps, _) => {
                 value={item.value}
                 onChange={e => onValueChange(item.id, e.target.value)}
               />
-              <span className="text-tertiary">
-                {
-                  item.type === 'percent' ? (
-                    '%'
-                  ) : ''
-                }
-              </span>
+              <span className="text-tertiary">{item.type === 'percent' ? '%' : ''}</span>
               <Separator className="h-4 w-[1px] bg-border mx-2" />
               <span className="text-tertiary min-w-16 text-center">
-                {
-                  props.mode === 'rise' ? '最低触发价' : '最高触发价'
-                }
+                {props.mode === 'rise' ? '最低触发价' : '最高触发价'}
                 &nbsp;
                 {calcPrice(item.value, item.type)}
               </span>

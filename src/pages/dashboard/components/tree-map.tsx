@@ -3,11 +3,11 @@ import { useMount, useUnmount } from 'ahooks'
 import { type HierarchyRectangularNode, type Selection, hierarchy, select, treemap } from 'd3'
 import { useEffect, useRef } from 'react'
 
+import { useLatestRef } from '@/hooks'
 import { router } from '@/router'
 import { getStringWidth } from '@/utils/string'
 import Decimal from 'decimal.js'
 import { debounce } from 'radash'
-import { useLatestRef } from '@/hooks'
 
 type TreeMapData = {
   name: string

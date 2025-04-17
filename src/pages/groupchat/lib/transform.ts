@@ -1,6 +1,6 @@
+import { Buffer } from 'buffer'
 import { ChatCmdType, ChatMessageType } from '@/store'
 import { stringToUint8Array } from '@/utils/string'
-import { Buffer } from 'buffer'
 import { assign } from 'radash'
 import WKSDK, {
   Channel,
@@ -210,7 +210,6 @@ export const ConversationTransform = {
     WKSDK.shared().channelManager.setChannleInfoForCache(channelInfo)
 
     if (v.recents.length) {
-
       const m = v.recents.find((r: any) => {
         const _m = MessageTransform.toMessage(r)
 

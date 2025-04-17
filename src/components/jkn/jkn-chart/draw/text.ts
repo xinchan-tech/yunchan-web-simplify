@@ -1,9 +1,9 @@
 import {
   type FigureConstructor,
-  getFigureClass,
   type IndicatorDrawParams,
   type TextAttrs,
-  type TextStyle
+  type TextStyle,
+  getFigureClass
 } from '@/plugins/jkn-kline-chart'
 
 /**

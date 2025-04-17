@@ -1,12 +1,12 @@
 import {
   type FigureConstructor,
-  getFigureClass,
   IndicatorSeries,
+  type IndicatorTemplate,
   type KLineData,
   PolygonType,
   type RectAttrs,
   type RectStyle,
-  type IndicatorTemplate
+  getFigureClass
 } from '@/plugins/jkn-kline-chart'
 
 export const gapIndicator: IndicatorTemplate<any, any> = {

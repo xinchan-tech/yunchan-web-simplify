@@ -1,13 +1,13 @@
 import { Skeleton } from '@/components/ui/skeleton'
 import { useLatestRef } from '@/hooks'
 import { useMount, useUnmount } from 'ahooks'
+import { isNumber, isString } from 'radash'
 import type { TableProps } from 'rc-table'
 import Table, { VirtualTable } from 'rc-table'
 import type { DefaultRecordType } from 'rc-table/lib/interface'
 import { type ReactNode, memo, useCallback, useMemo, useRef } from 'react'
 import { useImmer } from 'use-immer'
 import { withSort } from '../jkn-icon/with-sort'
-import { isNumber, isString } from 'radash'
 
 export interface JknRcTableProps<T = any> extends TableProps<T> {
   headerHeight?: number
@@ -62,7 +62,7 @@ const _JknRcTable = <T extends DefaultRecordType = any>({
   const _columns = useMemo(() => {
     if (!columns) return columns
     const width = dom.current?.getBoundingClientRect().width
-    
+
     return columns.map(column => {
       if (designWidth && width) {
         columns.forEach((item: any) => {

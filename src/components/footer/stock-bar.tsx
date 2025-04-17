@@ -5,6 +5,7 @@ import { cn } from '@/utils/style'
 import { useQuery } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
 import { SubscribeSpan } from '../num-span'
+import { JknIcon } from "../jkn/jkn-icon"
 
 // const codes = ['IXIC', 'SPX', 'DJI']
 export const StockBar = () => {
@@ -45,8 +46,14 @@ export const StockBar = () => {
               initValue={item.price ?? 0}
               initDirection={item.percent > 0}
               decimal={3}
-              arrow
               showSign
+            />
+            <JknIcon.Svg
+              name={item.percent >= 0 ? 'stock-up' : 'stock-down'}
+              className={cn(
+                item.percent >= 0 ? 'text-stock-up' : 'text-stock-down',
+                'ml-1 size-3'
+              )}
             />
             &emsp;
             <SubscribeSpan.Percent

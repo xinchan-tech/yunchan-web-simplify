@@ -9,10 +9,9 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Outlet, useLocation, useNavigate } from 'react-router'
 import {
-  AiAlarmNotice,
+  AuthGuard,
   Footer,
   HeaderUser,
-  JknAlert,
   Menu,
   MenuRight,
   StockSelect,
@@ -39,9 +38,8 @@ const App = () => {
   const hasSelected = useConfig(s => s.hasSelected)
   const token = useToken(s => s.token)
   const refreshUser = useUser(s => s.refreshUser)
-  const { t, i18n } = useTranslation()
+  const { i18n } = useTranslation()
   const setUser = useUser(s => s.setUser)
-  const notLogin = useRef(0)
   const queryClient = useQueryClient()
   const path = useLocation()
 
@@ -135,25 +133,10 @@ const App = () => {
         refreshUser()
       }
     }
-    const handler = () => {
-      useToken.getState().removeToken()
-      useUser.getState().reset()
-      if (notLogin.current === 0 && window.location.pathname !== '/app') {
-        notLogin.current = 1
-        JknAlert.info({
-          content: '请先登录账号',
-          onAction: async () => {
-            notLogin.current = 0
-            window.location.href = '/'
-          }
-        })
-      }
-    }
-    appEvent.on('logout', handler)
+
 
     return () => {
       channel.current?.close()
-      appEvent.off('logout', handler)
     }
   }, [navigate])
 
@@ -171,55 +154,55 @@ const App = () => {
     }
   })
 
-
   return (
-    <div className="container-layout dark">
-      <Toaster />
-      {
-        inviteModal.contenxt
-      }
-      <div className="flex flex-col h-full overflow-hidden w-full">
-        <div className="box-border px-2.5 flex items-center h-11">
-          <HeaderUser />
-          {
-            path.pathname.startsWith('/app/stock') ? (
-              <ChartToolBar />
-            ) : null
-          }
-          <div className="ml-auto">
-            <StockSelect className="rounded-[300px] px-3 bg-[#2E2E2E]" onChange={(s) => navigate(`/app/stock?symbol=${s}`)} />
-          </div>
-        </div>
-        <div className="flex-1 overflow-hidden flex bg-accent">
-          <div className="w-[40px] flex-shrink-0 bg-accent pt-1">
-            <div className="h-full bg-background w-full  flex flex-col items-center rounded-tr-xs pt-3">
-              <Menu />
+    <AuthGuard>
+      <div className="container-layout dark">
+        <Toaster />
+        {
+          inviteModal.contenxt
+        }
+        <div className="flex flex-col h-full overflow-hidden w-full">
+          <div className="box-border px-2.5 flex items-center h-11">
+            <HeaderUser />
+            {
+              path.pathname.startsWith('/app/stock') ? (
+                <ChartToolBar />
+              ) : null
+            }
+            <div className="ml-auto">
+              <StockSelect className="rounded-[300px] px-3 bg-[#2E2E2E]" onChange={(s) => navigate(`/app/stock?symbol=${s}`)} />
             </div>
           </div>
-
-          <div className="flex-1 overflow-hidden flex flex-col">
-            <div className="flex-1 overflow-hidden p-1 box-border">
-              <div className="rounded-xs overflow-hidden w-full h-full">
-                <Outlet />
+          <div className="flex-1 overflow-hidden flex bg-accent">
+            <div className="w-[40px] flex-shrink-0 bg-accent pt-1">
+              <div className="h-full bg-background w-full  flex flex-col items-center rounded-tr-xs pt-3">
+                <Menu />
               </div>
             </div>
 
-            <div className="footer px-1 box-border">
-              <Footer />
-            </div>
-          </div>
+            <div className="flex-1 overflow-hidden flex flex-col">
+              <div className="flex-1 overflow-hidden p-1 box-border">
+                <div className="rounded-xs overflow-hidden w-full h-full">
+                  <Outlet />
+                </div>
+              </div>
 
-          <div className="w-[40px] flex-shrink-0 flex flex-col mt-1 bg-background rounded-tl-xs">
-            <MenuRight />
-            <div className="mt-auto">
-              <AlarmSubscribe />
+              <div className="footer px-1 box-border">
+                <Footer />
+              </div>
+            </div>
+
+            <div className="w-[40px] flex-shrink-0 flex flex-col mt-1 bg-background rounded-tl-xs">
+              <MenuRight />
+              <div className="mt-auto">
+                <AlarmSubscribe />
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <style jsx>
-        {`
+        <style jsx>
+          {`
           .container-layout {
             background-color: hsl(var(--background));
             overflow: hidden;
@@ -263,8 +246,9 @@ const App = () => {
             align-items: center;
           }
         `}
-      </style>
-    </div >
+        </style>
+      </div >
+    </AuthGuard>
   )
 }
 

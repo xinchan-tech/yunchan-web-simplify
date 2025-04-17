@@ -1,7 +1,7 @@
 import { StockChartInterval, type StockRawRecord } from '@/api'
+import { dateUtils } from '@/utils/date'
 import type { StockTrading } from '@/utils/stock'
 import type { ChartManageStore, Indicator } from './store'
-import { dateUtils } from '@/utils/date'
 
 export const renderUtils = {
   getViewMode: (s: ChartManageStore['viewMode']) => {

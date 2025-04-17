@@ -1,16 +1,16 @@
 import { logout } from '@/api'
+import logoTitleSm from '@/assets/image/logo-title-sm.png'
 import { JknAlert, JknAvatar, JknIcon, Popover, PopoverContent, PopoverTrigger, useModal } from '@/components'
 import { useToast } from '@/hooks'
 import { useToken, useUser } from '@/store'
+import { appEvent } from '@/utils/event'
+import { useBoolean, useMount, useUnmount } from 'ahooks'
 import to from 'await-to-js'
 import type { ReactNode } from 'react'
-import LoginForm from '../user/login-form'
-import UserCenter from '../user/user-center'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router'
-import { useBoolean, useMount, useUnmount } from 'ahooks'
-import { appEvent } from '@/utils/event'
-import logoTitleSm from '@/assets/image/logo-title-sm.png'
+import LoginForm from '../user/login-form'
+import UserCenter from '../user/user-center'
 
 export const HeaderSetting = () => {
   const token = useToken(s => s.token)

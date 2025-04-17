@@ -11,7 +11,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import type { CreateGroupRecord } from '@/api'
 import { toast } from '@/hooks'
 import { useUser } from '@/store'
-import { ComponentRef, useRef, useState } from 'react'
+import { type ComponentRef, useRef, useState } from 'react'
 import CreateGroupForm from './create-group-form'
 import { JoinGroupContentModal } from './join-group-content'
 

@@ -57,7 +57,7 @@ const useBaseSubscribe = (
 
   const onChange = useCallback<OnValueChangeFn>(
     (data, extra) => {
-      const newDirection = (data.record.close - data.record.preClose) > 0 ? 'up' : 'down'
+      const newDirection = data.record.close - data.record.preClose > 0 ? 'up' : 'down'
       if (newDirection !== direction) {
         setDirection(newDirection)
       }

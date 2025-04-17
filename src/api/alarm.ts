@@ -102,7 +102,7 @@ type AddAlarmParams = {
     fall?: number[]
     frequency?: number
     is_email?: '0' | '1'
-    float_params?: {price: number, type: number; change_value: number}[]
+    float_params?: { price: number; type: number; change_value: number }[]
   }
 }
 export const addAlarm = async (params: AddAlarmParams) => {
@@ -303,12 +303,13 @@ type PercentAlarmRecord = BaseAlarmRecord & {
   }
 }
 
-
 /**
  * 触发警报日志列表
  */
 export const getAlarmLogsList = async (params: GetAlarmLogsParams) => {
-  return request.get<Page<PriceAlarmRecord | AiAlarmRecord | PercentAlarmRecord>>('/stock-svc/alarm/logs', { params }).then(r => r.data)
+  return request
+    .get<Page<PriceAlarmRecord | AiAlarmRecord | PercentAlarmRecord>>('/stock-svc/alarm/logs', { params })
+    .then(r => r.data)
 }
 getAlarmLogsList.cacheKey = 'stock-svc:alarms:logs'
 

@@ -1,16 +1,16 @@
+import { useQueryParams } from '@/hooks'
+import { AESCrypt } from '@/utils/string'
 import { cn } from '@/utils/style'
 import { useEffect, useMemo } from 'react'
+import { CoilingBar } from '../component/chart-tool-bar'
+import { DrawToolBox } from '../component/draw-tool-box'
 import { MainChart } from '../component/main-chart'
 import { chartEvent } from '../lib/event'
 import { chartManage, useChartManage } from '../lib/store'
 import { renderUtils } from '../lib/utils'
-import { CoilingBar } from '../component/chart-tool-bar'
-import { useQueryParams } from '@/hooks'
-import { AESCrypt } from '@/utils/string'
-import { DrawToolBox } from "../component/draw-tool-box"
 
 // biome-ignore lint/suspicious/noEmptyInterface: <explanation>
-interface KChartProps { }
+interface KChartProps {}
 
 const getChartIdByIndex = (index: number) => `chart-${index}`
 
@@ -48,11 +48,7 @@ export const KChart = (_props: KChartProps) => {
 
   return (
     <div className="h-full overflow-hidden flex flex-col bg-background relative">
-      {
-        drawTool ? (
-          <DrawToolBox />
-        ) : null
-      }
+      {drawTool ? <DrawToolBox /> : null}
       <div className="text-foreground text-sm flex items-center px-4 space-x-4 pt-1">
         <CoilingBar />
       </div>
@@ -66,7 +62,7 @@ export const KChart = (_props: KChartProps) => {
               active === getChartIdByIndex(index) && arr.length > 1 ? 'active' : ''
             )}
             onClick={() => onChangeActive(index)}
-            onKeyDown={() => { }}
+            onKeyDown={() => {}}
           >
             <MainChart chartId={getChartIdByIndex(index)} />
           </div>

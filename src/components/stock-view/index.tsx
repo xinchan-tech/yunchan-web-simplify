@@ -1,7 +1,7 @@
 import { router } from '@/router'
 import { useStockList } from '@/store'
-import { JknIcon } from '../jkn/jkn-icon'
 import { cn } from '@/utils/style'
+import { JknIcon } from '../jkn/jkn-icon'
 
 interface StockViewProps {
   code: string

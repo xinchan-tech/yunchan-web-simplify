@@ -1,8 +1,8 @@
-import { type Channel, type Message, WKSDK, type Subscriber } from 'wukongimjssdk'
-import { SubscriberType } from './model'
 import { type getChannelDetail, getChatNameAndAvatar } from '@/api'
-import { subscriberCache } from '../cache'
 import { queryClient } from '@/utils/query-client'
+import { type Channel, type Message, type Subscriber, WKSDK } from 'wukongimjssdk'
+import { subscriberCache } from '../cache'
+import { SubscriberType } from './model'
 
 export const isChannelOwner = (subscriber?: Subscriber) => {
   return subscriber?.orgData?.type === SubscriberType.ChannelOwner
