@@ -26,6 +26,7 @@ export declare namespace ColorType {
     b: number
     a: number
   }
+  export type HEX = string
 }
 
 export const colorUtil = {
@@ -148,8 +149,18 @@ export const colorUtil = {
     return { r: Math.round(r * 255), g: Math.round(g * 255), b: Math.round(b * 255) }
   },
   rgbToHex(rgb: { r: number; g: number; b: number }) {
-    const r = `#${Math.floor(rgb.r).toString(16)}${Math.floor(rgb.g).toString(16)}${Math.floor(rgb.b).toString(16)}`
+    const r = `#${Math.floor(rgb.r).toString(16)}${Math.floor(rgb.g).toString(16)}${Math.floor(rgb.b).toString(16)}`.toUpperCase()
     return r
+  },
+  parseRGBA(rgba: string): ColorType.RGBA | undefined {
+    const result = /^rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)$/i.exec(rgba)
+    if (!result) return undefined
+    return {
+      r: Number(result[1]),
+      g: Number(result[2]),
+      b: Number(result[3]),
+      a: result[4] ? Number(result[4]) : 1
+    }
   },
   radomColorForPalette() {
     return this.colorPalette[Math.floor(Math.random() * this.colorPalette.length)]

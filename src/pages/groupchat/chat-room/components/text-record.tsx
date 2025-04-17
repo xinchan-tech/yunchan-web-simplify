@@ -96,7 +96,7 @@ const hyperlinkParse = (raw: string) => {
  * $开头
  */
 const stockCodeParse = (raw: string) => {
-  const reg = /\$[A-Za-z0-9]{1,6}/g
+  const reg = /\$[A-Za-z\.]{1,6}/g
 
   return raw.replace(reg, code => {
     const stockMap = useStockList.getState().listMap

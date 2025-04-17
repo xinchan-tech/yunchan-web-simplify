@@ -1,9 +1,9 @@
 import type { StockRawRecord } from '@/api'
-import type { Coordinate } from '@/plugins/jkn-kline-chart'
+import { LineType, type Coordinate, type LineStyle, type OverlayStyle, type Styles } from '@/plugins/jkn-kline-chart'
 import { useConfig } from '@/store'
 import type { StockTrading } from '@/utils/stock'
 import dayjs from 'dayjs'
-import type { Candlestick } from './types'
+import type { Candlestick, DrawOverlayParams } from './types'
 
 export enum ChartTypes {
   MAIN_PANE_ID = 'candle_pane',
@@ -186,4 +186,20 @@ export const drawRoundedRect = (
   ctx.arcTo(x, y, x + leftTop, y, leftTop)
   ctx.closePath()
   ctx.fill()
+}
+
+export const drawOverlayParamsToFigureStyle = (type: string, params: DrawOverlayParams): any => {
+  const lineType = params.lineType as 'solid' | 'dashed' | 'dotted'
+  switch (type) {
+    case 'line':
+      return {
+        color: params.color,
+        size: params.lineWidth,
+        style: lineType === 'dashed' ? LineType.Dashed : lineType === 'dotted' ? LineType.Dashed : LineType.Solid,
+        dashedValue: lineType === 'dashed' ? [4, 4] : lineType === 'dotted' ? [2, 2] : undefined,
+      } as LineStyle
+    default: 
+      return {} as any
+  }
+
 }

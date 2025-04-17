@@ -379,11 +379,52 @@ export const MainChart = (props: MainChartProps) => {
       // chartImp.current?.setRightAxis(type.right === MainYAxis.Percentage ? 'percentage' : 'normal')
     })
 
-    const cancelDrawStart = chartEvent.on('drawStart', type => {
-      chartImp.current?.createOverlay(type, type => {
-        chartEvent.get().emit('drawEnd', type)
-        return true
+    const cancelDrawStart = chartEvent.on('drawStart', ({type, params}) => {
+      chartImp.current?.createOverlay(type, {
+        onEnd: type => {
+          chartEvent.get().emit('drawEnd', type)
+          return true
+        },
+        onStart: (type, e) => {
+          chartEvent.get().emit('drawSelect', {
+            type,
+            e
+          })
+          return true
+        },
+        onSelect: (type, e) => {
+          chartEvent.get().emit('drawSelect', {
+            type,
+            e
+          })
+          return true
+        },
+        onDeSelect: (type, e)=> {
+          chartEvent.get().emit('drawDeSelect', {
+            type,
+            e
+          })
+          return true
+        },
+        params
       })
+    })
+
+    const cancelDrawChange = chartEvent.on('drawChange', ({ id, params }) => {
+      chartImp.current?.setOverlay(id, params)
+    })
+
+    const cancelDrawLock = chartEvent.on('drawLock', ({ id, lock }) => {
+      if(lock) {
+        chartImp.current?.lockOverlay(id)
+      }
+      else {
+        chartImp.current?.unlockOverlay(id)
+      }
+    })
+
+    const cancelDrawDelete = chartEvent.on('drawDelete', ({ id }) => {
+      chartImp.current?.removeOverlay(id)
     })
 
     return () => {
@@ -397,6 +438,9 @@ export const MainChart = (props: MainChartProps) => {
       cancelIntervalEvent()
       cancelYAxisChange()
       cancelDrawStart()
+      cancelDrawChange()
+      cancelDrawLock()
+      cancelDrawDelete()
     }
   }, [activeChartId, props.chartId, chartStore.interval, symbol, startAt])
 
