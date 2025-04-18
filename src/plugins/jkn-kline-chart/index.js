@@ -5262,14 +5262,6 @@ var StoreImp = /** @class */ (function () {
          */
         this._zoomEnabled = true;
         /**
-         * Zoom scale factor
-         */
-        this._zoomScale = 1;
-        /**
-         *
-         */
-        this._coordinate = null;
-        /**
          * Scroll enabled flag
          */
         this._scrollEnabled = true;
@@ -5285,6 +5277,10 @@ var StoreImp = /** @class */ (function () {
          * Distance from the last data to the right of the drawing area
          */
         this._offsetRightDistance = DEFAULT_OFFSET_RIGHT_DISTANCE;
+        /**
+         * The number of bar to the right of the drawing area from the last data when scrolling starts
+         */
+        this._lastBarSpace = DEFAULT_BAR_SPACE;
         /**
          * The number of bar to the right of the drawing area from the last data when scrolling starts
          */
@@ -5886,8 +5882,6 @@ var StoreImp = /** @class */ (function () {
         this.setBarSpace(barSpace, function () {
             _this._lastBarRightSideDiffBarCount += (floatIndex - _this.coordinateToFloatIndex(x));
         });
-        this._zoomScale = scale;
-        this._coordinate = coordinate !== null && coordinate !== void 0 ? coordinate : null;
         var realScale = this._barSpace / prevBarSpace;
         if (realScale !== 1) {
             this.executeAction(ActionType.OnZoom, { scale: realScale });
@@ -6472,9 +6466,9 @@ var StoreImp = /** @class */ (function () {
         return this._chart;
     };
     StoreImp.prototype.setXAxisTick = function (tick) {
-        var _a;
         this._fixedXAxisTick = tick;
         if (this.isFixedXAxisTick()) {
+            this._lastBarSpace = this._barSpace;
             this._barSpace = this._totalBarSpace / this._fixedXAxisTick;
             this._offsetRightDistance = (this._fixedXAxisTick - this._dataList.length) * this._barSpace;
             this.setOffsetRightDistance(this._offsetRightDistance);
@@ -6482,7 +6476,8 @@ var StoreImp = /** @class */ (function () {
             this.setCrosshair(this._crosshair, { notInvalidate: true });
         }
         else {
-            this.zoom(this._zoomScale, (_a = this._coordinate) !== null && _a !== void 0 ? _a : undefined);
+            this.setBarSpace(this._lastBarSpace);
+            this.setOffsetRightDistance(DEFAULT_OFFSET_RIGHT_DISTANCE);
         }
     };
     return StoreImp;

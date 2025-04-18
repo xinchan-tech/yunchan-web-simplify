@@ -55,7 +55,6 @@ const getOssClient = async () => {
 
 export const uploadUtils = {
   upload: async (file: File, filename: string) => {
-    throw new Error('uploadUtils.upload is not implemented')
     const client = await getOssClient()
 
     const res = await client.put(filename, file)
