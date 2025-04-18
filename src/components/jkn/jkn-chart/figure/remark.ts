@@ -7,8 +7,9 @@ export type RemarkAttrs = {
   fontSize?: number
 }
 
-export type FigureStyles = {
-  color?: string
+export type RemarkStyles = {
+  color: string
+  fontColor?: string
 }
 
 type RemarkAttrsExt = RemarkAttrs & {
@@ -23,11 +24,11 @@ type RemarkAttrsExt = RemarkAttrs & {
 /**
  *
  */
-export const RemarkFigure: FigureTemplate<RemarkAttrs, FigureStyles> = {
+export const RemarkFigure: FigureTemplate<RemarkAttrs, RemarkStyles> = {
   name: 'remark',
   draw: (ctx, attrs, styles) => {
     const { coordinates, text, fontSize = 16 } = attrs
-    const { color = '#fff' } = styles
+    const { color, fontColor } = styles
     const padding = [6, 6]
     let textMax = 128
     let height = fontSize
@@ -86,7 +87,7 @@ export const RemarkFigure: FigureTemplate<RemarkAttrs, FigureStyles> = {
     /**
      * 画文本
      */
-    ctx.fillStyle = '#000'
+    ctx.fillStyle = fontColor || '#000'
     text.forEach((t, i) => {
       ctx.fillText(t, x + padding[1], y - (i - 1) * fontSize - padding[0])
     })

@@ -49,9 +49,9 @@ const getLastTime = () => {
   const localDate = dayjs(new Date().valueOf() - localTime + usTime).tz('America/New_York')
 
   if (localDate.isBefore(localDate.hour(9).minute(30).second(0))) {
-    return getPrevTradingDays(localDate, 2)[0]
+    return getPrevTradingDays(localDate, 1)[0]
   }
-  return getPrevTradingDays(localDate, 1)[0]
+  return getPrevTradingDays(localDate, 0)[0]
 }
 
 const getTableList = async (type: string, date?: string) => {

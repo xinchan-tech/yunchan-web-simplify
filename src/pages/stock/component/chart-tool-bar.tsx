@@ -28,7 +28,7 @@ import {
   ToggleGroupItem,
   useModal
 } from '@/components'
-import { useAuthorized, useLatestRef, useOptimisticUpdate, useStockSearch, useToast } from '@/hooks'
+import { useAuthorized, useOptimisticUpdate, useStockSearch, useToast } from '@/hooks'
 import { sysConfig } from '@/utils/config'
 import { stockUtils } from '@/utils/stock'
 import { cn } from '@/utils/style'

@@ -10,4 +10,6 @@ export type DrawOverlayParams = {
   color: string
   lineWidth: number
   lineType: string
+  cross: boolean
+  text?: string
 }

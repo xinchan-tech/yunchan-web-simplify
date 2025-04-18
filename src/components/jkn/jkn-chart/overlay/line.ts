@@ -5,6 +5,7 @@ import type { DrawOverlayParams } from '../types'
 export const LineOverlay: OverlayTemplate<DrawOverlayParams> = {
   name: 'line',
   totalStep: 3,
+  modeSensitivity: 1,
   needDefaultPointFigure: true,
   needDefaultXAxisFigure: false,
   needDefaultYAxisFigure: false,

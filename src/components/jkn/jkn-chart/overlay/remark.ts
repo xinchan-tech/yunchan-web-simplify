@@ -1,27 +1,13 @@
-import type { Coordinate, OverlayTemplate, RectAttrs } from '@/plugins/jkn-kline-chart'
+import type { OverlayTemplate } from '@/plugins/jkn-kline-chart'
+import type { DrawOverlayParams } from '../types'
 
-const minWidth = 32
-
-const getRect = (coordinates: Coordinate[], text: string): RectAttrs => {
-  const textWidth = minWidth
-
-  const textHeight = 14
-
-  return {
-    x: coordinates[1].x - textWidth / 2,
-    y: coordinates[1].y - textHeight / 2,
-    width: textWidth,
-    height: textHeight
-  }
-}
-
-export const RemarkOverlay: OverlayTemplate = {
+export const RemarkOverlay: OverlayTemplate<DrawOverlayParams & { text?: string }> = {
   name: 'remark',
   totalStep: 3,
   needDefaultPointFigure: true,
   needDefaultXAxisFigure: false,
   needDefaultYAxisFigure: false,
-  createPointFigures: ({ coordinates, chart, overlay }) => {
+  createPointFigures: ({ coordinates, overlay }) => {
     if (coordinates.length < 2) {
       return []
     }
@@ -35,7 +21,9 @@ export const RemarkOverlay: OverlayTemplate = {
           coordinates: coordinates,
           text: [text]
         },
-        styles: {}
+        styles: {
+          color: overlay.extendData.color
+        }
       }
     ]
   }

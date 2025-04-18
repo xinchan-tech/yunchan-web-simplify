@@ -53,11 +53,9 @@ interface TreeMapProps {
   data: TreeMapData[]
   parentLabel?: boolean
   loading?: boolean
+  nav?: boolean
 }
 
-const SINGLE_CHART_WIDTH = getStringWidth('树', '12px sans-serif')
-const ELLIPSIS_WIDTH = getStringWidth('...', '12px sans-serif')
-const ONE_PX_WIDTH = getStringWidth('T', '1px sans-serif')
 
 const TreeMap = (props: TreeMapProps) => {
   // const listMap = useStockList(s => s.listMap)
@@ -144,6 +142,7 @@ const TreeMap = (props: TreeMapProps) => {
       .attr('height', d => d.y1 - d.y0)
       .attr('fill', d => d.data.color ?? 'transport')
       .on('click', (_, d) => {
+        props.nav && 
         router.navigate(`/app/stock?symbol=${d.data.name}`)
       })
   }
@@ -235,6 +234,7 @@ const TreeMap = (props: TreeMapProps) => {
       .attr('fill', 'white')
       .attr('style', 'user-select: none;')
       .on('click', (_, d) => {
+        props.nav && 
         router.navigate(`/app/stock/trading?symbol=${d.data.name}`)
       })
   }
@@ -278,6 +278,7 @@ const TreeMap = (props: TreeMapProps) => {
       .attr('fill', () => '#fff')
       .attr('style', 'user-select: none;') // corrected 'sty' to 'style' and added 'user-select: none;'
       .on('click', (_, d) => {
+        props.nav && 
         router.navigate(`/app/stock/trading?symbol=${d.data.name}`)
       })
   }

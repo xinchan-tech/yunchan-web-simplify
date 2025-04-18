@@ -2018,3 +2018,47 @@ export const getPalTop = (params?: { date?: string; limit?: number }) => {
     .then(r => r.data)
 }
 getPalTop.cacheKey = 'pal:top'
+
+
+type SaveUserPlottingParams = {
+  hash: string
+  plotting_id: number
+  symbol: string
+  kline: string
+  text?: string
+  css?: {
+    width: number
+    color: string
+    lineType: string
+  }
+  cross: 0 | 1
+  slope: number
+  points: {
+    x: string
+    y: number
+  }[]
+  create_time: string
+}
+/**
+ * 保存用户绘制图形
+ */
+export const saveUserPlotting = (params: SaveUserPlottingParams) => {
+  return request.post('/stock-svc/plottings', params).then(r => r.data)
+}
+
+type GetUserPlottingUser = Omit<SaveUserPlottingParams, 'kline'> & { stock_kline_value: number, stock_kline_id: number }
+
+export const getUserPlotting = (params?: { symbol: string; kline: number }) => {
+  return request.get<GetUserPlottingUser[]>('/stock-svc/plottings', { params }).then(r => r.data)
+}
+getUserPlotting.cacheKey = 'stock:plotting'
+
+export const deleteUserPlotting = (hash: string[]) => {
+  return request.post('/stock-svc/plottings/delete', { Hash: hash }).then(r => r.data)
+}
+
+export const deleteUserPlottingByInterval= (symbol: string, interval: number) => {
+  return request
+    .post('/stock-svc/plottings/withSymbol/delete', { symbol, kline: interval })
+    .then(r => r.data)
+}

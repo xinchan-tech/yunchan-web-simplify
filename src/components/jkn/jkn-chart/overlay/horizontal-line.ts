@@ -1,12 +1,16 @@
 import type { OverlayTemplate } from '@/plugins/jkn-kline-chart'
+import type { DrawOverlayParams } from '../types'
+import { drawOverlayParamsToFigureStyle } from "../utils"
 
-export const HorizontalLineOverlay: OverlayTemplate = {
+export const HorizontalLineOverlay: OverlayTemplate<DrawOverlayParams> = {
   name: 'hline',
   totalStep: 2,
   needDefaultPointFigure: true,
   needDefaultXAxisFigure: false,
   needDefaultYAxisFigure: false,
-  createPointFigures: ({ coordinates, bounding }) => {
+  createPointFigures: ({ coordinates, bounding, overlay }) => {
+    const styles = drawOverlayParamsToFigureStyle('line', overlay.extendData)
+ 
     if (coordinates.length === 1) {
       return [
         {
@@ -22,7 +26,8 @@ export const HorizontalLineOverlay: OverlayTemplate = {
                 y: coordinates[0].y
               }
             ]
-          }
+          },
+          styles
         }
       ]
     }

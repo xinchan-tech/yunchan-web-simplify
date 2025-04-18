@@ -44,6 +44,7 @@ export const ChatInput = forwardRef<ChatInputInstance, ChatInputProps>((props, r
       handlePaste: (_view, event) => {
         if (!editor?.isEditable) return false
         const items = event.clipboardData?.items
+
         if (!items) return false
         for (const item of Array.from(items)) {
           if (item.type.indexOf('image') !== -1) {
@@ -94,9 +95,33 @@ export const ChatInput = forwardRef<ChatInputInstance, ChatInputProps>((props, r
     if (!editor?.isEditable) return false
     const content = editor?.getJSON() as JSONContent
     const extra = {
-      reply: undefined as Undefinable<Reply>,
+      reply: undefined as any,
       mentions: mentionList.map(item => item.uid)
     }
+
+    const mergerContent: JSONContent['content'] = []
+    console.log(content)
+    content.content?.forEach(item => {
+      const last = mergerContent[mergerContent.length - 1]
+      if (!last) {
+        mergerContent.push(item)
+        return
+      }
+
+      if (last.type === 'paragraph' && item.type === 'paragraph') {
+        item.content?.forEach(c => {
+          last.content?.push(
+            { type: 'hardBreak' },
+            c
+          )
+        })
+        return
+      }
+
+      mergerContent.push(item)
+    })
+
+    content.content = mergerContent
 
     const self = WKSDK.shared().channelManager.getSubscribeOfMe(props.channel!)!
 
@@ -107,6 +132,8 @@ export const ChatInput = forwardRef<ChatInputInstance, ChatInputProps>((props, r
       extra.reply = reply
       reply.content = replyMessage.content
     }
+
+
     props.onSubmit?.(content, extra)
     setMentionList([])
     setReplyMessage(null)
@@ -288,7 +315,7 @@ const ChatInputTool = ({ onSelectEmoji, onImageUpload, onDollarClick }: ChatInpu
       <div
         className="flex items-center justify-center cursor-pointer text-tertiary "
         onClick={onDollarClick}
-        onKeyDown={() => {}}
+        onKeyDown={() => { }}
       >
         <JknIcon.Svg name="dollar" size={20} />
       </div>

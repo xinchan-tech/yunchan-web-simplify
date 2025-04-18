@@ -67,7 +67,7 @@ export const StockBar = () => {
             &emsp;
             <SubscribeSpan.Percent
               symbol={item.code}
-              initValue={item.percent * 100}
+              initValue={item.percent}
               initDirection={item.percent >= 0}
               decimal={2}
               showSign

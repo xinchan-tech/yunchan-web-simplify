@@ -154,7 +154,7 @@ const EtfTable = (props: PageTableProps) => {
       },
       {
         title: '名称代码',
-        dataIndex: 'name',
+        dataIndex: 'symbol',
         align: 'left',
         sort: true,
         width: '23%',

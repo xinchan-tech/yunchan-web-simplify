@@ -63,7 +63,7 @@ const PlateStocks = (props: PlateStocksProps) => {
       },
       {
         title: '名称代码',
-        dataIndex: 'name',
+        dataIndex: 'symbol',
         align: 'left',
         sort: true,
         width: '28.5%',

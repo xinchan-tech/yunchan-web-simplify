@@ -6,6 +6,8 @@ import {
   type OverlayTemplate,
   type TextAttrs
 } from '@/plugins/jkn-kline-chart'
+import type { DrawOverlayParams } from '../types'
+import { drawOverlayParamsToFigureStyle } from '../utils'
 
 function getGoldLines(coordinates: Coordinate[], bounding: Bounding): LineAttrs[] {
   const startX = 0
@@ -74,7 +76,7 @@ const getExtendLine = (coordinates: Coordinate[], bounding: Bounding): LineAttrs
   return lines
 }
 
-const getTexts = (lines: LineAttrs[], bounding: Bounding): TextAttrs[] => {
+const getTexts = (lines: LineAttrs[]): TextAttrs[] => {
   const texts: TextAttrs[] = []
 
   lines.forEach(item => {
@@ -98,25 +100,29 @@ const getTexts = (lines: LineAttrs[], bounding: Bounding): TextAttrs[] => {
   return texts
 }
 
-export const GoldOverlay: OverlayTemplate = {
+export const GoldOverlay: OverlayTemplate<DrawOverlayParams> = {
   name: 'gold',
   totalStep: 3,
   needDefaultPointFigure: true,
   needDefaultXAxisFigure: false,
   needDefaultYAxisFigure: false,
-  createPointFigures: ({ coordinates, bounding }) => {
+  createPointFigures: ({ coordinates, bounding, overlay }) => {
     const baseLines = getGoldLines(coordinates, bounding)
     const extendLines = getExtendLine(coordinates, bounding)
-    const texts = getTexts([...baseLines, ...extendLines], bounding)
+    const texts = getTexts([...baseLines, ...extendLines])
+    const lineStyles = drawOverlayParamsToFigureStyle('line', overlay.extendData)
+    const textStyles = drawOverlayParamsToFigureStyle('text', overlay.extendData)
     return [
       {
         type: 'line',
-        attrs: baseLines
+        attrs: baseLines,
+        styles: lineStyles
       },
       {
         type: 'line',
         attrs: extendLines,
         styles: {
+          ...lineStyles,
           style: LineType.Dashed,
           dashedValue: [4, 4]
         }
@@ -125,7 +131,8 @@ export const GoldOverlay: OverlayTemplate = {
         type: 'text',
         attrs: texts,
         styles: {
-          backgroundColor: 'transparent'
+          backgroundColor: 'transparent',
+          ...textStyles
         }
       }
     ]
