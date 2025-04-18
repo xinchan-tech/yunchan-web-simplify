@@ -34,6 +34,7 @@ const JknRangePicker = ({ children, onChange, placeholder, ...props }: JknDatePi
         console.log('newRange', newRange)
         // 如果选择完成（有开始和结束日期），清除上次选择并设置新范围
         if (newRange?.from && newRange?.to) {
+            console.log('newRange', 12312313123)
             const startDate = dayjs(newRange.from).format('YYYY-MM-DD'); // 使用 dayjs 格式化开始日期
             const endDate = dayjs(newRange.to).format('YYYY-MM-DD'); // 使用 dayjs 格式化结束日期
             setRange(newRange); // 更新选择范围
@@ -72,7 +73,7 @@ const JknRangePicker = ({ children, onChange, placeholder, ...props }: JknDatePi
                 <div>
                     <Calendar
                         mode="range"
-                        selected={range.from && range.to ? { from: range.from, to: range.to } : undefined}
+                        selected={range}
                         onSelect={handleDateChange}
                         month={leftMonth} // 左边选择器的当前月份
                         onMonthChange={handleLeftMonthChange} // 更新左边月份
@@ -89,7 +90,7 @@ const JknRangePicker = ({ children, onChange, placeholder, ...props }: JknDatePi
                 <div>
                     <Calendar
                         mode="range"
-                        selected={range.from && range.to ? { from: range.from, to: range.to } : undefined}
+                        selected={range}
                         onSelect={handleDateChange}
                         month={rightMonth} // 右边选择器的当前月份
                         onMonthChange={handleRightMonthChange} // 更新右边月份
