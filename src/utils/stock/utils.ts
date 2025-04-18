@@ -421,7 +421,7 @@ export const stockUtils = {
     }
   },
 
-  gotoStockPage: (symbol: string, opts?: { interval: number }) => {
+  gotoStockPage: (symbol: string, opts?: { interval: number; alarm?: boolean }) => {
     const { interval } = opts ?? {}
     const query: any = {
       symbol
@@ -431,7 +431,11 @@ export const stockUtils = {
       query.q = AESCrypt.encrypt(JSON.stringify({ interval }))
     }
 
-    router.navigate(`/app/stock?${qs.stringify(query)}`)
+    if (opts?.alarm) {
+      router.navigate(`/app/stock/alarm?${qs.stringify(query)}`)
+    } else {
+      router.navigate(`/app/stock?${qs.stringify(query)}`)
+    }
   },
 
   parseTime

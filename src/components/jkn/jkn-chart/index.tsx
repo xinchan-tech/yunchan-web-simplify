@@ -39,14 +39,17 @@ import {
   ArrowOverlay,
   ChannelOverlay,
   type ChartOverlayType,
+  FireWallOverlay,
   GoldOverlay,
   HorizontalLineOverlay,
   LineOverlay,
   LogoOverlay,
   ParallelOverlay,
+  PressureLineOverlay,
   RayOverlay,
   RectangleOverlay,
   RemarkOverlay,
+  SupportLineOverlay,
   TimeOverlay,
   VerticalLineOverlay
 } from './overlay'
@@ -81,6 +84,9 @@ registerOverlay(RectangleOverlay)
 registerOverlay(GoldOverlay)
 registerOverlay(TimeOverlay)
 registerOverlay(RemarkOverlay)
+registerOverlay(FireWallOverlay)
+registerOverlay(SupportLineOverlay)
+registerOverlay(PressureLineOverlay)
 
 interface JknChartProps {
   className?: string
@@ -130,16 +136,21 @@ interface JknChartIns {
   removeGapIndicator: () => void
   setGapIndicator: (count: number) => void
   createOverlay: (type: ChartOverlayType, options: {
-    onEnd: (type: ChartOverlayType) => boolean
+    onEnd: (e: OverlayEvent<DrawOverlayParams>) => boolean
     onStart: (type: ChartOverlayType, e: OverlayEvent<DrawOverlayParams>) => boolean
     onSelect: (type: ChartOverlayType, e: OverlayEvent<DrawOverlayParams>) => boolean
     onDeSelect: (type: ChartOverlayType, e: OverlayEvent<DrawOverlayParams>) => boolean
     params: DrawOverlayParams
+    points?: {
+      timestamp: number
+      value: number
+    }[]
   }) => void
   setOverlay: (id: string, params: DrawOverlayParams) => void
   lockOverlay: (id?: string) => void
   unlockOverlay: (id?: string) => void
   removeOverlay: (id?: string) => void
+  hideOverlay: (visible: boolean) => void
 }
 
 const getAxisType = (chart: Chart) => {
@@ -668,7 +679,7 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
     removeBackTestIndicator: () => {
       chart.current?.removeIndicator({ id: 'back-test-indicator' })
     },
-    setDragEnable: enable => { },
+    setDragEnable: () => { },
     getChart: () => chart.current,
     setTimeShareChart: interval => {
       const { up: upColor, down: downColor } = getStockColor()
@@ -850,13 +861,14 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
       chart.current?.createOverlay({
         id: uid,
         name: type,
-        onDrawEnd: () => opts.onEnd(type),
+        onDrawEnd: (e) => opts.onEnd(e as OverlayEvent<DrawOverlayParams>),
         onDrawStart: (e) => {
           return opts.onStart(type, e as OverlayEvent<DrawOverlayParams>)
         },
         onSelected: (e) => opts.onSelect(type, e as OverlayEvent<DrawOverlayParams>),
         onDeselected: (e) => opts.onDeSelect(type, e as OverlayEvent<DrawOverlayParams>),
-        extendData: opts.params
+        extendData: opts.params,
+        points: opts.points,
       })
     },
     setOverlay: (id, params) => {
@@ -866,7 +878,7 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
       })
     },
     lockOverlay: id => {
-      if(!id) {
+      if (!id) {
         const overlays = chart.current?.getOverlays()
         if (!overlays) return
 
@@ -889,7 +901,7 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
       })
     },
     unlockOverlay: id => {
-      if(!id) {
+      if (!id) {
         const overlays = chart.current?.getOverlays()
         if (!overlays) return
 
@@ -922,6 +934,11 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
         return
       }
       chart.current?.removeOverlay({ id })
+    },
+    hideOverlay: (visible) => {
+      chart.current?.overrideOverlay({
+        visible: visible
+      })
     }
   }))
 

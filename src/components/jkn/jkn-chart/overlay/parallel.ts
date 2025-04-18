@@ -1,5 +1,6 @@
 import type { Bounding, Coordinate, LineAttrs, OverlayTemplate } from '@/plugins/jkn-kline-chart'
-import { getLinearSlopeIntercept } from '../utils'
+import { drawOverlayParamsToFigureStyle, getLinearSlopeIntercept } from '../utils'
+import type { DrawOverlayParams } from "../types"
 
 export function getParallelLines(
   coordinates: Coordinate[],
@@ -72,16 +73,17 @@ export function getParallelLines(
   return lines
 }
 
-export const ParallelOverlay: OverlayTemplate = {
+export const ParallelOverlay: OverlayTemplate<DrawOverlayParams> = {
   name: 'parallel',
   totalStep: 4,
   needDefaultPointFigure: true,
   needDefaultXAxisFigure: false,
   needDefaultYAxisFigure: false,
-  createPointFigures: ({ coordinates, bounding }) => [
+  createPointFigures: ({ coordinates, bounding, overlay }) => [
     {
       type: 'line',
-      attrs: getParallelLines(coordinates, bounding)
+      attrs: getParallelLines(coordinates, bounding),
+      styles: drawOverlayParamsToFigureStyle('line', overlay.extendData)
     }
   ]
 }

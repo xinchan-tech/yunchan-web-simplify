@@ -1,10 +1,15 @@
-import { type ChartOverlayType, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, JknAlert, JknColorPicker, JknColorPickerPopover, JknIcon } from '@/components'
+import { type ChartOverlayType, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, JknAlert, JknColorPicker, JknColorPickerPopover, JknIcon, JknRcTable, type JknRcTableProps, useModal } from '@/components'
 import { DndContext, type DragEndEvent, useDraggable } from '@dnd-kit/core'
 import { CSS } from '@dnd-kit/utilities'
 import { createContext, Fragment, type PropsWithChildren, useContext, useEffect, useMemo, useState } from 'react'
-import { chartManage, useChartManage } from '../lib'
+import { chartManage, renderUtils, useChartManage } from '../lib'
 import { chartEvent } from '../lib/event'
 import { type Updater, useImmer } from "use-immer"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { getUserPlotting } from "@/api"
+import { stockUtils } from "@/utils/stock"
+import { dateUtils } from "@/utils/date"
+import { useCheckboxGroup } from "@/hooks"
 
 const defaultBar: {
   icon: ChartOverlayType
@@ -51,9 +56,21 @@ const defaultBar: {
       icon: 'time',
       label: '时空尺'
     },
+    // {
+    //   icon: 'remark',
+    //   label: '注解'
+    // },
     {
-      icon: 'remark',
-      label: '注解'
+      icon: 'firewall',
+      label: '防火墙'
+    },
+    {
+      icon: 'pressure-line',
+      label: '压力线'
+    },
+    {
+      icon: 'support-line',
+      label: '支撑线'
     }
   ]
 
@@ -63,12 +80,22 @@ const DrawToolContext = createContext<{
   type: string,
   lock: boolean,
   uid: Nullable<string>
+  /**
+   * 是否连续画线
+   */
+  continuous?: boolean
+  /**
+   * 跨周期画线
+   */
+  cross?: boolean
   setDrawSetting: Updater<{
-    color: string,
-    width: number,
-    type: string,
+    color: string
+    width: number
+    type: string
     lock: boolean
     uid: string
+    continuous: boolean
+    cross: boolean
   }>
 }>({} as any)
 
@@ -79,11 +106,13 @@ export const DrawToolBox = () => {
   const [settingPoint, setSettingPoint] = useState({ x: 24, y: 24 })
   const [drawSelect, setDrawSelect] = useState<Nullable<ChartOverlayType>>()
   const [setting, setSetting] = useImmer({
-    color: 'rgba(255, 0, 0, 1)',
-    width: 1,
+    color: 'rgba(255, 215, 0)',
+    width: 2,
     type: 'solid',
     lock: false,
-    uid: ''
+    uid: '',
+    cross: false,
+    continuous: false
   })
 
   const onDragEnd = (event: DragEndEvent) => {
@@ -227,7 +256,8 @@ const DrawSettingBar = ({ pos }: { pos: { x: number; y: number }, type: ChartOve
         params: {
           color: s.color,
           lineWidth: s.width,
-          lineType: s.type
+          lineType: s.type,
+          cross: s.cross ?? false
         }
       })
     }
@@ -279,7 +309,7 @@ const DrawSettingBar = ({ pos }: { pos: { x: number; y: number }, type: ChartOve
 
 const DrawToolBar = () => {
   const barStore = useChartManage(s => s.drawToolBar)
-  const [active, setActive] = useState<Nullable<string>>()
+  const [active, setActive] = useState<Nullable<{ type: string, uid: string }>>()
 
   const drawBar = useMemo(() => {
     return barStore?.length ? barStore : defaultBar
@@ -288,34 +318,48 @@ const DrawToolBar = () => {
   const left = drawBar.slice(0, Math.ceil(drawBar.length / 2))
   const right = drawBar.slice(Math.ceil(drawBar.length / 2))
 
+  const { setDrawSetting, ...setting } = useDrawTool()
+
   useEffect(() => {
-    return chartEvent.on('drawEnd', e => {
-      if (e === active) {
-        setActive('')
+    return chartEvent.on('drawEnd', ({ type }) => {
+      setActive(undefined)
+
+      if (setting.continuous) {
+        chartEvent.get().emit('drawStart', {
+          type: type,
+          params: {
+            color: setting.color,
+            lineWidth: setting.width,
+            lineType: setting.type,
+            cross: setting.cross ?? false
+          }
+        })
       }
     })
-  }, [active])
+  }, [setting.type, setting.width, setting.color, setting.continuous, setting.cross])
 
-  const { setDrawSetting, ...setting } = useDrawTool()
+
+
   const onClick = (item: ChartOverlayType) => {
-    if (active === item) {
-      chartEvent.get().emit('drawCancel', item)
-      setActive('')
+    if (active?.type === item) {
+      // chartEvent.get().emit('drawCancel', active.uid)
+      setActive(undefined)
       return
     }
 
     if (active) {
-      chartEvent.get().emit('drawCancel', item)
+      // chartEvent.get().emit('drawCancel', active.uid)
     }
 
-    setActive(item)
+    setActive({ type: item, uid: undefined as any })
 
     chartEvent.get().emit('drawStart', {
       type: item,
       params: {
         color: setting.color,
         lineWidth: setting.width,
-        lineType: setting.type
+        lineType: setting.type,
+        cross: setting.cross ?? false
       }
     })
   }
@@ -327,7 +371,7 @@ const DrawToolBar = () => {
           <div
             key={left[index].icon}
             className="hover:text-foreground hover:cursor-pointer data-[active=true]:text-primary"
-            data-active={active === left[index].icon}
+            data-active={active?.type === left[index].icon}
             onClick={() => onClick(left[index].icon as ChartOverlayType)}
             onKeyDown={() => { }}
           >
@@ -343,7 +387,7 @@ const DrawToolBar = () => {
             <div
               key={right[index].icon}
               className="hover:text-foreground hover:cursor-pointer data-[active=true]:text-primary"
-              data-active={active === right[index].icon}
+              data-active={active?.type === right[index].icon}
               onClick={() => onClick(right[index].icon as ChartOverlayType)}
               onKeyDown={() => { }}
             >
@@ -366,26 +410,78 @@ const DrawToolBar = () => {
 }
 
 const DrawToolAction = () => {
+  const [visible, setVisible] = useState(true)
+
+  const onSetVisible = () => {
+    chartEvent.get().emit('drawHide', !visible)
+    setVisible(!visible)
+  }
+
+  const { continuous, cross, setDrawSetting } = useDrawTool()
+
+  const onSetContinuous = () => {
+    setDrawSetting(s => ({
+      ...s,
+      continuous: !s.continuous
+    }))
+  }
+
+  const onDelete = () => {
+    JknAlert.confirm({
+      content: '确定清除所有画线？',
+      onAction: async (ac) => {
+        if (ac === 'confirm') {
+          chartEvent.get().emit('drawDelete', {
+            id: undefined
+          })
+          setDrawSetting(s => ({
+            ...s,
+            uid: ''
+          }))
+        }
+      },
+      okBtnVariant: 'destructive'
+    })
+  }
+
+  const onSetCross = () => {
+    setDrawSetting(s => ({
+      ...s,
+      cross: !s.cross
+    }))
+  }
+
+  const statistics = useModal({
+    content: <DrawStatisticsTable />,
+    title: '画线统计',
+    className: 'w-[860px]',
+    closeIcon: true,
+    footer: null
+  })
+
   return (
     <div className="grid grid-cols-2 gap-2.5">
-      <div className="hover:text-foreground hover:cursor-pointer">
-        <JknIcon.Svg name="draw-visible" size={20} className="p-1" hoverable label="可见" />
+      <div data-checked={!visible} className="hover:text-foreground hover:cursor-pointer data-[checked=true]:text-primary" onClick={() => onSetVisible()} onKeyDown={() => void 0}>
+        <JknIcon.Svg name="invisible" size={20} className="p-1" hoverable label="显示" />
       </div>
-      <div className="hover:text-foreground hover:cursor-pointer">
+      {/* <div className="hover:text-foreground hover:cursor-pointer">
         <JknIcon.Svg name="draw-lock" size={20} className="p-1" hoverable />
-      </div>
-      <div className="hover:text-foreground hover:cursor-pointer">
+      </div> */}
+      <div data-checked={cross} className="hover:text-foreground hover:cursor-pointer data-[checked=true]:text-primary" onClick={() => onSetCross()} onKeyDown={() => void 0}>
         <JknIcon.Svg name="draw-link" size={20} className="p-1" hoverable />
       </div>
-      <div className="hover:text-foreground hover:cursor-pointer">
+      <div className="hover:text-foreground hover:cursor-pointer" onClick={() => onDelete()} onKeyDown={() => void 0}>
         <JknIcon.Svg name="draw-delete" size={20} className="p-1" hoverable />
       </div>
-      <div className="hover:text-foreground hover:cursor-pointer">
+      <div data-checked={continuous} className="hover:text-foreground hover:cursor-pointer data-[checked=true]:text-primary" onClick={() => onSetContinuous()} onKeyDown={() => void 0}>
         <JknIcon.Svg name="draw-continuous" size={20} className="p-1" hoverable />
       </div>
-      <div className="hover:text-foreground hover:cursor-pointer">
+      <div className="hover:text-foreground hover:cursor-pointer data-[checked=true]:text-primary" onClick={() => statistics.modal.open()} onKeyDown={() => void 0}>
         <JknIcon.Svg name="draw-statistics" size={20} className="p-1" hoverable />
       </div>
+      {
+        statistics.context
+      }
     </div>
   )
 }
@@ -494,6 +590,101 @@ const DrawSettingDeletePicker = ({ onClick, lock }: { lock: boolean, onClick: ()
   return (
     <div className="size-4 p-1.5 hover:bg-accent rounded cursor-pointer" onClick={_onClick} onKeyDown={() => void 0}>
       <JknIcon.Svg name="draw-delete" className="w-full h-full" />
+    </div>
+  )
+}
+
+const DrawStatisticsTable = () => {
+  const draws = useQuery({
+    queryKey: [getUserPlotting],
+    queryFn: () => getUserPlotting(),
+  })
+
+  const queryClient = useQueryClient()
+
+  const onDelete = (id: string) => {
+    JknAlert.confirm({
+      content: '确定删除该画线？',
+      onAction: async (ac) => {
+        if (ac === 'confirm') {
+          chartEvent.get().emit('drawDelete', {
+            id
+          })
+          queryClient.setQueryData([getUserPlotting], (old: any) => {
+            return old.filter((item: any) => item.hash !== id)
+          })
+        }
+      }
+    })
+  }
+
+  const { checked, toggle, setCheckedAll } = useCheckboxGroup([])
+
+  const columns: JknRcTableProps<ArrayItem<typeof draws.data>>['columns'] = [
+    {
+      title: '序号',
+      dataIndex: 'id',
+      align: 'center',
+      width: 60,
+      render: (_, __, index) => <span>{index + 1}</span>
+    },
+    {
+      title: '股票代码',
+      dataIndex: 'symbol',
+      align: 'center',
+      render: (_, record) => <span>{record.symbol}</span>
+    },
+    {
+      title: '股票周期',
+      dataIndex: 'stock_kline_id',
+      align: 'center',
+      render: (_, record) => <span>{stockUtils.intervalToStr(+record.stock_kline_id)}</span>
+    },
+    {
+      title: '类型',
+      dataIndex: 'stock_kline_value',
+      align: 'center',
+      render: (_, record) => <span>{defaultBar.find(b => b.icon === renderUtils.getOverlayById(record.stock_kline_id))?.label}</span>
+    },
+    {
+      title: '锚点日期',
+      width: 180,
+      dataIndex: 'anchor_date',
+      render: (_, record) => <span>{record.points[0].x.split('@').shift()}</span>
+    },
+    {
+      title: '创建时间',
+      width: 180,
+      dataIndex: 'create_time',
+      render: (_, record) => <span>{dateUtils.toUsDay(+record.create_time).format('YYYY-MM-DD HH:mm:00')}</span>
+    },
+    {
+      title: '操作',
+      dataIndex: 'delete',
+      align: 'center',
+      width: 60,
+      render: (_, record) => (
+        <JknIcon.Svg name="delete" className="w-4 h-4 p-1.5 cursor-pointer" hoverable onClick={() => onDelete(record.hash)} />
+      )
+    },
+    {
+      title: <JknIcon.Checkbox checkedIcon="checkbox_mult_sel" uncheckedIcon="checkbox_mult_nor" checked={checked.includes('all')} onChange={() => setCheckedAll(checked.includes('all') ? [] : ['all'])} />,
+      dataIndex: 'checkbox',
+      align: 'center',
+      width: 60,
+      render: (_, record) => (
+        <JknIcon.Checkbox checkedIcon="checkbox_mult_sel" uncheckedIcon="checkbox_mult_nor" checked={checked.includes(record.hash)} onChange={() => toggle(record.hash)} />
+      )
+    }
+  ]
+
+  return (
+    <div className="h-[640px]">
+      <JknRcTable
+        columns={columns}
+        data={draws.data}
+        rowKey="hash"
+      />
     </div>
   )
 }

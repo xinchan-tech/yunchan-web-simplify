@@ -1,5 +1,6 @@
 import type { Bounding, Coordinate, LineAttrs, OverlayTemplate } from '@/plugins/jkn-kline-chart'
-import { getLinearYFromCoordinates } from '../utils'
+import { drawOverlayParamsToFigureStyle, getLinearYFromCoordinates } from '../utils'
+import type { DrawOverlayParams } from "../types"
 
 export function getRayLine(coordinates: Coordinate[], bounding: Bounding): LineAttrs | LineAttrs[] {
   if (coordinates.length > 1) {
@@ -32,16 +33,17 @@ export function getRayLine(coordinates: Coordinate[], bounding: Bounding): LineA
   return []
 }
 
-export const RayOverlay: OverlayTemplate = {
+export const RayOverlay: OverlayTemplate<DrawOverlayParams> = {
   name: 'ray',
   totalStep: 3,
   needDefaultPointFigure: true,
   needDefaultXAxisFigure: false,
   needDefaultYAxisFigure: false,
-  createPointFigures: ({ coordinates, bounding }) => {
+  createPointFigures: ({ coordinates, bounding, overlay }) => {
     return {
       type: 'line',
-      attrs: getRayLine(coordinates, bounding)
+      attrs: getRayLine(coordinates, bounding),
+      styles: drawOverlayParamsToFigureStyle('line', overlay.extendData)
     }
   }
 }

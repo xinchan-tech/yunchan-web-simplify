@@ -77,3 +77,9 @@ export const useMessageStatusListener = (message: Message, cb: MessageStatusList
     }
   }, [lastFn, message])
 }
+
+export const useMediaUploadListener = (message: Message, cb: MessageStatusListener) => {
+  useEffect(() => {
+    
+  })
+}

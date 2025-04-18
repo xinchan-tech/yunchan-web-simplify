@@ -149,7 +149,7 @@ export const colorUtil = {
     return { r: Math.round(r * 255), g: Math.round(g * 255), b: Math.round(b * 255) }
   },
   rgbToHex(rgb: { r: number; g: number; b: number }) {
-    const r = `#${Math.floor(rgb.r).toString(16)}${Math.floor(rgb.g).toString(16)}${Math.floor(rgb.b).toString(16)}`.toUpperCase()
+    const r = `#${Math.floor(rgb.r).toString(16).padStart(2, '0')}${Math.floor(rgb.g).toString(16).padStart(2, '0')}${Math.floor(rgb.b).toString(16).padStart(2, '0')}`.toUpperCase()
     return r
   },
   parseRGBA(rgba: string): ColorType.RGBA | undefined {

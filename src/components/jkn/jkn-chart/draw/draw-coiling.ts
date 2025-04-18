@@ -98,7 +98,7 @@ export const drawCoilingPivot: DrawCoilingFunc = ({ ctx, xAxis, yAxis, indicator
     new Text({
       name: 'text',
       attrs: {
-        x: endPoints[0] + 12,
+        x: endPoints[0] + 24,
         y: startPoints[1],
         text: mark,
         align: 'center',
@@ -106,7 +106,7 @@ export const drawCoilingPivot: DrawCoilingFunc = ({ ctx, xAxis, yAxis, indicator
       },
       styles: {
         color: p.color,
-        size: 16,
+        size: 24,
         weight: 600
       }
     }).draw(ctx)
@@ -137,9 +137,9 @@ export const drawCoilingPivot: DrawCoilingFunc = ({ ctx, xAxis, yAxis, indicator
     new Text({
       name: 'text',
       attrs: {
-        x: endPoints[0] + 32,
+        x: endPoints[0] + 24,
         y: startPoints[1],
-        text: '',
+        text: mark,
         align: 'center',
         baseline: 'bottom'
       },
@@ -225,7 +225,7 @@ export const drawCoilingTradePoint: DrawCoilingTradePointFunc = ({ ctx, xAxis, y
       },
       styles: {
         color: p.color,
-        fontSize: 12
+        size: 16
       }
     }).draw(ctx)
   })

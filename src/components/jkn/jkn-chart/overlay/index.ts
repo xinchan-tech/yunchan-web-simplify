@@ -10,6 +10,10 @@ export * from './rectangle'
 export * from './gold'
 export * from './time'
 export * from './remark'
+export * from './firewall'
+export * from './support-line'
+export * from './pressure-line'
+
 export type ChartOverlayType =
   | 'parallel'
   | 'line'
@@ -22,3 +26,6 @@ export type ChartOverlayType =
   | 'gold'
   | 'time'
   | 'remark'
+  | 'firewall'
+  | 'support-line'
+  | 'pressure-line'

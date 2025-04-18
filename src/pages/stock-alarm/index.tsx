@@ -410,6 +410,7 @@ const StockAlarmRecordList = () => {
         className="flex-1"
         itemHeight={70}
         rowKey="id"
+        loading={alarmQuery.isLoading}
         data={alarmQuery.data ?? []}
         hasMore={alarmQuery.hasNextPage}
         fetchMore={alarmQuery.fetchNextPage}
@@ -427,9 +428,9 @@ interface AlarmRecordItemProps {
 const AlarmRecordItem = ({ symbol, data, onDelete }: AlarmRecordItemProps) => {
   const onClick = () => {
     if(data.type === AlarmType.AI){
-      stockUtils.gotoStockPage(symbol, { interval: data.condition.coiling.param.stock_cycle })
+      stockUtils.gotoStockPage(symbol, { interval: data.condition.coiling.param.stock_cycle, alarm: true })
     }else {
-      stockUtils.gotoStockPage(symbol, { interval: StockChartInterval.DAY })
+      stockUtils.gotoStockPage(symbol, { interval: StockChartInterval.DAY, alarm: true })
     }
   }
   

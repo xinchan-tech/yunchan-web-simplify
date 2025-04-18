@@ -276,7 +276,7 @@ export const ChatMessageList = () => {
           )}
         </ChatMessageRow>
       )}
-    ></JknVirtualInfinite>
+    />
   )
 }
 
@@ -292,6 +292,7 @@ const ChatMessageRow = ({ message, children, onMessageSend }: PropsWithChildren<
   const { fromName, fromAvatar } = message.remoteExtra.extra || {}
 
   useMessageStatusListener(message, msg => {
+    console.log(message, msg)
     if (message.clientSeq === msg.clientSeq) {
       message.status = msg.reasonCode === 1 ? MessageStatus.Normal : MessageStatus.Fail
       message.messageID = msg.messageID.toString()

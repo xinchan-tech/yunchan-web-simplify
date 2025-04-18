@@ -1,5 +1,11 @@
 import type { StockRawRecord } from '@/api'
-import { LineType, type Coordinate, type LineStyle, type OverlayStyle, type Styles } from '@/plugins/jkn-kline-chart'
+import {
+  type Coordinate,
+  type LineStyle,
+  LineType,
+  type RectStyle,
+  type TextStyle
+} from '@/plugins/jkn-kline-chart'
 import { useConfig } from '@/store'
 import type { StockTrading } from '@/utils/stock'
 import dayjs from 'dayjs'
@@ -196,10 +202,19 @@ export const drawOverlayParamsToFigureStyle = (type: string, params: DrawOverlay
         color: params.color,
         size: params.lineWidth,
         style: lineType === 'dashed' ? LineType.Dashed : lineType === 'dotted' ? LineType.Dashed : LineType.Solid,
-        dashedValue: lineType === 'dashed' ? [4, 4] : lineType === 'dotted' ? [2, 2] : undefined,
+        dashedValue: lineType === 'dashed' ? [4, 4] : lineType === 'dotted' ? [2, 2] : undefined
       } as LineStyle
-    default: 
+    case 'text':
+      return {
+        color: params.color
+      } as TextStyle
+    case 'rect':
+      return {
+        color: params.color,
+        borderColor: params.color,
+        borderSize: params.lineWidth
+      } as RectStyle
+    default:
       return {} as any
   }
-
 }

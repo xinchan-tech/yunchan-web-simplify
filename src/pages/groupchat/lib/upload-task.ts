@@ -1,4 +1,5 @@
 import { uploadUtils } from '@/utils/oss'
+import to from "await-to-js"
 import type { Canceler } from 'axios'
 import { nanoid } from 'nanoid'
 import { type MediaMessageContent, MessageTask, TaskStatus } from 'wukongimjssdk'
@@ -28,7 +29,13 @@ export class MediaMessageUploadTask extends MessageTask {
   }
 
   async uploadFile(file: File, fileName: string) {
-    const res = await uploadUtils.upload(file, fileName)
+    const [err, res] = await to(uploadUtils.upload(file, fileName))
+    if(err){
+      this.status === TaskStatus.fail
+      this.update()
+      console.log('文件上传失败！->', err)
+      return
+    }
     // const resp = await axios
     //   .post(uploadURL, param, {
     //     headers: { 'Content-Type': 'multipart/form-data' },

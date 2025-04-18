@@ -2,6 +2,7 @@ import { StockChartInterval, type StockRawRecord } from '@/api'
 import { dateUtils } from '@/utils/date'
 import type { StockTrading } from '@/utils/stock'
 import type { ChartManageStore, Indicator } from './store'
+import type { ChartOverlayType } from "@/components"
 
 export const renderUtils = {
   getViewMode: (s: ChartManageStore['viewMode']) => {
@@ -173,5 +174,74 @@ export const renderUtils = {
     }
 
     return current.add(-1 * 15 * 180, 'd').format('YYYY-MM-DD HH:mm:ss')
+  },
+  /**
+   * 
+   */
+  getOverlayByType: (type: ChartOverlayType): Nullable<number> => {
+    switch (type) {
+      case 'line':
+        return 1
+      case 'hline':
+        return 9
+      case 'vline':
+        return 10
+      case 'parallel':
+        return 7
+      case 'arrow':
+        return 8
+      case 'channel':
+        return 29
+      case 'ray':
+        return 3
+      case 'rectangle':
+        return 4
+      case 'gold':
+        return 9
+      case 'time':
+        return 12
+      case 'remark':
+        return 6
+      case 'firewall':
+        return 40
+      case 'pressure-line':
+        return 44
+      case 'support-line':
+        return 43
+      default:
+        return undefined
+    }
+  },
+  getOverlayById: (id: number): Nullable<ChartOverlayType> => {
+    switch (id) {
+      case 1:
+        return 'line'
+      case 9:
+        return 'hline'
+      case 10:
+        return 'vline'
+      case 7:
+        return 'parallel'
+      case 8:
+        return 'arrow'
+      case 29:
+        return 'channel'
+      case 3:
+        return 'ray'
+      case 4:
+        return 'rectangle'
+      case 12:
+        return 'time'
+      case 6:
+        return 'remark'
+      case 40:
+        return 'firewall'
+      case 43:
+        return 'support-line'
+      case 44:
+        return 'pressure-line'
+      default:
+        return undefined
+    }
   }
 }
