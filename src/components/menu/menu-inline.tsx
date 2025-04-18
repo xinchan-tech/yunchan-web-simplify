@@ -31,30 +31,30 @@ const MenuInline = () => {
   const menus: MenuItem[] = useMemo(
     () => [
       {
-        icon: <JknIcon.Svg name="dashboard" size={24} />,
+        icon: <JknIcon.Svg name="wallet-icon" size={24} />,
         title: '我的钱包',
         path: '/assets'
       },
       {
-        icon: <JknIcon.Svg name="views" size={24} />,
+        icon: <JknIcon.Svg name="aiTrading-icon" size={24} />,
         title: 'AI交易',
-        path: '/views'
+        path: '/assets/aiTrading'
       },
       {
-        icon: <JknIcon.Svg name="pool" size={24} />,
+        icon: <JknIcon.Svg name="invest-icon" size={24} />,
         title: '投资组合',
-        path: '/golden'
+        path: '/assets/invest'
       },
       {
-        icon: <JknIcon.Svg name="picker" size={24} />,
+        icon: <JknIcon.Svg name="historyList-icon" size={24} />,
         title: '历史查询',
-        path: '/super'
+        path: '/assets/historyList'
       },
 
       {
-        icon: <JknIcon.Svg name="calendar" size={24} />,
+        icon: <JknIcon.Svg name="curvReport-icon" size={24} />,
         title: '回报曲线',
-        path: '/calendar'
+        path: '/assets/curvReport'
       },
     ],
     []
@@ -81,12 +81,14 @@ const MenuInline = () => {
   return (
     <div className="h-full flex flex-col items-center w-full px-0.5 box-border space-y-2.5 text-foreground">
       {menus.map(item => (
-        <div className={cn('text-center text-inherit w-full  min-w-[7.8125rem] p-2.5 box-border text-gray-400 cursor-pointer hover:text-white hover:bg-[#2E2E2E] rounded-md flex justify-start items-center', pathname === item.path && 'bg-[#2E2E2E]')} key={item.title}>
+        <div
+          onClick={() => onNav(item.path)}
+          className={cn('text-center text-inherit w-full  min-w-[7.8125rem] p-2.5 box-border text-gray-400 cursor-pointer hover:text-white hover:bg-[#2E2E2E] rounded-md flex justify-start items-center',
+            pathname === item.path && 'bg-[#2E2E2E]')} key={item.title}>
           <div
-            onClick={() => onNav(item.path)}
             onKeyDown={() => { }}
             className={cn(
-              'flex flex-col items-center  w-8 h-[28px] justify-center rounded-xs'
+              'flex flex-col items-center  w-8 h-[28px] justify-center rounded-xs',
             )}
           >
             <div className={cn('flex', pathname === item.path ? 'text-white' : '')}>{item.icon}</div>

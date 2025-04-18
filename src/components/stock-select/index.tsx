@@ -25,7 +25,7 @@ const StockSelect = ({ onChange, className, width, ...props }: StockSelectProps)
 
     setTimeout(() => {
       const s = stockList.list.find(item => item[1] === symbol)
-
+      
       if (s) {
         setHistory(_s => {
           const newHistory = _s?.filter(item => item[1] !== symbol) ?? []
@@ -75,7 +75,7 @@ const StockSelect = ({ onChange, className, width, ...props }: StockSelectProps)
             />
           </div>
         </PopoverAnchor>
-        <PopoverContent align="start" className="w-48 bg-muted" onOpenAutoFocus={e => e.preventDefault()}>
+        <PopoverContent align="start" className="w-48 bg-muted" style={{ width }} onOpenAutoFocus={e => e.preventDefault()}>
           {history?.length && !keyword ? (
             <div>
               <div className="flex items-center justify-between px-2 py-2 border-0 border-b border-solid border-border">

@@ -1,4 +1,5 @@
 import photo from '@/assets/image/back-result.png'
+import { JknIcon } from '@/components'
 
 const AssetsInfo = () => {
 
@@ -29,8 +30,14 @@ const AssetsInfo = () => {
             <span>Assert</span>
         </div>
         <div className='ml-[2.5rem]'>
-            <div className='px-[10px] py-[12px] bg-[#2962ff] rounded-[6px] w-[7.25rem] text-center font-sm cursor-pointer'>存款</div>
-            <div className='px-[10px] py-[12px] bg-[#2e2e2e] rounded-[6px] w-[7.25rem] text-center font-sm cursor-pointer mt-[10px] ' >撤退</div>
+            <div className='px-[10px] py-[12px] box-border flex items-center justify-center bg-[#2962ff] rounded-[6px] w-[7.25rem] text-center font-sm cursor-pointer'>
+                <JknIcon.Svg name="assets-add" size={24} />
+                <span className='ml-1'>存款</span>
+            </div>
+            <div className='px-[10px] py-[12px] box-border flex items-center justify-center bg-[#2e2e2e] rounded-[6px] w-[7.25rem] text-center font-sm cursor-pointer mt-[10px] ' >
+                <JknIcon.Svg name="assets-retreat" size={24} />
+                <span className='ml-1'>撤退</span>
+            </div>
         </div>
         <div className='border-[1px] border-solid box-border border-[#3D3D3D] mx-[2.5rem]'></div>
 

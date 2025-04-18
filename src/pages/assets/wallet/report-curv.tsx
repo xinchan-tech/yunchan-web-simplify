@@ -1,18 +1,20 @@
-import imageLogo from "@/assets/image/logo.png";
 import { useChart } from "@/hooks";
 import { useEffect, useState } from "react";
-import { getChartOps } from './const'
+import { getLineChartOps } from '../const'
 import { useDebounce } from 'ahooks'
+import { StockView } from '@/components'
+import { type StockTrading, stockUtils } from '@/utils/stock'
+type TableDataType = ReturnType<typeof stockUtils.toStockWithExt>
 
-const ReportCurv = () => {
+const ReportCurv = ({ rowdata }: { rowdata: TableDataType }) => {
   const [chart, dom] = useChart()
   const [resizeTrigger, setResizeTrigger] = useState(0)
   const debouncedResizeTrigger = useDebounce(resizeTrigger, 500)
+  // const [stock, setStock] = useState<StockTrading>()
 
   useEffect(() => {
-    console.log('chart', chart.current)
     if (!chart.current) return
-    const options = getChartOps()
+    const options = getLineChartOps()
     chart.current.setOption(options)
 
     const handleResize = () => {
@@ -28,7 +30,7 @@ const ReportCurv = () => {
 
   useEffect(() => {
     if (debouncedResizeTrigger > 0) {
-      chart.current?.resize(); 
+      chart.current?.resize();
     }
   }, [debouncedResizeTrigger])
 
@@ -55,17 +57,25 @@ const ReportCurv = () => {
     }
   ]
 
+  useEffect(() => {
+    console.log('data', rowdata)
+    // const listMap = useStockList(s => s.listMap)
+    // setStock(listMap[code])
+  }, [rowdata])
+
   return <div className="border-[1px] border-[#3c3c3c] border-solid rounded-md w-full h-full p-6 box-border flex flex-col">
     <div className="text-2xl ">
       回归曲线
     </div>
     <div className="flex">
-      <div className="w-[12.5rem]">
-        <div className="flex items-center mt-[2.625rem]">
-          <img src={imageLogo} alt="" className="w-6 h-6" />
-          <span className="ml-2 text-base inline-block">AAPL</span>
+      <div className="w-[12.5rem] flex items-end">
+        <div className="flex items-end ">
+        <StockView name={rowdata?.name} code={rowdata?.code as string} showName className=""  />
+          {/* <img src={imageLogo} alt="" className="w-6 h-6" /> */}
+          {/* <JknIcon stock={data?.[0]} className="mr-3" /> */}
+          {/* <span className="ml-2 text-base inline-block">AAPL</span> */}
         </div>
-        <div className="text-sm text-[#b8b8b8] mt-[0.4375rem] indent-8 truncate">苹果发顺丰第…</div>
+        {/* <div className="text-sm text-[#b8b8b8] mt-[0.4375rem] indent-8 truncate">苹果发顺丰第…</div> */}
       </div>
       <div className="flex flex-1 justify-around items-center pr-[15%] box-border">
         {
