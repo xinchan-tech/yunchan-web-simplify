@@ -1,5 +1,14 @@
 # Changelog
 
+## [2.3.0](https://github.com/xinchan-gx/yunchan-web/compare/2.2.8...2.3.0) (2025-04-18)
+
+### ✨ Features | 新功能
+
+* 更新查询配置以确保在有蜡烛数据时启用绘图 ([7706a7d](https://github.com/xinchan-gx/yunchan-web/commit/7706a7da63eb821b80285e459462d4b895b4f390))
+* 添加错误处理和日志记录到文件上传功能，更新上传工具以抛出未实现错误 ([e249cc3](https://github.com/xinchan-gx/yunchan-web/commit/e249cc352ac5a616050376b3156f0d036d096b8a))
+* 添加媒体上传监听器，更新 OSS 上传工具以实现文件上传功能 ([a20fb8e](https://github.com/xinchan-gx/yunchan-web/commit/a20fb8e9029b6253466d31ef807256755b352bfd))
+* enhance drawing tools with new overlay parameters and functionality ([951e74b](https://github.com/xinchan-gx/yunchan-web/commit/951e74b955803a30e0e0bd435578db0421553fed))
+
 ## [2.2.8](https://github.com/xinchan-gx/yunchan-web/compare/2.2.7...2.2.8) (2025-04-17)
 
 ### ✨ Features | 新功能
