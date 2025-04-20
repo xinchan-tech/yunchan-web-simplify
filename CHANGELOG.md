@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.4.0](https://github.com/xinchan-gx/yunchan-web/compare/2.3.0...2.4.0) (2025-04-20)
+
+### ✨ Features | 新功能
+
+* 更新 Apple 登录组件的 clientId 配置 ([c98f77a](https://github.com/xinchan-gx/yunchan-web/commit/c98f77ae0ce550b36921d6a0db148b5b9876b3da))
+
 ## [2.3.0](https://github.com/xinchan-gx/yunchan-web/compare/2.2.8...2.3.0) (2025-04-18)
 
 ### ✨ Features | 新功能
