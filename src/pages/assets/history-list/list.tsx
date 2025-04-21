@@ -53,7 +53,6 @@ const HistoryList = () => {
 
   useEffect(() => {
     const r: TableDataType[] = []
-    console.log('query.data.items', query.data?.items, active)
     if (!query.data?.items) {
       setList([])
       return
@@ -189,7 +188,7 @@ const HistoryList = () => {
         </JknDatePicker> */}
       <div className='flex align-center'>
         <div className="flex items-center mr-6">
-          <JknRangePicker onChange={onDateChange} placeholder={["开始时间", "截止时间"]} />
+          <JknRangePicker allowClear onChange={onDateChange} placeholder={["开始时间", "截止时间"]} />
         </div>
         <StockSelect placeholder="查询" className='rounded-lg' width="18.75rem" onChange={v => setQueryParams(v)} />
       </div>
