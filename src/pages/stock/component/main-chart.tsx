@@ -14,7 +14,6 @@ import { ChartType, MainYAxis, chartManage, useChartManage } from '../lib/store'
 import { renderUtils } from '../lib/utils'
 import { BackTestBar } from './back-test-bar'
 import { ChartContextMenu } from './chart-context-menu'
-import to from "await-to-js"
 import dayjs from "dayjs"
 import { useQuery } from "@tanstack/react-query"
 import { sysConfig } from "@/utils/config"
@@ -142,7 +141,11 @@ export const MainChart = (props: MainChartProps) => {
       })
     })
 
-  }, [plotting.data, createOverlay])
+    return () => {
+      plotting.refetch()
+    }
+
+  }, [plotting.data, createOverlay, plotting.refetch])
 
   useStockBarSubscribe([`${symbol}@${stockUtils.intervalToPeriod(chartStore.interval)}`], data => {
     const mode = useChartManage.getState().chartStores[props.chartId].mode
@@ -504,9 +507,9 @@ export const MainChart = (props: MainChartProps) => {
     const cancelDrawDelete = chartEvent.on('drawDelete', ({ id }) => {
       chartImp.current?.removeOverlay(id)
       if (id) {
-        deleteUserPlotting(isArray(id) ? id : [id])
+        deleteUserPlotting(isArray(id) ? id : [id]).then(() => plotting.refetch())
       } else {
-        deleteUserPlottingByInterval(symbol, chartStore.interval)
+        deleteUserPlottingByInterval(symbol, chartStore.interval).then(() => plotting.refetch())
       }
     })
 
@@ -535,10 +538,7 @@ export const MainChart = (props: MainChartProps) => {
       cancelDrawCancel()
       cancelDrawHide()
     }
-  }, [activeChartId, props.chartId, chartStore.interval, symbol, startAt, createOverlay])
-
-
-
+  }, [activeChartId, props.chartId, chartStore.interval, symbol, startAt, createOverlay, plotting.refetch])
 
   const onAddBackTestRecord = (record: any) => {
     chartImp.current?.createBackTestIndicator([record])

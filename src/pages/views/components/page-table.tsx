@@ -4,22 +4,14 @@ import {
   JknPagination,
   JknRcTable,
   type JknRcTableProps,
-  Pagination,
-  PaginationContent,
-  PaginationEllipsis,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
   StockView,
   SubscribeSpan
 } from '@/components'
-import { usePagination, useStockQuoteSubscribe, useTableData, useTableRowClickToStockTrading } from '@/hooks'
-import { stockSubscribe, stockUtils } from '@/utils/stock'
-import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
-import { useUnmount } from 'ahooks'
+import { usePagination, useTableData, useTableRowClickToStockTrading } from '@/hooks'
+import { stockUtils } from '@/utils/stock'
+import { useQuery } from '@tanstack/react-query'
 
-import { useCallback, useEffect, useMemo } from 'react'
+import { useEffect, useMemo } from 'react'
 import { useImmer } from 'use-immer'
 
 interface PageTableProps {
@@ -223,7 +215,7 @@ const PageTable = (props: PageTableProps) => {
         dataIndex: 'symbol',
         align: 'left',
         sort: true,
-        width: '15%',
+        width: '14%',
         render: (_, row) => (
           <div className="flex items-center h-[33px]">
             <StockView name={row.name} code={row.symbol as string} showName />
@@ -251,7 +243,7 @@ const PageTable = (props: PageTableProps) => {
         title: '涨跌幅',
         dataIndex: 'percent',
         align: 'left',
-        width: '11.5%',
+        width: '10%',
         sort: true,
         render: (_, row) => (
           <SubscribeSpan.PercentBlink
@@ -269,7 +261,7 @@ const PageTable = (props: PageTableProps) => {
         title: '成交额',
         dataIndex: 'amount',
         align: 'left',
-        width: '12%',
+        width: '11%',
         sort: true,
         render: (_, row) => (
           <SubscribeSpan.TurnoverBlink
@@ -285,7 +277,7 @@ const PageTable = (props: PageTableProps) => {
         title: '总市值',
         dataIndex: 'total',
         align: 'left',
-        width: '12%',
+        width: '11%',
         sort: true,
         render: (_, row) => (
           <div className="">

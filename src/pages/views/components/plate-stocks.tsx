@@ -66,7 +66,7 @@ const PlateStocks = (props: PlateStocksProps) => {
         dataIndex: 'symbol',
         align: 'left',
         sort: true,
-        width: '28.5%',
+        width: '23.5%',
         render: (_, row) => (
           <div className="flex items-center h-[33px]">
             <StockView name={row.name} code={row.symbol as string} showName />
@@ -127,7 +127,8 @@ const PlateStocks = (props: PlateStocksProps) => {
       {
         title: '总市值',
         dataIndex: 'marketValue',
-        align: 'right',
+        align: 'left',
+        width: '13.5%',
         sort: true,
         render: (_, row) => (
           <div className="">
