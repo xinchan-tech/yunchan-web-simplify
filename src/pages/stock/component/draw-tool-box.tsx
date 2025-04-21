@@ -657,9 +657,9 @@ const DrawStatisticsTable = () => {
     },
     {
       title: '类型',
-      dataIndex: 'stock_kline_value',
+      dataIndex: 'plotting',
       align: 'center',
-      render: (_, record) => <span>{defaultBar.find(b => b.icon === renderUtils.getOverlayById(record.stock_kline_id))?.label}</span>
+      render: (_, record) => <span>{record.plotting}</span>
     },
     {
       title: '锚点日期',

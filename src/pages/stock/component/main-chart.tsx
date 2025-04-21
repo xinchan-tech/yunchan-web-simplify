@@ -52,7 +52,7 @@ export const MainChart = (props: MainChartProps) => {
     queryKey: [getUserPlotting, symbol, chartStore.interval],
     queryFn: () => getUserPlotting({ symbol, kline: chartStore.interval }),
     enabled: candlesticks.length > 0 && sysConfig.PUBLIC_BASE_BUILD_ENV !== 'PRODUCTION',
-    select: data => data.filter(d => d.stock_kline_value === chartStore.interval && d.symbol === symbol),
+    select: data => data.filter(d => (d.stock_kline_value === chartStore.interval || d.cross === 1) && d.symbol === symbol),
   })
 
   const createOverlay = useCallback(({ type, params, points, id }: ChartEvents['drawStart']) => {
@@ -120,7 +120,7 @@ export const MainChart = (props: MainChartProps) => {
 
   useEffect(() => {
     chartImp.current?.removeOverlay()
-
+    console.log(plotting.data)
     plotting.data?.forEach(data => {
       const type = renderUtils.getOverlayById(data.plotting_id)
       if (!type) return

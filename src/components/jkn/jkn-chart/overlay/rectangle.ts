@@ -4,7 +4,7 @@ import { createOverlayTemplate, drawOverlayParamsToFigureStyle } from "../utils"
 
 export const RectangleOverlay = createOverlayTemplate<DrawOverlayParams>({
   name: 'rectangle',
-  totalStep: 2,
+  totalStep: 3,
   createPointFigures: ({ coordinates, overlay }) => {
     if (coordinates.length === 2) {
       return [

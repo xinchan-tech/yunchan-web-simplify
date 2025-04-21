@@ -75,7 +75,7 @@ export function getParallelLines(
 
 export const ParallelOverlay = createOverlayTemplate<DrawOverlayParams>({
   name: 'parallel',
-  totalStep: 3,
+  totalStep: 4,
   createPointFigures: ({ coordinates, bounding, overlay }) => [
     {
       type: 'line',
