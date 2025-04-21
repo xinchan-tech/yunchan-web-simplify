@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.4.2](https://github.com/xinchan-gx/yunchan-web/compare/2.4.1...2.4.2) (2025-04-21)
+
+### ✨ Features | 新功能
+
+* 更新绘图查询启用条件，确保在非生产环境下才启用 ([ffa83d7](https://github.com/xinchan-gx/yunchan-web/commit/ffa83d7a4b32159c145c42325b4490cd9862ffdb))
+
 ## [2.4.1](https://github.com/xinchan-gx/yunchan-web/compare/2.4.0...2.4.1) (2025-04-21)
 
 ### ✨ Features | 新功能
