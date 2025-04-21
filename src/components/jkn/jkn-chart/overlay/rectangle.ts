@@ -9,6 +9,10 @@ export const RectangleOverlay: OverlayTemplate<DrawOverlayParams> = {
   needDefaultPointFigure: true,
   needDefaultXAxisFigure: false,
   needDefaultYAxisFigure: false,
+  onRightClick: (e) => {
+    e.preventDefault?.()
+    return true
+  },
   createPointFigures: ({ coordinates, overlay }) => {
     if (coordinates.length === 2) {
       return [

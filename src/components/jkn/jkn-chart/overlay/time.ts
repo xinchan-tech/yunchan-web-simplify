@@ -104,6 +104,10 @@ export const TimeOverlay: OverlayTemplate<DrawOverlayParams> = {
   needDefaultPointFigure: true,
   needDefaultXAxisFigure: false,
   needDefaultYAxisFigure: false,
+  onRightClick: (e) => {
+    e.preventDefault?.()
+    return true
+  },
   createPointFigures: ({ coordinates, chart, overlay }) => {
     if (coordinates.length < 2) {
       return []

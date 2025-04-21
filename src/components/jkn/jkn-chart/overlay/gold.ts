@@ -106,6 +106,10 @@ export const GoldOverlay: OverlayTemplate<DrawOverlayParams> = {
   needDefaultPointFigure: true,
   needDefaultXAxisFigure: false,
   needDefaultYAxisFigure: false,
+  onRightClick: (e) => {
+    e.preventDefault?.()
+    return true
+  },
   createPointFigures: ({ coordinates, bounding, overlay }) => {
     const baseLines = getGoldLines(coordinates, bounding)
     const extendLines = getExtendLine(coordinates, bounding)

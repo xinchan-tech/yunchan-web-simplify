@@ -9,6 +9,10 @@ export const ChannelOverlay: OverlayTemplate<DrawOverlayParams> = {
   needDefaultPointFigure: true,
   needDefaultXAxisFigure: false,
   needDefaultYAxisFigure: false,
+  onRightClick: (e) => {
+    e.preventDefault?.()
+    return true
+  },
   createPointFigures: ({ coordinates, bounding, overlay }) => [
     {
       type: 'line',

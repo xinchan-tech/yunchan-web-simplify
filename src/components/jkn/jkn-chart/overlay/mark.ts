@@ -5,6 +5,10 @@ export const OverMarkOverlay: OverlayTemplate = {
   totalStep: 1,
   lock: true,
   needDefaultXAxisFigure: false,
+  onRightClick: (e) => {
+    e.preventDefault?.()
+    return true
+  },
   needDefaultYAxisFigure: false,
   createPointFigures: ({ coordinates }) => {
     return coordinates.map(coordinate => {

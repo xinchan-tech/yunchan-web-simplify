@@ -11,6 +11,10 @@ export const FireWallOverlay: OverlayTemplate<DrawOverlayParams> = {
   needDefaultPointFigure: true,
   needDefaultXAxisFigure: false,
   needDefaultYAxisFigure: false,
+  onRightClick: (e) => {
+    e.preventDefault?.()
+    return true
+  },
   createYAxisFigures: ({ coordinates, bounding, overlay }) => {
     const lineStyles = drawOverlayParamsToFigureStyle('line', overlay.extendData)
     return [

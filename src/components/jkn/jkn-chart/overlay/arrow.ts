@@ -8,6 +8,10 @@ export const ArrowOverlay: OverlayTemplate<DrawOverlayParams> = {
   needDefaultPointFigure: true,
   needDefaultXAxisFigure: false,
   needDefaultYAxisFigure: false,
+  onRightClick: (e) => {
+    e.preventDefault?.()
+    return true
+  },
   createPointFigures: ({ coordinates, overlay }) => {
     const styles = drawOverlayParamsToFigureStyle('line', overlay.extendData)
     if (coordinates.length === 2) {

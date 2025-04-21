@@ -9,6 +9,10 @@ export const LineOverlay: OverlayTemplate<DrawOverlayParams> = {
   needDefaultPointFigure: true,
   needDefaultXAxisFigure: false,
   needDefaultYAxisFigure: false,
+  onRightClick: (e) => {
+    e.preventDefault?.()
+    return true
+  },
   createPointFigures: ({ coordinates, bounding, overlay }) => {
     const styles = drawOverlayParamsToFigureStyle('line', overlay.extendData)
     if (coordinates.length === 2) {
