@@ -2030,6 +2030,7 @@ type SaveUserPlottingParams = {
     width: number
     color: string
     lineType: string
+    fontSize?: number
   }
   cross: 0 | 1
   slope: number

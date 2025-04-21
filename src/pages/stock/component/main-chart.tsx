@@ -71,14 +71,15 @@ export const MainChart = (props: MainChartProps) => {
           hash: e.overlay.id,
           symbol: symbol,
           kline: chartStore.interval.toString(),
-          cross: params.cross ? 1 : 0,
+          cross: e.overlay.extendData.cross ? 1 : 0,
           plotting_id: pid,
           text: e.overlay.extendData.text ?? '文本',
           slope: 0,
           css: {
-            color: params.color,
-            width: params.lineWidth,
-            lineType: params.lineType
+            color: e.overlay.extendData.color,
+            width: e.overlay.extendData.lineWidth,
+            lineType: e.overlay.extendData.lineType,
+            fontSize: e.overlay.extendData.fontSize,
           },
           create_time: dayjs().valueOf().toString(),
           points: e.overlay.points.map(p => ({
@@ -133,6 +134,7 @@ export const MainChart = (props: MainChartProps) => {
           lineWidth: data.css?.width ?? 1,
           lineType: data.css?.lineType ?? 'solid',
           text: data.text,
+          fontSize: data.css?.fontSize,
         },
         points: data.points.map(p => ({
           timestamp: dateUtils.toUsDay(p.x.split('@').shift()).valueOf(),
@@ -490,8 +492,8 @@ export const MainChart = (props: MainChartProps) => {
       chartImp.current?.setOverlay(id, params)
       const overlay = chartImp.current?.getChart()?.getOverlays({ id }) ?? []
 
-      if(overlay[0]){
-        overlay[0].onDrawEnd?.({overlay: overlay[0]} as any)
+      if (overlay[0]) {
+        overlay[0].onDrawEnd?.({ overlay: overlay[0] } as any)
       }
     })
 
