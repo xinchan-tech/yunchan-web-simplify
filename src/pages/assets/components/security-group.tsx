@@ -10,7 +10,7 @@ import { stockUtils } from '@/utils/stock'
 import { useEffect, useState, useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 type TableDataType = ReturnType<typeof stockUtils.toStockWithExt>
-const Securitygroup = ({ onUpdate }: { onUpdate?: (data: TableDataType) => void }) => {
+const Securitygroup = ({ onUpdate }: { onUpdate?: (data: TableDataType, row: TableDataType[]) => void }) => {
     const [active, setActive] = useState<string>()
     const [dates, setDates] = useState<string[]>([])
     const [data, { onSort, setList }] = useTableData<TableDataType>([])
@@ -74,7 +74,7 @@ const Securitygroup = ({ onUpdate }: { onUpdate?: (data: TableDataType) => void 
             })
         }
         setList(r)
-        onUpdate?.(r[0])
+        onUpdate?.(r[0], r)
     }, [query.data?.items, setList])
 
     const columns: JknRcTableProps<TableDataType>['columns'] = useMemo(
