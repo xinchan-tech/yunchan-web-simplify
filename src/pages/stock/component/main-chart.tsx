@@ -17,6 +17,7 @@ import { ChartContextMenu } from './chart-context-menu'
 import to from "await-to-js"
 import dayjs from "dayjs"
 import { useQuery } from "@tanstack/react-query"
+import { sysConfig } from "@/utils/config"
 
 interface MainChartProps {
   chartId: string
@@ -50,7 +51,7 @@ export const MainChart = (props: MainChartProps) => {
   const plotting = useQuery({
     queryKey: [getUserPlotting, symbol, chartStore.interval],
     queryFn: () => getUserPlotting({ symbol, kline: chartStore.interval }),
-    enabled: candlesticks.length > 0,
+    enabled: candlesticks.length > 0 && sysConfig.PUBLIC_BASE_BUILD_ENV !== 'PRODUCTION',
     select: data => data.filter(d => d.stock_kline_value === chartStore.interval && d.symbol === symbol),
   })
 
