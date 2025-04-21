@@ -17,7 +17,6 @@ export const HeaderSetting = () => {
   const user = useUser(s => s.user)
   const { toast } = useToast()
   const reset = useUser(s => s.reset)
-  const { t } = useTranslation()
   const removeToken = useToken(s => s.removeToken)
   const navigate = useNavigate()
   const [visible, { setFalse, toggle }] = useBoolean()
@@ -83,16 +82,16 @@ export const HeaderSetting = () => {
     }
   })
 
-  const userCenter = useModal({
-    content: <UserCenter />,
-    className: 'w-[600px]',
-    title: t('user center'),
-    footer: false,
-    closeIcon: true,
-    onOpen: () => {
-      setFalse()
-    }
-  })
+  // const userCenter = useModal({
+  //   content: <UserCenter />,
+  //   className: 'w-[600px]',
+  //   title: t('user center'),
+  //   footer: false,
+  //   closeIcon: true,
+  //   onOpen: () => {
+  //     setFalse()
+  //   }
+  // })
 
   return (
     <>
@@ -115,7 +114,7 @@ export const HeaderSetting = () => {
               <HeaderSettingCell
                 icon={<JknAvatar src={user?.avatar} title={user?.realname} className="size-5" />}
                 title={user?.realname}
-                onClick={() => userCenter.modal.open()}
+                onClick={() => { navigate('/app/user'); setFalse() }}
               />
             ) : null}
             <HeaderSettingCell
@@ -159,7 +158,7 @@ export const HeaderSetting = () => {
       {/* {
         loginForm.context
       } */}
-      {userCenter.context}
+      {/* {userCenter.context} */}
     </>
   )
 }
@@ -177,7 +176,7 @@ const HeaderSettingCell = ({ icon, title, label, color, onClick }: HeaderSetting
       className="flex items-center px-2.5 w-full text-sm h-11 hover:bg-accent box-border cursor-pointer"
       style={{ color }}
       onClick={onClick}
-      onKeyDown={() => {}}
+      onKeyDown={() => { }}
     >
       {typeof icon === 'string' ? <JknIcon.Svg name={icon as IconName} size={20} /> : icon}
       <span className="ml-2.5">{title}</span>
