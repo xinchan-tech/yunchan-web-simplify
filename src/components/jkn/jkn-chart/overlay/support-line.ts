@@ -1,17 +1,10 @@
 import type { OverlayTemplate } from '@/plugins/jkn-kline-chart'
 import type { DrawOverlayParams } from '../types'
-import { drawOverlayParamsToFigureStyle } from "../utils"
+import { drawOverlayParamsToFigureStyle, createOverlayTemplate } from "../utils"
 
-export const SupportLineOverlay: OverlayTemplate<DrawOverlayParams> = {
+export const SupportLineOverlay = createOverlayTemplate({
   name: 'support-line',
   totalStep: 2,
-  needDefaultPointFigure: true,
-  needDefaultXAxisFigure: false,
-  needDefaultYAxisFigure: false,
-  onRightClick: (e) => {
-    e.preventDefault?.()
-    return true
-  },
   createYAxisFigures: ({ coordinates, bounding, overlay }) => {
     if(coordinates.length === 1) {
       const styles = drawOverlayParamsToFigureStyle('line', overlay.extendData)
@@ -77,4 +70,4 @@ export const SupportLineOverlay: OverlayTemplate<DrawOverlayParams> = {
     }
     return []
   }
-}
+});

@@ -18,6 +18,7 @@ import to from "await-to-js"
 import dayjs from "dayjs"
 import { useQuery } from "@tanstack/react-query"
 import { sysConfig } from "@/utils/config"
+import { isArray } from "radash"
 
 interface MainChartProps {
   chartId: string
@@ -67,13 +68,13 @@ export const MainChart = (props: MainChartProps) => {
           JknAlert.toast('未知的绘图类型')
           return true
         }
-        to(saveUserPlotting({
+        saveUserPlotting({
           hash: e.overlay.id,
           symbol: symbol,
           kline: chartStore.interval.toString(),
           cross: params.cross ? 1 : 0,
           plotting_id: pid,
-          text: e.overlay.extendData.text,
+          text: e.overlay.extendData.text ?? '文本',
           slope: 0,
           css: {
             color: params.color,
@@ -85,7 +86,7 @@ export const MainChart = (props: MainChartProps) => {
             x: `${dateUtils.toUsDay(p.timestamp).format('YYYY-MM-DD HH:mm:00')}@0.00`,
             y: p.value!
           }))
-        })).catch(() => {
+        }).catch(() => {
           JknAlert.toast('保存绘图失败')
         })
         return true
@@ -484,6 +485,11 @@ export const MainChart = (props: MainChartProps) => {
 
     const cancelDrawChange = chartEvent.on('drawChange', ({ id, params }) => {
       chartImp.current?.setOverlay(id, params)
+      const overlay = chartImp.current?.getChart()?.getOverlays({ id }) ?? []
+
+      if(overlay[0]){
+        overlay[0].onDrawEnd?.({overlay: overlay[0]} as any)
+      }
     })
 
     const cancelDrawLock = chartEvent.on('drawLock', ({ id, lock }) => {

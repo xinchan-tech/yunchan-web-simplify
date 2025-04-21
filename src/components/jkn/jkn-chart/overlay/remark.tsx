@@ -10,13 +10,15 @@ import { createRoot } from "react-dom/client"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { useMount } from "ahooks"
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden"
+import { createOverlayTemplate } from "../utils"
 
-export const RemarkOverlay: OverlayTemplate<DrawOverlayParams & { text?: string, fontSize: number }> = {
+export const RemarkOverlay = createOverlayTemplate<DrawOverlayParams & { text?: string, fontSize?: number }>({
   name: 'remark',
   totalStep: 3,
-  needDefaultPointFigure: true,
-  needDefaultXAxisFigure: false,
-  needDefaultYAxisFigure: false,
+  onPressedMoveEnd: (e) => {
+    e.overlay.onDrawEnd?.(e)
+    return true
+  },
   onRightClick: (e) => {
     e.preventDefault?.()
     return true
@@ -26,7 +28,7 @@ export const RemarkOverlay: OverlayTemplate<DrawOverlayParams & { text?: string,
     preventDefault?.()
     const { text = '文本', fontSize = 16 } = overlay.extendData ?? ({} as any)
     renderEditModal(text, fontSize).then(r => {
-      if(r){
+      if (r) {
         const { text, fontSize } = r as { text: string, fontSize: number }
         chart.overrideOverlay({
           id: overlay.id,
@@ -47,7 +49,7 @@ export const RemarkOverlay: OverlayTemplate<DrawOverlayParams & { text?: string,
     }
 
     const { text = '文本', fontSize = 16 } = overlay.extendData
-    
+
     return [
       {
         type: 'remark',
@@ -62,7 +64,7 @@ export const RemarkOverlay: OverlayTemplate<DrawOverlayParams & { text?: string,
       }
     ]
   }
-}
+})
 
 const renderEditModal = (text: string, fontSize: number) => {
   return new Promise((resolve) => {
@@ -95,7 +97,7 @@ const renderEditModal = (text: string, fontSize: number) => {
           container.remove()
         }}
         onOk={(text, fontSize) => {
-          resolve({text, fontSize})
+          resolve({ text, fontSize })
           root.unmount()
           container.remove()
         }}

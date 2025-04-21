@@ -1,8 +1,6 @@
-import type { OverlayTemplate } from '@/plugins/jkn-kline-chart'
-import type { DrawOverlayParams } from '../types'
-import { drawOverlayParamsToFigureStyle } from "../utils"
+import { drawOverlayParamsToFigureStyle, createOverlayTemplate } from "../utils"
 
-export const HorizontalLineOverlay: OverlayTemplate<DrawOverlayParams> = {
+export const HorizontalLineOverlay = createOverlayTemplate({
   name: 'hline',
   totalStep: 2,
   needDefaultPointFigure: true,
@@ -37,4 +35,4 @@ export const HorizontalLineOverlay: OverlayTemplate<DrawOverlayParams> = {
     }
     return []
   }
-}
+});

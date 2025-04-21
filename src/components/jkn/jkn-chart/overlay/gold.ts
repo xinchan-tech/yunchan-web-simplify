@@ -3,11 +3,10 @@ import {
   type Coordinate,
   type LineAttrs,
   LineType,
-  type OverlayTemplate,
   type TextAttrs
 } from '@/plugins/jkn-kline-chart'
 import type { DrawOverlayParams } from '../types'
-import { drawOverlayParamsToFigureStyle } from '../utils'
+import { drawOverlayParamsToFigureStyle, createOverlayTemplate } from '../utils'
 
 function getGoldLines(coordinates: Coordinate[], bounding: Bounding): LineAttrs[] {
   const startX = 0
@@ -100,7 +99,7 @@ const getTexts = (lines: LineAttrs[]): TextAttrs[] => {
   return texts
 }
 
-export const GoldOverlay: OverlayTemplate<DrawOverlayParams> = {
+export const GoldOverlay = createOverlayTemplate<DrawOverlayParams>({
   name: 'gold',
   totalStep: 3,
   needDefaultPointFigure: true,
@@ -141,4 +140,4 @@ export const GoldOverlay: OverlayTemplate<DrawOverlayParams> = {
       }
     ]
   }
-}
+})

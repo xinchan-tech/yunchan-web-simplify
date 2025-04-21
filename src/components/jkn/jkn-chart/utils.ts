@@ -3,6 +3,7 @@ import {
   type Coordinate,
   type LineStyle,
   LineType,
+  type OverlayTemplate,
   type RectStyle,
   type TextStyle
 } from '@/plugins/jkn-kline-chart'
@@ -217,4 +218,21 @@ export const drawOverlayParamsToFigureStyle = (type: string, params: DrawOverlay
     default:
       return {} as any
   }
+}
+
+export const createOverlayTemplate = <T extends DrawOverlayParams = DrawOverlayParams>(template: OverlayTemplate<T>) => {
+  return {
+    needDefaultPointFigure: true,
+    needDefaultXAxisFigure: false,
+    needDefaultYAxisFigure: false,
+    onRightClick: (e) => {
+      e.preventDefault?.()
+      return true
+    },
+    onPressedMoveEnd: (e) => {
+      e.overlay.onDrawEnd?.(e)
+      return true
+    },
+    ...template
+  } as OverlayTemplate<T>
 }

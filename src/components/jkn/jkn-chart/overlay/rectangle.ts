@@ -1,18 +1,10 @@
-import type { OverlayTemplate } from '@/plugins/jkn-kline-chart'
 import { PolygonType } from '@/plugins/jkn-kline-chart'
 import type { DrawOverlayParams } from "../types"
-import { drawOverlayParamsToFigureStyle } from "../utils"
+import { createOverlayTemplate, drawOverlayParamsToFigureStyle } from "../utils"
 
-export const RectangleOverlay: OverlayTemplate<DrawOverlayParams> = {
+export const RectangleOverlay = createOverlayTemplate<DrawOverlayParams>({
   name: 'rectangle',
-  totalStep: 3,
-  needDefaultPointFigure: true,
-  needDefaultXAxisFigure: false,
-  needDefaultYAxisFigure: false,
-  onRightClick: (e) => {
-    e.preventDefault?.()
-    return true
-  },
+  totalStep: 2,
   createPointFigures: ({ coordinates, overlay }) => {
     if (coordinates.length === 2) {
       return [
@@ -33,4 +25,4 @@ export const RectangleOverlay: OverlayTemplate<DrawOverlayParams> = {
     }
     return []
   }
-}
+});

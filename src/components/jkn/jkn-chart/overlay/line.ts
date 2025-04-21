@@ -1,8 +1,8 @@
 import type { OverlayTemplate } from '@/plugins/jkn-kline-chart'
-import { drawOverlayParamsToFigureStyle, getLinearYFromCoordinates } from '../utils'
+import { drawOverlayParamsToFigureStyle, getLinearYFromCoordinates, createOverlayTemplate } from '../utils'
 import type { DrawOverlayParams } from '../types'
 
-export const LineOverlay: OverlayTemplate<DrawOverlayParams> = {
+export const LineOverlay = createOverlayTemplate({
   name: 'line',
   totalStep: 3,
   modeSensitivity: 1,
@@ -59,4 +59,4 @@ export const LineOverlay: OverlayTemplate<DrawOverlayParams> = {
     }
     return []
   }
-}
+});

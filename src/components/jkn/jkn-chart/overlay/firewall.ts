@@ -1,20 +1,11 @@
-import type { OverlayFigure, OverlayTemplate } from '@/plugins/jkn-kline-chart'
-import type { DrawOverlayParams } from '../types'
-import { drawOverlayParamsToFigureStyle } from '../utils'
+import { drawOverlayParamsToFigureStyle, createOverlayTemplate } from '../utils'
 
 const colors = ['#1e8bf1', '#00a74e', '#ff2c3f']
 const texts = ['止盈位', '买入位', '止损位']
 
-export const FireWallOverlay: OverlayTemplate<DrawOverlayParams> = {
+export const FireWallOverlay = createOverlayTemplate({
   name: 'firewall',
   totalStep: 4,
-  needDefaultPointFigure: true,
-  needDefaultXAxisFigure: false,
-  needDefaultYAxisFigure: false,
-  onRightClick: (e) => {
-    e.preventDefault?.()
-    return true
-  },
   createYAxisFigures: ({ coordinates, bounding, overlay }) => {
     const lineStyles = drawOverlayParamsToFigureStyle('line', overlay.extendData)
     return [
@@ -96,4 +87,4 @@ export const FireWallOverlay: OverlayTemplate<DrawOverlayParams> = {
     }
     return []
   }
-}
+});
