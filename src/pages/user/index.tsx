@@ -8,7 +8,7 @@ const UserPage = () => {
 
   const title = useMemo(() => {
     if (pathname === '/app/user') return ['个人中心']
-    const subPath = pathname.split('/')[2]
+    const subPath = pathname.split('/').pop()
 
     const route = routes
       .find(r => r.path === '/app')
