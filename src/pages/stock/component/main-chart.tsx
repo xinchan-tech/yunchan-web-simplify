@@ -142,10 +142,10 @@ export const MainChart = (props: MainChartProps) => {
     })
 
     return () => {
-      plotting.refetch()
+      plotting.isLoading && plotting.refetch()
     }
 
-  }, [plotting.data, createOverlay, plotting.refetch])
+  }, [plotting.data, createOverlay, plotting.refetch, plotting.isLoading])
 
   useStockBarSubscribe([`${symbol}@${stockUtils.intervalToPeriod(chartStore.interval)}`], data => {
     const mode = useChartManage.getState().chartStores[props.chartId].mode
