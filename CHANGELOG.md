@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.4.1](https://github.com/xinchan-gx/yunchan-web/compare/2.4.0...2.4.1) (2025-04-21)
+
+### ✨ Features | 新功能
+
+* 修改用户页面路径解析逻辑以获取子路径 ([7a0c387](https://github.com/xinchan-gx/yunchan-web/commit/7a0c38714d85b9523c7f2e90d6320507effb3e3d))
+
 ## [2.4.0](https://github.com/xinchan-gx/yunchan-web/compare/2.3.0...2.4.0) (2025-04-20)
 
 ### ✨ Features | 新功能
