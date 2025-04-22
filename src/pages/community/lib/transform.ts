@@ -11,7 +11,7 @@ import WKSDK, {
   Setting,
   Subscriber
 } from 'wukongimjssdk'
-import { ChatCmdMessage, ChatMessageType, ChatTextMessage, type ChatChannel, type ChatSession } from './types'
+import { ChatCmdMessage, ChatCmdType, ChatMessageType, ChatTextMessage, type ChatChannel, type ChatSession } from './types'
 
 export const MessageTransform = {
   toMessage: (msg: any) => {
@@ -336,7 +336,8 @@ export const ConversationTransform = {
       if (v.lastMessage.contentType === ChatMessageType.Text) {
         session.message = {
           ...message,
-          me: v.lastMessage.content.mentionUser,
+          type: ChatMessageType.Text,
+          mentionUser: v.lastMessage.content.mentionUser,
         } as ChatTextMessage
       }
     }

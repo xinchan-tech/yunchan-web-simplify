@@ -23,7 +23,7 @@ export const CacheStoreName = {
 export class ChatCache {
   public db: Nullable<IDBPDatabase> = null
   public static DB_NAME = 'community-store'
-  public static DB_VERSION = 1
+  public static DB_VERSION = 5
 
   constructor() {
     openDB(ChatCache.DB_NAME, ChatCache.DB_VERSION, {

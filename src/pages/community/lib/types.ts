@@ -116,6 +116,6 @@ export type ChatCmdMessage = MessageBase & {
 export interface ChatSession {
   id: string
   channel: ChatChannel
-  message?: ChatCmdMessage
+  message?: ChatMessage
   unRead: number
 }

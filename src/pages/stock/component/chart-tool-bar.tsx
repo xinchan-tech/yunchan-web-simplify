@@ -95,12 +95,8 @@ export const ChartToolBar = () => {
         <Separator orientation="vertical" className="h-2 w-[1px] bg-accent mx-1" />
         <AlarmPicker />
         <Separator orientation="vertical" className="h-2 w-[1px] bg-accent mx-1" />
-        {sysConfig.PUBLIC_BASE_BUILD_ENV !== 'PRODUCTION' ? (
-          <>
-            <DrawTool />
-            <Separator orientation="vertical" className="h-2 w-[1px] bg-accent mx-1" />
-          </>
-        ) : null}
+        <DrawTool />
+        <Separator orientation="vertical" className="h-2 w-[1px] bg-accent mx-1" />
         <WrapperLabel label="股票回测">
           <div>
             <BackTest />
@@ -146,65 +142,65 @@ export const CoilingBar = () => {
     <>
       {system
         ? coilingList?.map(c => {
-            const render = () => {
-              switch (c.id) {
-                case CoilingIndicatorId.PEN:
-                  return (
-                    <span
-                      className="cursor-pointer"
+          const render = () => {
+            switch (c.id) {
+              case CoilingIndicatorId.PEN:
+                return (
+                  <span
+                    className="cursor-pointer"
+                    style={{ color: coiling.includes(c.id) ? '#DBDBDB' : '#575757' }}
+                    onClick={() => _onClickCoiling(c.id)}
+                    onKeyDown={() => { }}
+                  >
+                    <JknIcon.Svg
+                      name="mins"
+                      size={12}
+                      className="mr-1"
+                      style={{ color: coiling.includes(c.id) ? '#E7C88D' : '#575757' }}
+                    />
+                    <span>{c.name}</span>
+                  </span>
+                )
+              case CoilingIndicatorId.ONE_TYPE:
+              case CoilingIndicatorId.TWO_TYPE:
+              case CoilingIndicatorId.THREE_TYPE:
+                return (
+                  <span
+                    className="cursor-pointer flex items-center"
+                    onClick={() => _onClickCoiling(c.id as any)}
+                    onKeyDown={() => { }}
+                  >
+                    <JknIcon.Checkbox
+                      checked={coiling.includes(c.id)}
+                      uncheckedIcon="chart-coiling-bs"
+                      checkedIcon="chart-coiling-bs-active"
+                      className="h-4 w-4 rounded-none mr-1"
+                    />
+                    <span style={{ color: coiling.includes(c.id) ? '#DBDBDB' : '#575757' }}>{c.name}</span>
+                  </span>
+                )
+              case CoilingIndicatorId.PIVOT:
+                return (
+                  <span
+                    className="cursor-pointer flex items-center"
+                    onClick={() => _onClickCoiling(c.id as any)}
+                    style={{ color: coiling.includes(c.id) ? '#DBDBDB' : '#575757' }}
+                    onKeyDown={() => { }}
+                  >
+                    <JknIcon.Svg
+                      name="poivts"
+                      size={16}
                       style={{ color: coiling.includes(c.id) ? '#DBDBDB' : '#575757' }}
-                      onClick={() => _onClickCoiling(c.id)}
-                      onKeyDown={() => {}}
-                    >
-                      <JknIcon.Svg
-                        name="mins"
-                        size={12}
-                        className="mr-1"
-                        style={{ color: coiling.includes(c.id) ? '#E7C88D' : '#575757' }}
-                      />
-                      <span>{c.name}</span>
-                    </span>
-                  )
-                case CoilingIndicatorId.ONE_TYPE:
-                case CoilingIndicatorId.TWO_TYPE:
-                case CoilingIndicatorId.THREE_TYPE:
-                  return (
-                    <span
-                      className="cursor-pointer flex items-center"
-                      onClick={() => _onClickCoiling(c.id as any)}
-                      onKeyDown={() => {}}
-                    >
-                      <JknIcon.Checkbox
-                        checked={coiling.includes(c.id)}
-                        uncheckedIcon="chart-coiling-bs"
-                        checkedIcon="chart-coiling-bs-active"
-                        className="h-4 w-4 rounded-none mr-1"
-                      />
-                      <span style={{ color: coiling.includes(c.id) ? '#DBDBDB' : '#575757' }}>{c.name}</span>
-                    </span>
-                  )
-                case CoilingIndicatorId.PIVOT:
-                  return (
-                    <span
-                      className="cursor-pointer flex items-center"
-                      onClick={() => _onClickCoiling(c.id as any)}
-                      style={{ color: coiling.includes(c.id) ? '#DBDBDB' : '#575757' }}
-                      onKeyDown={() => {}}
-                    >
-                      <JknIcon.Svg
-                        name="poivts"
-                        size={16}
-                        style={{ color: coiling.includes(c.id) ? '#DBDBDB' : '#575757' }}
-                      />
-                      <span>{c.name}</span>
-                    </span>
-                  )
-                default:
-                  return null
-              }
+                    />
+                    <span>{c.name}</span>
+                  </span>
+                )
+              default:
+                return null
             }
-            return <Fragment key={c.id}>{render()}</Fragment>
-          })
+          }
+          return <Fragment key={c.id}>{render()}</Fragment>
+        })
         : null}
     </>
   )
@@ -378,7 +374,7 @@ const IndicatorPicker = memo(() => {
         <div
           className="cursor-pointer hover:bg-accent h-full rounded px-3 flex items-center"
           onClick={() => modal.modal.open()}
-          onKeyDown={() => {}}
+          onKeyDown={() => { }}
         >
           <JknIcon.Svg name="chart-indicator" size={20} />
           &nbsp;
@@ -541,7 +537,7 @@ export const IndicatorModal = (props: { onClickParams: () => void }) => {
                 key={i.id}
                 className="flex items-center pl-4 space-x-2 py-3 hover:bg-accent cursor-pointer data-[checked=true]:bg-accent"
                 onClick={() => setCategory(i.id)}
-                onKeyDown={() => {}}
+                onKeyDown={() => { }}
               >
                 <JknIcon.Svg name={i.icon as any} size={16} />
                 <span>{i.name}</span>
@@ -567,7 +563,7 @@ export const IndicatorModal = (props: { onClickParams: () => void }) => {
                 className="flex items-center pl-2.5 pr-3.5 space-x-2 hover:bg-accent cursor-pointer py-1.5 data-[checked=true]:bg-[#2962FF4D] text-transparent hover:text-[#B8B8B8]"
                 data-checked={checkedIndicator.has(i.id)}
                 onClick={() => onCheck(i)}
-                onKeyDown={() => {}}
+                onKeyDown={() => { }}
               >
                 {i.collect === 1 ? (
                   <JknIcon.Svg
@@ -662,7 +658,7 @@ const StockPkPicker = () => {
         <div
           className="cursor-pointer hover:bg-accent  h-9 rounded px-3 flex items-center"
           onClick={() => modal.modal.open()}
-          onKeyDown={() => {}}
+          onKeyDown={() => { }}
         >
           <JknIcon.Svg name="chart-pk" size={20} />
         </div>
@@ -740,7 +736,7 @@ const StockPkModal = () => {
                 <div
                   className="ml-auto px-1 py-1 rounded cursor-pointer hover:bg-accent flex items-center justify-center"
                   onClick={() => chartManage.removeStockOverlay(p.symbol)}
-                  onKeyDown={() => {}}
+                  onKeyDown={() => { }}
                 >
                   <JknIcon.Svg name="check" size={10} />
                 </div>
@@ -752,7 +748,7 @@ const StockPkModal = () => {
             <div
               className="ml-auto cursor-pointer text-tertiary flex items-center"
               onClick={() => setSearchHistory([])}
-              onKeyDown={() => {}}
+              onKeyDown={() => { }}
             >
               <JknIcon.Svg name="delete" size={14} />
               &nbsp;
@@ -765,7 +761,7 @@ const StockPkModal = () => {
                 key={p.symbol}
                 className="flex items-center px-4 py-2 hover:bg-accent cursor-pointer"
                 onClick={() => onClick(p.symbol, p.name)}
-                onKeyDown={() => {}}
+                onKeyDown={() => { }}
               >
                 <JknIcon.Stock symbol={p.symbol} />
                 <div>
@@ -806,7 +802,7 @@ const StockVirtualList = (props: { list: any[]; onClick: (symbol: string, name: 
             className="py-2 px-4 flex items-center hover:bg-accent cursor-pointer"
             key={ele.index}
             onClick={() => props.onClick(ele.data[1], ele.data[3])}
-            onKeyDown={() => {}}
+            onKeyDown={() => { }}
           >
             <div className="flex-shrink-0">
               {ele.data[0] ? (
@@ -845,7 +841,7 @@ const OverlayMarkPicker = () => {
         <div
           className="cursor-pointer hover:bg-accent  h-9 rounded px-3 flex items-center"
           onClick={() => modal.modal.open()}
-          onKeyDown={() => {}}
+          onKeyDown={() => { }}
         >
           <JknIcon.Svg name="chart-fav" size={20} />
         </div>
@@ -936,7 +932,7 @@ export const OverlayMarkModal = () => {
               className="flex items-center pl-4 space-x-2 py-3 hover:bg-accent cursor-pointer data-[checked=true]:bg-accent"
               data-checked={category === t.key}
               onClick={() => setCategory(t.key)}
-              onKeyDown={() => {}}
+              onKeyDown={() => { }}
             >
               <span>{t.title}</span>
             </div>
@@ -949,7 +945,7 @@ export const OverlayMarkModal = () => {
               className="flex items-center w-full box-border justify-between px-4 hover:bg-accent cursor-pointer py-2 overlay-mark-item"
               data-checked={i.key === overlayMark?.mark}
               onClick={() => onCheck(i)}
-              onKeyDown={() => {}}
+              onKeyDown={() => { }}
             >
               <span>{i.name}</span>
               <span
@@ -1017,7 +1013,7 @@ const BackTest = () => {
         mode === 'backTest' && 'text-primary'
       )}
       onClick={onChangeMode}
-      onKeyDown={() => {}}
+      onKeyDown={() => { }}
     >
       <JknIcon.Svg name="chart-back-test" size={20} />
       &nbsp;
@@ -1035,11 +1031,11 @@ const DrawTool = () => {
       )}
       data-active={showDrawTool}
       onClick={() => chartManage.showDrawTool(!showDrawTool)}
-      onKeyDown={() => {}}
+      onKeyDown={() => { }}
     >
       <JknIcon.Svg name="draw-tool" size={20} />
       &nbsp;
-      <span>画线工具</span>
+      <span>画线</span>
     </div>
   )
 }

@@ -51,7 +51,7 @@ export const MainChart = (props: MainChartProps) => {
   const plotting = useQuery({
     queryKey: [getUserPlotting, symbol, chartStore.interval],
     queryFn: () => getUserPlotting({ symbol, kline: chartStore.interval }),
-    enabled: candlesticks.length > 0 && sysConfig.PUBLIC_BASE_BUILD_ENV !== 'PRODUCTION',
+    enabled: candlesticks.length > 0,
     select: data => data.filter(d => (d.stock_kline_value === chartStore.interval || d.cross === 1) && d.symbol === symbol),
   })
 
