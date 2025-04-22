@@ -46,7 +46,6 @@ export const useModal = ({
   const [modalVisible, { toggle: toggleModalVisible }] = useBoolean(false)
   const [innerTitle, setInnerTitle] = usePropValue(title)
   const [visible, { setFalse, setTrue }] = useBoolean(false)
-  const platform = useConfig(s => s.platform)
   const _onOpenChange = (open?: boolean) => {
     if (!open) {
       toggleModalVisible()

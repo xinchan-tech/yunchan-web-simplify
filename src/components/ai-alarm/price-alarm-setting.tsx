@@ -78,7 +78,8 @@ export const PriceAlarmSetting = (props: PriceAlarmSetting) => {
     const rise: number[] = []
     const fall: number[] = []
 
-    form.getValues('rise')?.map(v => {
+    form.getValues('rise')?.forEach(v => {
+      if(!v) return
       const price = Decimal.create(v)
       if (price.gt(stock.close)) {
         rise.push(price.toNumber())
@@ -114,6 +115,8 @@ export const PriceAlarmSetting = (props: PriceAlarmSetting) => {
     queryClient.refetchQueries({
       queryKey: [getAlarmConditionsList.cacheKey]
     })
+
+    form.setValue('rise', [])
   }
 
   return (
@@ -224,6 +227,13 @@ const PriceSetting = forwardRef((props: PriceSettingProps, _) => {
   })
 
   useEffect(() => {
+    if(!props.value?.length) {
+      setList([{ checked: false, value: '', id: nanoid(8) }])
+      return
+    }
+  }, [props.value])
+
+  useEffect(() => {
     if (query.data) {
       const stock = stockUtils.toStock(query.data.stock, {
         extend: query.data.extend,
@@ -234,13 +244,9 @@ const PriceSetting = forwardRef((props: PriceSettingProps, _) => {
         .mul(1.05)
         .toFixed(2)
 
-      const down = Decimal.create(stock.close ?? 0)
-        .mul(0.95)
-        .toFixed(2)
 
       setList([
-        { checked: false, value: up, id: nanoid(8) },
-        { checked: false, value: down, id: nanoid(8) }
+        { checked: false, value: up, id: nanoid(8) }
       ])
     }
   }, [query.data])
@@ -266,7 +272,7 @@ const PriceSetting = forwardRef((props: PriceSettingProps, _) => {
   }
 
   useEffect(() => {
-    props.onChange?.(list.filter(item => item.value).map(item => item.value))
+    props.onChange?.(list.map(item => item.value))
   }, [list, props.onChange])
 
   const addListItem = () => {

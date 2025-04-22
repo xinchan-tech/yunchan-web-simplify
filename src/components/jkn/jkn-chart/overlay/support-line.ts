@@ -1,15 +1,12 @@
 import type { OverlayTemplate } from '@/plugins/jkn-kline-chart'
 import type { DrawOverlayParams } from '../types'
-import { drawOverlayParamsToFigureStyle } from "../utils"
+import { drawOverlayParamsToFigureStyle, createOverlayTemplate } from '../utils'
 
-export const SupportLineOverlay: OverlayTemplate<DrawOverlayParams> = {
+export const SupportLineOverlay = createOverlayTemplate({
   name: 'support-line',
   totalStep: 2,
-  needDefaultPointFigure: true,
-  needDefaultXAxisFigure: false,
-  needDefaultYAxisFigure: false,
   createYAxisFigures: ({ coordinates, bounding, overlay }) => {
-    if(coordinates.length === 1) {
+    if (coordinates.length === 1) {
       const styles = drawOverlayParamsToFigureStyle('line', overlay.extendData)
       const textStyles = drawOverlayParamsToFigureStyle('text', overlay.extendData)
       return [
@@ -48,9 +45,8 @@ export const SupportLineOverlay: OverlayTemplate<DrawOverlayParams> = {
     }
     return []
   },
-  createPointFigures: ({ coordinates, bounding, overlay }) => {
+  createPointFigures: ({ coordinates, bounding, overlay, yAxis }) => {
     const styles = drawOverlayParamsToFigureStyle('line', overlay.extendData)
- 
     if (coordinates.length === 1) {
       return [
         {
@@ -68,9 +64,24 @@ export const SupportLineOverlay: OverlayTemplate<DrawOverlayParams> = {
             ]
           },
           styles
+        },
+        {
+          type: 'text',
+          attrs: {
+            x: bounding.width,
+            y: coordinates[0].y,
+            text: yAxis?.convertFromPixel(coordinates[0].y).toFixed(3) ?? '',
+            align: 'right',
+            baseline: 'bottom'
+          },
+          styles: {
+            color: styles.color,
+            backgroundColor: 'transparent',
+            size: 16
+          }
         }
       ]
     }
     return []
   }
-}
+})

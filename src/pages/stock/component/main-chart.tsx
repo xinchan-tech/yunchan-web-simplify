@@ -7,17 +7,17 @@ import { type Stock, stockSubscribe, stockUtils } from '@/utils/stock'
 import { colorUtil } from '@/utils/style'
 import { useMount, useUnmount } from 'ahooks'
 import qs from 'qs'
-import { type ComponentRef, useEffect, useRef, useState } from 'react'
-import { chartEvent } from '../lib/event'
+import { type ComponentRef, useCallback, useEffect, useRef, useState } from 'react'
+import { chartEvent, type ChartEvents } from '../lib/event'
 import { useCandlesticks } from '../lib/request'
 import { ChartType, MainYAxis, chartManage, useChartManage } from '../lib/store'
 import { renderUtils } from '../lib/utils'
 import { BackTestBar } from './back-test-bar'
 import { ChartContextMenu } from './chart-context-menu'
-import to from "await-to-js"
 import dayjs from "dayjs"
 import { useQuery } from "@tanstack/react-query"
 import { sysConfig } from "@/utils/config"
+import { isArray } from "radash"
 
 interface MainChartProps {
   chartId: string
@@ -51,24 +51,90 @@ export const MainChart = (props: MainChartProps) => {
   const plotting = useQuery({
     queryKey: [getUserPlotting, symbol, chartStore.interval],
     queryFn: () => getUserPlotting({ symbol, kline: chartStore.interval }),
-    enabled: candlesticks.length > 0 && sysConfig.PUBLIC_BASE_BUILD_ENV !== 'PRODUCTION',
-    select: data => data.filter(d => d.stock_kline_value === chartStore.interval && d.symbol === symbol),
+    enabled: candlesticks.length > 0,
+    select: data => data.filter(d => (d.stock_kline_value === chartStore.interval || d.cross === 1) && d.symbol === symbol),
   })
+
+  const createOverlay = useCallback(({ type, params, points, id }: ChartEvents['drawStart']) => {
+    chartImp.current?.createOverlay(type, {
+      onEnd: e => {
+        chartEvent.get().emit('drawEnd', {
+          type,
+          e
+        })
+        const pid = renderUtils.getOverlayByType(type)
+        if (!pid) {
+          JknAlert.toast('未知的绘图类型')
+          return true
+        }
+        saveUserPlotting({
+          hash: e.overlay.id,
+          symbol: symbol,
+          kline: chartStore.interval.toString(),
+          cross: e.overlay.extendData.cross ? 1 : 0,
+          plotting_id: pid,
+          text: e.overlay.extendData.text ?? '文本',
+          slope: 0,
+          css: {
+            color: e.overlay.extendData.color,
+            width: e.overlay.extendData.lineWidth,
+            lineType: e.overlay.extendData.lineType,
+            fontSize: e.overlay.extendData.fontSize,
+          },
+          create_time: dayjs().valueOf().toString(),
+          points: e.overlay.points.map(p => ({
+            x: `${dateUtils.toUsDay(p.timestamp).format('YYYY-MM-DD HH:mm:00')}@0.00`,
+            y: p.value!
+          }))
+        }).catch(() => {
+          JknAlert.toast('保存绘图失败')
+        })
+        return true
+      },
+      onStart: (type, e) => {
+        chartEvent.get().emit('drawSelect', {
+          type,
+          e
+        })
+        return true
+      },
+      onSelect: (type, e) => {
+        chartEvent.get().emit('drawSelect', {
+          type,
+          e
+        })
+        return true
+      },
+      onDeSelect: (type, e) => {
+        chartEvent.get().emit('drawDeSelect', {
+          type,
+          e
+        })
+        return true
+      },
+      params,
+      points: points ?? [],
+      id
+    })
+  }, [chartStore.interval, symbol])
+
 
   useEffect(() => {
     chartImp.current?.removeOverlay()
 
     plotting.data?.forEach(data => {
       const type = renderUtils.getOverlayById(data.plotting_id)
-      if(!type) return
-      chartEvent.get().emit('drawStart', {
+      if (!type) return
+      createOverlay({
         type,
+        id: data.hash,
         params: {
           cross: data.cross === 1,
           color: data.css?.color ?? '#ffffff',
           lineWidth: data.css?.width ?? 1,
           lineType: data.css?.lineType ?? 'solid',
           text: data.text,
+          fontSize: data.css?.fontSize,
         },
         points: data.points.map(p => ({
           timestamp: dateUtils.toUsDay(p.x.split('@').shift()).valueOf(),
@@ -76,8 +142,12 @@ export const MainChart = (props: MainChartProps) => {
         }))
       })
     })
-    
-  }, [plotting.data])
+
+    return () => {
+      plotting.isLoading && plotting.refetch()
+    }
+
+  }, [plotting.data, createOverlay, plotting.refetch, plotting.isLoading])
 
   useStockBarSubscribe([`${symbol}@${stockUtils.intervalToPeriod(chartStore.interval)}`], data => {
     const mode = useChartManage.getState().chartStores[props.chartId].mode
@@ -414,69 +484,17 @@ export const MainChart = (props: MainChartProps) => {
       // chartImp.current?.setRightAxis(type.right === MainYAxis.Percentage ? 'percentage' : 'normal')
     })
 
-    const cancelDrawStart = chartEvent.on('drawStart', ({ type, params, points }) => {
-      chartImp.current?.createOverlay(type, {
-        onEnd: e => {
-          chartEvent.get().emit('drawEnd', {
-            type,
-            e
-          })
-          const pid = renderUtils.getOverlayByType(type)
-          if (!pid) {
-            JknAlert.toast('未知的绘图类型')
-            return true
-          }
-          to(saveUserPlotting({
-            hash: e.overlay.id,
-            symbol: symbol,
-            kline: chartStore.interval.toString(),
-            cross: params.cross ? 1 : 0,
-            plotting_id: pid,
-            text: '',
-            slope: 0,
-            css: {
-              color: params.color,
-              width: params.lineWidth,
-              lineType: params.lineType
-            },
-            create_time: dayjs().valueOf().toString(),
-            points: e.overlay.points.map(p => ({
-              x: `${dateUtils.toUsDay(p.timestamp).format('YYYY-MM-DD HH:mm:00')}@0.00`,
-              y: p.value!
-            }))
-          })).catch(() => {
-            JknAlert.toast('保存绘图失败')
-          })
-          return true
-        },
-        onStart: (type, e) => {
-          chartEvent.get().emit('drawSelect', {
-            type,
-            e
-          })
-          return true
-        },
-        onSelect: (type, e) => {
-          chartEvent.get().emit('drawSelect', {
-            type,
-            e
-          })
-          return true
-        },
-        onDeSelect: (type, e) => {
-          chartEvent.get().emit('drawDeSelect', {
-            type,
-            e
-          })
-          return true
-        },
-        params,
-        points: points ?? []
-      })
+    const cancelDrawStart = chartEvent.on('drawStart', ({ type, params, points, id }) => {
+      createOverlay({ type, params, points, id })
     })
 
     const cancelDrawChange = chartEvent.on('drawChange', ({ id, params }) => {
       chartImp.current?.setOverlay(id, params)
+      const overlay = chartImp.current?.getChart()?.getOverlays({ id }) ?? []
+
+      if (overlay[0]) {
+        overlay[0].onDrawEnd?.({ overlay: overlay[0] } as any)
+      }
     })
 
     const cancelDrawLock = chartEvent.on('drawLock', ({ id, lock }) => {
@@ -491,9 +509,9 @@ export const MainChart = (props: MainChartProps) => {
     const cancelDrawDelete = chartEvent.on('drawDelete', ({ id }) => {
       chartImp.current?.removeOverlay(id)
       if (id) {
-        deleteUserPlotting([id])
+        deleteUserPlotting(isArray(id) ? id : [id]).then(() => plotting.refetch())
       } else {
-        deleteUserPlottingByInterval(symbol, chartStore.interval)
+        deleteUserPlottingByInterval(symbol, chartStore.interval).then(() => plotting.refetch())
       }
     })
 
@@ -522,18 +540,7 @@ export const MainChart = (props: MainChartProps) => {
       cancelDrawCancel()
       cancelDrawHide()
     }
-  }, [activeChartId, props.chartId, chartStore.interval, symbol, startAt])
-
-  // useUpdateEffect(() => {
-  //   chartImp.current?.setChartType(chartStore.type === ChartType.Candle ? 'candle' : 'area')
-  // }, [chartStore.type])
-
-  // useUpdateEffect(() => {
-  //   if (chartStore.mode === 'normal') {
-  //     refreshCandlesticks()
-  //     chartImp.current?.removeBackTestIndicator()
-  //   }
-  // }, [chartStore.mode])
+  }, [activeChartId, props.chartId, chartStore.interval, symbol, startAt, createOverlay, plotting.refetch])
 
   const onAddBackTestRecord = (record: any) => {
     chartImp.current?.createBackTestIndicator([record])

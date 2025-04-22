@@ -1,7 +1,7 @@
 import { getConfig, getStockCollectCates } from '@/api'
 import { useToast } from '@/hooks'
 import { appEvent } from '@/utils/event'
-import { wsManager, WsV2 } from '@/utils/ws'
+import { wsManager } from '@/utils/ws'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useMount, useUpdateEffect } from 'ahooks'
 import { uid } from 'radash'

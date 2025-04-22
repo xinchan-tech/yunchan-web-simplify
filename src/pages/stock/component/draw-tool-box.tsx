@@ -1,4 +1,4 @@
-import { type ChartOverlayType, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, JknAlert, JknColorPicker, JknColorPickerPopover, JknIcon, JknRcTable, type JknRcTableProps, useModal } from '@/components'
+import { Button, type ChartOverlayType, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, JknAlert, JknColorPicker, JknColorPickerPopover, JknIcon, JknRcTable, type JknRcTableProps, Popover, PopoverContent, PopoverTrigger, useModal } from '@/components'
 import { DndContext, type DragEndEvent, useDraggable } from '@dnd-kit/core'
 import { CSS } from '@dnd-kit/utilities'
 import { createContext, Fragment, type PropsWithChildren, useContext, useEffect, useMemo, useState } from 'react'
@@ -56,10 +56,10 @@ const defaultBar: {
       icon: 'time',
       label: '时空尺'
     },
-    // {
-    //   icon: 'remark',
-    //   label: '注解'
-    // },
+    {
+      icon: 'remark',
+      label: '注解'
+    },
     {
       icon: 'firewall',
       label: '防火墙'
@@ -133,15 +133,15 @@ export const DrawToolBox = () => {
     }
   }
 
-  useEffect(() => {
-    return chartEvent.on('drawEnd', () => {
-      setDrawSelect(undefined)
-      setSetting(s => ({
-        ...s,
-        uid: ''
-      }))
-    })
-  }, [setSetting])
+  // useEffect(() => {
+  //   return chartEvent.on('drawEnd', () => {
+  //     setDrawSelect(undefined)
+  //     setSetting(s => ({
+  //       ...s,
+  //       uid: ''
+  //     }))
+  //   })
+  // }, [setSetting])
   useEffect(() => {
     return chartEvent.on('drawStart', e => {
       setDrawSelect(e.type)
@@ -464,20 +464,17 @@ const DrawToolAction = () => {
       <div data-checked={!visible} className="hover:text-foreground hover:cursor-pointer data-[checked=true]:text-primary" onClick={() => onSetVisible()} onKeyDown={() => void 0}>
         <JknIcon.Svg name="invisible" size={20} className="p-1" hoverable label="显示" />
       </div>
-      {/* <div className="hover:text-foreground hover:cursor-pointer">
-        <JknIcon.Svg name="draw-lock" size={20} className="p-1" hoverable />
-      </div> */}
       <div data-checked={cross} className="hover:text-foreground hover:cursor-pointer data-[checked=true]:text-primary" onClick={() => onSetCross()} onKeyDown={() => void 0}>
-        <JknIcon.Svg name="draw-link" size={20} className="p-1" hoverable />
+        <JknIcon.Svg name="draw-link" size={20} className="p-1" hoverable label="跨周期绘制" />
       </div>
       <div className="hover:text-foreground hover:cursor-pointer" onClick={() => onDelete()} onKeyDown={() => void 0}>
-        <JknIcon.Svg name="draw-delete" size={20} className="p-1" hoverable />
+        <JknIcon.Svg name="draw-delete" size={20} className="p-1" hoverable label="清除所有" />
       </div>
       <div data-checked={continuous} className="hover:text-foreground hover:cursor-pointer data-[checked=true]:text-primary" onClick={() => onSetContinuous()} onKeyDown={() => void 0}>
-        <JknIcon.Svg name="draw-continuous" size={20} className="p-1" hoverable />
+        <JknIcon.Svg name="draw-continuous" size={20} className="p-1" hoverable label="连续绘制" />
       </div>
       <div className="hover:text-foreground hover:cursor-pointer data-[checked=true]:text-primary" onClick={() => statistics.modal.open()} onKeyDown={() => void 0}>
-        <JknIcon.Svg name="draw-statistics" size={20} className="p-1" hoverable />
+        <JknIcon.Svg name="draw-statistics" size={20} className="p-1" hoverable label="绘制统计" />
       </div>
       {
         statistics.context
@@ -618,6 +615,24 @@ const DrawStatisticsTable = () => {
     })
   }
 
+  const deleteAll = () => {
+    JknAlert.confirm({
+      content: '确定删除所有画线？',
+      onAction: async (ac) => {
+        if (ac === 'confirm') {
+          chartEvent.get().emit('drawDelete', {
+            id: checked
+          })
+          queryClient.setQueryData([getUserPlotting], (old: any) => {
+            return old.filter((item: any) => !checked.includes(item.hash))
+          })
+
+          setCheckedAll([])
+        }
+      }
+    })
+  }
+
   const { checked, toggle, setCheckedAll } = useCheckboxGroup([])
 
   const columns: JknRcTableProps<ArrayItem<typeof draws.data>>['columns'] = [
@@ -638,13 +653,13 @@ const DrawStatisticsTable = () => {
       title: '股票周期',
       dataIndex: 'stock_kline_id',
       align: 'center',
-      render: (_, record) => <span>{stockUtils.intervalToStr(+record.stock_kline_id)}</span>
+      render: (_, record) => <span>{stockUtils.intervalToStr(+record.stock_kline_value)}</span>
     },
     {
       title: '类型',
-      dataIndex: 'stock_kline_value',
+      dataIndex: 'plotting',
       align: 'center',
-      render: (_, record) => <span>{defaultBar.find(b => b.icon === renderUtils.getOverlayById(record.stock_kline_id))?.label}</span>
+      render: (_, record) => <span>{record.plotting}</span>
     },
     {
       title: '锚点日期',
@@ -668,12 +683,23 @@ const DrawStatisticsTable = () => {
       )
     },
     {
-      title: <JknIcon.Checkbox checkedIcon="checkbox_mult_sel" uncheckedIcon="checkbox_mult_nor" checked={checked.includes('all')} onChange={() => setCheckedAll(checked.includes('all') ? [] : ['all'])} />,
+      title: (
+        <Popover open={checked.length > 0} >
+          <PopoverTrigger asChild>
+            <div>
+              <JknIcon.Checkbox className="rounded-none" checkedIcon="checkbox_mult_sel" uncheckedIcon="checkbox_mult_nor" checked={checked.length > 0} onClick={() => setCheckedAll(!checked.length ? (draws.data?.map(v => v.hash) ?? []) : [])} />
+            </div>
+          </PopoverTrigger>
+          <PopoverContent className="text-center p-2 w-fit">
+            <Button variant="destructive" className="w-24" onClick={deleteAll}>删除</Button>
+          </PopoverContent>
+        </Popover>
+      ),
       dataIndex: 'checkbox',
       align: 'center',
       width: 60,
       render: (_, record) => (
-        <JknIcon.Checkbox checkedIcon="checkbox_mult_sel" uncheckedIcon="checkbox_mult_nor" checked={checked.includes(record.hash)} onChange={() => toggle(record.hash)} />
+        <JknIcon.Checkbox className="rounded-none" checkedIcon="checkbox_mult_sel" uncheckedIcon="checkbox_mult_nor" checked={checked.includes(record.hash)} onClick={() => toggle(record.hash)} />
       )
     }
   ]

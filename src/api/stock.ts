@@ -2030,6 +2030,7 @@ type SaveUserPlottingParams = {
     width: number
     color: string
     lineType: string
+    fontSize?: number
   }
   cross: 0 | 1
   slope: number
@@ -2046,7 +2047,7 @@ export const saveUserPlotting = (params: SaveUserPlottingParams) => {
   return request.post('/stock-svc/plottings', params).then(r => r.data)
 }
 
-type GetUserPlottingUser = Omit<SaveUserPlottingParams, 'kline'> & { stock_kline_value: number, stock_kline_id: number }
+type GetUserPlottingUser = Omit<SaveUserPlottingParams, 'kline'> & { stock_kline_value: number, stock_kline_id: number, plotting: string }
 
 export const getUserPlotting = (params?: { symbol: string; kline: number }) => {
   return request.get<GetUserPlottingUser[]>('/stock-svc/plottings', { params }).then(r => r.data)

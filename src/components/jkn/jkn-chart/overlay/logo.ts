@@ -1,11 +1,15 @@
-import type { OverlayTemplate } from '@/plugins/jkn-kline-chart'
+import { createOverlayTemplate } from "../utils";
 
-export const LogoOverlay: OverlayTemplate = {
-  name: 'logoOverlay',
+export const LogoOverlay = createOverlayTemplate({
+  name: 'logo',
   totalStep: 1,
-  lock: true,
+  needDefaultPointFigure: false,
   needDefaultXAxisFigure: false,
   needDefaultYAxisFigure: false,
+  onRightClick: (e) => {
+    e.preventDefault?.()
+    return true
+  },
   createPointFigures: ({ bounding }) => {
     return {
       type: 'logo',
@@ -17,4 +21,4 @@ export const LogoOverlay: OverlayTemplate = {
       }
     }
   }
-}
+});

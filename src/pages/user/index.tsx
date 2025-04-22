@@ -1,6 +1,6 @@
 import { JknIcon } from '@/components'
 import { routes } from '@/router'
-import { Fragment, useMemo, useState } from 'react'
+import { Fragment, useMemo } from 'react'
 import { Link, Outlet, useLocation } from 'react-router'
 
 const UserPage = () => {

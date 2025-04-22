@@ -104,13 +104,6 @@ export const routes: RouteObject[] = [
           title: '大V快评'
         }
       },
-      // {
-      //   path: '/alarm',
-      //   Component: lazy(() => import('@/pages/alarm')),
-      //   handle: {
-      //     title: 'AI警报'
-      //   }
-      // },
       {
         path: '/app/setting',
         Component: lazy(() => import('@/pages/setting')),
@@ -203,6 +196,22 @@ export const routes: RouteObject[] = [
     handle: {
       title: '讨论社群'
     }
+  },
+  {
+    path: '/community',
+    Component: lazy(() => import('@/pages/community')),
+    handle: {
+      title: '讨论社群'
+    },
+    children: [
+      {
+        index: true,
+        Component: lazy(() => import('@/pages/community/chat')),
+        handle: {
+          title: '讨论社群'
+        }
+      }
+    ]
   },
   {
     path: '*',
