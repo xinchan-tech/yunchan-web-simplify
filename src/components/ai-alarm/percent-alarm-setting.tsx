@@ -82,10 +82,10 @@ export const PercentageAlarmSetting = (props: PercentageAlarmSettingProps) => {
       let price: Decimal
       let type = 2
       if (v.endsWith('%')) {
-        price = Decimal.create(v.replace('%', '')).div(100)
+        price = Decimal.create(v.replace('%', '')).div(-100)
         type = 1
       } else {
-        price = Decimal.create(v)
+        price = Decimal.create(v).mul(-1)
       }
 
       floatParams.push({
@@ -100,10 +100,10 @@ export const PercentageAlarmSetting = (props: PercentageAlarmSettingProps) => {
       let price: Decimal
       let type = 2
       if (v.endsWith('%')) {
-        price = Decimal.create(v.replace('%', '')).div(-100)
+        price = Decimal.create(v.replace('%', '')).div(100)
         type = 1
       } else {
-        price = Decimal.create(v).mul(-1)
+        price = Decimal.create(v)
       }
 
       floatParams.push({
@@ -170,7 +170,7 @@ export const PercentageAlarmSetting = (props: PercentageAlarmSettingProps) => {
                 <FormItem className="pb-4 flex space-y-0">
                   <FormLabel className="w-32 text-secondary text-base font-normal">浮动警报</FormLabel>
                   <FormControl className="flex-1">
-                    <PriceSetting mode="rise" value={field.value} onChange={field.onChange} />
+                    <PriceSetting mode="fall" value={field.value} onChange={field.onChange} />
                   </FormControl>
                 </FormItem>
               )}
@@ -183,7 +183,7 @@ export const PercentageAlarmSetting = (props: PercentageAlarmSettingProps) => {
                 <FormItem className="pb-4 flex space-y-0">
                   <FormLabel className="w-32 text-secondary text-base font-normal" />
                   <FormControl className="flex-1">
-                    <PriceSetting mode="fall" value={field.value} onChange={field.onChange} />
+                    <PriceSetting mode="rise" value={field.value} onChange={field.onChange} />
                   </FormControl>
                 </FormItem>
               )}
@@ -321,14 +321,14 @@ const PriceSetting = forwardRef((props: PriceSettingProps, _) => {
         .mul(1 + (props.mode === 'rise' ? 1 : -1) * (+price / 100))
         .toNumber()
 
-      return <span className={cn(props.mode === 'fall' ? 'text-stock-up' : 'text-stock-down')}>{v.toFixed(2)}</span>
+      return <span className={cn(props.mode === 'rise' ? 'text-stock-up' : 'text-stock-down')}>{v.toFixed(2)}</span>
     }
 
     const v = Decimal.create(query.data?.close ?? 0)
       .plus((props.mode === 'rise' ? 1 : -1) * +price)
       .toNumber()
 
-    return <span className={cn(props.mode === 'fall' ? 'text-stock-up' : 'text-stock-down')}>{v.toFixed(2)}</span>
+    return <span className={cn(props.mode === 'rise' ? 'text-stock-up' : 'text-stock-down')}>{v.toFixed(2)}</span>
   }
 
   return (
@@ -337,14 +337,14 @@ const PriceSetting = forwardRef((props: PriceSettingProps, _) => {
         <div key={item.id} className="flex flex-col">
           <div className={cn('text-tertiary flex items-center space-x-2 my-2')}>
             {props.mode === 'rise' ? (
+              <span className="text-stock-down">
+                 下跌追踪
+                <JknIcon.Svg name="stock-down" size={12} />
+              </span>
+            ) : (
               <span className="text-stock-up">
                 上涨追踪
                 <JknIcon.Svg name="stock-up" size={12} />
-              </span>
-            ) : (
-              <span className="text-stock-down">
-                下跌追踪
-                <JknIcon.Svg name="stock-down" size={12} />
               </span>
             )}
             <div className="!ml-auto flex items-center rounded-sm  text-xs px-1 py-0.5 hover:bg-accent cursor-pointer text-secondary !mr-6">
@@ -386,14 +386,14 @@ const PriceSetting = forwardRef((props: PriceSettingProps, _) => {
               <Input
                 type="number"
                 min={0}
-                className={cn('border-none flex-1', props.mode === 'fall' ? 'text-stock-up' : 'text-stock-down')}
+                className={cn('border-none flex-1', props.mode === 'rise' ? 'text-stock-up' : 'text-stock-down')}
                 value={item.value}
                 onChange={e => onValueChange(item.id, e.target.value)}
               />
               <span className="text-tertiary">{item.type === 'percent' ? '%' : ''}</span>
               <Separator className="h-4 w-[1px] bg-border mx-2" />
               <span className="text-tertiary min-w-16 text-center">
-                {props.mode === 'rise' ? '最低触发价' : '最高触发价'}
+                {props.mode === 'fall' ? '最低触发价' : '最高触发价'}
                 &nbsp;
                 {calcPrice(item.value, item.type)}
               </span>

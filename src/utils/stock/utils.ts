@@ -255,7 +255,7 @@ export const stockUtils = {
    */
   getPercent: (stock: Pick<Stock, 'close' | 'prevClose'>, decimal?: number, percent?: boolean): number | undefined => {
     if (!stock.prevClose) return
-    let n = Decimal.create(stock.close).minus(stock.prevClose).div(stock.prevClose)
+    let n = Decimal.create(stock.close ?? 0).minus(stock.prevClose).div(stock.prevClose)
 
     if (percent) {
       n = n.mul(100)
@@ -271,7 +271,7 @@ export const stockUtils = {
    */
   getPercentUnsafe: (stock: Stock, decimal?: number, percent?: boolean): number => {
     if (!isNumber(+stock.prevClose)) return Number.NEGATIVE_INFINITY
-    let n = Decimal.create(stock.close).minus(stock.prevClose).div(stock.prevClose)
+    let n = Decimal.create(stock.close ?? 0).minus(stock.prevClose).div(stock.prevClose)
 
     if (percent) {
       n = n.mul(100)
@@ -341,7 +341,7 @@ export const stockUtils = {
   /**
    * 计算订阅的市场总值
    */
-  getSubscribeMarketValue: (stock: Partial<Stock>, data: Parameters<StockSubscribeHandler<'quote'>>[0]['record']) => {
+  getSubscribeMarketValue: (stock: Partial<Stock>, data: Parameters<StockSubscribeHandler<'quoteTopic'>>[0]['record']) => {
     if (!stock.totalShare) return
     return data.close * stock.totalShare
   },
@@ -349,7 +349,7 @@ export const stockUtils = {
   /**
    * 计算订阅的换手率
    */
-  getSubscribeTurnOverRate: (stock: Partial<Stock>, data: Parameters<StockSubscribeHandler<'quote'>>[0]['record']) => {
+  getSubscribeTurnOverRate: (stock: Partial<Stock>, data: Parameters<StockSubscribeHandler<'quoteTopic'>>[0]['record']) => {
     const marketValue = stockUtils.getSubscribeMarketValue(stock, data)
 
     if (!marketValue) return

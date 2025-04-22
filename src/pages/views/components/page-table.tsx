@@ -105,7 +105,8 @@ const PageTable = (props: PageTableProps) => {
               s[index].total = v.marketValue
               s[index].prePercent = v.prePercent
               s[index].afterPercent = v.afterPercent
-              s[index].name = stockInfo[3] || v.symbol 
+              s[index].name = stockInfo[3] || v.symbol
+              s[index].isUp = v.percent > 0
             }
           })
 
