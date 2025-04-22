@@ -14,7 +14,7 @@ export const routeNotAuthList = ['/app/user']
 export const AuthGuard = (props: PropsWithChildren) => {
   const location = useLocation()
   const token = useToken(s => s.token)
-  const hasAuthorized = useUser(s => s.hasAuthorized())
+  const hasAuthorized = useUser(s => s.hasAuthorized)
   const navigate = useNavigate()
   const showLogin = useRef(false)
 
@@ -92,7 +92,7 @@ export const AuthGuard = (props: PropsWithChildren) => {
       return <Navigate to={`/app?${qs.stringify(query)}`} replace />
     }
 
-    if (!hasAuthorized && !routeNotAuthList.some(route => location.pathname.startsWith(route))) {
+    if (!hasAuthorized() && !routeNotAuthList.some(route => location.pathname.startsWith(route))) {
       const q = AESCrypt.encrypt(JSON.stringify({ mall: true }))
       const query = qs.parse(location.search, { ignoreQueryPrefix: true })
       if (!query.redirect) {

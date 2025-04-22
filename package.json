@@ -11,6 +11,8 @@
     "preview": "rsbuild preview",
     "generate-icon": "node ./scripts/generate-icon-type.js",
     "release": "release-it",
+    "release:patch": "release-it -i patch",
+    "release:major": "release-it -i major1",
     "deploy:test": "node ./scripts/deploy.js",
     "deploy:release": "node ./scripts/release.js",
     "frp": "frpc -c ./frpc.toml"
