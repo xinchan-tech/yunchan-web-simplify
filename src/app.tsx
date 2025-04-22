@@ -24,6 +24,7 @@ import { chatConstants, useConfig, useToken, useUser } from './store'
 import { ChartToolBar } from "./pages/stock/component/chart-tool-bar"
 import { AlarmSubscribe } from "./components/ai-alarm/alarm-subscribe"
 import qs from "qs"
+import { AESCrypt } from "./utils/string"
 
 export const CHAT_STOCK_JUMP = 'chat_stock_jump'
 export const CHAT_TO_APP_REFRESH_USER = 'chat_to_app_refresh_user'
@@ -153,6 +154,20 @@ const App = () => {
       localStorage.setItem('invite-code', JSON.stringify(codeObj))
     }
   })
+
+
+  useEffect(() => {
+    if(path.pathname === '/app'){
+      const query = qs.parse(path.search, { ignoreQueryPrefix: true })
+      if(query.q){
+        const qStr = JSON.parse(AESCrypt.decrypt(query.q as string))
+  
+        if(qStr.mall){
+          appEvent.emit('notAuth')
+        }
+      }
+    }
+  }, [path.search, path.pathname])
 
   return (
     <AuthGuard>
