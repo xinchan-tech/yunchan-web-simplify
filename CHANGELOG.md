@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.5.1](https://github.com/xinchan-gx/yunchan-web/compare/2.5.0...2.5.1) (2025-04-22)
+
+### ✨ Features | 新功能
+
+* 更新股票订阅逻辑，添加前后涨跌幅数据支持，优化数据处理 ([8d75a45](https://github.com/xinchan-gx/yunchan-web/commit/8d75a4506c313ff0edff9cc1f401c7bb70f03185))
+* 添加生产环境判断，优化排序列的验证逻辑 ([bf5f4c2](https://github.com/xinchan-gx/yunchan-web/commit/bf5f4c2bdb6b124c4145a5e6f3bce546633221ad))
+
 ## [2.5.0](https://github.com/xinchan-gx/yunchan-web/compare/2.4.4...2.5.0) (2025-04-22)
 
 ### ✨ Features | 新功能
