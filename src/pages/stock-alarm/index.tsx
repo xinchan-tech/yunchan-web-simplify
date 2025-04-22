@@ -33,6 +33,7 @@ import { cn } from '@/utils/style'
 import { WsV2 } from '@/utils/ws'
 import { useInfiniteQuery } from '@tanstack/react-query'
 import to from 'await-to-js'
+import dayjs from "dayjs"
 import Decimal from 'decimal.js'
 import { Fragment, type KeyboardEventHandler, useEffect, useState } from 'react'
 
@@ -207,11 +208,11 @@ const AlarmItem = ({ symbol, data, onDelete }: AlarmItemProps) => {
       const value = data.condition.float_param.change_value
       const triggerValue =
         triggerStr === '盈亏比例'
-          ? data.condition.float_param.price * (1 + value)
-          : value + data.condition.float_param.price
+          ? (data.condition.float_param.price * (1 + value / 100)).toFixed(2)
+          : (value + data.condition.float_param.price).toFixed(2)
       return (
         <span data-direction={value > 0 ? 'up' : 'down'}>
-          止损起始点&nbsp;
+          {data.condition.float_param.type === 1 ? '按涨跌比比例' : '按涨跌金额'}&nbsp;
           {triggerValue}&nbsp;
           {value > 0 ? '↑' : '↓'}
         </span>
@@ -237,9 +238,9 @@ const AlarmItem = ({ symbol, data, onDelete }: AlarmItemProps) => {
 
   const onNav = () => {
     if (data.stock_cycle) {
-      stockUtils.gotoStockPage(symbol, { interval: data.stock_cycle })
+      stockUtils.gotoStockPage(symbol, { interval: data.stock_cycle, alarm: true  })
     } else {
-      stockUtils.gotoStockPage(symbol, { interval: StockChartInterval.DAY })
+      stockUtils.gotoStockPage(symbol, { interval: StockChartInterval.DAY, alarm: true  })
     }
   }
 
@@ -247,7 +248,7 @@ const AlarmItem = ({ symbol, data, onDelete }: AlarmItemProps) => {
     <div
       className="alarm-list-item text-foreground px-5 py-3 leading-none text-sm border-b-primary hover:bg-[#1B1B1B]"
       onClick={onNav}
-      onKeyDown={() => {}}
+      onKeyDown={() => { }}
     >
       <div className="flex items-center w-full relative">
         <JknIcon.Stock symbol={symbol} className="w-4 h-4 leading-4 mr-1" />
@@ -269,12 +270,19 @@ const AlarmItem = ({ symbol, data, onDelete }: AlarmItemProps) => {
         </div>
       </div>
       {data.type === AlarmType.PERCENT ? (
-        <div className="text-left mt-2">股价起始点{data.condition.float_param.price}</div>
+        <div className="text-tertiary text-xs text-left mt-2.5">
+          起始价格{data.condition.float_param.price}&nbsp;&nbsp;
+          <span>
+            止损起始点
+            {data.condition.float_param.type === 1 ? (data.condition.float_param.price * (1 + data.condition.float_param.change_value / 100)).toFixed(2)
+              : (data.condition.float_param.change_value + data.condition.float_param.price).toFixed(2)}
+          </span>
+        </div>
       ) : null}
       <div className="text-tertiary text-xs text-left mt-2.5">
         <span>
-          添加时间&nbsp;美东&nbsp;
-          {dateUtils.toUsDay(data.create_time).format('MM/DD w HH:mm')}
+          添加时间&nbsp;
+          {dayjs(+data.create_time * 1000).format('MM/DD w HH:mm')}
         </span>
         &emsp;
         {data.type !== AlarmType.PERCENT ? (
@@ -283,14 +291,7 @@ const AlarmItem = ({ symbol, data, onDelete }: AlarmItemProps) => {
             {data.condition.frequency === 1 ? '持续提醒' : '仅提醒一次'}
           </span>
         ) : (
-          <span>
-            {data.condition.float_param.type === 1 ? '按涨跌比' : '按涨跌金额'}
-            {data.condition.float_param.type === 1 ? (
-              <span>{Decimal.create(data.condition.float_param.change_value).mul(100).toFixed(2)}%</span>
-            ) : (
-              <span>{data.condition.float_param.change_value}</span>
-            )}
-          </span>
+          null
         )}
       </div>
       {data.expire_time ? (
@@ -427,13 +428,13 @@ interface AlarmRecordItemProps {
 }
 const AlarmRecordItem = ({ symbol, data, onDelete }: AlarmRecordItemProps) => {
   const onClick = () => {
-    if(data.type === AlarmType.AI){
+    if (data.type === AlarmType.AI) {
       stockUtils.gotoStockPage(symbol, { interval: data.condition.coiling.param.stock_cycle, alarm: true })
-    }else {
+    } else {
       stockUtils.gotoStockPage(symbol, { interval: StockChartInterval.DAY, alarm: true })
     }
   }
-  
+
   const renderTrigger = () => {
     if (data.type === AlarmType.AI) {
       const cyc = stockUtils.intervalToStr(data.condition.coiling.param.stock_cycle)
@@ -482,7 +483,7 @@ const AlarmRecordItem = ({ symbol, data, onDelete }: AlarmRecordItemProps) => {
     <div
       className="alarm-list-item text-foreground px-5 py-3 leading-none text-sm border-b-primary hover:bg-[#1B1B1B]"
       onClick={onClick}
-      onKeyDown={() => {}}
+      onKeyDown={() => { }}
     >
       <div className="flex items-center w-full relative">
         <JknIcon.Stock symbol={symbol} className="w-4 h-4 leading-4 mr-1" />

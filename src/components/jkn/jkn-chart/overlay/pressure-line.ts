@@ -43,7 +43,7 @@ export const PressureLineOverlay = createOverlayTemplate({
     }
     return []
   },
-  createPointFigures: ({ coordinates, bounding, overlay }) => {
+  createPointFigures: ({ coordinates, bounding, overlay, yAxis }) => {
     const styles = drawOverlayParamsToFigureStyle('line', overlay.extendData)
  
     if (coordinates.length === 1) {
@@ -63,6 +63,21 @@ export const PressureLineOverlay = createOverlayTemplate({
             ]
           },
           styles
+        },
+        {
+          type: 'text',
+          attrs: {
+            x: bounding.width,
+            y: coordinates[0].y,
+            text: yAxis?.convertFromPixel(coordinates[0].y).toFixed(3) ?? '',
+            align: 'right',
+            baseline: 'bottom'
+          },
+          styles: {
+            color: styles.color,
+            backgroundColor: 'transparent',
+            size: 16
+          }
         }
       ]
     }

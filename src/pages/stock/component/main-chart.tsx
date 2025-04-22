@@ -121,7 +121,7 @@ export const MainChart = (props: MainChartProps) => {
 
   useEffect(() => {
     chartImp.current?.removeOverlay()
-    console.log(plotting.data)
+
     plotting.data?.forEach(data => {
       const type = renderUtils.getOverlayById(data.plotting_id)
       if (!type) return

@@ -653,7 +653,7 @@ const DrawStatisticsTable = () => {
       title: '股票周期',
       dataIndex: 'stock_kline_id',
       align: 'center',
-      render: (_, record) => <span>{stockUtils.intervalToStr(+record.stock_kline_id)}</span>
+      render: (_, record) => <span>{stockUtils.intervalToStr(+record.stock_kline_value)}</span>
     },
     {
       title: '类型',

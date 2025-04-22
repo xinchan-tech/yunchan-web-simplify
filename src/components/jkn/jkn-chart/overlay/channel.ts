@@ -4,7 +4,7 @@ import type { DrawOverlayParams } from '../types'
 
 export const ChannelOverlay = createOverlayTemplate<DrawOverlayParams>({
   name: 'channel',
-  totalStep: 3,
+  totalStep: 4,
   createPointFigures: ({ coordinates, bounding, overlay }) => [
     {
       type: 'line',

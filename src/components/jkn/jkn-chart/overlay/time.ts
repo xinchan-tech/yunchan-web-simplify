@@ -121,12 +121,12 @@ export const TimeOverlay = createOverlayTemplate({
 
       if (first) {
         kline = dataList.length
-        day = Math.abs(dayjs(first.timestamp).diff(dayjs(last.timestamp), 'day'))
+        day = Math.max(Math.abs(dayjs(first.timestamp).diff(dayjs(last.timestamp), 'day')), 1)
       }
     }
 
-    const percent = Math.abs((coordinates[1].y - coordinates[0].y) / coordinates[0].y)
-    const height = coordinates[0].y - coordinates[1].y
+    const percent = (overlay.points[1].value! - overlay.points[0].value!) / overlay.points[0].value!
+    const height = overlay.points[1].value! - overlay.points[0].value!
 
     const rect = getRect(coordinates)
     const lines = getArrow(rect)
