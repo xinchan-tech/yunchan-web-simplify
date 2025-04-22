@@ -1,7 +1,7 @@
 import { bindInviteCode, getUser, login, loginByThird, loginImService } from '@/api'
 import { Button, Form, FormControl, FormField, FormItem, FormLabel, Input } from '@/components'
 import { useToast, useZForm } from '@/hooks'
-import { useToken } from '@/store'
+import { useToken, useUser } from '@/store'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import dayjs from 'dayjs'
 import { z } from 'zod'
@@ -26,9 +26,9 @@ export const LoginForm = (
   const setToken = useToken(s => s.setToken)
   const { toast } = useToast()
   const queryClient = useQueryClient()
+  const refreshUser = useUser(s => s.refreshUser)
 
-  const onLoginSuccess = (token: string) => {
-    setToken(token)
+  const onLoginSuccess = () => {
 
     queryClient.refetchQueries({ queryKey: [getUser.cacheKey] })
 
@@ -54,14 +54,22 @@ export const LoginForm = (
   }
 
   const loginMutation = useMutation({
-    mutationFn: ({ type, data }: { type: string; data: any }) => {
+    mutationFn: async ({ type, data }: { type: string; data: any }) => {
       if (type === 'username') {
-        return loginByUsername()
+        const r = await loginByUsername()
+        setToken(r.token)
+        await refreshUser()
+
+        return r
       }
 
-      return type === 'apple' ? loginByThird('apple', data) : loginByThird('google', data)
+      const r = await (type === 'apple' ? loginByThird('apple', data) : loginByThird('google', data))
+      setToken(r.token)
+      await refreshUser()
+
+      return r
     },
-    onSuccess: r => onLoginSuccess(r.token),
+    onSuccess: r => onLoginSuccess(),
     onError: err => {
       toast({
         description: err.message
@@ -110,7 +118,7 @@ export const LoginForm = (
                   <div
                     className="text-right text-sm cursor-pointer"
                     onClick={() => props.setPage('resetPassword')}
-                    onKeyDown={() => {}}
+                    onKeyDown={() => { }}
                   >
                     忘记密码？
                   </div>
@@ -137,7 +145,7 @@ export const LoginForm = (
             <span
               className="cursor-pointer text-primary"
               onClick={() => props.setPage('register')}
-              onKeyDown={() => {}}
+              onKeyDown={() => { }}
             >
               立即注册
             </span>
