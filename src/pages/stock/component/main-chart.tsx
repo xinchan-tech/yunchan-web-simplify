@@ -52,7 +52,10 @@ export const MainChart = (props: MainChartProps) => {
     queryKey: [getUserPlotting, symbol, chartStore.interval],
     queryFn: () => getUserPlotting({ symbol, kline: chartStore.interval }),
     enabled: candlesticks.length > 0,
-    select: data => data.filter(d => (d.stock_kline_value === chartStore.interval || d.cross === 1) && d.symbol === symbol),
+    select: data => {
+      if(!data) return []
+      return data.filter(d => (d.stock_kline_value === chartStore.interval || d.cross === 1) && d.symbol === symbol)
+    },
   })
 
   const createOverlay = useCallback(({ type, params, points, id }: ChartEvents['drawStart']) => {
@@ -121,7 +124,6 @@ export const MainChart = (props: MainChartProps) => {
 
   useEffect(() => {
     chartImp.current?.removeOverlay()
-
     plotting.data?.forEach(data => {
       const type = renderUtils.getOverlayById(data.plotting_id)
       if (!type) return
@@ -143,11 +145,8 @@ export const MainChart = (props: MainChartProps) => {
       })
     })
 
-    return () => {
-      plotting.isLoading && plotting.refetch()
-    }
 
-  }, [plotting.data, createOverlay, plotting.refetch, plotting.isLoading])
+  }, [plotting.data, createOverlay])
 
   useStockBarSubscribe([`${symbol}@${stockUtils.intervalToPeriod(chartStore.interval)}`], data => {
     const mode = useChartManage.getState().chartStores[props.chartId].mode

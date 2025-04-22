@@ -132,7 +132,7 @@ const rankActionResultParser = (data: any) => {
     action,
     topic: action as string,
     data: Object.entries(r).map(([key, value]) => {
-      const [symbol, close, percent, volume, turnover, marketValue] = value
+      const [symbol, close, percent, volume, turnover, marketValue, prePercent, afterPercent] = value
       return {
         rank: Number.parseInt(key),
         symbol: String(symbol),
@@ -140,7 +140,9 @@ const rankActionResultParser = (data: any) => {
         percent,
         volume,
         turnover,
-        marketValue
+        marketValue,
+        prePercent,
+        afterPercent
       }
     })
   }
@@ -352,7 +354,6 @@ class StockSubscribe {
    */
   public subscribeRank(params: { key: RankSortKey; sort: OrderSort; limit: string }) {
     const action = 'rank_subscribe'
-
     this.ws.send({
       action: action,
       cid: this.cid,
