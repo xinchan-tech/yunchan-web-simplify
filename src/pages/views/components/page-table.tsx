@@ -8,6 +8,7 @@ import {
   SubscribeSpan
 } from '@/components'
 import { usePagination, useTableData, useTableRowClickToStockTrading } from '@/hooks'
+import { useStockList } from "@/store"
 import { sysConfig } from "@/utils/config"
 import { stockSubscribe, stockUtils } from '@/utils/stock'
 import { useQuery } from '@tanstack/react-query'
@@ -47,6 +48,7 @@ type TableDataType = {
 }
 //单表格
 const PageTable = (props: PageTableProps) => {
+  const stockMap = useStockList(s => s.listMap)
   const [sort, setSort] = useImmer<{ column: UsStockColumn; order: 'asc' | 'desc' }>({
     column: 'total_mv',
     order: 'desc'
@@ -68,7 +70,7 @@ const PageTable = (props: PageTableProps) => {
 
   useEffect(() => {
     if(sysConfig.PUBLIC_BASE_BUILD_ENV === 'PRODUCTION') return
-    if (!['close', 'increase', 'total_mv', 'total', 'stock_before', 'stock_after'].includes(sort.column)) {
+    if (!['close', 'increase', 'total_mv', 'amount', 'total', 'stock_before', 'stock_after'].includes(sort.column)) {
       return
     }
 
@@ -88,20 +90,22 @@ const PageTable = (props: PageTableProps) => {
     })
 
     const cancel = stockSubscribe.on('rank_subscribe', (data) => {
-      if(Object.keys(data).length > 0){
+      if(data.data.length > 0){
         setList((s: TableDataType[]) => {
-          Object.keys(data.data).forEach((key) => {
-            const index = Number(key)
-            console.log(index)
-
+          console.log('before', [...s])
+          data.data.forEach(v => {
+            const index = v.rank
+            const stockInfo = stockMap[v.symbol]
+            
             if(s[index]){
-              s[index].price = data.data[key as any].close
-              s[index].percent = data.data[key as any].percent
-              s[index].symbol = data.data[key as any].symbol
-              s[index].amount = data.data[key as any].turnover
-              s[index].total = data.data[key as any].marketValue
-              s[index].prePercent = data.data[key as any].prePercent
-              s[index].afterPercent = data.data[key as any].afterPercent
+              s[index].price = v.close
+              s[index].percent = v.percent
+              s[index].symbol = v.symbol
+              s[index].amount = v.turnover
+              s[index].total = v.marketValue
+              s[index].prePercent = v.prePercent
+              s[index].afterPercent = v.afterPercent
+              s[index].name = stockInfo[3] || v.symbol 
             }
           })
 
@@ -115,11 +119,12 @@ const PageTable = (props: PageTableProps) => {
       stockSubscribe.unsubscribeRank()
       cancel()
     }
-  }, [pagination, sort])
+  }, [pagination, sort, stockMap])
 
   const query = useQuery({
     queryKey: [getUsStocks.cacheKey, props.type, sort, pagination],
-    queryFn: () => queryFn()
+    queryFn: () => queryFn(),
+    refetchOnWindowFocus: false
   })
 
   const [list, { setList, onSort, cleanSort }] = useTableData<TableDataType>([], 'symbol')

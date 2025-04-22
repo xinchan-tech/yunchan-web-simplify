@@ -1,36 +1,36 @@
-import { fetchUserInChannel } from "@/pages/groupchat/lib/utils"
 import { useChatStore } from "@/store"
 import { colorUtil, cn } from "@/utils/style"
 import { useState, useEffect } from "react"
+import { fetchUserFromCache } from "../lib/utils"
 
 interface UserAvatarProps {
   shape: 'circle' | 'square' | number
   avatar?: string
   src: string
   className?: string
+  name?: string
   uid: string
   size?: string | number
+  type: '1' | '2'
 }
 
 export const UserAvatar = (props: UserAvatarProps) => {
-  const { shape, src, uid, className, size = 33 } = props
+  const { shape, src, uid, className, size = 33, name: _name } = props
   const [avatar, setAvatar] = useState<string>(src)
-  const [name, setName] = useState<string>(uid)
+  const [name, setName] = useState<string>(_name || uid)
 
   useEffect(() => {
     if (src) {
       setAvatar(src)
     } else {
-      const channel = useChatStore.getState().lastChannel
-      if (channel) {
-        fetchUserInChannel(channel, uid).then(r => {
-          if (r.avatar) {
-            setAvatar(r.avatar)
-          } else {
-            setName(r.name)
-          }
-        })
-      }
+  
+      fetchUserFromCache(uid).then(r => {
+        if (r.avatar) {
+          setAvatar(r.avatar)
+        } else {
+          setName(r.name)
+        }
+      })
     }
   }, [src, uid])
 
@@ -56,8 +56,8 @@ export const UserAvatar = (props: UserAvatarProps) => {
   }
 
   return (
-    <div className={cn(className)} style={styles}>
-      <img className="w-full" src={avatar} alt={avatar} />
+    <div className={cn(className, 'overflow-hidden')} style={styles}>
+      <img className="w-full h-full" src={avatar} alt={avatar} />
     </div>
   )
 }

@@ -46,10 +46,11 @@ type TableDataType = Stock & {
 const getLastTime = () => {
   const localDate = dateUtils.toUsDay(Date.now().valueOf())
 
+
   if (localDate.isBefore(localDate.hour(9).minute(30).second(0))) {
     return getPrevTradingDays(localDate, 1)[0]
   }
-  return getPrevTradingDays(localDate, 0)[0]
+  return getPrevTradingDays(localDate, 1)[0]
 }
 
 const getTableList = async (type: string, date?: string) => {
@@ -61,7 +62,7 @@ const getTableList = async (type: string, date?: string) => {
       date,
       extend: ['financials', 'total_share', 'collect', 'basic_index']
     })
-
+  
     res = r?.map(item => {
       const stock = stockUtils.toStockWithExt(item.stock, {
         extend: item.extend,
@@ -148,7 +149,6 @@ const PushPage = () => {
     // } else {
     //   setList([])
     // }
-
     setList(query.data ?? [])
   }, [query.data, setList])
 

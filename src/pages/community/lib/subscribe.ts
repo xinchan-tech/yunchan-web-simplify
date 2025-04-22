@@ -6,6 +6,8 @@ import WKSDK, { ConnectStatus, type ConnectStatusListener } from 'wukongimjssdk'
 import { initImDataSource } from './datasource'
 import { chatManager } from './store'
 import { ChatConnectStatus, chatConstants } from './types'
+import { chatEvent } from './event'
+import { ConversationTransform } from './transform'
 
 /**
  * 连接IM
@@ -45,20 +47,28 @@ export const useConnectIM = () => {
     const connectStatusListener: ConnectStatusListener = (status, reasonCode, connectInfo) => {
       chatManager.setState(status as unknown as ChatConnectStatus)
 
-      if(status === ConnectStatus.Connected) {
-        
+      if (status === ConnectStatus.Connected) {
         chatManager.setState(ChatConnectStatus.Syncing)
-        WKSDK.shared().conversationManager.sync().then((r) => {
-          
-          chatManager.setState(ChatConnectStatus.Connected)
-        })
+        WKSDK.shared()
+          .conversationManager.sync()
+          .then(r => {
+            Promise.all(r.map(v => ConversationTransform.toSession(v)))
+              .then(res => chatEvent.emit('syncSession', res))
+              .then(() => {
+                chatManager.setState(ChatConnectStatus.Connected)
+              })
+              .catch(() => {
+                chatManager.setState(ChatConnectStatus.SyncingFail)
+                console.error('Error syncing sessions')
+              })
+          })
       }
 
       if (status === ConnectStatus.ConnectKick || status === ConnectStatus.ConnectFail) {
         console.warn('Warning: Connection failed or kicked, code: {}, info: {}', reasonCode, connectInfo)
       }
     }
-    
+
     WKSDK.shared().connectManager.addConnectStatusListener(connectStatusListener)
     // WKSDK.shared().chatManager.addCMDListener(cmdListener)
 

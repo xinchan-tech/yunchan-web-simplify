@@ -376,7 +376,7 @@ export const MarketValueSubscribeSpan = memo(
 
     const subscribeFormatter = useCallback<SubscribeSpanProps['formatter']>(
       data => {
-        return numberFormatter(data.record.close * totalShare)
+        return numberFormatter(data.record.marketValue || data.record.close * totalShare)
       },
       [numberFormatter, totalShare]
     )
