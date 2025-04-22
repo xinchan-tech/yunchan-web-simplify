@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.4.4](https://github.com/xinchan-gx/yunchan-web/compare/2.4.3...2.4.4) (2025-04-22)
+
+### ✨ Features | 新功能
+
+* 更新用户状态管理逻辑，确保在登录和重置密码时正确刷新用户信息 ([d29bce5](https://github.com/xinchan-gx/yunchan-web/commit/d29bce53e82575053908a78790e4a6ea80dec53d))
+
 ## [2.4.3](https://github.com/xinchan-gx/yunchan-web/compare/2.4.2...2.4.3) (2025-04-22)
 
 ### ✨ Features | 新功能
