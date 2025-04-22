@@ -1,5 +1,23 @@
 # Changelog
 
+## [2.5.0](https://github.com/xinchan-gx/yunchan-web/compare/2.4.4...2.5.0) (2025-04-22)
+
+### ✨ Features | 新功能
+
+* 调整表格列宽和对齐方式以优化显示效果 ([11074fe](https://github.com/xinchan-gx/yunchan-web/commit/11074fe3d523fbdac7b370d8b5bcfc67b384120a))
+* 更新多个组件以优化数据处理和显示逻辑，添加新的功能支持 ([aff9b9a](https://github.com/xinchan-gx/yunchan-web/commit/aff9b9a6566cb81ceb62bee70f6418c8acb9f3c1))
+* 更新数据库版本，优化消息处理逻辑，简化图表组件的条件渲染 ([fcb83a6](https://github.com/xinchan-gx/yunchan-web/commit/fcb83a6602a92a2d554edb9e18e51336f96cd399))
+* 更新用户状态管理逻辑，确保在登录和重置密码时正确刷新用户信息 ([6bbb3f4](https://github.com/xinchan-gx/yunchan-web/commit/6bbb3f4b115697d77c04f80dd3a75dd84d54e5c1))
+* 添加 fontSize 属性到绘图参数和覆盖层样式，以支持自定义字体大小 ([ebe25ab](https://github.com/xinchan-gx/yunchan-web/commit/ebe25abb95776d93771604a05383d22ec9eeab5f))
+* 添加解密功能以处理重定向查询参数，并优化未授权用户的导航逻辑 ([36ec5dd](https://github.com/xinchan-gx/yunchan-web/commit/36ec5dd4004fd4389ea953e21dc5d3c70246c28f))
+* 添加右键点击事件处理到多个图层，更新绘图工具以支持备注功能 ([8674e84](https://github.com/xinchan-gx/yunchan-web/commit/8674e841f5a7d82d1d0436ef5ae31c63af5bf881))
+* 修改触发值和止损起始点的计算逻辑，以正确显示百分比和价格 ([8a88c45](https://github.com/xinchan-gx/yunchan-web/commit/8a88c45bce083de97d1408569cc02eb0bba59dd0))
+* 移除未使用的状态管理导入以优化代码 ([6070940](https://github.com/xinchan-gx/yunchan-web/commit/60709403eeaf85cfba9341bdc547ec3f344cc963))
+* 优化绘图数据更新逻辑，仅在加载状态下重新获取数据 ([cb7ae27](https://github.com/xinchan-gx/yunchan-web/commit/cb7ae273122580a77a04b85ee9869c3cadbb98e5))
+* 重构多个覆盖层以使用 createOverlayTemplate 函数，简化代码并提高可维护性 ([82bf881](https://github.com/xinchan-gx/yunchan-web/commit/82bf881708971f212a0347f9e0f07bbc2bbb3560))
+* 重构社区模块，更新存储名称，添加会话组件，优化IM连接逻辑 ([2b6cbac](https://github.com/xinchan-gx/yunchan-web/commit/2b6cbac2bb0a7d4219fe0907a4095e5520615719))
+* Add community page and user avatar component ([936e5a3](https://github.com/xinchan-gx/yunchan-web/commit/936e5a364c1d05685d56c8c192d0578c3489d39e))
+
 ## [2.4.4](https://github.com/xinchan-gx/yunchan-web/compare/2.4.3...2.4.4) (2025-04-22)
 
 ### ✨ Features | 新功能
