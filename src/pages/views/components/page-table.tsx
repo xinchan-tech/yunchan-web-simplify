@@ -8,6 +8,7 @@ import {
   SubscribeSpan
 } from '@/components'
 import { usePagination, useTableData, useTableRowClickToStockTrading } from '@/hooks'
+import { sysConfig } from "@/utils/config"
 import { stockSubscribe, stockUtils } from '@/utils/stock'
 import { useQuery } from '@tanstack/react-query'
 
@@ -66,8 +67,8 @@ const PageTable = (props: PageTableProps) => {
   }
 
   useEffect(() => {
-    console.log(sort.column)
-    if (!['close', 'increase', 'amount', 'total', 'stock_before', 'stock_after'].includes(sort.column)) {
+    if(sysConfig.PUBLIC_BASE_BUILD_ENV === 'PRODUCTION') return
+    if (!['close', 'increase', 'total_mv', 'total', 'stock_before', 'stock_after'].includes(sort.column)) {
       return
     }
 
@@ -91,6 +92,7 @@ const PageTable = (props: PageTableProps) => {
         setList((s: TableDataType[]) => {
           Object.keys(data.data).forEach((key) => {
             const index = Number(key)
+            console.log(index)
 
             if(s[index]){
               s[index].price = data.data[key as any].close
