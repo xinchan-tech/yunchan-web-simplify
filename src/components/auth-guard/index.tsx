@@ -1,18 +1,20 @@
 import { useToken, useUser } from '@/store'
 import { appEvent } from '@/utils/event'
 import { type PropsWithChildren, useEffect, useRef } from 'react'
-import { Navigate, useLocation, useNavigate } from 'react-router'
+import { Navigate, redirect, useLocation, useNavigate } from 'react-router'
 import { JknAlert } from '../jkn/jkn-alert'
 import { MallPackages } from '../mall-dialog'
 import { useModal } from '../modal'
+import qs from "qs"
+import { AESCrypt } from "@/utils/string"
 
 export const routeWhiteList = ['/app/mall', '/app', '/app/login']
+export const routeNotAuthList = ['/app/user']
 
 export const AuthGuard = (props: PropsWithChildren) => {
   const location = useLocation()
   const token = useToken(s => s.token)
-  const authorized = useUser(s => s.user?.authorized)
-  const lastPath = useRef('/app')
+  const hasAuthorized = useUser(s => s.hasAuthorized())
   const navigate = useNavigate()
   const showLogin = useRef(false)
 
@@ -66,6 +68,11 @@ export const AuthGuard = (props: PropsWithChildren) => {
 
   if (!routeWhiteList.some(route => route === location.pathname)) {
     if (!token) {
+      const query = qs.parse(location.search, { ignoreQueryPrefix: true })
+      if (!query.redirect) {
+        query.redirect = location.pathname + location.search
+      }
+
       if (!showLogin.current) {
         showLogin.current = true
         JknAlert.info({
@@ -73,7 +80,7 @@ export const AuthGuard = (props: PropsWithChildren) => {
           onAction: async e => {
             showLogin.current = false
             if (e === 'confirm') {
-              navigate(`/app/login?redirect=${encodeURIComponent(location.pathname + location.search)}`, {
+              navigate(`/app/login?${qs.stringify(query)}`, {
                 replace: true
               })
               return
@@ -82,15 +89,20 @@ export const AuthGuard = (props: PropsWithChildren) => {
         })
       }
 
-      return <Navigate to={`/app?redirect=${encodeURIComponent(location.pathname + location.search)}`} replace />
+      return <Navigate to={`/app?${qs.stringify(query)}`} replace />
     }
 
-    if (!authorized?.length) {
-      return <Navigate to={lastPath.current} replace />
+    if (!hasAuthorized && !routeNotAuthList.some(route => location.pathname.startsWith(route))) {
+      const q = AESCrypt.encrypt(JSON.stringify({ mall: true }))
+      const query = qs.parse(location.search, { ignoreQueryPrefix: true })
+      if (!query.redirect) {
+        query.redirect = location.pathname + location.search
+      }
+      return <Navigate to={`/app?${qs.stringify({ ...query, q })}`} replace />
     }
   }
 
-  lastPath.current = location.pathname + location.search
+
 
   return (
     <>

@@ -60,13 +60,6 @@ const MenuRight = () => {
   // const [auth, toastNotAuth] = useAuthorized('vcomment')
 
   const onNav = (path: string) => {
-    if (!token) {
-      toast({
-        title: '请先登录'
-      })
-      return
-    }
-
     if (path === "/chat") {
       if (user?.permission && user.permission.chat === true) {
         if (useConfig.getState().ip === 'CN') {
