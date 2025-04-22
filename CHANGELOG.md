@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.5.2](https://github.com/xinchan-gx/yunchan-web/compare/2.5.1...2.5.2) (2025-04-22)
+
+### ✨ Features | 新功能
+
+* 更新市场价值计算逻辑，优化会话同步状态处理，增强用户头像组件样式 ([49bb0e2](https://github.com/xinchan-gx/yunchan-web/commit/49bb0e26365bd3ce3c498ac02229a01ce6ddef2b))
+* 更新用户头像组件，添加类型属性；优化社区页面的用户状态判断逻辑；修复推送页面的时间获取逻辑 ([455adc1](https://github.com/xinchan-gx/yunchan-web/commit/455adc10df1a5e8d3758a956305a3e8302f99d56))
+* 更新用户头像组件，添加名称属性并优化用户信息获取逻辑；更新页面表格，增加股票名称字段和排序验证逻辑 ([ce7b8bd](https://github.com/xinchan-gx/yunchan-web/commit/ce7b8bdfd417b2bfe72b13871f83714b955191e0))
+
 ## [2.5.1](https://github.com/xinchan-gx/yunchan-web/compare/2.5.0...2.5.1) (2025-04-22)
 
 ### ✨ Features | 新功能
