@@ -5,7 +5,7 @@ export const getChatNameAndAvatar = async (params: {
   type: string
   id: string
 }) => {
-  const resp = await request.get<{ name: string; avatar: string }>('/im/avatars', { params }).then(r => r.data)
+  const resp = await request.get<Nullable<{ name: string; avatar: string }>>('/im/avatars', { params }).then(r => r.data)
   return resp
 }
 getChatNameAndAvatar.cacheKey = 'groupChannels:getChatNameAndAvatar'

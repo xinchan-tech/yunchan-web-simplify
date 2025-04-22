@@ -153,6 +153,20 @@ export const colorUtil = {
     return r
   },
   parseRGBA(rgba: string): ColorType.RGBA | undefined {
+    /**
+     * 判断rgba和hex
+     */
+    const hexResult = /^#?([a-f\d]{6}|[a-f\d]{8})$/i.exec(rgba)
+
+    if (hexResult) {
+      const hex = hexResult[1]
+      const r = Number.parseInt(hex.slice(0, 2), 16)
+      const g = Number.parseInt(hex.slice(2, 4), 16)
+      const b = Number.parseInt(hex.slice(4, 6), 16)
+      const a = hex.length === 8 ? Number.parseInt(hex.slice(6, 8), 16) / 255 : 1
+      return { r, g, b, a }
+    }
+    
     const result = /^rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)$/i.exec(rgba)
     if (!result) return undefined
     return {

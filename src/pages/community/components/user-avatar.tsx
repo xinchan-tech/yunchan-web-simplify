@@ -20,15 +20,16 @@ export const UserAvatar = (props: UserAvatarProps) => {
   const [name, setName] = useState<string>(_name || uid)
 
   useEffect(() => {
+
     if (src) {
       setAvatar(src)
     } else {
-  
+
       fetchUserFromCache(uid).then(r => {
-        if (r.avatar) {
+        if (r?.avatar) {
           setAvatar(r.avatar)
-        } else {
-          setName(r.name)
+        } else if (r?.name) {
+          setName(r?.name)
         }
       })
     }
