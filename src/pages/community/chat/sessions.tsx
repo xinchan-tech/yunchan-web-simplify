@@ -1,6 +1,6 @@
 import { JknIcon, JknSearchInput } from "@/components"
 import { chatManager, useChatStore } from "../lib/store"
-import { ChatConnectStatus, type ChatSession } from "../lib/types"
+import { ChatConnectStatus, ChatMessageType, type ChatSession } from "../lib/types"
 import { useChatEvent } from "../lib/event"
 import { useCallback, useEffect, useMemo } from "react"
 import { useImmer } from "use-immer"
@@ -53,6 +53,7 @@ export const Sessions = () => {
 
   const sessionList = useMemo(() => {
     if (!sessions) return []
+    console.log(sessions)
     if (!search) return sessions
     return sessions.filter(s => s.channel.name.includes(search))
   }, [search, sessions])
@@ -114,11 +115,21 @@ export const Sessions = () => {
                   </div>
                 ) : null} */}
               </div>
-              {/* <div className="group-last-msg flex justify-between items-center">
+              <div className="group-last-msg flex justify-between items-center">
                 <div className="flex-1 text-xs text-tertiary line-clamp-1">
-                  {c.isMentionMe ? <span style={{ color: 'red' }}>[有人@我]</span> : null}
-                  <UsernameSpan uid={c.lastMessage?.fromUID!} channel={c.channel!} colon />
-                  {c.lastMessage?.contentType === ChatMessageType.Cmd
+                  {s.isMentionMe ? <span className="text-destructive">[有人@我]</span> : null}
+                  {
+                    s.message?.type === ChatMessageType.Image || s.message?.type === ChatMessageType.Text ? (
+                      <span>{s.message?.senderName}: &nbsp;</span>
+                    ): null
+                  }
+                  {s.message?.type ? {
+                    [ChatMessageType.Cmd]: '[系统消息]',
+                    [ChatMessageType.Text]: s.message?.content,
+                    [ChatMessageType.Image]: '[图片]',
+                    [ChatMessageType.System]: '加入群聊',
+                  }[s.message?.type] : ''}
+                  {/* {c.lastMessage?.contentType === ChatMessageType.Cmd
                     ? c.lastMessage.content.cmd === ChatCmdType.MessageRevoke
                       ? '撤回了一条消息'
                       : '[系统消息]'
@@ -126,12 +137,12 @@ export const Sessions = () => {
                       ? '[图片]'
                       : +c.lastMessage!.contentType === +ChatMessageType.System
                         ? '加入群聊'
-                        : c.lastMessage?.content.text || ''}
+                        : c.lastMessage?.content.text || ''} */}
                 </div>
-                <div className="text-xs text-tertiary">
+                {/* <div className="text-xs text-tertiary">
                   {c.lastMessage?.timestamp ? dateUtils.dateAgo(dayjs(c.lastMessage.timestamp * 1000)) : null}
-                </div>
-              </div> */}
+                </div> */}
+              </div>
             </div>
           </div>
         ))

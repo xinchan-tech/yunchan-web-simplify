@@ -470,7 +470,7 @@ const AlarmRecordItem = ({ symbol, data, onDelete }: AlarmRecordItemProps) => {
       return (
         <span data-direction={value > 0 ? 'up' : 'down'}>
           止损触发价&nbsp;
-          {triggerValue}&nbsp;
+          {triggerValue.toFixed(3)}&nbsp;
           {value > 0 ? '↑' : '↓'}
         </span>
       )
@@ -489,7 +489,7 @@ const AlarmRecordItem = ({ symbol, data, onDelete }: AlarmRecordItemProps) => {
         <JknIcon.Stock symbol={symbol} className="w-4 h-4 leading-4 mr-1" />
         <span>{symbol}</span>，{renderTrigger()}
         <span className="bg-accent rounded-xs px-1 py-[1px] box-border text-tertiary text-xs ml-1">
-          {data.type === AlarmType.AI ? 'AI' : '股价'}
+          {data.type === AlarmType.AI ? 'AI' : data.type === AlarmType.PERCENT ? '浮动' : '股价'}
         </span>
         <div className="absolute -right-2 -top-1 alarm-list-item-action space-x-1 text-secondary">
           <JknIcon.Svg
@@ -525,8 +525,9 @@ const AlarmRecordItem = ({ symbol, data, onDelete }: AlarmRecordItemProps) => {
             {data.condition.data.trigger_type === 1 ? (
               <span>{Decimal.create(data.condition.data.pnl_percent).mul(100).toFixed(2)}%</span>
             ) : (
-              <span>{data.condition.data.pnl_price}</span>
+              <span>{data.condition.data.pnl_price.toFixed(3)}</span>
             )}
+            &nbsp;
           </span>
         ) : null}
         {data.alarm_time ? <span>触发时间&nbsp;美东&nbsp;{dateUtils.toUsDay(data.alarm_time).format('MM/DD w HH:mm')}</span> : null}

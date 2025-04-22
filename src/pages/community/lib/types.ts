@@ -101,6 +101,7 @@ export type ChatTextMessage = MessageBase & {
   type: ChatMessageType.Text
   senderAvatar: string
   mentionUser: ChatUser[]
+  mentionAll: boolean
 }
 
 export type ChatImageMessage = MessageBase & {
@@ -119,4 +120,5 @@ export interface ChatSession {
   channel: ChatChannel
   message?: ChatMessage
   unRead: number
+  isMentionMe: boolean
 }

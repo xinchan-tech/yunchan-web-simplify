@@ -1,8 +1,8 @@
 import { WKSDK } from 'wukongimjssdk'
 import type { ChatChannel } from './types'
-import { queryClient } from "@/utils/query-client"
-import { getChatNameAndAvatar } from "@/api"
-import { userCache } from "../cache/user"
+import { queryClient } from '@/utils/query-client'
+import { getChatNameAndAvatar } from '@/api'
+import { userCache } from '../cache/user'
 
 const sessionUserCache = new Map<string, { name: string; avatar?: string }>()
 
@@ -22,16 +22,19 @@ export const fetchUserFromCache = async (userId: string) => {
   //   }
   // }
 
-
   const r = await queryClient.ensureQueryData({
     queryKey: [getChatNameAndAvatar.cacheKey, { type: '1', id: userId }],
     queryFn: () => getChatNameAndAvatar({ type: '1', id: userId })
   })
 
-  sessionUserCache.set(userId, { name: r.name, avatar: r.avatar })
+  if (r) {
+    sessionUserCache.set(userId, { name: r.name, avatar: r.avatar })
 
-  return {
-    name: r.name,
-    avatar: r.avatar
+    return {
+      name: r?.name,
+      avatar: r?.avatar
+    }
   }
+
+  return
 }

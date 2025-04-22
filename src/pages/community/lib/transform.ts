@@ -19,6 +19,8 @@ import {
   type ChatChannel,
   type ChatSession
 } from './types'
+import { useUser } from "@/store"
+import { fetchUserFromCache } from "./utils"
 
 export const MessageTransform = {
   toMessage: (msg: any) => {
@@ -310,7 +312,8 @@ export const ConversationTransform = {
     const session: ChatSession = {
       id: v.channel.channelID,
       channel: channel,
-      unRead: v.unread
+      unRead: v.unread,
+      isMentionMe: false,
     }
     // message: {
     //   id: v.lastMessage?.messageID ?? nanoid(),
@@ -340,11 +343,17 @@ export const ConversationTransform = {
           cmdType: v.lastMessage.content.cmd
         }
       } else if (v.lastMessage.contentType === ChatMessageType.Text) {
+        const user = useUser.getState().user?.id
+        const content = v.lastMessage.content as MessageText
         session.message = {
           ...message,
+          content: content.text,
           type: ChatMessageType.Text,
-          mentionUser: v.lastMessage.content.mentionUser
+          mentionUser: content.mention?.uids?.length ? (await Promise.all(content.mention.uids.map(s => fetchUserFromCache(s)))) : [],
+          mentionAll: content.mention?.all ?? false,
         } as ChatTextMessage
+
+        session.isMentionMe = content.mention?.uids?.some(u => u === user) || content.mention?.all || false
       }
     }
 
