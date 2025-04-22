@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.4.3](https://github.com/xinchan-gx/yunchan-web/compare/2.4.2...2.4.3) (2025-04-22)
+
+### ✨ Features | 新功能
+
+* 添加解密功能以处理重定向查询参数，并优化未授权用户的导航逻辑 ([53e2c6f](https://github.com/xinchan-gx/yunchan-web/commit/53e2c6fe962b12119f3ac52b2e080d70ae1ab480))
+
 ## [2.4.2](https://github.com/xinchan-gx/yunchan-web/compare/2.4.1...2.4.2) (2025-04-21)
 
 ### ✨ Features | 新功能
