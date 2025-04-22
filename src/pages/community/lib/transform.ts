@@ -1,7 +1,5 @@
 import { Buffer } from 'buffer'
-import { ChatCmdType, ChatMessageType } from '@/store'
 import { stringToUint8Array } from '@/utils/string'
-import { assign } from 'radash'
 import WKSDK, {
   Channel,
   ChannelInfo,
@@ -13,6 +11,7 @@ import WKSDK, {
   Setting,
   Subscriber
 } from 'wukongimjssdk'
+import { ChatCmdMessage, ChatMessageType, ChatTextMessage, type ChatChannel, type ChatSession } from './types'
 
 export const MessageTransform = {
   toMessage: (msg: any) => {
@@ -291,6 +290,54 @@ export const ConversationTransform = {
         mute: v.channelInfo?.mute,
         top: v.channelInfo?.top,
         orgData: v.channelInfo?.orgData
+      }
+    }
+  },
+  toSession: async (v: Conversation) => {
+    const channel: ChatChannel = {
+      id: v.channel.channelID,
+      name: v.channelInfo?.title ?? '',
+      avatar: v.channelInfo?.logo ?? '',
+      type: v.channel.channelType
+    }
+    const session: ChatSession = {
+      id: v.channel.channelID,
+      channel: channel,
+      unRead: v.unread
+    }
+    // message: {
+    //   id: v.lastMessage?.messageID ?? nanoid(),
+    //   channel: channel,
+    //   content: v.lastMessage?.content,
+    //   senderId: v.lastMessage?.fromUID ?? '',
+    //   senderName: v.lastMessage?.remoteExtra.extra.fromName,
+    //   date: v.timestamp,
+    //   status: MessageStatus.Normal
+    // }
+
+    if (v.lastMessage) {
+      const message = {
+        id: v.lastMessage.messageID,
+        channel: channel,
+        content: v.lastMessage.content,
+        senderId: v.lastMessage.fromUID,
+        senderName: v.lastMessage.remoteExtra.extra.fromName,
+        date: v.timestamp,
+        status: MessageStatus.Normal
+      }
+      if (v.lastMessage.contentType === ChatMessageType.Cmd) {
+        session.message = {
+          ...message,
+          type: ChatMessageType.Cmd,
+          cmdType: v.lastMessage.content.cmd
+        }
+      }
+
+      if (v.lastMessage.contentType === ChatMessageType.Text) {
+        session.message = {
+          ...message,
+          me: v.lastMessage.content.mentionUser,
+        } as ChatTextMessage
       }
     }
   }

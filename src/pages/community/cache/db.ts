@@ -2,16 +2,28 @@ import type { IDBPDatabase } from 'idb'
 import { openDB } from 'idb'
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 export const CacheStoreName = {
-  CONVERSATION_STORE: 'chat-conversation',
-  SUBSCRIBER_STORE: 'chat-subscriber',
-  MESSAGE_STORE: 'chat-message',
-  USER_STORE: 'chat-user'
+  /**
+   * 会话存储
+   */
+  CONVERSATION_STORE: 'community-conversation',
+  /**
+   * 订阅存储/用户
+   */
+  SUBSCRIBER_STORE: 'community-subscriber',
+  /**
+   * 消息存储
+   */
+  MESSAGE_STORE: 'community-message',
+  /**
+   * 用户存储
+   */
+  USER_STORE: 'community-user'
 }
 
 export class ChatCache {
   public db: Nullable<IDBPDatabase> = null
-  public static DB_NAME = 'chat-store'
-  public static DB_VERSION = 4
+  public static DB_NAME = 'community-store'
+  public static DB_VERSION = 1
 
   constructor() {
     openDB(ChatCache.DB_NAME, ChatCache.DB_VERSION, {

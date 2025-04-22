@@ -1,67 +1,15 @@
 import { HoverCard, HoverCardArrow, HoverCardContent, HoverCardTrigger, JknAlert, JknAvatar, JknIcon, JknModal, Label, RadioGroup, RadioGroupItem } from "@/components"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { useToken, useUser } from "@/store"
+import { useUser } from "@/store"
 import { Outlet, useLocation } from "react-router"
-import { chatConstants, chatManager, useChatStore } from "./lib/store"
 import { ChannelList } from "./components/channel-list"
-import { useMount } from "ahooks"
-import { loginImService } from "@/api"
-import { useEffect, useRef } from "react"
-import { WKSDK } from "wukongimjssdk"
-import { connectStatusListener } from "./lib/event"
-import { initImDataSource } from "./lib/datasource"
+import { chatManager, useChatStore } from "./lib/store"
+import { useConnectIM } from "./lib/subscribe"
 
 
 const CommunityPage = () => {
   const user = useUser(s => s.user)
-  const loginStatus = useRef(false)
-  const token = useToken(s => s.token)
-
-  useMount(() => {
-    if (!loginStatus.current) {
-      loginImService().then(() => {
-        loginStatus.current = true
-      })
-    }
-  })
-
-  useEffect(() => {
-    if (!token || !user?.username) {
-      return
-    }
-
-    const localConfig = chatManager.getWsConfig()
-    const channel = new BroadcastChannel(chatConstants.broadcastChannelId)
-
-    if (!user?.username || !token) {
-      return
-    }
-
-    WKSDK.shared().config.uid = user.username
-    WKSDK.shared().config.token = token
-    WKSDK.shared().config.addr = localConfig.addr
-    WKSDK.shared().config.deviceFlag = localConfig.deviceFlag
-
-    /**
-     * 监听事件
-     */
-    WKSDK.shared().connectManager.addConnectStatusListener(connectStatusListener)
-    // WKSDK.shared().chatManager.addCMDListener(cmdListener)
-
-    channel.onmessage = event => {
-      if (event.data.type === 'logout') {
-        window.close()
-      }
-    }
-    initImDataSource()
-    WKSDK.shared().connectManager.connect()
-    return () => {
-      channel.close()
-      WKSDK.shared().connectManager.removeConnectStatusListener(connectStatusListener)
-      // WKSDK.shared().chatManager.removeCMDListener(cmdListener)
-      WKSDK.shared().disconnect()
-    }
-  }, [token, user?.username])
+  useConnectIM()
 
   return (
     <div className="flex h-screen w-screen overflow-hidden">

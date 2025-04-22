@@ -202,7 +202,16 @@ export const routes: RouteObject[] = [
     Component: lazy(() => import('@/pages/community')),
     handle: {
       title: '讨论社群'
-    }
+    },
+    children: [
+      {
+        index: true,
+        Component: lazy(() => import('@/pages/community/chat')),
+        handle: {
+          title: '讨论社群'
+        }
+      }
+    ]
   },
   {
     path: '*',

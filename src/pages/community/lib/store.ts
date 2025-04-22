@@ -1,14 +1,14 @@
 import { Channel, ConnectStatus } from 'wukongimjssdk'
 import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
-import { ChatCmdType, ChatMessageType, type ChatStore, chatConstants } from './types'
+import { type ChatChannel, ChatCmdType, ChatConnectStatus, ChatMessageType, type ChatStore, chatConstants } from './types'
 
 const wsUrlPrefix = `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${window.location.host}`
 
 const useChatStore = create<ChatStore>()(
   persist(
     _get => ({
-      state: ConnectStatus.Disconnect,
+      state: ChatConnectStatus.Disconnect,
       config: {
         addr: `${wsUrlPrefix}/im-ws`,
         deviceFlag: 5,
@@ -50,12 +50,12 @@ export const chatManager = {
     const wsConfig = { ...useChatStore.getState().config }
     return wsConfig
   },
-  setState: (state: ConnectStatus) => {
+  setState: (state: ChatConnectStatus) => {
     useChatStore.setState({
       state
     })
   },
-  setChannel: (channel: Channel) => {
+  setChannel: (channel: ChatChannel) => {
     useChatStore.setState({
       channel: channel
     })

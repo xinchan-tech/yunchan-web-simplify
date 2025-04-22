@@ -1,44 +1,20 @@
-import { chatManager } from '@/store'
-import mitt from 'mitt'
-import { ConnectStatus, type ConnectStatusListener, type Message, type Subscriber } from 'wukongimjssdk'
-
-export const connectStatusListener: ConnectStatusListener = (status, reasonCode, connectInfo) => {
-  chatManager.setState(status)
-
-  if (status === ConnectStatus.ConnectKick || status === ConnectStatus.ConnectFail) {
-    console.warn('Warning: Connection failed or kicked, code: {}, info: {}', reasonCode, connectInfo)
-  }
-}
+import { createEvent } from '@/utils/event'
+import type { ChatSession } from './types'
+import { useMount, useUnmount } from 'ahooks'
 
 export type ChatEvent = {
-  mentionUser: {
-    userInfo: {
-      uid: string
-      name: string
-    }
-    channelId: string
-  }
-  revokeMessage: {
-    channelId: string
-    message: Message
-  }
-  replyMessage: {
-    channelId: string
-    message: Message
-    fromName: string
-  }
-  copyMessage: {
-    channelId: string
-    message: Message
-  }
-  updateMe: {
-    channelId: string
-    subscribe: Subscriber
-  }
-  messageInit: null
-  messageUpdate: null
-  messageFetchMore: null
-  messageFetchMoreDone: null
+  syncSession: ChatSession[]
+  updateSession: ChatSession
 }
 
-export const chatEvent = mitt<ChatEvent>()
+export const chatEvent = createEvent<ChatEvent>()
+
+export const useChatEvent = <T extends keyof ChatEvent>(event: T, cb: (value: ChatEvent[T]) => void) => {
+  useMount(() => {
+    chatEvent.on(event, cb)
+  })
+
+  useUnmount(() => {
+    chatEvent.off(event, cb)
+  })
+}
