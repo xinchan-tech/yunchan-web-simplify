@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.5.3](https://github.com/xinchan-gx/yunchan-web/compare/2.5.2...2.5.3) (2025-04-22)
+
+### ✨ Features | 新功能
+
+* 优化聊天名称和头像获取逻辑，增强用户头像组件的状态管理；更新消息转换逻辑以支持提及功能 ([e477bc4](https://github.com/xinchan-gx/yunchan-web/commit/e477bc4714cee89f24cd067fa36e43ac4a945ce0))
+
 ## [2.5.2](https://github.com/xinchan-gx/yunchan-web/compare/2.5.1...2.5.2) (2025-04-22)
 
 ### ✨ Features | 新功能
