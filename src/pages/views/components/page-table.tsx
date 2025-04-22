@@ -88,20 +88,18 @@ const PageTable = (props: PageTableProps) => {
     })
 
     const cancel = stockSubscribe.on('rank_subscribe', (data) => {
-      if(Object.keys(data).length > 0){
+      if(data.data.length > 0){
         setList((s: TableDataType[]) => {
-          Object.keys(data.data).forEach((key) => {
-            const index = Number(key)
-            console.log(index)
-
+          data.data.forEach(v => {
+            const index = v.rank
             if(s[index]){
-              s[index].price = data.data[key as any].close
-              s[index].percent = data.data[key as any].percent
-              s[index].symbol = data.data[key as any].symbol
-              s[index].amount = data.data[key as any].turnover
-              s[index].total = data.data[key as any].marketValue
-              s[index].prePercent = data.data[key as any].prePercent
-              s[index].afterPercent = data.data[key as any].afterPercent
+              s[index].price = v.close
+              s[index].percent = v.percent
+              s[index].symbol = v.symbol
+              s[index].amount = v.turnover
+              s[index].total = v.marketValue
+              s[index].prePercent = v.prePercent
+              s[index].afterPercent = v.afterPercent
             }
           })
 

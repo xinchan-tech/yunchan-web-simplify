@@ -2,7 +2,7 @@ import { JknIcon, JknSearchInput } from "@/components"
 import { chatManager, useChatStore } from "../lib/store"
 import { ChatConnectStatus, type ChatSession } from "../lib/types"
 import { useChatEvent } from "../lib/event"
-import { useCallback, useMemo } from "react"
+import { useCallback, useEffect, useMemo } from "react"
 import { useImmer } from "use-immer"
 import { UserAvatar } from "../components/user-avatar"
 
@@ -30,6 +30,10 @@ const statusInfo: Record<ChatConnectStatus, { color: string; text: string }> = {
   [ChatConnectStatus.Syncing]: {
     color: 'blue',
     text: '同步中'
+  },
+  [ChatConnectStatus.SyncingFail]: {
+    color: 'red',
+    text: '同步失败'
   }
 }
 
@@ -67,32 +71,18 @@ export const Sessions = () => {
           className="text-secondary placeholder:text-tertiary"
           placeholder="搜索"
         />
-        {/* <CreateGroup /> */}
       </div>
       {
         sessionList.map(s => (
           <div
             key={s.channel.id}
-            className="flex conversation-card overflow-hidden cursor-pointer"
-            data-check={s.channel.id === channel?.id}
-            // className={cn(
-            //   '',
-            //   c.channel.channelID === lastChannel?.channelID && 'actived'
-            // )}
+            className="flex conversation-card overflow-hidden cursor-pointer data-[checked=true]:bg-accent"
+            data-checked={s.channel.id === channel?.id}
             onClick={() => chatManager.setChannel(s.channel)}
             onKeyDown={() => { }}
           >
             <div className="group-avatar rounded-md flex items-center text-ellipsis justify-center relative">
               <UserAvatar src={s.channel.avatar} shape="square" uid={s.channel.name} className="w-[30px] h-[30px]" />
-              {/* <ChatAvatar
-                radius="4px"
-                className="w-[30px] h-[30px]"
-                data={{
-                  name: c.channelInfo?.title || '',
-                  uid: c.channel.channelID,
-                  avatar: c.channelInfo?.logo || ''
-                }}
-              /> */}
               {s.unRead > 0 ? (
                 <div className="absolute h-[14px] box-border unread min-w-5 text-xs">
                   {s.unRead > 99 ? '99+' : s.unRead}

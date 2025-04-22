@@ -56,7 +56,8 @@ export enum ChatConnectStatus {
   Connecting = 2,
   ConnectFail = 3,
   ConnectKick = 4,
-  Syncing = 5
+  Syncing = 5,
+  SyncingFail = 6
 }
 
 export interface ChatChannel {

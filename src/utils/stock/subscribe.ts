@@ -39,7 +39,8 @@ const quoteActionResultParser = (data: any) => {
     changePercent: Number.parseFloat(raws[3]),
     percent: (Number.parseFloat(raws[1]) - Number.parseFloat(raws[2])) / Number.parseFloat(raws[2]),
     volume: Number.parseFloat(raws[4]),
-    turnover: Number.parseFloat(raws[5])
+    turnover: Number.parseFloat(raws[5]),
+    marketValue: Number.parseFloat(raws[6] ?? 0),
   }
 
   return {

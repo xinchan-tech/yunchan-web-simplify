@@ -56,8 +56,8 @@ export const UserAvatar = (props: UserAvatarProps) => {
   }
 
   return (
-    <div className={cn(className)} style={styles}>
-      <img className="w-full" src={avatar} alt={avatar} />
+    <div className={cn(className, 'overflow-hidden')} style={styles}>
+      <img className="w-full h-full" src={avatar} alt={avatar} />
     </div>
   )
 }

@@ -11,7 +11,14 @@ import WKSDK, {
   Setting,
   Subscriber
 } from 'wukongimjssdk'
-import { ChatCmdMessage, ChatCmdType, ChatMessageType, ChatTextMessage, type ChatChannel, type ChatSession } from './types'
+import {
+  ChatCmdMessage,
+  ChatCmdType,
+  ChatMessageType,
+  type ChatTextMessage,
+  type ChatChannel,
+  type ChatSession
+} from './types'
 
 export const MessageTransform = {
   toMessage: (msg: any) => {
@@ -325,21 +332,22 @@ export const ConversationTransform = {
         date: v.timestamp,
         status: MessageStatus.Normal
       }
+      
       if (v.lastMessage.contentType === ChatMessageType.Cmd) {
         session.message = {
           ...message,
           type: ChatMessageType.Cmd,
           cmdType: v.lastMessage.content.cmd
         }
-      }
-
-      if (v.lastMessage.contentType === ChatMessageType.Text) {
+      } else if (v.lastMessage.contentType === ChatMessageType.Text) {
         session.message = {
           ...message,
           type: ChatMessageType.Text,
-          mentionUser: v.lastMessage.content.mentionUser,
+          mentionUser: v.lastMessage.content.mentionUser
         } as ChatTextMessage
       }
     }
+
+    return session
   }
 }
