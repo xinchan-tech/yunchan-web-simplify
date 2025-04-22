@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.5.4](https://github.com/xinchan-gx/yunchan-web/compare/2.5.3...2.5.4) (2025-04-22)
+
+### ✨ Features | 新功能
+
+* 修正价格计算逻辑，更新股票信息获取，添加股票涨跌状态 ([ed4a658](https://github.com/xinchan-gx/yunchan-web/commit/ed4a658d228a02bcb09a4c8d5cc90f7938c2ec3c))
+
 ## [2.5.3](https://github.com/xinchan-gx/yunchan-web/compare/2.5.2...2.5.3) (2025-04-22)
 
 ### ✨ Features | 新功能
