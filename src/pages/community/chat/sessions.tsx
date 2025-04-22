@@ -82,7 +82,7 @@ export const Sessions = () => {
             onKeyDown={() => { }}
           >
             <div className="group-avatar rounded-md flex items-center text-ellipsis justify-center relative">
-              <UserAvatar src={s.channel.avatar} shape="square" uid={s.channel.name} className="w-[30px] h-[30px]" />
+              <UserAvatar src={s.channel.avatar} shape="square" uid={s.channel.id} name={s.channel.name} className="w-[30px] h-[30px]" />
               {s.unRead > 0 ? (
                 <div className="absolute h-[14px] box-border unread min-w-5 text-xs">
                   {s.unRead > 99 ? '99+' : s.unRead}

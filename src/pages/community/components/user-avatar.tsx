@@ -1,21 +1,22 @@
-import { fetchUserInChannel } from "@/pages/groupchat/lib/utils"
 import { useChatStore } from "@/store"
 import { colorUtil, cn } from "@/utils/style"
 import { useState, useEffect } from "react"
+import { fetchUserFromCache } from "../lib/utils"
 
 interface UserAvatarProps {
   shape: 'circle' | 'square' | number
   avatar?: string
   src: string
   className?: string
+  name?: string
   uid: string
   size?: string | number
 }
 
 export const UserAvatar = (props: UserAvatarProps) => {
-  const { shape, src, uid, className, size = 33 } = props
+  const { shape, src, uid, className, size = 33, name: _name } = props
   const [avatar, setAvatar] = useState<string>(src)
-  const [name, setName] = useState<string>(uid)
+  const [name, setName] = useState<string>(_name || uid)
 
   useEffect(() => {
     if (src) {
@@ -23,7 +24,7 @@ export const UserAvatar = (props: UserAvatarProps) => {
     } else {
       const channel = useChatStore.getState().lastChannel
       if (channel) {
-        fetchUserInChannel(channel, uid).then(r => {
+        fetchUserFromCache(uid).then(r => {
           if (r.avatar) {
             setAvatar(r.avatar)
           } else {
