@@ -79,6 +79,7 @@ export const HotTop = () => {
       },
       yAxis: {
         splitNumber: 3,
+        max: Math.max(...r.map(item => item.score)),
         type: 'value',
         axisLabel: {
           showMinLabel: false,

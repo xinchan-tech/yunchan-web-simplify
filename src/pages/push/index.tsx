@@ -44,9 +44,7 @@ type TableDataType = Stock & {
 }
 
 const getLastTime = () => {
-  const usTime = useTime.getState().usTime
-  const localTime = useTime.getState().localStamp
-  const localDate = dayjs(new Date().valueOf() - localTime + usTime).tz('America/New_York')
+  const localDate = dateUtils.toUsDay(Date.now().valueOf())
 
   if (localDate.isBefore(localDate.hour(9).minute(30).second(0))) {
     return getPrevTradingDays(localDate, 1)[0]

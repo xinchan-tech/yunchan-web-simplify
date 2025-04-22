@@ -1,16 +1,11 @@
-import type { OverlayFigure, OverlayTemplate } from '@/plugins/jkn-kline-chart'
-import type { DrawOverlayParams } from '../types'
-import { drawOverlayParamsToFigureStyle } from '../utils'
+import { drawOverlayParamsToFigureStyle, createOverlayTemplate } from '../utils'
 
 const colors = ['#1e8bf1', '#00a74e', '#ff2c3f']
 const texts = ['止盈位', '买入位', '止损位']
 
-export const FireWallOverlay: OverlayTemplate<DrawOverlayParams> = {
+export const FireWallOverlay = createOverlayTemplate({
   name: 'firewall',
   totalStep: 4,
-  needDefaultPointFigure: true,
-  needDefaultXAxisFigure: false,
-  needDefaultYAxisFigure: false,
   createYAxisFigures: ({ coordinates, bounding, overlay }) => {
     const lineStyles = drawOverlayParamsToFigureStyle('line', overlay.extendData)
     return [
@@ -49,7 +44,7 @@ export const FireWallOverlay: OverlayTemplate<DrawOverlayParams> = {
       }))
     ]
   },
-  createPointFigures: ({ coordinates, bounding, overlay }) => {
+  createPointFigures: ({ coordinates, bounding, overlay, yAxis }) => {
     const lineStyles = drawOverlayParamsToFigureStyle('line', overlay.extendData)
     const textStyles = drawOverlayParamsToFigureStyle('text', overlay.extendData)
     if (coordinates.length >= 1) {
@@ -78,18 +73,19 @@ export const FireWallOverlay: OverlayTemplate<DrawOverlayParams> = {
           attrs: {
             x: bounding.width,
             y: c.y,
-            text: c.y,
-            align: 'right'
+            text: yAxis?.convertFromPixel(c.y).toFixed(3) ?? '',
+            align: 'right',
+            baseline: 'bottom'
           },
           styles: {
             ...textStyles,
             color: colors[i],
             backgroundColor: 'transparent',
-            size: 16
+            size: 14
           }
         }))
       ]
     }
     return []
   }
-}
+});

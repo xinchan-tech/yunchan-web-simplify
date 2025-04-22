@@ -233,7 +233,7 @@ const GoldenPool = () => {
         title: '总市值',
         dataIndex: 'marketValue',
         align: 'left',
-        width: '19.5%',
+        width: '12.5%',
         sort: true,
         render: (_, row) => (
           <SubscribeSpan.MarketValue
@@ -248,7 +248,7 @@ const GoldenPool = () => {
       {
         title: '所属行业',
         dataIndex: 'industry',
-        align: 'left',
+        align: 'right',
         sort: true,
         render: (_, row) => <span className="text-[14px]">{row.industry}</span>
       },

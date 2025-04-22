@@ -788,7 +788,6 @@ const GoldenStockPool = () => {
 
   const query = useQuery({
     queryKey: [getStockCollects.cacheKey, type],
-    refetchInterval: 5 * 1000,
     queryFn: () =>
       getStockCollects({
         cate_id: +type,

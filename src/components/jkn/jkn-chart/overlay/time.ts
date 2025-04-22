@@ -1,9 +1,9 @@
-import type { Coordinate, LineAttrs, OverlayTemplate, Point, RectAttrs, TextAttrs } from '@/plugins/jkn-kline-chart'
+import type { Coordinate, LineAttrs, Point, RectAttrs, TextAttrs } from '@/plugins/jkn-kline-chart'
 import dayjs from 'dayjs'
-import type { DrawOverlayParams } from "../types"
-import { drawOverlayParamsToFigureStyle } from "../utils"
-import { PolygonType } from "@/plugins/jkn-kline-chart"
-import { colorUtil } from "@/utils/style"
+import { drawOverlayParamsToFigureStyle } from '../utils'
+import { PolygonType } from '@/plugins/jkn-kline-chart'
+import { colorUtil } from '@/utils/style'
+import { createOverlayTemplate } from '../utils'
 
 function getRect(coordinates: Coordinate[]): RectAttrs {
   return {
@@ -98,12 +98,9 @@ const getText = (rect: RectAttrs, lines: number, day: number, height: number, pe
   return texts
 }
 
-export const TimeOverlay: OverlayTemplate<DrawOverlayParams> = {
+export const TimeOverlay = createOverlayTemplate({
   name: 'time',
   totalStep: 3,
-  needDefaultPointFigure: true,
-  needDefaultXAxisFigure: false,
-  needDefaultYAxisFigure: false,
   createPointFigures: ({ coordinates, chart, overlay }) => {
     if (coordinates.length < 2) {
       return []
@@ -124,24 +121,26 @@ export const TimeOverlay: OverlayTemplate<DrawOverlayParams> = {
 
       if (first) {
         kline = dataList.length
-        day = Math.abs(dayjs(first.timestamp).diff(dayjs(last.timestamp), 'day'))
+        day = Math.max(Math.abs(dayjs(first.timestamp).diff(dayjs(last.timestamp), 'day')), 1)
       }
     }
 
-    const percent = Math.abs((coordinates[1].y - coordinates[0].y) / coordinates[0].y)
-    const height = coordinates[0].y - coordinates[1].y
+    const percent = (overlay.points[1].value! - overlay.points[0].value!) / overlay.points[0].value!
+    const height = overlay.points[1].value! - overlay.points[0].value!
 
     const rect = getRect(coordinates)
     const lines = getArrow(rect)
     const texts = getText(rect, kline, day, height, percent)
-    
+
     return [
       {
         type: 'rect',
         attrs: rect,
         styles: {
           ...drawOverlayParamsToFigureStyle('rect', overlay.extendData),
-          color: colorUtil.rgbaToString(colorUtil.hexToRGBA(colorUtil.rgbToHex(colorUtil.parseRGBA(overlay.extendData.color)!), 0.2)),
+          color: colorUtil.rgbaToString(
+            colorUtil.hexToRGBA(colorUtil.rgbToHex(colorUtil.parseRGBA(overlay.extendData.color)!), 0.2)
+          ),
           style: PolygonType.StrokeFill
         }
       },
@@ -162,4 +161,4 @@ export const TimeOverlay: OverlayTemplate<DrawOverlayParams> = {
       }
     ]
   }
-}
+})

@@ -197,9 +197,9 @@ export const renderUtils = {
       case 'rectangle':
         return 4
       case 'gold':
-        return 9
+        return 14
       case 'time':
-        return 12
+        return 20
       case 'remark':
         return 6
       case 'firewall':
@@ -230,7 +230,7 @@ export const renderUtils = {
         return 'ray'
       case 4:
         return 'rectangle'
-      case 12:
+      case 20:
         return 'time'
       case 6:
         return 'remark'
@@ -240,6 +240,8 @@ export const renderUtils = {
         return 'support-line'
       case 44:
         return 'pressure-line'
+      case 14:
+        return 'gold'
       default:
         return undefined
     }

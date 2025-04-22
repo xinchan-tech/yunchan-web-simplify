@@ -18,7 +18,7 @@ import { useMount, useUnmount } from 'ahooks'
 import dayjs from 'dayjs'
 import Decimal from 'decimal.js'
 import { nanoid } from "nanoid"
-import { debounce } from 'radash'
+import { debounce, isArray } from 'radash'
 import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react'
 import { CoilingIndicatorId } from './coiling-calc'
 import {
@@ -145,11 +145,12 @@ interface JknChartIns {
       timestamp: number
       value: number
     }[]
+    id?: string
   }) => void
   setOverlay: (id: string, params: DrawOverlayParams) => void
   lockOverlay: (id?: string) => void
   unlockOverlay: (id?: string) => void
-  removeOverlay: (id?: string) => void
+  removeOverlay: (id?: string | string[]) => void
   hideOverlay: (visible: boolean) => void
 }
 
@@ -857,7 +858,7 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
       })
     },
     createOverlay: (type, opts) => {
-      const uid = `overlay-${nanoid(8)}`
+      const uid = opts.id || `overlay-${nanoid(8)}`
       chart.current?.createOverlay({
         id: uid,
         name: type,
@@ -933,6 +934,14 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
 
         return
       }
+
+      if (isArray(id)) {
+        id.forEach((overlayId) => {
+          chart.current?.removeOverlay({ id: overlayId })
+        })
+        return
+      }
+
       chart.current?.removeOverlay({ id })
     },
     hideOverlay: (visible) => {

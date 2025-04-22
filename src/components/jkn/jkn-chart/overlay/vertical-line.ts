@@ -1,13 +1,9 @@
-import type { OverlayTemplate } from '@/plugins/jkn-kline-chart'
-import { drawOverlayParamsToFigureStyle } from "../utils"
+import { drawOverlayParamsToFigureStyle, createOverlayTemplate } from "../utils"
 import type { DrawOverlayParams } from "../types"
 
-export const VerticalLineOverlay: OverlayTemplate<DrawOverlayParams> = {
+export const VerticalLineOverlay = createOverlayTemplate<DrawOverlayParams>({
   name: 'vline',
   totalStep: 2,
-  needDefaultPointFigure: true,
-  needDefaultXAxisFigure: false,
-  needDefaultYAxisFigure: false,
   createPointFigures: ({ coordinates, bounding, overlay }) => {
     if (coordinates.length === 1) {
       return [
@@ -31,4 +27,4 @@ export const VerticalLineOverlay: OverlayTemplate<DrawOverlayParams> = {
     }
     return []
   }
-}
+});

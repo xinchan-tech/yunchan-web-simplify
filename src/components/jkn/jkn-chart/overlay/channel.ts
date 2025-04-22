@@ -1,14 +1,10 @@
-import type { OverlayTemplate } from '@/plugins/jkn-kline-chart'
 import { getParallelLines } from './parallel'
-import { drawOverlayParamsToFigureStyle } from '../utils'
+import { drawOverlayParamsToFigureStyle, createOverlayTemplate } from '../utils'
 import type { DrawOverlayParams } from '../types'
 
-export const ChannelOverlay: OverlayTemplate<DrawOverlayParams> = {
+export const ChannelOverlay = createOverlayTemplate<DrawOverlayParams>({
   name: 'channel',
   totalStep: 4,
-  needDefaultPointFigure: true,
-  needDefaultXAxisFigure: false,
-  needDefaultYAxisFigure: false,
   createPointFigures: ({ coordinates, bounding, overlay }) => [
     {
       type: 'line',
@@ -16,4 +12,4 @@ export const ChannelOverlay: OverlayTemplate<DrawOverlayParams> = {
       styles: drawOverlayParamsToFigureStyle('line', overlay.extendData)
     }
   ]
-}
+});

@@ -3,17 +3,21 @@ import {
   type Coordinate,
   type LineAttrs,
   LineType,
-  type OverlayTemplate,
+  type Point,
   type TextAttrs
 } from '@/plugins/jkn-kline-chart'
 import type { DrawOverlayParams } from '../types'
-import { drawOverlayParamsToFigureStyle } from '../utils'
+import { drawOverlayParamsToFigureStyle, createOverlayTemplate } from '../utils'
 
-function getGoldLines(coordinates: Coordinate[], bounding: Bounding): LineAttrs[] {
+function getGoldLines(
+  coordinates: Coordinate[],
+  bounding: Bounding,
+  points: Point[]
+): (LineAttrs & { value: number })[] {
   const startX = 0
   const endX = bounding.width
 
-  return coordinates.map(coordinate => ({
+  return coordinates.map((coordinate, index) => ({
     coordinates: [
       {
         x: startX,
@@ -23,27 +27,38 @@ function getGoldLines(coordinates: Coordinate[], bounding: Bounding): LineAttrs[
         x: endX,
         y: coordinate.y
       }
-    ]
+    ],
+    value: points[index].value
   }))
 }
 
 const r = [0.191, 0.382, 0.5, 0.618]
 
-const getExtendLine = (coordinates: Coordinate[], bounding: Bounding): LineAttrs[] => {
+const getExtendLine = (
+  coordinates: Coordinate[],
+  bounding: Bounding,
+  points: Point[]
+): (LineAttrs & { value: number })[] => {
   if (coordinates.length < 2) {
     return []
   }
 
-  const lines: LineAttrs[] = []
+  const lines: (LineAttrs & { value: number })[] = []
 
   coordinates.slice(1).forEach((coordinate, index) => {
     const prev = coordinates[index]
 
     const distance = coordinate.y - prev.y
 
+    const prevText = points[index].value
+    const textDistance = points[index + 1].value - prevText
+    
+
     r.forEach(ratio => {
       const y = prev.y + distance * ratio
       const y2 = coordinate.y + distance * ratio
+      const yText = prevText + textDistance * ratio
+      const yText2 = points[index + 1].value + textDistance * ratio
 
       lines.push({
         coordinates: [
@@ -55,7 +70,8 @@ const getExtendLine = (coordinates: Coordinate[], bounding: Bounding): LineAttrs
             x: bounding.width,
             y
           }
-        ]
+        ],
+        value: yText
       })
 
       lines.push({
@@ -68,7 +84,8 @@ const getExtendLine = (coordinates: Coordinate[], bounding: Bounding): LineAttrs
             x: bounding.width,
             y: y2
           }
-        ]
+        ],
+        value: yText2
       })
     })
   })
@@ -76,11 +93,11 @@ const getExtendLine = (coordinates: Coordinate[], bounding: Bounding): LineAttrs
   return lines
 }
 
-const getTexts = (lines: LineAttrs[]): TextAttrs[] => {
+const getTexts = (lines: (LineAttrs & { value: number })[]): TextAttrs[] => {
   const texts: TextAttrs[] = []
 
   lines.forEach(item => {
-    const { coordinates } = item
+    const { coordinates, value } = item
 
     if (!coordinates.length) {
       return
@@ -88,10 +105,10 @@ const getTexts = (lines: LineAttrs[]): TextAttrs[] => {
 
     const { y } = coordinates[0]
 
-    const text = y
+    const text = value.toFixed(2)
 
     texts.push({
-      text: text.toFixed(2),
+      text: text,
       x: 0,
       y: y
     })
@@ -100,15 +117,20 @@ const getTexts = (lines: LineAttrs[]): TextAttrs[] => {
   return texts
 }
 
-export const GoldOverlay: OverlayTemplate<DrawOverlayParams> = {
+export const GoldOverlay = createOverlayTemplate<DrawOverlayParams>({
   name: 'gold',
   totalStep: 3,
   needDefaultPointFigure: true,
   needDefaultXAxisFigure: false,
   needDefaultYAxisFigure: false,
+  onRightClick: e => {
+    e.preventDefault?.()
+    return true
+  },
   createPointFigures: ({ coordinates, bounding, overlay }) => {
-    const baseLines = getGoldLines(coordinates, bounding)
-    const extendLines = getExtendLine(coordinates, bounding)
+    if (!coordinates.length) return []
+    const baseLines = getGoldLines(coordinates, bounding, overlay.points as any)
+    const extendLines = getExtendLine(coordinates, bounding, overlay.points as any)
     const texts = getTexts([...baseLines, ...extendLines])
     const lineStyles = drawOverlayParamsToFigureStyle('line', overlay.extendData)
     const textStyles = drawOverlayParamsToFigureStyle('text', overlay.extendData)
@@ -132,9 +154,10 @@ export const GoldOverlay: OverlayTemplate<DrawOverlayParams> = {
         attrs: texts,
         styles: {
           backgroundColor: 'transparent',
+          size: 14,
           ...textStyles
         }
       }
     ]
   }
-}
+})

@@ -25,7 +25,7 @@ export const AlarmStockPicker = ({ value, onChange }: AlarmStickPickerProps) => 
     enabled: !!value,
     select: data =>
       data
-        ? stockUtils.toStock(data.stock, {
+        ? stockUtils.toStockWithExt(data.stock, {
             extend: data.extend,
             symbol: data.symbol,
             name: data.name
@@ -64,7 +64,7 @@ export const AlarmStockPicker = ({ value, onChange }: AlarmStickPickerProps) => 
                     <SubscribeSpan.Percent
                       trading="intraDay"
                       symbol={query.data.symbol}
-                      initValue={query.data.close}
+                      initValue={query.data.percent}
                       showColor={true}
                       initDirection={query.data.close - query.data.prevClose > 0}
                     />

@@ -78,6 +78,7 @@ export const PercentageAlarmSetting = (props: PercentageAlarmSettingProps) => {
     const base = stock.close
 
     form.getValues('rise')?.forEach(v => {
+      if (!v) return
       let price: Decimal
       let type = 2
       if (v.endsWith('%')) {
@@ -95,6 +96,7 @@ export const PercentageAlarmSetting = (props: PercentageAlarmSettingProps) => {
     })
 
     form.getValues('fall')?.forEach(v => {
+      if (!v) return
       let price: Decimal
       let type = 2
       if (v.endsWith('%')) {
@@ -137,6 +139,8 @@ export const PercentageAlarmSetting = (props: PercentageAlarmSettingProps) => {
     queryClient.refetchQueries({
       queryKey: [getAlarmConditionsList.cacheKey]
     })
+    form.setValue('fall', [])
+    form.setValue('rise', [])
   }
 
   return (
@@ -263,20 +267,22 @@ const PriceSetting = forwardRef((props: PriceSettingProps, _) => {
     select: data =>
       data
         ? stockUtils.toStock(data.stock, {
-            extend: data.extend,
-            symbol: data.symbol,
-            name: data.name
-          })
+          extend: data.extend,
+          symbol: data.symbol,
+          name: data.name
+        })
         : null
   })
 
   useEffect(() => {
+    if (!props.value?.length) {
+      setList([{ value: '', id: nanoid(8), type: 'percent' }])
+      return
+    }
+  }, [props.value])
+
+  useEffect(() => {
     if (query.data) {
-      // const stock = stockUtils.toStock(query.data.stock, {
-      //   extend: query.data.extend,
-      //   symbol: query.data.symbol,
-      //   name: query.data.name
-      // })
       const v = '5'
 
       setList([{ value: v, id: nanoid(8), type: 'percent' }])
@@ -297,7 +303,7 @@ const PriceSetting = forwardRef((props: PriceSettingProps, _) => {
 
   useEffect(() => {
     props.onChange?.(
-      list.filter(item => item.value).map(item => (item.type === 'percent' ? `${item.value}%` : item.value))
+      list.map(item => (item.type === 'percent' ? item.value ? `${item.value}%` : '' : item.value))
     )
   }, [list, props.onChange])
 

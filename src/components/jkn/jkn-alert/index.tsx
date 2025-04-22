@@ -94,7 +94,7 @@ export const JknAlert = {
     })
   },
 
-  toast(args: PureAlertOptions | string) {
+  error(args: PureAlertOptions | string) {
     let _args = {} as PureAlertOptions
     if (typeof args === 'string') {
       _args = { content: args }
@@ -104,10 +104,29 @@ export const JknAlert = {
     const _content = (
       <div className="text-center flex flex-col items-center">
         <div className="size-8 rounded-full border border-solid border-foreground flex items-center justify-center">
-          <JknIcon.Svg name="check" size={16} className="" />
+          <JknIcon.Svg name="close" size={16} className="" />
         </div>
         <div className="text-center mt-2.5">{content}</div>
       </div>
+    )
+
+    toast({
+      content: _content,
+      duration
+    })
+  },
+
+  toast(args: PureAlertOptions | string) {
+    let _args = {} as PureAlertOptions
+    if (typeof args === 'string') {
+      _args = { content: args }
+    }
+    const { content, duration } = _args
+
+    const _content = (
+      <span className="text-center flex flex-col items-center w-full">
+        <span className="text-center">{content}</span>
+      </span>
     )
 
     toast({
@@ -227,13 +246,13 @@ const PureAlertComponent = (props: PureAlertComponentProps) => {
 
   return (
     <AlertDialog open={open}>
-      <AlertDialogContent className="w-fit px-5 py-4 rounded-[12px] min-w-[102px] min-h-[102px] flex items-center justify-center box-border">
+      <AlertDialogContent className="w-fit px-5 py-4 rounded-[12px] min-w-[102px] flex items-center justify-center box-border">
         <VisuallyHidden>
           <AlertDialogHeader>
             <AlertDialogTitle />
           </AlertDialogHeader>
         </VisuallyHidden>
-        <AlertDialogDescription className="text-center p-0">{props.content}</AlertDialogDescription>
+        <AlertDialogDescription className="text-center p-0 min-h-fit">{props.content}</AlertDialogDescription>
       </AlertDialogContent>
     </AlertDialog>
   )

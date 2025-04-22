@@ -31,13 +31,14 @@ export const RemarkFigure: FigureTemplate<RemarkAttrs, RemarkStyles> = {
     const { color, fontColor } = styles
     const padding = [6, 6]
     let textMax = 128
-    let height = fontSize
+    let height = 0
     ctx.font = `${fontSize}px sans-serif`
 
     text.forEach(t => {
       textMax = Math.max(textMax, ctx.measureText(t).width)
       height += fontSize
     })
+    height = Math.max(height, fontSize + padding[0] * 2)
 
     /**
      * 画圆角矩形
@@ -89,7 +90,7 @@ export const RemarkFigure: FigureTemplate<RemarkAttrs, RemarkStyles> = {
      */
     ctx.fillStyle = fontColor || '#000'
     text.forEach((t, i) => {
-      ctx.fillText(t, x + padding[1], y - (i - 1) * fontSize - padding[0])
+      ctx.fillText(t, x + padding[1], y + i * fontSize + padding[0])
     })
     ctx.fillStyle = color
 

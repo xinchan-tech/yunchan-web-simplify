@@ -38,6 +38,7 @@ export type ChartEvents = {
   yAxisChange: ChartStore['yAxis']
   drawStart: {
     type: ChartOverlayType,
+    id?: string
     params: DrawOverlayParams,
     points?: {
       timestamp: number
@@ -66,7 +67,7 @@ export type ChartEvents = {
     lock: boolean
   }
   drawDelete: {
-    id?: string
+    id?: string | string[]
   },
   drawHide: boolean
 }
