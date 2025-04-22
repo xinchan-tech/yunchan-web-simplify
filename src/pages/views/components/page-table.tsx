@@ -12,6 +12,7 @@ import { useStockList } from "@/store"
 import { sysConfig } from "@/utils/config"
 import { stockSubscribe, stockUtils } from '@/utils/stock'
 import { useQuery } from '@tanstack/react-query'
+import { isNumber } from "radash"
 
 import { useEffect, useMemo } from 'react'
 import { useImmer } from 'use-immer'
@@ -70,7 +71,7 @@ const PageTable = (props: PageTableProps) => {
 
   useEffect(() => {
     if(sysConfig.PUBLIC_BASE_BUILD_ENV === 'PRODUCTION') return
-    if (!['close', 'increase', 'total_mv', 'amount', 'total', 'stock_before', 'stock_after'].includes(sort.column)) {
+    if (!['close', 'increase', 'total_mv', 'amount','stock_before', 'stock_after'].includes(sort.column)) {
       return
     }
 
