@@ -1,6 +1,6 @@
 import { HoverCard, HoverCardArrow, HoverCardContent, HoverCardTrigger, JknAlert, JknAvatar, JknIcon, JknModal, Label, RadioGroup, RadioGroupItem } from "@/components"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { useUser } from "@/store"
+import { useToken, useUser } from "@/store"
 import { Outlet, useLocation } from "react-router"
 import { ChannelList } from "./components/channel-list"
 import { chatManager, useChatStore } from "./lib/store"
@@ -9,7 +9,16 @@ import { useConnectIM } from "./lib/subscribe"
 
 const CommunityPage = () => {
   const user = useUser(s => s.user)
+  const token = useToken(s => s.token)
   useConnectIM()
+
+  if(!token){
+    return (
+      <div className="flex h-screen w-screen items-center justify-center">
+        
+      </div>
+    )
+  }
 
   return (
     <div className="flex h-screen w-screen overflow-hidden">
@@ -65,7 +74,7 @@ const Menu = () => {
 
 const Setting = () => {
   const config = useChatStore(s => s.config)
-  console.log("🚀 ~ Setting ~ config:", config)
+
   const user = useUser(s => s.user)
 
 

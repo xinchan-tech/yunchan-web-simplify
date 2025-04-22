@@ -11,6 +11,7 @@ interface UserAvatarProps {
   name?: string
   uid: string
   size?: string | number
+  type: '1' | '2'
 }
 
 export const UserAvatar = (props: UserAvatarProps) => {
@@ -22,16 +23,14 @@ export const UserAvatar = (props: UserAvatarProps) => {
     if (src) {
       setAvatar(src)
     } else {
-      const channel = useChatStore.getState().lastChannel
-      if (channel) {
-        fetchUserFromCache(uid).then(r => {
-          if (r.avatar) {
-            setAvatar(r.avatar)
-          } else {
-            setName(r.name)
-          }
-        })
-      }
+  
+      fetchUserFromCache(uid).then(r => {
+        if (r.avatar) {
+          setAvatar(r.avatar)
+        } else {
+          setName(r.name)
+        }
+      })
     }
   }, [src, uid])
 
