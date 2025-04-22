@@ -208,7 +208,7 @@ const AlarmItem = ({ symbol, data, onDelete }: AlarmItemProps) => {
       const value = data.condition.float_param.change_value
       const triggerValue =
         triggerStr === '盈亏比例'
-          ? (data.condition.float_param.price * (1 + value / 100)).toFixed(2)
+          ? `${(value * 100).toFixed(2)}%`
           : (value + data.condition.float_param.price).toFixed(2)
       return (
         <span data-direction={value > 0 ? 'up' : 'down'}>
@@ -274,7 +274,7 @@ const AlarmItem = ({ symbol, data, onDelete }: AlarmItemProps) => {
           起始价格{data.condition.float_param.price}&nbsp;&nbsp;
           <span>
             止损起始点
-            {data.condition.float_param.type === 1 ? (data.condition.float_param.price * (1 + data.condition.float_param.change_value / 100)).toFixed(2)
+            {data.condition.float_param.type === 1 ? (data.condition.float_param.price * (1 + data.condition.float_param.change_value)).toFixed(2)
               : (data.condition.float_param.change_value + data.condition.float_param.price).toFixed(2)}
           </span>
         </div>
