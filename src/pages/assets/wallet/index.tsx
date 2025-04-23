@@ -14,7 +14,7 @@ const Wallet = () => {
         <div className='h-[1.75rem]'>
         <AssetsTop />
         </div>
-        <div className='flex flex-1 mt-[0.9375rem] w-full h-full'>
+        <div className='flex flex-1 pt-[0.9375rem] w-full h-full box-border overflow-hidden'>
             <div className='w-[12.5rem]'>
                 <MenuInline />
             </div>

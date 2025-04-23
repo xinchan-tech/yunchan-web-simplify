@@ -2,7 +2,7 @@
 import AssetsTop from '../components/top';
 import AssetsInfo from '../components/info';
 import Securitygroup from '../components/security-group';
-import AiConfig from './ai-config'
+import AiConfig from './ai-config.tsx'
 import { useState } from "react";
 import { stockUtils } from '@/utils/stock'
 type TableDataType = ReturnType<typeof stockUtils.toStockWithExt>
@@ -16,11 +16,11 @@ const AiTrading = () => {
         setSharedData(row)
         setList(data)
     }
-    return <div className="pt-2.5 pb-5 pl-5 pr-8 box-border box-border min-h-screen flex flex-col">
+    return <div className="pt-2.5 pb-5 pl-5 pr-8 box-border box-border h-screen flex flex-col">
         <div className='h-[1.75rem]'>
             <AssetsTop key={'assets-top'} />
         </div>
-        <div className='flex flex-1 mt-[0.9375rem] w-full'>
+        <div className='flex flex-1 pt-[0.9375rem] w-full h-full box-border overflow-hidden'>
             <div className='w-[12.5rem]'>
                 <MenuInline key={'menu-inline'} />
             </div>
@@ -28,9 +28,9 @@ const AiTrading = () => {
                 <div className=''>
                     <AssetsInfo key={'assets-info'} />
                 </div>
-                <div className='mt-5 flex flex-1'>
+                <div className='mt-5 flex flex-1 overflow-hidden'>
                     <Securitygroup onUpdate={onUpdate} />
-                    <div className='ml-5 flex-1'>
+                    <div className='ml-5 flex flex-1'>
                         <AiConfig key={'ai-config'} list={list} row={sharedData} />
                     </div>
                 </div>

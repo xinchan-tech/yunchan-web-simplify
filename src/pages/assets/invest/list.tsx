@@ -54,7 +54,6 @@ const InvestList = () => {
 
   useEffect(() => {
     const r: TableDataType[] = []
-    console.log('query.data.items', query.data?.items, active)
     if (!query.data?.items) {
       setList([])
       return

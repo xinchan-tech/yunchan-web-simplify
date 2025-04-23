@@ -65,7 +65,7 @@ const ReportCurv = ({ rowdata }: { rowdata: TableDataType }) => {
 
   return <div className="border-[1px] border-[#3c3c3c] border-solid rounded-md w-full h-full p-6 box-border flex flex-col">
     <div className="text-2xl ">
-      回归曲线
+      回报曲线
     </div>
     <div className="flex">
       <div className="w-[12.5rem] flex items-end">

@@ -4,78 +4,79 @@ import {
     StockView,
     SubscribeSpan
 } from '@/components'
-import { getStockFinancials } from '@/api'
+import { getStockCollects, type StockRawRecord, getStockFinancials } from '@/api'
 import { useTableData } from '@/hooks'
 import { stockUtils } from '@/utils/stock'
+import { useConfig, useTime } from '@/store'
+import { type Stock, stockUtils } from '@/utils/stock'
 import { useEffect, useState, useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 type TableDataType = ReturnType<typeof stockUtils.toStockWithExt>
+const baseExtends: StockExtend[] = ['total_share', 'basic_index', 'day_basic', 'alarm_ai', 'alarm_all', 'financials']
+
 const Securitygroup = ({ onUpdate }: { onUpdate?: (data: TableDataType, row: TableDataType[]) => void }) => {
     const [active, setActive] = useState<string>()
     const [dates, setDates] = useState<string[]>([])
+    const trading = useTime(s => s.getTrading())
     const [data, { onSort, setList }] = useTableData<TableDataType>([])
 
     const query = useQuery({
-        queryKey: [getStockFinancials.cacheKey, active === dates[0] ? undefined : active],
+        queryKey: [getStockCollects.cacheKey],
         queryFn: () =>
-            getStockFinancials({
-                'date[0]': active,
-                'date[1]': active,
+            getStockCollects({
+                cate_id: 1,
                 limit: 300,
-                extend: ['basic_index', 'financials', 'stock_before', 'stock_after', 'total_share', 'collect']
+                extend: baseExtends
             })
     })
 
     useEffect(() => {
-        if (query.data?.dates?.length) {
-            setActive(query.data.dates[0])
-            setDates(query.data.dates)
-        }
-    }, [query.data?.dates, active])
-
-    useEffect(() => {
-        const r: TableDataType[] = []
-        if (!query.data?.items) {
+        if (!query.data) {
             setList([])
             return
         }
 
-        for (const { id, time, date, ...stock } of query.data.items) {
-            const lastStock = stockUtils.toStockWithExt(stock.stock, {
+        const r: TableDataType[] = query.data.items.map(stock => {
+            const lastStock = stockUtils.toStock(stock.stock, {
                 extend: stock.extend,
-                name: stock.name,
-                symbol: stock.symbol
+                symbol: stock.symbol,
+                name: stock.name
             })
-            const beforeStock = stockUtils.toStockWithExt(stock.extend?.stock_before, {
-                extend: stock.extend,
-                name: stock.name,
-                symbol: stock.symbol
-            })
-            const afterStock = stockUtils.toStockWithExt(stock.extend?.stock_after, {
-                extend: stock.extend,
-                name: stock.name,
-                symbol: stock.symbol
-            })
+            const beforeStock = stock.extend?.stock_before
+                ? stockUtils.toStock(stock.extend?.stock_before as StockRawRecord, {
+                    extend: stock.extend,
+                    symbol: stock.symbol,
+                    name: stock.name
+                })
+                : null
+            const afterStock = stock.extend?.stock_after
+                ? stockUtils.toStock(stock.extend?.stock_after as StockRawRecord, {
+                    extend: stock.extend,
+                    symbol: stock.symbol,
+                    name: stock.name
+                })
+                : null
 
-            r.push({
-                name: lastStock.name,
-                code: lastStock.symbol,
-                id,
-                date: `${date.substring(5, 10)} ${time}`,
-                price: lastStock?.close || undefined,
-                percent: lastStock?.percent && lastStock.percent,
-                turnover: lastStock?.turnover || undefined,
-                total: lastStock?.marketValue || undefined,
-                industry: lastStock?.industry,
-                prePercent: beforeStock?.percent,
-                afterPercent: afterStock?.percent,
-                collect: lastStock?.extend?.collect,
-                isUp: stockUtils.isUp(lastStock)
-            })
-        }
+            const thumbs = lastStock?.thumbs ?? []
+
+            const subStock: Stock | null = ['afterHours', 'close'].includes(trading) ? afterStock : beforeStock
+
+            return {
+                ...lastStock,
+                name: stock.name,
+                code: stock.symbol,
+                thumbs,
+                price: lastStock?.close,
+                percent: subStock ? stockUtils.getPercent(lastStock) : undefined,
+                subPrice: subStock?.close,
+                subPercent: subStock ? stockUtils.getPercent(subStock) : undefined
+            }
+        })
         setList(r)
         onUpdate?.(r[0], r)
-    }, [query.data?.items, setList])
+        console.log(r)
+    }, [query.data, setList])
+
 
     const columns: JknRcTableProps<TableDataType>['columns'] = useMemo(
         () => [
@@ -134,7 +135,7 @@ const Securitygroup = ({ onUpdate }: { onUpdate?: (data: TableDataType, row: Tab
     const onRowClick = (row: TableDataType) => {
         return {
             onClick: () => {
-                onUpdate?.(row)
+                onUpdate?.(row, data)
             }
         }
     }
@@ -148,7 +149,7 @@ const Securitygroup = ({ onUpdate }: { onUpdate?: (data: TableDataType, row: Tab
 
         <div className="flex-1 overflow-hidden h-full">
             <JknRcTable
-                rowKey="id"
+                rowKey="code"
                 isLoading={query.isLoading}
                 columns={columns}
                 data={data}
