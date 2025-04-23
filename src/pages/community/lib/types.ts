@@ -130,6 +130,7 @@ export type ChatImageMessage = MessageBase & {
   height: number
   revoke: boolean
   reply?: ChatReplyContent
+  file?: File
 }
 
 export type ChatReplyContent = {

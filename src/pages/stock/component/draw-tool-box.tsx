@@ -15,6 +15,9 @@ const defaultBar: {
   icon: ChartOverlayType
   label: string
   tool?: string[]
+  config?: {
+    color: string
+  }
 }[] = [
     {
       icon: 'line',
@@ -66,11 +69,17 @@ const defaultBar: {
     },
     {
       icon: 'pressure-line',
-      label: '压力线'
+      label: '压力线',
+      config: {
+        color: '#9A26AE'
+      }
     },
     {
       icon: 'support-line',
-      label: '支撑线'
+      label: '支撑线',
+      config: {
+        color: '#2495F1'
+      }
     }
   ]
 
@@ -328,7 +337,7 @@ const DrawToolBar = () => {
         chartEvent.get().emit('drawStart', {
           type: type,
           params: {
-            color: setting.color,
+            color: defaultBar.find(item => item.icon === type)?.config?.color ?? setting.color,
             lineWidth: setting.width,
             lineType: setting.type,
             cross: setting.cross ?? false
@@ -356,7 +365,7 @@ const DrawToolBar = () => {
     chartEvent.get().emit('drawStart', {
       type: item,
       params: {
-        color: setting.color,
+        color: defaultBar.find(v => v.icon === item)?.config?.color ?? setting.color,
         lineWidth: setting.width,
         lineType: setting.type,
         cross: setting.cross ?? false

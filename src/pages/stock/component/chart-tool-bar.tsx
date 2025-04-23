@@ -29,7 +29,6 @@ import {
   useModal
 } from '@/components'
 import { useAuthorized, useOptimisticUpdate, useStockSearch, useToast } from '@/hooks'
-import { sysConfig } from '@/utils/config'
 import { stockUtils } from '@/utils/stock'
 import { cn } from '@/utils/style'
 import { useQuery } from '@tanstack/react-query'
@@ -516,6 +515,7 @@ export const IndicatorModal = (props: { onClickParams: () => void }) => {
         <JknSearchInput
           onSearch={onSearch}
           placeholder="搜索"
+          mode="immediate"
           className="h-8 placeholder:text-tertiary"
           rootClassName="text-tertiary flex-1"
         />

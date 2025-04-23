@@ -236,7 +236,8 @@ export const MessageTransform = {
         senderAvatar: (await fetchUserFromCache(msg.fromUID))?.avatar,
         width: content.width,
         height: content.height,
-        revoke: false
+        revoke: false,
+        file: content.file
       }
     }
 

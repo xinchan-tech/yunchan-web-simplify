@@ -79,7 +79,7 @@ export const MainChart = (props: MainChartProps) => {
           text: e.overlay.extendData.text ?? '文本',
           slope: 0,
           css: {
-            color: e.overlay.extendData.color,
+            color: colorUtil.rgbaToHex(colorUtil.parseRGBA(e.overlay.extendData.color)!),
             width: e.overlay.extendData.lineWidth,
             lineType: e.overlay.extendData.lineType,
             fontSize: e.overlay.extendData.fontSize,
@@ -176,11 +176,14 @@ export const MainChart = (props: MainChartProps) => {
       return
     }
 
-    const lastData = chartImp.current?.getChart()?.getDataList()?.slice(-1)[0]
 
+    const lastData = chartImp.current?.getChart()?.getDataList()?.slice(-1)[0]
+  
     if (chartImp.current?.isSameIntervalCandlestick(record, interval)) {
       lastBarInInterval.current = record
+      
       if (trading === 'intraDay') {
+   
         chartImp.current?.appendCandlestick(
           {
             ...record,

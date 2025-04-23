@@ -31,6 +31,7 @@ export const MessageList = ({ messages, onFetchMore, hasMore }: MessageListProps
 
     if (lastMessageLast?.id === messageLast?.id) {
       const offsetLen = messages.length - lastMessages.current.length
+      console.log(offsetLen)
       if (offsetLen > 0) {
         const virtual = scrollRef.current?.getVirtualizer()
         if (virtual) {
@@ -41,11 +42,15 @@ export const MessageList = ({ messages, onFetchMore, hasMore }: MessageListProps
     } else {
       const virtual = scrollRef.current?.getVirtualizer()
       if (virtual) {
+        if(lastMessages.current.length === 0 && messages.length > 0) {
+          virtual.scrollToIndex(messages.length, { align: 'end' })
+        }
+
         const items = virtual.getVirtualItems()
 
         const currentLastItems = items[items.length - 1]?.index
-
-        if (currentLastItems >= messages.length - 1) {
+   
+        if (currentLastItems >= messages.length - 1) {     
           virtual.scrollToIndex(messages.length - 1, { align: 'end' })
         }
       }
@@ -57,9 +62,7 @@ export const MessageList = ({ messages, onFetchMore, hasMore }: MessageListProps
 
   return (
     <>
-      {
-        messages.length ? (
-          <JknVirtualInfinite
+      <JknVirtualInfinite
             className="w-full flex-1 chat-message-scroll-list"
             itemHeight={44}
             ref={scrollRef}
@@ -72,10 +75,6 @@ export const MessageList = ({ messages, onFetchMore, hasMore }: MessageListProps
               <ChatMessageRow key={msg.id} message={msg} isRevokeMessage={false} />
             )}
           />
-        ) : (
-          <div className="w-full flex-1 chat-message-scroll-list" />
-        )
-      }
     </>
   )
 }

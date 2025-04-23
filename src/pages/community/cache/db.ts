@@ -27,7 +27,7 @@ export const CacheStoreName = {
 export class ChatCache {
   public db: Nullable<IDBPDatabase> = null
   public static DB_NAME = 'community-store'
-  public static DB_VERSION = 10
+  public static DB_VERSION = 11
 
   constructor() {
     openDB(ChatCache.DB_NAME, ChatCache.DB_VERSION, {
@@ -46,7 +46,7 @@ export class ChatCache {
           autoIncrement: true
         })
         
-        messageStore.createIndex('channelId', 'channel.channelID')
+        messageStore.createIndex('channelId', 'channel.id')
 
         db.createObjectStore(CacheStoreName.USER_STORE, { keyPath: 'uid', autoIncrement: true })
 

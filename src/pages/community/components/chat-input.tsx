@@ -252,17 +252,20 @@ export const ChatInput = forwardRef<ChatInputInstance, ChatInputProps>((props, r
       <div className="h-[148px] overflow-y-auto box-border p-1 relative ">
         {
           props.channelReady ? (
-            <EditorContent className="h-[140px] px-2 box-border" editor={editor} />
+            <>
+              <EditorContent className="h-[140px] px-2 box-border" editor={editor} />
+              {!editor?.isEditable ? (
+                <div className="absolute inset-0 flex items-center justify-center left-0 right-0 top-0 bottom-0 box-border">
+                  <div className="text-tertiary text-base">您已被禁言</div>
+                </div>
+              ) : null}
+            </>
           ) : (
             <div className="absolute inset-0 flex items-center justify-center left-0 right-0 top-0 bottom-0 box-border">
             </div>
           )
         }
-        {!editor?.isEditable ? (
-          <div className="absolute inset-0 flex items-center justify-center left-0 right-0 top-0 bottom-0 box-border">
-            <div className="text-tertiary text-base">您已被禁言</div>
-          </div>
-        ) : null}
+
       </div>
     </div>
   )

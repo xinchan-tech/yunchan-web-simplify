@@ -1,5 +1,3 @@
-import type { OverlayTemplate } from '@/plugins/jkn-kline-chart'
-import type { DrawOverlayParams } from '../types'
 import { drawOverlayParamsToFigureStyle, createOverlayTemplate } from '../utils'
 
 export const SupportLineOverlay = createOverlayTemplate({
@@ -31,7 +29,7 @@ export const SupportLineOverlay = createOverlayTemplate({
           attrs: {
             x: 0,
             y: coordinates[0].y - styles.size - 2,
-            text: '支撑线',
+            text: '支撑点',
             baseline: 'bottom'
           },
           styles: {

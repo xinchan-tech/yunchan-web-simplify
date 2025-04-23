@@ -7,12 +7,15 @@ interface ImageRecordProps {
 }
 
 export const ImageRecord = (props: ImageRecordProps) => {
-  const content = props.message.content
-
   const url = useMemo(() => {
-    if (content) return content
+    if (props.message.content) return props.message.content
+
+    if (props.message.file){
+      return URL.createObjectURL(props.message.file)
+    }
+
     return ''
-  }, [content])
+  }, [props.message])
 
   const preview = () => {
     JknImage.preview(url)

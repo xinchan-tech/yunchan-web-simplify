@@ -5,7 +5,7 @@ import WKSDK, { Channel, Mention, MessageImage, MessageStatus, MessageText, Pull
 import { ChannelTransform, MessageTransform, SubscriberTransform } from "../lib/transform"
 import { channelCache, messageCache, subscriberCache } from "../cache"
 import { useLatestRef } from "@/hooks"
-import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger, JknAlert, ScrollArea } from "@/components"
+import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger, JknAlert, JknIcon, ScrollArea } from "@/components"
 import { UserAvatar } from "../components/user-avatar"
 import to from "await-to-js"
 import { setChannelManager, setMemberForbidden } from "@/api"
@@ -104,6 +104,7 @@ export const ChatRoom = () => {
   useEffect(() => {
     setChannelInfo(null)
     setSubscribes(null)
+    setMessage([])
 
     if (chatStatus === ChatConnectStatus.Connected && channel) {
 
@@ -293,7 +294,7 @@ export const ChatRoom = () => {
 
   useMessageStatusListener(useCallback((msg) => {
     const m = message.find(m => m.clientSeq === msg.clientSeq)
-
+    console.log(msg)
     if (!m) return
 
     messageCache.updateOrSave({
@@ -355,7 +356,7 @@ export const ChatRoom = () => {
               </div>
             </div>
             <ScrollArea className="chat-room-users-list flex-1">
-              {subscribes?.map(member => (
+              {subscribes?.sort((a, b) => +b.type - +a.type).map(member => (
                 <ContextMenu key={member.uid}>
                   <ContextMenuTrigger asChild>
                     <div className="chat-room-users-item flex items-center p-2 box-border hover:bg-accent w-full overflow-hidden">
@@ -369,9 +370,9 @@ export const ChatRoom = () => {
                         {member.name}
                       </div>
                       <div className="">
-                        {/* {isChannelOwner(member) && <JknIcon name="owner" />}
-                        {hasForbidden(member) && <JknIcon name="forbidden" />}
-                        {isChannelManager(member) && <JknIcon name="manager" />} */}
+                        {member.isOwner && <JknIcon name="owner" />}
+                        {member.hasForbidden && <JknIcon name="forbidden" />}
+                        {member.isManager && <JknIcon name="manager" />}
                       </div>
                     </div>
                   </ContextMenuTrigger>
