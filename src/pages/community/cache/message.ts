@@ -1,12 +1,12 @@
-import type { Channel, Message } from 'wukongimjssdk'
 import { MessageTransform } from '../lib/transform'
 import { CacheStoreName, ChatCache } from './db'
+import type { ChatChannel, ChatMessage } from '../lib/types'
 
 class MessageCache extends ChatCache {
   public static MESSAGE_STORE = CacheStoreName.MESSAGE_STORE
 
-  private getMessageId(message: Message) {
-    return `${message.messageID}`
+  private getMessageId(message: ChatMessage) {
+    return `${message.id}`
   }
 
   async get(messageId: string) {
@@ -18,7 +18,7 @@ class MessageCache extends ChatCache {
     return MessageTransform.fromJson(r)
   }
 
-  async updateOrSave(message: Message) {
+  async updateOrSave(message: ChatMessage) {
     const db = await this.getDb()
 
     const id = this.getMessageId(message)
@@ -26,17 +26,17 @@ class MessageCache extends ChatCache {
     const _message = await db.get(MessageCache.MESSAGE_STORE, id)
 
     if (!_message) {
-      await db.add(MessageCache.MESSAGE_STORE, MessageTransform.addContentObj(message))
+      await db.add(MessageCache.MESSAGE_STORE, message)
     } else {
-      await db.put(MessageCache.MESSAGE_STORE, id, MessageTransform.addContentObj(message) as any)
+      await db.put(MessageCache.MESSAGE_STORE, Object.assign(_message, message))
     }
   }
 
-  async updateBatch(data: Message[], channel?: Channel) {
+  async updateBatch(data: ChatMessage[], channel?: ChatChannel) {
     const db = await this.getDb()
 
     if (channel) {
-      const messages = await db.getAllKeysFromIndex(MessageCache.MESSAGE_STORE, 'channelId', channel.channelID)
+      const messages = await db.getAllKeysFromIndex(MessageCache.MESSAGE_STORE, 'channelId', channel.id)
 
       const tx = db.transaction(MessageCache.MESSAGE_STORE, 'readwrite')
       const store = tx.objectStore(MessageCache.MESSAGE_STORE)
@@ -61,20 +61,18 @@ class MessageCache extends ChatCache {
 
     await Promise.all(
       data.map(async message => {
-        await db.add(MessageCache.MESSAGE_STORE, MessageTransform.addContentObj(message) as any)
+        await db.add(MessageCache.MESSAGE_STORE, message)
       })
     )
   }
 
-  async getMessages(channel?: Channel) {
+  async getMessages(channel?: ChatChannel) {
     const db = await this.getDb()
     if (channel) {
-      return (await db.getAllFromIndex(MessageCache.MESSAGE_STORE, 'channelId', channel.channelID)).map(
-        MessageTransform.fromJson
-      )
+      return (await db.getAllFromIndex(MessageCache.MESSAGE_STORE, 'channelId', channel.id)) as ChatMessage[]
     }
 
-    return (await db.getAll(MessageCache.MESSAGE_STORE)).map(MessageTransform.fromJson)
+    return (await db.getAll(MessageCache.MESSAGE_STORE)) as ChatMessage[]
   }
 }
 

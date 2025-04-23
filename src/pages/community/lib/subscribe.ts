@@ -4,10 +4,11 @@ import { useMount } from 'ahooks'
 import { useRef, useEffect } from 'react'
 import WKSDK, { ConnectStatus, type ConnectStatusListener } from 'wukongimjssdk'
 import { initImDataSource } from './datasource'
-import { chatManager } from './store'
+import { chatManager, useChatStore } from './store'
 import { ChatConnectStatus, chatConstants } from './types'
 import { chatEvent } from './event'
 import { ConversationTransform } from './transform'
+import { sessionCache } from '../cache'
 
 /**
  * 连接IM
@@ -49,12 +50,30 @@ export const useConnectIM = () => {
 
       if (status === ConnectStatus.Connected) {
         chatManager.setState(ChatConnectStatus.Syncing)
+
+        /**
+         * 先取缓存
+         */
+        sessionCache.getSessions().then(res => {
+          /**
+           * 判断当前状态
+           */
+          if (chatManager.getState() !== ChatConnectStatus.Syncing) return
+
+          chatEvent.emit('syncSession', res)
+        })
+
         WKSDK.shared()
           .conversationManager.sync()
           .then(r => {
             Promise.all(r.map(v => ConversationTransform.toSession(v)))
-              .then(res => chatEvent.emit('syncSession', res))
-              .then(() => {
+              .then(res => {
+                if (!res.some(v => v.channel.id === useChatStore.getState().channel?.id)) {
+                  console.warn('Warning: No matching channel found in synced sessions')
+                  chatManager.setChannel(undefined)
+                }
+                chatEvent.emit('syncSession', res)
+                sessionCache.updateBatch(res)
                 chatManager.setState(ChatConnectStatus.Connected)
               })
               .catch(() => {

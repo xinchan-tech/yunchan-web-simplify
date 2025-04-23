@@ -18,8 +18,9 @@ import WKSDK, {
   Subscriber
 } from 'wukongimjssdk'
 import { userCache } from '../cache/user'
-import { ConversationTransform, MessageTransform } from './transform'
+import { ChannelTransform, ConversationTransform, MessageTransform, SubscriberTransform } from './transform'
 import { MediaMessageUploadTask } from './upload-task'
+import { channelCache, subscriberCache } from "../cache"
 
 /**
  * 请求频道资料数据源
@@ -44,8 +45,8 @@ const initChannelInfoDataSource = () => {
       const [res, detail] = r
 
       if (channel.channelType === ChannelTypePerson) {
-        channelInfo.title = res.name || channel.channelID
-        channelInfo.logo = res.avatar
+        channelInfo.title = res?.name || channel.channelID
+        channelInfo.logo = res?.avatar ?? ''
         channelInfo.mute = false
         channelInfo.top = false
         channelInfo.orgData = {}
@@ -53,8 +54,8 @@ const initChannelInfoDataSource = () => {
         channelInfo.lastOffline = 0
         channelInfo.channel = channel
       } else {
-        channelInfo.title = res.name || channel.channelID
-        channelInfo.logo = res.avatar
+        channelInfo.title = res?.name || channel.channelID
+        channelInfo.logo = res?.avatar ?? ''
         channelInfo.mute = false
         channelInfo.top = false
         channelInfo.orgData = {}
@@ -64,6 +65,8 @@ const initChannelInfoDataSource = () => {
       WKSDK.shared().channelManager.setChannleInfoForCache(channelInfo)
 
       channelInfo.orgData = detail
+
+      channelCache.updateOrSave(ChannelTransform.toChatChannel(channelInfo))
     } catch (error) {
       console.error(error)
     }
@@ -94,18 +97,19 @@ const initSyncSubscribersDataSource = () => {
       subscriber.orgData = member
       subscriber.avatar = member.avatar
       subscriber.channel = channel
-      // subscriber.userType = member.type as SubscriberType
-      // subscriber.forbidden = member.forbidden === '1'
       subscribers.push(subscriber)
     })
 
+    const chatSubscribers = subscribers.map(SubscriberTransform.toChatSubscriber)
+
     userCache.updateBatch(
-      res.items.map(member => ({
-        uid: member.username,
-        name: member.realname,
+      chatSubscribers.map(member => ({
+        uid: member.id,
+        name: member.name,
         avatar: member.avatar
       }))
     )
+    subscriberCache.updateByChannel(channel.channelID, chatSubscribers)
 
     return subscribers
   }

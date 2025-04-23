@@ -53,7 +53,6 @@ export const Sessions = () => {
 
   const sessionList = useMemo(() => {
     if (!sessions) return []
-    console.log(sessions)
     if (!search) return sessions
     return sessions.filter(s => s.channel.name.includes(search))
   }, [search, sessions])
@@ -100,20 +99,6 @@ export const Sessions = () => {
                     {s.channel.name || ''}
                   </div>
                 </div>
-                {/* {lastChannel?.channelID === c.channel.channelID ? (
-                  <div
-                    onClick={e => {
-                      e.stopPropagation()
-                      updateGroupInfoModal.modal.open()
-                    }}
-                    onKeyDown={() => {
-                      updateGroupInfoModal.modal.open()
-                    }}
-                    className="oper-icons ml-auto"
-                  >
-                    <JknIcon name="settings_shallow" className="rounded-none size-4" />
-                  </div>
-                ) : null} */}
               </div>
               <div className="group-last-msg flex justify-between items-center">
                 <div className="flex-1 text-xs text-tertiary line-clamp-1">

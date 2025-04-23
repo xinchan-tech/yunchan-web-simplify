@@ -1,82 +1,73 @@
 import { assign } from 'radash'
-import type { Conversation } from 'wukongimjssdk'
-import { ConversationTransform, MessageTransform, SubscriberTransform } from '../lib/transform'
+import { SubscriberTransform } from '../lib/transform'
 import { CacheStoreName, ChatCache } from './db'
+import type { ChatSession } from '../lib/types'
+import { useUser } from '@/store'
 
-class ConversationCache extends ChatCache {
-  public static CONVERSATION_STORE = CacheStoreName.CONVERSATION_STORE
+class SessionCache extends ChatCache {
+  public static CONVERSATION_STORE = CacheStoreName.SESSION_STORE
 
-  private getConversationId(conversation: Conversation) {
-    return conversation.channel.channelID
+  private getSessionId(session: ChatSession) {
+    const uid = useUser.getState().user!.username
+    return `${session.channel.id}-${session.channel.type}-${uid}`
   }
 
   async get(channelId: string) {
     const db = await this.getDb()
-    const obj = await db.get(ConversationCache.CONVERSATION_STORE, channelId)
+    const obj = await db.get(SessionCache.CONVERSATION_STORE, channelId)
 
     return obj ? SubscriberTransform.toSubscriber(obj) : null
   }
 
-  async updateOrSave(conversation: Conversation) {
+  async updateOrSave(session: ChatSession) {
     const db = await this.getDb()
-    const id = this.getConversationId(conversation)
-    const _conversation = await db.get(ConversationCache.CONVERSATION_STORE, id)
+    const id = this.getSessionId(session)
+    const _session = await db.get(SessionCache.CONVERSATION_STORE, id)
 
-    const obj = {
-      ...ConversationTransform.toConversationObj(conversation),
-      id
-    }
-
-    if (!_conversation) {
-      await db.add(ConversationCache.CONVERSATION_STORE, obj)
+    if (!_session) {
+      await db.add(SessionCache.CONVERSATION_STORE, session)
     } else {
-      assign(_conversation, obj)
-      await db.put(ConversationCache.CONVERSATION_STORE, _conversation)
+      assign(_session, session)
+      await db.put(SessionCache.CONVERSATION_STORE, _session)
     }
   }
 
-  async updateBatch(data: Conversation[]) {
+  async updateBatch(data: ChatSession[]) {
     const db = await this.getDb()
-    const conversations = await db.getAll(ConversationCache.CONVERSATION_STORE)
 
     /**
      * 开启事务
      */
-    const tx = db.transaction(ConversationCache.CONVERSATION_STORE, 'readwrite')
-    const store = tx.objectStore(ConversationCache.CONVERSATION_STORE)
+    const tx = db.transaction(SessionCache.CONVERSATION_STORE, 'readwrite')
+    const store = tx.objectStore(SessionCache.CONVERSATION_STORE)
 
     await Promise.all(
-      conversations.map(async c => {
-        store.delete(c.channel.channelID)
+      data.map(async c => {
+        store.delete(this.getSessionId(c))
       })
     )
 
     await Promise.all(
       data.map(async conversation => {
-        const id = this.getConversationId(conversation)
-        MessageTransform.addContentObj(conversation.lastMessage!)
-        await store.add({ ...ConversationTransform.toConversationObj(conversation), id })
+        const id = this.getSessionId(conversation)
+        await store.add({ ...conversation, id })
       })
     )
 
     await tx.done
   }
 
-  async delete(conversation: Conversation) {
+  async delete(data: ChatSession) {
     const db = await this.getDb()
-    const id = this.getConversationId(conversation)
-    await db.delete(ConversationCache.CONVERSATION_STORE, id)
+    const id = this.getSessionId(data)
+    await db.delete(SessionCache.CONVERSATION_STORE, id)
   }
 
-  async getConversations() {
+  async getSessions() {
     const db = await this.getDb()
-
-    return (
-      (await db.getAll(ConversationCache.CONVERSATION_STORE))?.map(c => {
-        return ConversationTransform.toConversationCls(c)
-      }) ?? []
-    )
+    const uid = useUser.getState().user!.username
+    return (await db.getAllFromIndex(SessionCache.CONVERSATION_STORE, 'uid', uid)) ?? []
   }
 }
 
-export const conversationCache = new ConversationCache()
+export const sessionCache = new SessionCache()

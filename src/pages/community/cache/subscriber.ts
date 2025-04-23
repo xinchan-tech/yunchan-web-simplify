@@ -1,92 +1,70 @@
-import { openDB } from 'idb'
 import { assign } from 'radash'
-import type { Subscriber } from 'wukongimjssdk'
-import { SubscriberTransform } from '../lib/transform'
 import { CacheStoreName, ChatCache } from './db'
+import type { ChatSubscriber } from "../lib/types"
 
 class SubscriberCache extends ChatCache {
-  public static SUBSCRIBER_STORE = CacheStoreName.SUBSCRIBER_STORE
+  public static STORE_NAME = CacheStoreName.SUBSCRIBER_STORE
 
-  private getSubscriberId(subscriber: Subscriber) {
-    return `${subscriber.uid}-${subscriber.channel.channelID}`
+  private getSubscriberId(subscriber: ChatSubscriber) {
+    return subscriber.uid
   }
 
   async get(channelId: string, uid: string) {
     const db = await this.getDb()
-    const obj = await db.get(SubscriberCache.SUBSCRIBER_STORE, `${uid}-${channelId}`)
-    if (!obj) {
-      return null
-    }
+    const obj = await db.get(SubscriberCache.STORE_NAME, `${uid}-${channelId}`)
 
-    obj.channel = {
-      channelID: obj.channelId,
-      channelType: obj.channelType
-    }
-
-    return obj ? SubscriberTransform.toSubscriber(obj) : null
+    return obj as Nullable<ChatSubscriber>
   }
 
-  async updateOrSave(subscriber: Subscriber) {
+  async updateOrSave(subscriber: ChatSubscriber) {
     const db = await this.getDb()
     const id = this.getSubscriberId(subscriber)
-    const _subscriber = await db.get(SubscriberCache.SUBSCRIBER_STORE, id)
-
-    const obj = {
-      ...SubscriberTransform.toSubscriberObj(subscriber),
-      id
-    }
+    const _subscriber = await db.get(SubscriberCache.STORE_NAME, id)
 
     if (!_subscriber) {
-      await db.add(SubscriberCache.SUBSCRIBER_STORE, obj)
+      await db.add(SubscriberCache.STORE_NAME, subscriber)
     } else {
-      assign(_subscriber, obj)
-      await db.put(SubscriberCache.SUBSCRIBER_STORE, _subscriber)
+      assign(_subscriber, subscriber)
+      await db.put(SubscriberCache.STORE_NAME, _subscriber)
     }
   }
 
-  async updateByChannel(channelId: string, data: Subscriber[]) {
+  async updateByChannel(channelId: string, data: ChatSubscriber[]) {
     const db = await this.getDb()
-    const subscribers = await this.getSubscribesByChannel(channelId)
 
     /**
      * 开启事务
      */
-    const tx = db.transaction(SubscriberCache.SUBSCRIBER_STORE, 'readwrite')
-    const store = tx.objectStore(SubscriberCache.SUBSCRIBER_STORE)
+    const tx = db.transaction(SubscriberCache.STORE_NAME, 'readwrite')
+    const store = tx.objectStore(SubscriberCache.STORE_NAME)
 
     await Promise.all(
-      subscribers.map(async subscriber => {
+      data.map(async subscriber => {
         store.delete(this.getSubscriberId(subscriber))
       })
     )
 
     await Promise.all(
       data.map(async subscriber => {
-        const id = this.getSubscriberId(subscriber)
-        await store.add({ ...SubscriberTransform.toSubscriberObj(subscriber), id })
+        await store.add({ ...subscriber })
       })
     )
 
     await tx.done
   }
 
-  async delete(subscriber: Subscriber) {
+  async delete(subscriber: ChatSubscriber) {
     const db = await this.getDb()
     const id = this.getSubscriberId(subscriber)
-    await db.delete(SubscriberCache.SUBSCRIBER_STORE, id)
+    await db.delete(SubscriberCache.STORE_NAME, id)
   }
 
   async getSubscribesByChannel(channelId: string) {
     const db = await this.getDb()
 
     return (
-      (await db.getAllFromIndex(SubscriberCache.SUBSCRIBER_STORE, 'channelId', channelId))?.map(sub => {
-        sub.channel = {
-          channelID: sub.channelId,
-          channelType: sub.channelType
-        }
-
-        return SubscriberTransform.toSubscriber(sub)
+      (await db.getAllFromIndex(SubscriberCache.STORE_NAME, 'channelId', channelId))?.map(sub => {
+        return sub as ChatSubscriber
       }) ?? []
     )
   }

@@ -6,7 +6,7 @@ import { fetchUserFromCache } from "../lib/utils"
 interface UserAvatarProps {
   shape: 'circle' | 'square' | number
   avatar?: string
-  src: string
+  src?: string
   className?: string
   name?: string
   uid: string
@@ -16,15 +16,14 @@ interface UserAvatarProps {
 
 export const UserAvatar = (props: UserAvatarProps) => {
   const { shape, src, uid, className, size = 33, name: _name } = props
-  const [avatar, setAvatar] = useState<string>(src)
+  const [avatar, setAvatar] = useState<string>(src || "")
   const [name, setName] = useState<string>(_name || uid)
 
   useEffect(() => {
-
+    
     if (src) {
       setAvatar(src)
     } else {
-
       fetchUserFromCache(uid).then(r => {
         if (r?.avatar) {
           setAvatar(r.avatar)

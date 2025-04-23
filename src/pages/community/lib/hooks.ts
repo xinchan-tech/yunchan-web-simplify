@@ -10,20 +10,16 @@ import WKSDK, {
   type Message,
   MessageStatus
 } from 'wukongimjssdk'
+import type { ChatMessage } from "./types"
 
 export const useMessageListener = (cb: MessageListener) => {
-  const lastFn = useLatestRef(cb)
   useEffect(() => {
-    const listener: MessageListener = message => {
-      lastFn.current(message)
-    }
-
-    WKSDK.shared().chatManager.addMessageListener(listener)
+    WKSDK.shared().chatManager.addMessageListener(cb)
 
     return () => {
-      WKSDK.shared().chatManager.removeMessageListener(listener)
+      WKSDK.shared().chatManager.removeMessageListener(cb)
     }
-  }, [lastFn])
+  }, [cb])
 }
 
 export const useCMDListener = (cb: MessageListener) => {
@@ -45,7 +41,7 @@ export const useCMDListener = (cb: MessageListener) => {
  * 调用WKSDK.shared().channelManager.syncSubscribes后触发
  * 这时候subscribes已经同步完成
  */
-export const useSubscribesListener = (channel: Undefinable<Channel>, cb: SubscriberChangeListener) => {
+export const useSubscribesListener = (channel: Nullable<Channel>, cb: SubscriberChangeListener) => {
   const lastFn = useLatestRef(cb)
   useEffect(() => {
     if (!channel) return
@@ -61,21 +57,14 @@ export const useSubscribesListener = (channel: Undefinable<Channel>, cb: Subscri
   }, [lastFn, channel])
 }
 
-export const useMessageStatusListener = (message: Message, cb: MessageStatusListener) => {
-  const lastFn = useLatestRef(cb)
+export const useMessageStatusListener = (cb: MessageStatusListener) => {
   useEffect(() => {
-    if (message.contentType === ChatMessageType.Cmd) return
-    if (message.status !== MessageStatus.Wait) return
-    const listener: MessageStatusListener = message => {
-      lastFn.current(message)
-    }
-
-    WKSDK.shared().chatManager.addMessageStatusListener(listener)
+    WKSDK.shared().chatManager.addMessageStatusListener(cb)
 
     return () => {
-      WKSDK.shared().chatManager.removeMessageStatusListener(listener)
+      WKSDK.shared().chatManager.removeMessageStatusListener(cb)
     }
-  }, [lastFn, message])
+  }, [cb])
 }
 
 export const useMediaUploadListener = (message: Message, cb: MessageStatusListener) => {

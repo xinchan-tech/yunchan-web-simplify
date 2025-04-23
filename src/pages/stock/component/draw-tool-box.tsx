@@ -173,18 +173,18 @@ export const DrawToolBox = () => {
         uid: ''
       }))
     })
-  })
+  }, [setSetting])
 
 
   return (
     <DrawToolContext.Provider value={{ ...setting, setDrawSetting: setSetting }}>
       <DndContext onDragEnd={onDragEnd}>
         <DrawToolContainer pos={boxPoint}>
-          <div className="border-b-primary border-0 w-full !border-dashed my-2.5" />
+          <div className="border-0 border-b w-full !border-dashed my-2.5 mt-3 !border-b-foreground" />
           <div className="">
             <DrawToolBar />
           </div>
-          <div className="border-b-primary border-0 w-full !border-dashed my-2.5" />
+          <div className="border-0 border-b w-full !border-dashed my-2.5 !border-b-foreground" />
           <div>
             <DrawToolAction />
           </div>
@@ -216,7 +216,7 @@ const DrawToolContainer = ({ pos, children }: PropsWithChildren<{ pos: { x: numb
   }
 
   return (
-    <div ref={setNodeRef} className="bg-muted z-10 box-border p-2.5 rounded" style={style}>
+    <div ref={setNodeRef} className="bg-accent z-10 box-border p-2.5 rounded" style={style}>
       <div className="grid grid-cols-2 gap-2">
         <div
           {...listeners}
@@ -286,7 +286,7 @@ const DrawSettingBar = ({ pos }: { pos: { x: number; y: number }, type: ChartOve
   }
 
   return (
-    <div ref={setNodeRef} className="bg-muted z-10 box-border p-1 rounded flex items-center" style={style}>
+    <div ref={setNodeRef} className="bg-accent z-10 box-border p-1 rounded flex items-center" style={style}>
       <div className="grid grid-cols-1 p-1 pr-2">
         <div
           {...listeners}

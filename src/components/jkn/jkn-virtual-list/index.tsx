@@ -1,5 +1,5 @@
 import { JknInfiniteArea, ScrollArea, Skeleton } from '@/components'
-import { type VirtualItem, useVirtualizer } from '@tanstack/react-virtual'
+import { type VirtualItem, type Virtualizer, useVirtualizer } from '@tanstack/react-virtual'
 import { useVirtualList } from 'ahooks'
 import {
   type ComponentProps,
@@ -59,6 +59,7 @@ interface JknVirtualInfiniteProps<T> extends JknVirtualListProps<T>, ComponentPr
 interface JknVirtualInfiniteIns {
   scrollToIndex: (index: number) => void
   getVirtualItems: () => VirtualItem[]
+  getVirtualizer: () => Virtualizer<any, any>
 }
 
 export const JknVirtualInfinite = forwardRef<JknVirtualInfiniteIns, JknVirtualInfiniteProps<any>>(
@@ -73,7 +74,9 @@ export const JknVirtualInfinite = forwardRef<JknVirtualInfiniteIns, JknVirtualIn
       getScrollElement: () =>
         containerRef.current?.getContainer()?.querySelector('[data-radix-scroll-area-viewport]') ?? null,
       estimateSize: () => itemHeight,
-      enabled: true
+      enabled: true,
+      initialOffset: Number.MAX_SAFE_INTEGER,
+      paddingEnd: 40
     })
 
     useLayoutEffect(() => {
@@ -94,9 +97,10 @@ export const JknVirtualInfinite = forwardRef<JknVirtualInfiniteIns, JknVirtualIn
       ref,
       () => ({
         scrollToIndex: virtualizer.scrollToIndex,
-        getVirtualItems: virtualizer.getVirtualItems
+        getVirtualItems: virtualizer.getVirtualItems,
+        getVirtualizer: () => virtualizer
       }),
-      [virtualizer.scrollToIndex, virtualizer.getVirtualItems]
+      [virtualizer]
     )
 
     return (

@@ -13,14 +13,15 @@ export const fetchUserFromCache = async (userId: string) => {
     return userFromCache
   }
 
-  // const userFromUserCache = await userCache.get(userId)
+  const userFromUserCache = await userCache.get(userId)
 
-  // if (userFromUserCache) {
-  //   return {
-  //     name: userFromUserCache.name,
-  //     avatar: userFromUserCache.avatar
-  //   }
-  // }
+  if (userFromUserCache) {
+    sessionUserCache.set(userId, { name: userFromUserCache.name, avatar: userFromUserCache.avatar })
+    return {
+      name: userFromUserCache.name,
+      avatar: userFromUserCache.avatar
+    }
+  }
 
   const r = await queryClient.ensureQueryData({
     queryKey: [getChatNameAndAvatar.cacheKey, { type: '1', id: userId }],
