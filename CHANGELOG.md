@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.5.5](https://github.com/xinchan-gx/yunchan-web/compare/2.5.4...2.5.5) (2025-04-23)
+
+### 🐛 Bug Fixes | Bug 修复
+
+* 更新Apple登录的clientId，确保与应用配置一致 ([b5a0ba7](https://github.com/xinchan-gx/yunchan-web/commit/b5a0ba7177ccf1fe380b7cec3eee02061e3bae0d))
+* 修复股票数据计算逻辑，确保正确处理价格和涨幅 ([e16bd8c](https://github.com/xinchan-gx/yunchan-web/commit/e16bd8c82e33fffb9942bb06cf36fad8a620a0cb))
+* 修复股票数据计算逻辑，确保正确处理价格和涨幅 ([a2c3670](https://github.com/xinchan-gx/yunchan-web/commit/a2c3670e5a7b7b2f90b95e1cd9fd32195d5ebaa6))
+
 ## [2.5.4](https://github.com/xinchan-gx/yunchan-web/compare/2.5.3...2.5.4) (2025-04-22)
 
 ### ✨ Features | 新功能
