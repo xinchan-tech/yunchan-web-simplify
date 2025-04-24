@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.5.7](https://github.com/xinchan-gx/yunchan-web/compare/2.5.6...2.5.7) (2025-04-24)
+
+### ✨ Features | 新功能
+
+* 添加公告通知功能，更新聊天频道状态和消息处理逻辑 ([e7405c8](https://github.com/xinchan-gx/yunchan-web/commit/e7405c8a27d7f91ddc9bd1f39e525733b78d327e))
+* 添加邀请码和cid字段到登录和注册功能，优化相关逻辑 ([995f6b6](https://github.com/xinchan-gx/yunchan-web/commit/995f6b631a5786637b0528620d2e654113045cba))
+* enhance chat session management and channel info display ([e404d1d](https://github.com/xinchan-gx/yunchan-web/commit/e404d1dced7c1f67410da5a4df0e78c36398b6bb))
+
+### ♻ Code Refactoring | 代码重构
+
+* 优化登录流程，调整邀请码绑定逻辑的位置 ([246c2a4](https://github.com/xinchan-gx/yunchan-web/commit/246c2a4129f50a928341cd0c6bc27830964a78e7))
+
 ## [2.5.6](https://github.com/xinchan-gx/yunchan-web/compare/2.5.5...2.5.6) (2025-04-24)
 
 ### ✨ Features | 新功能
