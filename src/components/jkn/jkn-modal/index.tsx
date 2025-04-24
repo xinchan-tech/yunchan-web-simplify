@@ -19,7 +19,7 @@ interface JknModalProps {
   confirmLoading?: boolean
   closeOnMaskClick?: boolean
   background?: string
-  onOk?: () => void
+  onOk?: () => Promise<boolean | undefined> | boolean |  undefined
   onClose?: () => void
   afterClose?: () => void
 }
@@ -40,6 +40,25 @@ export const JknModal = ({ background, className, closeOnMaskClick, closeIcon = 
     setTimeout(() => {
       afterClose?.()
     }, 300)
+  }
+
+  const _onOk = () => {
+    if(!onOk) {
+      _onClose()
+      return
+    }
+
+    const result = onOk()
+
+    if (result instanceof Promise) {
+      result.then(res => {
+        if (res !== false) {
+          _onClose()
+        }
+      })
+    } else if (result !== false) {
+      _onClose()
+    }
   }
 
 
@@ -90,7 +109,7 @@ export const JknModal = ({ background, className, closeOnMaskClick, closeIcon = 
             <Button variant="outline" className="w-24 box-border" onClick={() => _onClose()}>
               取消
             </Button>
-            <Button className="w-24 box-border " loading={confirmLoading} onClick={() => { onOk?.(); _onClose() }}>
+            <Button className="w-24 box-border " loading={confirmLoading} onClick={_onOk}>
               确认
             </Button>
           </DialogFooter>

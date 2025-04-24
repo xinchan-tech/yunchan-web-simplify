@@ -40,3 +40,5 @@ const ImagePreview = ({ src, afterClose }: { src: string; afterClose: () => void
 
   return <Viewer visible={visible} onClose={handleClose} images={[{ src: src, alt: '' }]} />
 }
+
+export { JknImageUploader } from './uploader'

@@ -12,6 +12,7 @@ import { Channel, Reply, WKSDK } from 'wukongimjssdk'
 import { type ChatEvent, chatEvent } from '../lib/event'
 import { useChatStore } from "../lib/store"
 import type { ChatMessage } from "../lib/types"
+import { MessageTransform } from "../lib/transform"
 
 interface ChatInputProps {
   hasForbidden: boolean
@@ -132,10 +133,16 @@ export const ChatInput = forwardRef<ChatInputInstance, ChatInputProps>((props, r
       const reply = new Reply()
       reply.fromUID = self.uid
       reply.fromName = self.name
+      reply.messageID = replyMessage.content.id
+      reply.messageSeq = replyMessage.content.messageSeq
+      if (MessageTransform.fromChatMessageToContent(replyMessage.content)) {
+        reply.content = MessageTransform.fromChatMessageToContent(replyMessage.content)!
+      } else {
+        reply.content = WKSDK.shared().getMessageContent(1)
+      }
+
       extra.reply = reply
-      // const content = new MessageContent()
-      // content.
-      // reply.content = content
+
     }
 
 
@@ -253,11 +260,17 @@ export const ChatInput = forwardRef<ChatInputInstance, ChatInputProps>((props, r
         {
           props.channelReady ? (
             <>
-              <EditorContent className="h-[140px] px-2 box-border" editor={editor} />
+              <EditorContent className="h-full px-2 box-border" editor={editor} />
               {!editor?.isEditable ? (
-                <div className="absolute inset-0 flex items-center justify-center left-0 right-0 top-0 bottom-0 box-border">
-                  <div className="text-tertiary text-base">您已被禁言</div>
-                </div>
+                props.inChannel ? (
+                  <div className="absolute inset-0 flex items-center justify-center left-0 right-0 top-0 bottom-0 box-border">
+                    <div className="text-tertiary text-base">您已被禁言</div>
+                  </div>
+                ): (
+                  <div className="absolute inset-0 flex items-center justify-center left-0 right-0 top-0 bottom-0 box-border">
+                    <div className="text-tertiary text-base">已不在该社群中</div>
+                  </div>
+                )
               ) : null}
             </>
           ) : (
@@ -340,6 +353,9 @@ const ImagePicker = ({ onUpload, children }: PropsWithChildren<ImagePickerProps>
       return
     }
 
+    e.target.files = null
+    e.target.value = ''
+
     const url = URL.createObjectURL(file)
 
     onUpload(url, file.name)
@@ -347,7 +363,7 @@ const ImagePicker = ({ onUpload, children }: PropsWithChildren<ImagePickerProps>
 
   return (
     <div className="flex items-center">
-      <input id={inputId} type="file" accept="image/*" onChange={handleFileChange} hidden />
+      <input id={inputId} type="file" accept="image/*" onInput={handleFileChange} hidden />
       <label htmlFor={inputId} className="cursor-pointer mt-1">
         {children}
       </label>

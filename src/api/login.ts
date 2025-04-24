@@ -5,6 +5,8 @@ import qs from 'qs'
 type LoginParams = {
   mobile: string
   password: string
+  cid?: string
+  inv_code?: string
 }
 
 type LoginResult = {
@@ -149,6 +151,8 @@ export const registerByEmail = (params: {
   password: string
   password_confirm: string
   code: string
+  cid?: string
+  inv_code?: string
 }) => {
   return request
     .post('/login/register', params, { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } })

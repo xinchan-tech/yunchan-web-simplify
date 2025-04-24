@@ -26,6 +26,7 @@ import { RadioGroup, RadioGroupItem } from '../ui/radio-group'
 import { ScrollArea } from '../ui/scroll-area'
 import { Skeleton } from '../ui/skeleton'
 import { Switch } from '../ui/switch'
+import dayjs from "dayjs"
 
 interface MallPackagesProps {
   showMore: () => void
@@ -79,7 +80,7 @@ export const MallPackages = (props: MallPackagesProps) => {
     closeIcon: true,
     closeOnMaskClick: false,
     footer: null,
-    onOk: async () => {},
+    onOk: async () => { },
     background: 'rgba(0, 0, 0, 0.3)'
   })
 
@@ -125,7 +126,7 @@ export const MallPackages = (props: MallPackagesProps) => {
           return (
             <div
               key={product.id}
-              onFocus={() => {}}
+              onFocus={() => { }}
               className={cn(
                 'relative w-[192px] p-[1px] rounded-2xl box-border space-y-[10px] transition-all duration-300',
                 isActive ? 'active-card' : 'default-card'
@@ -316,6 +317,19 @@ export const Cashier = (props: CashierProps) => {
       platform: type!
     }
 
+    const code = localStorage.getItem('invite-code')
+
+    if (code) {
+      const codeObj = JSON.parse(code)
+      if (codeObj.timestamp) {
+        const current = dayjs()
+        if (current.diff(codeObj.timestamp, 'day') <= 3) {
+          params.cid = codeObj.cid
+          params.inv_code = codeObj.code
+        }
+      }
+    }
+
     const res = await createMallProductOrder(params)
 
     return {
@@ -380,7 +394,7 @@ export const Cashier = (props: CashierProps) => {
     if (payStatus !== 'paid') {
       JknAlert.info({
         content: '未验证到支付成功，请确认',
-        onAction: async () => {}
+        onAction: async () => { }
       })
     } else {
       setPayUrl('')
@@ -487,7 +501,7 @@ export const Cashier = (props: CashierProps) => {
                   <span
                     className="text-primary cursor-pointer"
                     onClick={() => agreement.modal.open()}
-                    onKeyDown={() => {}}
+                    onKeyDown={() => { }}
                   >
                     《软件订阅协议》
                   </span>
@@ -539,7 +553,7 @@ export const Cashier = (props: CashierProps) => {
                 {type !== 'wechat' && (
                   <span className="text-tertiary text-xs">
                     未跳支付页面？
-                    <span className="text-primary cursor-pointer" onClick={onCopyUrl} onKeyDown={() => {}}>
+                    <span className="text-primary cursor-pointer" onClick={onCopyUrl} onKeyDown={() => { }}>
                       复制付款链接
                     </span>
                   </span>

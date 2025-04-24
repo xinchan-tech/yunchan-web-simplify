@@ -4,13 +4,16 @@ import { queryClient } from '@/utils/query-client'
 import { getChatNameAndAvatar } from '@/api'
 import { userCache } from '../cache/user'
 
-const sessionUserCache = new Map<string, { name: string; avatar?: string }>()
+const sessionUserCache = new Map<string, { name: string; avatar?: string, }>()
 
 export const fetchUserFromCache = async (userId: string) => {
   const userFromCache = await sessionUserCache.get(userId)
 
   if (userFromCache) {
-    return userFromCache
+    return {
+      ...userFromCache,
+      id: userId
+    }
   }
 
   const userFromUserCache = await userCache.get(userId)
@@ -19,6 +22,7 @@ export const fetchUserFromCache = async (userId: string) => {
     sessionUserCache.set(userId, { name: userFromUserCache.name, avatar: userFromUserCache.avatar })
     return {
       name: userFromUserCache.name,
+      id: userId,
       avatar: userFromUserCache.avatar
     }
   }
@@ -33,6 +37,7 @@ export const fetchUserFromCache = async (userId: string) => {
 
     return {
       name: r?.name,
+      id: userId,
       avatar: r?.avatar
     }
   }

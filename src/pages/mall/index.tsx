@@ -36,6 +36,7 @@ import { BasicPage } from './basic-page'
 import { GroupPage } from './group-page'
 import { IncrementPage } from './increment-page'
 import { IntroPage } from './intro-page'
+import dayjs from "dayjs"
 
 const versions = [
   // { name: '旗舰达人', value: 'basic' },
@@ -100,7 +101,7 @@ const MallPage = () => {
         form.setValue(key as any, value)
       })
     },
-    onOk: async () => {}
+    onOk: async () => { }
   })
 
   const token = useToken(s => s.token)
@@ -278,6 +279,19 @@ const CashierPage = () => {
       platform: type!
     }
 
+    const code = localStorage.getItem('invite-code')
+
+    if (code) {
+      const codeObj = JSON.parse(code)
+      if (codeObj.timestamp) {
+        const current = dayjs()
+        if (current.diff(codeObj.timestamp, 'day') <= 3) {
+          params.cid = codeObj.cid
+          params.inv_code = codeObj.code
+        }
+      }
+    }
+
     const res = await createMallProductOrder(params)
 
     return {
@@ -347,7 +361,7 @@ const CashierPage = () => {
     if (payStatus !== 'paid') {
       JknAlert.info({
         content: '未验证到支付成功，请确认',
-        onAction: async () => {}
+        onAction: async () => { }
       })
     } else {
       setPayUrl('')
@@ -456,7 +470,7 @@ const CashierPage = () => {
             />
             <span>
               &nbsp;我已经阅读并同意
-              <span className="text-primary cursor-pointer" onClick={() => agreement.modal.open()} onKeyDown={() => {}}>
+              <span className="text-primary cursor-pointer" onClick={() => agreement.modal.open()} onKeyDown={() => { }}>
                 《软件订阅协议》
               </span>
             </span>
@@ -488,7 +502,7 @@ const CashierPage = () => {
                 {type !== 'wechat' && (
                   <span className="text-tertiary text-xs">
                     未跳转到支付页面？复制付款
-                    <span className="text-primary cursor-pointer" onClick={onCopyUrl} onKeyDown={() => {}}>
+                    <span className="text-primary cursor-pointer" onClick={onCopyUrl} onKeyDown={() => { }}>
                       链接
                     </span>
                   </span>

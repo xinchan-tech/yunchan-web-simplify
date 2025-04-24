@@ -1,21 +1,22 @@
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger, JknVirtualInfinite } from "@/components"
 import { getTimeFormatStr } from "@/pages/groupchat/chat-utils"
-import { type ComponentRef, useCallback, useRef, useState, type PropsWithChildren, useEffect } from "react"
-import { useImmer } from "use-immer"
+import { type ComponentRef, useCallback, useRef, type PropsWithChildren, useEffect, useMemo } from "react"
 import WKSDK, { MessageStatus } from "wukongimjssdk"
 import { UserAvatar } from "../components/user-avatar"
 import { chatEvent } from "../lib/event"
-import { type ChatMessage, ChatMessageType, type ChatMessageTypes, type ChatReplyContent, type ChatSubscriber } from "../lib/types"
+import { type ChatCmdMessage, ChatCmdType, type ChatMessage, ChatMessageType, type ChatMessageTypes, type ChatReplyContent, type ChatSubscriber } from "../lib/types"
 import { TextRecord } from "../components/text-record"
 import { ImageRecord } from "../components/image-record"
 import { SystemRecord } from "../components/system-record"
+import { useChatStore } from "../lib/store"
 
 interface MessageListProps {
   messages: ChatMessage[]
   onFetchMore: () => void
   hasMore: boolean
+  me: Nullable<ChatSubscriber>
 }
-export const MessageList = ({ messages, onFetchMore, hasMore }: MessageListProps) => {
+export const MessageList = ({ messages, onFetchMore, hasMore, me }: MessageListProps) => {
   // const [innerMessages, setInnerMessages] = useImmer<ChatMessage[]>(messages)
   const scrollRef = useRef<ComponentRef<typeof JknVirtualInfinite>>(null)
   const lastMessages = useRef<ChatMessage[]>(messages)
@@ -59,6 +60,20 @@ export const MessageList = ({ messages, onFetchMore, hasMore }: MessageListProps
     lastMessages.current = messages
   }, [messages])
 
+  const revokeMessage = useMemo(() => {
+    const revoke = messages.filter((msg) => msg.type === ChatMessageType.Cmd && msg.cmdType === ChatCmdType.MessageRevoke) as ChatCmdMessage[]
+
+    const r: Record<string, ChatCmdMessage> = {}
+
+    revoke.forEach((msg: ChatCmdMessage) => {
+      if (msg.cmdType !== ChatCmdType.MessageRevoke) return
+      r[msg.messageId] = msg as ChatCmdMessage
+    })
+
+    return r
+
+  }, [messages])
+
   return (
     <>
       <JknVirtualInfinite
@@ -69,9 +84,10 @@ export const MessageList = ({ messages, onFetchMore, hasMore }: MessageListProps
         data={messages ?? []}
         hasMore={hasMore}
         direction="up"
+        autoBottom
         fetchMore={onFetchMore}
         renderItem={(msg: ChatMessage) => (
-          <ChatMessageRow key={msg.id} message={msg} isRevokeMessage={false} />
+          <ChatMessageRow key={msg.id} message={msg} isRevokeMessage={revokeMessage[msg.id]} me={me} />
         )}
       />
     </>
@@ -80,34 +96,41 @@ export const MessageList = ({ messages, onFetchMore, hasMore }: MessageListProps
 
 interface ChatMessageRowProps {
   message: ChatMessage
-  isRevokeMessage: boolean
+  isRevokeMessage: Nullable<ChatCmdMessage>
+  me: Nullable<ChatSubscriber>
 }
 
-const ChatMessageRow = ({ message, children, isRevokeMessage }: PropsWithChildren<ChatMessageRowProps>) => {
+const ChatMessageRow = ({ message, isRevokeMessage, me }: PropsWithChildren<ChatMessageRowProps>) => {
   const uid = WKSDK.shared().config.uid
-
+  const timeZone = useChatStore(s => s.config.timezone)
   const isSelfMessage = message.senderId === uid
 
   if (message.type === ChatMessageType.Cmd || message.type === ChatMessageType.System) {
-    return <div className="py-1.5 text-xs text-tertiary text-center">{children}</div>
+    return null
+  }
+
+  if (message.type === ChatMessageType.ChannelUpdate) {
+    return (
+      <div className="text-center my-2.5 text-sm text-tertiary">{message.content}</div>
+    )
+  }
+
+  if (isRevokeMessage) {
+    return (
+      <div className="text-center my-2.5 text-sm text-tertiary">
+        {isRevokeMessage.senderName} 撤回了一条消息
+      </div>
+    )
   }
 
   const renderMessage = () => {
 
-    return (
-      <>
-        {isRevokeMessage ? (
-          <div />
-        ) : (
-          ({
-            [ChatMessageType.Text]: <TextRecord message={message as ChatMessageTypes<ChatMessageType.Text>} />,
-            // [ChatMessageType.Cmd]: <CmdRecord message={msg} />,
-            [ChatMessageType.Image]: <ImageRecord message={message as ChatMessageTypes<ChatMessageType.Image>} />,
-            [ChatMessageType.System]: <SystemRecord message={message as ChatMessageTypes<ChatMessageType.System>} />
-          }[message.type] ?? null)
-        )}
-      </>
-    )
+    return ({
+      [ChatMessageType.Text]: <TextRecord message={message as ChatMessageTypes<ChatMessageType.Text>} />,
+      // [ChatMessageType.Cmd]: <CmdRecord message={msg} />,
+      [ChatMessageType.Image]: <ImageRecord message={message as ChatMessageTypes<ChatMessageType.Image>} />,
+      [ChatMessageType.System]: <SystemRecord message={message as ChatMessageTypes<ChatMessageType.System>} />
+    }[message.type] ?? null)
   }
 
   if (isSelfMessage) {
@@ -117,16 +140,16 @@ const ChatMessageRow = ({ message, children, isRevokeMessage }: PropsWithChildre
           <div className="flex items-start mb-1">
             <span className="text-tertiary text-xs">&nbsp;{getTimeFormatStr(message.timestamp * 1000)}</span>
           </div>
-          <ChatMessageRowMenu message={message}>
+          <ChatMessageRowMenu message={message} me={me}>
             <div className="bg-[#586EAC] rounded p-2.5 text-sm min-h-8 box-border max-w-full overflow-hidden whitespace-normal break-words leading-tight">
               {
                 renderMessage()
               }
             </div>
           </ChatMessageRowMenu>
-          <div className="flex items-center space-x-1">
+          <div className="flex items-start space-x-1">
             {(message.reply) ? <ReplyMessage reply={message.reply} /> : null}
-            <span className="text-xs text-tertiary scale-90 mt-1">
+            <span className="text-xs text-tertiary scale-90 mt-1 flex-shrink-0">
               {message.status === MessageStatus.Fail
                 ? '发送失败'
                 : message.status === MessageStatus.Wait
@@ -143,15 +166,17 @@ const ChatMessageRow = ({ message, children, isRevokeMessage }: PropsWithChildre
     )
   }
 
+
+
   return (
     <div className="py-3 px-4 flex items-start box-border">
       <UserAvatar shape="square" src={message.senderAvatar} name={message.senderId} uid={message.senderId} type="1" />
       <div className="ml-2.5 flex flex-col items-start" style={{ maxWidth: '50%' }}>
         <div className="text-sm leading-[14px] flex items-start mb">
           {message.senderName}
-          <span className="text-tertiary text-xs">&nbsp;{getTimeFormatStr(message.timestamp * 1000)}</span>
+          <span className="text-tertiary text-xs">&nbsp;{getTimeFormatStr(message.timestamp * 1000)} {timeZone === 'us' ? '[美东]' : ''}</span>
         </div>
-        <ChatMessageRowMenu message={message}>
+        <ChatMessageRowMenu message={message} me={me}>
           <div className="bg-[#2C2C2C] rounded p-2.5 text-sm min-h-8 box-border max-w-full overflow-hidden whitespace-normal break-words leading-tight">
             {
               renderMessage()
@@ -166,11 +191,11 @@ const ChatMessageRow = ({ message, children, isRevokeMessage }: PropsWithChildre
 
 interface ChatMessageRowMenuProps {
   message: ChatMessage
+  me: Nullable<ChatSubscriber>
 }
 
 const ChatMessageRowMenu = (props: PropsWithChildren<ChatMessageRowMenuProps>) => {
-  const { message, children } = props
-  const [self, setSelf] = useState<Nullable<ChatSubscriber>>()
+  const { message, children, me } = props
 
   const onMentions = useCallback(() => {
     chatEvent.emit('mention', {
@@ -188,6 +213,10 @@ const ChatMessageRowMenu = (props: PropsWithChildren<ChatMessageRowMenuProps>) =
     chatEvent.emit('revoke', message)
   }, [message])
 
+  const onCopy = useCallback(() => {
+    chatEvent.emit('copy', message)
+  }, [message])
+
   return (
     <ContextMenu>
       <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
@@ -198,7 +227,10 @@ const ChatMessageRowMenu = (props: PropsWithChildren<ChatMessageRowMenuProps>) =
         <ContextMenuItem onClick={onReplyMessage}>
           <span>引用</span>
         </ContextMenuItem>
-        {self?.isManager || self?.isOwner || message.senderId === self?.id ? (
+        <ContextMenuItem onClick={onCopy}>
+          <span>复制</span>
+        </ContextMenuItem>
+        {me?.isManager || me?.isOwner || message.senderId === me?.id ? (
           <ContextMenuItem onClick={onRevokeMessage}>
             <span>撤回</span>
           </ContextMenuItem>
@@ -218,10 +250,10 @@ const ReplyMessage = ({ reply }: ReplyMessageProps) => {
       <div>{reply.replySenderName}: &nbsp;</div>
       {reply.replyMessageType
         ? ({
-          [ChatMessageType.Text]: <div className="max-w-48">{(reply.replyMessageContent as any).text}</div>,
+          [ChatMessageType.Text]: <div className="max-w-48">{(reply.replyMessageContent)}</div>,
           [ChatMessageType.Image]: (
-            <div className="w-48 h-48">
-              <img className="w-full h-full" src={(reply.replyMessageContent as any).remoteUrl} alt="" />
+            <div>
+              <img className="w-full h-full" src={(reply.replyMessageContent)} alt="" />
             </div>
           )
         }[reply.replyMessageType] ?? null)

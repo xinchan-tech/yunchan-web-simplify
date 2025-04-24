@@ -6,6 +6,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import dayjs from 'dayjs'
 import { z } from 'zod'
 import { AppleLogin, GoogleLogin, WeChatLogin } from './login-other'
+import to from "await-to-js"
 
 interface LoginFormProps {
   afterLogin?: () => void
@@ -34,6 +35,11 @@ export const LoginForm = (
 
     loginImService()
 
+    props.afterLogin?.()
+  }
+
+  const loginByUsername = () => {
+    const loginParams = form.getValues() as any
     const code = localStorage.getItem('invite-code')
 
     if (code) {
@@ -41,30 +47,37 @@ export const LoginForm = (
       if (codeObj.timestamp) {
         const current = dayjs()
         if (current.diff(codeObj.timestamp, 'day') <= 3) {
-          bindInviteCode(codeObj.code, codeObj.cid)
+          loginParams.cid = codeObj.cid
+          loginParams.inv_code = codeObj.code
         }
       }
     }
-
-    props.afterLogin?.()
-  }
-
-  const loginByUsername = () => {
-    return login(form.getValues())
+    return login(loginParams)
   }
 
   const loginMutation = useMutation({
     mutationFn: async ({ type, data }: { type: string; data: any }) => {
+      let r = null
       if (type === 'username') {
-        const r = await loginByUsername()
-        setToken(r.token)
-        await refreshUser()
-
-        return r
+        r = await loginByUsername()
+      }else{
+        r = await (type === 'apple' ? loginByThird('apple', data) : loginByThird('google', data))
       }
 
-      const r = await (type === 'apple' ? loginByThird('apple', data) : loginByThird('google', data))
       setToken(r.token)
+
+      const code = localStorage.getItem('invite-code')
+
+      if (code) {
+        const codeObj = JSON.parse(code)
+        if (codeObj.timestamp) {
+          const current = dayjs()
+          if (current.diff(codeObj.timestamp, 'day') <= 3) {
+            await to(bindInviteCode(codeObj.code, codeObj.cid))
+          }
+        }
+      }
+
       await refreshUser()
 
       return r

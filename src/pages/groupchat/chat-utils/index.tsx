@@ -209,7 +209,7 @@ export const getTimeFormatStr = (timestamp: number): string => {
     time = dateUtils.toUsDay(time)
   }
 
-  return timeFormat.format === 'ago' ? dateUtils.dateAgo(time) : `${time.format('YYYY-MM-DD HH:mm:ss')} [美东]`
+  return timeFormat.format === 'ago' ? dateUtils.dateAgo(time) : `${time.format('YYYY-MM-DD HH:mm:ss')}`
 }
 
 export const genImgFileByUrl = (url: string, mime?: string) => {

@@ -7,7 +7,7 @@ import {
 } from '@/api'
 import to from 'await-to-js'
 import WKSDK, {
-  type Channel,
+  Channel,
   ChannelInfo,
   ChannelTypeGroup,
   ChannelTypePerson,
@@ -21,56 +21,62 @@ import { userCache } from '../cache/user'
 import { ChannelTransform, ConversationTransform, MessageTransform, SubscriberTransform } from './transform'
 import { MediaMessageUploadTask } from './upload-task'
 import { channelCache, subscriberCache } from "../cache"
+import type { ChatChannel } from "./types"
+
+export const syncChannelInfo = async (chatChannel: ChatChannel) => {
+  const channel = new Channel(chatChannel.id, chatChannel.type)
+  const channelInfo = new ChannelInfo()
+ 
+  try {
+    const params = {
+      type: channel.channelType === ChannelTypeGroup ? '2' : '1',
+      id: channel.channelID
+    }
+
+    const [err, r] = await to(Promise.all([getChatNameAndAvatar(params), getChannelDetail(channel.channelID)]))
+
+    if (err) {
+      console.error(err)
+      return channelInfo
+    }
+
+    const [res, detail] = r
+
+    if (channel.channelType === ChannelTypePerson) {
+      channelInfo.title = res?.name || channel.channelID
+      channelInfo.logo = res?.avatar ?? ''
+      channelInfo.mute = false
+      channelInfo.top = false
+      channelInfo.orgData = {}
+      channelInfo.online = false
+      channelInfo.lastOffline = 0
+      channelInfo.channel = channel
+    } else {
+      channelInfo.title = res?.name || channel.channelID
+      channelInfo.logo = res?.avatar ?? ''
+      channelInfo.mute = false
+      channelInfo.top = false
+      channelInfo.orgData = {}
+      channelInfo.channel = channel
+    }
+    channelInfo.orgData = detail
+
+    WKSDK.shared().channelManager.setChannleInfoForCache(channelInfo)
+
+    channelCache.updateOrSave(ChannelTransform.toChatChannel(channelInfo))
+  } catch (error) {
+    console.error(error)
+  }
+
+  return channelInfo
+}
 
 /**
  * 请求频道资料数据源
  */
 const initChannelInfoDataSource = () => {
   WKSDK.shared().config.provider.channelInfoCallback = async (channel: Channel) => {
-    const channelInfo = new ChannelInfo()
-
-    try {
-      const params = {
-        type: channel.channelType === ChannelTypeGroup ? '2' : '1',
-        id: channel.channelID
-      }
-
-      const [err, r] = await to(Promise.all([getChatNameAndAvatar(params), getChannelDetail(channel.channelID)]))
-
-      if (err) {
-        console.error(err)
-        return channelInfo
-      }
-
-      const [res, detail] = r
-
-      if (channel.channelType === ChannelTypePerson) {
-        channelInfo.title = res?.name || channel.channelID
-        channelInfo.logo = res?.avatar ?? ''
-        channelInfo.mute = false
-        channelInfo.top = false
-        channelInfo.orgData = {}
-        channelInfo.online = false
-        channelInfo.lastOffline = 0
-        channelInfo.channel = channel
-      } else {
-        channelInfo.title = res?.name || channel.channelID
-        channelInfo.logo = res?.avatar ?? ''
-        channelInfo.mute = false
-        channelInfo.top = false
-        channelInfo.orgData = {}
-        channelInfo.channel = channel
-      }
-
-      WKSDK.shared().channelManager.setChannleInfoForCache(channelInfo)
-
-      channelInfo.orgData = detail
-
-      channelCache.updateOrSave(ChannelTransform.toChatChannel(channelInfo))
-    } catch (error) {
-      console.error(error)
-    }
-
+    const channelInfo = await syncChannelInfo({id: channel.channelID, type: channel.channelType} as any)
     return channelInfo
   }
 }

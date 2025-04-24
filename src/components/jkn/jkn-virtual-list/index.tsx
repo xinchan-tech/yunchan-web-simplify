@@ -75,22 +75,23 @@ export const JknVirtualInfinite = forwardRef<JknVirtualInfiniteIns, JknVirtualIn
         containerRef.current?.getContainer()?.querySelector('[data-radix-scroll-area-viewport]') ?? null,
       estimateSize: () => itemHeight,
       enabled: true,
+      initialOffset: autoBottom ? Number.MAX_SAFE_INTEGER: 0,
       paddingEnd: 24
     })
 
-    useLayoutEffect(() => {
-      if (autoBottom) {
-        const items = virtualizer.getVirtualItems()
-        const currentLastItems = items[items.length - 1]?.index
-        const firstItems = items[0]?.index
-        if (firstItems === 0) {
-          virtualizer.scrollToIndex(data.length - 1)
-        }
-        if (data.length > 0 && currentLastItems >= data.length - 2) {
-          virtualizer.scrollToIndex(data.length - 1)
-        }
-      }
-    }, [data, virtualizer.scrollToIndex, autoBottom, virtualizer.getVirtualItems])
+    // useLayoutEffect(() => {
+    //   if (autoBottom) {
+    //     const items = virtualizer.getVirtualItems()
+    //     const currentLastItems = items[items.length - 1]?.index
+    //     const firstItems = items[0]?.index
+    //     if (firstItems === 0) {
+    //       virtualizer.scrollToIndex(data.length - 1)
+    //     }
+    //     if (data.length > 0 && currentLastItems >= data.length - 2) {
+    //       virtualizer.scrollToIndex(data.length - 1)
+    //     }
+    //   }
+    // }, [data, virtualizer.scrollToIndex, autoBottom, virtualizer.getVirtualItems])
 
     useImperativeHandle(
       ref,
