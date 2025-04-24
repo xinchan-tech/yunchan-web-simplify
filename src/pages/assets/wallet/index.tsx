@@ -12,7 +12,7 @@ const Wallet = () => {
     const [sharedData, setSharedData] = useState<TableDataType>(''); // 父组件管理共享状态
     return <div className="pt-2.5 pb-5 pl-5 pr-8 box-border box-border h-screen flex flex-col">
         <div className='h-[1.75rem]'>
-        <AssetsTop />
+            <AssetsTop />
         </div>
         <div className='flex flex-1 pt-[0.9375rem] w-full h-full box-border overflow-hidden'>
             <div className='w-[12.5rem]'>
@@ -24,6 +24,7 @@ const Wallet = () => {
                 </div>
                 <div className='mt-5 flex flex-1 overflow-hidden'>
                     <Securitygroup onUpdate={setSharedData} />
+
                     <div className='ml-5 flex-1'>
                         <ReportCurv rowdata={sharedData} />
                     </div>

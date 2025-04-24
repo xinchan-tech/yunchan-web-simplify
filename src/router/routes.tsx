@@ -186,7 +186,6 @@ export const routes: RouteObject[] = [
 
   {
     path: '/assets',
-    element: <div/>,
     Component: lazy(() => import('@/pages/assets')),
     children: [
       {

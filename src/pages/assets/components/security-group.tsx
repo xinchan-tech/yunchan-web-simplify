@@ -11,10 +11,11 @@ import { useConfig, useTime } from '@/store'
 import { type Stock, stockUtils } from '@/utils/stock'
 import { useEffect, useState, useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { cn } from '@/utils/style'
 type TableDataType = ReturnType<typeof stockUtils.toStockWithExt>
 const baseExtends: StockExtend[] = ['total_share', 'basic_index', 'day_basic', 'alarm_ai', 'alarm_all', 'financials']
 
-const Securitygroup = ({ onUpdate }: { onUpdate?: (data: TableDataType, row: TableDataType[]) => void }) => {
+const Securitygroup = ({ onUpdate, className, ...props }: { className?: string, onUpdate?: (data: TableDataType, row: TableDataType[]) => void }) => {
     const [active, setActive] = useState<string>()
     const [dates, setDates] = useState<string[]>([])
     const trading = useTime(s => s.getTrading())
@@ -141,7 +142,7 @@ const Securitygroup = ({ onUpdate }: { onUpdate?: (data: TableDataType, row: Tab
     }
 
 
-    return <div className="border-[1px] border-[#3c3c3c] border-solid px-0.5 py-6 rounded-md w-[28.25rem]">
+    return <div className={cn("border-[1px] border-[#3c3c3c] border-solid px-0.5 py-6 rounded-md w-[28.25rem]", className)}>
         <div className="text-2xl flex flex-col ml-6 mt-2.5">
             <span>证券投资组合</span>
             <span className="text-sm">概述您的多元化股票投资组合。</span>

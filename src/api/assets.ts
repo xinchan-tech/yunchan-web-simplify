@@ -110,8 +110,13 @@ export const saveTrades = async (params: TradesParamsType) => {
     return request.post('/qs-svc/trades', params)
 }
 
-export const getTradesList = (params: { page?: number, limit?: number }) => {
+export const getTradesList = (params: { symbol: string, page?: number, limit?: number, starTime: Date | undefined, endTime: Date | undefined }) => {
     return request.get('/qs-svc/trades', { params }).then(r => r.data)
 }
 
 getTradesList.cacheKey = 'assets:trades:list'
+
+
+export const delTadesCancel = (params:{ trade_ids: string}) => {
+    return request.post('/qs-svc/trades/cancel', params)
+}

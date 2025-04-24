@@ -53,13 +53,13 @@ const DialogAssets: React.FC<DialogAssetsProps> = ({ children, refreshInfo, type
         const data = form.getValues();
         const serve = type === 'deposit' ? saveAccountAddDeposit : saveAccountWithdraw;
         setLoadingTrue();
-        serve({ ...data, account_id: id }).then(({ status, message }) => {
+        serve({ ...data, account_id: id }).then(({ status, msg }) => {
             if (status == 1) {
                 refreshInfo && refreshInfo()
-                toast({ description: '存款成功' });
+                toast({ description: '操作成功' });
                 onClose()
             } else {
-                toast({ description: message });
+                toast({ description: msg });
             }
         }).finally(() => setLoadingFalse());
     };
@@ -68,6 +68,7 @@ const DialogAssets: React.FC<DialogAssetsProps> = ({ children, refreshInfo, type
     function onClose() {
         form.reset()
         setFalse();
+        setLoadingFalse()
     };
 
     return (

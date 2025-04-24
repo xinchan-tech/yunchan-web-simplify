@@ -2,7 +2,7 @@ import StockSelect from './stock-select';
 import { type StockTrading, stockUtils } from '@/utils/stock';
 import { Input } from '@/components';
 import { cn } from '@/utils/style';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { z } from 'zod'
 import { Button, JknIcon } from '@/components';
 import { useZForm, useToast } from '@/hooks'
@@ -10,6 +10,8 @@ import { saveTrades, TradesParamsType } from '@/api'
 import { useToast } from '@/hooks'
 import BigNumber from 'bignumber.js';
 import { FormProvider, useFormContext } from 'react-hook-form'
+import { useAssetsInfoStore } from '@/store/chat'
+import { useBoolean } from 'ahooks'
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 
 import {
@@ -24,45 +26,86 @@ type SelectedActionType = 'buy' | 'sell';
 
 const formSchema = z.object({
     price: z
-        .number({ required_error: '请输入金额' })
+        .number({ invalid_type_error: '请输入价格' })
+        .min(0.01, { message: '价格必须大于0' })
+        .refine((value) => /^\d+(\.\d{1,3})?$/.test(value.toString()), {
+            message: '价格最多只能保留三位小数',
+        })
+        .refine((value) => value.toString().replace('.', '').length <= 9, {
+            message: '价格不能超过九位数', // 校验金额不能超过九位数
+        }),
+    aiPrice: z
+        .number({ invalid_type_error: '请输入' })
         .min(0.01, { message: '金额必须大于0' })
-        .refine((value) => /^\d+(\.\d{1,2})?$/.test(value.toString()), {
-            message: '金额最多只能保留两位小数',
+        .refine((value) => /^\d+(\.\d{1,3})?$/.test(value.toString()), {
+            message: '金额最多只能保留三位小数',
         })
         .refine((value) => value.toString().replace('.', '').length <= 9, {
             message: '金额不能超过九位数', // 校验金额不能超过九位数
         }),
-    quantity: z
-        .number({ required_error: '请输入金额' })
-        .min(0.01, { message: '金额必须大于0' })
-        .refine((value) => /^\d+(\.\d{1,2})?$/.test(value.toString()), {
-            message: '金额最多只能保留两位小数',
+    retailPrice: z
+        .number({ invalid_type_error: '请输入目标价' })
+        .min(0.01, { message: '目标价必须大于0' })
+        .refine((value) => /^\d+(\.\d{1,3})?$/.test(value.toString()), {
+            message: '目标价最多只能保留三位小数',
         })
         .refine((value) => value.toString().replace('.', '').length <= 9, {
-            message: '金额不能超过九位数', // 校验金额不能超过九位数
+            message: '目标价不能超过九位数', // 校验金额不能超过九位数
+        }),
+    quantity: z
+        .number({ invalid_type_error: '请输入数量' })
+        .min(0.01, { message: '数量必须大于0' })
+        .int({ message: '数量必须是整数' })
+        .refine((value) => value.toString().replace('.', '').length <= 9, {
+            message: '数量不能超过九位数', // 校验金额不能超过九位数
+        }),
+    aiQuantity: z
+        .number({ invalid_type_error: '请输入数量' })
+        .min(0.01, { message: '数量必须大于0' })
+        .int({ message: '数量必须是整数' })
+        .refine((value) => value.toString().replace('.', '').length <= 9, {
+            message: '数量不能超过九位数', // 校验金额不能超过九位数
+        }),
+    retailQuantity: z
+        .number({ invalid_type_error: '请输入数量' })
+        .min(0.01, { message: '数量必须大于0' })
+        .int({ message: '数量必须是整数' })
+        .refine((value) => value.toString().replace('.', '').length <= 9, {
+            message: '数量不能超过九位数', // 校验金额不能超过九位数
         }),
 
 });
 
-// const totalPrices = useCallback((price: number, price: number) => {
-//     return (price * price).toFixed(2);
-// }, []);
+type AiTypes = 'percent' | 'price'
 
 const AiConfig = ({ list, row }: { list: TableDataType[]; row: TableDataType }) => {
     const [type, setType] = useState(1);
     const [selectedAction, setSelectedAction] = useState<SelectedActionType>('buy'); // 选中状态
+    const [aiType, setAiType] = useState<AiTypes>("percent")
     const [stock, setStock] = useState<TableDataType | null>(null);
+    const [loading, { setTrue: setLoadingTrue, setFalse: setLoadingFalse }] = useBoolean(false);
     const { toast } = useToast();
 
-    const form = useZForm(formSchema, {
+    let form = useZForm(formSchema, {
         price: '',
         quantity: '',
+        aiPrice: "",
+        aiQuantity: "",
+        retailPrice: "",
+        retailQuantity: "",
     });
 
-    const { watch, setValue } = form;
+
+    const { watch, setValue, trigger } = form;
     const price = watch('price'); // 监听价格
     const quantity = watch('quantity'); // 监听数量
+    const aiPrice = watch('aiPrice'); // 监听价格
+    const aiQuantity = watch('aiQuantity'); // 监听数量
+    const retailPrice = watch('retailPrice'); // 监听数量
+    const retailQuantity = watch('retailQuantity'); // 监听数量
     const totalAmount = new BigNumber(price || 0).multipliedBy(new BigNumber(quantity || 0)).toFixed(2);
+    const aiTotalAmount = new BigNumber(aiPrice || 0).multipliedBy(new BigNumber(aiQuantity || 0)).toFixed(2);
+    const retailTotalAmount = new BigNumber(retailPrice || 0).multipliedBy(new BigNumber(retailQuantity || 0)).toFixed(2);
 
     const tabs = [
         { key: 1, label: `常规类型` },
@@ -73,6 +116,10 @@ const AiConfig = ({ list, row }: { list: TableDataType[]; row: TableDataType }) 
         setType(key);
     };
 
+    // useEffect(()=>{
+
+    // }, [type])
+
     useEffect(() => {
         if (row.price) {
             form.setValue('price', row.price)
@@ -80,15 +127,65 @@ const AiConfig = ({ list, row }: { list: TableDataType[]; row: TableDataType }) 
         setStock(row)
     }, [row])
 
+    useEffect(() => {
+        if (price) {
+            trigger('price')
+        }
+    }, [price])
+
+    useEffect(() => {
+        if (quantity) {
+            trigger('quantity')
+        }
+    }, [quantity])
+
+    useEffect(() => {
+        if (aiPrice) {
+            trigger('aiPrice')
+        }
+    }, [aiPrice])
+
+    useEffect(() => {
+        if (aiQuantity) {
+            trigger('aiQuantity')
+        }
+    }, [aiQuantity])
+
+    useEffect(() => {
+        if (retailPrice) {
+            trigger('retailPrice')
+        }
+    }, [retailPrice])
+
+    useEffect(() => {
+        if (retailQuantity) {
+            trigger('retailQuantity')
+        }
+    }, [retailQuantity])
+
     const onsubmit = async (key: SelectedActionType) => {
-        const valid = await form.trigger();
-        console.log('valid', valid, stock)
+        const verify = type == 1 ? ['price', 'quantity'] : ["aiPrice", "aiQuantity", "retailPrice", "retailQuantity"]
+        const valid = await form.trigger(verify);
+        if (!valid) return
+        if (selectedAction == 'buy') { //买入比较可用金额
+            const info = useAssetsInfoStore?.getState()?.data
+            let _totalAmount = type == 1 ? totalAmount : aiTotalAmount
+            if (_totalAmount > info.balance) return toast({ description: '可用金额不足，请先存款！' })
+        } else {  //卖出比较数量
+            //目前还没有数量获取的地方
+        }
         const params: TradesParamsType = getSaveParams(key)
-        saveTrades(params).then(({ status }) => {
+        setLoadingTrue()
+        saveTrades(params).then(({ status, msg }) => {
             if (status == 1) {
                 toast({ description: '保存成功' })
+                form.reset()
+            } else {
+                toast({ description: msg })
             }
-        })
+        }).catch((err) => {
+            toast({ description: err?.response.data.msg })
+        }).finally(() => setLoadingFalse())
     }
 
     function getSaveParams(key: SelectedActionType) {
@@ -104,7 +201,17 @@ const AiConfig = ({ list, row }: { list: TableDataType[]; row: TableDataType }) 
             param.condition = {
                 params: [{ price, quantity }]
             }
-        } else { }
+        } else {
+
+            const { aiPrice, aiQuantity, retailPrice, retailQuantity } = data
+            console.log(data, aiPrice, aiQuantity, retailPrice, retailQuantity)
+            param.condition = {
+                ai_params: [
+                    { type: 3, change_value: retailPrice, quantity: retailQuantity },
+                    { type: aiType == 'percent' ? 1 : 2, change_value: aiPrice, quantity: aiQuantity }
+                ]
+            }
+        }
 
         return param
     }
@@ -114,11 +221,19 @@ const AiConfig = ({ list, row }: { list: TableDataType[]; row: TableDataType }) 
         setStock(row)
     }
 
+    const StockSelectCompent = useCallback(() => {
+        return <StockSelect list={list} row={row} classNmae="pr-[12px]" onChange={row => onSelectChange(row)} />
+    }, [row])
+
+    const onChangeAiType = (type: string) => {
+        console.log(type, 9999)
+    }
+
     return (
         <div className="border-[1px] border-solid border-[#3c3c3c] rounded-md p-6 flex-1">
             <div className="text-2xl font-bold">AI交易配置</div>
             <FormProvider {...form}>
-                <div className="w-[32rem] mt-5">
+                <div className="w-[32rem] mt-5 ">
                     {/* 买入/卖出切换 */}
                     <div className="w-full flex rounded-md mt-2.5 relative h-10 ">
                         <div
@@ -143,71 +258,11 @@ const AiConfig = ({ list, row }: { list: TableDataType[]; row: TableDataType }) 
 
                     {/* 股票选择 */}
                     <div className="mt-5 w-full box-border">
-                        <StockSelect list={list} row={row} classNmae="pr-[12px]" onChange={row => onSelectChange(row)} />
-                    </div>
-
-                    {/* 价格、数量、金额 */}
-                    <div className="box-border flex justify-between border-[1px] border-solid border-[#3c3c3c] px-2.5 py-1 rounded-md mt-2.5">
-                        <div className="flex-1">
-                            <FormField
-                                control={form.control}
-                                name="price"
-                                render={({ field }) => (
-                                    <FormItem className="flex items-start items-center space-y-0 relative">
-                                        <FormControl>
-                                            <div className='flex flex-col'>
-                                                <div className="text-[#808080] text-xs font-bold mb-1">价格</div>
-                                                <Input
-                                                    type="number"
-                                                    min={0}
-                                                    placeholder='请输入价格'
-                                                    className={cn('border-none flex-1 text-center h-[20px] text-left p-0 placeholder:text-[#808080]')}
-                                                    {...form.register('price', { valueAsNumber: true })}
-                                                />
-                                            </div>
-                                        </FormControl>
-                                        <FormMessage className="text-sm text-destructive absolute right-2 left-[8.5rem] bottom-[-15px]" />
-                                    </FormItem>
-                                )}
-                            >
-                            </FormField>
-                        </div>
-                        <div className="flex flex-1 flex-col items-center justify-center">
-                            <div className="text-[#DBDBDB] text-sm">
-                                <FormField
-                                    control={form.control}
-                                    name="quantity"
-                                    render={({ field }) => (
-                                        <FormItem className="flex items-start items-center space-y-0 relative">
-                                            <FormControl>
-                                                <div className='flex flex-col'>
-                                                    <div className="text-[#808080] text-xs font-bold mb-1 text-center">数量</div>
-                                                    <Input
-                                                        type="number"
-                                                        min={0}
-                                                        placeholder='请输入数量'
-                                                        className={cn('border-none flex-1 text-center h-[20px] text-center p-0 placeholder:text-[#808080]')}
-                                                        {...form.register('quantity', { valueAsNumber: true })}
-                                                    />
-                                                </div>
-                                            </FormControl>
-                                            <FormMessage className="text-sm text-destructive absolute right-2 left-[8.5rem] bottom-[-15px]" />
-                                        </FormItem>
-                                    )}
-                                >
-                                </FormField>
-                            </div>
-                        </div>
-                        <div className="flex flex-1 flex-col items-end justify-center">
-                            <div className="text-[#808080] text-xs font-bold mb-1 text-right pr-[12px] box-border">
-                                金额
-                            </div>
-                            <div className="text-[#808080] text-sm">{totalAmount}</div>
-                        </div>
+                        <StockSelectCompent />
                     </div>
 
                     {/* 类型选择 */}
-                    <div className="w-full box-border mt-2.5">
+                    <div className="w-full box-border mt-5">
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <div className="flex w-full justify-between px-2.5 py-2.5 box-border border-[1px] w-[10rem] border-solid border-[#3c3c3c] rounded-md items-center space-x-2 text-lg font-bold">
@@ -229,23 +284,229 @@ const AiConfig = ({ list, row }: { list: TableDataType[]; row: TableDataType }) 
                             </DropdownMenuContent>
                         </DropdownMenu>
                     </div>
+                    {
+                        type == 2 ? <>
+                            {/* 买卖目标价 */}
+                            < div >
+                                <div className="box-border flex justify-between border-[1px] border-solid border-[#3c3c3c] px-2.5 py-1 rounded-md mt-5">
+                                    <div className="flex-1">
+                                        <FormField
+                                            control={form.control}
+                                            name="retailPrice"
+                                            render={({ field }) => (
+                                                <FormItem className="flex items-start items-center space-y-0 relative">
+                                                    <FormControl>
+                                                        <div className='flex flex-col'>
+                                                            <div className="text-[#808080] text-xs font-bold mb-1">{selectedAction == 'buy' ? "买入" : "卖出"}目标价</div>
+                                                            <Input
+                                                                type="number"
+                                                                min={0}
+                                                                placeholder='请输入价格'
+                                                                className={cn('border-none flex-1 text-center h-[20px] text-left p-0 placeholder:text-[#808080]')}
+                                                                {...form.register('retailPrice', { valueAsNumber: true })}
+                                                            />
+                                                        </div>
+                                                    </FormControl>
+                                                    <FormMessage className="text-sx text-destructive absolute right-2 left-[0] bottom-[-24px] w-[400px]" />
+                                                </FormItem>
+                                            )}
+                                        >
+                                        </FormField>
+                                    </div>
+                                    <div className="flex flex-1 flex-col items-center justify-center">
+                                        <div className="text-[#DBDBDB] text-sm">
+                                            <FormField
+                                                control={form.control}
+                                                name="retailQuantity"
+                                                render={({ field }) => (
+                                                    <FormItem className="flex items-start items-center space-y-0 relative">
+                                                        <FormControl>
+                                                            <div className='flex flex-col'>
+                                                                <div className="text-[#808080] text-xs font-bold mb-1 text-center">数量</div>
+                                                                <Input
+                                                                    type="number"
+                                                                    min={0}
+                                                                    placeholder='请输入数量'
+                                                                    className={cn('border-none flex-1 text-center h-[20px] text-center p-0 placeholder:text-[#808080]')}
+                                                                    {...form.register('retailQuantity', { valueAsNumber: true })}
+                                                                />
+                                                            </div>
+                                                        </FormControl>
+                                                        <FormMessage className="text-sx text-destructive absolute right-2 left-[0] bottom-[-24px] w-full text-center" />
+                                                    </FormItem>
+                                                )}
+                                            >
+                                            </FormField>
+                                        </div>
+                                    </div>
+                                    <div className="flex flex-1 flex-col items-end justify-center">
+                                        <div className="text-[#808080] text-xs font-bold mb-1 text-right pr-[12px] box-border">
+                                            金额
+                                        </div>
+                                        <div className="text-[#808080] text-sm">{retailTotalAmount}</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* 回撤配置 */}
+                            <div className='mt-5'>
+                                <div className='text-[#B8B8B8] text-base my-2.5'>上涨追踪</div>
+                                <div className="box-border flex justify-between border-[1px] border-solid border-[#3c3c3c] px-2.5 py-1 rounded-md mt-5">
+                                    <div className="flex-1">
+                                        <FormField
+                                            control={form.control}
+                                            name="aiPrice"
+                                            render={({ field }) => (
+                                                <FormItem className="flex items-start items-center space-y-0 relative">
+                                                    <FormControl>
+                                                        <div className='flex flex-col'>
+                                                            <div className="flex w-auto items-center rounded-sm text-xs px-1 py-0.5 hover:bg-accent cursor-pointer text-secondary">
+                                                                <DropdownMenu>
+                                                                    <DropdownMenuTrigger asChild>
+                                                                        <span>{aiType == 'percent' ? "按回撤比例" : "按价格差额"}</span>
+                                                                    </DropdownMenuTrigger>
+                                                                    <DropdownMenuContent>
+                                                                        <DropdownMenuItem
+                                                                            data-checked='percent'
+                                                                            onClick={() => setAiType('percent')}
+                                                                        >
+                                                                            <span>按回撤比例</span>
+                                                                        </DropdownMenuItem>
+                                                                        <DropdownMenuItem data-checked='price' onClick={() => setAiType('price')}>
+                                                                            <span>按价格差额</span>
+                                                                        </DropdownMenuItem>
+                                                                    </DropdownMenuContent>
+                                                                </DropdownMenu>
+                                                                <JknIcon.Svg name="arrow-down" className="size-3" />
+                                                            </div>
+                                                            <Input
+                                                                type="number"
+                                                                min={0}
+                                                                placeholder={`请输入${aiType == 'percent' ? '回撤比例' : '价格差额'}`}
+                                                                className={cn('border-none flex-1 text-center h-[20px] text-left p-0 placeholder:text-[#808080]')}
+                                                                {...form.register('aiPrice', { valueAsNumber: true })}
+                                                            />
+                                                        </div>
+                                                    </FormControl>
+                                                    <FormMessage className="text-sx text-destructive absolute right-2 left-[0] bottom-[-24px] w-[400px]" />
+                                                </FormItem>
+                                            )}
+                                        >
+                                        </FormField>
+                                    </div>
+                                    <div className="flex flex-1 flex-col items-center justify-center">
+                                        <div className="text-[#DBDBDB] text-sm">
+                                            <FormField
+                                                control={form.control}
+                                                name="aiQuantity"
+                                                render={({ field }) => (
+                                                    <FormItem className="flex items-start items-center space-y-0 relative">
+                                                        <FormControl>
+                                                            <div className='flex flex-col'>
+                                                                <div className="text-[#808080] text-xs font-bold mb-1 text-center">数量</div>
+                                                                <Input
+                                                                    type="number"
+                                                                    min={0}
+                                                                    placeholder='请输入数量'
+                                                                    className={cn('border-none flex-1 text-center h-[20px] text-center p-0 placeholder:text-[#808080]')}
+                                                                    {...form.register('aiQuantity', { valueAsNumber: true })}
+                                                                />
+                                                            </div>
+                                                        </FormControl>
+                                                        <FormMessage className="text-sx text-destructive absolute right-2 left-[0] bottom-[-24px] w-full text-center" />
+                                                    </FormItem>
+                                                )}
+                                            >
+                                            </FormField>
+                                        </div>
+                                    </div>
+                                    <div className="flex flex-1 flex-col items-end justify-center">
+                                        <div className="text-[#808080] text-xs font-bold mb-1 text-right pr-[12px] box-border">
+                                            金额
+                                        </div>
+                                        <div className="text-[#808080] text-sm">{aiTotalAmount}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </> : <>
+                            {/* 价格、数量、金额 */}
+                            <div className="box-border flex justify-between border-[1px] border-solid border-[#3c3c3c] px-2.5 py-1 rounded-md mt-5">
+                                <div className="flex-1">
+                                    <FormField
+                                        control={form.control}
+                                        name="price"
+                                        render={({ field }) => (
+                                            <FormItem className="flex items-start items-center space-y-0 relative">
+                                                <FormControl>
+                                                    <div className='flex flex-col'>
+                                                        <div className="text-[#808080] text-xs font-bold mb-1">价格</div>
+                                                        <Input
+                                                            type="number"
+                                                            min={0}
+                                                            placeholder='请输入价格'
+                                                            className={cn('border-none flex-1 text-center h-[20px] text-left p-0 placeholder:text-[#808080]')}
+                                                            {...form.register('price', { valueAsNumber: true })}
+                                                        />
+                                                    </div>
+                                                </FormControl>
+                                                <FormMessage className="text-sx text-destructive absolute right-2 left-[0] bottom-[-24px] w-[400px]" />
+                                            </FormItem>
+                                        )}
+                                    >
+                                    </FormField>
+                                </div>
+                                <div className="flex flex-1 flex-col items-center justify-center">
+                                    <div className="text-[#DBDBDB] text-sm">
+                                        <FormField
+                                            control={form.control}
+                                            name="quantity"
+                                            render={({ field }) => (
+                                                <FormItem className="flex items-start items-center space-y-0 relative">
+                                                    <FormControl>
+                                                        <div className='flex flex-col'>
+                                                            <div className="text-[#808080] text-xs font-bold mb-1 text-center">数量</div>
+                                                            <Input
+                                                                type="number"
+                                                                min={0}
+                                                                placeholder='请输入数量'
+                                                                className={cn('border-none flex-1 text-center h-[20px] text-center p-0 placeholder:text-[#808080]')}
+                                                                {...form.register('quantity', { valueAsNumber: true })}
+                                                            />
+                                                        </div>
+                                                    </FormControl>
+                                                    <FormMessage className="text-sx text-destructive absolute right-2 left-[0] bottom-[-24px] w-full text-center" />
+                                                </FormItem>
+                                            )}
+                                        >
+                                        </FormField>
+                                    </div>
+                                </div>
+                                <div className="flex flex-1 flex-col items-end justify-center">
+                                    <div className="text-[#808080] text-xs font-bold mb-1 text-right box-border">
+                                        金额
+                                    </div>
+                                    <div className="text-[#808080] text-sm">{totalAmount}</div>
+                                </div>
+                            </div>
+                        </>
+                    }
 
                     {/* 提交按钮 */}
-                    <div className="mt-5">
+                    <div className="mt-10">
                         {selectedAction === 'buy' && (
-                            <Button className="py-2 text-content w-full bg-[#089981] text-base text-bold text-[#fff]" onClick={() => onsubmit('buy')}>
+                            <Button loading={loading} className="py-2 text-content w-full bg-[#089981] text-base text-bold text-[#fff]" onClick={() => onsubmit('buy')}>
                                 买入
                             </Button>
                         )}
                         {selectedAction === 'sell' && (
-                            <Button className="py-2 text-content w-full bg-[#F23645] text-base text-bold text-[#fff]" onClick={() => onsubmit('sell')}>
+                            <Button loading={loading} className="py-2 text-content w-full bg-[#F23645] text-base text-bold text-[#fff]" onClick={() => onsubmit('sell')}>
                                 卖出
                             </Button>
                         )}
                     </div>
                 </div>
-            </FormProvider>
-        </div>
+            </FormProvider >
+        </div >
     );
 };
 

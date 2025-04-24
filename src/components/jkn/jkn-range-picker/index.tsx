@@ -38,7 +38,6 @@ const JknRangePicker = ({ children, onChange, onClose, allowClear, placeholder, 
     const handleDateChange = (newRange: DateRange | undefined, from: Date) => {
         // 如果选择完成（有开始和结束日期），清除上次选择并设置新范围
         if (newRange?.from && newRange?.to && !isOPen) {
-            console.log('newRange', 12312313123)
             const startDate = dayjs(newRange.from).format('YYYY-MM-DD'); // 使用 dayjs 格式化开始日期
             const endDate = dayjs(newRange.to).format('YYYY-MM-DD'); // 使用 dayjs 格式化结束日期
             setRange(newRange); // 更新选择范围
@@ -70,6 +69,7 @@ const JknRangePicker = ({ children, onChange, onClose, allowClear, placeholder, 
         setRange({}); // 清除选择范围
         setDate([]); // 清除日期
         onClose && onClose('', '') // 触发回调
+        onChange && onChange('', '') // 触发回调
     };
 
     return <Popover open={open} onOpenChange={show => (show ? setTrue() : setFalse())}>

@@ -30,7 +30,7 @@ const AssetsInfo = () => {
     const query = useQuery<InfoType>({
         queryKey: [getAccountInfo.cacheKey],
         queryFn: () => getAccountInfo(),
-        refetchInterval: 30 * 1000,
+        // refetchInterval: 30 * 1000,
     })
 
     useEffect(() => {

@@ -69,7 +69,7 @@ const ReportCurv = ({ rowdata }: { rowdata: TableDataType }) => {
     </div>
     <div className="flex">
       <div className="w-[12.5rem] flex items-end">
-        <div className="flex items-end ">
+        <div className="flex max-w-full items-end ">
         <StockView name={rowdata?.name} code={rowdata?.code as string} showName className=""  />
           {/* <img src={imageLogo} alt="" className="w-6 h-6" /> */}
           {/* <JknIcon stock={data?.[0]} className="mr-3" /> */}
@@ -84,7 +84,7 @@ const ReportCurv = ({ rowdata }: { rowdata: TableDataType }) => {
               <div className="flex items-center mt-[2.625rem]">
                 <span className="ml-2 text-base inline-block text-[#b8b8b8] leading=[1.375rem]">{item.name}</span>
               </div>
-              <div className="text-base text-[#D9D9D9] mt-[0.4375rem] leading=[1.375rem]">{item.value}</div>
+              <div className="text-base text-[#D9D9D9] mt-[0.4375rem] leading=[1.375rem] whitespace-nowrap text-ellipsis overflow-hidden">{item.value}</div>
             </div>
           })
         }

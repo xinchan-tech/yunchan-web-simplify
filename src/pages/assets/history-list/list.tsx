@@ -1,15 +1,20 @@
-import { StockSelect, JknRcTable, type JknRcTableProps, JknRangePicker, StockView, SubscribeSpan } from '@/components'
-import { getTradesList } from '@/api'
+import { StockSelect, JknRcTable, JknPopconfirm, Button, type JknRcTableProps, JknRangePicker, StockView, SubscribeSpan } from '@/components'
+import { getTradesList, delTadesCancel } from '@/api'
 import { useQuery } from '@tanstack/react-query'
-import { useQueryParams } from '@/hooks'
+import { useQueryParams, useToast } from '@/hooks'
 import { useTableData, useTableRowClickToStockTrading } from '@/hooks'
 import { useMemo, useState, useEffect } from 'react'
 import Decimal from 'decimal.js'
 import { stockUtils } from '@/utils/stock'
-import { getStockInfo } from '../const'
 import { useStockList } from '@/store'
 import dayjs from 'dayjs'
 import { cn } from '@/utils/style'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components';
 
 type TableDataType = {
   name: string
@@ -30,19 +35,23 @@ type TableDataType = {
 const HistoryList = () => {
   const [active, setActive] = useState<string>()
   const [total, setTotal] = useState<number>(0)
-  const [dates, setDates] = useState<string[]>([])
+  const [starTime, setStarTime] = useState<Date | undefined>()
+  const [endTime, setEndTime] = useState<string>('')
   const [data, { onSort, setList }] = useTableData<TableDataType>([])
   const listMap = useStockList(s => s.listMap)
+  const [keyWord, setKeyWord] = useState<string>('')
   const [queryParams, setQueryParams] = useQueryParams<{ symbol: string }>()
-  const onRowClick = useTableRowClickToStockTrading('code')
-  const [date, setDate] = useState<string[]>([])
+  const { toast } = useToast()
 
   const query = useQuery({
-    queryKey: [getTradesList.cacheKey, active === dates[0] ? undefined : active],
+    queryKey: [getTradesList.cacheKey, starTime, endTime, keyWord],
     queryFn: () =>
       getTradesList({
         page: 1,
         limit: 300,
+        starTime,
+        endTime,
+        symbol: keyWord
       })
   })
 
@@ -59,17 +68,7 @@ const HistoryList = () => {
         name: stock.name,
         symbol: stock.symbol
       })
-      const beforeStock = stockUtils.toStockWithExt(stock.extend?.stock_before, {
-        extend: stock.extend,
-        name: stock.name,
-        symbol: stock.symbol
-      })
-      const afterStock = stockUtils.toStockWithExt(stock.extend?.stock_after, {
-        extend: stock.extend,
-        name: stock.name,
-        symbol: stock.symbol
-      })
-      console.log('lastStock', lastStock, beforeStock, afterStock)
+
       r.push({
         ...stock,
         name: lastStock.name,
@@ -89,6 +88,15 @@ const HistoryList = () => {
     setList(r)
     setTotal(r.length)
   }, [query.data?.items, setList])
+
+  const handleCancel = (trade_ids: string) => {
+    delTadesCancel({ trade_ids: [trade_ids] }).then(({ status, msg }) => {
+      if (status == 1) {
+        query.refetch()
+      }
+      toast(status == 1 ? '操作成功' : msg)
+    })
+  }
 
   const columns: JknRcTableProps<TableDataType>['columns'] = useMemo(
     () => [
@@ -123,7 +131,7 @@ const HistoryList = () => {
         align: 'left',
         width: '10%',
         sort: true,
-        render: (_: any, { create_time }) => create_time ? dayjs(create_time).format('YYYY-MM-DD') : "--"
+        render: (_: any, { create_time }) => create_time ? dayjs(create_time * 1000).format('YYYY-MM-DD') : "--"
       },
       {
         title: '订单价格',
@@ -159,20 +167,40 @@ const HistoryList = () => {
       },
       {
         title: '状态',
-        dataIndex: 'status',
+        dataIndex: 'status_text',
         align: 'center',
         width: '10%',
         sort: true,
-        render: (_: any, { status }) => <span className={cn("text-[#ECB920]", status == '2' && 'text-[#22AB94]')}>
-          {status ? status == '1' ? "悬而未决" : "成功" : "--"}
+        render: (_: any, { status_text, status }) => <span className={cn("text-[#ECB920]", status != 1 && `text-[#${status == 2 ? '22AB94' : 'fff'}]`)}>
+          {status_text ? status_text : "--"}
+          {/* {status ? status == '1' ? "悬而未决" : "成功" : "--"} */}
         </span>
+      },
+      {
+        title: '操作',
+        dataIndex: 'opt',
+        align: 'right',
+        maxWidth: '200',
+        render: (_, { status, symbol, id }, index) => {
+          return status == 1 ? <JknPopconfirm
+            title={`您确定取消【${symbol}】吗?`}
+            placement="bottomRight"
+            onConfirm={() => handleCancel(id)}
+            onCancel={() => console.log('取消操作')}
+          >
+            <div className='cursor-pointer'>取消</div>
+          </JknPopconfirm>
+            : null
+        }
       }
     ],
     []
   )
 
   const onDateChange = (start: string, end: string) => {
-    setDate([start, end])
+    console.log(start, end)
+    setStarTime(start ? dayjs(start).valueOf() / 1000 : undefined)
+    setEndTime(end ? dayjs(end).valueOf() / 1000 : undefined)
   }
 
   return <div className="border-[1px] border-solid border-[#3c3c3c] rounded-md pt-6 px-[2px] box-border w-full">
@@ -181,7 +209,7 @@ const HistoryList = () => {
         <div className="flex items-center justify-end mr-6">
           <JknRangePicker allowClear onChange={onDateChange} placeholder={["开始时间", "截止时间"]} />
         </div>
-        <StockSelect placeholder="查询" className='rounded-lg' width="18.75rem" onChange={v => setQueryParams(v)} />
+        <StockSelect placeholder="查询" className='rounded-lg' width="18.75rem" onChange={v => setKeyWord(v)} />
       </div>
     </div>
 
