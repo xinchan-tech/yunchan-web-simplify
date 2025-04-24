@@ -1082,7 +1082,7 @@ type GetStockSelectionResult = {
  * 筛选股票
  */
 export const getStockSelection = (params: StockSelectionParams) => {
-  return request.post<GetStockSelectionResult[]>('/stock/selection', params).then(r => r.data)
+  return request.post<GetStockSelectionResult[]>('/stock-svc/stocks/selection', params).then(r => r.data)
 }
 
 type GetStockFinancialsParams = {
