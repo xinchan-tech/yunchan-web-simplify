@@ -56,6 +56,8 @@ type CreateMallProductOrderParams = {
   remark?: string
   platform: string
   order_id?: string
+  cid?: string
+  inv_code?: string
 }
 
 type CreateMallProductOrderResult = {

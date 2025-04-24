@@ -20,6 +20,7 @@ import { useCheckbox, useToast, useZForm } from '@/hooks'
 import { cn } from '@/utils/style'
 import { useMutation } from '@tanstack/react-query'
 import { useCountDown, useCounter } from 'ahooks'
+import dayjs from "dayjs"
 import { REGEXP_ONLY_DIGITS } from 'input-otp'
 import { useState } from 'react'
 import { FormProvider, type SubmitErrorHandler } from 'react-hook-form'
@@ -120,6 +121,19 @@ export const RegisterForm = (props: {
         code: code
       }
 
+      const _code = localStorage.getItem('invite-code')
+
+      if (_code) {
+        const codeObj = JSON.parse(_code)
+        if (codeObj.timestamp) {
+          const current = dayjs()
+          if (current.diff(codeObj.timestamp, 'day') <= 3) {
+            r.inv_code = codeObj.code
+            r.cid = codeObj.cid
+          }
+        }
+      }
+
       return registerByEmail(r)
     },
     onSuccess: () => {
@@ -139,7 +153,7 @@ export const RegisterForm = (props: {
     <>
       {step >= 2 ? (
         <div className="w-[960px] mx-auto pt-[60px]">
-          <div className="flex items-center" onClick={() => prevStep()} onKeyDown={() => {}}>
+          <div className="flex items-center" onClick={() => prevStep()} onKeyDown={() => { }}>
             <div className="size-8 rounded bg-accent flex items-center justify-center mr-2">
               <JknIcon.Svg name="arrow-left" size={10} className="" />
             </div>
@@ -184,7 +198,7 @@ export const RegisterForm = (props: {
                 <span
                   className="text-tertiary cursor-pointer"
                   onClick={() => !time && sendCode.mutate()}
-                  onKeyDown={() => {}}
+                  onKeyDown={() => { }}
                 >
                   <span className={cn(!time && 'text-primary')}>重发</span>
                   {time ? (
@@ -303,7 +317,7 @@ export const RegisterForm = (props: {
                     <span
                       className="text-primary cursor-pointer"
                       onClick={() => agreementModal.modal.open()}
-                      onKeyDown={() => {}}
+                      onKeyDown={() => { }}
                     >
                       《软件服务条款》
                     </span>
@@ -320,7 +334,7 @@ export const RegisterForm = (props: {
                 <span
                   className="cursor-pointer text-primary"
                   onClick={() => props.setPage('login')}
-                  onKeyDown={() => {}}
+                  onKeyDown={() => { }}
                 >
                   立即登录
                 </span>

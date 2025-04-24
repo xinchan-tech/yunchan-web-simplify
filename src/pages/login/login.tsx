@@ -39,7 +39,20 @@ export const LoginForm = (
   }
 
   const loginByUsername = () => {
-    return login(form.getValues())
+    const loginParams = form.getValues() as any
+    const code = localStorage.getItem('invite-code')
+
+    if (code) {
+      const codeObj = JSON.parse(code)
+      if (codeObj.timestamp) {
+        const current = dayjs()
+        if (current.diff(codeObj.timestamp, 'day') <= 3) {
+          loginParams.cid = codeObj.cid
+          loginParams.inv_code = codeObj.code
+        }
+      }
+    }
+    return login(loginParams)
   }
 
   const loginMutation = useMutation({
@@ -60,7 +73,7 @@ export const LoginForm = (
         if (codeObj.timestamp) {
           const current = dayjs()
           if (current.diff(codeObj.timestamp, 'day') <= 3) {
-            const [err] = await to(bindInviteCode(codeObj.code, codeObj.cid))
+            await to(bindInviteCode(codeObj.code, codeObj.cid))
           }
         }
       }
