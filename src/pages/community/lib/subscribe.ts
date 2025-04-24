@@ -68,9 +68,10 @@ export const useConnectIM = () => {
           .then(r => {
             Promise.all(r.map(v => ConversationTransform.toSession(v)))
               .then(res => {
+              
                 if (!res.some(v => v.channel.id === useChatStore.getState().channel?.id)) {
                   console.warn('Warning: No matching channel found in synced sessions')
-                  chatManager.setChannel(undefined)
+                  chatManager.setChannel(res[0].channel)
                 }
                 chatEvent.emit('syncSession', res)
                 sessionCache.updateBatch(res)

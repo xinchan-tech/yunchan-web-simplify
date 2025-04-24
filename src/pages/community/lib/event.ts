@@ -1,5 +1,5 @@
 import { createEvent } from '@/utils/event'
-import type { ChatMessage, ChatSession, ChatSubscriber, ChatUser } from './types'
+import type { ChatChannel, ChatMessage, ChatSession, ChatSubscriber, ChatUser } from './types'
 import { useMount, useUnmount } from 'ahooks'
 
 export type ChatEvent = {
@@ -7,8 +7,13 @@ export type ChatEvent = {
   updateSession: ChatSession
   syncMessage: ChatMessage[]
   updateMessage: ChatMessage
+  updateChannel: ChatChannel
   syncSubscriber: ChatSubscriber
   updateSubscriber: ChatSubscriber
+  imageUploadSuccess: {
+    clientSeq: number
+    url: string
+  }
   reply: ChatMessage
   mention: ChatUser
   revoke: ChatMessage

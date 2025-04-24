@@ -1,4 +1,4 @@
-import { useUser } from "@/store"
+import { useUser } from '@/store'
 import { stringToUint8Array } from '@/utils/string'
 import { Buffer } from 'buffer'
 import WKSDK, {
@@ -7,6 +7,7 @@ import WKSDK, {
   type CMDContent,
   Conversation,
   Message,
+  type MessageContent,
   MessageExtra,
   type MessageImage,
   MessageStatus,
@@ -21,9 +22,10 @@ import {
   ChatMessageType,
   type ChatSession,
   type ChatSubscriber,
+  type ChatSystemMessage,
   type ChatTextMessage
 } from './types'
-import { fetchUserFromCache } from "./utils"
+import { fetchUserFromCache } from './utils'
 
 export const MessageTransform = {
   toMessage: (msg: any) => {
@@ -173,24 +175,24 @@ export const MessageTransform = {
       channel: {
         id: msg.channel.channelID,
         type: msg.channel.channelType,
-        ownerId: "",
+        ownerId: '',
         userNum: 0,
-        notice: "",
+        notice: '',
         inChannel: false
       },
       content: msg.content,
       senderId: msg.fromUID,
       clientSeq: msg.clientSeq,
-      senderName: msg.remoteExtra.extra.fromName,
+      senderName: msg.remoteExtra.extra.fromName ?? (await fetchUserFromCache(msg.fromUID))?.name,
       date: msg.timestamp,
       status: msg.status,
       timestamp: msg.timestamp,
-      messageSeq: msg.messageSeq,
+      messageSeq: msg.messageSeq
     } as ChatMessage
-    
+
     if (msg.contentType === ChatMessageType.Cmd) {
       const content = msg.content as CMDContent
-      if(content.cmd === ChatCmdType.MessageRevoke) {
+      if (content.cmd === ChatCmdType.MessageRevoke) {
         message = {
           ...message,
           content: content.param.message_id,
@@ -198,7 +200,7 @@ export const MessageTransform = {
           cmdType: ChatCmdType.MessageRevoke,
           messageId: content.param.message_id
         }
-      } else if(content.cmd === ChatCmdType.ChannelUpdate){
+      } else if (content.cmd === ChatCmdType.ChannelUpdate) {
         message = {
           ...message,
           content: content.param.channel_id,
@@ -206,14 +208,14 @@ export const MessageTransform = {
           cmdType: ChatCmdType.ChannelUpdate,
           channelId: content.param.channel_id
         }
-      } else if(content.cmd === ChatCmdType.SubscriberForbidden) {
+      } else if (content.cmd === ChatCmdType.SubscriberForbidden) {
         message = {
           ...message,
           content: content.param.uid,
           type: ChatMessageType.Cmd,
           cmdType: ChatCmdType.SubscriberForbidden,
           uid: content.param.uid,
-          channelId: content.param.channel_id,
+          channelId: content.param.channel_id
         }
       }
     } else if (msg.contentType === ChatMessageType.Text) {
@@ -223,20 +225,26 @@ export const MessageTransform = {
         content: content.text,
         type: ChatMessageType.Text,
         senderAvatar: (await fetchUserFromCache(msg.fromUID))?.avatar,
-        mentionUser: content.mention?.uids?.length ? (await Promise.all(content.mention.uids.map(s => fetchUserFromCache(s)))) : [],
+        mentionUser: content.mention?.uids?.length
+          ? await Promise.all(content.mention.uids.map(s => fetchUserFromCache(s)))
+          : [],
         mentionAll: content.mention?.all ?? false,
-        revoke: false,
+        revoke: false
       } as ChatTextMessage
 
-      if(content.reply){
-        console.log(content.reply, content.reply.content)
+      if (content.reply) {
         message.reply = {
           replySenderName: content.reply.fromName,
           replySenderId: content.reply.fromUID,
           replySenderAvatar: '',
-          replyMessageType: content.reply.content.contentType,
-          replyMessageContent: content.reply.content.conversationDigest,
+          replyMessageType: content.reply.content?.contentType,
+          replyMessageContent: content.reply.content?.conversationDigest,
           replyMessageId: content.reply.messageID
+        }
+
+        if (message.reply.replyMessageType === ChatMessageType.Image) {
+          message.reply.replyMessageContent =
+            (content.reply.content as unknown as Nullable<MessageImage>)?.remoteUrl ?? ''
         }
       }
     } else if (msg.contentType === ChatMessageType.Image) {
@@ -252,19 +260,58 @@ export const MessageTransform = {
         file: content.file
       }
 
-      if(content.reply){
+      if (content.reply) {
         message.reply = {
           replySenderName: content.reply.fromName,
           replySenderId: content.reply.fromUID,
           replySenderAvatar: '',
-          replyMessageType: content.reply.content.contentType,
-          replyMessageContent: content.reply.content.conversationDigest,
+          replyMessageType: content.reply.content?.contentType,
+          replyMessageContent: content.reply.content?.conversationDigest,
           replyMessageId: content.reply.messageID
         }
+
+        if (message.reply.replyMessageType === ChatMessageType.Image) {
+          message.reply.replyMessageContent =
+            (content.reply.content as unknown as Nullable<MessageImage>)?.remoteUrl ?? ''
+        }
       }
+    } else if (msg.contentType === ChatMessageType.ChannelUpdate) {
+      message = {
+        ...message,
+        content: msg.content.content?.content,
+        type: ChatMessageType.ChannelUpdate,
+        
+      } as ChatSystemMessage
     }
 
     return message
+  },
+  fromChatMessageToContent: (msg: ChatMessage): Nullable<MessageContent> => {
+    if (msg.type === ChatMessageType.Text) {
+      const contentObj = {
+        content: msg.content,
+        type: ChatMessageType.Text as number
+      }
+
+      const messageContent = WKSDK.shared().getMessageContent(contentObj.type)
+      messageContent.decode(stringToUint8Array(JSON.stringify(contentObj)))
+      return messageContent
+    }
+
+    if (msg.type === ChatMessageType.Image) {
+      const contentObj = {
+        url: msg.content,
+        width: msg.width,
+        height: msg.height,
+        type: ChatMessageType.Image as number
+      }
+
+      const messageContent = WKSDK.shared().getMessageContent(contentObj.type)
+      messageContent.decode(stringToUint8Array(JSON.stringify(contentObj)))
+      return messageContent
+    }
+
+    return
   }
 }
 
@@ -313,7 +360,7 @@ export const SubscriberTransform = {
       hasForbidden: subscriber.orgData.forbidden === '1',
       isManager: subscriber.orgData.type === '1',
       isOwner: subscriber.orgData.type === '2',
-      uid: `${subscriber.uid}-${subscriber.channel.channelID}`,
+      uid: `${subscriber.uid}-${subscriber.channel.channelID}`
     }
 
     return chatSubscriber
@@ -425,33 +472,27 @@ export const ConversationTransform = {
       name: v.channelInfo?.title ?? '',
       avatar: v.channelInfo?.logo ?? '',
       type: v.channel.channelType,
-      ownerId: "",
+      ownerId: '',
       userNum: 0,
-      notice: "",
-      inChannel: false
+      notice: '',
+      inChannel: false,
+      editable: false,
+      maxCount: 0
     }
+
     const session: ChatSession = {
       id: v.channel.channelID,
       channel: channel,
       unRead: v.unread,
       isMentionMe: false,
-      uid: useUser.getState().user!.username,
+      uid: useUser.getState().user!.username
     }
-    // message: {
-    //   id: msg?.messageID ?? nanoid(),
-    //   channel: channel,
-    //   content: v.lastMessage?.content,
-    //   senderId: v.lastMessage?.fromUID ?? '',
-    //   senderName: v.lastMessage?.remoteExtra.extra.fromName,
-    //   date: v.timestamp,
-    //   status: MessageStatus.Normal
-    // }
 
     if (v.lastMessage) {
-      const user = useUser.getState().user?.id
+      const user = useUser.getState().user?.username
       const message = await MessageTransform.toChatMessage(v.lastMessage)
       session.message = message
-      if(message.type === ChatMessageType.Text) {
+      if (message.type === ChatMessageType.Text) {
         session.isMentionMe = message.mentionUser?.some(u => u.id === user) || message.mentionAll || false
       }
     }
@@ -470,7 +511,11 @@ export const ChannelTransform = {
       ownerId: channel.orgData.owner,
       userNum: channel.orgData.total_user,
       notice: channel.orgData.notice,
-      inChannel: channel.orgData.in_channel === 1
+      inChannel: channel.orgData.in_channel === 1,
+      tags: channel.orgData.tags,
+      editable: channel.orgData.editable,
+      maxCount: channel.orgData.max_num,
+      brief: channel.orgData.brief
     }
   }
 }

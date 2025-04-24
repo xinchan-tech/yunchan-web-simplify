@@ -2,9 +2,12 @@ import { JknIcon, JknSearchInput } from "@/components"
 import { chatManager, useChatStore } from "../lib/store"
 import { ChatConnectStatus, ChatMessageType, type ChatSession } from "../lib/types"
 import { useChatEvent } from "../lib/event"
-import { useCallback, useEffect, useMemo } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { useImmer } from "use-immer"
 import { UserAvatar } from "../components/user-avatar"
+import { ChannelInfo } from "../components/channel-info"
+import { cleanUnreadConversation } from "@/api"
+import { Channel } from "wukongimjssdk"
 
 const statusInfo: Record<ChatConnectStatus, { color: string; text: string }> = {
   [ChatConnectStatus.Disconnect]: {
@@ -42,6 +45,7 @@ export const Sessions = () => {
   const [sessions, setSessions] = useImmer<ChatSession[]>([])
   const [search, setSearch] = useImmer<Nullable<string>>(undefined)
   const channel = useChatStore(s => s.channel)
+  const [hoverChannel, setHoverChannel] = useState<string>()
 
   const onSearch = (e?: string) => {
     setSearch(e)
@@ -51,11 +55,39 @@ export const Sessions = () => {
     setSessions(e)
   }, [setSessions]))
 
+  useChatEvent('updateSession', useCallback((e) => {
+    setSessions(draft => {
+      const index = draft.findIndex(s => s.channel.id === e.channel.id)
+
+      if (index !== -1) {
+        const ord = draft[index]
+        const n = {...e}
+        if (channel?.id === e.channel.id) {
+          n.unRead = 0
+        } else {
+          n.unRead = ord.unRead + 1
+        }
+        draft.splice(index, 1, n)
+      }
+    })
+  }, [channel, setSessions]))
+
   const sessionList = useMemo(() => {
     if (!sessions) return []
     if (!search) return sessions
     return sessions.filter(s => s.channel.name.includes(search))
   }, [search, sessions])
+
+  const onSelectChannel = (s: ChatSession) => {
+    chatManager.setChannel(s.channel)
+    cleanUnreadConversation(new Channel(s.channel.id, s.channel.type))
+    setSessions(draft => {
+      const se = draft.find(se => se.channel.id === s.channel.id)
+      if (se) {
+        se.unRead = 0
+      }
+    })
+  }
 
   return (
     <div>
@@ -76,9 +108,12 @@ export const Sessions = () => {
         sessionList.map(s => (
           <div
             key={s.channel.id}
+            onMouseEnter={() => {
+              setHoverChannel(s.channel.id)
+            }}
             className="flex conversation-card overflow-hidden cursor-pointer data-[checked=true]:bg-accent"
             data-checked={s.channel.id === channel?.id}
-            onClick={() => chatManager.setChannel(s.channel)}
+            onClick={() => onSelectChannel(s)}
             onKeyDown={() => { }}
           >
             <div className="group-avatar rounded-md flex items-center text-ellipsis justify-center relative">
@@ -90,7 +125,7 @@ export const Sessions = () => {
               ) : null}
             </div>
             <div className="group-data flex-1 overflow-hidden">
-              <div className="group-title flex  justify-between">
+              <div className="group-title flex  justify-between relative">
                 <div className="flex items-baseline">
                   <div
                     title={s.channel.name}
@@ -99,6 +134,17 @@ export const Sessions = () => {
                     {s.channel.name || ''}
                   </div>
                 </div>
+                {
+                  hoverChannel === s.channel.id ? (
+                    <div
+                      onClick={e => { e.stopPropagation() }}
+                      onKeyDown={() => { }}
+                      className="absolute right-0 top-0"
+                    >
+                      <ChannelInfo channel={s.channel} />
+                    </div>
+                  ) : null
+                }
               </div>
               <div className="group-last-msg flex justify-between items-center">
                 <div className="flex-1 text-xs text-tertiary line-clamp-1">
@@ -106,23 +152,16 @@ export const Sessions = () => {
                   {
                     s.message?.type === ChatMessageType.Image || s.message?.type === ChatMessageType.Text ? (
                       <span>{s.message?.senderName}: &nbsp;</span>
-                    ): null
+                    ) : null
                   }
                   {s.message?.type ? {
                     [ChatMessageType.Cmd]: '[系统消息]',
                     [ChatMessageType.Text]: s.message?.content,
                     [ChatMessageType.Image]: '[图片]',
                     [ChatMessageType.System]: '加入群聊',
+                    [ChatMessageType.ChannelUpdate]: s.message?.content,
                   }[s.message?.type] : ''}
-                  {/* {c.lastMessage?.contentType === ChatMessageType.Cmd
-                    ? c.lastMessage.content.cmd === ChatCmdType.MessageRevoke
-                      ? '撤回了一条消息'
-                      : '[系统消息]'
-                    : c.lastMessage?.contentType === ChatMessageType.Image
-                      ? '[图片]'
-                      : +c.lastMessage!.contentType === +ChatMessageType.System
-                        ? '加入群聊'
-                        : c.lastMessage?.content.text || ''} */}
+
                 </div>
                 {/* <div className="text-xs text-tertiary">
                   {c.lastMessage?.timestamp ? dateUtils.dateAgo(dayjs(c.lastMessage.timestamp * 1000)) : null}
@@ -132,80 +171,7 @@ export const Sessions = () => {
           </div>
         ))
       }
-      {/* <div className="group-list">
-        {conversations.map(c => (
-          <div
-            key={c.channel.channelID}
-            className={cn(
-              'flex conversation-card overflow-hidden cursor-pointer',
-              c.channel.channelID === lastChannel?.channelID && 'actived'
-            )}
-            onClick={() => onChannelSelect(c)}
-            onKeyDown={() => { }}
-          >
-            <div className="group-avatar rounded-md flex items-center text-ellipsis justify-center relative">
-              <ChatAvatar
-                radius="4px"
-                className="w-[30px] h-[30px]"
-                data={{
-                  name: c.channelInfo?.title || '',
-                  uid: c.channel.channelID,
-                  avatar: c.channelInfo?.logo || ''
-                }}
-              />
-              {c.unread > 0 ? (
-                <div className="absolute h-[14px] box-border unread min-w-5 text-xs">
-                  {c.unread > 99 ? '99+' : c.unread}
-                </div>
-              ) : null}
-            </div>
-            <div className="group-data flex-1 overflow-hidden">
-              <div className="group-title flex  justify-between">
-                <div className="flex items-baseline">
-                  <div
-                    title={c.channelInfo?.title || ''}
-                    className="overflow-hidden whitespace-nowrap text-ellipsis w-full text-sm"
-                  >
-                    {c.channelInfo?.title || ''}
-                  </div>
-                </div>
-                {lastChannel?.channelID === c.channel.channelID ? (
-                  <div
-                    onClick={e => {
-                      e.stopPropagation()
-                      updateGroupInfoModal.modal.open()
-                    }}
-                    onKeyDown={() => {
-                      updateGroupInfoModal.modal.open()
-                    }}
-                    className="oper-icons ml-auto"
-                  >
-                    <JknIcon name="settings_shallow" className="rounded-none size-4" />
-                  </div>
-                ) : null}
-              </div>
-              <div className="group-last-msg flex justify-between items-center">
-                <div className="flex-1 text-xs text-tertiary line-clamp-1">
-                  {c.isMentionMe ? <span style={{ color: 'red' }}>[有人@我]</span> : null}
-                  <UsernameSpan uid={c.lastMessage?.fromUID!} channel={c.channel!} colon />
-                  {c.lastMessage?.contentType === ChatMessageType.Cmd
-                    ? c.lastMessage.content.cmd === ChatCmdType.MessageRevoke
-                      ? '撤回了一条消息'
-                      : '[系统消息]'
-                    : c.lastMessage?.contentType === ChatMessageType.Image
-                      ? '[图片]'
-                      : +c.lastMessage!.contentType === +ChatMessageType.System
-                        ? '加入群聊'
-                        : c.lastMessage?.content.text || ''}
-                </div>
-                <div className="text-xs text-tertiary">
-                  {c.lastMessage?.timestamp ? dateUtils.dateAgo(dayjs(c.lastMessage.timestamp * 1000)) : null}
-                </div>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div> */}
+
       <style jsx>
         {`
         .group-list {

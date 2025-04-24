@@ -58,7 +58,7 @@ export const uploadUtils = {
     const client = await getOssClient()
 
     const res = await client.put(filename, file)
-
+    
     return res
   }
 }

@@ -5,16 +5,16 @@ import { Outlet, useLocation } from "react-router"
 import { ChannelList } from "./components/channel-list"
 import { chatManager, useChatStore } from "./lib/store"
 import { useConnectIM } from "./lib/subscribe"
-import { useMessageListener, useMessageStatusListener } from "./lib/hooks"
-import { useCallback } from "react"
+import { useMessageListener } from "./lib/hooks"
+import { useCallback, useEffect } from "react"
 import { chatEvent } from "./lib/event"
-import { MessageTransform } from "./lib/transform"
+import { ChannelTransform, ConversationTransform, MessageTransform } from "./lib/transform"
+import WKSDK, { type MessageListener, type ChannelInfoListener, type ConversationListener } from "wukongimjssdk"
 
 
 const CommunityPage = () => {
   const user = useUser(s => s.user)
   const token = useToken(s => s.token)
-  const path = useLocation()
   useConnectIM()
 
   useMessageListener(useCallback((e) => {
@@ -22,6 +22,36 @@ const CommunityPage = () => {
       chatEvent.emit('updateMessage', r)
     })
   }, []))
+
+  useEffect(() => {
+    const handler: ConversationListener = (e) => {
+      ConversationTransform.toSession(e).then(r => {
+        chatEvent.emit('updateSession', r)
+      })
+    }
+    WKSDK.shared().conversationManager.addConversationListener(handler)
+
+    const channelHandler: ChannelInfoListener = (e) => {
+      chatEvent.emit('updateChannel', ChannelTransform.toChatChannel(e))
+    }
+
+    WKSDK.shared().channelManager.addListener(channelHandler)
+
+    const cmdHandler: MessageListener = (e) => {
+      MessageTransform.toChatMessage(e).then((r) => {
+        chatEvent.emit('updateMessage', r)
+      })
+    }
+
+    WKSDK.shared().chatManager.addCMDListener(cmdHandler)
+
+
+    return () => {
+      WKSDK.shared().conversationManager.removeConversationListener(handler)
+      WKSDK.shared().channelManager.removeListener(channelHandler)
+      WKSDK.shared().chatManager.removeCMDListener(cmdHandler)
+    }
+  })
 
   if (!token) {
     return (

@@ -15,7 +15,8 @@ export enum ChatMessageType {
   Notification = 8,
 
   Cmd = 99,
-  System = '1002'
+  System = '1002',
+  ChannelUpdate = 1005
 }
 
 export enum ChatCmdType {
@@ -71,16 +72,22 @@ export interface ChatChannel {
   notice: string
   inChannel: boolean
   state?: ChatChannelState
+  tags?: string
+  editable: boolean
+  maxCount: number
+  brief?: string
 }
 
-export type ChatMessage = ChatSystemMessage | ChatTextMessage | ChatImageMessage | ChatCmdMessage
+export type ChatMessage = ChatSystemMessage | ChatTextMessage | ChatImageMessage | ChatCmdMessage | ChatChannelUpdateMessage
 export type ChatMessageTypes<T extends ChatMessageType> = T extends ChatMessageType.Text
   ? ChatTextMessage
   : T extends ChatMessageType.Image
     ? ChatImageMessage
     : T extends ChatMessageType.Cmd
       ? ChatCmdMessage
-      : never
+      : T extends ChatMessageType.ChannelUpdate
+        ? ChatChannelUpdateMessage
+        : never
 
 export type ChatUser = {
   id: string
@@ -157,6 +164,11 @@ export type ChatCmdMessage = MessageBase & { type: ChatMessageType.Cmd } & (
         uid: string
       }
   )
+
+export type ChatChannelUpdateMessage = MessageBase & {
+  type: ChatMessageType.ChannelUpdate
+  content: string
+}
 
 export interface ChatSession {
   id: string
