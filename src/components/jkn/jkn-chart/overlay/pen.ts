@@ -1,33 +1,39 @@
-import type { OverlayTemplate } from '@/plugins/jkn-kline-chart'
-import { drawOverlayParamsToFigureStyle, getLinearYFromCoordinates, createOverlayTemplate } from '../utils'
+import { drawOverlayParamsToFigureStyle, createOverlayTemplate } from '../utils'
 import type { DrawOverlayParams } from '../types'
 
-export const PenOverlay = createOverlayTemplate({
+export const PenOverlay = createOverlayTemplate<DrawOverlayParams & { points: { x: number; y: number }[] }>({
   name: 'pen',
-  totalStep: 2,
-  needDefaultPointFigure: true,
+  totalStep: 3,
+  needDefaultPointFigure: false,
   needDefaultXAxisFigure: false,
   needDefaultYAxisFigure: false,
-  onRightClick: (e) => {
-    e.preventDefault?.()
+  onDrawing: ({ overlay, x, y }) => {
+    if(overlay.points.length <= 1){
+      return false
+    }
+    if (!overlay.extendData.points) {
+      overlay.extendData.points = []
+    }
+    overlay.extendData.points.push({ x: x!, y: y! })
     return true
   },
-  onClick: (e) => {
-    console.log(e, 'click')
-    return true
-  },
-  onPressedMoving: (e) => {
-    console.log(e)
-    return true
-  },
-  onPressedMoveStart: (e) => {
-    console.log(e, 'start')
-    return true
-  },
-  createPointFigures: ({ coordinates, bounding, overlay }) => {
-    if(coordinates.length > 1){
-      return []
+  createPointFigures: ({ coordinates, overlay }) => {
+    const styles = drawOverlayParamsToFigureStyle('line', overlay.extendData)
+    if (coordinates.length > 1) {
+      return [
+        {
+          type: 'line',
+          attrs: {
+            coordinates: [
+              ...(overlay.extendData.points ?? [])
+            ]
+          },
+          styles: {
+            ...styles
+          }
+        }
+      ]
     }
     return []
   }
-});
+})

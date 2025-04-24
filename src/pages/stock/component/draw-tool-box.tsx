@@ -80,6 +80,10 @@ const defaultBar: {
       config: {
         color: '#2495F1'
       }
+    },
+    {
+      icon: 'pen',
+      label: '画笔'
     }
   ]
 

@@ -65,6 +65,10 @@ export const MainChart = (props: MainChartProps) => {
           type,
           e
         })
+
+        if(type === 'pen'){
+          return true
+        }
         const pid = renderUtils.getOverlayByType(type)
         if (!pid) {
           JknAlert.toast('未知的绘图类型')
