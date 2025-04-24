@@ -227,6 +227,17 @@ export const MessageTransform = {
         mentionAll: content.mention?.all ?? false,
         revoke: false,
       } as ChatTextMessage
+
+      if(content.reply){
+        message.reply = {
+          replySenderName: content.reply.fromName,
+          replySenderId: content.reply.fromUID,
+          replySenderAvatar: '',
+          replyMessageType: content.reply.content.contentType,
+          replyMessageContent: content.reply.content.conversationDigest,
+          replyMessageId: content.reply.messageID
+        }
+      }
     } else if (msg.contentType === ChatMessageType.Image) {
       const content = msg.content as unknown as MessageImage
       message = {
@@ -238,6 +249,17 @@ export const MessageTransform = {
         height: content.height,
         revoke: false,
         file: content.file
+      }
+
+      if(content.reply){
+        message.reply = {
+          replySenderName: content.reply.fromName,
+          replySenderId: content.reply.fromUID,
+          replySenderAvatar: '',
+          replyMessageType: content.reply.content.contentType,
+          replyMessageContent: content.reply.content.conversationDigest,
+          replyMessageId: content.reply.messageID
+        }
       }
     }
 

@@ -23,7 +23,7 @@ export const TextRecord = (props: TextRecordProps) => {
   return (
     <span>
       {
-        texts.map(lines => (
+        texts.map((lines, index) => (
           <span key={nanoid(8)} className="select-text">
             {
               lines.map(line => (
@@ -36,7 +36,9 @@ export const TextRecord = (props: TextRecordProps) => {
                 </Fragment>
               ))
             }
-            <br />
+            {
+              index === texts.length - 1 ? null : <br />
+            }
           </span>
         ))
       }
@@ -45,7 +47,7 @@ export const TextRecord = (props: TextRecordProps) => {
           <span className="text-[#FFC440]">&nbsp; @所有人</span>
         ) : message.mentionUser.length ? (
           message.mentionUser.map((mention) => (
-            <span key={mention.id} className="text-[#FFC440] select-text">
+            <span key={nanoid()} className="text-[#FFC440] select-text">
               <span>&nbsp;@</span>
               {mention.name}
             </span>

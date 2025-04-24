@@ -66,7 +66,7 @@ export const ChatRoom = () => {
       if (channelLast.current?.id !== _channel?.channelID) {
         return
       }
-
+      console.log(r)
       return Promise.all(r.map(MessageTransform.toChatMessage))
     }).then(res => {
       if (!res) return

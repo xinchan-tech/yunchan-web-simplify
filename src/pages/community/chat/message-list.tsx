@@ -31,7 +31,7 @@ export const MessageList = ({ messages, onFetchMore, hasMore }: MessageListProps
 
     if (lastMessageLast?.id === messageLast?.id) {
       const offsetLen = messages.length - lastMessages.current.length
-      console.log(offsetLen)
+
       if (offsetLen > 0) {
         const virtual = scrollRef.current?.getVirtualizer()
         if (virtual) {

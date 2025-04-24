@@ -138,7 +138,7 @@ export type ChatReplyContent = {
   replySenderId: string
   replySenderName: string
   replySenderAvatar: string
-  replyMessageId: string
+  replyMessageId?: string
   replyMessageType: ChatMessageType.Image | ChatMessageType.Text
 }
 

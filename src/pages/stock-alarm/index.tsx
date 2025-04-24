@@ -208,13 +208,23 @@ const AlarmItem = ({ symbol, data, onDelete }: AlarmItemProps) => {
       const value = data.condition.float_param.change_value
       const triggerValue =
         triggerStr === '盈亏比例'
-          ? `${(value * 100).toFixed(2)}%`
-          : (value + data.condition.float_param.price).toFixed(2)
+          ? `${Math.abs((value * 100)).toFixed(2)}%`
+          : (Math.abs(value)).toFixed(2)
       return (
         <span data-direction={value > 0 ? 'up' : 'down'}>
-          {data.condition.float_param.type === 1 ? '按涨跌比比例' : '按涨跌金额'}&nbsp;
+          {
+            value > 0 ? (
+              <span>
+                上涨追踪 ↑ {data.condition.float_param.type === 1 ? '按回撤比例' : '按回撤金额'}
+              </span>
+            ) : (
+              <span>
+                下跌追踪 ↓ {data.condition.float_param.type === 1 ? '按反弹比例' : '按反弹金额'}
+              </span>
+            )
+          }
+          &nbsp;
           {triggerValue}&nbsp;
-          {value > 0 ? '↑' : '↓'}
         </span>
       )
     }
@@ -238,9 +248,9 @@ const AlarmItem = ({ symbol, data, onDelete }: AlarmItemProps) => {
 
   const onNav = () => {
     if (data.stock_cycle) {
-      stockUtils.gotoStockPage(symbol, { interval: data.stock_cycle, alarm: true  })
+      stockUtils.gotoStockPage(symbol, { interval: data.stock_cycle, alarm: true })
     } else {
-      stockUtils.gotoStockPage(symbol, { interval: StockChartInterval.DAY, alarm: true  })
+      stockUtils.gotoStockPage(symbol, { interval: StockChartInterval.DAY, alarm: true })
     }
   }
 
@@ -465,13 +475,21 @@ const AlarmRecordItem = ({ symbol, data, onDelete }: AlarmRecordItemProps) => {
     }
 
     if (data.type === AlarmType.PERCENT) {
-      const triggerValue = data.condition.data.trigger_price
       const value = data.condition.data.pnl_percent
       return (
         <span data-direction={value > 0 ? 'up' : 'down'}>
-          止损触发价&nbsp;
-          {triggerValue.toFixed(3)}&nbsp;
-          {value > 0 ? '↑' : '↓'}
+          {
+            value > 0 ? (
+              <span>
+                上涨追踪 ↑ {data.condition.data.trigger_type === 1 ? '按回撤比例' : '按回撤金额'}
+              </span>
+            ) : (
+              <span>
+                下跌追踪 ↓ {data.condition.data.trigger_type === 1 ? '按反弹比例' : '按反弹金额'}
+              </span>
+            )
+          }
+          &nbsp;{data.condition.data.trigger_type === 1 ? `${(data.condition.data.pnl_percent * 100).toFixed(2)}%` : data.condition.data.pnl_price.toFixed(3)}
         </span>
       )
     }
@@ -518,16 +536,18 @@ const AlarmRecordItem = ({ symbol, data, onDelete }: AlarmRecordItemProps) => {
           />
         </div>
       ) : null}
-      <div className="text-tertiary text-xs text-left mt-1">
+      <div className="text-tertiary text-xs text-left mt-1.5 leading-5">
         {data.type === AlarmType.PERCENT ? (
-          <span>
+          <span className="leading-7">
+            报警触发价&nbsp;
+            {(data.condition.data.pnl_price + data.condition.data.base_price).toFixed(3)}&nbsp;
             {data.condition.data.trigger_type === 1 ? '盈亏比例' : '盈亏金额'}
             {data.condition.data.trigger_type === 1 ? (
               <span>{Decimal.create(data.condition.data.pnl_percent).mul(100).toFixed(2)}%</span>
             ) : (
               <span>{data.condition.data.pnl_price.toFixed(3)}</span>
             )}
-            &nbsp;
+            <br />
           </span>
         ) : null}
         {data.alarm_time ? <span>触发时间&nbsp;美东&nbsp;{dateUtils.toUsDay(data.alarm_time).format('MM/DD w HH:mm')}</span> : null}

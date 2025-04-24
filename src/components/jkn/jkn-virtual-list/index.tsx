@@ -75,7 +75,7 @@ export const JknVirtualInfinite = forwardRef<JknVirtualInfiniteIns, JknVirtualIn
         containerRef.current?.getContainer()?.querySelector('[data-radix-scroll-area-viewport]') ?? null,
       estimateSize: () => itemHeight,
       enabled: true,
-      initialOffset: Number.MAX_SAFE_INTEGER
+      paddingEnd: 24
     })
 
     useLayoutEffect(() => {
