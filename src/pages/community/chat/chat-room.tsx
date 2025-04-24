@@ -5,10 +5,10 @@ import WKSDK, { Channel, Mention, MessageImage, MessageStatus, MessageText, Pull
 import { ChannelTransform, MessageTransform, SubscriberTransform } from "../lib/transform"
 import { channelCache, messageCache, subscriberCache } from "../cache"
 import { useLatestRef } from "@/hooks"
-import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger, JknAlert, JknIcon, ScrollArea } from "@/components"
+import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger, JknAlert, JknIcon, ScrollArea, useModal } from "@/components"
 import { UserAvatar } from "../components/user-avatar"
 import to from "await-to-js"
-import { revokeMessage, setChannelManager, setMemberForbidden } from "@/api"
+import { readChannelNotice, revokeMessage, setChannelManager, setMemberForbidden } from "@/api"
 import { useImmer } from "use-immer"
 import { MessageList } from "./message-list"
 import { ChatInput } from "../components/chat-input"
@@ -18,6 +18,8 @@ import { useUser } from "@/store"
 import type { JSONContent } from "@tiptap/react"
 import { useMessageStatusListener } from "../lib/hooks"
 import { syncChannelInfo } from "../lib/datasource"
+import { useCountDown } from "ahooks"
+import { nanoid } from "nanoid"
 
 export const ChatRoom = () => {
   const [channelStatus, setChannelStatus] = useState<ChatChannelState>(ChatChannelState.NotConnect)
@@ -139,6 +141,7 @@ export const ChatRoom = () => {
 
           const c = ChannelTransform.toChatChannel(channel)
           setChannelInfo(c)
+          channelCache.updateOrSave(c)
         })
 
         const messageQuery = refreshMessage()
@@ -330,16 +333,49 @@ export const ChatRoom = () => {
     if (c.id !== channelLast.current?.id) return
 
     setChannelInfo(c)
+    channelCache.updateOrSave(c)
   }, [channelLast]))
 
   useChatEvent('revoke', useCallback((e) => {
-
     revokeMessage({ msg_id: e.id })
   }, []))
 
 
+  const noticeModal = useModal({
+    content: (
+      <ChatRoomNotice
+        notice={channelInfo?.notice ?? ''}
+        onConfirm={() => {
+          readChannelNotice(channelInfo!.id).then(() => {
+            WKSDK.shared().channelManager.fetchChannelInfo(new Channel(channelInfo!.id, channelInfo!.type))
+          })
+
+          noticeModal.modal.close()
+        }}
+      />
+    ),
+    className: 'w-[476px]',
+    footer: null,
+    closeOnMaskClick: false
+  })
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
+  useEffect(() => {
+    if (channelInfo) {
+      if (!channelInfo.isReadNotice) {
+        noticeModal.modal.open()
+      }
+    }
+  }, [channelInfo])
+
+
+
+
   return (
     <div className="w-full h-full overflow-hidden flex flex-col">
+      {
+        noticeModal.context
+      }
       <div className="chat-room-title h-10">
         <div className="group-chat-header justify-between flex h-10">
           <div className="leading-10 border h-full bg-[#141414] border-b-primary w-full text-sm px-4">
@@ -441,35 +477,37 @@ export const ChatRoom = () => {
           </div>
         </div>
       </div>
-      {/* <div className="chat-room-main h-[calc(100%-40px)] bg-[#0a0a0a] flex overflow-hidden flex-1">
-        <div className="chat-room-content h-full w-full overflow-hidden">
-          <div className="chat-room-message h-[calc(100%-180px)] overflow-hidden border-b-primary">
-            <ChatMessageList />
-          </div>
-          <ChatInput onSubmit={onSubmit} channel={channel} />
+    </div>
+  )
+}
+
+const ChatRoomNotice = ({ notice, onConfirm }: { notice: string; onConfirm: () => void }) => {
+  const [countDown] = useCountDown({
+    leftTime: 1000 * 10
+  })
+  return (
+    <div className="chat-room-notice py-6 px-5">
+      <div className="chat-room-notice-title text-xl mb-6">尊敬的各位群友</div>
+      <div className="bg">
+        <div className="mb-4">👉入群请自觉遵守群规:</div>
+        <div className="chat-room-notice-content text-xs text-tertiary leading-5 h-[90px] overflow-y-auto">
+          {
+            notice.split('\n').filter(s => !!s).map(item => (
+              <div key={nanoid()}>{item}</div>
+            ))
+          }
         </div>
-        <div className="chat-room-right w-[188px] border-l-primary flex flex-col">
-          <div className="chat-room-notice p-2 box-border h-[164px] flex-shrink-0 border-b-primary flex flex-col">
-            <div className="chat-room-notice-title text-sm py-1">公告</div>
-            <div className="chat-room-notice-content text-xs text-tertiary leading-5">{channelDetail?.notice}</div>
-          </div>
-          <div className="chat-room-users flex-1 overflow-hidden">
-            <ChannelMembers owner={channelDetail?.owner ?? ''} />
-          </div>
+      </div>
+      <div className="text-center">
+        <div
+          className="text-base inline-block w-[120px] h-[38px] leading-[38px] mt-4 rounded-[300px] bg-[#575757]"
+          onClick={() => countDown <= 0 && onConfirm()}
+          onKeyDown={() => { }}
+        >
+          <span>确定</span>
+          {countDown >= 1 ? <span>({Math.floor(countDown / 1000)}s)</span> : null}
         </div>
-      </div> */}
-      {/* {noticeModal.context} */}
-      <style jsx>
-        {`
-             .chat-room-notice-content  {
-               overflow: hidden;
-               text-overflow: ellipsis;
-               display: -webkit-box;
-               -webkit-line-clamp: 6;
-               -webkit-box-orient: vertical;
-             }
-             `}
-      </style>
+      </div>
     </div>
   )
 }

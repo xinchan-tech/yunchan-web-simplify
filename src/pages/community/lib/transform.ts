@@ -477,7 +477,8 @@ export const ConversationTransform = {
       notice: '',
       inChannel: false,
       editable: false,
-      maxCount: 0
+      maxCount: 0,
+      isReadNotice: false
     }
 
     const session: ChatSession = {
@@ -515,7 +516,8 @@ export const ChannelTransform = {
       tags: channel.orgData.tags,
       editable: channel.orgData.editable,
       maxCount: channel.orgData.max_num,
-      brief: channel.orgData.brief
+      brief: channel.orgData.brief,
+      isReadNotice: channel.orgData.is_notice_read === 1,
     }
   }
 }

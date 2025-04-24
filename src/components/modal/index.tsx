@@ -72,9 +72,11 @@ export const useModal = ({
 
   const modal: UseModalAction = {
     open: (...arg: unknown[]) => {
-      toggleModalVisible()
-      setTrue()
-      onOpen?.(...arg)
+      if(!visible) {
+        toggleModalVisible()
+        setTrue()
+        onOpen?.(...arg)
+      }
     },
     close: () => {
       toggleModalVisible()

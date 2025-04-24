@@ -76,6 +76,7 @@ export interface ChatChannel {
   editable: boolean
   maxCount: number
   brief?: string
+  isReadNotice: boolean
 }
 
 export type ChatMessage = ChatSystemMessage | ChatTextMessage | ChatImageMessage | ChatCmdMessage | ChatChannelUpdateMessage
