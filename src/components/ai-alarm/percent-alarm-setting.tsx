@@ -370,7 +370,7 @@ const PriceSetting = forwardRef((props: PriceSettingProps, _) => {
           <div className="flex items-center overflow-hidden w-full">
             <div className="border border-solid border-input rounded flex items-center pr-2 box-border">
               <span className="text-center text-tertiary pl-2">
-                {props.mode === 'rise' ? (
+                {props.mode === 'fall' ? (
                   item.type === 'price' ? (
                     <span>按回撤价格</span>
                   ) : (

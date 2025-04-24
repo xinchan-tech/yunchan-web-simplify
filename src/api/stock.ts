@@ -882,9 +882,9 @@ export type StockCategory = {
  * 获取选股分类所有数据
  */
 export const getStockCategoryData = () => {
-  return request.get<GetStockCategoryResult>('/stock/category/data').then(r => r.data)
+  return request.get<GetStockCategoryResult>('/stock-svc/stocks/category/data').then(r => r.data)
 }
-getStockCategoryData.cacheKey = '/stock/category/data'
+getStockCategoryData.cacheKey = '/stock-svc/stocks/category/data'
 
 /**
  * 财务
@@ -1082,7 +1082,7 @@ type GetStockSelectionResult = {
  * 筛选股票
  */
 export const getStockSelection = (params: StockSelectionParams) => {
-  return request.post<GetStockSelectionResult[]>('/stock/selection', params).then(r => r.data)
+  return request.post<GetStockSelectionResult[]>('/stock-svc/stocks/selection', params).then(r => r.data)
 }
 
 type GetStockFinancialsParams = {

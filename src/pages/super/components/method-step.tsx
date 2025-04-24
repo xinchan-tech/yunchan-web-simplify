@@ -5,6 +5,7 @@ import { cn } from '@/utils/style'
 import { useMount, useUnmount } from 'ahooks'
 import { useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { SuperStockContext } from '../ctx'
+import { useAuthorized } from "@/hooks"
 
 /**
  * 自定义多头策略图标组件
@@ -122,6 +123,17 @@ const MethodStep = () => {
     }
   }, [isBear])
 
+  const [, authToast] = useAuthorized()
+
+  const onClick = (e: React.MouseEvent<HTMLButtonElement>, item: any) => {
+    if(!item.authorized) {
+      e.preventDefault()
+      e.stopPropagation()
+      authToast()
+      return
+    }
+  }
+
   return (
     <div className="mt-8 w-full">
       <div className="w-full pb-5 text-[18px] text-[#B8B8B8] font-[500]">选股方式</div>
@@ -149,10 +161,10 @@ const MethodStep = () => {
               {(item.children as unknown as StockCategory[])?.map(child =>
                 child.name !== '' ? (
                   <ToggleGroupItem
-                    disabled={!child.authorized}
                     key={child.id}
                     value={child.id}
                     data-item-name={item.name}
+                    onClick={e => onClick(e, child)}
                     className={cn(
                       'w-full py-5 px-[14px] rounded-sm border border-[#2E2E2E] bg-transparent relative',
                       'data-[state=on]:bg-transparent',
@@ -161,7 +173,7 @@ const MethodStep = () => {
                       "data-[state=on]:[&:not([data-item-name='多头策略'])]:bg-[#D61B5F]"
                     )}
                   >
-                    {!child.authorized && <JknIcon name="ic_lock" className="absolute right-0 top-0 w-3 h-3" />}
+                    {!child.authorized && <JknIcon name="ic_lock" className="absolute right-0 top-0 w-3 h-3 rounded-none" />}
                     {child.name}
                   </ToggleGroupItem>
                 ) : null

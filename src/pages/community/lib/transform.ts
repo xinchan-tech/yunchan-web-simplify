@@ -1,25 +1,28 @@
-import { Buffer } from 'buffer'
+import { useUser } from "@/store"
 import { stringToUint8Array } from '@/utils/string'
+import { Buffer } from 'buffer'
 import WKSDK, {
   Channel,
   ChannelInfo,
+  type CMDContent,
   Conversation,
   Message,
   MessageExtra,
+  type MessageImage,
   MessageStatus,
   MessageText,
   Setting,
   Subscriber
 } from 'wukongimjssdk'
 import {
-  ChatCmdMessage,
-  ChatCmdType,
-  ChatMessageType,
-  type ChatTextMessage,
   type ChatChannel,
-  type ChatSession
+  ChatCmdType,
+  type ChatMessage,
+  ChatMessageType,
+  type ChatSession,
+  type ChatSubscriber,
+  type ChatTextMessage
 } from './types'
-import { useUser } from "@/store"
 import { fetchUserFromCache } from "./utils"
 
 export const MessageTransform = {
@@ -163,6 +166,105 @@ export const MessageTransform = {
     message.isDeleted = msg.isDeleted
 
     return message
+  },
+  toChatMessage: async (msg: Message): Promise<ChatMessage> => {
+    let message = {
+      id: msg.messageID,
+      channel: {
+        id: msg.channel.channelID,
+        type: msg.channel.channelType,
+        ownerId: "",
+        userNum: 0,
+        notice: "",
+        inChannel: false
+      },
+      content: msg.content,
+      senderId: msg.fromUID,
+      clientSeq: msg.clientSeq,
+      senderName: msg.remoteExtra.extra.fromName,
+      date: msg.timestamp,
+      status: msg.status,
+      timestamp: msg.timestamp,
+      messageSeq: msg.messageSeq,
+    } as ChatMessage
+    
+    if (msg.contentType === ChatMessageType.Cmd) {
+      const content = msg.content as CMDContent
+      if(content.cmd === ChatCmdType.MessageRevoke) {
+        message = {
+          ...message,
+          content: content.param.message_id,
+          type: ChatMessageType.Cmd,
+          cmdType: ChatCmdType.MessageRevoke,
+          messageId: content.param.message_id
+        }
+      } else if(content.cmd === ChatCmdType.ChannelUpdate){
+        message = {
+          ...message,
+          content: content.param.channel_id,
+          type: ChatMessageType.Cmd,
+          cmdType: ChatCmdType.ChannelUpdate,
+          channelId: content.param.channel_id
+        }
+      } else if(content.cmd === ChatCmdType.SubscriberForbidden) {
+        message = {
+          ...message,
+          content: content.param.uid,
+          type: ChatMessageType.Cmd,
+          cmdType: ChatCmdType.SubscriberForbidden,
+          uid: content.param.uid,
+          channelId: content.param.channel_id,
+        }
+      }
+    } else if (msg.contentType === ChatMessageType.Text) {
+      const content = msg.content as MessageText
+      message = {
+        ...message,
+        content: content.text,
+        type: ChatMessageType.Text,
+        senderAvatar: (await fetchUserFromCache(msg.fromUID))?.avatar,
+        mentionUser: content.mention?.uids?.length ? (await Promise.all(content.mention.uids.map(s => fetchUserFromCache(s)))) : [],
+        mentionAll: content.mention?.all ?? false,
+        revoke: false,
+      } as ChatTextMessage
+
+      if(content.reply){
+        console.log(content.reply, content.reply.content)
+        message.reply = {
+          replySenderName: content.reply.fromName,
+          replySenderId: content.reply.fromUID,
+          replySenderAvatar: '',
+          replyMessageType: content.reply.content.contentType,
+          replyMessageContent: content.reply.content.conversationDigest,
+          replyMessageId: content.reply.messageID
+        }
+      }
+    } else if (msg.contentType === ChatMessageType.Image) {
+      const content = msg.content as unknown as MessageImage
+      message = {
+        ...message,
+        content: content.remoteUrl,
+        type: ChatMessageType.Image,
+        senderAvatar: (await fetchUserFromCache(msg.fromUID))?.avatar,
+        width: content.width,
+        height: content.height,
+        revoke: false,
+        file: content.file
+      }
+
+      if(content.reply){
+        message.reply = {
+          replySenderName: content.reply.fromName,
+          replySenderId: content.reply.fromUID,
+          replySenderAvatar: '',
+          replyMessageType: content.reply.content.contentType,
+          replyMessageContent: content.reply.content.conversationDigest,
+          replyMessageId: content.reply.messageID
+        }
+      }
+    }
+
+    return message
   }
 }
 
@@ -200,6 +302,21 @@ export const SubscriberTransform = {
       channelId: subscriber.channel.channelID,
       channelType: subscriber.channel.channelType
     }
+  },
+  toChatSubscriber: (subscriber: Subscriber): ChatSubscriber => {
+    const chatSubscriber: ChatSubscriber = {
+      id: subscriber.uid,
+      name: subscriber.name,
+      avatar: subscriber.avatar,
+      channelId: subscriber.channel.channelID,
+      type: subscriber.orgData.type,
+      hasForbidden: subscriber.orgData.forbidden === '1',
+      isManager: subscriber.orgData.type === '1',
+      isOwner: subscriber.orgData.type === '2',
+      uid: `${subscriber.uid}-${subscriber.channel.channelID}`,
+    }
+
+    return chatSubscriber
   }
 }
 
@@ -307,16 +424,21 @@ export const ConversationTransform = {
       id: v.channel.channelID,
       name: v.channelInfo?.title ?? '',
       avatar: v.channelInfo?.logo ?? '',
-      type: v.channel.channelType
+      type: v.channel.channelType,
+      ownerId: "",
+      userNum: 0,
+      notice: "",
+      inChannel: false
     }
     const session: ChatSession = {
       id: v.channel.channelID,
       channel: channel,
       unRead: v.unread,
       isMentionMe: false,
+      uid: useUser.getState().user!.username,
     }
     // message: {
-    //   id: v.lastMessage?.messageID ?? nanoid(),
+    //   id: msg?.messageID ?? nanoid(),
     //   channel: channel,
     //   content: v.lastMessage?.content,
     //   senderId: v.lastMessage?.fromUID ?? '',
@@ -326,37 +448,29 @@ export const ConversationTransform = {
     // }
 
     if (v.lastMessage) {
-      const message = {
-        id: v.lastMessage.messageID,
-        channel: channel,
-        content: v.lastMessage.content,
-        senderId: v.lastMessage.fromUID,
-        senderName: v.lastMessage.remoteExtra.extra.fromName,
-        date: v.timestamp,
-        status: MessageStatus.Normal
-      }
-      
-      if (v.lastMessage.contentType === ChatMessageType.Cmd) {
-        session.message = {
-          ...message,
-          type: ChatMessageType.Cmd,
-          cmdType: v.lastMessage.content.cmd
-        }
-      } else if (v.lastMessage.contentType === ChatMessageType.Text) {
-        const user = useUser.getState().user?.id
-        const content = v.lastMessage.content as MessageText
-        session.message = {
-          ...message,
-          content: content.text,
-          type: ChatMessageType.Text,
-          mentionUser: content.mention?.uids?.length ? (await Promise.all(content.mention.uids.map(s => fetchUserFromCache(s)))) : [],
-          mentionAll: content.mention?.all ?? false,
-        } as ChatTextMessage
-
-        session.isMentionMe = content.mention?.uids?.some(u => u === user) || content.mention?.all || false
+      const user = useUser.getState().user?.id
+      const message = await MessageTransform.toChatMessage(v.lastMessage)
+      session.message = message
+      if(message.type === ChatMessageType.Text) {
+        session.isMentionMe = message.mentionUser?.some(u => u.id === user) || message.mentionAll || false
       }
     }
 
     return session
+  }
+}
+
+export const ChannelTransform = {
+  toChatChannel: (channel: ChannelInfo): ChatChannel => {
+    return {
+      id: channel.channel.channelID,
+      name: channel.title,
+      avatar: channel.logo,
+      type: channel.channel.channelType,
+      ownerId: channel.orgData.owner,
+      userNum: channel.orgData.total_user,
+      notice: channel.orgData.notice,
+      inChannel: channel.orgData.in_channel === 1
+    }
   }
 }

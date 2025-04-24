@@ -20,15 +20,6 @@ const useChatStore = create<ChatStore>()(
     }),
     {
       name: 'community',
-      storage: createJSONStorage(() => localStorage, {
-        reviver: (key, value) => {
-          if (key === 'lastChannel' && value) {
-            const _channelObj = JSON.parse(value as string) as Channel
-            return new Channel(_channelObj.channelID, _channelObj.channelType)
-          }
-          return value
-        }
-      }),
       partialize: state => ({
         config: {
           addr: `${wsUrlPrefix}/im-ws`,
@@ -36,7 +27,7 @@ const useChatStore = create<ChatStore>()(
           timezone: state.config.timezone,
           timeFormat: state.config.timeFormat
         },
-        lastChannel: JSON.stringify(state.channel),
+        channel: state.channel,
         usersExpanded: state.usersExpanded
       })
     }
@@ -55,7 +46,10 @@ export const chatManager = {
       state
     })
   },
-  setChannel: (channel: ChatChannel) => {
+  getState: () => {
+    return useChatStore.getState().state
+  },
+  setChannel: (channel?: ChatChannel) => {
     useChatStore.setState({
       channel: channel
     })

@@ -15,6 +15,9 @@ const defaultBar: {
   icon: ChartOverlayType
   label: string
   tool?: string[]
+  config?: {
+    color: string
+  }
 }[] = [
     {
       icon: 'line',
@@ -66,11 +69,21 @@ const defaultBar: {
     },
     {
       icon: 'pressure-line',
-      label: '压力线'
+      label: '压力线',
+      config: {
+        color: '#9A26AE'
+      }
     },
     {
       icon: 'support-line',
-      label: '支撑线'
+      label: '支撑线',
+      config: {
+        color: '#2495F1'
+      }
+    },
+    {
+      icon: 'pen',
+      label: '画笔'
     }
   ]
 
@@ -173,22 +186,25 @@ export const DrawToolBox = () => {
         uid: ''
       }))
     })
-  })
+  }, [setSetting])
 
-
+  const drawTool = useChartManage(s => s.drawTool)
   return (
     <DrawToolContext.Provider value={{ ...setting, setDrawSetting: setSetting }}>
       <DndContext onDragEnd={onDragEnd}>
-        <DrawToolContainer pos={boxPoint}>
-          <div className="border-b-primary border-0 w-full !border-dashed my-2.5" />
-          <div className="">
-            <DrawToolBar />
-          </div>
-          <div className="border-b-primary border-0 w-full !border-dashed my-2.5" />
-          <div>
-            <DrawToolAction />
-          </div>
-        </DrawToolContainer>
+        {
+          drawTool ? (
+            <div className="bg-background border-l-primary px-1.5 pt-2.5">
+              <div className="">
+                <DrawToolBar />
+              </div>
+              <div className="border-0 border-b w-full !border-dashed my-2.5 !border-b-foreground" />
+              <div>
+                <DrawToolAction />
+              </div>
+            </div>
+          ) : null
+        }
         {
           drawSelect ? (
             <DrawSettingBar pos={settingPoint} type={drawSelect} />
@@ -199,40 +215,6 @@ export const DrawToolBox = () => {
   )
 }
 
-const DrawToolContainer = ({ pos, children }: PropsWithChildren<{ pos: { x: number; y: number } }>) => {
-  const { attributes, listeners, setNodeRef, transform } = useDraggable({
-    id: 'draggable-draw-tool'
-  })
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    position: 'absolute' as any,
-    left: pos.x,
-    top: pos.y
-  }
-
-  const onClose = () => {
-    chartManage.showDrawTool(false)
-  }
-
-  return (
-    <div ref={setNodeRef} className="bg-muted z-10 box-border p-2.5 rounded" style={style}>
-      <div className="grid grid-cols-2 gap-2">
-        <div
-          {...listeners}
-          {...attributes}
-          className="text-tertiary hover:text-foreground hover:cursor-pointer flex items-center justify-center"
-        >
-          <JknIcon.Svg name="draggable" className="w-3 h-4" />
-        </div>
-        <div className="flex items-center justify-center" onClick={onClose} onKeyDown={() => void 0}>
-          <JknIcon.Svg name="close" className="p-1 box-border" hoverable size={20} />
-        </div>
-      </div>
-      {children}
-    </div>
-  )
-}
 
 const DrawSettingBar = ({ pos }: { pos: { x: number; y: number }, type: ChartOverlayType }) => {
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
@@ -286,7 +268,7 @@ const DrawSettingBar = ({ pos }: { pos: { x: number; y: number }, type: ChartOve
   }
 
   return (
-    <div ref={setNodeRef} className="bg-muted z-10 box-border p-1 rounded flex items-center" style={style}>
+    <div ref={setNodeRef} className="bg-accent z-10 box-border p-1 rounded flex items-center" style={style}>
       <div className="grid grid-cols-1 p-1 pr-2">
         <div
           {...listeners}
@@ -315,9 +297,6 @@ const DrawToolBar = () => {
     return barStore?.length ? barStore : defaultBar
   }, [barStore])
 
-  const left = drawBar.slice(0, Math.ceil(drawBar.length / 2))
-  const right = drawBar.slice(Math.ceil(drawBar.length / 2))
-
   const { setDrawSetting, ...setting } = useDrawTool()
 
   useEffect(() => {
@@ -328,7 +307,7 @@ const DrawToolBar = () => {
         chartEvent.get().emit('drawStart', {
           type: type,
           params: {
-            color: setting.color,
+            color: defaultBar.find(item => item.icon === type)?.config?.color ?? setting.color,
             lineWidth: setting.width,
             lineType: setting.type,
             cross: setting.cross ?? false
@@ -356,7 +335,7 @@ const DrawToolBar = () => {
     chartEvent.get().emit('drawStart', {
       type: item,
       params: {
-        color: setting.color,
+        color: defaultBar.find(v => v.icon === item)?.config?.color ?? setting.color,
         lineWidth: setting.width,
         lineType: setting.type,
         cross: setting.cross ?? false
@@ -365,43 +344,26 @@ const DrawToolBar = () => {
   }
 
   return (
-    <div className="grid grid-cols-2 gap-2.5">
-      {Array.from({ length: left.length }).map((_, index) => (
-        <Fragment key={left[index].icon}>
+    <div className="grid grid-cols-1 gap-2.5">
+      {
+        drawBar.map(item => (
           <div
-            key={left[index].icon}
+            key={item.icon}
             className="hover:text-foreground hover:cursor-pointer data-[active=true]:text-primary"
-            data-active={active?.type === left[index].icon}
-            onClick={() => onClick(left[index].icon as ChartOverlayType)}
+            data-active={active?.type === item.icon}
+            onClick={() => onClick(item.icon as ChartOverlayType)}
             onKeyDown={() => { }}
           >
             <JknIcon.Svg
-              name={`draw-${left[index].icon}` as any}
+              name={`draw-${item.icon}` as any}
               size={20}
               className="p-1"
               hoverable
-              label={left[index].label}
+              label={item.label}
             />
           </div>
-          {right[index] ? (
-            <div
-              key={right[index].icon}
-              className="hover:text-foreground hover:cursor-pointer data-[active=true]:text-primary"
-              data-active={active?.type === right[index].icon}
-              onClick={() => onClick(right[index].icon as ChartOverlayType)}
-              onKeyDown={() => { }}
-            >
-              <JknIcon.Svg
-                name={`draw-${right[index].icon}` as any}
-                size={20}
-                className="p-1"
-                hoverable
-                label={right[index].label}
-              />
-            </div>
-          ) : null}
-        </Fragment>
-      ))}
+        ))
+      }
       <div className="hover:text-foreground hover:cursor-pointer data-[active=true]:text-primary">
         <JknIcon.Svg name={'draw-more' as any} size={20} className="p-1" hoverable label="更多画线工具" />
       </div>
@@ -460,7 +422,7 @@ const DrawToolAction = () => {
   })
 
   return (
-    <div className="grid grid-cols-2 gap-2.5">
+    <div className="grid grid-cols-1 gap-2.5">
       <div data-checked={!visible} className="hover:text-foreground hover:cursor-pointer data-[checked=true]:text-primary" onClick={() => onSetVisible()} onKeyDown={() => void 0}>
         <JknIcon.Svg name="invisible" size={20} className="p-1" hoverable label="显示" />
       </div>

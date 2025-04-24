@@ -5,7 +5,7 @@ export const CacheStoreName = {
   /**
    * 会话存储
    */
-  CONVERSATION_STORE: 'community-conversation',
+  SESSION_STORE: 'community-conversation',
   /**
    * 订阅存储/用户
    */
@@ -17,13 +17,17 @@ export const CacheStoreName = {
   /**
    * 用户存储
    */
-  USER_STORE: 'community-user'
+  USER_STORE: 'community-user',
+  /**
+   * 频道存储
+   */
+  CHANNEL_STORE: 'community-channel'
 }
 
 export class ChatCache {
   public db: Nullable<IDBPDatabase> = null
   public static DB_NAME = 'community-store'
-  public static DB_VERSION = 5
+  public static DB_VERSION = 11
 
   constructor() {
     openDB(ChatCache.DB_NAME, ChatCache.DB_VERSION, {
@@ -31,18 +35,22 @@ export class ChatCache {
         for (const s of db.objectStoreNames) {
           db.deleteObjectStore(s)
         }
-        const store = db.createObjectStore(CacheStoreName.SUBSCRIBER_STORE, { keyPath: 'id', autoIncrement: true })
+        const store = db.createObjectStore(CacheStoreName.SUBSCRIBER_STORE, { keyPath: 'uid', autoIncrement: true })
         store.createIndex('channelId', 'channelId')
 
-        db.createObjectStore(CacheStoreName.CONVERSATION_STORE, { keyPath: 'id', autoIncrement: true })
+        const sessionStore = db.createObjectStore(CacheStoreName.SESSION_STORE, { keyPath: 'id', autoIncrement: true })
+        sessionStore.createIndex('uid', 'uid')
 
         const messageStore = db.createObjectStore(CacheStoreName.MESSAGE_STORE, {
           keyPath: 'messageID',
           autoIncrement: true
         })
-        messageStore.createIndex('channelId', 'channel.channelID')
+        
+        messageStore.createIndex('channelId', 'channel.id')
 
         db.createObjectStore(CacheStoreName.USER_STORE, { keyPath: 'uid', autoIncrement: true })
+
+        db.createObjectStore(CacheStoreName.CHANNEL_STORE, { keyPath: 'id', autoIncrement: true })
       },
       blocked() {
         console.warn(`conversation db blocked: ${ChatCache.DB_NAME}`)

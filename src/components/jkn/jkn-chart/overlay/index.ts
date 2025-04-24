@@ -13,6 +13,7 @@ export * from './remark'
 export * from './firewall'
 export * from './support-line'
 export * from './pressure-line'
+export * from './pen'
 
 export type ChartOverlayType =
   | 'parallel'
@@ -29,3 +30,4 @@ export type ChartOverlayType =
   | 'firewall'
   | 'support-line'
   | 'pressure-line'
+  | 'pen'

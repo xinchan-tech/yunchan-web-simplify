@@ -1,10 +1,18 @@
 import { createEvent } from '@/utils/event'
-import type { ChatSession } from './types'
+import type { ChatMessage, ChatSession, ChatSubscriber, ChatUser } from './types'
 import { useMount, useUnmount } from 'ahooks'
 
 export type ChatEvent = {
   syncSession: ChatSession[]
   updateSession: ChatSession
+  syncMessage: ChatMessage[]
+  updateMessage: ChatMessage
+  syncSubscriber: ChatSubscriber
+  updateSubscriber: ChatSubscriber
+  reply: ChatMessage
+  mention: ChatUser
+  revoke: ChatMessage
+  copy: ChatMessage
 }
 
 export const chatEvent = createEvent<ChatEvent>()

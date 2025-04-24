@@ -22,6 +22,8 @@ const priceToCnUnit = (price: Decimal, decimal = 3) => {
 
   if (_price.isNaN()) return '--'
 
+  if(_price.isZero()) return _price.toFixed(decimal)
+
   for (let i = 0; i < unitSteps.length - 1; i++) {
     const step = new Decimal(unitSteps[i])
 

@@ -12,7 +12,7 @@ import { useStockList } from "@/store"
 import { sysConfig } from "@/utils/config"
 import { stockSubscribe, stockUtils } from '@/utils/stock'
 import { useQuery } from '@tanstack/react-query'
-import { isNumber } from "radash"
+import { useUnmount } from "ahooks"
 
 import { useEffect, useMemo } from 'react'
 import { useImmer } from 'use-immer'
@@ -50,9 +50,10 @@ type TableDataType = {
 //单表格
 const PageTable = (props: PageTableProps) => {
   const stockMap = useStockList(s => s.listMap)
-  const [sort, setSort] = useImmer<{ column: UsStockColumn; order: 'asc' | 'desc' }>({
+  const [sort, setSort] = useImmer<{ column: UsStockColumn; order: 'asc' | 'desc', cacheTime: number }>({
     column: 'total_mv',
-    order: 'desc'
+    order: 'desc',
+    cacheTime: 0
   })
 
   const { pagination, onPageChange, onPageSizeChange, total, onTotalChange } = usePagination()
@@ -69,11 +70,19 @@ const PageTable = (props: PageTableProps) => {
     })
   }
 
+  const query = useQuery({
+    queryKey: [getUsStocks.cacheKey, props.type, sort, pagination],
+    queryFn: () => queryFn(),
+    refetchOnWindowFocus: false,
+  })
+
+
   useEffect(() => {
-    if(sysConfig.PUBLIC_BASE_BUILD_ENV === 'PRODUCTION') return
-    if (!['close', 'increase', 'total_mv', 'amount','stock_before', 'stock_after'].includes(sort.column)) {
+    if (sysConfig.PUBLIC_BASE_BUILD_ENV === 'PRODUCTION') return
+    if (!['close', 'increase', 'total_mv', 'amount', 'stock_before', 'stock_after'].includes(sort.column)) {
       return
     }
+    if(!query.data) return
 
     const columnMap: Record<string, string> = {
       close: 'Close',
@@ -91,14 +100,13 @@ const PageTable = (props: PageTableProps) => {
     })
 
     const cancel = stockSubscribe.on('rank_subscribe', (data) => {
-      if(data.data.length > 0){
+      if (data.data.length > 0) {
         setList((s: TableDataType[]) => {
-          console.log('before', [...s])
           data.data.forEach(v => {
             const index = v.rank
             const stockInfo = stockMap[v.symbol]
-            
-            if(s[index]){
+
+            if (s[index]) {
               s[index].price = v.close
               s[index].percent = v.percent
               s[index].symbol = v.symbol
@@ -111,23 +119,20 @@ const PageTable = (props: PageTableProps) => {
             }
           })
 
-          console.log([...s])
           return [...s]
         })
       }
     })
 
     return () => {
-      stockSubscribe.unsubscribeRank()
       cancel()
     }
-  }, [pagination, sort, stockMap])
+  }, [pagination, sort, stockMap, query.data])
 
-  const query = useQuery({
-    queryKey: [getUsStocks.cacheKey, props.type, sort, pagination],
-    queryFn: () => queryFn(),
-    refetchOnWindowFocus: false
+  useUnmount(() => {
+    stockSubscribe.unsubscribeRank()
   })
+
 
   const [list, { setList, onSort, cleanSort }] = useTableData<TableDataType>([], 'symbol')
 
@@ -144,7 +149,7 @@ const PageTable = (props: PageTableProps) => {
     for (const item of allPage) {
       // const [lastData, beforeData, afterData] = stockUtils.toStock(item)
       const lastData = stockUtils.toStock(item.stock, { extend: item.extend })
- 
+
       const beforeData = stockUtils.toStock(item.extend.stock_before, { extend: item.extend })
       const afterData = stockUtils.toStock(item.extend.stock_after, { extend: item.extend })
 
@@ -189,16 +194,19 @@ const PageTable = (props: PageTableProps) => {
 
       if (columnKey === 'symbol' || columnKey === 'industry' || columnKey === 'pe' || columnKey === 'pb') {
         onSort(columnKey, sort)
+        stockSubscribe.unsubscribeRank()
         return
       }
 
       setSort({
         column: sort !== undefined ? columnMap[columnKey as string] : 'total_mv',
-        order: sort === undefined ? 'desc' : sort
+        order: sort === undefined ? 'desc' : sort,
+        cacheTime: Date.now()
       })
       cleanSort()
 
     } else {
+      stockSubscribe.unsubscribeRank()
       onSort(columnKey, sort)
     }
   }
@@ -221,7 +229,7 @@ const PageTable = (props: PageTableProps) => {
         dataIndex: 'index',
         align: 'center',
         width: '5%',
-        render: (_, _row, index) => <span onClick={(e) => {e.preventDefault();e.stopPropagation()}} onKeyDown={() => void 0}>{index + 1 + ((pagination.page - 1 )* pagination.pageSize)}</span>
+        render: (_, _row, index) => <span onClick={(e) => { e.preventDefault(); e.stopPropagation() }} onKeyDown={() => void 0}>{index + 1 + ((pagination.page - 1) * pagination.pageSize)}</span>
       },
       {
         title: '名称代码',

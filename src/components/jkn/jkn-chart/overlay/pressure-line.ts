@@ -29,7 +29,7 @@ export const PressureLineOverlay = createOverlayTemplate({
           attrs: {
             x: 0,
             y: coordinates[0].y - styles.size - 2,
-            text: '压力线',
+            text: '压力点',
             baseline: 'bottom'
           },
           styles: {

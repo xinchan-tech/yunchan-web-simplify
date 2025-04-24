@@ -32,6 +32,7 @@ export interface ChatConfig {
 }
 
 export enum ChatChannelState {
+  NotConnect = -1,
   Fetching = 0,
   Fetched = 1,
   FetchError = 2
@@ -65,22 +66,35 @@ export interface ChatChannel {
   name: ChannelInfo['title']
   avatar: ChannelInfo['logo']
   type: Channel['channelType']
+  ownerId: string
+  userNum: number
+  notice: string
+  inChannel: boolean
   state?: ChatChannelState
 }
 
 export type ChatMessage = ChatSystemMessage | ChatTextMessage | ChatImageMessage | ChatCmdMessage
+export type ChatMessageTypes<T extends ChatMessageType> = T extends ChatMessageType.Text
+  ? ChatTextMessage
+  : T extends ChatMessageType.Image
+    ? ChatImageMessage
+    : T extends ChatMessageType.Cmd
+      ? ChatCmdMessage
+      : never
 
-type ChatUser = {
+export type ChatUser = {
   id: string
   name: string
   avatar: string
 }
 
-type ChatSubscriber = ChatUser & {
+export type ChatSubscriber = ChatUser & {
+  uid: string
   channelId: string
   type: SubscriberType
   hasForbidden: boolean
   isManager: boolean
+  isOwner: boolean
 }
 
 type MessageBase = {
@@ -91,6 +105,9 @@ type MessageBase = {
   senderName: string
   date: number
   status: Message['status']
+  clientSeq: number
+  timestamp: number
+  messageSeq: number
 }
 
 export type ChatSystemMessage = MessageBase & {
@@ -99,21 +116,47 @@ export type ChatSystemMessage = MessageBase & {
 
 export type ChatTextMessage = MessageBase & {
   type: ChatMessageType.Text
-  senderAvatar: string
+  senderAvatar?: string
   mentionUser: ChatUser[]
   mentionAll: boolean
+  revoke: boolean
+  reply?: ChatReplyContent
 }
 
 export type ChatImageMessage = MessageBase & {
   type: ChatMessageType.Image
-  senderAvatar: string
+  senderAvatar?: string
+  width: number
+  height: number
+  revoke: boolean
+  reply?: ChatReplyContent
+  file?: File
 }
 
-export type ChatCmdMessage = MessageBase & {
-  type: ChatMessageType.Cmd
-  cmdType: ChatCmdType
+export type ChatReplyContent = {
+  replyMessageContent: string
+  replySenderId: string
+  replySenderName: string
+  replySenderAvatar: string
+  replyMessageId?: string
+  replyMessageType: ChatMessageType.Image | ChatMessageType.Text
 }
 
+export type ChatCmdMessage = MessageBase & { type: ChatMessageType.Cmd } & (
+    | {
+        cmdType: ChatCmdType.MessageRevoke
+        messageId: string
+      }
+    | {
+        cmdType: ChatCmdType.ChannelUpdate
+        channelId: string
+      }
+    | {
+        cmdType: ChatCmdType.SubscriberForbidden
+        channelId: string
+        uid: string
+      }
+  )
 
 export interface ChatSession {
   id: string
@@ -121,4 +164,5 @@ export interface ChatSession {
   message?: ChatMessage
   unRead: number
   isMentionMe: boolean
+  uid: string
 }

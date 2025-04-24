@@ -67,6 +67,13 @@ export const colorUtil = {
         }
       : undefined
   },
+  rgbaToHex(rgba: ColorType.RGBA) {
+    const r = Math.floor(rgba.r).toString(16).padStart(2, '0')
+    const g = Math.floor(rgba.g).toString(16).padStart(2, '0')
+    const b = Math.floor(rgba.b).toString(16).padStart(2, '0')
+    const a = Math.floor(rgba.a * 255).toString(16).padStart(2, '0')
+    return `#${r}${g}${b}${a}`.toUpperCase()
+  },
   rgbaToString(rgba?: { r: number; g: number; b: number; a: number }) {
     if (!rgba) return ''
     return `rgba(${rgba.r}, ${rgba.g}, ${rgba.b}, ${rgba.a})`

@@ -1,3 +1,5 @@
 export * from './subscriber'
 export * from './conversation'
 export * from './message'
+export * from './user'
+export * from './channel'

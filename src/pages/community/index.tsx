@@ -5,17 +5,28 @@ import { Outlet, useLocation } from "react-router"
 import { ChannelList } from "./components/channel-list"
 import { chatManager, useChatStore } from "./lib/store"
 import { useConnectIM } from "./lib/subscribe"
+import { useMessageListener, useMessageStatusListener } from "./lib/hooks"
+import { useCallback } from "react"
+import { chatEvent } from "./lib/event"
+import { MessageTransform } from "./lib/transform"
 
 
 const CommunityPage = () => {
   const user = useUser(s => s.user)
   const token = useToken(s => s.token)
+  const path = useLocation()
   useConnectIM()
 
-  if(!token){
+  useMessageListener(useCallback((e) => {
+    MessageTransform.toChatMessage(e).then((r) => {
+      chatEvent.emit('updateMessage', r)
+    })
+  }, []))
+
+  if (!token) {
     return (
       <div className="flex h-screen w-screen items-center justify-center">
-        
+
       </div>
     )
   }
@@ -33,7 +44,7 @@ const CommunityPage = () => {
           <Setting />
         </div>
       </div>
-      <div>
+      <div className="flex-1">
         <Outlet />
       </div>
     </div>

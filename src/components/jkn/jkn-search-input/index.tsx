@@ -1,17 +1,20 @@
 import { Input, type InputProps } from '@/components/ui/input'
-import { usePropValue } from '@/hooks'
+import { useLatestRef, usePropValue } from '@/hooks'
 import { cn } from '@/utils/style'
-import { type KeyboardEventHandler, type MouseEventHandler, useCallback } from 'react'
+import { type ChangeEvent, ChangeEventHandler, type KeyboardEventHandler, type MouseEventHandler, useCallback, useRef } from 'react'
 import { JknIcon } from '../jkn-icon'
 
 interface JknSearchInputProps extends InputProps {
   onSearch?: (value?: string) => void
   className?: string
   rootClassName?: string
+  mode?: 'lazy' | 'immediate'
 }
 
-export const JknSearchInput = ({ onSearch, className, rootClassName, value, ...inputProps }: JknSearchInputProps) => {
+export const JknSearchInput = ({ onSearch, className, rootClassName, value, mode = 'lazy', ...inputProps }: JknSearchInputProps) => {
   const [innerValue, setInnerValue] = usePropValue<string>(value as string)
+  const searchFn = useLatestRef(onSearch)
+  const timer = useRef<number>()
 
   const handleBlur = useCallback(() => {
     if (onSearch) {
@@ -40,6 +43,19 @@ export const JknSearchInput = ({ onSearch, className, rootClassName, value, ...i
     [onSearch, setInnerValue]
   )
 
+  const onChange = (e: ChangeEvent<HTMLInputElement>) =>{
+    setInnerValue(e.target.value)
+    if (mode === 'immediate') {
+      if (timer.current) {
+        clearTimeout(timer.current)
+      }
+      timer.current = window.setTimeout(() => {
+        searchFn.current?.(e.target.value)
+        timer.current = undefined
+      }, 300)
+    }
+  }
+
   return (
     <div className={cn('flex items-center rounded overflow-hidden box-border px-2', rootClassName)}>
       <JknIcon.Svg name="search" className="h-full" />
@@ -48,7 +64,7 @@ export const JknSearchInput = ({ onSearch, className, rootClassName, value, ...i
         className={cn('border-none', className)}
         value={innerValue}
         onBlur={handleBlur}
-        onChange={v => setInnerValue(v.target.value)}
+        onChange={onChange}
         onKeyDown={onEnterDown}
       />
       <span

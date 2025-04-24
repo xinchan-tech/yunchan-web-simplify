@@ -88,6 +88,8 @@ const SuperStock = () => {
       data.category_ids = [...data.category_ids, ...(data as any).category_ids_ext]
     }
 
+    (data as any).category_ids_ext = undefined
+
     setTrue()
 
     const [err, r] = await to(getStockSelection(data))

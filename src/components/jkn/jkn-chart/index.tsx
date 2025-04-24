@@ -45,6 +45,7 @@ import {
   LineOverlay,
   LogoOverlay,
   ParallelOverlay,
+  PenOverlay,
   PressureLineOverlay,
   RayOverlay,
   RectangleOverlay,
@@ -87,6 +88,7 @@ registerOverlay(RemarkOverlay)
 registerOverlay(FireWallOverlay)
 registerOverlay(SupportLineOverlay)
 registerOverlay(PressureLineOverlay)
+registerOverlay(PenOverlay)
 
 interface JknChartProps {
   className?: string
@@ -444,7 +446,7 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
     isSameIntervalCandlestick: (candlestick, interval) => {
       const lastData = chart.current?.getDataList().slice(-1)[0]
       if (!lastData) return
-
+      
       return isSameInterval(lastData, candlestick, interval)
     },
     setAxisType: type => {
