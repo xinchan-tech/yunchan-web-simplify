@@ -1,5 +1,19 @@
 # Changelog
 
+## [2.5.6](https://github.com/xinchan-gx/yunchan-web/compare/2.5.5...2.5.6) (2025-04-24)
+
+### ✨ Features | 新功能
+
+* 更新报警记录项显示逻辑，优化触发价和盈亏信息展示 ([e421356](https://github.com/xinchan-gx/yunchan-web/commit/e421356aaded91aa085c65bc76e634ee29dab1be))
+* 添加画笔工具，更新绘图逻辑以支持新功能 ([a77d13b](https://github.com/xinchan-gx/yunchan-web/commit/a77d13b10db453a1659a633d46908618b13153ef))
+* Add new components for message records and enhance chat functionalities ([5816874](https://github.com/xinchan-gx/yunchan-web/commit/58168746d79fa4abe0d13b2bbc2918d93a44ab04))
+
+### 🐛 Bug Fixes | Bug 修复
+
+* 更新股票分类数据请求路径，修复绘图工具显示逻辑，优化权限验证处理 ([c3ca44c](https://github.com/xinchan-gx/yunchan-web/commit/c3ca44c0fba096647563e87b481978631257910d))
+* 更新股票筛选请求路径，修复API调用逻辑 ([a511992](https://github.com/xinchan-gx/yunchan-web/commit/a511992cd3478ec49409cbcdade79ab16e0e24bc))
+* 更新聊天记录处理逻辑，添加错误日志输出，优化消息滚动行为 ([7457118](https://github.com/xinchan-gx/yunchan-web/commit/74571188d511bd318439914492af33c2c6bef2c0))
+
 ## [2.5.5](https://github.com/xinchan-gx/yunchan-web/compare/2.5.4...2.5.5) (2025-04-23)
 
 ### 🐛 Bug Fixes | Bug 修复
