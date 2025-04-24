@@ -229,6 +229,7 @@ export const MessageTransform = {
       } as ChatTextMessage
 
       if(content.reply){
+        console.log(content.reply, content.reply.content)
         message.reply = {
           replySenderName: content.reply.fromName,
           replySenderId: content.reply.fromUID,

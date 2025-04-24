@@ -543,9 +543,9 @@ const AlarmRecordItem = ({ symbol, data, onDelete }: AlarmRecordItemProps) => {
             {(data.condition.data.pnl_price + data.condition.data.base_price).toFixed(3)}&nbsp;
             {data.condition.data.trigger_type === 1 ? '盈亏比例' : '盈亏金额'}
             {data.condition.data.trigger_type === 1 ? (
-              <span>{Decimal.create(data.condition.data.pnl_percent).mul(100).toFixed(2)}%</span>
+              <span>{Decimal.create(data.condition.data.trigger_price).minus(data.condition.data.base_price).div(data.condition.data.base_price).mul(100).toFixed(2)}%</span>
             ) : (
-              <span>{data.condition.data.pnl_price.toFixed(3)}</span>
+              <span>{(data.condition.data.trigger_price - data.condition.data.base_price).toFixed(3)}</span>
             )}
             <br />
           </span>

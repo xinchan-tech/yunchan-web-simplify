@@ -66,11 +66,11 @@ export const ChatRoom = () => {
       if (channelLast.current?.id !== _channel?.channelID) {
         return
       }
-      console.log(r)
       return Promise.all(r.map(MessageTransform.toChatMessage))
     }).then(res => {
       if (!res) return
       messageCache.updateBatch(res, channel)
+      console.log(res)
       setMessage(res)
     })
   }, [channel, setMessage, channelLast])
@@ -141,7 +141,8 @@ export const ChatRoom = () => {
 
         const subscriberQuery = refreshSubscriber()
 
-        Promise.all([channelQuery, subscriberQuery, messageQuery]).then(() => setChannelStatus(ChatChannelState.Fetched)).catch(() => {
+        Promise.all([channelQuery, subscriberQuery, messageQuery]).then(() => setChannelStatus(ChatChannelState.Fetched)).catch((e) => {
+          console.log(e)
           setChannelStatus(ChatChannelState.FetchError)
         })
       })
