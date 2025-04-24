@@ -882,9 +882,9 @@ export type StockCategory = {
  * 获取选股分类所有数据
  */
 export const getStockCategoryData = () => {
-  return request.get<GetStockCategoryResult>('/stock/category/data').then(r => r.data)
+  return request.get<GetStockCategoryResult>('/stock-svc/stocks/category/data').then(r => r.data)
 }
-getStockCategoryData.cacheKey = '/stock/category/data'
+getStockCategoryData.cacheKey = '/stock-svc/stocks/category/data'
 
 /**
  * 财务

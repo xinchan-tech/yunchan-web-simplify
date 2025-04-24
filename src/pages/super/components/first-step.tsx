@@ -143,11 +143,11 @@ const FeaturedRankingPanel = () => {
   const getIcon = (name: string) => {
     if (name === '首页热门榜') {
       return <JknIcon name="ic_fire_red" />
-    } else if (name === '小盘黑马榜') {
+    } if (name === '小盘黑马榜') {
       return <JknIcon name="ic_diamond" />
-    } else if (name === '今日股王榜') {
+    } if (name === '今日股王榜') {
       return <JknIcon name="ic_crown" />
-    } else if (name === 'TOP1000+强') {
+    } if (name === 'TOP1000+强') {
       return <JknIcon name="ic_good" />
     }
     return null
@@ -156,15 +156,17 @@ const FeaturedRankingPanel = () => {
   const hasRecommend = (name: string) => {
     if (name === '首页热门榜') {
       return true
-    } else if (name === '小盘黑马榜') {
+    }if (name === '小盘黑马榜') {
       return true
-    } else if (name === '今日股王榜') {
+    }if (name === '今日股王榜') {
       return true
-    } else if (name === 'TOP1000+强') {
+    }if (name === 'TOP1000+强') {
       return true
     }
     return false
   }
+
+  
 
   return (
     <ToggleGroup
@@ -177,7 +179,7 @@ const FeaturedRankingPanel = () => {
     >
       {data?.map(child =>
         child.name !== '' ? (
-          <div key={child.value} onClick={() => !child.authorized && toastNotAuth()} onKeyDown={() => {}}>
+          <div key={child.value} onClick={() => !child.authorized && toastNotAuth()} onKeyDown={() => { }}>
             <ToggleGroupItem
               value={child.value}
               disabled={!child.authorized}
