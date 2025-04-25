@@ -2,7 +2,7 @@ import { forwardRef, useEffect } from "react";
 import { Dialog, DialogContent, DialogTrigger, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button, JknIcon } from '@/components'
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
-import { z } from 'zod'
+import { string, z } from 'zod'
 import { FormProvider, useFormContext } from 'react-hook-form'
 import { useBoolean } from 'ahooks'
 import { useZForm, useToast } from '@/hooks'
@@ -54,14 +54,17 @@ const DialogAssets: React.FC<DialogAssetsProps> = ({ children, refreshInfo, type
         const serve = type === 'deposit' ? saveAccountAddDeposit : saveAccountWithdraw;
         setLoadingTrue();
         serve({ ...data, account_id: id }).then(({ status, msg }) => {
+            console.log(status, msg)
             if (status == 1) {
                 refreshInfo && refreshInfo()
-                toast({ description: '操作成功' });
                 onClose()
-            } else {
-                toast({ description: msg });
             }
-        }).finally(() => setLoadingFalse());
+            toast({ description: status == 1 ? '操作成功' : msg });
+        })
+            .finally(() => setLoadingFalse())
+            .catch((err) => {
+                toast({ description: String(err) })
+            })
     };
 
 

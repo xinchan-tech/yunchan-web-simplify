@@ -184,7 +184,7 @@ const AiConfig = ({ list, row }: { list: TableDataType[]; row: TableDataType }) 
                 toast({ description: msg })
             }
         }).catch((err) => {
-            toast({ description: err?.response.data.msg })
+            toast({ description: String(err) })
         }).finally(() => setLoadingFalse())
     }
 

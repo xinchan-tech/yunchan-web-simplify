@@ -95,6 +95,9 @@ const HistoryList = () => {
       }
       toast(status == 1 ? '操作成功' : msg)
     })
+    .catch((err) => {
+      toast({ description: String(err) })
+    })
   }
 
   const columns: JknRcTableProps<TableDataType>['columns'] = useMemo(
