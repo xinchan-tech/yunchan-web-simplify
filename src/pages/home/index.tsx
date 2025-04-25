@@ -39,6 +39,9 @@ const HomePage = () => {
           <Link to="/stock?symbol=QQQ" className="home-navigate-item hover:text-primary">
             行情
           </Link>
+          <Link to="/assets" className="home-navigate-item hover:text-primary">
+            AI交易
+          </Link>
         </div>
         <div className="flex items-center space-x-4">
           {token ? (

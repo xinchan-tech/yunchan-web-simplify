@@ -51,13 +51,13 @@ const JknPopconfirm: React.FC<JknPopconfirmProps> = ({
             case 'topLeft':
                 return 'bottom-full mb-2 left-0';
             case 'topRight':
-                return 'bottom-full mb-2 right-0';
+                return 'bottom-full mb-2 right-0 translate-x-[30%]'; // 确保右对齐
             case 'bottom':
                 return 'translate-x-[-50%] top-full mt-2';
             case 'bottomLeft':
                 return 'top-full mt-2 left-0';
             case 'bottomRight':
-                return 'top-full mt-2 right-0';
+                return 'top-full mt-2 right-0'; // 确保右对齐
             case 'left':
                 return 'right-full mr-2 top-1/2 translate-y-[-50%]';
             case 'right':

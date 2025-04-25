@@ -1,7 +1,7 @@
 
 import AssetsTop from '../components/top';
 import AssetsInfo from '../components/info';
-import Securitygroup from '../components/security-group';
+import Securitygroup from './security-group';
 import AiConfig from './ai-config.tsx'
 import { useState } from "react";
 import { stockUtils } from '@/utils/stock'
@@ -16,29 +16,13 @@ const AiTrading = () => {
         setSharedData(row)
         setList(data)
     }
-    return <div className="pt-2.5 pb-5 pl-5 pr-8 box-border box-border h-screen flex flex-col">
-        <div className='h-[1.75rem]'>
-            <AssetsTop key={'assets-top'} />
+    return <div className='mt-5 flex flex-1 overflow-hidden'>
+        <Securitygroup onUpdate={onUpdate} className='w-[40rem]' />
+        <div className='ml-5 flex flex-1'>
+            <AiConfig key={'ai-config'} list={list} row={sharedData} />
         </div>
-        <div className='flex flex-1 pt-[0.9375rem] w-full h-full box-border overflow-hidden'>
-            <div className='w-[12.5rem]'>
-                <MenuInline key={'menu-inline'} />
-            </div>
-            <div className='flex-1 flex flex-col ml-8'>
-                <div className=''>
-                    <AssetsInfo key={'assets-info'} />
-                </div>
-                <div className='mt-5 flex flex-1 overflow-hidden'>
-                    <Securitygroup onUpdate={onUpdate} className='w-[40rem]' />
-                    <div className='ml-5 flex flex-1'>
-                        <AiConfig key={'ai-config'} list={list} row={sharedData} />
-                    </div>
-                </div>
-            </div>
-
-        </div>
-
     </div>
+
 }
 
 

@@ -82,7 +82,7 @@ const JknRangePicker = ({ children, onChange, onClose, allowClear, placeholder, 
                 {/* {
                     date.length && allowClear ? */}
                 <div className={cn('flex justify-center items-center border-[1px]  w-[1.2rem] h-[1.2rem] border-solid border-[#0f0f0f] mx-2 rounded-full',
-                    hovered && 'hover:border-[#3c3c3c]',
+                    hovered && date.length && allowClear && 'hover:border-[#3c3c3c]',
                 )}
                     onMouseEnter={() => setHovered(true)} // 鼠标移入时切换图标
                     onMouseLeave={() => setHovered(false)} // 鼠标移出时恢复图标

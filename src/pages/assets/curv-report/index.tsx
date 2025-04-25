@@ -53,41 +53,27 @@ const CurvReport = () => {
         ops && chart.current?.setOption(ops)
     }
 
-    return <div className="pt-2.5 pb-5 pl-5 pr-8 box-border box-border min-h-screen flex flex-col">
-        <div className='h-[1.75rem]'>
-            <AssetsTop />
-        </div>
-        <div className='flex flex-1 mt-[0.9375rem] w-full'>
-            <div className='w-[12.5rem]'>
-                <MenuInline />
-            </div>
-            <div className='flex-1 flex flex-col ml-8'>
-                <div className=''>
-                    <AssetsInfo />
-                </div>
-                <div className='mt-5 flex flex-1 border-[1px] border-solid border-[#3c3c3c] rounded-md w-full h-full p-6 box-border flex flex-col'>
-                    <div className="px-3 py-2.5">
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <div className="flex justify-between px-5 py-2.5 box-border border-[1px] w-[10rem] border-solid border-[#3c3c3c] rounded-md items-center space-x-2 text-lg font-bold">
-                                    <span className='text-[#DBDBDB] text-sm'>{tabs.find(tab => tab.key == selectedKey)?.label}</span>
-                                    <JknIcon.Svg name="arrow-down" size={10} />
-                                </div>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent style={{ width: '10rem' }}>
-                                {tabs.filter(tab => tab.key != selectedKey).map(tab => (
-                                    <DropdownMenuItem key={tab.key} onClick={() => onTypeChange(tab.key as string)} >
-                                        {tab.label}
-                                    </DropdownMenuItem>
-                                ))}
-                            </DropdownMenuContent>
-                        </DropdownMenu>
+    return <div className='mt-5 flex flex-1 border-[1px] border-solid border-[#3c3c3c] rounded-md w-full h-full p-6 box-border flex flex-col'>
+        <div className="px-3 py-2.5">
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <div className="flex justify-between px-5 py-2.5 box-border border-[1px] w-[10rem] border-solid border-[#3c3c3c] rounded-md items-center space-x-2 text-lg font-bold">
+                        <span className='text-[#DBDBDB] text-sm'>{tabs.find(tab => tab.key == selectedKey)?.label}</span>
+                        <JknIcon.Svg name="arrow-down" size={10} />
                     </div>
-                    <div ref={dom} className="w-full h-full"></div>
-                </div>
-            </div>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent style={{ width: '10rem' }}>
+                    {tabs.filter(tab => tab.key != selectedKey).map(tab => (
+                        <DropdownMenuItem key={tab.key} onClick={() => onTypeChange(tab.key as string)} >
+                            {tab.label}
+                        </DropdownMenuItem>
+                    ))}
+                </DropdownMenuContent>
+            </DropdownMenu>
         </div>
+        <div ref={dom} className="w-full h-full"></div>
     </div>
+
 }
 
 export default CurvReport

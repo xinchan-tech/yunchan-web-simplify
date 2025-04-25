@@ -1,4 +1,4 @@
-import { StockSelect, JknRcTable, JknPopconfirm, Button, type JknRcTableProps, JknRangePicker, StockView, SubscribeSpan } from '@/components'
+import { StockSelectCache, JknRcTable, JknPopconfirm, Button, type JknRcTableProps, JknRangePicker, StockView, SubscribeSpan } from '@/components'
 import { getTradesList, delTadesCancel } from '@/api'
 import { useQuery } from '@tanstack/react-query'
 import { useQueryParams, useToast } from '@/hooks'
@@ -63,12 +63,11 @@ const HistoryList = () => {
     }
 
     for (const { id, time, ...stock } of query.data.items) {
-      const lastStock = stockUtils.toStockWithExt(stock.stock, {
+      const lastStock = stockUtils.toStock(stock.stock, {
         extend: stock.extend,
         name: stock.name,
         symbol: stock.symbol
       })
-
       r.push({
         ...stock,
         name: lastStock.name,
@@ -180,7 +179,7 @@ const HistoryList = () => {
         title: '操作',
         dataIndex: 'opt',
         align: 'right',
-        maxWidth: '200',
+        width: '5%',
         render: (_, { status, symbol, id }, index) => {
           return status == 1 ? <JknPopconfirm
             title={`您确定取消【${symbol}】吗?`}
@@ -209,7 +208,7 @@ const HistoryList = () => {
         <div className="flex items-center justify-end mr-6">
           <JknRangePicker allowClear onChange={onDateChange} placeholder={["开始时间", "截止时间"]} />
         </div>
-        <StockSelect placeholder="查询" className='rounded-lg' width="18.75rem" onChange={v => setKeyWord(v)} />
+        <StockSelectCache allowClear placeholder="查询" className='rounded-lg' width="18.75rem" onChange={v => setKeyWord(v)} />
       </div>
     </div>
 

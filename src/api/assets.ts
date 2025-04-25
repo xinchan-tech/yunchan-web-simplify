@@ -117,6 +117,13 @@ export const getTradesList = (params: { symbol: string, page?: number, limit?: n
 getTradesList.cacheKey = 'assets:trades:list'
 
 
-export const delTadesCancel = (params:{ trade_ids: string}) => {
+export const delTadesCancel = (params: { trade_ids: string }) => {
     return request.post('/qs-svc/trades/cancel', params)
 }
+
+
+export const getInvestStocks = ({ params }: { params: Record<string, any> }) => {
+    return request.get('/qs-svc/invest/stocks', { params }).then(r => r.data)
+}
+
+getInvestStocks.cacheKey = 'assets:invest:stocks'

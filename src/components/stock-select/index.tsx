@@ -10,9 +10,10 @@ import { ScrollArea } from '../ui/scroll-area'
 
 interface StockSelectProps extends Omit<InputProps, 'onChange'> {
   onChange?: (symbol: string) => void
+  showKeyWord?: boolean
 }
 
-const StockSelect = ({ onChange, className, width, ...props }: StockSelectProps) => {
+const StockSelect = ({ onChange, showKeyWord, className, width, ...props }: StockSelectProps) => {
   const [open, { setTrue, setFalse }] = useBoolean(false)
   const stockList = useStockList()
   const [keyword, setKeyword] = useState('')
@@ -22,7 +23,6 @@ const StockSelect = ({ onChange, className, width, ...props }: StockSelectProps)
 
   const _onClick = (symbol: string) => {
     setFalse()
-
     setTimeout(() => {
       const s = stockList.list.find(item => item[1] === symbol)
       
