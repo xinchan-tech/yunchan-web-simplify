@@ -3,7 +3,7 @@ import { cn } from "@/utils/style"
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden"
 import { isFunction } from "@tanstack/react-table"
 import { useBoolean } from "ahooks"
-import type { PropsWithChildren, ReactNode } from "react"
+import { useState, type PropsWithChildren, type ReactNode } from "react"
 
 type ModalAction = {
   close: () => void
@@ -19,13 +19,18 @@ interface JknModalProps {
   confirmLoading?: boolean
   closeOnMaskClick?: boolean
   background?: string
-  onOk?: () => Promise<boolean | undefined> | boolean |  undefined
+  onOk?: () => Promise<boolean | undefined> | boolean | undefined
   onClose?: () => void
   afterClose?: () => void
+  lazy?: boolean
+  confirmBtnText?: string
+  children: ReactNode | ((action: ModalAction) => ReactNode)
 }
 
-export const JknModal = ({ background, className, closeOnMaskClick, closeIcon = true, title, footer, confirmLoading, children, trigger, onOk, onClose, afterClose }: PropsWithChildren<JknModalProps>) => {
+export const JknModal = ({ background, lazy = false, className, closeOnMaskClick, closeIcon = true, title, footer, confirmLoading, children, trigger, confirmBtnText, onOk, onClose, afterClose }: JknModalProps) => {
   const [visible, { setTrue: setOpen, setFalse: setClose }] = useBoolean(false)
+  // 动画关
+  const [afterVisible, setAfterVisible] = useState(visible)
 
   const onPointerDownOutside = (e: any) => {
     if (closeOnMaskClick) {
@@ -39,11 +44,17 @@ export const JknModal = ({ background, className, closeOnMaskClick, closeIcon = 
     onClose?.()
     setTimeout(() => {
       afterClose?.()
+      setAfterVisible(false)
     }, 300)
   }
 
+  const _onOpen = () => {
+    setOpen()
+    setAfterVisible(true)
+  }
+
   const _onOk = () => {
-    if(!onOk) {
+    if (!onOk) {
       _onClose()
       return
     }
@@ -63,7 +74,7 @@ export const JknModal = ({ background, className, closeOnMaskClick, closeIcon = 
 
 
   return (
-    <Dialog open={visible} onOpenChange={v => v ? setOpen() : _onClose()} modal>
+    <Dialog open={visible} onOpenChange={v => v ? _onOpen() : _onClose()} modal>
       <DialogTrigger asChild>
         <div>
           {trigger}
@@ -103,20 +114,30 @@ export const JknModal = ({ background, className, closeOnMaskClick, closeIcon = 
             <DialogDescription className="text-center" />
           </VisuallyHidden>
         )}
-        {children}
+        {
+          lazy ? (
+            afterVisible ? isFunction(children) ? (
+              children({ close: _onClose, open: _onOpen })
+            ) : children : null
+          ) : (
+            isFunction(children) ? (
+              children({ close: _onClose, open: _onOpen })
+            ) : children
+          )
+        }
         {footer === null ? null : footer === undefined ? (
           <DialogFooter className="m-4">
             <Button variant="outline" className="w-24 box-border" onClick={() => _onClose()}>
               取消
             </Button>
             <Button className="w-24 box-border " loading={confirmLoading} onClick={_onOk}>
-              确认
+              {confirmBtnText || '确认'}
             </Button>
           </DialogFooter>
         ) : (
           <DialogFooter className="m-4">
             {
-              isFunction(footer) ? footer({ open: setOpen, close: setClose }) : footer
+              isFunction(footer) ? footer({ open: _onOpen, close: setClose }) : footer
             }
           </DialogFooter>
         )}

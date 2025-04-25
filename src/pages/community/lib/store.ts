@@ -16,7 +16,10 @@ const useChatStore = create<ChatStore>()(
         timeFormat: 'ago'
       },
       channel: undefined,
-      usersExpanded: true
+      usersExpanded: true,
+      chatConfig: {
+        voteShow: {}
+      }
     }),
     {
       name: 'community',
@@ -28,6 +31,7 @@ const useChatStore = create<ChatStore>()(
           timeFormat: state.config.timeFormat
         },
         channel: state.channel,
+        chatConfig: state.chatConfig,
         usersExpanded: state.usersExpanded
       })
     }
@@ -52,6 +56,29 @@ export const chatManager = {
   setChannel: (channel?: ChatChannel) => {
     useChatStore.setState({
       channel: channel
+    })
+  },
+  getChannel: () => {
+    return useChatStore.getState().channel
+  },
+  toChannel: (channel: ChatChannel): Channel => {
+    return new Channel(channel.id, channel.type)
+  },
+  hideVote: (voteId: number, channelId: string) => {
+    const chatConfig = useChatStore.getState().chatConfig
+    const voteShow = {...chatConfig.voteShow}
+    if (voteShow[channelId]) {
+      voteShow[channelId].show = false
+      voteShow[channelId].voteId = voteId
+    } else {
+      voteShow[channelId] = { show: false, voteId }
+    }
+ 
+    useChatStore.setState({
+      chatConfig: {
+        ...chatConfig,
+        voteShow: voteShow
+      }
     })
   },
   setUsersExpanded: (expanded: boolean) => {

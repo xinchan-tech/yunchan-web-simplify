@@ -1,6 +1,6 @@
 import { JknIcon, JknSearchInput } from "@/components"
 import { chatManager, useChatStore } from "../lib/store"
-import { ChatConnectStatus, ChatMessageType, type ChatSession } from "../lib/types"
+import { ChatCmdType, ChatConnectStatus, ChatMessageType, type ChatSession } from "../lib/types"
 import { useChatEvent } from "../lib/event"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { useImmer } from "use-immer"
@@ -8,6 +8,7 @@ import { UserAvatar } from "../components/user-avatar"
 import { ChannelInfo } from "../components/channel-info"
 import { cleanUnreadConversation } from "@/api"
 import { Channel } from "wukongimjssdk"
+import { sessionCache } from "../cache"
 
 const statusInfo: Record<ChatConnectStatus, { color: string; text: string }> = {
   [ChatConnectStatus.Disconnect]: {
@@ -58,23 +59,47 @@ export const Sessions = () => {
   useChatEvent('updateSession', useCallback((e) => {
     setSessions(draft => {
       const index = draft.findIndex(s => s.channel.id === e.channel.id)
-
+      const lastChannel = chatManager.getChannel()
       if (index !== -1) {
         const ord = draft[index]
-        const n = {...e}
-        if (channel?.id === e.channel.id) {
+        const n = { ...e }
+        if (lastChannel?.id === e.channel.id) {
           n.unRead = 0
+          cleanUnreadConversation(chatManager.toChannel(lastChannel!))
         } else {
           n.unRead = ord.unRead + 1
+
         }
+        sessionCache.updateOrSave({ ...n })
         draft.splice(index, 1, n)
       }
     })
-  }, [channel, setSessions]))
+  }, [setSessions]))
+
+  useChatEvent('updateMessage', useCallback((e) => {
+    if (e.type === ChatMessageType.Cmd) {
+      const lastChannel = chatManager.getChannel()
+      setSessions(draft => {
+        const index = draft.findIndex(s => s.channel.id === e.channel.id)
+        if (index !== -1) {
+          const n = { ...draft[index] }
+          n.message = e
+          n.isMentionMe = false
+          if (lastChannel?.id === e.channel.id) {
+            n.unRead = 0
+          } else {
+            n.unRead = n.unRead + 1
+          }
+
+          draft.splice(index, 1, n)
+        }
+      })
+    }
+  }, [setSessions]))
 
   const sessionList = useMemo(() => {
     if (!sessions) return []
-    if (!search) return sessions
+    if (!search) return [...sessions].sort((a, b) => (b.message?.timestamp ?? 0) - (a.message?.timestamp ?? 0))
     return sessions.filter(s => s.channel.name.includes(search))
   }, [search, sessions])
 
@@ -147,25 +172,23 @@ export const Sessions = () => {
                 }
               </div>
               <div className="group-last-msg flex justify-between items-center">
-                <div className="flex-1 text-xs text-tertiary line-clamp-1">
+                <div className="flex-1 text-xs text-tertiary text-ellipsis overflow-hidden whitespace-nowrap">
                   {s.isMentionMe ? <span className="text-destructive">[有人@我]</span> : null}
                   {
                     s.message?.type === ChatMessageType.Image || s.message?.type === ChatMessageType.Text ? (
-                      <span>{s.message?.senderName}: &nbsp;</span>
+                      <>{s.message?.senderName}: &nbsp;</>
                     ) : null
                   }
                   {s.message?.type ? {
-                    [ChatMessageType.Cmd]: '[系统消息]',
+                    [ChatMessageType.Cmd]: (s.message as any).cmdType === ChatCmdType.MessageRevoke ? `${s.message?.senderName}撤回了一条消息` : '[系统消息]',
                     [ChatMessageType.Text]: s.message?.content,
                     [ChatMessageType.Image]: '[图片]',
                     [ChatMessageType.System]: '加入群聊',
                     [ChatMessageType.ChannelUpdate]: s.message?.content,
+                    [ChatMessageType.Vote]: `${s.message.senderName ?? ''}发起了投票：${s.message?.content}`,
                   }[s.message?.type] : ''}
 
                 </div>
-                {/* <div className="text-xs text-tertiary">
-                  {c.lastMessage?.timestamp ? dateUtils.dateAgo(dayjs(c.lastMessage.timestamp * 1000)) : null}
-                </div> */}
               </div>
             </div>
           </div>

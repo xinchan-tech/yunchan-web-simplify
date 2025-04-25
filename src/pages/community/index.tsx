@@ -1,16 +1,18 @@
-import { HoverCard, HoverCardArrow, HoverCardContent, HoverCardTrigger, JknAlert, JknAvatar, JknIcon, JknModal, Label, RadioGroup, RadioGroupItem } from "@/components"
+import { JknAlert, JknAvatar, JknIcon, JknModal, Label, RadioGroup, RadioGroupItem } from "@/components"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { useToken, useUser } from "@/store"
 import { Outlet, useLocation } from "react-router"
 import { ChannelList } from "./components/channel-list"
-import { chatManager, useChatStore } from "./lib/store"
+import { chatManager, ChatMessageType, useChatStore } from "./lib/store"
 import { useConnectIM } from "./lib/subscribe"
 import { useMessageListener } from "./lib/hooks"
 import { useCallback, useEffect } from "react"
 import { chatEvent } from "./lib/event"
 import { ChannelTransform, ConversationTransform, MessageTransform } from "./lib/transform"
 import WKSDK, { type MessageListener, type ChannelInfoListener, type ConversationListener } from "wukongimjssdk"
+import { VoteMessageContent } from "./lib/types"
 
+WKSDK.shared().register(ChatMessageType.Vote.toString() as unknown as number, () => new VoteMessageContent())
 
 const CommunityPage = () => {
   const user = useUser(s => s.user)
@@ -24,19 +26,23 @@ const CommunityPage = () => {
   }, []))
 
   useEffect(() => {
+    // 监听会话更新
     const handler: ConversationListener = (e) => {
+      console.log(e)
       ConversationTransform.toSession(e).then(r => {
         chatEvent.emit('updateSession', r)
       })
     }
     WKSDK.shared().conversationManager.addConversationListener(handler)
 
+    // 监听频道更新
     const channelHandler: ChannelInfoListener = (e) => {
       chatEvent.emit('updateChannel', ChannelTransform.toChatChannel(e))
     }
 
     WKSDK.shared().channelManager.addListener(channelHandler)
 
+    // 监听命令更新
     const cmdHandler: MessageListener = (e) => {
       MessageTransform.toChatMessage(e).then((r) => {
         chatEvent.emit('updateMessage', r)
@@ -84,8 +90,8 @@ const CommunityPage = () => {
 export default CommunityPage
 
 const menus = [
-  { title: '讨论社群', icon: 'group', path: '/community' },
-  { title: 'live', icon: 'live', path: '/community/live' },
+  { title: '社群', icon: 'group', path: '/community' },
+  // { title: '图文', icon: 'live', path: '/community/live' },
 ]
 
 const Menu = () => {
@@ -94,19 +100,20 @@ const Menu = () => {
     <div className="mt-4">
       {
         menus.map(item => (
-          <HoverCard openDelay={300} closeDelay={300} key={item.title}>
-            <HoverCardTrigger asChild>
-              <div key={item.title} className="w-full flex items-center justify-center cursor-pointer size-[64px] hover:bg-accent" data-check={path.pathname === item.path}>
-                <JknIcon.Svg name={item.icon as IconName} size={24} />
-              </div>
-            </HoverCardTrigger>
+          // <HoverCard openDelay={300} closeDelay={300} key={item.title}>
+          //   <HoverCardTrigger asChild>
 
-            <HoverCardContent align="center" side="bottom" className="w-fit py-1 px-2 text-sm">
-              <HoverCardArrow width={10} height={4} className="text-accent fill-accent" />
-              {item.title}
-            </HoverCardContent>
-          </HoverCard>
+          //   </HoverCardTrigger>
 
+          //   <HoverCardContent align="center" side="bottom" className="w-fit py-1 px-2 text-sm">
+          //     <HoverCardArrow width={10} height={4} className="text-accent fill-accent" />
+          //     {item.title}
+          //   </HoverCardContent>
+          // </HoverCard>
+          <div key={item.title} className="w-full flex flex-col items-center justify-center cursor-pointer size-[64px] hover:bg-accent data-[checked=true]:bg-accent" data-checked={path.pathname === item.path}>
+            <JknIcon.Svg name={item.icon as IconName} size={24} />
+            <div className="text-sm">{item.title}</div>
+          </div>
         ))
       }
     </div>

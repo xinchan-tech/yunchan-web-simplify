@@ -25,10 +25,9 @@ class SessionCache extends ChatCache {
     const _session = await db.get(SessionCache.CONVERSATION_STORE, id)
 
     if (!_session) {
-      await db.add(SessionCache.CONVERSATION_STORE, session)
+      await db.add(SessionCache.CONVERSATION_STORE, { ...session, id: this.getSessionId(session) })
     } else {
-      assign(_session, session)
-      await db.put(SessionCache.CONVERSATION_STORE, _session)
+      await db.put(SessionCache.CONVERSATION_STORE, { ...session, id: this.getSessionId(session) })
     }
   }
 

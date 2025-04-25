@@ -3,6 +3,7 @@ import { Button, JknAlert, JknIcon, JknModal, JknSearchInput, SkeletonLoading } 
 import { useMutation, useQuery } from "@tanstack/react-query"
 import { type PropsWithChildren, useMemo, useState } from "react"
 import { UserAvatar } from "./user-avatar"
+import { useUser } from "@/store"
 
 
 export const ChannelList = (props: PropsWithChildren) => {
@@ -112,6 +113,7 @@ const GroupChannelCard = (props: {
   channel: GroupChannelItem
 }) => {
   const { channel } = props
+  const refreshUser = useUser(s => s.refreshUser)
 
   const joinChannel = useMutation({
     mutationFn: () => {
@@ -121,7 +123,7 @@ const GroupChannelCard = (props: {
       })
         .then(() => {
           JknAlert.success('更换群聊成功')
-
+          refreshUser()
         })
     },
     onError: (e) => {
@@ -135,6 +137,7 @@ const GroupChannelCard = (props: {
       <div className="flex flex-1">
         <div className="avatar-box">
           <UserAvatar
+            type="2"
             uid={channel.account}
             src={channel.avatar}
             size={64}

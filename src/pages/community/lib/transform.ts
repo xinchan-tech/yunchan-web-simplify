@@ -23,7 +23,9 @@ import {
   type ChatSession,
   type ChatSubscriber,
   type ChatSystemMessage,
-  type ChatTextMessage
+  type ChatTextMessage,
+  type ChatVoteMessage,
+  type VoteMessageContent
 } from './types'
 import { fetchUserFromCache } from './utils'
 
@@ -282,6 +284,14 @@ export const MessageTransform = {
         type: ChatMessageType.ChannelUpdate,
         
       } as ChatSystemMessage
+    } else if (+msg.contentType === ChatMessageType.Vote) {
+      const content = msg.content as VoteMessageContent
+      message = {
+        ...message,
+        content: content.title,
+        voteId: content.voteId,
+        type: ChatMessageType.Vote
+      } as ChatVoteMessage
     }
 
     return message

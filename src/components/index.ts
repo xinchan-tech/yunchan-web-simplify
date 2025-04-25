@@ -31,6 +31,7 @@ export { default as Menu } from './menu'
 export { default as MenuRight } from './menu/menu-right'
 export * from './modal'
 export * from './num-span'
+export { StockPicker } from './stock-select/picker'
 
 export { default as Star } from './star'
 export { default as CollectStar } from './star/collect-star'

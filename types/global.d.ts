@@ -36,6 +36,8 @@ declare type RequiredBy<T, K extends keyof T> = Partial<Omit<T, K>> & Required<P
 
 declare type Nullable<T> = T | null | undefined
 
+declare type FuncParams<T> = T extends (...args: infer U) => any ? U : never
+
 // declare type Undefinable<T> = T | undefined
 
 interface Google {

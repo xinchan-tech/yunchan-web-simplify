@@ -9,6 +9,7 @@ import { TextRecord } from "../components/text-record"
 import { ImageRecord } from "../components/image-record"
 import { SystemRecord } from "../components/system-record"
 import { useChatStore } from "../lib/store"
+import { VoteRecord } from "../components/vote-record"
 
 interface MessageListProps {
   messages: ChatMessage[]
@@ -115,6 +116,12 @@ const ChatMessageRow = ({ message, isRevokeMessage, me }: PropsWithChildren<Chat
     )
   }
 
+  if (message.type === ChatMessageType.Vote) {
+    return (
+      <div className="text-center my-2.5 text-sm text-tertiary"><VoteRecord message={message} /></div>
+    )
+  }
+
   if (isRevokeMessage) {
     return (
       <div className="text-center my-2.5 text-sm text-tertiary">
@@ -122,6 +129,7 @@ const ChatMessageRow = ({ message, isRevokeMessage, me }: PropsWithChildren<Chat
       </div>
     )
   }
+
 
   const renderMessage = () => {
 

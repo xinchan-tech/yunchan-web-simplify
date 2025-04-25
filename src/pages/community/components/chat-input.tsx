@@ -1,5 +1,5 @@
-import { JknAlert, JknIcon, PopoverContent, PopoverTrigger } from '@/components'
-import { ChatMessageType } from '@/store'
+import { JknAlert, JknIcon, JknModal, PopoverContent, PopoverTrigger } from '@/components'
+import { ChatMessageType, useUser } from '@/store'
 import emojiData from '@emoji-mart/data'
 import Picker from '@emoji-mart/react'
 import { Popover } from '@radix-ui/react-popover'
@@ -11,13 +11,15 @@ import { useImmer } from 'use-immer'
 import { Channel, Reply, WKSDK } from 'wukongimjssdk'
 import { type ChatEvent, chatEvent } from '../lib/event'
 import { useChatStore } from "../lib/store"
-import type { ChatMessage } from "../lib/types"
+import type { ChatMessage, ChatSubscriber } from "../lib/types"
 import { MessageTransform } from "../lib/transform"
+import { VoteForm } from "./vote-form"
 
 interface ChatInputProps {
   hasForbidden: boolean
   inChannel: boolean
   channelReady: boolean
+  me?: ChatSubscriber
   onSubmit?: (
     text?: JSONContent,
     extra?: {
@@ -254,6 +256,7 @@ export const ChatInput = forwardRef<ChatInputInstance, ChatInputProps>((props, r
           onSelectEmoji={onToolSelectEmoji}
           onImageUpload={onToolImageUpload}
           onDollarClick={onDollarClick}
+          me={props.me}
         />
       </div>
       <div className="h-[148px] overflow-y-auto box-border p-1 relative ">
@@ -266,7 +269,7 @@ export const ChatInput = forwardRef<ChatInputInstance, ChatInputProps>((props, r
                   <div className="absolute inset-0 flex items-center justify-center left-0 right-0 top-0 bottom-0 box-border">
                     <div className="text-tertiary text-base">您已被禁言</div>
                   </div>
-                ): (
+                ) : (
                   <div className="absolute inset-0 flex items-center justify-center left-0 right-0 top-0 bottom-0 box-border">
                     <div className="text-tertiary text-base">已不在该社群中</div>
                   </div>
@@ -288,9 +291,11 @@ interface ChatInputToolProps {
   onSelectEmoji: (emoji: string) => void
   onImageUpload: (fileUrl: string, name: string) => void
   onDollarClick: () => void
+  me?: ChatSubscriber
 }
 
-const ChatInputTool = ({ onSelectEmoji, onImageUpload, onDollarClick }: ChatInputToolProps) => {
+const ChatInputTool = ({ onSelectEmoji, onImageUpload, me }: ChatInputToolProps) => {
+  const teacher = useUser(s => s.user?.teacher)
   return (
     <div className="chat-room-input-box flex items-center space-x-4 h-[32px] box-border border-b-primary">
       <EmojiPicker onPicker={onSelectEmoji}>
@@ -303,13 +308,22 @@ const ChatInputTool = ({ onSelectEmoji, onImageUpload, onDollarClick }: ChatInpu
           <JknIcon.Svg name="picture" size={20} />
         </ImagePicker>
       </div>
-      <div
+      {/* <div
         className="flex items-center justify-center cursor-pointer text-tertiary "
         onClick={onDollarClick}
         onKeyDown={() => { }}
       >
         <JknIcon.Svg name="dollar" size={20} />
-      </div>
+      </div> */}
+      {
+        teacher || me?.isManager || me?.isOwner ? (
+          <div className="flex items-center justify-center cursor-pointer text-tertiary pt-1">
+            <VoteInput>
+              <JknIcon.Svg name="rank" size={18} />
+            </VoteInput>
+          </div>
+        ) : null
+      }
     </div>
   )
 }
@@ -368,5 +382,25 @@ const ImagePicker = ({ onUpload, children }: PropsWithChildren<ImagePickerProps>
         {children}
       </label>
     </div>
+  )
+}
+
+
+// 投票
+export const VoteInput = ({ children }: PropsWithChildren) => {
+  const channel = useChatStore(s => s.channel)
+  if (!channel) return children
+  return (
+    <JknModal lazy trigger={children} title="投票"
+      footer={null}
+    >
+      {
+        ({close}) => <VoteForm
+          channel={channel}
+          onClose={close}
+          onSubmit={close}
+        />
+      }
+    </JknModal>
   )
 }
