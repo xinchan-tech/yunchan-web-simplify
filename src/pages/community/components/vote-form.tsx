@@ -19,9 +19,18 @@ const voteSchema = z.object({
   desc: z.string().min(1, { message: '请输入投票详情' }),
   voteLimit: z.string().min(1, { message: '请输入每人可投票次数' }),
   items: z.array(z.object({
-    title: z.string().min(1, { message: "投票选项不能为空" }),
+    title: z.string().optional(),
     id: z.number().optional()
-  })).min(1, { message: "投票选项不能为空" }),
+  })).min(1, { message: "投票选项不能为空" })
+    .refine((data) => {
+      const titles = data.map(item => item.title)
+      return new Set(titles).size === titles.length
+    }, { message: "投票选项不能重复" })
+    .refine((data) => {
+      return data.every(item => item.title && item.title.length > 0)
+    }, {
+      message: "投票选项不能为空"
+    }),
   endTime: z.string().min(1, { message: "投票截止时间不能为空" }),
 })
 
@@ -44,7 +53,7 @@ export const VoteForm = ({ id, channel, onSubmit, onClose }: VoteFormProps) => {
       const r = await form.trigger()
       if (!r) {
         const error = Object.values(form.formState.errors)[0]
-        throw new Error(error?.message)
+        throw new Error(error?.message ? error.message : error.root ? error.root.message : "未知错误")
       }
 
       const data = form.getValues()
@@ -52,7 +61,7 @@ export const VoteForm = ({ id, channel, onSubmit, onClose }: VoteFormProps) => {
       const params: FuncParams<typeof createVote>[0] = {
         title: data.title,
         items: data.items.map(item => ({
-          title: item.title,
+          title: item.title!,
           id: 0
         })),
         id,
@@ -119,7 +128,7 @@ export const VoteForm = ({ id, channel, onSubmit, onClose }: VoteFormProps) => {
               <FormItem className="pb-4 flex justify-center space-y-0">
                 <FormLabel className="text-sm w-28 flex-shrink-0">投票截止时间</FormLabel>
                 <FormControl>
-                  <JknDatePicker time {...field} >
+                  <JknDatePicker time {...field} disabled={e => !dayjs().add(-1, 'day').isBefore(e)} >
                     {
                       (v) => (
                         <div className="h-10 flex w-full items-center justify-end box-border py-2 border border-solid border-input rounded-md px-2">
@@ -183,7 +192,7 @@ export const VoteForm = ({ id, channel, onSubmit, onClose }: VoteFormProps) => {
 
 interface VoteStockPickerProps {
   index: number
-  value: string
+  value?: string
   onChange: (value: string) => void
   onAdd: () => void
   onDelete: (index: number) => void

@@ -56,6 +56,30 @@ class SessionCache extends ChatCache {
     await tx.done
   }
 
+  async cleanAndUpdate(data: ChatSession[]) {
+    const db = await this.getDb()
+    const sessions = await this.getSessions()
+
+    /**
+     * 开启事务
+     */
+    const tx = db.transaction(SessionCache.CONVERSATION_STORE, 'readwrite')
+    const store = tx.objectStore(SessionCache.CONVERSATION_STORE)
+
+    await Promise.all(
+      sessions.map(async c => store.delete(this.getSessionId(c)))
+    )
+
+    await Promise.all(
+      data.map(async conversation => {
+        const id = this.getSessionId(conversation)
+        await store.add({ ...conversation, id })
+      })
+    )
+
+    await tx.done
+  }
+
   async delete(data: ChatSession) {
     const db = await this.getDb()
     const id = this.getSessionId(data)

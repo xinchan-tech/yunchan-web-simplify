@@ -254,17 +254,18 @@ export const calcBottomSignal = (candlesticks: StockRawRecord[]): IndicatorData[
   let maxVol = 0
   hdly(candlesticks).forEach((vol: number, index, arr) => {
     if (vol > 0 && arr.length - 1 !== index) {
+      const _vol = vol / 150 * 80
       // hdlyData.push([index, 0, vol, 2, 0, ''])
       hdlyData.push({
         x: index,
         y1: 0,
-        y2: vol,
+        y2: _vol,
         width: 1,
         empty: 0
       })
 
-      if (vol >= maxVol) {
-        maxVol = vol
+      if (_vol >= maxVol) {
+        maxVol = _vol
         maxPos = index
       }
     } else {
@@ -279,7 +280,7 @@ export const calcBottomSignal = (candlesticks: StockRawRecord[]): IndicatorData[
         } else if (maxVol < 150) {
           str = '超大底'
         }
-        hdlyLabel.push({ x: maxPos, y: maxVol + 8, text: str, color: 'rgb(255, 0, 102)' })
+        hdlyLabel.push({ x: maxPos, y: maxVol, text: str, color: 'rgb(255, 0, 102)' })
         maxPos = -1
         maxVol = 0
       }

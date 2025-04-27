@@ -435,7 +435,7 @@ export const ChatRoom = () => {
                   {
                     voteList.data?.items.map(item => (
                       <div key={item.id} className="text-foreground leading-none p-2.5 w-full box-border">
-                        <div className="text-sm">{item.uid}发起了投票{item.title}</div>
+                        <div className="text-sm">{item.user_name}发起了投票{item.title}</div>
                         <div className="text-xs w-full whitespace-nowrap text-ellipsis overflow-hidden mt-1">
                           {
                             item.desc

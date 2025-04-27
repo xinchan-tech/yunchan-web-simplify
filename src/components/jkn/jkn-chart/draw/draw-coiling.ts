@@ -312,7 +312,7 @@ export const drawHDLYLabel: DrawHDLYLabelFunc = (params, { data, color }) => {
       name: 'hdly-label',
       attrs: {
         x: xAxis.convertToPixel(item.x),
-        y: yAxis.convertToPixel(item.y) + 4,
+        y: yAxis.convertToPixel(item.y) - 14,
         text: item.text,
         align: 'center',
         baseline: 'middle'

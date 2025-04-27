@@ -74,7 +74,7 @@ export const VoteDetailList = (props: VoteDetailListProps) => {
  
 
   return (
-    <div className="w-[548px] bg-white rounded-lg overflow-hidden">
+    <div className="w-[548px] rounded-lg overflow-hidden">
       <div className="h-[160px] p-5 box-content" style={{ background: `url(${VoteTitleBg}) no-repeat`, backgroundSize: '100%' }}>
         <JknIcon.Svg name="close" className="absolute right-4 top-4 cursor-pointer font-thin" size={28} onClick={props.onClose} />
         <div className="text-[40px] font-bold text-white mt-10" >
@@ -94,13 +94,13 @@ export const VoteDetailList = (props: VoteDetailListProps) => {
           投票说明
         </div>
       </div>
-      <ScrollArea className="py-4 h-[680px]">
+      <ScrollArea className="py-4 h-[680px] w-full bg-white">
         {
           detail.isLoading ? (
             <SkeletonLoading count={8} />
           ) : (
             detail.data?.items.map((item, index) => (
-              <div key={item.id} className="flex items-center px-5 border-b border-border space-x-5 py-1.5">
+              <div key={item.id} className="flex items-center px-5 border-b border-border space-x-5 py-1.5 w-[548px] box-border overflow-hidden">
                 <div>
                   {
                     index < 3 ? (
@@ -108,7 +108,7 @@ export const VoteDetailList = (props: VoteDetailListProps) => {
                     ) : <div className="size-8 text-center">{index + 1}</div>
                   }
                 </div>
-                <div className="text-sm text-primary flex items-center text-[#575757] py-3.5 px-3 vote-progress flex-1 relative" style={{ '--vote-progress-width': `${(totalCount ? (item.count / totalCount) : 0) * 100}%` } as CSSProperties}>
+                <div className="text-sm text-primary flex items-center text-[#575757] py-3.5 px-3 vote-progress flex-1 overflow-hidden box-border relative" style={{ '--vote-progress-width': `${(totalCount ? (item.count / totalCount) : 0) * 100}%` } as CSSProperties}>
                   <StockView code={item.title} showName />
                   <div className="ml-auto text-[#575757] mr-4">
                     {((totalCount ? (item.count / totalCount) : 0) * 100).toFixed(2)}%

@@ -38,6 +38,7 @@ function JknDatePicker({ children, onChange, time, ...props }: JknDatePickerProp
   }
 
   const onChangeTime = (d?: Date) => {
+
     if (d) {
       setDate(dayjs(d).format(format))
       onChange?.(dayjs(d).format(format))
@@ -55,7 +56,7 @@ function JknDatePicker({ children, onChange, time, ...props }: JknDatePickerProp
         {typeof children === 'function' ? children(date, { open: setTrue, close: setFalse }) : children}
       </PopoverTrigger>
       <PopoverContent className="p-0 w-[360px]" style={{ height: 432 + (time ? 42 : 0) }}>
-        <Calendar mode="single" selected={dayjs(date).toDate()} onSelect={_onSelect} {...props} />
+        <Calendar mode="single" selected={dayjs(date).toDate()} onDayClick={_onSelect} {...props} />
         {
           time ? (
             <div className="flex items-center justify-end">

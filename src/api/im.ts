@@ -331,6 +331,7 @@ type GetVoteListResult = PageResult<{
   uid: string
   vote_limit: number
   end_time: number
+  user_name: string
 }>
 
 export const getVoteList = async (params: GetVoteListParams) => {
