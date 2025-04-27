@@ -1,9 +1,9 @@
-import { type QuoteBuffer, type StockSubscribeHandler, type SubscribeActionType, stockSubscribe } from '@/utils/stock'
+import { stockSubscribe, type SubscribeBarType, type SubscribeQuoteType, type SubscribeSnapshotType, SubscribeTopic } from '@/utils/stock'
 import { useUnmount } from 'ahooks'
 import { useEffect, useMemo, useRef } from 'react'
 import { useLatestRef } from './use-latest-ref'
 
-const useStockSubscribe = (action: SubscribeActionType, symbols: string[]) => {
+const useStockSubscribe = (action: SubscribeTopic, symbols: string[]) => {
   useEffect(() => {
     if (symbols.length === 0) return
     const unsubscribe = stockSubscribe.subscribe(action, symbols)
@@ -19,7 +19,7 @@ const useStockSubscribe = (action: SubscribeActionType, symbols: string[]) => {
  * @param symbols
  * @param handler
  */
-export const useStockQuoteSubscribe = (symbols: string[], handler?: (params: QuoteBuffer) => void) => {
+export const useStockQuoteSubscribe = (symbols: string[], handler?: (params: Record<string, SubscribeQuoteType>) => void) => {
   const symbolsMap = useMemo(() => {
     const map = new Set<string>()
     symbols.forEach(symbol => {
@@ -32,8 +32,8 @@ export const useStockQuoteSubscribe = (symbols: string[], handler?: (params: Quo
     if (!symbolsMap.size) return
     if (!handler) return
 
-    const _handler: (params: QuoteBuffer) => void = e => {
-      const r: QuoteBuffer = {}
+    const _handler: (params: Record<string, SubscribeQuoteType>) => void = e => {
+      const r: Record<string, SubscribeQuoteType> = {}
       Object.keys(e).forEach(key => {
         if (symbolsMap.has(key)) {
           r[key] = e[key]
@@ -41,7 +41,7 @@ export const useStockQuoteSubscribe = (symbols: string[], handler?: (params: Quo
       })
       handler?.(r)
     }
-    const unsubscribe = stockSubscribe.on('quote', _handler)
+    const unsubscribe = stockSubscribe.on(SubscribeTopic.Quote, _handler)
 
     return () => {
       unsubscribe()
@@ -49,24 +49,24 @@ export const useStockQuoteSubscribe = (symbols: string[], handler?: (params: Quo
   }, [symbolsMap, handler])
 }
 
-export const useStockBarSubscribe = (symbols: string[], handler: StockSubscribeHandler<'bar'>) => {
-  useStockSubscribe('bar', symbols)
+export const useStockBarSubscribe = (symbols: string[], handler: (data: SubscribeBarType) => void) => {
+  useStockSubscribe(SubscribeTopic.Bar, symbols)
 
   const renderFn = useLatestRef(handler)
 
   useEffect(() => {
-    const cancel = stockSubscribe.on('bar', renderFn.current)
+    const cancel = stockSubscribe.on(SubscribeTopic.Bar, renderFn.current)
 
     return cancel
   }, [renderFn])
 }
 
-export const useSnapshot = (symbol: string, handler: StockSubscribeHandler<'snapshot'>) => {
+export const useSnapshot = (symbol: string, handler: (data: SubscribeSnapshotType) => void) => {
   const unSubscribe = useRef<() => void>()
 
   useEffect(() => {
     if (!symbol) return
-    unSubscribe.current = stockSubscribe.subscribe('snapshot', [symbol])
+    unSubscribe.current = stockSubscribe.subscribe(SubscribeTopic.Snapshot, [symbol])
 
     return () => {
       unSubscribe.current?.()
@@ -74,7 +74,7 @@ export const useSnapshot = (symbol: string, handler: StockSubscribeHandler<'snap
   }, [symbol])
 
   useEffect(() => {
-    const cancel = stockSubscribe.on('snapshot', handler)
+    const cancel = stockSubscribe.on(SubscribeTopic.Snapshot, handler)
 
     return cancel
   }, [handler])
@@ -84,14 +84,14 @@ export const useSnapshot = (symbol: string, handler: StockSubscribeHandler<'snap
   })
 }
 
-export const useSnapshotOnce = (symbol: string, handler: StockSubscribeHandler<'snapshot'>) => {
+export const useSnapshotOnce = (symbol: string, handler: (data: SubscribeSnapshotType) => void) => {
   const once = useRef(0)
   const unSubscribe = useRef<() => void>()
   const unSubscribeHandler = useRef<() => void>()
 
   useEffect(() => {
     if (!symbol) return
-    const unsubscribe = stockSubscribe.subscribe('snapshot', [symbol])
+    const unsubscribe = stockSubscribe.subscribe(SubscribeTopic.Snapshot, [symbol])
     unSubscribe.current = unsubscribe
     once.current = 0
 
@@ -102,12 +102,12 @@ export const useSnapshotOnce = (symbol: string, handler: StockSubscribeHandler<'
 
   useEffect(() => {
     if (once.current) return
-    const _handler: StockSubscribeHandler<'snapshot'> = e => {
+    const _handler: (data: SubscribeSnapshotType) => void = e => {
       if (e.data.symbol !== symbol) return
       once.current = 1
       handler(e)
     }
-    const cancel = stockSubscribe.on('snapshot', _handler)
+    const cancel = stockSubscribe.on(SubscribeTopic.Snapshot, _handler)
     unSubscribeHandler.current = cancel
 
     return cancel

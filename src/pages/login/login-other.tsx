@@ -30,7 +30,7 @@ type AppleLoginResult = {
 export const AppleLogin = (props: ThirdLoginFormProps) => {
   useMount(() => {
     window.AppleID.auth.init({
-      clientId: 'com.jkn.app.web',
+      clientId: 'com.todaychart.web',
       redirectURI: import.meta.env.PUBLIC_BASE_APPLE_REDIRECT_URI,
       scope: 'email',
       state: 'https://www.mgjkn.com/main',

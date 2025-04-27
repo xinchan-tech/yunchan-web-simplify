@@ -1,6 +1,6 @@
 import { usePropValue } from '@/hooks'
 import { useConfig } from '@/store'
-import { type StockSubscribeHandler, type StockTrading, stockSubscribe, stockUtils } from '@/utils/stock'
+import { type StockTrading, stockUtils } from '@/utils/stock'
 import { cn } from '@/utils/style'
 import { useUpdateEffect } from 'ahooks'
 import { type VariantProps, cva } from 'class-variance-authority'
@@ -8,6 +8,7 @@ import Decimal from 'decimal.js'
 import { get, isFunction, isNumber } from 'radash'
 import { type HTMLAttributes, memo, useEffect, useRef, useState } from 'react'
 import { JknIcon } from '..'
+import { stockSubscribe, type SubscribeQuoteType } from "@/utils/stock/subscribe"
 
 const numSpanVariants = cva('', {
   variants: {
@@ -177,8 +178,8 @@ export const NumSpan = ({
 interface NumSpanSubscribeProps extends Omit<NumSpanProps, 'value'> {
   code: string
   field:
-    | keyof Parameters<StockSubscribeHandler<'quoteTopic'>>[0]['record']
-    | ((data: Parameters<StockSubscribeHandler<'quoteTopic'>>[0]['record']) => number | string | undefined)
+    | keyof SubscribeQuoteType['record']
+    | ((data: SubscribeQuoteType['record']) => number | string | undefined)
   value?: number | string
   subscribe?: boolean
 }
@@ -207,7 +208,7 @@ export const NumSpanSubscribe = ({
   useEffect(() => {
     if (!subscribe) return
     const unSubscribe = stockSubscribe.onQuoteTopic(code, data => {
-      const v = isFunction(fieldFn.current) ? fieldFn.current(data.record) : get(data.record, fieldFn.current)
+      const v = isFunction(fieldFn.current) ? fieldFn.current(data.record) : get(data.record, fieldFn.current as string)
 
       setInnerValue(v as number | string | undefined)
       setIsUp(data.record.percent > 0)
@@ -245,7 +246,7 @@ interface SubscribeSpanProps extends Omit<HTMLAttributes<HTMLSpanElement>, 'onCh
   value: number | string | undefined
   visibleOptimization?: boolean
   symbol: string
-  formatter: (data: Parameters<StockSubscribeHandler<'quoteTopic'>>[0]) => number | string | undefined
+  formatter: (data: SubscribeQuoteType) => number | string | undefined
   /**
    * 周期
    */
@@ -255,7 +256,7 @@ interface SubscribeSpanProps extends Omit<HTMLAttributes<HTMLSpanElement>, 'onCh
    */
   subscribe?: boolean
   onChange?: (
-    data: Parameters<StockSubscribeHandler<'quoteTopic'>>[0],
+    data: SubscribeQuoteType,
     extra: { changeDirection?: 'up' | 'down'; lastValue?: string | number; newValue?: number | string }
   ) => void
 }

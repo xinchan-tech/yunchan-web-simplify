@@ -40,7 +40,7 @@ import {
 } from '@/hooks'
 import { useTime, useToken } from '@/store'
 import { dateUtils } from '@/utils/date'
-import { type StockSubscribeHandler, stockUtils } from '@/utils/stock'
+import { stockUtils, type SubscribeSnapshotType } from '@/utils/stock'
 import { cn } from '@/utils/style'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import dayjs from 'dayjs'
@@ -75,7 +75,7 @@ const StockInfo = () => {
 
 export default StockInfo
 
-type StockBaseInfoData = Parameters<StockSubscribeHandler<'snapshot'>>[0]['data']
+type StockBaseInfoData = SubscribeSnapshotType['data']
 
 const StockBaseInfo = () => {
   const code = useSymbolQuery()
@@ -161,7 +161,7 @@ const StockBaseInfo = () => {
       <div className="py-1 space-y-3 bg-background">
         <StockQuoteBar
           label="点击查看盘中分时走势"
-          percent={dataInfo ? stockUtils.getPercent(dataInfo) : undefined}
+          percent={dataInfo ? stockUtils.getPercentUnsafe(dataInfo) : undefined}
           close={dataInfo?.close}
           prevClose={dataInfo?.prevClose}
           tradingLabel={trading === 'intraDay' ? '交易中' : '收盘价'}
@@ -177,7 +177,7 @@ const StockBaseInfo = () => {
               <StockQuoteBar
                 label="点击查看分时走势"
                 percent={
-                  dataInfo ? stockUtils.getPercent({ close: dataInfo.extPrice, prevClose: dataInfo.close }) : undefined
+                  dataInfo ? stockUtils.getPercentUnsafe({ close: dataInfo.extPrice, prevClose: dataInfo.close }) : undefined
                 }
                 close={dataInfo?.extPrice}
                 prevClose={dataInfo?.close}
@@ -191,7 +191,7 @@ const StockBaseInfo = () => {
               <StockQuoteBar
                 label="点击查看分时走势"
                 percent={
-                  dataInfo ? stockUtils.getPercent({ close: dataInfo.extPrice, prevClose: dataInfo.close }) : undefined
+                  dataInfo ? stockUtils.getPercentUnsafe({ close: dataInfo.extPrice, prevClose: dataInfo.close }) : undefined
                 }
                 close={dataInfo?.extPrice}
                 prevClose={dataInfo?.close}
@@ -344,10 +344,10 @@ const StockQuote = () => {
   )
 
   useEffect(() => {
-    if (code !== codeInfo?.symbol) {
+    if(code){
       setCodeInfo(undefined)
     }
-  }, [code, codeInfo])
+  }, [code])
 
   // const [stock, _, __] = codeInfoQuery.data ? stockUtils.toStockWithExt(codeInfoQuery.data) : []
 

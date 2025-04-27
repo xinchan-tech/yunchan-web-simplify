@@ -57,4 +57,4 @@ export const createEvent = <T extends Record<string, unknown>>() => {
   return new EventEmitter<T>()
 }
 
-export { appEvent }
+export { appEvent, type EventEmitter }
