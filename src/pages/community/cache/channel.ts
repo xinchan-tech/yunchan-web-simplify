@@ -1,7 +1,7 @@
-import { assign } from 'radash'
 import { CacheStoreName, ChatCache } from './db'
 import type { ChatChannel } from "../lib/types"
 import { useUser } from "@/store"
+import { assign } from "radash"
 
 class ChannelCache extends ChatCache {
   public static STORE_NAME = CacheStoreName.CHANNEL_STORE
@@ -22,16 +22,14 @@ class ChannelCache extends ChatCache {
     const db = await this.getDb()
     const key = this.getChannelKey(channel)
     const _channel = await db.get(ChannelCache.STORE_NAME, key)
-
     if (!_channel) {
       await db.add(ChannelCache.STORE_NAME, {
         ...channel,
         key
       })
     } else {
-      assign(_channel, channel)
       await db.put(ChannelCache.STORE_NAME, {
-        ..._channel,
+        ...assign(_channel, channel),
         key
       })
     }

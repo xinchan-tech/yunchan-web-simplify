@@ -3,6 +3,8 @@ import type { ChatChannel } from './types'
 import { queryClient } from '@/utils/query-client'
 import { getChatNameAndAvatar } from '@/api'
 import { userCache } from '../cache/user'
+import { dateUtils } from "@/utils/date"
+import dayjs from "dayjs"
 
 const sessionUserCache = new Map<string, { name: string; avatar?: string, }>()
 
@@ -43,4 +45,14 @@ export const fetchUserFromCache = async (userId: string) => {
   }
 
   return
+}
+
+export const formatTimeStr = (timestamp: number, format: {timezone: string, format: string} ): string => {
+  let time = dayjs(timestamp)
+
+  if (format.timezone === 'us') {
+    time = dateUtils.toUsDay(time)
+  }
+
+  return (format.format === 'ago' ? dateUtils.dateAgo(time) : `${time.format('YYYY-MM-DD HH:mm:ss')}`) + (format.timezone === 'us' ? ' [美东]': '')
 }

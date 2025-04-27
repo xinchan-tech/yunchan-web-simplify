@@ -212,6 +212,16 @@ export const getTimeFormatStr = (timestamp: number): string => {
   return timeFormat.format === 'ago' ? dateUtils.dateAgo(time) : `${time.format('YYYY-MM-DD HH:mm:ss')}`
 }
 
+export const formatTimeStr = (timestamp: number, format: {timezone: string, format: string} ): string => {
+  let time = dayjs(timestamp)
+
+  if (format.timezone === 'us') {
+    time = dateUtils.toUsDay(time)
+  }
+
+  return format.format === 'ago' ? dateUtils.dateAgo(time) : `${time.format('YYYY-MM-DD HH:mm:ss')}`
+}
+
 export const genImgFileByUrl = (url: string, mime?: string) => {
   // return new Promise((resolve, reject) => {
   // const img = new Image();

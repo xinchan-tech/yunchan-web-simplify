@@ -6,7 +6,7 @@ type Events = {
   cleanPickerStockMethod: unknown
   cleanPickerStockFactor: unknown
   notAuth: unknown
-  logout: unknown
+  logout: Nullable<boolean>
 }
 
 // useToken.getState().removeToken()

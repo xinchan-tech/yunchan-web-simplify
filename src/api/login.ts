@@ -187,3 +187,8 @@ type GetCurrentIpResult = {
   region: string
   start_time: string
 }
+
+
+export const transferAppleAccount = (code: string)=> {
+  return request.post('/user-svc/apple/transferSub', { code }).then(r => r.data)
+}

@@ -63,6 +63,7 @@ export const Sessions = () => {
       if (index !== -1) {
         const ord = draft[index]
         const n = { ...e }
+
         if (lastChannel?.id === e.channel.id) {
           n.unRead = 0
           cleanUnreadConversation(chatManager.toChannel(lastChannel!))
@@ -95,6 +96,18 @@ export const Sessions = () => {
         }
       })
     }
+  }, [setSessions]))
+
+  useChatEvent('updateChannel', useCallback((e) => {
+    setSessions(draft => {
+      const index = draft.findIndex(s => s.channel.id === e.id)
+      if (index !== -1) {
+        const n = { ...draft[index] }
+        n.channel = e
+        draft.splice(index, 1, n)
+        sessionCache.updateOrSave(n)
+      }
+    })
   }, [setSessions]))
 
   const sessionList = useMemo(() => {
@@ -135,6 +148,9 @@ export const Sessions = () => {
             key={s.channel.id}
             onMouseEnter={() => {
               setHoverChannel(s.channel.id)
+            }}
+            onMouseLeave={() => {
+              setHoverChannel(undefined)
             }}
             className="flex conversation-card overflow-hidden cursor-pointer data-[checked=true]:bg-accent"
             data-checked={s.channel.id === channel?.id}

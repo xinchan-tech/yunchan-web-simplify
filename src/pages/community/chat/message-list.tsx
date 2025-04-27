@@ -10,6 +10,7 @@ import { ImageRecord } from "../components/image-record"
 import { SystemRecord } from "../components/system-record"
 import { useChatStore } from "../lib/store"
 import { VoteRecord } from "../components/vote-record"
+import { formatTimeStr } from "../lib/utils"
 
 interface MessageListProps {
   messages: ChatMessage[]
@@ -104,6 +105,7 @@ interface ChatMessageRowProps {
 const ChatMessageRow = ({ message, isRevokeMessage, me }: PropsWithChildren<ChatMessageRowProps>) => {
   const uid = WKSDK.shared().config.uid
   const timeZone = useChatStore(s => s.config.timezone)
+  const timeFormat = useChatStore(s => s.config.timeFormat)
   const isSelfMessage = message.senderId === uid
 
   if (message.type === ChatMessageType.Cmd || message.type === ChatMessageType.System) {
@@ -146,7 +148,7 @@ const ChatMessageRow = ({ message, isRevokeMessage, me }: PropsWithChildren<Chat
       <div className="py-3 px-4 flex justify-end items-start box-border">
         <div className="mr-2.5 flex flex-col items-end overflow-hidden" style={{ maxWidth: '50%' }}>
           <div className="flex items-start mb-1">
-            <span className="text-tertiary text-xs">&nbsp;{getTimeFormatStr(message.timestamp * 1000)}</span>
+            <span className="text-tertiary text-xs">&nbsp;{formatTimeStr(message.timestamp * 1000, {timezone: timeZone, format: timeFormat})}</span>
           </div>
           <ChatMessageRowMenu message={message} me={me}>
             <div className="bg-[#586EAC] rounded p-2.5 text-sm min-h-8 box-border max-w-full overflow-hidden whitespace-normal break-words leading-tight">
@@ -182,7 +184,7 @@ const ChatMessageRow = ({ message, isRevokeMessage, me }: PropsWithChildren<Chat
       <div className="ml-2.5 flex flex-col items-start" style={{ maxWidth: '50%' }}>
         <div className="text-sm leading-[14px] flex items-start mb">
           {message.senderName}
-          <span className="text-tertiary text-xs">&nbsp;{getTimeFormatStr(message.timestamp * 1000)} {timeZone === 'us' ? '[美东]' : ''}</span>
+          <span className="text-tertiary text-xs">&nbsp;{formatTimeStr(message.timestamp * 1000, {timezone: timeZone, format: timeFormat})}</span>
         </div>
         <ChatMessageRowMenu message={message} me={me}>
           <div className="bg-[#2C2C2C] rounded p-2.5 text-sm min-h-8 box-border max-w-full overflow-hidden whitespace-normal break-words leading-tight">

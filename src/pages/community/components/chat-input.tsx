@@ -133,8 +133,8 @@ export const ChatInput = forwardRef<ChatInputInstance, ChatInputProps>((props, r
 
     if (replyMessage) {
       const reply = new Reply()
-      reply.fromUID = self.uid
-      reply.fromName = self.name
+      reply.fromUID = replyMessage.content.senderId
+      reply.fromName = replyMessage.content.senderName
       reply.messageID = replyMessage.content.id
       reply.messageSeq = replyMessage.content.messageSeq
       if (MessageTransform.fromChatMessageToContent(replyMessage.content)) {

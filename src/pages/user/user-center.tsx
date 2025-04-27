@@ -1,4 +1,4 @@
-import { getUser, updateUser } from '@/api'
+import { getUser, transferAppleAccount, updateUser } from '@/api'
 import UserDefaultPng from '@/assets/icon/user_default.png'
 import {
   Button,
@@ -10,15 +10,17 @@ import {
   JknAlert,
   JknAvatar,
   JknIcon,
+  JknModal,
   Separator,
   useFormModal,
   useModal
 } from '@/components'
 import { useToast, useZForm } from '@/hooks'
 import { parseUserPermission, useUser } from '@/store'
+import { appEvent } from "@/utils/event"
 import { uploadUtils } from '@/utils/oss'
 import { useMutation, useQuery } from '@tanstack/react-query'
-import { useUnmount } from 'ahooks'
+import { useMount, useUnmount } from 'ahooks'
 import to from 'await-to-js'
 import copy from 'copy-to-clipboard'
 import dayjs from 'dayjs'
@@ -130,7 +132,7 @@ const UserCenter = () => {
           <div
             className="bg-background border border-solid border-[#50535E] size-6 absolute right-0 bottom-0 rounded-full flex items-center justify-center cursor-pointer"
             onClick={avatarForm.modal.open}
-            onKeyDown={() => {}}
+            onKeyDown={() => { }}
           >
             <JknIcon.Svg name="edit" size={12} className="text-[#50535E]" />
           </div>
@@ -153,7 +155,7 @@ const UserCenter = () => {
           <div
             className="bg-[#E8D9B9] rounded-[30px] text-[#6A4C18] w-[120px] h-[36px] leading-[36px] text-center cursor-pointer"
             onClick={() => navigate('/app/mall')}
-            onKeyDown={() => {}}
+            onKeyDown={() => { }}
           >
             {packages ? '立即续费' : '立即购买'}
           </div>
@@ -179,6 +181,13 @@ const UserCenter = () => {
         </div>
       </div>
       <div className="space-y-12 mt-12">
+        <div className="flex items-center">
+          <span className="text-lg">转移我的 Apple 登录账号</span>
+          <div className="ml-auto text-[#808080]">
+            <AppleLogin />
+          </div>
+        </div>
+
         <div className="flex items-center">
           <span className="text-lg">昵称</span>
           <div className="ml-auto text-[#808080]">
@@ -335,5 +344,75 @@ const AvatarSelect = (props: { onOk: () => void }) => {
     </div>
   )
 }
+
+type AppleLoginResult = {
+  authorization: {
+    code: string
+    id_token: string
+    state: string
+  }
+}
+
+export const AppleLogin = () => {
+  return (
+    <JknModal title="提示" footer={null} trigger={
+      <Button className="bg-accent text-foreground rounded w-[72px] ml-5">
+        转移
+      </Button>
+    }>
+      <AppleLoginModal />
+    </JknModal>
+  )
+}
+
+const AppleLoginModal = () => {
+  useMount(() => {
+    window.AppleID.auth.init({
+      clientId: 'com.jkn.app.web',
+      redirectURI: import.meta.env.PUBLIC_BASE_APPLE_REDIRECT_URI,
+      scope: 'email',
+      state: 'https://www.mgjkn.com/main',
+      nonce: 'xxx',
+      usePopup: true
+    })
+  })
+
+  const refreshUser = useUser(s => s.refreshUser)
+
+  const onClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    e.stopPropagation()
+    e.preventDefault()
+
+    window.AppleID.auth.signIn().then(async (r: AppleLoginResult) => {
+      const { code } = r.authorization
+
+      const [err] = await to(transferAppleAccount(code))
+
+      if (err) {
+        JknAlert.error('未找到旧账号，请联系客服进行处理')
+        return
+      }
+
+      JknAlert.info({
+        content: '旧账号所有权限已经转移到此账号, 请重新登录',
+        onAction: async () => {
+          appEvent.emit('logout')
+        }
+      })
+    })
+
+  }
+
+  return (
+    <div className="text-center w-[500px] px-5 leading-10">
+      <span>由于新版软件不兼容旧版 Apple 账号</span><br />
+      <span>如果你的账号提示无权限内容，请点击下面的 Apple 登录按钮将旧账号的权限转移到新的账号</span>
+      <div className="flex items-center justify-center my-10" onClick={onClick} onKeyDown={() => {}} >
+        <div id="appleid-signin" data-color="black" data-border="true" data-type="sign in" className="h-[64px] cursor-pointer pointer-events-none" />
+      </div>
+    </div>
+  )
+}
+
 
 export default UserCenter

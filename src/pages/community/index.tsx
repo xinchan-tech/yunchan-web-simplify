@@ -12,7 +12,7 @@ import { ChannelTransform, ConversationTransform, MessageTransform } from "./lib
 import WKSDK, { type MessageListener, type ChannelInfoListener, type ConversationListener } from "wukongimjssdk"
 import { VoteMessageContent } from "./lib/types"
 
-WKSDK.shared().register(ChatMessageType.Vote.toString() as unknown as number, () => new VoteMessageContent())
+WKSDK.shared().register(ChatMessageType.Vote, () => new VoteMessageContent())
 
 const CommunityPage = () => {
   const user = useUser(s => s.user)
@@ -28,7 +28,6 @@ const CommunityPage = () => {
   useEffect(() => {
     // 监听会话更新
     const handler: ConversationListener = (e) => {
-      console.log(e)
       ConversationTransform.toSession(e).then(r => {
         chatEvent.emit('updateSession', r)
       })

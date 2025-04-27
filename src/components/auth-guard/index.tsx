@@ -19,11 +19,11 @@ export const AuthGuard = (props: PropsWithChildren) => {
   const showLogin = useRef(false)
 
   useEffect(() => {
-    const handler = () => {
+    const handler = (showToast: Nullable<boolean>) => {
       useToken.getState().removeToken()
       useUser.getState().reset()
 
-      if (!showLogin.current && window.location.pathname !== '/app') {
+      if (!showLogin.current && window.location.pathname !== '/app' && showToast) {
         showLogin.current = true
         JknAlert.info({
           content: '请先登录账号',

@@ -11,11 +11,10 @@ import { useZForm } from "@/hooks"
 import { useEffect } from "react"
 import { FormProvider } from "react-hook-form"
 import { editGroupService } from "@/api"
-import { useUnmount } from "ahooks"
 import { syncChannelInfo } from "../lib/datasource"
 import { chatEvent } from "../lib/event"
 
-const SettingIcon = () => <JknIcon.Svg name="setting" hoverable className="p-1" size={12} />
+const SettingIcon = () => <JknIcon.Svg name="setting" hoverable className="p-1 bg-accent" size={12} />
 // const InfoIcon = () => <JknIcon.Svg name="" hoverable className="p-1.5" />
 
 interface ChannelInfoProps {
@@ -25,7 +24,7 @@ interface ChannelInfoProps {
 export const ChannelInfo = ({ channel }: ChannelInfoProps) => {
 
   return (
-    <JknModal lazy title="社群信息" trigger={<SettingIcon />} footer={null}>
+    <JknModal lazy title="社群信息" trigger={<SettingIcon  />} footer={null}>
       <ChannelInfoCard channel={channel} />
     </JknModal>
   )
