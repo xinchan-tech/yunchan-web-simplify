@@ -11,6 +11,7 @@ import { SystemRecord } from "../components/system-record"
 import { useChatStore } from "../lib/store"
 import { VoteRecord } from "../components/vote-record"
 import { formatTimeStr } from "../lib/utils"
+import { RevokeRecord } from "../components/revoke-record"
 
 interface MessageListProps {
   messages: ChatMessage[]
@@ -126,9 +127,13 @@ const ChatMessageRow = ({ message, isRevokeMessage, me }: PropsWithChildren<Chat
 
   if (isRevokeMessage) {
     return (
-      <div className="text-center my-2.5 text-sm text-tertiary">
-        {isRevokeMessage.senderName} 撤回了一条消息
-      </div>
+      // <div className="text-center my-2.5 text-sm text-tertiary">
+      //   {isRevokeMessage.senderName} 撤回了一条消息
+      // </div>
+      <RevokeRecord 
+        message={message}
+        revokeMessage={isRevokeMessage} 
+      />
     )
   }
 

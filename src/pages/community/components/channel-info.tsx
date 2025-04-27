@@ -61,7 +61,7 @@ const ChannelInfoCard = ({ channel }: { channel: ChatChannel }) => {
   }
 
   return (
-    <div className="w-[668px] h-[590px] box-border px-5">
+    <div className="w-[668px] min-h-[590px] box-border px-5">
       {
         channelInfo.isLoading ? (
           <SkeletonLoading count={12} />
@@ -100,17 +100,17 @@ const ChannelInfoCard = ({ channel }: { channel: ChatChannel }) => {
               />
             </div>
             <div className="mt-4 flex justify-start flex-1">
-              <div className="flex-1">
+              <div className="flex-1 flex flex-col overflow-hidden">
                 <div>群公告</div>
-                <ScrollArea className="h-[280px]">
-                  <pre className="text-sm text-tertiary whitespace-pre-wrap">
+                <div className="flex-1 overflow-y-auto">
+                  <pre className="text-sm text-tertiary whitespace-pre-wrap break-words">
                     {channelInfo.data?.notice || ''}
                   </pre>
-                </ScrollArea>
+                </div>
               </div>
-              <div className="w-64 h-full">
+              <div className="w-64 h-full flex flex-col">
                 <div className="mb-2.5">全部成员</div>
-                <ScrollArea className="border border-solid border-border rounded h-[280px]">
+                <ScrollArea className="border border-solid border-border rounded flex-1">
                   {
                     subscriber.isLoading ? (
                       <SkeletonLoading count={12} />

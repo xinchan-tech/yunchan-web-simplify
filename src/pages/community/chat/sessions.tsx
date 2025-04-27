@@ -9,6 +9,7 @@ import { ChannelInfo } from "../components/channel-info"
 import { cleanUnreadConversation } from "@/api"
 import { Channel } from "wukongimjssdk"
 import { sessionCache } from "../cache"
+import { formatTimeStr } from "../lib/utils"
 
 const statusInfo: Record<ChatConnectStatus, { color: string; text: string }> = {
   [ChatConnectStatus.Disconnect]: {
@@ -127,6 +128,9 @@ export const Sessions = () => {
     })
   }
 
+  const zone = useChatStore(s => s.config.timezone)
+  const format = useChatStore(s => s.config.timeFormat)
+
   return (
     <div>
       <div className="flex items-center text-xs text-tertiary px-2 py-1">
@@ -148,9 +152,6 @@ export const Sessions = () => {
             key={s.channel.id}
             onMouseEnter={() => {
               setHoverChannel(s.channel.id)
-            }}
-            onMouseLeave={() => {
-              setHoverChannel(undefined)
             }}
             className="flex conversation-card overflow-hidden cursor-pointer data-[checked=true]:bg-accent"
             data-checked={s.channel.id === channel?.id}
@@ -188,21 +189,32 @@ export const Sessions = () => {
                 }
               </div>
               <div className="group-last-msg flex justify-between items-center">
-                <div className="flex-1 text-xs text-tertiary text-ellipsis overflow-hidden whitespace-nowrap">
-                  {s.isMentionMe ? <span className="text-destructive">[有人@我]</span> : null}
-                  {
-                    s.message?.type === ChatMessageType.Image || s.message?.type === ChatMessageType.Text ? (
-                      <>{s.message?.senderName}: &nbsp;</>
-                    ) : null
-                  }
-                  {s.message?.type ? {
-                    [ChatMessageType.Cmd]: (s.message as any).cmdType === ChatCmdType.MessageRevoke ? `${s.message?.senderName}撤回了一条消息` : '[系统消息]',
-                    [ChatMessageType.Text]: s.message?.content,
-                    [ChatMessageType.Image]: '[图片]',
-                    [ChatMessageType.System]: '加入群聊',
-                    [ChatMessageType.ChannelUpdate]: s.message?.content,
-                    [ChatMessageType.Vote]: `${s.message.senderName ?? ''}发起了投票：${s.message?.content}`,
-                  }[s.message?.type] : ''}
+                <div className="flex-1 text-xs text-tertiary text-ellipsis overflow-hidden whitespace-nowrap w-full flex items-center">
+                  <span className="flex-1 overflow-hidden text-ellipsis whitespace-nowrap">
+                    {s.isMentionMe ? <span className="text-destructive">[有人@我]</span> : null}
+                    {
+                      s.message?.type === ChatMessageType.Image || s.message?.type === ChatMessageType.Text ? (
+                        <>{s.message?.senderName}: &nbsp;</>
+                      ) : null
+                    }
+                    {s.message?.type ? {
+                      [ChatMessageType.Cmd]: (s.message as any).cmdType === ChatCmdType.MessageRevoke ? `${s.message?.senderName}撤回了一条消息` : '[系统消息]',
+                      [ChatMessageType.Text]: s.message?.content,
+                      [ChatMessageType.Image]: '[图片]',
+                      [ChatMessageType.System]: '加入群聊',
+                      [ChatMessageType.ChannelUpdate]: s.message?.content,
+                      [ChatMessageType.Vote]: `${s.message.senderName ?? ''}发起了投票：${s.message?.content}`,
+                    }[s.message?.type] : ''}
+                  </span>
+                  <span className="ml-auto flex-shrink-0">
+                    &nbsp;
+                    {
+                      formatTimeStr((s.message?.timestamp ?? 0) * 1000, {
+                        timezone: 'local',
+                        format: 'ago'
+                      })
+                    }
+                  </span>
 
                 </div>
               </div>

@@ -1,4 +1,4 @@
-import { getUser, transferAppleAccount, updateUser } from '@/api'
+import { bindInviteCode, getUser, transferAppleAccount, updateUser } from '@/api'
 import UserDefaultPng from '@/assets/icon/user_default.png'
 import {
   Button,
@@ -11,6 +11,9 @@ import {
   JknAvatar,
   JknIcon,
   JknModal,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
   Separator,
   useFormModal,
   useModal
@@ -47,7 +50,8 @@ const UserCenter = () => {
       total_inv: s.user?.total_inv,
       transaction: s.user?.transaction,
       points: s.user?.points,
-      shareUrl: s.user?.share_url
+      shareUrl: s.user?.share_url,
+      show_invite: s.user?.show_invite,
     }))
   )
   const setUser = useUser(s => s.setUser)
@@ -123,6 +127,27 @@ const UserCenter = () => {
   })
 
   const navigate = useNavigate()
+
+  const [inviteCode, setInviteCode] = useState('')
+
+  const bindInviteCodeMutation = useMutation({
+    mutationFn: async (closeCb: () => void) => {
+      await bindInviteCode(inviteCode)
+      closeCb()
+    },
+    onSuccess: () => {
+      toast({
+        description: '绑定成功'
+      })
+    },
+    onError: err => {
+      if (err?.message) {
+        toast({
+          description: err.message
+        })
+      }
+    }
+  })
 
   return (
     <div>
@@ -248,6 +273,50 @@ const UserCenter = () => {
             </Button>
           </div>
         </div>
+
+
+        {user?.show_invite === 1 ? (
+          <div className="flex items-center">
+            <span className="text-lg">填写邀请码</span>
+            <div className="ml-auto text-[#808080]">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <div className="ml-auto text-[#808080]">
+                    <Button
+                      className="bg-accent text-foreground rounded w-[72px] ml-5"
+                    >
+                      填写
+                    </Button>
+                  </div>
+                </PopoverTrigger>
+                <PopoverContent className="w-[200px]">
+                  {action => (
+                    <div className="py-2 px-4 text-center space-y-4">
+                      <div className="text-sm text-center">邀请码</div>
+                      <Input
+                        className="w-full border-transparent bg-accent placeholder:text-tertiary"
+                        placeholder="请输入邀请码"
+                        value={inviteCode}
+                        size="sm"
+                        onChange={e => {
+                          setInviteCode(e.target.value)
+                        }}
+                      />
+                      <Button
+                        loading={bindInviteCodeMutation.isPending}
+                        className="mt-2 px-6"
+                        size="sm"
+                        onClick={() => bindInviteCodeMutation.mutate(action.close)}
+                      >
+                        确定
+                      </Button>
+                    </div>
+                  )}
+                </PopoverContent>
+              </Popover>
+            </div>
+          </div>
+        ) : null}
       </div>
       {edit.context}
       {avatarForm.context}
@@ -407,7 +476,7 @@ const AppleLoginModal = () => {
     <div className="text-center w-[500px] px-5 leading-10">
       <span>由于新版软件不兼容旧版 Apple 账号</span><br />
       <span>如果你的账号提示无权限内容，请点击下面的 Apple 登录按钮将旧账号的权限转移到新的账号</span>
-      <div className="flex items-center justify-center my-10" onClick={onClick} onKeyDown={() => {}} >
+      <div className="flex items-center justify-center my-10" onClick={onClick} onKeyDown={() => { }} >
         <div id="appleid-signin" data-color="black" data-border="true" data-type="sign in" className="h-[64px] cursor-pointer pointer-events-none" />
       </div>
     </div>
