@@ -132,9 +132,10 @@ const HomePage = () => {
             <span onClick={toast} onKeyDown={() => {}}>
               <img src={AndroidDownload} alt="logo" className="h-[46px] w-[196px]" />
             </span>
-            <span onClick={toast} onKeyDown={() => {}}>
+
+            <a href="https://apps.apple.com/us/app/id6744859604?l=zh-Hans-CN">
               <img src={IosDownload} alt="logo" className="h-[46px] w-[196px]" />
-            </span>
+            </a>
           </div>
         </div>
       </div>
