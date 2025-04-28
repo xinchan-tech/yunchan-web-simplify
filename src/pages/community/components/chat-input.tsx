@@ -129,8 +129,6 @@ export const ChatInput = forwardRef<ChatInputInstance, ChatInputProps>((props, r
 
     content.content = mergerContent
 
-    const self = WKSDK.shared().channelManager.getSubscribeOfMe(new Channel(channel!.id, channel!.type))!
-
     if (replyMessage) {
       const reply = new Reply()
       reply.fromUID = replyMessage.content.senderId

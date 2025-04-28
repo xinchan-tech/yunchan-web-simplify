@@ -40,6 +40,7 @@ const userFormSchema = z.object({
 
 const UserCenter = () => {
   const form = useZForm(userFormSchema, { realname: '' })
+  const refreshUser = useUser(s => s.refreshUser)
   const user = useUser(
     useShallow(s => ({
       name: s.user?.realname,
@@ -133,6 +134,7 @@ const UserCenter = () => {
   const bindInviteCodeMutation = useMutation({
     mutationFn: async (closeCb: () => void) => {
       await bindInviteCode(inviteCode)
+      await refreshUser()
       closeCb()
     },
     onSuccess: () => {

@@ -1,5 +1,4 @@
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger, JknVirtualInfinite } from "@/components"
-import { getTimeFormatStr } from "@/pages/groupchat/chat-utils"
 import { type ComponentRef, useCallback, useRef, type PropsWithChildren, useEffect, useMemo } from "react"
 import WKSDK, { MessageStatus } from "wukongimjssdk"
 import { UserAvatar } from "../components/user-avatar"

@@ -148,30 +148,3 @@ const parseText = (raw: string): TextSegments[] => {
 
   return groups
 }
-
-/**
- * 超链接解析
- */
-const hyperlinkParse = (raw: string) => {
-  const reg = /((http|https):\/\/)?([\w-]+\.)+[\w-]+(\/[\w- ./?%&=]*)?/g
-
-  return raw.replace(reg, url => {
-    return `<a href="${url}" target="_blank">&nbsp;${url}&nbsp;</a>`
-  })
-}
-
-/**
- * 股票代码解析
- * $开头
- */
-const stockCodeParse = (raw: string) => {
-  const reg = /\$[A-Za-z\.]{1,6}/g
-
-  return raw.replace(reg, code => {
-    const stockMap = useStockList.getState().listMap
-    if (stockMap[code.slice(1)]) {
-      return `<span class="text-[#8CABFF] cursor-pointer" data-stock-code="${code.slice(1)}">${code}</span>`
-    }
-    return code
-  })
-}

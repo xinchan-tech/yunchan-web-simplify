@@ -2,8 +2,9 @@ import { getVoteDetail, submitVote } from "@/api"
 import { useMutation, useQuery } from "@tanstack/react-query"
 import VoteTitleBg from '@/assets/icon/vote-title-bg.png'
 import dayjs from "dayjs"
-import { Button, JknAlert, JknIcon, ScrollArea, SkeletonLoading, StockView } from "@/components"
+import { Button, JknAlert, JknIcon, ScrollArea, SkeletonLoading, StockPicker, StockSelect, StockView, useModal } from "@/components"
 import { useState, type CSSProperties } from "react"
+import to from "await-to-js"
 
 interface VoteDetailListProps {
   voteId: number
@@ -39,7 +40,7 @@ export const VoteDetailList = (props: VoteDetailListProps) => {
       return
     },
     onSuccess: () => {
-      
+
     },
     onError: (e) => {
       JknAlert.error(e.message)
@@ -48,7 +49,7 @@ export const VoteDetailList = (props: VoteDetailListProps) => {
 
   const [submitId, setSubmitId] = useState<number | null>(null)
   const _submitVote = (id: number) => {
-    if(hasClose){
+    if (hasClose) {
       JknAlert.error('投票已结束')
       return
     }
@@ -71,7 +72,49 @@ export const VoteDetailList = (props: VoteDetailListProps) => {
     })
   }
 
- 
+  const [selectStock, setSelectStock] = useState<string>()
+
+  const StockSelectModal = useModal({
+    title: '新增股票代码',
+    className: 'w-[458px]',
+    content: <div className="px-5 my-4"><StockPicker value={selectStock} onChange={setSelectStock} /></div>,
+    onOk: async () => {
+      if (!selectStock) {
+        JknAlert.error('股票代码不能为空')
+        return false
+      }
+
+      if (detail.data?.items.some(item => item.title === selectStock)) {
+        JknAlert.error('股票代码已存在')
+        return false
+      }
+
+      const [res] = await to(submitVote(props.voteId, [{ title: selectStock, id: 0 }]))
+
+      if(res) {
+        JknAlert.error(res.message)
+    
+        return false
+      }
+
+      await detail.refetch()
+
+      setSelectStock(undefined)
+      StockSelectModal.modal.close()
+      JknAlert.success('新增成功')
+    }
+
+  })
+
+  const onCreate = () => {
+    if(!canVote){
+      JknAlert.error('您已达到最大投票数')
+      return
+    }
+
+    StockSelectModal.modal.open()
+  }
+
 
   return (
     <div className="w-[548px] rounded-lg overflow-hidden">
@@ -126,6 +169,19 @@ export const VoteDetailList = (props: VoteDetailListProps) => {
           )
         }
       </ScrollArea>
+      {
+        detail.data?.custom_item === 1 ? (
+          <div className="bg-white px-5 py-2">
+            <Button block className="border border-solid border-[#DBDBDB] rounded-[12px] h-[60px] text-[#575757]" onClick={onCreate}>
+              <JknIcon.Svg name="plus" />
+              <span>新增股票代码</span>
+            </Button>
+          </div>
+        ) : null
+      }
+      {
+        StockSelectModal.context
+      }
       <style jsx>{`
         .vote-progress::after {
           content: '';

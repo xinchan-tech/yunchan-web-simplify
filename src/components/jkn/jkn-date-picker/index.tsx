@@ -2,22 +2,24 @@ import { Calendar } from '@/components/ui/calendar'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { useBoolean, useMount } from 'ahooks'
 import dayjs from 'dayjs'
-import { type ReactNode,useRef, useState } from 'react'
+import { type ReactNode, useRef, useState } from 'react'
 import type { DayPickerSingleProps } from 'react-day-picker'
 import { JknIcon } from "../jkn-icon"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
+import { usePropValue } from "@/hooks"
 
 interface DatePickerPropsBase {
   onChange?: (date?: string) => void
   children: ReactNode | ((date: string | undefined, action: { open: () => void; close: () => void }) => ReactNode)
   time?: boolean
+  date?: string
 }
 
 type JknDatePickerProps = Omit<DayPickerSingleProps, 'mode'> & DatePickerPropsBase
 
-function JknDatePicker({ children, onChange, time, ...props }: JknDatePickerProps) {
-  const [date, setDate] = useState<string>()
+function JknDatePicker({ children, onChange, date: _date, time, ...props }: JknDatePickerProps) {
+  const [date, setDate] = usePropValue<string>(_date)
   const [open, { setTrue, setFalse }] = useBoolean(false)
   const format = time ? 'YYYY-MM-DD HH:mm' : 'YYYY-MM-DD'
 
@@ -25,7 +27,7 @@ function JknDatePicker({ children, onChange, time, ...props }: JknDatePickerProp
     const oldDate = dayjs(date)
     if (d) {
       let newDate = dayjs(d)
-      if(time){
+      if (time) {
         newDate = newDate.set('hour', oldDate.hour()).set('minute', oldDate.minute())
       }
       setDate(newDate.format(format))
@@ -59,7 +61,8 @@ function JknDatePicker({ children, onChange, time, ...props }: JknDatePickerProp
         <Calendar mode="single" selected={dayjs(date).toDate()} onDayClick={_onSelect} {...props} />
         {
           time ? (
-            <div className="flex items-center justify-end">
+            <div className="flex items-center justify-between px-4">
+              <div className="text-secondary">选择时间：</div>
               <TimePicker value={date} onChange={onChangeTime} />
             </div>
           ) : null
@@ -87,9 +90,9 @@ const TimePicker = ({ onChange, value }: TimePickerProps) => {
   }
 
   return (
-    <Popover open={open} onOpenChange={show => (show ? setTrue() : setFalse())} modal>
+    <Popover open={open} onOpenChange={show => (show ? setTrue() : setFalse())} modal >
       <PopoverTrigger asChild>
-        <div className="inline-flex items-center p-2 rounded hover:bg-accent cursor-pointer mr-4">
+        <div className="inline-flex items-center p-2 rounded hover:bg-accent cursor-pointer">
           <div>{dayjs(value).format('HH:mm')}</div>&nbsp;
           <JknIcon.Svg name="calendar-2" />
         </div>

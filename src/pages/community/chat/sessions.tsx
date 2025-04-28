@@ -1,8 +1,8 @@
-import { JknIcon, JknSearchInput } from "@/components"
+import { JknSearchInput } from "@/components"
 import { chatManager, useChatStore } from "../lib/store"
 import { ChatCmdType, ChatConnectStatus, ChatMessageType, type ChatSession } from "../lib/types"
 import { useChatEvent } from "../lib/event"
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useMemo, useState } from "react"
 import { useImmer } from "use-immer"
 import { UserAvatar } from "../components/user-avatar"
 import { ChannelInfo } from "../components/channel-info"
@@ -64,14 +64,14 @@ export const Sessions = () => {
       if (index !== -1) {
         const ord = draft[index]
         const n = { ...e }
-
         if (lastChannel?.id === e.channel.id) {
           n.unRead = 0
           cleanUnreadConversation(chatManager.toChannel(lastChannel!))
         } else {
           n.unRead = ord.unRead + 1
-
+          n.isMentionMe = ord.isMentionMe || e.isMentionMe
         }
+
         sessionCache.updateOrSave({ ...n })
         draft.splice(index, 1, n)
       }
@@ -124,12 +124,10 @@ export const Sessions = () => {
       const se = draft.find(se => se.channel.id === s.channel.id)
       if (se) {
         se.unRead = 0
+        se.isMentionMe = false
       }
     })
   }
-
-  const zone = useChatStore(s => s.config.timezone)
-  const format = useChatStore(s => s.config.timeFormat)
 
   return (
     <div>

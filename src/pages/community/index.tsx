@@ -11,6 +11,7 @@ import { chatEvent } from "./lib/event"
 import { ChannelTransform, ConversationTransform, MessageTransform } from "./lib/transform"
 import WKSDK, { type MessageListener, type ChannelInfoListener, type ConversationListener } from "wukongimjssdk"
 import { VoteMessageContent } from "./lib/types"
+import { UserAvatar } from "./components/user-avatar"
 
 WKSDK.shared().register(ChatMessageType.Vote, () => new VoteMessageContent())
 
@@ -70,7 +71,7 @@ const CommunityPage = () => {
     <div className="flex h-screen w-screen overflow-hidden">
       <div className="w-[64px] border-r-primary items-stretch flex flex-col">
         <div className="px-2.5 my-2.5">
-          <JknAvatar className="size-12 rounded" title={user?.realname} src={user?.avatar} />
+          <UserAvatar size={48} className="size-12 rounded" name={user?.realname} uid={user?.username ?? ''} src={user?.avatar} shape="square" type="1" />
         </div>
         <div>
           <Menu />

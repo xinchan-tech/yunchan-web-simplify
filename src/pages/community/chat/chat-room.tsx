@@ -5,7 +5,7 @@ import WKSDK, { Channel, Mention, MessageImage, MessageStatus, MessageText, Pull
 import { ChannelTransform, MessageTransform, SubscriberTransform } from "../lib/transform"
 import { channelCache, messageCache, subscriberCache } from "../cache"
 import { useLatestRef } from "@/hooks"
-import { Button, ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger, JknAlert, JknIcon, ScrollArea, useModal } from "@/components"
+import { Button, ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger, JknAlert, JknIcon, RichText, ScrollArea, useModal } from "@/components"
 import { UserAvatar } from "../components/user-avatar"
 import to from "await-to-js"
 import { getVoteList, readChannelNotice, revokeMessage, setChannelManager, setMemberForbidden } from "@/api"
@@ -71,6 +71,7 @@ export const ChatRoom = () => {
       if (channelLast.current?.id !== _channel?.channelID) {
         return
       }
+      // console.log(r)
       return Promise.all(r.map(MessageTransform.toChatMessage))
     }).then(res => {
       if (!res) return
@@ -95,7 +96,7 @@ export const ChatRoom = () => {
       if (channelLast.current?.id !== _channel?.channelID) {
         return
       }
-
+    
       return Promise.all(r.map(MessageTransform.toChatMessage))
     }).then(res => {
       if (!res) return
@@ -134,6 +135,7 @@ export const ChatRoom = () => {
           if (channelLast.current?.id !== _channel?.channelID) {
             return
           }
+          
           const channel = WKSDK.shared().channelManager.getChannelInfo(_channel)
           if (!channel) {
             throw new Error('channel is null')
@@ -382,11 +384,11 @@ export const ChatRoom = () => {
 
 
   const showVoteTips = useMemo(() => {
-    if(channelStatus !== ChatChannelState.Fetched) return false
+    if (channelStatus !== ChatChannelState.Fetched) return false
 
     if (!voteList.data?.items.length) return false
 
-    if(!channel?.id) return false
+    if (!channel?.id) return false
 
     const voteShowOnChannel = voteShow[channel?.id]
 
@@ -467,11 +469,9 @@ export const ChatRoom = () => {
         <div className="flex-shrink-0 w-[240px] border-l-primary flex flex-col">
           <div className="chat-room-notice p-2 box-border  flex-shrink-0 border-b-primary flex flex-col">
             <div className="chat-room-notice-title text-sm py-1">公告</div>
-            <ScrollArea className="h-[164px]">
-              <pre className="text-xs text-tertiary leading-5 whitespace-pre-wrap">
-                {channelInfo?.notice}
-              </pre>
-            </ScrollArea>
+            <div className="h-[164px] overflow-y-auto">
+              <RichText className="text-sm text-secondary" text={channelInfo?.notice ?? ''} />
+            </div>
           </div>
           <div className="chat-room-users h-full flex flex-col overflow-hidden">
             <div className="chat-room-users-title p-2 flex items-center">

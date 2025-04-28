@@ -1,4 +1,4 @@
-import { FormControl, FormField, FormItem, FormLabel, Input, JknAlert, JknAvatar, JknIcon, JknImageUploader, JknModal, ScrollArea, SkeletonLoading, Textarea } from "@/components"
+import { FormControl, FormField, FormItem, FormLabel, Input, JknAlert, JknAvatar, JknIcon, JknImageUploader, JknModal, RichText, ScrollArea, SkeletonLoading, Textarea } from "@/components"
 import type { ChatChannel } from "../lib/types"
 import WKSDK, { Channel } from "wukongimjssdk"
 import { ChannelTransform, SubscriberTransform } from "../lib/transform"
@@ -13,6 +13,7 @@ import { FormProvider } from "react-hook-form"
 import { editGroupService } from "@/api"
 import { syncChannelInfo } from "../lib/datasource"
 import { chatEvent } from "../lib/event"
+import { UserAvatar } from "./user-avatar"
 
 const SettingIcon = () => <JknIcon.Svg name="setting" hoverable className="p-1 bg-accent" size={12} />
 // const InfoIcon = () => <JknIcon.Svg name="" hoverable className="p-1.5" />
@@ -24,7 +25,7 @@ interface ChannelInfoProps {
 export const ChannelInfo = ({ channel }: ChannelInfoProps) => {
 
   return (
-    <JknModal lazy title="社群信息" trigger={<SettingIcon  />} footer={null}>
+    <JknModal lazy title="社群信息" trigger={<SettingIcon />} footer={null}>
       <ChannelInfoCard channel={channel} />
     </JknModal>
   )
@@ -78,8 +79,18 @@ const ChannelInfoCard = ({ channel }: { channel: ChatChannel }) => {
                 }
               </div>
               <GroupTag total={channelInfo.data?.userNum} showMember tags={channelInfo.data?.tags || ''} />
-              <div className="text-sm text-tertiary">
-                {channelInfo.data?.brief || ''}
+              <div className="text-sm text-tertiary max-h-[60px] overflow-y-auto w-full line-clamp-3">
+                <JknModal
+                  trigger={<span className="text-tertiary cursor-pointer"><RichText text={channelInfo.data?.brief || ''} /></span>}
+                  title="社群简介"
+                  background="rgb(0, 0, 0, 0.4)"
+                  className="w-[680px]"
+                  footer={null}
+                  >
+                  <div className="px-5 mb-4 overflow-y-auto h-[460px] leading-5">
+                    <RichText text={channelInfo.data?.brief || ''} />
+                  </div>
+                </JknModal>
               </div>
             </div>
             <div className="mt-4 px-12 text-muted-foreground flex items-center border-0 border-t border-b border-solid border-border py-3">
@@ -99,18 +110,16 @@ const ChannelInfoCard = ({ channel }: { channel: ChatChannel }) => {
                 }}
               />
             </div>
-            <div className="mt-4 flex justify-start flex-1">
+            <div className="mt-4 flex justify-start flex-1 space-x-4 pb-5">
               <div className="flex-1 flex flex-col overflow-hidden">
                 <div>群公告</div>
-                <div className="flex-1 overflow-y-auto">
-                  <pre className="text-sm text-tertiary whitespace-pre-wrap break-words">
-                    {channelInfo.data?.notice || ''}
-                  </pre>
+                <div className="h-[260px] overflow-y-auto">
+                  <RichText className="text-sm text-tertiary whitespace-pre-wrap break-words" text={channelInfo.data?.notice || ''} />
                 </div>
               </div>
               <div className="w-64 h-full flex flex-col">
                 <div className="mb-2.5">全部成员</div>
-                <ScrollArea className="border border-solid border-border rounded flex-1">
+                <ScrollArea className="border border-solid border-border rounded h-[260px]">
                   {
                     subscriber.isLoading ? (
                       <SkeletonLoading count={12} />
@@ -118,8 +127,8 @@ const ChannelInfoCard = ({ channel }: { channel: ChatChannel }) => {
                       <div className="flex flex-col box-border p-2">
                         {
                           subscriber.data?.map(item => (
-                            <div key={item.id} className="flex items-center mb-2.5 hover:bg-accent cursor-pointer">
-                              <JknAvatar className="size-6" src={item.avatar} title={item.name} />&nbsp;
+                            <div key={item.id} className="flex items-center mb-2.5">
+                              <UserAvatar size={24} src={item.avatar} name={item.name} uid={item.id} shape="circle" type="1" />&nbsp;&nbsp;
                               <span className="text-sm">{item.name}</span>
                             </div>
                           ))

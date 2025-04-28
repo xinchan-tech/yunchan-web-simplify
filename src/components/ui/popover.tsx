@@ -39,7 +39,7 @@ const PopoverContent = React.forwardRef<React.ElementRef<typeof PopoverPrimitive
             <div>
               {isFunction(children) ? children({ close: onClose }) : children}
               <VisuallyHidden>
-                <PopoverClose ref={closeButtonRef}></PopoverClose>
+                <PopoverClose ref={closeButtonRef} />
               </VisuallyHidden>
             </div>
           }
