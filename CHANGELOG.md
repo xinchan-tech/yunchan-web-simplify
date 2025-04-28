@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.6.1](https://github.com/xinchan-gx/yunchan-web/compare/2.6.0...2.6.1) (2025-04-28)
+
+### ✨ Features | 新功能
+
+* 优化回复消息显示，添加文本溢出处理 ([76f66ae](https://github.com/xinchan-gx/yunchan-web/commit/76f66aef268780dd65ad2ed11b46fe55b543d0b4))
+
 ## [2.6.0](https://github.com/xinchan-gx/yunchan-web/compare/2.5.7...2.6.0) (2025-04-28)
 
 ### ✨ Features | 新功能
