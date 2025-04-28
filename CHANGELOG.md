@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.7.1](https://github.com/xinchan-gx/yunchan-web/compare/2.7.0...2.7.1) (2025-04-28)
+
+### 🐛 Bug Fixes | Bug 修复
+
+* 修复quote订阅事件 ([81ff70a](https://github.com/xinchan-gx/yunchan-web/commit/81ff70aedf592014fc66b16aca65716cb98c850e))
+
 ## [2.7.0](https://github.com/xinchan-gx/yunchan-web/compare/2.6.1...2.7.0) (2025-04-28)
 
 ### ✨ Features | 新功能
