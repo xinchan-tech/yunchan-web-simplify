@@ -23,7 +23,9 @@ import {
   type ChatSession,
   type ChatSubscriber,
   type ChatSystemMessage,
-  type ChatTextMessage
+  type ChatTextMessage,
+  type ChatVoteMessage,
+  type VoteMessageContent
 } from './types'
 import { fetchUserFromCache } from './utils'
 
@@ -203,7 +205,7 @@ export const MessageTransform = {
       } else if (content.cmd === ChatCmdType.ChannelUpdate) {
         message = {
           ...message,
-          content: content.param.channel_id,
+          content: '',
           type: ChatMessageType.Cmd,
           cmdType: ChatCmdType.ChannelUpdate,
           channelId: content.param.channel_id
@@ -282,6 +284,14 @@ export const MessageTransform = {
         type: ChatMessageType.ChannelUpdate,
         
       } as ChatSystemMessage
+    } else if (+msg.contentType === ChatMessageType.Vote) {
+      const content = msg.content as VoteMessageContent
+      message = {
+        ...message,
+        content: content.title,
+        voteId: content.voteId,
+        type: ChatMessageType.Vote
+      } as ChatVoteMessage
     }
 
     return message

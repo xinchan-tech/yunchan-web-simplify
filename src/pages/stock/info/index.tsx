@@ -40,7 +40,7 @@ import {
 } from '@/hooks'
 import { useTime, useToken } from '@/store'
 import { dateUtils } from '@/utils/date'
-import { type StockSubscribeHandler, stockUtils } from '@/utils/stock'
+import { stockUtils, type SubscribeSnapshotType } from '@/utils/stock'
 import { cn } from '@/utils/style'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import dayjs from 'dayjs'
@@ -75,7 +75,7 @@ const StockInfo = () => {
 
 export default StockInfo
 
-type StockBaseInfoData = Parameters<StockSubscribeHandler<'snapshot'>>[0]['data']
+type StockBaseInfoData = SubscribeSnapshotType['data']
 
 const StockBaseInfo = () => {
   const code = useSymbolQuery()
@@ -161,7 +161,7 @@ const StockBaseInfo = () => {
       <div className="py-1 space-y-3 bg-background">
         <StockQuoteBar
           label="点击查看盘中分时走势"
-          percent={dataInfo ? stockUtils.getPercent(dataInfo) : undefined}
+          percent={dataInfo ? stockUtils.getPercentUnsafe(dataInfo) : undefined}
           close={dataInfo?.close}
           prevClose={dataInfo?.prevClose}
           tradingLabel={trading === 'intraDay' ? '交易中' : '收盘价'}
@@ -177,7 +177,7 @@ const StockBaseInfo = () => {
               <StockQuoteBar
                 label="点击查看分时走势"
                 percent={
-                  dataInfo ? stockUtils.getPercent({ close: dataInfo.extPrice, prevClose: dataInfo.close }) : undefined
+                  dataInfo ? stockUtils.getPercentUnsafe({ close: dataInfo.extPrice, prevClose: dataInfo.close }) : undefined
                 }
                 close={dataInfo?.extPrice}
                 prevClose={dataInfo?.close}
@@ -191,7 +191,7 @@ const StockBaseInfo = () => {
               <StockQuoteBar
                 label="点击查看分时走势"
                 percent={
-                  dataInfo ? stockUtils.getPercent({ close: dataInfo.extPrice, prevClose: dataInfo.close }) : undefined
+                  dataInfo ? stockUtils.getPercentUnsafe({ close: dataInfo.extPrice, prevClose: dataInfo.close }) : undefined
                 }
                 close={dataInfo?.extPrice}
                 prevClose={dataInfo?.close}
@@ -344,10 +344,10 @@ const StockQuote = () => {
   )
 
   useEffect(() => {
-    if (code !== codeInfo?.symbol) {
+    if (code) {
       setCodeInfo(undefined)
     }
-  }, [code, codeInfo])
+  }, [code])
 
   // const [stock, _, __] = codeInfoQuery.data ? stockUtils.toStockWithExt(codeInfoQuery.data) : []
 
@@ -480,8 +480,6 @@ const StockNews = () => {
     return listify(dateGroup, (k, v) => ({ date: k, event: v }))
   }, [newList.data])
 
-  const navigate = useNavigate()
-
   const [expand, setExpand] = useState(false)
 
   return (
@@ -508,7 +506,7 @@ const StockNews = () => {
                     </span>
                     &nbsp; &nbsp;<span className="text-lg font-bold">最新消息</span>
                   </div>
-                  <div className="">
+                  <ScrollArea style={{ height: expand ? 480 : 220 }}>
                     {newGroup.slice(0, expand ? newGroup.length : 2).map((item, index, arr) => (
                       <div
                         key={item.date}
@@ -516,15 +514,18 @@ const StockNews = () => {
                         onKeyDown={() => { }}
                       >
                         <div>
-                          <span className="">{item.date}</span>
+                          <span className="">
+                            {item.date}&nbsp;&nbsp;
+                            <JknIcon name="ic_us" className="size-3" />
+                            &nbsp;美东时间
+                          </span>
                           {item.event.map(event => (
-                            <div key={event.title ?? nanoid(4)} className="flex flex-col mt-3">
-                              <span className="w-full line-clamp-1">{event.title.slice(14)}</span>
+                            <div key={(event.title ?? nanoid(4)) + event.time} className="flex flex-col mt-3">
+                              <span className="w-full line-clamp-1">{event.title}</span>
                               <span className="text-sm text-tertiary mt-1">
                                 发布于&nbsp;
-                                <JknIcon name="ic_us" className="size-3" />
-                                &nbsp;
-                                {dateUtils.toUsDay(event.time).format('美东时间 M月D日 w HH:mm')}
+
+                                {dateUtils.toUsDay(event.time).format('HH:mm')}
                               </span>
                             </div>
                           ))}
@@ -532,13 +533,15 @@ const StockNews = () => {
                         {index !== arr.length - 1 ? <Separator className="mt-4" /> : null}
                       </div>
                     ))}
-                  </div>
+                  </ScrollArea>
                   {newGroup.length > 2 ? (
                     <Button
                       className="bg-[#3D3D3D] text-foreground mt-4 px-4 text-sm"
-                      onClick={() => navigate('/app/calendar')}
+                      onClick={() => setExpand(s => !s)}
                     >
-                      查看更多
+                      {
+                        !expand ? '查看更多' : '收起'
+                      }
                     </Button>
                   ) : null}
                 </div>

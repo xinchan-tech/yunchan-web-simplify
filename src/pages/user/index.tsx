@@ -19,7 +19,7 @@ const UserPage = () => {
   }, [pathname])
   return (
     <div className="w-full h-full overflow-y-auto bg-background leading-none text-foreground">
-      <div className="w-page mx-auto pt-10 h-full box-border flex flex-col">
+      <div className="w-page mx-auto pt-10 pb-10 box-border flex flex-col">
         {title.length === 1 ? (
           <h3 className="text-[32px] flex-shrink-0">个人中心</h3>
         ) : (

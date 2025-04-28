@@ -7,7 +7,7 @@ import { isNumber } from 'radash'
 import { dateUtils } from '../date'
 import { AESCrypt } from '../string'
 import { type Stock, StockRecord, type StockResultRecord, type StockTrading, type StockWithExt } from './stock'
-import type { StockSubscribeHandler } from './subscribe'
+import type { SubscribeQuoteType } from "./subscribe"
 
 /**
  * 判断时间数据
@@ -269,7 +269,7 @@ export const stockUtils = {
   /**
    * 涨幅 能返回infinity和NaN
    */
-  getPercentUnsafe: (stock: Stock, decimal?: number, percent?: boolean): number => {
+  getPercentUnsafe: (stock: Partial<Stock>, decimal?: number, percent?: boolean): number => {
     if (!stock.prevClose || !isNumber(+stock.prevClose)) return Number.NEGATIVE_INFINITY
     let n = Decimal.create(stock.close ?? 0).minus(stock.prevClose).div(stock.prevClose)
 
@@ -341,7 +341,7 @@ export const stockUtils = {
   /**
    * 计算订阅的市场总值
    */
-  getSubscribeMarketValue: (stock: Partial<Stock>, data: Parameters<StockSubscribeHandler<'quoteTopic'>>[0]['record']) => {
+  getSubscribeMarketValue: (stock: Partial<Stock>, data: SubscribeQuoteType['record']) => {
     if (!stock.totalShare) return
     return data.close * stock.totalShare
   },
@@ -349,7 +349,7 @@ export const stockUtils = {
   /**
    * 计算订阅的换手率
    */
-  getSubscribeTurnOverRate: (stock: Partial<Stock>, data: Parameters<StockSubscribeHandler<'quoteTopic'>>[0]['record']) => {
+  getSubscribeTurnOverRate: (stock: Partial<Stock>, data: SubscribeQuoteType['record']) => {
     const marketValue = stockUtils.getSubscribeMarketValue(stock, data)
 
     if (!marketValue) return

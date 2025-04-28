@@ -2,7 +2,29 @@ import { getAllStocks } from '@/api'
 import { useStockList } from '@/store'
 import { useQuery } from '@tanstack/react-query'
 import pako from 'pako'
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
+
+let stockTrie: Trie | null = null
+
+const refreshStockTrie = (stockList: [string, string, string, string][]) => {
+  const trie = new Trie()
+
+  stockList.forEach(item => trie.insert(item[1]))
+
+  if (stockList.length > 0) {
+    stockTrie = trie
+  }
+
+  return trie
+}
+
+const getStockTrie = () => {
+  if (!stockTrie) {
+    return refreshStockTrie(useStockList.getState().list)
+  }
+
+  return stockTrie
+}
 
 export const useStockSearch = (keyword: string) => {
   const stockList = useStockList(s => s.list)
@@ -13,21 +35,16 @@ export const useStockSearch = (keyword: string) => {
     queryKey: [getAllStocks.cacheKey],
     queryFn: () => getAllStocks(stockListKey)
   })
-  // const  = useRef<Trie>(new Trie())
 
-  const trie = useMemo(() => {
-    const trie = new Trie()
-    stockList.forEach(item => trie.insert(item[1]))
-    return trie
-  }, [stockList])
+  const trie = useRef(getStockTrie())
 
   const result = useMemo(() => {
     if (!keyword) {
       return [...stockList]
     }
 
-    return trie.searchPrefix(keyword.toUpperCase()).map(item => stockMap[item])
-  }, [stockMap, keyword, stockList, trie])
+    return trie.current.searchPrefix(keyword.toUpperCase()).map(item => stockMap[item])
+  }, [stockMap, keyword, stockList])
 
   useEffect(() => {
     if (query.data?.key === stockListKey) return
@@ -44,6 +61,7 @@ export const useStockSearch = (keyword: string) => {
       const res = JSON.parse(pako.inflate(dataUint8, { to: 'string' })) as [string, string, string, string][]
       res.sort((a, b) => a[1].localeCompare(b[1]))
       setStockList(res, query.data.key)
+      trie.current = refreshStockTrie(res)
     }
   }, [query.data, setStockList, stockListKey])
 

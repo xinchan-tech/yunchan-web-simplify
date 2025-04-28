@@ -8,6 +8,8 @@ import { Input, type InputProps } from '../ui/input'
 import { Popover, PopoverAnchor, PopoverContent } from '../ui/popover'
 import { ScrollArea } from '../ui/scroll-area'
 
+export { StockPicker } from './picker'
+
 interface StockSelectProps extends Omit<InputProps, 'onChange'> {
   onChange?: (symbol: string) => void
 }
@@ -88,7 +90,7 @@ const StockSelect = ({ onChange, className, width, ...props }: StockSelectProps)
                     className="h-[49px] px-2 border-b-primary flex items-center hover:bg-accent cursor-pointer"
                     key={ele[1]}
                     onClick={() => _onClick(ele[1])}
-                    onKeyDown={() => {}}
+                    onKeyDown={() => { }}
                   >
                     <div className="flex-shrink-0">
                       {ele[0] ? (
@@ -144,7 +146,7 @@ const VirtualStockList = (props: VirtualStockListProps) => {
             className="h-[49px] px-2 border-0 border-b border-solid border-border flex items-center hover:bg-accent cursor-pointer w-48 box-border overflow-hidden"
             key={ele.index}
             onClick={() => props.onClick?.(ele.data[1])}
-            onKeyDown={() => {}}
+            onKeyDown={() => { }}
           >
             <div className="flex-shrink-0">
               {ele.data[0] ? (

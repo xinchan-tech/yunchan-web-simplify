@@ -28,10 +28,10 @@ function Calendar({ className, classNames, showOutsideDays = true, ...props }: C
         table: 'w-full border-collapse space-y-1',
         head_row: 'flex',
         head_cell:
-          'text-muted-foreground rounded-md w-12 h-8 font-normal text-[0.8rem] p-0 flex items-center justify-center',
+          'text-muted-foreground rounded-md w-10 h-10 font-normal text-[0.8rem] p-0 flex items-center justify-center',
         row: 'flex w-full mt-2',
         cell: cn(
-          'relative p-0 text-center w-12 h-12 text-sm flex items-center justify-center bg-transport focus-within:relative focus-within:z-20 [&:has([aria-selected])]:bg-primary [&:has([aria-selected].day-outside)]:bg-primary [&:has([aria-selected].day-range-end)]:rounded-r-md',
+          'relative p-0 text-center w-10 h-10 text-sm flex items-center justify-center bg-transport focus-within:relative focus-within:z-20 [&:has([aria-selected])]:bg-primary [&:has([aria-selected].day-outside)]:bg-primary [&:has([aria-selected].day-range-end)]:rounded-r-md',
           props.mode === 'range'
             ? '[&:has(>.day-range-end)]:rounded-r-md [&:has(>.day-range-start)]:rounded-l-md first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md'
             : '[&:has([aria-selected])]:rounded-md'

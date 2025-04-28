@@ -1,14 +1,14 @@
 import { useCallback, useEffect, useMemo, useState } from "react"
-import { type ChatChannel, ChatChannelState, ChatConnectStatus, type ChatMessage, type ChatSubscriber } from "../lib/types"
-import { useChatStore } from "../lib/store"
+import { type ChatChannel, ChatChannelState, ChatConnectStatus, type ChatMessage, ChatMessageType, type ChatSubscriber } from "../lib/types"
+import { chatManager, useChatStore } from "../lib/store"
 import WKSDK, { Channel, Mention, MessageImage, MessageStatus, MessageText, PullMode, type Reply } from "wukongimjssdk"
 import { ChannelTransform, MessageTransform, SubscriberTransform } from "../lib/transform"
 import { channelCache, messageCache, subscriberCache } from "../cache"
 import { useLatestRef } from "@/hooks"
-import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger, JknAlert, JknIcon, ScrollArea, useModal } from "@/components"
+import { Button, ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger, JknAlert, JknIcon, RichText, ScrollArea, useModal } from "@/components"
 import { UserAvatar } from "../components/user-avatar"
 import to from "await-to-js"
-import { readChannelNotice, revokeMessage, setChannelManager, setMemberForbidden } from "@/api"
+import { getVoteList, readChannelNotice, revokeMessage, setChannelManager, setMemberForbidden } from "@/api"
 import { useImmer } from "use-immer"
 import { MessageList } from "./message-list"
 import { ChatInput } from "../components/chat-input"
@@ -19,7 +19,7 @@ import type { JSONContent } from "@tiptap/react"
 import { useMessageStatusListener } from "../lib/hooks"
 import { syncChannelInfo } from "../lib/datasource"
 import { useCountDown } from "ahooks"
-import { nanoid } from "nanoid"
+import { useQuery } from "@tanstack/react-query"
 
 export const ChatRoom = () => {
   const [channelStatus, setChannelStatus] = useState<ChatChannelState>(ChatChannelState.NotConnect)
@@ -30,9 +30,10 @@ export const ChatRoom = () => {
   const channel = useChatStore(s => s.channel)
   const channelLast = useLatestRef(channel)
   const user = useUser(s => s.user)
+  const voteShow = useChatStore(s => s.chatConfig.voteShow)
 
   const me = useMemo(() => {
-    if (!user) return null
+    if (!user) return undefined
 
     return subscribes?.find(s => s.id === user.username)
   }, [subscribes, user])
@@ -69,12 +70,11 @@ export const ChatRoom = () => {
       if (channelLast.current?.id !== _channel?.channelID) {
         return
       }
-
+      // console.log(r)
       return Promise.all(r.map(MessageTransform.toChatMessage))
     }).then(res => {
       if (!res) return
       messageCache.updateBatch(res, channel)
-
       setMessage(res)
     })
   }, [channel, setMessage, channelLast])
@@ -134,6 +134,7 @@ export const ChatRoom = () => {
           if (channelLast.current?.id !== _channel?.channelID) {
             return
           }
+
           const channel = WKSDK.shared().channelManager.getChannelInfo(_channel)
           if (!channel) {
             throw new Error('channel is null')
@@ -155,6 +156,17 @@ export const ChatRoom = () => {
       })
     }
   }, [chatStatus, channel, channelLast, refreshSubscriber, refreshMessage, setMessage])
+
+  const voteList = useQuery({
+    queryKey: [getVoteList.cacheKey, channel?.id],
+    queryFn: () => getVoteList({
+      channel_account: channel!.id,
+      status: 2,
+      limit: 1,
+      page: 1
+    }),
+    enabled: channel?.id !== undefined,
+  })
 
 
   const onReplayUser = (member: { name: string; id: string }) => {
@@ -286,30 +298,32 @@ export const ChatRoom = () => {
     })
   }
 
-  useEffect(() => {
-    const cancelMessage = chatEvent.on('updateMessage', (message) => {
-      if (message.channel.id !== channel?.id) return
-      setMessage(draft => {
-        draft.push(message)
-      })
+  useChatEvent('updateMessage', useCallback((message) => {
+    const lastChannel = chatManager.getChannel()
 
-      if (message.status === 1) {
-        messageCache.updateOrSave(message)
-      }
+    if (lastChannel?.id !== message.channel.id) return
+
+    setMessage(draft => {
+      draft.push(message)
     })
 
-    const cancelImageUpload = chatEvent.on('imageUploadSuccess', (message) => {
-      setMessage(draft => {
-        const m = draft.find(m => m.clientSeq === message.clientSeq)
-        if (!m) return
-        m.content = message.url
-      })
-    })
-    return () => {
-      cancelMessage()
-      cancelImageUpload()
+    if (message.status === 1) {
+      messageCache.updateOrSave(message)
     }
-  }, [channel, setMessage])
+
+    if (message.type === ChatMessageType.Vote) {
+      voteList.refetch()
+    }
+  }, [setMessage, voteList.refetch]))
+
+  useChatEvent('imageUploadSuccess', useCallback((message) => {
+    setMessage(draft => {
+      const m = draft.find(m => m.clientSeq === message.clientSeq)
+      if (!m) return
+      m.content = message.url
+    })
+  }, [setMessage]))
+
 
   useMessageStatusListener(useCallback((msg) => {
     const m = message.find(m => m.clientSeq === msg.clientSeq)
@@ -340,7 +354,6 @@ export const ChatRoom = () => {
     revokeMessage({ msg_id: e.id })
   }, []))
 
-
   const noticeModal = useModal({
     content: (
       <ChatRoomNotice
@@ -354,7 +367,7 @@ export const ChatRoom = () => {
         }}
       />
     ),
-    className: 'w-[476px]',
+    className: 'w-fit',
     footer: null,
     closeOnMaskClick: false
   })
@@ -369,7 +382,23 @@ export const ChatRoom = () => {
   }, [channelInfo])
 
 
+  const showVoteTips = useMemo(() => {
+    if (channelStatus !== ChatChannelState.Fetched) return false
 
+    if (!voteList.data?.items.length) return false
+
+    if (!channel?.id) return false
+
+    const voteShowOnChannel = voteShow[channel?.id]
+
+    if (!voteShowOnChannel) return true
+
+    if (voteShowOnChannel.voteId !== voteList.data.items[0].id) return true
+
+    if (voteShowOnChannel.show) return true
+
+    return false
+  }, [voteShow, voteList.data, channelStatus, channel])
 
   return (
     <div className="w-full h-full overflow-hidden flex flex-col">
@@ -391,8 +420,35 @@ export const ChatRoom = () => {
           </div>
         </div>
       </div>
-      <div className="flex-1 flex h-full">
-        <div className="flex-1 h-full flex flex-col overflow-hidden">
+      <div className="flex-1 flex h-full relative overflow-hidden">
+        <div className="flex-1 h-full flex flex-col overflow-hidden relative">
+          {
+            showVoteTips && ChatChannelState.Fetched === channelStatus && channelInfo?.inChannel ? (
+              <div className="absolute top-2.5 left-2.5 right-2.5 bg-[#263D35] rounded-[4px] z-10 flex items-center">
+                <div className="absolute -right-2 -top-2 size-4 bg-[#263D35] rounded-full cursor-pointer flex items-center justify-center"
+                  onClick={() => chatManager.hideVote(voteList.data?.items[0].id!, channel!.id)}
+                  onKeyDown={() => { }}
+                >
+                  <JknIcon.Svg name="close" size={8} />
+                </div>
+                <div className="flex-1 overflow-hidden">
+                  {
+                    voteList.data?.items.map(item => (
+                      <div key={item.id} className="text-foreground leading-none p-2.5 w-full box-border">
+                        <div className="text-sm">{item.user_name}发起了投票{item.title}</div>
+                        <div className="text-xs w-full whitespace-nowrap text-ellipsis overflow-hidden mt-1">
+                          {
+                            item.desc
+                          }
+                        </div>
+                      </div>
+                    ))
+                  }
+                </div>
+                <Button className="text-foreground bg-[#089981] px-4 mr-2.5" onClick={() => chatEvent.emit('showVote', voteList.data?.items[0].id!)}>投票</Button>
+              </div>
+            ) : null
+          }
           {
             channelInfo?.inChannel ? (
               <MessageList messages={message} onFetchMore={fetchMoreMessage} hasMore={message[0] && message[0]?.messageSeq > 0} me={me} />
@@ -404,19 +460,17 @@ export const ChatRoom = () => {
             defaultSize={{
               height: 240
             }}
-            className="w-full border-0 border-t border-solid border-accent"
+            className="w-full border-0 border-t border-solid border-accent flex-shrink-0"
           >
-            <ChatInput hasForbidden={me?.hasForbidden ?? false} inChannel={(channelInfo?.inChannel ?? false)} channelReady={ChatChannelState.Fetched === channelStatus} onSubmit={onSubmit} />
+            <ChatInput hasForbidden={me?.hasForbidden ?? false} inChannel={(channelInfo?.inChannel ?? false)} channelReady={ChatChannelState.Fetched === channelStatus} onSubmit={onSubmit} me={me} />
           </Resizable>
         </div>
-        <div className="flex-shrink-0 w-[188px] border-l-primary flex flex-col">
+        <div className="flex-shrink-0 w-[200px] border-l-primary flex flex-col">
           <div className="chat-room-notice p-2 box-border  flex-shrink-0 border-b-primary flex flex-col">
             <div className="chat-room-notice-title text-sm py-1">公告</div>
-            <ScrollArea className="h-[164px]">
-              <pre className="text-xs text-tertiary leading-5">
-                {channelInfo?.notice}
-              </pre>
-            </ScrollArea>
+            <div className="h-[164px] overflow-y-auto">
+              <RichText className="text-sm text-secondary" text={channelInfo?.notice ?? ''} />
+            </div>
           </div>
           <div className="chat-room-users h-full flex flex-col overflow-hidden">
             <div className="chat-room-users-title p-2 flex items-center">
@@ -426,53 +480,56 @@ export const ChatRoom = () => {
               </div>
             </div>
             <ScrollArea className="chat-room-users-list flex-1">
-              {subscribes?.sort((a, b) => +b.type - +a.type).map(member => (
-                <ContextMenu key={member.uid}>
-                  <ContextMenuTrigger asChild>
-                    <div className="chat-room-users-item flex items-center p-2 box-border hover:bg-accent w-full overflow-hidden">
-                      <UserAvatar
-                        src={member.avatar}
-                        name={member.name}
-                        uid={member.id}
-                        className="h-6 w-6"
-                        size="sm" shape="circle" type="1" />
-                      <div className="text-xs leading-6 ml-2 mr-1 flex-1 overflow-hidden text-ellipsis whitespace-nowrap">
-                        {member.name}
+              <div>
+                {subscribes?.sort((a, b) => +b.type - +a.type).map(member => (
+                  <ContextMenu key={member.uid}>
+                    <ContextMenuTrigger asChild>
+                      <div className="chat-room-users-item flex items-center p-2 box-border hover:bg-accent w-full overflow-hidden">
+                        <UserAvatar
+                          src={member.avatar}
+                          name={member.name}
+                          uid={member.id}
+                          className="h-6 w-6"
+                          size="sm" shape="circle" type="1" />
+                        <div className="text-xs leading-6 ml-2 mr-1 flex-1 overflow-hidden text-ellipsis whitespace-nowrap">
+                          {member.name}
+                        </div>
+                        <div className="">
+                          {member.isOwner && <JknIcon name="owner" />}
+                          {member.hasForbidden && <JknIcon name="forbidden" />}
+                          {member.isManager && <JknIcon name="manager" />}
+                        </div>
                       </div>
-                      <div className="">
-                        {member.isOwner && <JknIcon name="owner" />}
-                        {member.hasForbidden && <JknIcon name="forbidden" />}
-                        {member.isManager && <JknIcon name="manager" />}
-                      </div>
-                    </div>
-                  </ContextMenuTrigger>
-                  <ContextMenuContent>
-                    <ContextMenuItem onClick={() => onReplayUser(member)}>
-                      <div className="text-xs text-secondary" onKeyDown={() => { }}>
-                        回复用户
-                      </div>
-                    </ContextMenuItem>
-                    {hasManageAuth(member) && (
-                      <ContextMenuItem onClick={() => onChangeMemberManageAuth(member)}>
+                    </ContextMenuTrigger>
+                    <ContextMenuContent>
+                      <ContextMenuItem onClick={() => onReplayUser(member)}>
                         <div className="text-xs text-secondary" onKeyDown={() => { }}>
-                          {member.isManager ? '取消管理员' : '设为管理员'}
+                          回复用户
                         </div>
                       </ContextMenuItem>
-                    )}
-                    {hasForbiddenAuth(member) && (
-                      <ContextMenuItem
-                        onClick={() => {
-                          onChangeMemberForbiddenAuth(member)
-                        }}
-                      >
-                        <div className="text-xs text-secondary" onKeyDown={() => { }}>
-                          {!member.hasForbidden ? '添加黑名单' : '解除黑名单'}
-                        </div>
-                      </ContextMenuItem>
-                    )}
-                  </ContextMenuContent>
-                </ContextMenu>
-              ))}
+                      {hasManageAuth(member) && (
+                        <ContextMenuItem onClick={() => onChangeMemberManageAuth(member)}>
+                          <div className="text-xs text-secondary" onKeyDown={() => { }}>
+                            {member.isManager ? '取消管理员' : '设为管理员'}
+                          </div>
+                        </ContextMenuItem>
+                      )}
+                      {hasForbiddenAuth(member) && (
+                        <ContextMenuItem
+                          onClick={() => {
+                            onChangeMemberForbiddenAuth(member)
+                          }}
+                        >
+                          <div className="text-xs text-secondary" onKeyDown={() => { }}>
+                            {!member.hasForbidden ? '添加黑名单' : '解除黑名单'}
+                          </div>
+                        </ContextMenuItem>
+                      )}
+                    </ContextMenuContent>
+                  </ContextMenu>
+                ))}
+                <div className="h-12" />
+              </div>
             </ScrollArea>
           </div>
         </div>
@@ -486,21 +543,17 @@ const ChatRoomNotice = ({ notice, onConfirm }: { notice: string; onConfirm: () =
     leftTime: 1000 * 10
   })
   return (
-    <div className="chat-room-notice py-6 px-5">
+    <div className="chat-room-notice py-6 px-5 w-[560px]">
       <div className="chat-room-notice-title text-xl mb-6">尊敬的各位群友</div>
       <div className="bg">
         <div className="mb-4">👉入群请自觉遵守群规:</div>
-        <div className="chat-room-notice-content text-xs text-tertiary leading-5 h-[90px] overflow-y-auto">
-          {
-            notice.split('\n').filter(s => !!s).map(item => (
-              <div key={nanoid()}>{item}</div>
-            ))
-          }
+        <div className="h-[240px] overflow-y-auto">
+          <RichText text={notice} />
         </div>
       </div>
       <div className="text-center">
         <div
-          className="text-base inline-block w-[120px] h-[38px] leading-[38px] mt-4 rounded-[300px] bg-[#575757]"
+          className="text-base inline-block w-[120px] h-[38px] leading-[38px] mt-4 rounded-[300px] bg-[#575757] cursor-pointer"
           onClick={() => countDown <= 0 && onConfirm()}
           onKeyDown={() => { }}
         >

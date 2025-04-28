@@ -1,4 +1,4 @@
-import { loginImService } from '@/api'
+import { cleanUnreadConversation, loginImService } from '@/api'
 import { useUser, useToken } from '@/store'
 import { useMount } from 'ahooks'
 import { useRef, useEffect } from 'react'
@@ -68,11 +68,20 @@ export const useConnectIM = () => {
           .then(r => {
             Promise.all(r.map(v => ConversationTransform.toSession(v)))
               .then(res => {
-              
                 if (!res.some(v => v.channel.id === useChatStore.getState().channel?.id)) {
                   console.warn('Warning: No matching channel found in synced sessions')
                   chatManager.setChannel(res[0].channel)
                 }
+
+                const lastChannel = chatManager.getChannel()
+                res.forEach(v => {
+                  if(v.channel.id === lastChannel?.id) {
+                    v.unRead = 0
+                    v.isMentionMe = false
+                    cleanUnreadConversation(chatManager.toChannel(v.channel))
+                  }
+                })
+
                 chatEvent.emit('syncSession', res)
                 sessionCache.updateBatch(res)
                 chatManager.setState(ChatConnectStatus.Connected)

@@ -138,8 +138,8 @@ const StockFinancials = () => {
         render: (_: any, row) => (
           <SubscribeSpan.Price
             showColor={false}
-            symbol=""
-            subscribe={false}
+            symbol={row.code}
+            subscribe={true}
             initValue={row.price}
             decimal={3}
             initDirection={row.isUp}
@@ -155,8 +155,7 @@ const StockFinancials = () => {
         sort: true,
         render: (_: any, row) => (
           <SubscribeSpan.PercentBlink
-            symbol=""
-            subscribe={false}
+            symbol={row.code}
             decimal={2}
             initValue={row.percent}
             initDirection={row.isUp}
@@ -170,7 +169,15 @@ const StockFinancials = () => {
         align: 'left',
         width: '13.5%',
         sort: true,
-        render: (_: any, row) => Decimal.create(row.turnover).toShortCN(3)
+        render: (_: any, row) => (
+          <SubscribeSpan.TurnoverBlink
+            trading="intraDay"
+            symbol={row.code}
+            decimal={2}
+            initValue={row.turnover}
+            showColor={false}
+          />
+        )
       },
       {
         title: '总市值',
@@ -178,7 +185,16 @@ const StockFinancials = () => {
         align: 'left',
         width: '13.5%',
         sort: true,
-        render: (_: any, row) => Decimal.create(row.total).toShortCN(3)
+        render: (_: any, row) => (
+          <SubscribeSpan.MarketValueBlink
+            trading="intraDay"
+            symbol={row.code}
+            initValue={row.total}
+            decimal={2}
+            totalShare={0}
+            showColor={false}
+          />
+        )
       },
       {
         title: '财报时间',

@@ -21,13 +21,17 @@ export const CacheStoreName = {
   /**
    * 频道存储
    */
-  CHANNEL_STORE: 'community-channel'
+  CHANNEL_STORE: 'community-channel',
+  /**
+   * 草稿存储
+   */
+  DRAFT_STORE: 'community-draft'
 }
 
 export class ChatCache {
   public db: Nullable<IDBPDatabase> = null
   public static DB_NAME = 'community-store'
-  public static DB_VERSION = 11
+  public static DB_VERSION = 13
 
   constructor() {
     openDB(ChatCache.DB_NAME, ChatCache.DB_VERSION, {
@@ -50,7 +54,9 @@ export class ChatCache {
 
         db.createObjectStore(CacheStoreName.USER_STORE, { keyPath: 'uid', autoIncrement: true })
 
-        db.createObjectStore(CacheStoreName.CHANNEL_STORE, { keyPath: 'id', autoIncrement: true })
+        db.createObjectStore(CacheStoreName.CHANNEL_STORE, { keyPath: 'key', autoIncrement: true })
+
+        db.createObjectStore(CacheStoreName.DRAFT_STORE, { keyPath: 'key', autoIncrement: true })
       },
       blocked() {
         console.warn(`conversation db blocked: ${ChatCache.DB_NAME}`)

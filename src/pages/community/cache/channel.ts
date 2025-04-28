@@ -1,31 +1,37 @@
-import { assign } from 'radash'
 import { CacheStoreName, ChatCache } from './db'
 import type { ChatChannel } from "../lib/types"
+import { useUser } from "@/store"
+import { assign } from "radash"
 
 class ChannelCache extends ChatCache {
   public static STORE_NAME = CacheStoreName.CHANNEL_STORE
 
-  private getChannelId(channel: ChatChannel) {
-    return channel.id
+  private getChannelKey(channel: ChatChannel) {
+    const userId = useUser.getState().user?.username
+    return `${channel.id}-${userId}`
   }
 
   async get(uid: string) {
     const db = await this.getDb()
-    const obj = await db.get(ChannelCache.STORE_NAME, uid)
+    const obj = await db.get(ChannelCache.STORE_NAME, this.getChannelKey({ id: uid } as ChatChannel))
 
     return obj as Nullable<ChatChannel>
   }
 
   async updateOrSave(channel: ChatChannel) {
     const db = await this.getDb()
-    const id = this.getChannelId(channel)
-    const _channel = await db.get(ChannelCache.STORE_NAME, id)
-
+    const key = this.getChannelKey(channel)
+    const _channel = await db.get(ChannelCache.STORE_NAME, key)
     if (!_channel) {
-      await db.add(ChannelCache.STORE_NAME, channel)
+      await db.add(ChannelCache.STORE_NAME, {
+        ...channel,
+        key
+      })
     } else {
-      assign(_channel, channel)
-      await db.put(ChannelCache.STORE_NAME, _channel)
+      await db.put(ChannelCache.STORE_NAME, {
+        ...assign(_channel, channel),
+        key
+      })
     }
   }
 
@@ -38,11 +44,15 @@ class ChannelCache extends ChatCache {
     const tx = db.transaction(ChannelCache.STORE_NAME, 'readwrite')
     const store = tx.objectStore(ChannelCache.STORE_NAME)
 
-    await Promise.all(data.map(item => store.delete(this.getChannelId(item))))
+    await Promise.all(data.map(item => store.delete(this.getChannelKey(item))))
 
     await Promise.all(
-      data.map(async user => {
-        await store.add(user)
+      data.map(c => {
+        const k = this.getChannelKey(c)
+        return store.add({
+          ...c,
+          key: k
+        })
       })
     )
   }

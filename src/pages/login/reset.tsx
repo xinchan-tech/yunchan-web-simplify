@@ -56,6 +56,7 @@ export const ResetForm = (props: {
   const { toast } = useToast()
   const queryClient = useQueryClient()
   const refreshUser = useUser(s => s.refreshUser)
+  const setLoginType = useUser(s => s.setLoginType)
 
   const onError: SubmitErrorHandler<RegisterSchema> = err => {
     toast({
@@ -115,6 +116,7 @@ export const ResetForm = (props: {
     mutationFn: async ({ type, data }: { type: string; data: any }) => {
       const r = await (type === 'apple' ? loginByThird('apple', data) : loginByThird('google', data))
       setToken(r.token)
+      setLoginType(type === 'apple' ? 'apple' : 'google')
       await refreshUser()
 
       return r

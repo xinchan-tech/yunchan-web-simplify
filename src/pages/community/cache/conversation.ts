@@ -25,10 +25,9 @@ class SessionCache extends ChatCache {
     const _session = await db.get(SessionCache.CONVERSATION_STORE, id)
 
     if (!_session) {
-      await db.add(SessionCache.CONVERSATION_STORE, session)
+      await db.add(SessionCache.CONVERSATION_STORE, { ...session, id: this.getSessionId(session) })
     } else {
-      assign(_session, session)
-      await db.put(SessionCache.CONVERSATION_STORE, _session)
+      await db.put(SessionCache.CONVERSATION_STORE, { ...session, id: this.getSessionId(session) })
     }
   }
 
@@ -45,6 +44,30 @@ class SessionCache extends ChatCache {
       data.map(async c => {
         store.delete(this.getSessionId(c))
       })
+    )
+
+    await Promise.all(
+      data.map(async conversation => {
+        const id = this.getSessionId(conversation)
+        await store.add({ ...conversation, id })
+      })
+    )
+
+    await tx.done
+  }
+
+  async cleanAndUpdate(data: ChatSession[]) {
+    const db = await this.getDb()
+    const sessions = await this.getSessions()
+
+    /**
+     * 开启事务
+     */
+    const tx = db.transaction(SessionCache.CONVERSATION_STORE, 'readwrite')
+    const store = tx.objectStore(SessionCache.CONVERSATION_STORE)
+
+    await Promise.all(
+      sessions.map(async c => store.delete(this.getSessionId(c)))
     )
 
     await Promise.all(

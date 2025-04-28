@@ -1,4 +1,4 @@
-import { FormControl, FormField, FormItem, FormLabel, Input, JknAlert, JknAvatar, JknIcon, JknImageUploader, JknModal, ScrollArea, SkeletonLoading, Textarea } from "@/components"
+import { FormControl, FormField, FormItem, FormLabel, Input, JknAlert, JknAvatar, JknIcon, JknImageUploader, JknModal, RichText, ScrollArea, SkeletonLoading, Textarea } from "@/components"
 import type { ChatChannel } from "../lib/types"
 import WKSDK, { Channel } from "wukongimjssdk"
 import { ChannelTransform, SubscriberTransform } from "../lib/transform"
@@ -11,11 +11,11 @@ import { useZForm } from "@/hooks"
 import { useEffect } from "react"
 import { FormProvider } from "react-hook-form"
 import { editGroupService } from "@/api"
-import { useUnmount } from "ahooks"
 import { syncChannelInfo } from "../lib/datasource"
 import { chatEvent } from "../lib/event"
+import { UserAvatar } from "./user-avatar"
 
-const SettingIcon = () => <JknIcon.Svg name="setting" hoverable className="p-1" size={12} />
+const SettingIcon = () => <JknIcon.Svg name="setting" hoverable className="p-1 bg-accent" size={12} />
 // const InfoIcon = () => <JknIcon.Svg name="" hoverable className="p-1.5" />
 
 interface ChannelInfoProps {
@@ -23,6 +23,15 @@ interface ChannelInfoProps {
 }
 
 export const ChannelInfo = ({ channel }: ChannelInfoProps) => {
+
+  return (
+    <JknModal lazy title="社群信息" trigger={<SettingIcon />} footer={null}>
+      <ChannelInfoCard channel={channel} />
+    </JknModal>
+  )
+}
+
+const ChannelInfoCard = ({ channel }: { channel: ChatChannel }) => {
   const channelInfo = useQuery({
     queryKey: ['channelInfo', channel.id],
     queryFn: async () => {
@@ -31,6 +40,7 @@ export const ChannelInfo = ({ channel }: ChannelInfoProps) => {
     },
     enabled: !!channel.id
   })
+
   const shareUrl = useUser(s => s.user?.share_url)
 
   const subscriber = useQuery({
@@ -45,85 +55,94 @@ export const ChannelInfo = ({ channel }: ChannelInfoProps) => {
 
   const onSubmit = () => {
     channelInfo.refetch().then(r => {
-      if(r.data){
+      if (r.data) {
         chatEvent.emit('updateChannel', r.data)
       }
     })
   }
 
   return (
-    <JknModal title="社群信息" trigger={<SettingIcon />} footer={null}>
-      <div className="w-[668px] h-[590px] box-border px-5">
-        {
-          channelInfo.isLoading ? (
-            <SkeletonLoading count={12} />
-          ) : (
-            <>
-              <div className="flex w-full flex-col items-center space-y-2.5">
-                <JknAvatar className="size-24" src={channelInfo.data?.avatar} title={channelInfo.data?.name} />
-                <div className="flex items-center">
-                  {channelInfo.data?.name}&nbsp;
-                  {
-                    channelInfo.data?.editable ? (
-                      <EditChannelForm channel={channelInfo.data} onOk={onSubmit} />
-                    ) : null
+    <div className="w-[668px] min-h-[590px] box-border px-5">
+      {
+        channelInfo.isLoading ? (
+          <SkeletonLoading count={12} />
+        ) : (
+          <>
+            <div className="flex w-full flex-col items-center space-y-2.5">
+              <JknAvatar className="size-24" src={channelInfo.data?.avatar} title={channelInfo.data?.name} />
+              <div className="flex items-center">
+                {channelInfo.data?.name}&nbsp;
+                {
+                  channelInfo.data?.editable ? (
+                    <EditChannelForm channel={channelInfo.data} onOk={onSubmit} />
+                  ) : null
+                }
+              </div>
+              <GroupTag total={channelInfo.data?.userNum} showMember tags={channelInfo.data?.tags || ''} />
+              <div className="text-sm text-tertiary max-h-[60px] overflow-y-auto w-full line-clamp-3">
+                <JknModal
+                  trigger={<span className="text-tertiary cursor-pointer"><RichText text={channelInfo.data?.brief || ''} /></span>}
+                  title="社群简介"
+                  background="rgb(0, 0, 0, 0.4)"
+                  className="w-[680px]"
+                  footer={null}
+                  >
+                  <div className="px-5 mb-4 overflow-y-auto h-[460px] leading-5">
+                    <RichText text={channelInfo.data?.brief || ''} />
+                  </div>
+                </JknModal>
+              </div>
+            </div>
+            <div className="mt-4 px-12 text-muted-foreground flex items-center border-0 border-t border-b border-solid border-border py-3">
+              <span className="flex-shrink-0">人数上限：{channelInfo.data?.maxCount ?? '--'}人</span>
+              &emsp;&emsp;&emsp;&emsp;
+              <span className="flex-shrink-0 ml-auto">邀请链接：</span>
+              <span className="line-clamp-1 text-tertiary w-[200px]">{shareUrl}</span>
+              <JknIcon.Svg
+                name="copy"
+                className="text-tertiary cursor-pointer"
+                size={20}
+                onClick={() => {
+                  if (shareUrl) {
+                    copy(`${shareUrl}&cid=${channel.id}`)
+                    JknAlert.success('复制成功')
                   }
-                </div>
-                <GroupTag total={channelInfo.data?.userNum} showMember tags={channelInfo.data?.tags || ''} />
-              </div>
-              <div className="mt-4 px-12 text-muted-foreground flex items-center border-0 border-t border-b border-solid border-border py-3">
-                <span className="flex-shrink-0">人数上限：{channelInfo.data?.maxCount ?? '--'}人</span>
-                &emsp;&emsp;&emsp;&emsp;
-                <span className="flex-shrink-0 ml-auto">邀请链接：</span>
-                <span className="line-clamp-1 text-tertiary w-[200px]">{shareUrl}</span>
-                <JknIcon.Svg
-                  name="copy"
-                  className="text-tertiary cursor-pointer"
-                  size={20}
-                  onClick={() => {
-                    if (shareUrl) {
-                      copy(`${shareUrl}&cid=${channel.id}`)
-                      JknAlert.success('复制成功')
-                    }
-                  }}
-                />
-              </div>
-              <div className="mt-4 flex justify-start flex-1">
-                <div className="flex-1">
-                  <div>群公告</div>
-                  <ScrollArea className="h-[280px]">
-                    <pre className="text-sm text-tertiary">
-                      {channelInfo.data?.notice || ''}
-                    </pre>
-                  </ScrollArea>
-                </div>
-                <div className="w-64 h-full">
-                  <div className="mb-2.5">全部成员</div>
-                  <ScrollArea className="border border-solid border-border rounded h-[280px]">
-                    {
-                      subscriber.isLoading ? (
-                        <SkeletonLoading count={12} />
-                      ) : (
-                        <div className="flex flex-col box-border p-2">
-                          {
-                            subscriber.data?.map(item => (
-                              <div key={item.id} className="flex items-center mb-2.5 hover:bg-accent cursor-pointer">
-                                <JknAvatar className="size-6" src={item.avatar} title={item.name} />&nbsp;
-                                <span className="text-sm">{item.name}</span>
-                              </div>
-                            ))
-                          }
-                        </div>
-                      )
-                    }
-                  </ScrollArea>
+                }}
+              />
+            </div>
+            <div className="mt-4 flex justify-start flex-1 space-x-4 pb-5">
+              <div className="flex-1 flex flex-col overflow-hidden">
+                <div>群公告</div>
+                <div className="h-[260px] overflow-y-auto">
+                  <RichText className="text-sm text-tertiary whitespace-pre-wrap break-words" text={channelInfo.data?.notice || ''} />
                 </div>
               </div>
-            </>
-          )
-        }
-      </div>
-    </JknModal>
+              <div className="w-64 h-full flex flex-col">
+                <div className="mb-2.5">全部成员</div>
+                <ScrollArea className="border border-solid border-border rounded h-[260px]">
+                  {
+                    subscriber.isLoading ? (
+                      <SkeletonLoading count={12} />
+                    ) : (
+                      <div className="flex flex-col box-border p-2">
+                        {
+                          subscriber.data?.map(item => (
+                            <div key={item.id} className="flex items-center mb-2.5">
+                              <UserAvatar size={24} src={item.avatar} name={item.name} uid={item.id} shape="circle" type="1" />&nbsp;&nbsp;
+                              <span className="text-sm">{item.name}</span>
+                            </div>
+                          ))
+                        }
+                      </div>
+                    )
+                  }
+                </ScrollArea>
+              </div>
+            </div>
+          </>
+        )
+      }
+    </div>
   )
 }
 
@@ -163,13 +182,13 @@ export const EditChannelForm = ({ channel, onOk }: EditChannelFormProps) => {
     mutationFn: async () => {
       const r = await form.trigger()
 
-      if(!r){
+      if (!r) {
         throw new Error('请检查输入')
       }
 
       const data = form.getValues()
 
-      const params ={
+      const params = {
         ...data,
         avatar: data.logo,
         account: channel.id,
@@ -223,7 +242,10 @@ export const EditChannelForm = ({ channel, onOk }: EditChannelFormProps) => {
               <FormItem className="pb-4 flex justify-center space-y-0">
                 <FormControl>
                   <JknImageUploader src={field.value} onChange={field.onChange} title="上传社群头像">
-                    <JknAvatar className="size-24" src={field.value}  title={channel.name} />
+                    <div className="relative">
+                      <JknAvatar className="size-24 cursor-pointer" src={field.value} title={channel.name} />
+                      <JknIcon.Svg name="edit" hoverable className="absolute right-1 bottom-0 bg-accent p-1 rounded-full" size={12} />
+                    </div>
                   </JknImageUploader>
                 </FormControl>
               </FormItem>

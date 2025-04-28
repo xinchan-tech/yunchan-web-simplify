@@ -1,6 +1,6 @@
 import { createEvent } from '@/utils/event'
 import type { ChatChannel, ChatMessage, ChatSession, ChatSubscriber, ChatUser } from './types'
-import { useMount, useUnmount } from 'ahooks'
+import { useEffect } from "react"
 
 export type ChatEvent = {
   syncSession: ChatSession[]
@@ -18,16 +18,14 @@ export type ChatEvent = {
   mention: ChatUser
   revoke: ChatMessage
   copy: ChatMessage
+  showVote: number
 }
 
 export const chatEvent = createEvent<ChatEvent>()
 
 export const useChatEvent = <T extends keyof ChatEvent>(event: T, cb: (value: ChatEvent[T]) => void) => {
-  useMount(() => {
-    chatEvent.on(event, cb)
-  })
-
-  useUnmount(() => {
-    chatEvent.off(event, cb)
+  useEffect(() => {
+    const cancel = chatEvent.on(event, cb)
+    return () => cancel()
   })
 }

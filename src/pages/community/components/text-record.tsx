@@ -1,7 +1,7 @@
 
 import { type ChatMessageType, useStockList } from '@/store'
 import { Fragment } from 'react'
-import type { ChatMessageTypes } from "../lib/types"
+import { chatConstants, type ChatMessageTypes } from "../lib/types"
 import { nanoid } from "nanoid"
 
 type TextSegment = {
@@ -19,7 +19,13 @@ export const TextRecord = (props: TextRecordProps) => {
   const { message } = props
   // const content = 
   const texts = parseText(message.content)
-
+  const handleStockClick = (code: string) => {
+    const stockMap = useStockList.getState().listMap
+    if (stockMap[code]) {
+      const channel = new BroadcastChannel(chatConstants.broadcastChannelId)
+      channel.postMessage({ type: 'chat_stock_jump', payload: code })
+    }
+  }
   return (
     <span>
       {
@@ -30,8 +36,8 @@ export const TextRecord = (props: TextRecordProps) => {
                 <Fragment key={nanoid(8)}>
                   {{
                     text: <span className="chat-text-item select-text">{line.text}</span>,
-                    stock: <span className="text-[#8CABFF] cursor-pointer select-text">{line.text}</span>,
-                    hyperlink: <a href={line.text} target="_blank" className="text-[#8CABFF] cursor-pointer select-text" rel="noreferrer">{line.text}</a>
+                    stock: <span className="text-[#8CABFF] cursor-pointer select-text" onClick={() => handleStockClick(line.text.slice(1))} onKeyDown={() => { }}>{line.text}</span>,
+                    hyperlink: <a href={line.text} target="_blank" className="!text-[#8CABFF] cursor-pointer select-text" rel="noreferrer">{line.text}</a>
                   }[line.type]}
                 </Fragment>
               ))
@@ -61,7 +67,7 @@ export const TextRecord = (props: TextRecordProps) => {
 const parseText = (raw: string): TextSegments[] => {
   const groups: TextSegments[] = []
   let segments: TextSegments = []
-
+  const stockMap = useStockList.getState().listMap
   raw.split('\n').forEach(line => {
     let lastSegment: TextSegment | undefined = undefined
     for (let i = 0; i < line.length; i++) {
@@ -90,8 +96,8 @@ const parseText = (raw: string): TextSegments[] => {
           lastSegment.text += char
         }
       } else if (lastSegment.type === 'hyperlink') {
-        // 判断超链接结束
-        if (!/^[A-Za-z0-9\-\.]+$/.test(char)) {
+        // 判断超链接结束,中文为结束
+        if (/[\u4e00-\u9fa5]/.test(char)) {
           segments.push(lastSegment)
           if (char === '$') {
             lastSegment = { type: 'stock', text: char }
@@ -117,14 +123,23 @@ const parseText = (raw: string): TextSegments[] => {
         }
       }
     }
-    
+
 
     if (lastSegment) {
-      if(lastSegment.type === 'stock' && lastSegment.text.length === 1){
+      if (lastSegment.type === 'stock' && lastSegment.text.length === 1) {
         lastSegment.type = 'text'
       }
       segments.push(lastSegment)
     }
+
+    segments.forEach(segment => {
+      if (segment.type === 'stock') {
+        const code = segment.text.slice(1)
+        if (!stockMap[code]) {
+          segment.type = 'text'
+        }
+      }
+    })
 
     groups.push(segments)
     segments = []
@@ -132,31 +147,4 @@ const parseText = (raw: string): TextSegments[] => {
   })
 
   return groups
-}
-
-/**
- * 超链接解析
- */
-const hyperlinkParse = (raw: string) => {
-  const reg = /((http|https):\/\/)?([\w-]+\.)+[\w-]+(\/[\w- ./?%&=]*)?/g
-
-  return raw.replace(reg, url => {
-    return `<a href="${url}" target="_blank">&nbsp;${url}&nbsp;</a>`
-  })
-}
-
-/**
- * 股票代码解析
- * $开头
- */
-const stockCodeParse = (raw: string) => {
-  const reg = /\$[A-Za-z\.]{1,6}/g
-
-  return raw.replace(reg, code => {
-    const stockMap = useStockList.getState().listMap
-    if (stockMap[code.slice(1)]) {
-      return `<span class="text-[#8CABFF] cursor-pointer" data-stock-code="${code.slice(1)}">${code}</span>`
-    }
-    return code
-  })
 }

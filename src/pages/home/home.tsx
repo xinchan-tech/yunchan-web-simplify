@@ -12,9 +12,9 @@ const Home = () => {
             No Trading <br />
             只有趋势图，3秒锁定趋势
           </div>
-          <div className="linear-gradient-1 w-[160px] h-[56px] rounded-[300px] text-xl text-white flex items-center justify-center mt-10 cursor-pointer">
+          <Link to="/app/stock?symbol=QQQ" className="linear-gradient-1 w-[160px] h-[56px] rounded-[300px] text-xl text-white flex items-center justify-center mt-10 cursor-pointer">
             开始使用
-          </div>
+          </Link>
         </div>
         <div>
           <img src={StockKing} alt="" className="h-[860px]" />

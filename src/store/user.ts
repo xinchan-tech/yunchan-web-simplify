@@ -25,6 +25,8 @@ type User = Omit<Awaited<ReturnType<typeof getUser>>, 'permission'> & {
 
 interface UserStore {
   user?: User
+  loginType?: 'account' | 'wechat' | 'apple' | 'google'
+  setLoginType: (type: 'account' | 'wechat' | 'apple' | 'google') => void
   setUser: (user: Partial<User>) => void
   refreshUser: () => Promise<User>
   reset: () => void
@@ -35,6 +37,7 @@ export const useUser = create<UserStore>()(
   persist(
     (set, get) => ({
       user: undefined,
+      loginType: undefined,
       setUser: user => set({ user: Object.assign({}, get().user ?? {}, user) as User }),
       reset: () => set({ user: undefined }),
       refreshUser: async () => {
@@ -69,7 +72,8 @@ export const useUser = create<UserStore>()(
         }
 
         return true
-      }
+      },
+      setLoginType: type => set({ loginType: type })
     }),
     {
       name: 'user',

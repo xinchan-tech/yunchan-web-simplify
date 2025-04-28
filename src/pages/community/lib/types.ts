@@ -1,4 +1,9 @@
-import type { Channel, ChannelInfo, ConnectStatus, Conversation, Message } from 'wukongimjssdk'
+import {
+  MessageContent,
+  type Channel,
+  type ChannelInfo,
+  type Message
+} from 'wukongimjssdk'
 
 export const chatConstants = {
   broadcastChannelId: 'chat-broadcast-channel'
@@ -16,7 +21,8 @@ export enum ChatMessageType {
 
   Cmd = 99,
   System = '1002',
-  ChannelUpdate = 1005
+  ChannelUpdate = 1005,
+  Vote = 612
 }
 
 export enum ChatCmdType {
@@ -44,6 +50,9 @@ export interface ChatStore {
   config: ChatConfig
   channel?: ChatChannel
   usersExpanded: boolean
+  chatConfig: {
+    voteShow: Record<string, { show: boolean; voteId: number }>
+  }
 }
 
 export enum SubscriberType {
@@ -79,7 +88,13 @@ export interface ChatChannel {
   isReadNotice: boolean
 }
 
-export type ChatMessage = ChatSystemMessage | ChatTextMessage | ChatImageMessage | ChatCmdMessage | ChatChannelUpdateMessage
+export type ChatMessage =
+  | ChatSystemMessage
+  | ChatTextMessage
+  | ChatImageMessage
+  | ChatCmdMessage
+  | ChatChannelUpdateMessage
+  | ChatVoteMessage
 export type ChatMessageTypes<T extends ChatMessageType> = T extends ChatMessageType.Text
   ? ChatTextMessage
   : T extends ChatMessageType.Image
@@ -171,6 +186,12 @@ export type ChatChannelUpdateMessage = MessageBase & {
   content: string
 }
 
+export type ChatVoteMessage = MessageBase & {
+  type: ChatMessageType.Vote
+  title: string
+  voteId: number
+}
+
 export interface ChatSession {
   id: string
   channel: ChatChannel
@@ -178,4 +199,35 @@ export interface ChatSession {
   unRead: number
   isMentionMe: boolean
   uid: string
+}
+
+export type ChatDraft = {
+  key: string
+  content: any
+  channel: ChatChannel
+}
+
+export class VoteMessageContent extends MessageContent {
+  cmd!: string
+  title!: string
+  voteId!: number
+  type!: number
+
+  decodeJSON(content: any): void {
+    this.cmd = content.cmd
+    this.title = content.param.title
+    this.voteId = content.param.vote_id
+    this.type = +content.type
+  }
+
+  encodeJSON(): any {
+    return {
+      cmd: this.cmd,
+      params: {
+        title: this.title,
+        vote_id: this.voteId
+      },
+      type: this.type.toString()
+    }
+  }
 }
