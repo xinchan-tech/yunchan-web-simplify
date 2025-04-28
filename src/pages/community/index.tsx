@@ -12,6 +12,7 @@ import { ChannelTransform, ConversationTransform, MessageTransform } from "./lib
 import WKSDK, { type MessageListener, type ChannelInfoListener, type ConversationListener } from "wukongimjssdk"
 import { VoteMessageContent } from "./lib/types"
 import { UserAvatar } from "./components/user-avatar"
+import { appEvent } from "@/utils/event"
 
 WKSDK.shared().register(ChatMessageType.Vote, () => new VoteMessageContent())
 
@@ -25,6 +26,8 @@ const CommunityPage = () => {
       chatEvent.emit('updateMessage', r)
     })
   }, []))
+
+  
 
   useEffect(() => {
     // 监听会话更新
@@ -59,10 +62,23 @@ const CommunityPage = () => {
     }
   })
 
+  useEffect(() => {
+    const handlerLogout = () => {
+      useToken.getState().removeToken()
+      useUser.getState().reset()
+    }
+
+    appEvent.on('logout', handlerLogout)
+
+    return () => {
+      appEvent.off('logout', handlerLogout)
+    }
+  }, [])
+
   if (!token) {
     return (
       <div className="flex h-screen w-screen items-center justify-center">
-
+        当前登录已失效，请到主窗口重新登录
       </div>
     )
   }
@@ -80,7 +96,7 @@ const CommunityPage = () => {
           <Setting />
         </div>
       </div>
-      <div className="flex-1">
+      <div className="flex-1 overflow-hidden">
         <Outlet />
       </div>
     </div>
@@ -90,7 +106,7 @@ const CommunityPage = () => {
 export default CommunityPage
 
 const menus = [
-  { title: '社群', icon: 'group', path: '/community' },
+  { title: '社群', icon: 'group', path: '/chat' },
   // { title: '图文', icon: 'live', path: '/community/live' },
 ]
 

@@ -49,16 +49,20 @@ export const VoteForm = ({ id, channel, onSubmit, onClose }: VoteFormProps) => {
   const queryClient = useQueryClient()
 
   useEffect(() => {
+    // console.log(detail.data)
     if (detail.data) {
       form.setValue('title', detail.data.title)
       form.setValue('desc', detail.data.desc)
       form.setValue('voteLimit', detail.data.vote_limit.toString())
       form.setValue('endTime', dayjs(detail.data.end_time * 1000).format('YYYY-MM-DD HH:mm'))
       form.setValue('custom', detail.data.custom_item)
-      optionsFields.remove()
-      detail.data.items.forEach(item => {
-        optionsFields.append({ title: item.title, id: item.id })
-      })
+      // form.setValue('items', [{title: ''}, {title: '1'}])
+      // optionsFields.remove(0)
+      // console.log(detail.data)
+      // detail.data.items.forEach(item => {
+      //   optionsFields.append({ title: item.title, id: item.id })
+      // })
+      optionsFields.replace(detail.data.items.map(item => ({ title: item.title, id: item.id })))
     }
   }, [detail.data])
 
@@ -76,8 +80,6 @@ export const VoteForm = ({ id, channel, onSubmit, onClose }: VoteFormProps) => {
     name: 'items'
   })
 
-
-
   const submit = useMutation({
     mutationFn: async () => {
       const r = await form.trigger()
@@ -92,7 +94,7 @@ export const VoteForm = ({ id, channel, onSubmit, onClose }: VoteFormProps) => {
         title: data.title,
         items: data.items.map(item => ({
           title: item.title!,
-          id: 0
+          id: item.id ?? 0
         })),
         id,
         channel_account: channel.id,
@@ -165,7 +167,7 @@ export const VoteForm = ({ id, channel, onSubmit, onClose }: VoteFormProps) => {
                   <FormItem className="pb-4 flex justify-center space-y-0">
                     <FormLabel className="text-sm w-28 flex-shrink-0">投票截止时间</FormLabel>
                     <FormControl>
-                      <JknDatePicker time date={field.value} onChange={field.onChange} disabled={e => !dayjs().add(-1, 'day').isBefore(e)} >
+                      <JknDatePicker time date={field.value} onChange={field.onChange} disabled={e => !dayjs().add(-1, 'day').isBefore(e)} popover={{ side: 'left' }}>
                         {
                           (v) => (
                             <div className="h-10 flex w-full items-center justify-end box-border py-2 border border-solid border-input rounded-md px-2">

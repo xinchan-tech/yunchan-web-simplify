@@ -245,7 +245,7 @@ export const ChatInput = forwardRef<ChatInputInstance, ChatInputProps>((props, r
 
 
   return (
-    <div className="chat-room-input h-[180px] relative">
+    <div className="chat-room-input h-full relative flex flex-col">
       {mentionList.length ? (
         <div className="flex items-center absolute text-sm left-0 -top-8 h-8 box-border px-3 leading-8 border-t-primary right-0 bg-[#0a0a0a]">
           <JknIcon.Svg name="close" className="cursor-pointer" size={12} onClick={() => setMentionList([])} />
@@ -272,7 +272,7 @@ export const ChatInput = forwardRef<ChatInputInstance, ChatInputProps>((props, r
           me={props.me}
         />
       </div>
-      <div className="h-[148px] overflow-y-auto box-border p-1 relative ">
+      <div className="flex-1 overflow-y-auto box-border p-1 relative">
         {
           props.channelReady ? (
             <>

@@ -170,9 +170,9 @@ const UserCenter = () => {
         <div>
           <span className="text-xl">{user.name}</span><br/>
           <span className="text-xs text-secondary leading-6">
-            上次登录方式:&nbsp;
+            本次登录方式:&nbsp;
             {{
-              account: '邮箱登录',
+              account: '账号登录',
               apple: 'Apple 登录',
               wechat: '微信登录',
               google: 'Google 登录'

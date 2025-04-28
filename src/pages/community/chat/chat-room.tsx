@@ -19,7 +19,6 @@ import type { JSONContent } from "@tiptap/react"
 import { useMessageStatusListener } from "../lib/hooks"
 import { syncChannelInfo } from "../lib/datasource"
 import { useCountDown } from "ahooks"
-import { nanoid } from "nanoid"
 import { useQuery } from "@tanstack/react-query"
 
 export const ChatRoom = () => {
@@ -71,7 +70,7 @@ export const ChatRoom = () => {
       if (channelLast.current?.id !== _channel?.channelID) {
         return
       }
-      console.log(r)
+      // console.log(r)
       return Promise.all(r.map(MessageTransform.toChatMessage))
     }).then(res => {
       if (!res) return
@@ -421,10 +420,10 @@ export const ChatRoom = () => {
           </div>
         </div>
       </div>
-      <div className="flex-1 flex h-full relative">
+      <div className="flex-1 flex h-full relative overflow-hidden">
         <div className="flex-1 h-full flex flex-col overflow-hidden relative">
           {
-            showVoteTips ? (
+            showVoteTips && ChatChannelState.Fetched === channelStatus && channelInfo?.inChannel ? (
               <div className="absolute top-2.5 left-2.5 right-2.5 bg-[#263D35] rounded-[4px] z-10 flex items-center">
                 <div className="absolute -right-2 -top-2 size-4 bg-[#263D35] rounded-full cursor-pointer flex items-center justify-center"
                   onClick={() => chatManager.hideVote(voteList.data?.items[0].id!, channel!.id)}
@@ -461,12 +460,12 @@ export const ChatRoom = () => {
             defaultSize={{
               height: 240
             }}
-            className="w-full border-0 border-t border-solid border-accent"
+            className="w-full border-0 border-t border-solid border-accent flex-shrink-0"
           >
             <ChatInput hasForbidden={me?.hasForbidden ?? false} inChannel={(channelInfo?.inChannel ?? false)} channelReady={ChatChannelState.Fetched === channelStatus} onSubmit={onSubmit} me={me} />
           </Resizable>
         </div>
-        <div className="flex-shrink-0 w-[240px] border-l-primary flex flex-col">
+        <div className="flex-shrink-0 w-[200px] border-l-primary flex flex-col">
           <div className="chat-room-notice p-2 box-border  flex-shrink-0 border-b-primary flex flex-col">
             <div className="chat-room-notice-title text-sm py-1">公告</div>
             <div className="h-[164px] overflow-y-auto">

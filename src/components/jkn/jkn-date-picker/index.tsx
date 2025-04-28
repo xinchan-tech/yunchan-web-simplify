@@ -14,18 +14,21 @@ interface DatePickerPropsBase {
   children: ReactNode | ((date: string | undefined, action: { open: () => void; close: () => void }) => ReactNode)
   time?: boolean
   date?: string
+  popover?: {
+    side?: 'top' | 'bottom' | 'left' | 'right'
+    sideOffset?: number
+  }
 }
 
 type JknDatePickerProps = Omit<DayPickerSingleProps, 'mode'> & DatePickerPropsBase
 
-function JknDatePicker({ children, onChange, date: _date, time, ...props }: JknDatePickerProps) {
+function JknDatePicker({ children, onChange, date: _date, time, popover, ...props }: JknDatePickerProps) {
   const [date, setDate] = usePropValue<string>(_date)
   const [open, { setTrue, setFalse }] = useBoolean(false)
   const format = time ? 'YYYY-MM-DD HH:mm' : 'YYYY-MM-DD'
 
   const _onSelect = (d?: Date) => {
     const oldDate = dayjs(date || Date.now())
-    console.log(d, oldDate, date)
     if (d) {
       let newDate = dayjs(d)
       if (time) {
@@ -37,7 +40,7 @@ function JknDatePicker({ children, onChange, date: _date, time, ...props }: JknD
       setDate(undefined)
       onChange?.(undefined)
     }
-    setFalse()
+    !time && setFalse()
   }
 
   const onChangeTime = (d?: Date) => {
@@ -58,7 +61,7 @@ function JknDatePicker({ children, onChange, date: _date, time, ...props }: JknD
       <PopoverTrigger asChild>
         {typeof children === 'function' ? children(date, { open: setTrue, close: setFalse }) : children}
       </PopoverTrigger>
-      <PopoverContent className="p-0 w-[360px]" style={{ height: 432 + (time ? 42 : 0) }}>
+      <PopoverContent className="p-0 w-[306px]" style={{ height: 390 + (time ? 42 : 0) }} {...popover}>
         <Calendar mode="single" selected={dayjs(date || Date.now()).toDate()} onDayClick={_onSelect} {...props} />
         {
           time ? (

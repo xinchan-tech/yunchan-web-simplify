@@ -62,7 +62,7 @@ export const LoginForm = (
       if (type === 'username') {
         r = await loginByUsername()
         setLoginType('account')
-      }else{
+      } else {
         r = await (type === 'apple' ? loginByThird('apple', data) : loginByThird('google', data))
         setLoginType(type === 'apple' ? 'apple' : 'google')
       }
@@ -93,10 +93,14 @@ export const LoginForm = (
     }
   })
 
+  const loginType = useUser(s => s.loginType)
+
   return (
     <>
       <div className="login-content h-full w-[371px] box-border flex flex-col">
-        <p className="text-[32px] mb-12">欢迎登录</p>
+        <p className="text-[32px] mb-12">
+          欢迎登录
+        </p>
         <Form {...form}>
           <form className="space-y-5 text-foreground">
             <FormField
@@ -131,13 +135,25 @@ export const LoginForm = (
                       type="password"
                     />
                   </FormControl>
-                  <div
-                    className="text-right text-sm cursor-pointer"
-                    onClick={() => props.setPage('resetPassword')}
-                    onKeyDown={() => { }}
-                  >
-                    忘记密码？
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-tertiary leading-6">
+                      上次登录方式:&nbsp;
+                      {{
+                        account: '账号登录',
+                        apple: 'Apple 登录',
+                        wechat: '微信登录',
+                        google: 'Google 登录'
+                      }[loginType ?? 'account']}
+                    </span>
+                    <span
+                      className="text-right text-sm cursor-pointer"
+                      onClick={() => props.setPage('resetPassword')}
+                      onKeyDown={() => { }}
+                    >
+                      忘记密码？
+                    </span>
                   </div>
+
                 </FormItem>
               )}
             />

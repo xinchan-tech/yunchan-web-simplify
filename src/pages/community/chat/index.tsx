@@ -21,10 +21,10 @@ const ChatPage = () => {
 
   return (
     <div className="w-full h-full flex">
-      <div className="w-[240px] h-full border-0 border-x border-solid border-border bg-[#161616]">
+      <div className="w-[200px] h-full border-0 border-x border-solid border-border bg-[#161616]">
         <Sessions />
       </div>
-      <div className="flex-1">
+      <div className="flex-1 overflow-hidden">
         <ChatRoom />
       </div>
       {

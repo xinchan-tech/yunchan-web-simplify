@@ -70,7 +70,7 @@ const MenuRight = () => {
         window.open(
           `${window.location.origin}/chat`,
           "whatever",
-          "hideit,height=750,width=1200,resizable=yes,scrollbars=yes,status=no,location=no"
+          "hideit,height=850,width=1200,resizable=yes,scrollbars=yes,status=no,location=no"
         )
         return
       } else {
