@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.7.2](https://github.com/xinchan-gx/yunchan-web/compare/2.7.1...2.7.2) (2025-04-28)
+
+### ✨ Features | 新功能
+
+* 添加totalShare字段并更新相关逻辑 ([d149f51](https://github.com/xinchan-gx/yunchan-web/commit/d149f514b42ffe703610c97d94515ff91369ba25))
+* 添加totalShare字段并更新相关逻辑 ([e062fea](https://github.com/xinchan-gx/yunchan-web/commit/e062fea41847a3bf600143accfdc892803a509f6))
+
 ## [2.7.1](https://github.com/xinchan-gx/yunchan-web/compare/2.7.0...2.7.1) (2025-04-28)
 
 ### 🐛 Bug Fixes | Bug 修复
