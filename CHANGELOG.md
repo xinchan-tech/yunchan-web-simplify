@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.7.0](https://github.com/xinchan-gx/yunchan-web/compare/2.6.1...2.7.0) (2025-04-28)
+
+### ✨ Features | 新功能
+
+* 更新下载链接，添加iOS应用下载入口 ([abfa1a1](https://github.com/xinchan-gx/yunchan-web/commit/abfa1a1e4f3145d1c39a223d77bc2966a83e722a))
+
 ## [2.6.1](https://github.com/xinchan-gx/yunchan-web/compare/2.6.0...2.6.1) (2025-04-28)
 
 ### ✨ Features | 新功能
