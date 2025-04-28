@@ -51,7 +51,7 @@ export class QuoteBuffer extends LatestValueBuffer<SubscribeQuoteType> {
 
   handleData(data: Record<string, SubscribeQuoteType>): void {
     Object.entries(data).forEach(([key, value]) => {
-      this.event.emit(`${this.topic}@${key}` as SubscribeTopic.QuoteTopic, value)
+      this.event.emit(`${this.topic}:${key}` as SubscribeTopic.QuoteTopic, value)
     })
 
     this.event.emit(this.topic as SubscribeTopic.Quote, data)
