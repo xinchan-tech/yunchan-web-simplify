@@ -26,6 +26,7 @@ type TableDataType = {
   collect: 1 | 0
   key: string
   bull: string
+  totalShare: number
 }
 
 interface StockTableProps {
@@ -72,7 +73,8 @@ const StockTable = (props: StockTableProps) => {
           bottom: item.indicator_name_hdly,
           prePercent: stockUtils.getPercentUnsafe(beforeData),
           afterPercent: stockUtils.getPercentUnsafe(afterData),
-          collect: lastData.extend?.collect ?? 0
+          collect: lastData.extend?.collect ?? 0,
+          totalShare: lastData.extend?.total_share ?? 0
         }
       })
     )
@@ -220,12 +222,13 @@ const StockTable = (props: StockTableProps) => {
         align: 'left',
         sort: true,
         render: (total, row) => (
-          <SubscribeSpan.TurnoverBlink
+          <SubscribeSpan.MarketValueBlink
             trading="intraDay"
             symbol={row.symbol}
             decimal={2}
             initValue={total}
             showColor={false}
+            totalShare={row.totalShare}
           />
         )
       },
