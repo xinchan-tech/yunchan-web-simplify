@@ -1,5 +1,19 @@
 # Changelog
 
+## [2.6.0](https://github.com/xinchan-gx/yunchan-web/compare/2.5.7...2.6.0) (2025-04-28)
+
+### ✨ Features | 新功能
+
+* 更新财务数据表格，增强价格、百分比、成交量和市值的显示逻辑 ([db68c93](https://github.com/xinchan-gx/yunchan-web/commit/db68c93aa190c4197ffab0186a70e9762e6315bd))
+* 更新日期选择器，添加弹出框位置配置；调整菜单右侧窗口高度；优化日历组件样式；修复聊天房间和社区页面布局；增强聊天输入组件的灵活性；更新投票表单逻辑，支持动态项目替换；调整登录页面显示上次登录方式；优化用户中心显示登录方式 ([bda657a](https://github.com/xinchan-gx/yunchan-web/commit/bda657af31a0527e0c54021f46e9808d2feec503))
+* 更新投票功能，添加用户名称，优化投票选项验证逻辑 ([d1623a7](https://github.com/xinchan-gx/yunchan-web/commit/d1623a7e1a3db8fbdc02efdeb283855855e8931d))
+* 添加 Apple 登录账号转移功能，优化用户中心相关逻辑 ([71cdb28](https://github.com/xinchan-gx/yunchan-web/commit/71cdb28747b62584de681d340f077969ec0c52f0))
+* 添加邀请码绑定功能，优化用户中心界面 ([e7bd0df](https://github.com/xinchan-gx/yunchan-web/commit/e7bd0dfe6e1b3030abf6510d5151e1316ae83555))
+* add draft storage and management in community chat ([6ee44d5](https://github.com/xinchan-gx/yunchan-web/commit/6ee44d5654ac60e0237f4965e59610952bbb6df0))
+* Add RichText component for enhanced text rendering and parsing ([fa36882](https://github.com/xinchan-gx/yunchan-web/commit/fa36882bbb053120b27970656a5cfcd4548ad665))
+* add voting functionality with detailed vote list and record components ([0483c43](https://github.com/xinchan-gx/yunchan-web/commit/0483c43f7005d128705c144ce611e6bc45cbde46))
+* Refactor stock subscription system ([7ad378c](https://github.com/xinchan-gx/yunchan-web/commit/7ad378c8dab92029c0a9da042a005e932cb88863))
+
 ## [2.5.7](https://github.com/xinchan-gx/yunchan-web/compare/2.5.6...2.5.7) (2025-04-24)
 
 ### ✨ Features | 新功能
