@@ -24,14 +24,15 @@ const voteSchema = z.object({
     id: z.number().optional()
   })).min(1, { message: "投票选项不能为空" })
     .refine((data) => {
-      const titles = data.map(item => item.title)
-      return new Set(titles).size === titles.length
-    }, { message: "投票选项不能重复" })
-    .refine((data) => {
       return data.every(item => item.title && item.title.length > 0)
     }, {
       message: "投票选项不能为空"
-    }),
+    })
+    .refine((data) => {
+      const titles = data.map(item => item.title)
+      return new Set(titles).size === titles.length
+    }, { message: "投票选项不能重复" })
+  ,
   endTime: z.string().min(1, { message: "投票截止时间不能为空" }),
   custom: z.number({ message: '自定义选项不能为空' }).default(0)
 })
@@ -104,8 +105,8 @@ export const VoteForm = ({ id, channel, onSubmit, onClose }: VoteFormProps) => {
 
       await createVote(params)
 
-      if(id){
-        queryClient.invalidateQueries({queryKey: [getVoteDetail.cacheKey, id]})
+      if (id) {
+        queryClient.invalidateQueries({ queryKey: [getVoteDetail.cacheKey, id] })
       }
       onSubmit?.(data)
     },
@@ -245,7 +246,7 @@ export const VoteForm = ({ id, channel, onSubmit, onClose }: VoteFormProps) => {
         </Button>
         <Button className="w-24 box-border " onClick={() => submit.mutate()} loading={submit.isPending}>
           {
-            id ? '修改投票': '发起投票'
+            id ? '修改投票' : '发起投票'
           }
         </Button>
       </div>
@@ -262,7 +263,7 @@ interface VoteStockPickerProps {
 }
 
 const VoteStockPicker = ({ index, value, onChange, onAdd, onDelete }: VoteStockPickerProps) => {
-  console.log(value, 11)
+
   return (
     <div className="flex-1 w-full h-10 flex items-center box-border py-2 border border-solid border-input rounded-md px-4">
       <StockPicker value={value} onChange={onChange} className="border-none p-0" outline={false} />

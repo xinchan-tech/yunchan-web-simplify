@@ -137,7 +137,7 @@ export const VoteDetailList = (props: VoteDetailListProps) => {
           投票说明
         </div>
       </div>
-      <ScrollArea className="py-4 h-[680px] w-full bg-white">
+      <ScrollArea className="py-4 max-h-[680px] h-[50vh] w-full bg-white">
         {
           detail.isLoading ? (
             <SkeletonLoading count={8} />
@@ -170,7 +170,7 @@ export const VoteDetailList = (props: VoteDetailListProps) => {
         }
       </ScrollArea>
       {
-        detail.data?.custom_item === 1 ? (
+        detail.data?.custom_item === 1 && !hasClose ? (
           <div className="bg-white px-5 py-2">
             <Button block className="border border-solid border-[#DBDBDB] rounded-[12px] h-[60px] text-[#575757]" onClick={onCreate}>
               <JknIcon.Svg name="plus" />

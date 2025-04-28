@@ -28,6 +28,7 @@ export const LoginForm = (
   const { toast } = useToast()
   const queryClient = useQueryClient()
   const refreshUser = useUser(s => s.refreshUser)
+  const setLoginType = useUser(s => s.setLoginType)
 
   const onLoginSuccess = () => {
 
@@ -60,8 +61,10 @@ export const LoginForm = (
       let r = null
       if (type === 'username') {
         r = await loginByUsername()
+        setLoginType('account')
       }else{
         r = await (type === 'apple' ? loginByThird('apple', data) : loginByThird('google', data))
+        setLoginType(type === 'apple' ? 'apple' : 'google')
       }
 
       setToken(r.token)

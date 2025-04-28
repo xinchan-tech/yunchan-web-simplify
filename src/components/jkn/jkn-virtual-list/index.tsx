@@ -1,6 +1,7 @@
 import { JknInfiniteArea, ScrollArea, Skeleton } from '@/components'
 import { type VirtualItem, type Virtualizer, useVirtualizer } from '@tanstack/react-virtual'
 import { useVirtualList } from 'ahooks'
+import { nanoid } from "nanoid"
 import {
   type ComponentProps,
   type ComponentRef,
@@ -52,8 +53,10 @@ export const JknVirtualList = <T,>({
   )
 }
 
-interface JknVirtualInfiniteProps<T> extends JknVirtualListProps<T>, ComponentProps<typeof JknInfiniteArea> {
+interface JknVirtualInfiniteProps<T> extends Omit<JknVirtualListProps<T>, 'onScroll'>, ComponentProps<typeof JknInfiniteArea> {
   autoBottom?: boolean
+  onScrollToTop?: (range: { startIndex?: number; endIndex?: number }) => void
+  onScrollToBottom?: (range: { startIndex?: number; endIndex?: number }) => void
 }
 
 interface JknVirtualInfiniteIns {
@@ -64,7 +67,7 @@ interface JknVirtualInfiniteIns {
 
 export const JknVirtualInfinite = forwardRef<JknVirtualInfiniteIns, JknVirtualInfiniteProps<any>>(
   (
-    { data, itemHeight, renderItem, overscan = 20, className, rowKey, onScroll, autoBottom, loading, ...props },
+    { data, itemHeight, renderItem, overscan = 20, className, rowKey, onScrollToTop, onScrollToBottom, autoBottom, loading, ...props },
     ref
   ) => {
     const containerRef = useRef<ComponentRef<typeof JknInfiniteArea>>(null)
@@ -75,23 +78,19 @@ export const JknVirtualInfinite = forwardRef<JknVirtualInfiniteIns, JknVirtualIn
         containerRef.current?.getContainer()?.querySelector('[data-radix-scroll-area-viewport]') ?? null,
       estimateSize: () => itemHeight,
       enabled: true,
-      initialOffset: autoBottom ? Number.MAX_SAFE_INTEGER: 0,
-      paddingEnd: 24
-    })
+      getItemKey: (index) => rowKey ? ((data[index] as any)[rowKey as any] ?? index) : index,
+      onChange: (v, sync) => {
+        if (sync) {
+          if (v.range?.startIndex === 0) {
+            onScrollToTop?.(v.range)
+          }
 
-    // useLayoutEffect(() => {
-    //   if (autoBottom) {
-    //     const items = virtualizer.getVirtualItems()
-    //     const currentLastItems = items[items.length - 1]?.index
-    //     const firstItems = items[0]?.index
-    //     if (firstItems === 0) {
-    //       virtualizer.scrollToIndex(data.length - 1)
-    //     }
-    //     if (data.length > 0 && currentLastItems >= data.length - 2) {
-    //       virtualizer.scrollToIndex(data.length - 1)
-    //     }
-    //   }
-    // }, [data, virtualizer.scrollToIndex, autoBottom, virtualizer.getVirtualItems])
+          if (v.range?.endIndex === data.length - 1) {
+            onScrollToBottom?.(v.range)
+          }
+        }
+      }
+    })
 
     useImperativeHandle(
       ref,

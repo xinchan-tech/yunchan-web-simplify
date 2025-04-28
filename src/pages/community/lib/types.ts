@@ -2,8 +2,6 @@ import {
   MessageContent,
   type Channel,
   type ChannelInfo,
-  type ConnectStatus,
-  type Conversation,
   type Message
 } from 'wukongimjssdk'
 
@@ -201,6 +199,12 @@ export interface ChatSession {
   unRead: number
   isMentionMe: boolean
   uid: string
+}
+
+export type ChatDraft = {
+  key: string
+  content: any
+  channel: ChatChannel
 }
 
 export class VoteMessageContent extends MessageContent {

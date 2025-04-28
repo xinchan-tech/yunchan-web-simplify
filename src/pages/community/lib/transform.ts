@@ -205,7 +205,7 @@ export const MessageTransform = {
       } else if (content.cmd === ChatCmdType.ChannelUpdate) {
         message = {
           ...message,
-          content: content.param.channel_id,
+          content: '',
           type: ChatMessageType.Cmd,
           cmdType: ChatCmdType.ChannelUpdate,
           channelId: content.param.channel_id

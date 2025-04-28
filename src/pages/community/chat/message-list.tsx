@@ -1,5 +1,5 @@
-import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger, JknVirtualInfinite } from "@/components"
-import { type ComponentRef, useCallback, useRef, type PropsWithChildren, useEffect, useMemo } from "react"
+import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger, JknIcon, JknVirtualInfinite } from "@/components"
+import { type ComponentRef, useCallback, useRef, type PropsWithChildren, useMemo, useLayoutEffect, useState } from "react"
 import WKSDK, { MessageStatus } from "wukongimjssdk"
 import { UserAvatar } from "../components/user-avatar"
 import { chatEvent } from "../lib/event"
@@ -21,45 +21,59 @@ interface MessageListProps {
 export const MessageList = ({ messages, onFetchMore, hasMore, me }: MessageListProps) => {
   // const [innerMessages, setInnerMessages] = useImmer<ChatMessage[]>(messages)
   const scrollRef = useRef<ComponentRef<typeof JknVirtualInfinite>>(null)
-  const lastMessages = useRef<ChatMessage[]>(messages)
+  const lastMessageRange = useRef<Nullable<{ index: number, data: ChatMessage }>>()
+  const [showToBottom, setShowToBottom] = useState(false)
 
-  useEffect(() => {
-    const lastMessageLast = lastMessages.current[lastMessages.current.length - 1]
-    const messageLast = messages[messages.length - 1]
 
-    if (!messageLast && !lastMessageLast) {
-      lastMessages.current = messages
+  useLayoutEffect(() => {
+    const virtual = scrollRef.current?.getVirtualizer()
+    if (!virtual) return
+    if (!messages.length) {
+      lastMessageRange.current = null
+      virtual.scrollToOffset(Number.MAX_SAFE_INTEGER, { align: 'start' })
       return
     }
 
-    if (lastMessageLast?.id === messageLast?.id) {
-      const offsetLen = messages.length - lastMessages.current.length
-
-      if (offsetLen > 0) {
-        const virtual = scrollRef.current?.getVirtualizer()
-        if (virtual) {
-          virtual.scrollToIndex(offsetLen, { align: 'start' })
-        }
-      }
-
-    } else {
-      const virtual = scrollRef.current?.getVirtualizer()
-      if (virtual) {
-        if (lastMessages.current.length === 0 && messages.length > 0) {
-          virtual.scrollToIndex(messages.length, { align: 'end' })
-        }
-
-        const items = virtual.getVirtualItems()
-
-        const currentLastItems = items[items.length - 1]?.index
-
-        if (currentLastItems >= messages.length - 1) {
-          virtual.scrollToIndex(messages.length - 1, { align: 'end' })
-        }
-      }
+    if (lastMessageRange.current === null) {
+      virtual.scrollToIndex(messages.length, { align: 'end' })
+      lastMessageRange.current = { index: messages.length, data: messages[messages.length - 1] }
+      return
     }
 
-    lastMessages.current = messages
+    if (lastMessageRange.current?.index === 0) {
+      const idx = messages.findIndex(v => v.id === lastMessageRange.current?.data.id)
+
+      if (idx === -1) return
+
+      if(idx === 0) return
+
+      virtual.scrollToIndex(idx, { align: 'start' })
+      lastMessageRange.current = { index: idx, data: messages[idx] }
+      return
+    }
+
+    const virtualLast = virtual.getVirtualItems()[virtual.getVirtualItems().length - 1]?.index
+
+    if (!virtualLast) return
+
+    if (virtualLast >= messages.length - 1) {
+      virtual.scrollToIndex(messages.length - 1, { align: 'end' })
+      lastMessageRange.current = { index: messages.length - 1, data: messages[messages.length - 1] }
+    } else {
+      setShowToBottom(true)
+    }
+
+  }, [messages])
+
+  const toBottomMessage = useCallback(() => {
+    const virtual = scrollRef.current?.getVirtualizer()
+    if (!virtual) return
+
+    if (messages.length > 0) {
+      virtual.scrollToIndex(messages.length - 1, { align: 'end' })
+      lastMessageRange.current = { index: messages.length - 1, data: messages[messages.length - 1] }
+      setShowToBottom(false)
+    }
   }, [messages])
 
   const revokeMessage = useMemo(() => {
@@ -76,23 +90,42 @@ export const MessageList = ({ messages, onFetchMore, hasMore, me }: MessageListP
 
   }, [messages])
 
+  const onScrollToTop = useCallback((e: { startIndex?: number, endIndex?: number }) => {
+    lastMessageRange.current = {
+      index: e.startIndex ?? 0,
+      data: messages[e.startIndex ?? 0]
+    }
+  }, [messages])
+
   return (
-    <>
+    <div className="flex-1 w-full relative overflow-hidden">
       <JknVirtualInfinite
-        className="w-full flex-1 chat-message-scroll-list"
+        className="size-full chat-message-scroll-list"
         itemHeight={44}
         ref={scrollRef}
-        rowKey="messageID"
+        rowKey="id"
         data={messages ?? []}
         hasMore={hasMore}
         direction="up"
+        onScrollToTop={onScrollToTop}
+        onScrollToBottom={() => setShowToBottom(false)}
+        key="id"
         autoBottom
         fetchMore={onFetchMore}
         renderItem={(msg: ChatMessage) => (
           <ChatMessageRow key={msg.id} message={msg} isRevokeMessage={revokeMessage[msg.id]} me={me} />
         )}
       />
-    </>
+      {
+        showToBottom ? (
+          <div className="absolute bottom-3 right-3 flex justify-center items-center rounded-[300px] cursor-pointer bg-[#586eac]  text-xs px-3 py-1" onClick={toBottomMessage} onKeyDown={() => { }}>
+            <span>新消息</span>
+            &nbsp;
+            <JknIcon.Svg name="arrow-down" size={12} />
+          </div>
+        ) : null
+      }
+    </div>
   )
 }
 
@@ -109,18 +142,26 @@ const ChatMessageRow = ({ message, isRevokeMessage, me }: PropsWithChildren<Chat
   const isSelfMessage = message.senderId === uid
 
   if (message.type === ChatMessageType.Cmd || message.type === ChatMessageType.System) {
+    // if(message.type === ChatMessageType.Cmd && message.cmdType === ChatCmdType.ChannelUpdate) {
+    //   return (
+    //     <div className="text-center py-2.5 text-sm text-tertiary">
+    //       {message.senderName || message.senderId} 加入群聊
+    //     </div>
+    //   )
+    // }
+
     return null
   }
 
   if (message.type === ChatMessageType.ChannelUpdate) {
     return (
-      <div className="text-center my-2.5 text-sm text-tertiary">{message.content}</div>
+      <div className="text-center py-2.5 text-sm text-tertiary">{message.content}</div>
     )
   }
 
   if (message.type === ChatMessageType.Vote) {
     return (
-      <div className="text-center my-2.5 text-sm text-tertiary"><VoteRecord message={message} /></div>
+      <div className="text-center py-2.5 text-sm text-tertiary"><VoteRecord message={message} /></div>
     )
   }
 
@@ -129,9 +170,9 @@ const ChatMessageRow = ({ message, isRevokeMessage, me }: PropsWithChildren<Chat
       // <div className="text-center my-2.5 text-sm text-tertiary">
       //   {isRevokeMessage.senderName} 撤回了一条消息
       // </div>
-      <RevokeRecord 
+      <RevokeRecord
         message={message}
-        revokeMessage={isRevokeMessage} 
+        revokeMessage={isRevokeMessage}
       />
     )
   }
@@ -152,7 +193,7 @@ const ChatMessageRow = ({ message, isRevokeMessage, me }: PropsWithChildren<Chat
       <div className="py-3 px-4 flex justify-end items-start box-border">
         <div className="mr-2.5 flex flex-col items-end overflow-hidden" style={{ maxWidth: '50%' }}>
           <div className="flex items-start mb-1">
-            <span className="text-tertiary text-xs">&nbsp;{formatTimeStr(message.timestamp * 1000, {timezone: timeZone, format: timeFormat})}</span>
+            <span className="text-tertiary text-xs">&nbsp;{formatTimeStr(message.timestamp * 1000, { timezone: timeZone, format: timeFormat })}</span>
           </div>
           <ChatMessageRowMenu message={message} me={me}>
             <div className="bg-[#586EAC] rounded p-2.5 text-sm min-h-8 box-border max-w-full overflow-hidden whitespace-normal break-words leading-tight">
@@ -188,7 +229,7 @@ const ChatMessageRow = ({ message, isRevokeMessage, me }: PropsWithChildren<Chat
       <div className="ml-2.5 flex flex-col items-start" style={{ maxWidth: '50%' }}>
         <div className="text-sm leading-[14px] flex items-start mb">
           {message.senderName}
-          <span className="text-tertiary text-xs">&nbsp;{formatTimeStr(message.timestamp * 1000, {timezone: timeZone, format: timeFormat})}</span>
+          <span className="text-tertiary text-xs">&nbsp;{formatTimeStr(message.timestamp * 1000, { timezone: timeZone, format: timeFormat })}</span>
         </div>
         <ChatMessageRowMenu message={message} me={me}>
           <div className="bg-[#2C2C2C] rounded p-2.5 text-sm min-h-8 box-border max-w-full overflow-hidden whitespace-normal break-words leading-tight">

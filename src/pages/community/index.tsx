@@ -1,4 +1,4 @@
-import { JknAlert, JknAvatar, JknIcon, JknModal, Label, RadioGroup, RadioGroupItem } from "@/components"
+import { JknAlert, JknIcon, JknModal, Label, RadioGroup, RadioGroupItem } from "@/components"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { useToken, useUser } from "@/store"
 import { Outlet, useLocation } from "react-router"

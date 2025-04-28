@@ -1,7 +1,7 @@
 import { getWxLoginStatus } from '@/api'
 import { JknIcon, useModal } from '@/components'
 import { router } from '@/router'
-import { useToken } from '@/store'
+import { useToken, useUser } from '@/store'
 import { appEvent } from '@/utils/event'
 import { useMount, useUnmount } from 'ahooks'
 import QRCode from 'qrcode'
@@ -121,6 +121,7 @@ export const GoogleLogin = (props: ThirdLoginFormProps) => {
 const WxLoginForm = () => {
   const canvas = useRef<HTMLCanvasElement>(null)
   const timer = useRef<number>()
+  const setLoginType = useUser(state => state.setLoginType)
 
   useMount(() => {
     const size = 160
@@ -156,7 +157,8 @@ const WxLoginForm = () => {
         if (res.code) {
           useToken.getState().setToken(res.code)
           window.clearInterval(timer.current)
-          router.navigate('/')
+          setLoginType('wechat')
+          router.navigate('/app')
         }
       })
     }, 4000)

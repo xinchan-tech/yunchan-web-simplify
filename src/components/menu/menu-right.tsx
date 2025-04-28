@@ -1,6 +1,5 @@
-import { useToast } from "@/hooks"
 import { router } from "@/router"
-import { useConfig, useToken, useUser } from "@/store"
+import { useConfig, useUser } from "@/store"
 import { cn } from "@/utils/style"
 import { ReactNode, useEffect, useState } from "react"
 import { JknAlert, JknIcon } from ".."
@@ -26,8 +25,7 @@ const MenuRight = () => {
   }, [])
 
   const user = useUser(s => s.user)
-  const { token } = useToken()
-  const { toast } = useToast()
+
 
   const menus: MenuItem[] = [
     {
@@ -72,7 +70,7 @@ const MenuRight = () => {
         window.open(
           `${window.location.origin}/chat`,
           "whatever",
-          "hideit,height=750,width=1000,resizable=yes,scrollbars=yes,status=no,location=no"
+          "hideit,height=750,width=1200,resizable=yes,scrollbars=yes,status=no,location=no"
         )
         return
       } else {

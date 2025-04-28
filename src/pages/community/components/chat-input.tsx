@@ -8,12 +8,13 @@ import { EditorContent, type JSONContent, useEditor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import { type PropsWithChildren, forwardRef, useEffect, useId, useImperativeHandle, useState } from 'react'
 import { useImmer } from 'use-immer'
-import { Channel, Reply, WKSDK } from 'wukongimjssdk'
+import { Reply, WKSDK } from 'wukongimjssdk'
 import { type ChatEvent, chatEvent } from '../lib/event'
 import { useChatStore } from "../lib/store"
 import type { ChatMessage, ChatSubscriber } from "../lib/types"
 import { MessageTransform } from "../lib/transform"
 import { VoteForm } from "./vote-form"
+import { draftCache } from "../cache"
 
 interface ChatInputProps {
   hasForbidden: boolean
@@ -34,6 +35,8 @@ interface ChatInputInstance {
 }
 
 const extensions = [StarterKit, Image]
+
+
 
 export const ChatInput = forwardRef<ChatInputInstance, ChatInputProps>((props, ref) => {
   const [mentionList, setMentionList] = useImmer<{ name: string; uid: string }[]>([])
@@ -172,6 +175,12 @@ export const ChatInput = forwardRef<ChatInputInstance, ChatInputProps>((props, r
   useEffect(() => {
     if (!channel) return
 
+    draftCache.get(channel).then(draft => {
+      if(!draft) return
+
+      editor?.commands.setContent(draft.content)
+    })
+
     const cancelMention = chatEvent.on('mention', ({ id, name }: ChatEvent['mention']) => {
       if (!editor?.isEditable) return false
       setReplyMessage(null)
@@ -219,7 +228,13 @@ export const ChatInput = forwardRef<ChatInputInstance, ChatInputProps>((props, r
       cancelReply()
       setMentionList([])
       setReplyMessage(null)
+      draftCache.updateOrSave({
+        channel: channel,
+        content: editor?.getJSON(),
+        key: channel.id
+      })
       editor?.commands.clearContent()
+
     }
   }, [channel, editor, setMentionList, setReplyMessage])
 

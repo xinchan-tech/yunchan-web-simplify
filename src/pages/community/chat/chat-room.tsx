@@ -71,7 +71,7 @@ export const ChatRoom = () => {
       if (channelLast.current?.id !== _channel?.channelID) {
         return
       }
-      // console.log(r)
+      console.log(r)
       return Promise.all(r.map(MessageTransform.toChatMessage))
     }).then(res => {
       if (!res) return
@@ -96,7 +96,7 @@ export const ChatRoom = () => {
       if (channelLast.current?.id !== _channel?.channelID) {
         return
       }
-    
+
       return Promise.all(r.map(MessageTransform.toChatMessage))
     }).then(res => {
       if (!res) return
@@ -135,7 +135,7 @@ export const ChatRoom = () => {
           if (channelLast.current?.id !== _channel?.channelID) {
             return
           }
-          
+
           const channel = WKSDK.shared().channelManager.getChannelInfo(_channel)
           if (!channel) {
             throw new Error('channel is null')
@@ -368,7 +368,7 @@ export const ChatRoom = () => {
         }}
       />
     ),
-    className: 'w-[476px]',
+    className: 'w-fit',
     footer: null,
     closeOnMaskClick: false
   })
@@ -481,53 +481,56 @@ export const ChatRoom = () => {
               </div>
             </div>
             <ScrollArea className="chat-room-users-list flex-1">
-              {subscribes?.sort((a, b) => +b.type - +a.type).map(member => (
-                <ContextMenu key={member.uid}>
-                  <ContextMenuTrigger asChild>
-                    <div className="chat-room-users-item flex items-center p-2 box-border hover:bg-accent w-full overflow-hidden">
-                      <UserAvatar
-                        src={member.avatar}
-                        name={member.name}
-                        uid={member.id}
-                        className="h-6 w-6"
-                        size="sm" shape="circle" type="1" />
-                      <div className="text-xs leading-6 ml-2 mr-1 flex-1 overflow-hidden text-ellipsis whitespace-nowrap">
-                        {member.name}
+              <div>
+                {subscribes?.sort((a, b) => +b.type - +a.type).map(member => (
+                  <ContextMenu key={member.uid}>
+                    <ContextMenuTrigger asChild>
+                      <div className="chat-room-users-item flex items-center p-2 box-border hover:bg-accent w-full overflow-hidden">
+                        <UserAvatar
+                          src={member.avatar}
+                          name={member.name}
+                          uid={member.id}
+                          className="h-6 w-6"
+                          size="sm" shape="circle" type="1" />
+                        <div className="text-xs leading-6 ml-2 mr-1 flex-1 overflow-hidden text-ellipsis whitespace-nowrap">
+                          {member.name}
+                        </div>
+                        <div className="">
+                          {member.isOwner && <JknIcon name="owner" />}
+                          {member.hasForbidden && <JknIcon name="forbidden" />}
+                          {member.isManager && <JknIcon name="manager" />}
+                        </div>
                       </div>
-                      <div className="">
-                        {member.isOwner && <JknIcon name="owner" />}
-                        {member.hasForbidden && <JknIcon name="forbidden" />}
-                        {member.isManager && <JknIcon name="manager" />}
-                      </div>
-                    </div>
-                  </ContextMenuTrigger>
-                  <ContextMenuContent>
-                    <ContextMenuItem onClick={() => onReplayUser(member)}>
-                      <div className="text-xs text-secondary" onKeyDown={() => { }}>
-                        回复用户
-                      </div>
-                    </ContextMenuItem>
-                    {hasManageAuth(member) && (
-                      <ContextMenuItem onClick={() => onChangeMemberManageAuth(member)}>
+                    </ContextMenuTrigger>
+                    <ContextMenuContent>
+                      <ContextMenuItem onClick={() => onReplayUser(member)}>
                         <div className="text-xs text-secondary" onKeyDown={() => { }}>
-                          {member.isManager ? '取消管理员' : '设为管理员'}
+                          回复用户
                         </div>
                       </ContextMenuItem>
-                    )}
-                    {hasForbiddenAuth(member) && (
-                      <ContextMenuItem
-                        onClick={() => {
-                          onChangeMemberForbiddenAuth(member)
-                        }}
-                      >
-                        <div className="text-xs text-secondary" onKeyDown={() => { }}>
-                          {!member.hasForbidden ? '添加黑名单' : '解除黑名单'}
-                        </div>
-                      </ContextMenuItem>
-                    )}
-                  </ContextMenuContent>
-                </ContextMenu>
-              ))}
+                      {hasManageAuth(member) && (
+                        <ContextMenuItem onClick={() => onChangeMemberManageAuth(member)}>
+                          <div className="text-xs text-secondary" onKeyDown={() => { }}>
+                            {member.isManager ? '取消管理员' : '设为管理员'}
+                          </div>
+                        </ContextMenuItem>
+                      )}
+                      {hasForbiddenAuth(member) && (
+                        <ContextMenuItem
+                          onClick={() => {
+                            onChangeMemberForbiddenAuth(member)
+                          }}
+                        >
+                          <div className="text-xs text-secondary" onKeyDown={() => { }}>
+                            {!member.hasForbidden ? '添加黑名单' : '解除黑名单'}
+                          </div>
+                        </ContextMenuItem>
+                      )}
+                    </ContextMenuContent>
+                  </ContextMenu>
+                ))}
+                <div className="h-12" />
+              </div>
             </ScrollArea>
           </div>
         </div>
@@ -541,21 +544,17 @@ const ChatRoomNotice = ({ notice, onConfirm }: { notice: string; onConfirm: () =
     leftTime: 1000 * 10
   })
   return (
-    <div className="chat-room-notice py-6 px-5">
+    <div className="chat-room-notice py-6 px-5 w-[560px]">
       <div className="chat-room-notice-title text-xl mb-6">尊敬的各位群友</div>
       <div className="bg">
         <div className="mb-4">👉入群请自觉遵守群规:</div>
-        <div className="chat-room-notice-content text-xs text-tertiary leading-5 h-[90px] overflow-y-auto">
-          {
-            notice.split('\n').filter(s => !!s).map(item => (
-              <div key={nanoid()}>{item}</div>
-            ))
-          }
+        <div className="h-[240px] overflow-y-auto">
+          <RichText text={notice} />
         </div>
       </div>
       <div className="text-center">
         <div
-          className="text-base inline-block w-[120px] h-[38px] leading-[38px] mt-4 rounded-[300px] bg-[#575757]"
+          className="text-base inline-block w-[120px] h-[38px] leading-[38px] mt-4 rounded-[300px] bg-[#575757] cursor-pointer"
           onClick={() => countDown <= 0 && onConfirm()}
           onKeyDown={() => { }}
         >

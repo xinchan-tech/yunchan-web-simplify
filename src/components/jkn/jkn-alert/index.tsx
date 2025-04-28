@@ -240,7 +240,7 @@ const PureAlertComponent = (props: PureAlertComponentProps) => {
       () => {
         waitAction()
       },
-      props.duration || 3 * 1000
+      props.duration || 2 * 1000
     )
   })
 

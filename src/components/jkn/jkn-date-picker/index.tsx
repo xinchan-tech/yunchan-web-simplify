@@ -2,7 +2,7 @@ import { Calendar } from '@/components/ui/calendar'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { useBoolean, useMount } from 'ahooks'
 import dayjs from 'dayjs'
-import { type ReactNode, useRef, useState } from 'react'
+import { type ReactNode, useRef } from 'react'
 import type { DayPickerSingleProps } from 'react-day-picker'
 import { JknIcon } from "../jkn-icon"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -24,7 +24,8 @@ function JknDatePicker({ children, onChange, date: _date, time, ...props }: JknD
   const format = time ? 'YYYY-MM-DD HH:mm' : 'YYYY-MM-DD'
 
   const _onSelect = (d?: Date) => {
-    const oldDate = dayjs(date)
+    const oldDate = dayjs(date || Date.now())
+    console.log(d, oldDate, date)
     if (d) {
       let newDate = dayjs(d)
       if (time) {
@@ -58,12 +59,12 @@ function JknDatePicker({ children, onChange, date: _date, time, ...props }: JknD
         {typeof children === 'function' ? children(date, { open: setTrue, close: setFalse }) : children}
       </PopoverTrigger>
       <PopoverContent className="p-0 w-[360px]" style={{ height: 432 + (time ? 42 : 0) }}>
-        <Calendar mode="single" selected={dayjs(date).toDate()} onDayClick={_onSelect} {...props} />
+        <Calendar mode="single" selected={dayjs(date || Date.now()).toDate()} onDayClick={_onSelect} {...props} />
         {
           time ? (
             <div className="flex items-center justify-between px-4">
               <div className="text-secondary">选择时间：</div>
-              <TimePicker value={date} onChange={onChangeTime} />
+              <TimePicker value={date || Date.now() as any} onChange={onChangeTime} />
             </div>
           ) : null
         }

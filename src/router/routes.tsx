@@ -190,15 +190,15 @@ export const routes: RouteObject[] = [
       }
     ]
   },
+  // {
+  //   path: '/chat',
+  //   Component: lazy(() => import('@/pages/groupchat')),
+  //   handle: {
+  //     title: '讨论社群'
+  //   }
+  // },
   {
     path: '/chat',
-    Component: lazy(() => import('@/pages/groupchat')),
-    handle: {
-      title: '讨论社群'
-    }
-  },
-  {
-    path: '/community',
     Component: lazy(() => import('@/pages/community')),
     handle: {
       title: '讨论社群'

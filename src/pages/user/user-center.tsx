@@ -27,7 +27,7 @@ import { useMount, useUnmount } from 'ahooks'
 import to from 'await-to-js'
 import copy from 'copy-to-clipboard'
 import dayjs from 'dayjs'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { type PropsWithChildren, type ReactNode, useEffect, useMemo, useRef, useState } from 'react'
 import { useFormContext } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router'
@@ -56,6 +56,7 @@ const UserCenter = () => {
     }))
   )
   const setUser = useUser(s => s.setUser)
+  const loginType = useUser(s => s.loginType)
 
   const { t } = useTranslation()
   const query = useQuery({
@@ -106,6 +107,8 @@ const UserCenter = () => {
 
       query.refetch()
       edit.close()
+
+      return undefined
     },
     onOpen: () => {
       form.setValue('realname', query.data?.realname)
@@ -164,7 +167,18 @@ const UserCenter = () => {
             <JknIcon.Svg name="edit" size={12} className="text-[#50535E]" />
           </div>
         </div>
-        <span className="text-xl">{user.account}</span>
+        <div>
+          <span className="text-xl">{user.name}</span><br/>
+          <span className="text-xs text-secondary leading-6">
+            上次登录方式:&nbsp;
+            {{
+              account: '邮箱登录',
+              apple: 'Apple 登录',
+              wechat: '微信登录',
+              google: 'Google 登录'
+            }[loginType ?? 'account']}
+          </span>
+        </div>
       </div>
 
       <div className="mt-10 bg-muted rounded px-5 py-3">
@@ -207,121 +221,133 @@ const UserCenter = () => {
           </div>
         </div>
       </div>
+
+
       <div className="space-y-12 mt-12">
-        <div className="flex items-center">
-          <span className="text-lg">转移我的 Apple 登录账号</span>
+        {/* <div className="flex items-center">
+          <span className="text-lg"></span>
           <div className="ml-auto text-[#808080]">
-            <AppleLogin />
-          </div>
-        </div>
 
-        <div className="flex items-center">
-          <span className="text-lg">昵称</span>
-          <div className="ml-auto text-[#808080]">
-            {user.name}
-            <Button className="bg-accent text-foreground rounded w-[72px] ml-5" onClick={() => edit.open()}>
-              编辑
-            </Button>
           </div>
-        </div>
+        </div> */}
+        <UserInfoCell label="转移我的 Apple 登录账号">
+          <AppleLogin />
+        </UserInfoCell>
 
-        <div className="flex items-center">
-          <span className="text-lg">UID</span>
-          <div className="ml-auto text-[#808080]">
-            {user.id}
-            <Button
-              className="bg-accent text-foreground rounded w-[72px] ml-5"
-              onClick={() => {
-                if (user?.id) {
-                  copy(user.id)
-                  JknAlert.success('复制成功')
-                }
-              }}
-            >
-              复制
-            </Button>
-          </div>
-        </div>
+        <UserInfoCell label="昵称">
+          {user.name}
+          <Button className="bg-accent text-foreground rounded w-[72px] ml-5" onClick={() => edit.open()}>
+            编辑
+          </Button>
+        </UserInfoCell>
 
-        <div className="flex items-center">
-          <span className="text-lg">账单明细</span>
-          <div className="ml-auto text-[#808080]">
-            <Button className="bg-accent text-foreground rounded w-[72px] ml-5" onClick={() => navigate('/app/user/bills')}>
-              查看
-            </Button>
-          </div>
-        </div>
+        <UserInfoCell label="UID">
+          {user.id}
+          <Button
+            className="bg-accent text-foreground rounded w-[72px] ml-5"
+            onClick={() => {
+              if (user?.id) {
+                copy(user.id)
+                JknAlert.success('复制成功')
+              }
+            }}
+          >
+            复制
+          </Button>
+        </UserInfoCell>
 
-        <div className="flex items-center">
-          <span className="text-lg">邀请好友</span>
-          <div className="ml-auto text-[#808080]">
-            <Button
-              className="bg-accent text-foreground rounded w-[72px] ml-5"
-              onClick={() => navigate('/app/user/invite')}
-            >
-              前往
-            </Button>
-          </div>
-        </div>
+        <UserInfoCell label="账单明细">
+          <Button className="bg-accent text-foreground rounded w-[72px] ml-5" onClick={() => navigate('/app/user/bills')}>
+            查看
+          </Button>
+        </UserInfoCell>
 
-        <div className="flex items-center">
-          <span className="text-lg">订阅管理</span>
-          <div className="ml-auto text-[#808080]">
-            <Button
-              className="bg-accent text-foreground rounded w-[72px] ml-5"
-              onClick={() => navigate('/app/user/subscribe')}
-            >
-              前往
-            </Button>
-          </div>
-        </div>
+        <UserInfoCell label="邀请好友">
+          <Button
+            className="bg-accent text-foreground rounded w-[72px] ml-5"
+            onClick={() => navigate('/app/user/invite')}
+          >
+            前往
+          </Button>
+        </UserInfoCell>
 
+        <UserInfoCell label="订阅管理">
+          <Button
+            className="bg-accent text-foreground rounded w-[72px] ml-5"
+            onClick={() => navigate('/app/user/subscribe')}
+          >
+            前往
+          </Button>
+        </UserInfoCell>
+
+        <UserInfoCell label="账单明细">
+          <Button
+            className="bg-accent text-foreground rounded w-[72px] ml-5"
+            onClick={() => navigate('/app/user/subscribe')}
+          >
+            前往
+          </Button>
+        </UserInfoCell>
 
         {user?.show_invite === 1 ? (
-          <div className="flex items-center">
-            <span className="text-lg">填写邀请码</span>
-            <div className="ml-auto text-[#808080]">
-              <Popover>
-                <PopoverTrigger asChild>
-                  <div className="ml-auto text-[#808080]">
+          <UserInfoCell label="填写邀请码">
+            <Popover>
+              <PopoverTrigger asChild>
+                <div className="ml-auto text-[#808080]">
+                  <Button
+                    className="bg-accent text-foreground rounded w-[72px] ml-5"
+                  >
+                    填写
+                  </Button>
+                </div>
+              </PopoverTrigger>
+              <PopoverContent className="w-[200px]">
+                {action => (
+                  <div className="py-2 px-4 text-center space-y-4">
+                    <div className="text-sm text-center">邀请码</div>
+                    <Input
+                      className="w-full border-transparent bg-accent placeholder:text-tertiary"
+                      placeholder="请输入邀请码"
+                      value={inviteCode}
+                      size="sm"
+                      onChange={e => {
+                        setInviteCode(e.target.value)
+                      }}
+                    />
                     <Button
-                      className="bg-accent text-foreground rounded w-[72px] ml-5"
+                      loading={bindInviteCodeMutation.isPending}
+                      className="mt-2 px-6"
+                      size="sm"
+                      onClick={() => bindInviteCodeMutation.mutate(action.close)}
                     >
-                      填写
+                      确定
                     </Button>
                   </div>
-                </PopoverTrigger>
-                <PopoverContent className="w-[200px]">
-                  {action => (
-                    <div className="py-2 px-4 text-center space-y-4">
-                      <div className="text-sm text-center">邀请码</div>
-                      <Input
-                        className="w-full border-transparent bg-accent placeholder:text-tertiary"
-                        placeholder="请输入邀请码"
-                        value={inviteCode}
-                        size="sm"
-                        onChange={e => {
-                          setInviteCode(e.target.value)
-                        }}
-                      />
-                      <Button
-                        loading={bindInviteCodeMutation.isPending}
-                        className="mt-2 px-6"
-                        size="sm"
-                        onClick={() => bindInviteCodeMutation.mutate(action.close)}
-                      >
-                        确定
-                      </Button>
-                    </div>
-                  )}
-                </PopoverContent>
-              </Popover>
-            </div>
-          </div>
+                )}
+              </PopoverContent>
+            </Popover>
+          </UserInfoCell>
         ) : null}
       </div>
       {edit.context}
       {avatarForm.context}
+    </div>
+  )
+}
+
+interface UserInfoCellProps {
+  label: ReactNode
+}
+
+const UserInfoCell = ({ label, children }: PropsWithChildren<UserInfoCellProps>) => {
+  return (
+    <div className="flex items-center">
+      <span className="text-lg">{label}</span>
+      <div className="ml-auto text-[#808080]">
+        {
+          children
+        }
+      </div>
     </div>
   )
 }

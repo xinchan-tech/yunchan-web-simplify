@@ -12,7 +12,7 @@ export const ChannelList = (props: PropsWithChildren) => {
   const channels = useQuery({
     queryKey: [getChatChannels.cacheKey, '1', keywords],
     queryFn: () => {
-      // if(!keywords) return Promise.resolve([])
+      if(!keywords) return Promise.resolve([])
       return getChatChannels({
         type: '1',
         account: keywords
