@@ -1,4 +1,4 @@
-import { useToken } from '@/store'
+import { useToken, useUser } from '@/store'
 import { uid } from 'radash'
 import { sysConfig } from '../../config'
 import { Ws } from '../../ws'
@@ -32,7 +32,7 @@ class StockSubscribe {
   private sysBuffer: SysBuffer
 
   static get() {
-    const token = useToken.getState().token || uid(14)
+    const token = useUser.getState().user?.username || uid(14)
     if (!StockSubscribe.instance) {
       StockSubscribe.instance = new StockSubscribe(`${sysConfig.PUBLIC_BASE_WS_STOCK_URL}?token=${token}`)
     }

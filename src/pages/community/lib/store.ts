@@ -1,16 +1,22 @@
-import { Channel, ConnectStatus } from 'wukongimjssdk'
+import { Channel } from 'wukongimjssdk'
 import { create } from 'zustand'
-import { createJSONStorage, persist } from 'zustand/middleware'
-import { type ChatChannel, ChatCmdType, ChatConnectStatus, ChatMessageType, type ChatStore, chatConstants } from './types'
-
-const wsUrlPrefix = `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${window.location.host}`
+import { persist } from 'zustand/middleware'
+import {
+  type ChatChannel,
+  ChatCmdType,
+  ChatConnectStatus,
+  ChatMessageType,
+  type ChatStore,
+  chatConstants
+} from './types'
+import { sysConfig } from '@/utils/config'
 
 const useChatStore = create<ChatStore>()(
   persist(
     _get => ({
       state: ChatConnectStatus.Disconnect,
       config: {
-        addr: `${wsUrlPrefix}/im-ws`,
+        addr: sysConfig.PUBLIC_BASE_WS_IM,
         deviceFlag: 5,
         timezone: 'local',
         timeFormat: 'ago'
@@ -25,7 +31,7 @@ const useChatStore = create<ChatStore>()(
       name: 'community',
       partialize: state => ({
         config: {
-          addr: `${wsUrlPrefix}/im-ws`,
+          addr: sysConfig.PUBLIC_BASE_WS_IM,
           deviceFlag: 5,
           timezone: state.config.timezone,
           timeFormat: state.config.timeFormat
@@ -66,14 +72,14 @@ export const chatManager = {
   },
   hideVote: (voteId: number, channelId: string) => {
     const chatConfig = useChatStore.getState().chatConfig
-    const voteShow = {...chatConfig.voteShow}
+    const voteShow = { ...chatConfig.voteShow }
     if (voteShow[channelId]) {
       voteShow[channelId].show = false
       voteShow[channelId].voteId = voteId
     } else {
       voteShow[channelId] = { show: false, voteId }
     }
- 
+
     useChatStore.setState({
       chatConfig: {
         ...chatConfig,
