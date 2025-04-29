@@ -16,7 +16,6 @@ import { BackTestBar } from './back-test-bar'
 import { ChartContextMenu } from './chart-context-menu'
 import dayjs from "dayjs"
 import { useQuery } from "@tanstack/react-query"
-import { sysConfig } from "@/utils/config"
 import { isArray } from "radash"
 
 interface MainChartProps {
@@ -53,7 +52,7 @@ export const MainChart = (props: MainChartProps) => {
     queryFn: () => getUserPlotting({ symbol, kline: chartStore.interval }),
     enabled: candlesticks.length > 0,
     select: data => {
-      if(!data) return []
+      if (!data) return []
       return data.filter(d => (d.stock_kline_value === chartStore.interval || d.cross === 1) && d.symbol === symbol)
     },
   })
@@ -66,7 +65,7 @@ export const MainChart = (props: MainChartProps) => {
           e
         })
 
-        if(type === 'pen'){
+        if (type === 'pen') {
           return true
         }
         const pid = renderUtils.getOverlayByType(type)
@@ -182,12 +181,12 @@ export const MainChart = (props: MainChartProps) => {
 
 
     const lastData = chartImp.current?.getChart()?.getDataList()?.slice(-1)[0]
-  
+
     if (chartImp.current?.isSameIntervalCandlestick(record, interval)) {
       lastBarInInterval.current = record
-      
+
       if (trading === 'intraDay') {
-   
+
         chartImp.current?.appendCandlestick(
           {
             ...record,
@@ -390,11 +389,24 @@ export const MainChart = (props: MainChartProps) => {
         const c = chartManage.getChart(props.chartId)
         chartImp.current?.setChartType(c?.type === ChartType.Candle ? 'candle' : 'area')
       }
+
       chartManage.setMode('normal')
       Array.from(stockCache.current.compare.entries()).forEach(([_, indicatorId]) => {
         chartImp.current?.setStockCompare(indicatorId, {
           interval,
           startAt: renderUtils.getChartStartDate(interval)
+        })
+      })
+  
+      useChartManage.getState().chartStores[props.chartId].mainIndicators.forEach(indicator => {
+        chartImp.current?.setIndicator(indicator.id.toString(), {
+          interval,
+        })
+      })
+
+      useChartManage.getState().chartStores[props.chartId].secondaryIndicators.forEach(indicator => {
+        chartImp.current?.setSubIndicator(indicator.id.toString(), {
+          interval,
         })
       })
     })

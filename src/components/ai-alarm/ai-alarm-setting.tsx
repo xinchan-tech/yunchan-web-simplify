@@ -146,7 +146,7 @@ const AiAlarmSetting = (props: AiAlarmSetting) => {
                   className="w-32 flex-shrink-0 text-base font-normal"
                   style={{ color: categoryType === '多头策略' ? 'hsl(var(--stock-up-color))' : '#808080' }}
                 >
-                  底部信号
+                  抄底信号
                 </FormLabel>
                 <FormControl>
                   <StockHdlySelect {...field} />

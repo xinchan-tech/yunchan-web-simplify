@@ -15,7 +15,9 @@ export const VoteRecord = ({ message }: VoteRecordProps) => {
   return (
     <div className="flex items-center justify-center">
       {message.senderName ?? ''}发起了投票：
-      <span className="text-[#FFC440] cursor-pointer" onClick={() => chatEvent.emit('showVote', message.voteId)} onKeyDown={() => { }}>{message.content}</span>
+      <span className="text-[#FFC440] cursor-pointer" onClick={() => chatEvent.emit('showVote', message.voteId)} onKeyDown={() => { }}>
+        {message.content.slice(0, 20)}{message.content.length > 20 ? '...' : ''}
+      </span>
       {
         uid === message.senderId ? (
           <>

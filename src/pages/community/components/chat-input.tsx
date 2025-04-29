@@ -261,7 +261,7 @@ export const ChatInput = forwardRef<ChatInputInstance, ChatInputProps>((props, r
   return (
     <div className="chat-room-input h-full relative flex flex-col">
       {mentionList.length ? (
-        <div className="flex items-center absolute text-sm left-0 -top-8 h-8 box-border px-3 leading-8 border-t-primary right-0 bg-[#0a0a0a]">
+        <div className="flex items-center absolute text-sm left-0 -top-8 h-8 box-border px-3 leading-8 border-0 border-solid border-y border-[#2E2E2E] right-0 bg-[#0a0a0a]">
           <JknIcon.Svg name="close" className="cursor-pointer" size={12} onClick={() => setMentionList([])} />
           <span>&nbsp;&nbsp;回复用户: &nbsp;&nbsp;</span>
           <div className="flex items-center space-x-4">
@@ -272,13 +272,13 @@ export const ChatInput = forwardRef<ChatInputInstance, ChatInputProps>((props, r
         </div>
       ) : null}
       {replyMessage ? (
-        <div className="flex items-center absolute text-sm left-0 -top-8 h-8 box-border px-3 leading-8 border-t-primary right-0 overflow-hidden bg-[#0a0a0a]">
+        <div className="flex items-center absolute text-sm left-0 -top-8 h-8 box-border px-3 leading-8 border-0 border-solid border-y border-[#2E2E2E] right-0 overflow-hidden bg-[#0a0a0a]">
           <JknIcon.Svg name="close" className="cursor-pointer" size={12} onClick={() => setReplyMessage(null)} />
           <span>&nbsp;&nbsp;{replyMessage.name}: &nbsp;&nbsp;</span>
           <div className="flex-1 overflow-hidden text-ellipsis whitespace-nowrap">{replyMessage.text}</div>
         </div>
       ) : null}
-      <div className="chat-room-input-box flex items-center space-x-4 h-[32px] box-border px-4 border-b-primary">
+      <div className="chat-room-input-box flex items-center space-x-4 h-[32px] box-border px-4 border-0 border-b border-solid border-[#2E2E2E]">
         <ChatInputTool
           onSelectEmoji={onToolSelectEmoji}
           onImageUpload={onToolImageUpload}

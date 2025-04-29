@@ -9,16 +9,23 @@ interface StockViewProps {
   showName?: boolean
   iconSize?: number
   className?: string
+  navToTrading?: boolean
 }
 
-const StockView = ({ code, name, showName = false, iconSize = 24, className }: StockViewProps) => {
+const StockView = ({ code, name, showName = false, iconSize = 24, className, navToTrading = true }: StockViewProps) => {
   const listMap = useStockList(s => s.listMap)
   const stock = listMap[code]
+
+  const onDoubleClick = () => {
+    if (navToTrading) {
+      router.navigate(`/app/stock?symbol=${code}`)
+    }
+  }
 
   return (
     <div
       className={cn('overflow-hidden flex items-center w-full', className)}
-      onDoubleClick={() => router.navigate(`/app/stock/trading?symbol=${code}`)}
+      onDoubleClick={onDoubleClick}
     >
       <div className="flex items-center">
         {stock?.[0] ? (

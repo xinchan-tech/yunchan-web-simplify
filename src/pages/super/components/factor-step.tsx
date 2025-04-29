@@ -65,10 +65,10 @@ const FactorStep = () => {
       <div className="w-full pt-5 pb-8 flex flex-col">
         <div className="flex flex-row mt-5">
           <div className="w-[132px] text-base font-[500] flex-shrink-0 flex-grow-0 text-[#B8B8B8]">
-            <div className="flex flex-row">底部信号</div>
+            <div className="flex flex-row">抄底信号</div>
           </div>
           <ToggleGroup
-            className="flex-grow grid grid-cols-3 gap-[10px]"
+            className="flex-grow grid grid-cols-2 gap-[10px]"
             type="multiple"
             value={selection}
             hoverColor="#2E2E2E"

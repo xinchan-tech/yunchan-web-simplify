@@ -157,7 +157,7 @@ export const createDefaultChartStore = (chartId: string, symbol?: string): Chart
   return {
     type: ChartType.Candle,
     interval: StockChartInterval.DAY,
-    system: undefined,
+    system: '302',
     mode: 'normal',
     id: chartId,
     symbol: symbol ?? 'QQQ',
@@ -167,21 +167,34 @@ export const createDefaultChartStore = (chartId: string, symbol?: string): Chart
      */
     secondaryIndicators: [
       {
-        id: '9',
-        type: 'system',
-        name: '底部信号',
-        calcType: 'trade_point'
-      },
-      {
-        id: '10',
-        type: 'system',
-        name: '买卖点位',
-        calcType: 'trade_hdly'
+        calcType: 'trade_hdly',
+        id: 9 as unknown as string,
+        name: '海底捞月',
+        type: 'system'
       }
     ],
-    mainIndicators: [],
+    mainIndicators: [
+      {
+        id: 302 as unknown as string,
+        name: '缠论AI专业系统',
+        type: 'system',
+        calcType: ''
+      },
+      {
+        id: 241 as unknown as string,
+        name: '黄蓝梯子(短线版)',
+        type: 'system',
+        calcType: 'local_policy'
+      }
+    ],
     overlayStock: [],
-    coiling: [],
+    coiling: [
+      CoilingIndicatorId.PEN,
+      CoilingIndicatorId.ONE_TYPE,
+      CoilingIndicatorId.TWO_TYPE,
+      CoilingIndicatorId.THREE_TYPE,
+      CoilingIndicatorId.PIVOT
+    ],
     overlayMark: undefined,
     yAxis: {
       right: MainYAxis.Price

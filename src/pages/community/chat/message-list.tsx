@@ -141,14 +141,18 @@ const ChatMessageRow = ({ message, isRevokeMessage, me }: PropsWithChildren<Chat
   const timeFormat = useChatStore(s => s.config.timeFormat)
   const isSelfMessage = message.senderId === uid
 
-  if (message.type === ChatMessageType.Cmd || message.type === ChatMessageType.System) {
-    // if(message.type === ChatMessageType.Cmd && message.cmdType === ChatCmdType.ChannelUpdate) {
-    //   return (
-    //     <div className="text-center py-2.5 text-sm text-tertiary">
-    //       {message.senderName || message.senderId} 加入群聊
-    //     </div>
-    //   )
-    // }
+  if(message.type === ChatMessageType.Cmd){
+    return null
+  }
+
+  if (message.type === ChatMessageType.System) {
+    if (message.content) {
+      return (
+        <div className="text-center py-2.5 text-sm text-tertiary">
+          {message.senderName || message.senderId} {message.content}
+        </div>
+      )
+    }
 
     return null
   }

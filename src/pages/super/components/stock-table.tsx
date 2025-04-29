@@ -5,7 +5,6 @@ import { useConfig } from '@/store'
 import { stockUtils } from '@/utils/stock'
 import { cn } from '@/utils/style'
 import { nanoid } from 'nanoid'
-import { isNumber } from "radash"
 import { useEffect, useMemo, useState } from 'react'
 
 type TableDataType = {
@@ -155,6 +154,7 @@ const StockTable = (props: StockTableProps) => {
       {
         title: '信号类型',
         dataIndex: 'indicator_name',
+        sort: true,
         width: 90,
         align: 'center',
         render: (indicator_name, row) =>
@@ -213,6 +213,22 @@ const StockTable = (props: StockTableProps) => {
               nanText="--"
             />
           </div>
+        )
+      },
+      {
+        title: '成交额',
+        dataIndex: 'amount',
+        width: 100,
+        align: 'left',
+        sort: true,
+        render: (amount, row) => (
+          <SubscribeSpan.TurnoverBlink
+            trading="intraDay"
+            symbol={row.symbol}
+            decimal={2}
+            initValue={amount}
+            showColor={false}
+          />
         )
       },
       {

@@ -118,9 +118,10 @@ interface JknChartIns {
   removeAllCoiling: () => void
   createIndicator: (params: IndicatorParams) => void
   removeIndicator: (indicator: string) => void
+  setIndicator: (indicatorId: string, params: Partial<IndicatorParams>) => void
   setIndicatorVisible: (indicatorId: string, visible: boolean) => void
   createSubIndicator: (params: IndicatorParams) => Nullable<string>
-  setSubIndicator: (indicatorId: string, params: IndicatorParams) => void
+  setSubIndicator: (indicatorId: string, params: Partial<IndicatorParams>) => void
   removeSubIndicator: (indicatorId: string) => void
   createStockCompare: (symbol: string, params: { color: string; interval: number; startAt?: string }) => string
   removeStockCompare: (symbol: string) => void
@@ -213,7 +214,8 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
         indicator: {
           tooltip: {
             text: {
-              color: '#DBDBDB'
+              color: '#DBDBDB',
+              size: 14
             }
           }
         },
@@ -279,7 +281,8 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
               ]
             },
             text: {
-              color: '#DBDBDB'
+              color: '#DBDBDB',
+              size: 14
             }
           },
           priceMark: {
@@ -446,7 +449,7 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
     isSameIntervalCandlestick: (candlestick, interval) => {
       const lastData = chart.current?.getDataList().slice(-1)[0]
       if (!lastData) return
-      
+
       return isSameInterval(lastData, candlestick, interval)
     },
     setAxisType: type => {
@@ -547,7 +550,6 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
     },
     createIndicator: ({ indicator, symbol, interval, name, isRemote }) => {
       const formula = useIndicator.getState().formula
-
       if (!formula[indicator]) return
 
       chart.current?.createIndicator(
@@ -564,8 +566,20 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
     removeIndicator: indicator => {
       chart.current?.removeIndicator({ id: indicator })
     },
+    setIndicator: (indicator, { interval }) => {
+      const formula = useIndicator.getState().formula
+      if (!formula[indicator]) return
+
+      const indicatorId = chart.current?.getIndicators({ id: indicator })[0]
+      if (!indicatorId) return
+
+      chart.current?.overrideIndicator({
+        name: 'local-indicator',
+        id: indicator,
+        calcParams: [indicator, indicatorId.calcParams[1], interval ?? indicatorId.calcParams[2]],
+      })
+    },
     setIndicatorVisible: (indicatorId, visible) => {
-      console.log(visible)
       chart.current?.overrideIndicator({
         id: indicatorId,
         visible,
@@ -594,8 +608,8 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
       chart.current.overrideIndicator({
         name: 'local-indicator',
         id: sub?.id,
-        calcParams: [params.indicator, params.symbol, params.interval],
-        extendData: { name: params.name, indicatorId: params.indicator }
+        calcParams: [params.indicator ?? sub.calcParams[0], params.symbol ?? sub.calcParams[1], params.interval ?? sub.calcParams[2]],
+        // extendData: { name: params.name, indicatorId: params.indicator }
       })
     },
     removeSubIndicator(indicatorId) {

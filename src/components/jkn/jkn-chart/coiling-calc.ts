@@ -249,23 +249,23 @@ export const calcBottomSignal = (candlesticks: StockRawRecord[]): IndicatorData[
 
   const hdlyLabel: IndicatorDataType<'HDLY_LABEL'>['drawData'] = []
   const hdlyData: IndicatorDataType<'STICKLINE'>['drawData'] = []
-
+  let maxValue = 0
   let maxPos = -1
   let maxVol = 0
   hdly(candlesticks).forEach((vol: number, index, arr) => {
+    maxValue = Math.max(maxValue, vol)
     if (vol > 0 && arr.length - 1 !== index) {
-      const _vol = vol / 150 * 80
       // hdlyData.push([index, 0, vol, 2, 0, ''])
       hdlyData.push({
         x: index,
         y1: 0,
-        y2: _vol,
+        y2: vol,
         width: 1,
         empty: 0
       })
 
-      if (_vol >= maxVol) {
-        maxVol = _vol
+      if (vol >= maxVol) {
+        maxVol = vol
         maxPos = index
       }
     } else {
@@ -286,6 +286,17 @@ export const calcBottomSignal = (candlesticks: StockRawRecord[]): IndicatorData[
       }
     }
   })
+
+  if (maxValue > 0) {
+    hdlyData.forEach(item => {
+      const _v = item.y2 / maxValue * 85
+      item.y2 = _v
+    })
+
+    hdlyLabel.forEach(item => {
+      item.y = item.y / maxValue * 85
+    })
+  }
 
   const monthLineData = monthLine(candlesticks)
   const horizonData = horizon(candlesticks)

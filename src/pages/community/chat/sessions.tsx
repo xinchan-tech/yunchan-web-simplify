@@ -157,7 +157,7 @@ export const Sessions = () => {
             onKeyDown={() => { }}
           >
             <div className="group-avatar rounded-md flex items-center text-ellipsis justify-center relative">
-              <UserAvatar type="2" src={s.channel.avatar} shape="square" uid={s.channel.id} name={s.channel.name} className="w-[30px] h-[30px]" />
+              <UserAvatar type="2" src={s.channel.avatar} shape="square" uid={s.channel.id} name={s.channel.name} className="!size-10" />
               {s.unRead > 0 ? (
                 <div className="absolute h-[14px] box-border unread min-w-5 text-xs">
                   {s.unRead > 99 ? '99+' : s.unRead}
@@ -199,9 +199,9 @@ export const Sessions = () => {
                       [ChatMessageType.Cmd]: (s.message as any).cmdType === ChatCmdType.MessageRevoke ? `${s.message?.senderName}撤回了一条消息` : '[系统消息]',
                       [ChatMessageType.Text]: s.message?.content,
                       [ChatMessageType.Image]: '[图片]',
-                      [ChatMessageType.System]: '加入群聊',
+                      [ChatMessageType.System]: s.message?.content,
                       [ChatMessageType.ChannelUpdate]: s.message?.content,
-                      [ChatMessageType.Vote]: `${s.message.senderName ?? ''}发起了投票：${s.message?.content}`,
+                      [ChatMessageType.Vote]: `${s.message.senderName ?? ''}发起了投票：${s.message?.content}`
                     }[s.message?.type] : ''}
                   </span>
                   <span className="ml-auto flex-shrink-0">

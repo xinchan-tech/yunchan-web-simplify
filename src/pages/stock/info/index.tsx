@@ -468,7 +468,7 @@ const StockNews = () => {
     const dateGroup: Record<string, typeof data> = {}
 
     data.forEach(item => {
-      const date = dateUtils.toUsDay(item.time).format('M-D w')
+      const date = dateUtils.toUsDay(item.time).format('YYYY-MM-DD')
 
       if (!dateGroup[date]) {
         dateGroup[date] = []
@@ -477,7 +477,7 @@ const StockNews = () => {
       dateGroup[date].push(item)
     })
 
-    return listify(dateGroup, (k, v) => ({ date: k, event: v }))
+    return listify(dateGroup, (k, v) => ({ date: k, event: v })).sort((a, b) => dayjs(b.date).valueOf() - dayjs(a.date).valueOf())
   }, [newList.data])
 
   const [expand, setExpand] = useState(false)
@@ -515,7 +515,7 @@ const StockNews = () => {
                       >
                         <div>
                           <span className="">
-                            {item.date}&nbsp;&nbsp;
+                            {dayjs(item.date).format('M-D w')}&nbsp;&nbsp;
                             <JknIcon name="ic_us" className="size-3" />
                             &nbsp;美东时间
                           </span>
@@ -558,8 +558,11 @@ const StockNews = () => {
               >
                 <CarouselContent className="h-12">
                   {newList.data?.event.map(item => (
-                    <div key={nanoid()} className="flex-grow-0 flex-shrink-0 basis-full flex items-center">
-                      {<span className="text-xs">{item.title}</span>}
+                    <div key={nanoid()} className="flex-grow-0 flex-shrink-0 basis-full flex items-center line-clamp-2">
+                      <span className="text-xs">
+                        {dateUtils.dateAgo(dayjs(item.time * 1000))}
+                        &nbsp; · 【美东】{item.title}
+                      </span>
                     </div>
                   ))}
                 </CarouselContent>
