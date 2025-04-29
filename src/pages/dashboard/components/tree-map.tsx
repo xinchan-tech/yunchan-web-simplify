@@ -200,10 +200,19 @@ const TreeMap = (props: TreeMapProps) => {
       .enter()
       .append('text')
       .attr('x', d => {
-        const text = d.data.name
+        let text = d.data.name !== 'root' ? d.data.name : ''
         const rectWidth = d.x1 - d.x0
         const maxTextWidth = rectWidth * 0.6
         const rectHeight = d.y1 - d.y0
+        // const area = rectWidth * rectHeight;
+        
+        if(rectHeight < 20){
+          text = ''
+        }
+
+        if(rectWidth < 34){
+          text = ''
+        }
 
         let textSize = Math.max(Math.sqrt(maxTextWidth * rectHeight) / 6, 12)
 
@@ -228,7 +237,7 @@ const TreeMap = (props: TreeMapProps) => {
         return d.y0 + (d.y1 - d.y0) / 2 - 2
       })
       .text(d => {
-        return d.data.name
+        return d.data.symbolText
       })
       .attr('font-size', d => `${d.data.symbolSize}px`)
       .attr('fill', 'white')
@@ -246,10 +255,18 @@ const TreeMap = (props: TreeMapProps) => {
       .enter()
       .append('text')
       .text(d => {
-        const text = `${Decimal.create(d.data.data).gt(0) ? '+' : ''}${Decimal.create(d.data.data)}%`
+        let text = `${Decimal.create(d.data.data).gt(0) ? '+' : ''}${Decimal.create(d.data.data)}%`
         const rectWidth = d.x1 - d.x0
         const maxTextWidth = rectWidth * 0.4
         const rectHeight = (d.y1 - d.y0) * 0.8
+
+        if(rectHeight < 20){
+          text = ''
+        }
+
+        if(rectWidth < 34){
+          text = ''
+        }
         let textSize = Math.max(Math.sqrt(maxTextWidth * rectHeight) / 6, 10)
         if (textSize < 10) {
           textSize = 10

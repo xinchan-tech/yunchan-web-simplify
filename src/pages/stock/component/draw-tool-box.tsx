@@ -359,13 +359,14 @@ const DrawToolBar = () => {
               size={20}
               className="p-1"
               hoverable
+              labelSide="right"
               label={item.label}
             />
           </div>
         ))
       }
       <div className="hover:text-foreground hover:cursor-pointer data-[active=true]:text-primary">
-        <JknIcon.Svg name={'draw-more' as any} size={20} className="p-1" hoverable label="更多画线工具" />
+        <JknIcon.Svg name={'draw-more' as any} size={20} className="p-1" hoverable label="更多画线工具" labelSide="right" />
       </div>
     </div>
   )
@@ -424,19 +425,19 @@ const DrawToolAction = () => {
   return (
     <div className="grid grid-cols-1 gap-2.5">
       <div data-checked={!visible} className="hover:text-foreground hover:cursor-pointer data-[checked=true]:text-primary" onClick={() => onSetVisible()} onKeyDown={() => void 0}>
-        <JknIcon.Svg name="invisible" size={20} className="p-1" hoverable label="显示" />
+        <JknIcon.Svg name="invisible" size={20} className="p-1" hoverable label="显示" labelSide="right" />
       </div>
       <div data-checked={cross} className="hover:text-foreground hover:cursor-pointer data-[checked=true]:text-primary" onClick={() => onSetCross()} onKeyDown={() => void 0}>
-        <JknIcon.Svg name="draw-link" size={20} className="p-1" hoverable label="跨周期绘制" />
+        <JknIcon.Svg name="draw-link" size={20} className="p-1" hoverable label="跨周期绘制" labelSide="right" />
       </div>
       <div className="hover:text-foreground hover:cursor-pointer" onClick={() => onDelete()} onKeyDown={() => void 0}>
-        <JknIcon.Svg name="draw-delete" size={20} className="p-1" hoverable label="清除所有" />
+        <JknIcon.Svg name="draw-delete" size={20} className="p-1" hoverable label="清除所有" labelSide="right" />
       </div>
       <div data-checked={continuous} className="hover:text-foreground hover:cursor-pointer data-[checked=true]:text-primary" onClick={() => onSetContinuous()} onKeyDown={() => void 0}>
-        <JknIcon.Svg name="draw-continuous" size={20} className="p-1" hoverable label="连续绘制" />
+        <JknIcon.Svg name="draw-continuous" size={20} className="p-1" hoverable label="连续绘制" labelSide="right" />
       </div>
       <div className="hover:text-foreground hover:cursor-pointer data-[checked=true]:text-primary" onClick={() => statistics.modal.open()} onKeyDown={() => void 0}>
-        <JknIcon.Svg name="draw-statistics" size={20} className="p-1" hoverable label="绘制统计" />
+        <JknIcon.Svg name="draw-statistics" size={20} className="p-1" hoverable label="绘制统计" labelSide="right" />
       </div>
       {
         statistics.context

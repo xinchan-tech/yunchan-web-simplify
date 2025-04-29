@@ -8,7 +8,7 @@ import {
   Skeleton
 } from '@/components'
 import { useStockQuoteSubscribe } from '@/hooks'
-import { type StockSubscribeHandler, stockUtils } from '@/utils/stock'
+import {  stockUtils, type SubscribeQuoteType } from '@/utils/stock'
 import { useQuery } from '@tanstack/react-query'
 import Decimal from 'decimal.js'
 import { useCallback, useEffect, useMemo, useState } from 'react'
@@ -112,8 +112,8 @@ const StockTree = () => {
     return Array.from(stocks)
   }, [query.data])
 
-  const subscribeHandler: StockSubscribeHandler<'quote'> = useCallback(
-    d => {
+  const subscribeHandler = useCallback(
+    (d: Record<string, SubscribeQuoteType>) => {
       Object.values(d).forEach(data => {
         if (stockUtils.getTrading(data.record.time) !== 'intraDay') return
         if (!subscribeStocks.includes(data.topic)) return
@@ -240,11 +240,6 @@ const StockTree = () => {
       <div className="flex-1 overflow-hidden">
         {['industry', 'concept'].includes(type) ? (
           <div className="h-full flex flex-col">
-            {/* <CapsuleTabs type="text" activeKey={date} onChange={v => setDate(v as unknown as StockTreeDate)}>
-              <CapsuleTabs.Tab value="day" label={t('stockTree.today')} />
-              <CapsuleTabs.Tab value="week" label={t('stockTree.week')} />
-              <CapsuleTabs.Tab value="month" label={t('stockTree.month')} />
-            </CapsuleTabs> */}
             <div className="flex-1 p-1 overflow-hidden">
               {!query.isLoading ? (
                 <TreeMap data={treeData} nav />
@@ -316,28 +311,6 @@ const SimpleCheck = ({ value, onChange }: StockTreeProps) => {
   return (
     <div className="check-group flex items-center space-x-2 text-center text-xs leading-5">
       <JknIcon.Svg name="filter" size={12} className="cursor-pointer" />
-      {/* {steps.map((step, index) => (
-        <div
-          key={step}
-          style={{
-            background: value.includes(+step) ? colors[index] : '#1e1e1e'
-          }}
-          onClick={() => onClick(+step)}
-          onKeyDown={() => { }}
-        >
-          {step}%
-        </div>
-      ))}
-      <style jsx>{`
-          .check-group > div {!
-            background: #1e1e1e;
-            border-radius: 4px;
-            color: white;
-            width: 38px;
-            cursor: pointer;
-            transition: all .2s ease-in-out;
-          }
-        `}</style> */}
     </div>
   )
 }

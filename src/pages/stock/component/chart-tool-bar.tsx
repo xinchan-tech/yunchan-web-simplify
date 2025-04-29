@@ -18,6 +18,7 @@ import {
   HoverCardContent,
   HoverCardTrigger,
   Input,
+  JknAlert,
   JknIcon,
   JknSearchInput,
   ScrollArea,
@@ -999,6 +1000,11 @@ const BackTest = () => {
   const interval = useChartManage(s => s.getActiveChart().interval)
   const [auth, toast] = useAuthorized('backTestTime')
   const onChangeMode = () => {
+    if(renderUtils.isTimeIndexChart(interval)){
+      JknAlert.toast('分时图不支持回测')
+      return
+    }
+
     const time = auth()
     if (!time || interval < time) {
       toast()
