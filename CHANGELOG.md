@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.7.3](https://github.com/xinchan-gx/yunchan-web/compare/2.7.2...2.7.3) (2025-04-29)
+
+### ✨ Features | 新功能
+
+* 更新WebSocket配置，添加IM和股票WebSocket地址 ([367d681](https://github.com/xinchan-gx/yunchan-web/commit/367d681e5ee4e72d2a3b9590a8279f1c530c793e))
+
 ## [2.7.2](https://github.com/xinchan-gx/yunchan-web/compare/2.7.1...2.7.2) (2025-04-28)
 
 ### ✨ Features | 新功能
