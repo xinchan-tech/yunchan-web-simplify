@@ -22,12 +22,13 @@ import { useLatestRef, useStack, useToast } from '@/hooks'
 import { dateUtils } from '@/utils/date'
 import { stockUtils } from '@/utils/stock'
 import { cn } from '@/utils/style'
-import { useUnmount } from 'ahooks'
+import { useMount, useUnmount } from 'ahooks'
 import dayjs from 'dayjs'
 import Decimal from 'decimal.js'
 import { memo, useRef, useState } from 'react'
 import { useChartManage } from '../lib'
 import { renderUtils } from '../lib/utils'
+import confetti from 'canvas-confetti'
 
 const disabledDate = (d: Date, candlesticks: StockRawRecord[]) => {
   if (!candlesticks.length) return true
@@ -127,6 +128,11 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
 
     if (currentKline.current >= candlesticksRestore.current.length) {
       resultModel.modal.open()
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 }
+      })
       return false
     }
 
@@ -137,6 +143,11 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
       closePosition(candlesticksRestore.current.length - 1)
 
       resultModel.modal.open()
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 }
+      })
       currentKline.current = -1
       return false
     }
@@ -188,6 +199,11 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
     window.clearInterval(timer!)
     setTimer(null)
     resultModel.modal.open()
+    confetti({
+      particleCount: 100,
+      spread: 70,
+      origin: { y: 0.6 }
+    })
     props.onChangeCandlesticks(candlesticksRestore.current)
     currentKline.current = -1
   }
@@ -443,6 +459,8 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
       const timeIndex = useChartManage.getState().chartStores[props.chartId].interval
 
       const total = Math.max(tradeRecord.buy.length, tradeRecord.sell.length)
+
+    
       return (
         <div className="text-center px-4 h-[444px] ">
           <div className="h-[108px] w-[100px] mx-auto mt-8">

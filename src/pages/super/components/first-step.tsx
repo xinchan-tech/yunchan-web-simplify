@@ -70,7 +70,7 @@ const DropdownSelector = ({ onSelect, selectedType }: DropdownSelectorProps) => 
     },
     {
       id: 'GoldenPool',
-      name: '股票自选',
+      name: '我的自选',
       icon: <StockTrendIcon />
     },
     {
