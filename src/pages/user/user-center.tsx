@@ -55,6 +55,7 @@ const UserCenter = () => {
       show_invite: s.user?.show_invite,
     }))
   )
+  const hasAuthorized = useUser(s => s.hasAuthorized())
   const setUser = useUser(s => s.setUser)
   const loginType = useUser(s => s.loginType)
 
@@ -168,7 +169,7 @@ const UserCenter = () => {
           </div>
         </div>
         <div>
-          <span className="text-xl">{user.name}</span><br/>
+          <span className="text-xl">{user.name}</span><br />
           <span className="text-xs text-secondary leading-6">
             本次登录方式:&nbsp;
             {{
@@ -230,9 +231,13 @@ const UserCenter = () => {
 
           </div>
         </div> */}
-        <UserInfoCell label="转移我的 Apple 登录账号">
-          <AppleLogin />
-        </UserInfoCell>
+        {
+          loginType === 'apple' && !hasAuthorized && (
+            <UserInfoCell label="转移我的 Apple 登录账号">
+              <AppleLogin />
+            </UserInfoCell>
+          )
+        }
 
         <UserInfoCell label="昵称">
           {user.name}

@@ -48,7 +48,7 @@ const getLastTime = () => {
 
 
   if (localDate.isBefore(localDate.hour(9).minute(30).second(0))) {
-    return getPrevTradingDays(localDate, 1)[0]
+    return getPrevTradingDays(localDate, 2)[0]
   }
   return getPrevTradingDays(localDate, 1)[0]
 }
