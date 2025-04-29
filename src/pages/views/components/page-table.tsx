@@ -10,7 +10,7 @@ import {
 import { usePagination, useTableData, useTableRowClickToStockTrading } from '@/hooks'
 import { useStockList } from "@/store"
 import { sysConfig } from "@/utils/config"
-import { stockSubscribe, stockUtils } from '@/utils/stock'
+import { stockSubscribe, stockUtils, SubscribeTopic } from '@/utils/stock'
 import { useQuery } from '@tanstack/react-query'
 import { useUnmount } from "ahooks"
 
@@ -99,7 +99,7 @@ const PageTable = (props: PageTableProps) => {
       key: columnMap[sort.column] as any
     })
 
-    const cancel = stockSubscribe.on('rank_subscribe', (data) => {
+    const cancel = stockSubscribe.on(SubscribeTopic.Rank, (data) => {
       if (data.data.length > 0) {
         setList((s: TableDataType[]) => {
           data.data.forEach(v => {
