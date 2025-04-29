@@ -211,9 +211,9 @@ const AlarmItem = ({ symbol, data, onDelete }: AlarmItemProps) => {
           ? `${Math.abs((value * 100)).toFixed(2)}%`
           : (Math.abs(value)).toFixed(2)
       return (
-        <span data-direction={value > 0 ? 'up' : 'down'}>
+        <span data-direction={value < 0 ? 'up' : 'down'}>
           {
-            value > 0 ? (
+            value < 0 ? (
               <span>
                 上涨追踪 ↑ {data.condition.float_param.type === 1 ? '按回撤比例' : '按回撤金额'}
               </span>
@@ -479,7 +479,7 @@ const AlarmRecordItem = ({ symbol, data, onDelete }: AlarmRecordItemProps) => {
       return (
         <span data-direction={value > 0 ? 'up' : 'down'}>
           {
-            value > 0 ? (
+            value <= 0 ? (
               <span>
                 上涨追踪 ↑ {data.condition.data.trigger_type === 1 ? '按回撤比例' : '按回撤金额'}
               </span>
