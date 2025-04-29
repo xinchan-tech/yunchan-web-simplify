@@ -42,6 +42,7 @@ export const useConnectIM = () => {
     WKSDK.shared().config.token = token
     WKSDK.shared().config.addr = localConfig.addr
     WKSDK.shared().config.deviceFlag = localConfig.deviceFlag
+    WKSDK.shared().config.heartbeatInterval = 10 * 1000
 
     chatManager.setState(ChatConnectStatus.Connecting)
 
