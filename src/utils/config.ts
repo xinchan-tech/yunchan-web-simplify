@@ -25,6 +25,7 @@ export const sysConfig = {
   PUBLIC_BASE_OSS_ACCESSKEYID: import.meta.env.PUBLIC_BASE_OSS_ACCESSKEYID,
   PUBLIC_BASE_OSS_ACCESS_KEY_SECRET: import.meta.env.PUBLIC_BASE_OSS_ACCESS_KEY_SECRET,
   PUBLIC_BASE_BUILD_ENV: import.meta.env.PUBLIC_BASE_BUILD_ENV,
+  PUBLIC_BASE_WS_IM: import.meta.env.PUBLIC_BASE_WS_IM,
   OS: os
 }
 window._sysConfig = sysConfig
