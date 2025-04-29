@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.7.5](https://github.com/xinchan-gx/yunchan-web/compare/2.7.4...2.7.5) (2025-04-29)
+
+### ✨ Features | 新功能
+
+* 更新用户中心，添加Apple登录授权状态判断，优化用户信息展示 ([bf4c1ea](https://github.com/xinchan-gx/yunchan-web/commit/bf4c1eaaed377b70e25a97049ce26907753f7244))
+* 更新IM连接配置，设置心跳间隔为10秒；调整获取上一个交易日的逻辑 ([f8c07de](https://github.com/xinchan-gx/yunchan-web/commit/f8c07ded054ae00a3a113d1052a76b0b4b8564d0))
+
 ## [2.7.4](https://github.com/xinchan-gx/yunchan-web/compare/2.7.3...2.7.4) (2025-04-29)
 
 ## [2.7.3](https://github.com/xinchan-gx/yunchan-web/compare/2.7.2...2.7.3) (2025-04-29)
