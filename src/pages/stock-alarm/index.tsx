@@ -260,9 +260,9 @@ const AlarmItem = ({ symbol, data, onDelete }: AlarmItemProps) => {
       onClick={onNav}
       onKeyDown={() => { }}
     >
-      <div className="flex items-center w-full relative">
+      <div className="flex items-center w-full relative whitespace-nowrap">
         <JknIcon.Stock symbol={symbol} className="w-4 h-4 leading-4 mr-1" />
-        <span>{symbol}</span>，{renderTrigger()}
+        <span className="flex-1 whitespace-nowrap text-ellipsis overflow-hidden text-left"><span>{symbol}</span>，{renderTrigger()}</span>
         <span className="bg-accent rounded-xs px-1 py-[1px] box-border text-tertiary text-xs ml-1">
           {data.type === AlarmType.AI ? 'AI' : data.type === AlarmType.PERCENT ? '浮动' : '股价'}
         </span>
@@ -489,7 +489,7 @@ const AlarmRecordItem = ({ symbol, data, onDelete }: AlarmRecordItemProps) => {
               </span>
             )
           }
-          &nbsp;{data.condition.data.trigger_type === 1 ? `${(data.condition.data.pnl_percent * 100).toFixed(2)}%` : data.condition.data.pnl_price.toFixed(3)}
+          &nbsp;{data.condition.data.trigger_type === 1 ? `${(Math.abs(data.condition.data.pnl_percent * 100)).toFixed(2)}%` : Math.abs(data.condition.data.pnl_price).toFixed(3)}
         </span>
       )
     }
@@ -505,7 +505,7 @@ const AlarmRecordItem = ({ symbol, data, onDelete }: AlarmRecordItemProps) => {
     >
       <div className="flex items-center w-full relative">
         <JknIcon.Stock symbol={symbol} className="w-4 h-4 leading-4 mr-1" />
-        <span>{symbol}</span>，{renderTrigger()}
+        <span className="flex-1 whitespace-nowrap text-ellipsis overflow-hidden text-left"><span>{symbol}</span>，{renderTrigger()}</span>
         <span className="bg-accent rounded-xs px-1 py-[1px] box-border text-tertiary text-xs ml-1">
           {data.type === AlarmType.AI ? 'AI' : data.type === AlarmType.PERCENT ? '浮动' : '股价'}
         </span>

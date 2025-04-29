@@ -8,7 +8,8 @@ import { useEffect } from 'react'
 export const HotTop = () => {
   const tops = useQuery({
     queryKey: [getPalTop.cacheKey],
-    queryFn: () => getPalTop()
+    queryFn: () => getPalTop(),
+    refetchInterval: 60 * 1000
   })
   const [chart, dom] = useChart()
 
