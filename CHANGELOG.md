@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.7.6](https://github.com/xinchan-gx/yunchan-web/compare/2.7.5...2.7.6) (2025-04-29)
+
+### ✨ Features | 新功能
+
+* 优化警报项展示，增加文本溢出处理和绝对值计算 ([dfaf317](https://github.com/xinchan-gx/yunchan-web/commit/dfaf31791f73d976e3672b10c8337347978e90cd))
+
 ## [2.7.5](https://github.com/xinchan-gx/yunchan-web/compare/2.7.4...2.7.5) (2025-04-29)
 
 ### ✨ Features | 新功能
