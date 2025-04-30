@@ -329,7 +329,7 @@ const AlarmItem = ({ symbol, data, onDelete }: AlarmItemProps) => {
     >
       <div className="flex items-center w-full relative whitespace-nowrap">
         <JknIcon.Stock symbol={symbol} className="w-4 h-4 leading-4 mr-1" />
-        <span className="flex-1 whitespace-nowrap text-ellipsis overflow-hidden text-left"><span>{symbol}</span>，{renderTrigger()}</span>
+        <span className="whitespace-nowrap text-ellipsis overflow-hidden text-left"><span>{symbol}</span>，{renderTrigger()}</span>
         <span className="bg-accent rounded-xs px-1 py-[1px] box-border text-tertiary text-xs ml-1">
           {data.type === AlarmType.AI ? 'AI' : data.type === AlarmType.PERCENT ? '浮动' : '股价'}
         </span>
@@ -577,7 +577,7 @@ const AlarmRecordItem = ({ symbol, data, onDelete }: AlarmRecordItemProps) => {
     >
       <div className="flex items-center w-full relative">
         <JknIcon.Stock symbol={symbol} className="w-4 h-4 leading-4 mr-1" />
-        <span className="flex-1 whitespace-nowrap text-ellipsis overflow-hidden text-left"><span>{symbol}</span>，{renderTrigger()}</span>
+        <span className="whitespace-nowrap text-ellipsis overflow-hidden text-left"><span>{symbol}</span>，{renderTrigger()}</span>
         <span className="bg-accent rounded-xs px-1 py-[1px] box-border text-tertiary text-xs ml-1">
           {data.type === AlarmType.AI ? 'AI' : data.type === AlarmType.PERCENT ? '浮动' : '股价'}
         </span>

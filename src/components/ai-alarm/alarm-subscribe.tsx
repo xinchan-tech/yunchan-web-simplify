@@ -7,6 +7,9 @@ import { memo, useEffect } from 'react'
 import { toast } from 'sonner'
 import { JknIcon, Sonner, Star } from '..'
 import { appEvent } from "@/utils/event"
+import NoticeMp3 from '@/assets/notice/alarm_notice.mp3'
+
+let noticeCache: HTMLAudioElement | null = null
 
 export const AlarmSubscribe = memo(() => {
   const token = useToken(s => s.token)
@@ -17,6 +20,10 @@ export const AlarmSubscribe = memo(() => {
 
       const unSubscribe = ws.onAlarm(e => {
         appEvent.emit('alarm', e)
+        if(noticeCache){
+          noticeCache = new Audio(NoticeMp3)
+        }
+        noticeCache?.play()
         const n = toast(
           <AlarmContent
             data={e}
