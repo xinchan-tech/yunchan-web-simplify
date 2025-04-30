@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.7.7](https://github.com/xinchan-gx/yunchan-web/compare/2.7.6...2.7.7) (2025-04-30)
+
+### ✨ Features | 新功能
+
+* 更新组件样式，调整CollectDropdownMenu和StockRelated中的文本样式 ([aea10a3](https://github.com/xinchan-gx/yunchan-web/commit/aea10a364fdd3a90a47bb9b9c35a1d0087b8b74b))
+
 ## [2.7.6](https://github.com/xinchan-gx/yunchan-web/compare/2.7.5...2.7.6) (2025-04-29)
 
 ### ✨ Features | 新功能
