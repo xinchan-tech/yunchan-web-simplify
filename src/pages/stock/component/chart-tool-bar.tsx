@@ -322,7 +322,7 @@ export const ChartTypeSelect = memo(() => {
                 : chartType === ChartType.Candle
                   ? 'chart-candle'
                   : chartType === ChartType.AmericanLine
-                    ? 'chart-area'
+                    ? 'chart-american'
                     : 'chart-area'
             }
             size={20}
@@ -350,7 +350,7 @@ export const ChartTypeSelect = memo(() => {
           data-checked={!renderUtils.isTimeIndexChart(interval) && chartType === ChartType.AmericanLine}
           onClick={() => onChartTypeChange(ChartType.AmericanLine)}
         >
-          <JknIcon.Svg name="chart-area" size={20} />
+          <JknIcon.Svg name="chart-american" size={20} />
           美国线
         </DropdownMenuItem>
       </DropdownMenuContent>
