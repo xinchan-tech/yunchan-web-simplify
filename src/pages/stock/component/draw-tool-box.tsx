@@ -1,5 +1,5 @@
 import { getUserPlotting } from "@/api"
-import { Button, type ChartOverlayType, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, JknAlert, JknColorPickerPopover, JknIcon, JknRcTable, type JknRcTableProps, Popover, PopoverContent, PopoverTrigger, useModal } from '@/components'
+import { Button, type ChartOverlayType, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, JknAlert, JknColorPickerPopover, JknIcon, JknRcTable, type JknRcTableProps, Popover, PopoverContent, PopoverTrigger, useModal, withTooltip } from '@/components'
 import { useCheckboxGroup } from "@/hooks"
 import { dateUtils } from "@/utils/date"
 import { stockUtils } from "@/utils/stock"
@@ -279,11 +279,11 @@ const DrawSettingBar = ({ pos }: { pos: { x: number; y: number }, type: ChartOve
         </div>
       </div>
       <div className="flex items-center">
-        <DrawSettingColorPicker color={setting.color} onChange={c => _setSetting({ ...setting, color: c })} />
-        <DrawSettingLineWidthPicker width={setting.width} onChange={w => _setSetting({ ...setting, width: w })} />
-        <DrawSettingLineTypePicker type={setting.type} onChange={t => _setSetting({ ...setting, type: t })} />
-        <DrawSettingLockPicker lock={setting.lock} onChange={l => _setLock(l)} />
-        <DrawSettingDeletePicker lock={setting.lock} onClick={() => _setDelete()} />
+        <DrawSettingColorPicker color={setting.color} onChange={c => _setSetting({ ...setting, color: c })} label="颜色选择" side="bottom" sideOffset={4} />
+        <DrawSettingLineWidthPicker width={setting.width} onChange={w => _setSetting({ ...setting, width: w })} label="画线宽度" side="bottom" sideOffset={4}  />
+        <DrawSettingLineTypePicker type={setting.type} onChange={t => _setSetting({ ...setting, type: t })} label="画线类型" side="bottom" sideOffset={4} />
+        <DrawSettingLockPicker lock={setting.lock} onChange={l => _setLock(l)} label="锁定画线" side="bottom" sideOffset={4}  />
+        <DrawSettingDeletePicker lock={setting.lock} onClick={() => _setDelete()} label="删除画线" side="bottom" sideOffset={4}  />
       </div>
     </div>
   )
@@ -447,7 +447,7 @@ const DrawToolAction = () => {
 }
 
 
-const DrawSettingColorPicker = ({ color, onChange }: { color: string; onChange: (newColor: string) => void }) => {
+const DrawSettingColorPicker = withTooltip(({ color, onChange }: { color: string; onChange: (newColor: string) => void }) => {
 
   return (
     <JknColorPickerPopover color={color} onChange={onChange}>
@@ -457,9 +457,9 @@ const DrawSettingColorPicker = ({ color, onChange }: { color: string; onChange: 
       </div>
     </JknColorPickerPopover>
   )
-}
+})
 
-const DrawSettingLineWidthPicker = ({ width, onChange }: { width: number; onChange: (newWidth: number) => void }) => {
+const DrawSettingLineWidthPicker = withTooltip(({ width, onChange }: { width: number; onChange: (newWidth: number) => void }) => {
   const lines = [1, 2, 3, 4, 5]
 
   return (
@@ -489,8 +489,8 @@ const DrawSettingLineWidthPicker = ({ width, onChange }: { width: number; onChan
     </DropdownMenu>
   )
 }
-
-const DrawSettingLineTypePicker = ({ type, onChange }: { type: string; onChange: (newType: string) => void }) => {
+)
+const DrawSettingLineTypePicker = withTooltip(({ type, onChange }: { type: string; onChange: (newType: string) => void }) => {
   const types = ['solid', 'dashed', 'dotted']
 
   return (
@@ -521,17 +521,17 @@ const DrawSettingLineTypePicker = ({ type, onChange }: { type: string; onChange:
       </DropdownMenuContent>
     </DropdownMenu>
   )
-}
+})
 
-const DrawSettingLockPicker = ({ lock, onChange }: { lock: boolean; onChange: (newLock: boolean) => void }) => {
+const DrawSettingLockPicker = withTooltip(({ lock, onChange }: { lock: boolean; onChange: (newLock: boolean) => void }) => {
   return (
     <div className="size-4 p-1.5 mx-1 hover:bg-accent rounded cursor-pointer data-[checked=true]:bg-primary" data-checked={lock} onClick={() => onChange(!lock)} onKeyDown={() => void 0}>
       <JknIcon.Svg name="draw-lock" className="w-full h-full" />
     </div>
   )
-}
+})
 
-const DrawSettingDeletePicker = ({ onClick, lock }: { lock: boolean, onClick: () => void }) => {
+const DrawSettingDeletePicker = withTooltip(({ onClick, lock }: { lock: boolean, onClick: () => void }) => {
   const _onClick = () => {
     if (!lock) {
       onClick()
@@ -552,7 +552,7 @@ const DrawSettingDeletePicker = ({ onClick, lock }: { lock: boolean, onClick: ()
       <JknIcon.Svg name="draw-delete" className="w-full h-full" />
     </div>
   )
-}
+})
 
 const DrawStatisticsTable = () => {
   const draws = useQuery({

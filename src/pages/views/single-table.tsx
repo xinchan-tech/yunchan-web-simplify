@@ -85,7 +85,7 @@ const SingleTable = (props: SingleTableProps) => {
     queryFn: () => QueryFn()
   })
 
-  const [list, { setList, onSort }] = useTableData<TableDataType>([], 'symbol')
+  const [list, { setList, onSort }] = useTableData<TableDataType>([])
 
   useEffect(() => {
     const r: TableDataType[] = []
@@ -129,7 +129,7 @@ const SingleTable = (props: SingleTableProps) => {
   const onSortChange: JknRcTableProps<TableDataType>['onSort'] = (columnKey, sort) => {
     if (!props.type || ['all', 'ixic', 'spx', 'dji', 'etf'].includes(props.type)) {
       const columnMap: Record<string, UsStockColumn> = {
-        code: 'symbol',
+        symbol: 'symbol',
         price: 'close',
         amount: 'amount',
         percent: 'increase',
@@ -173,7 +173,7 @@ const SingleTable = (props: SingleTableProps) => {
       },
       {
         title: '名称代码',
-        dataIndex: 'name',
+        dataIndex: 'symbol',
         align: 'left',
         width: '12.5%',
         sort: true,

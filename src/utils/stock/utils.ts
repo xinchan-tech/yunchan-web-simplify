@@ -408,10 +408,15 @@ export const stockUtils = {
     }
   },
 
-  getIndexTimeTick: () => {
-    const PRE_NUMBER = 330
+  getIndexTimeTick: (symbol?: string) => {
+    let PRE_NUMBER = 330
     const POST_NUMBER = 390
-    const AFTER_NUMBER = 240
+    let AFTER_NUMBER = 240
+
+    if(symbol && ['IXIC', 'DJI', 'SPY'].includes(symbol)) {
+      PRE_NUMBER = 0
+      AFTER_NUMBER = 0
+    }
 
     return {
       pre: PRE_NUMBER,

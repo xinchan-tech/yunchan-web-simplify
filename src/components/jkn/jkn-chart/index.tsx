@@ -149,12 +149,14 @@ interface JknChartIns {
       value: number
     }[]
     id?: string
+    indicatorId?: string
   }) => void
   setOverlay: (id: string, params: DrawOverlayParams) => void
   lockOverlay: (id?: string) => void
   unlockOverlay: (id?: string) => void
   removeOverlay: (id?: string | string[]) => void
   hideOverlay: (visible: boolean) => void
+  setPriceMarkStyle: (style: 'full' | 'last') => void
 }
 
 const getAxisType = (chart: Chart) => {
@@ -875,9 +877,18 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
     },
     createOverlay: (type, opts) => {
       const uid = opts.id || `overlay-${nanoid(8)}`
+      let paneId: string = ChartTypes.MAIN_PANE_ID
+      if (opts.indicatorId) {
+        const indicator = chart.current?.getIndicators({ id: opts.indicatorId })[0]
+        if (indicator) {
+          paneId = indicator.paneId
+        }
+      }
+
       chart.current?.createOverlay({
         id: uid,
         name: type,
+        paneId,
         onDrawEnd: (e) => opts.onEnd(e as OverlayEvent<DrawOverlayParams>),
         onDrawStart: (e) => {
           return opts.onStart(type, e as OverlayEvent<DrawOverlayParams>)
@@ -963,6 +974,19 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
     hideOverlay: (visible) => {
       chart.current?.overrideOverlay({
         visible: visible
+      })
+    },
+    setPriceMarkStyle: (style) => {
+      chart.current?.setStyles({
+        candle: {
+          priceMark: {
+            last: {
+              line: {
+                type: style
+              }
+            }
+          }
+        }
       })
     }
   }))

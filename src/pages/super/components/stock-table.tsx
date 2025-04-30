@@ -128,7 +128,7 @@ const StockTable = (props: StockTableProps) => {
         title: '',
         dataIndex: 'index',
         align: 'center',
-        width: 30,
+        width: 50,
         render: (_, _row, index) => <span>{index + 1}</span>
       },
       {

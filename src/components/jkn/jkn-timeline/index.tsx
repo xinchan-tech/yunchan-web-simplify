@@ -189,6 +189,7 @@ export const JknTimeline: React.FC<JknTimelineProps> = ({
           const itemTailColor = item.tailColor || defaultTailColor
 
           return (
+            // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
             <div key={index} className="flex items-stretch">
               <div className="flex flex-col items-center" style={{ marginRight: `${tailMarginRight}px` }}>
                 {/* 时间轴点 */}
@@ -208,7 +209,7 @@ export const JknTimeline: React.FC<JknTimelineProps> = ({
                   style={{
                     borderLeft: `${tailWidth}px dashed ${itemTailColor}`
                   }}
-                ></div>
+                />
               </div>
 
               {/* 内容区域 */}
@@ -232,7 +233,7 @@ export const JknTimeline: React.FC<JknTimelineProps> = ({
         )}
 
         {/* 底部填充，确保内容可以完全滚动到视图中 */}
-        <div className="h-[50px]"></div>
+        <div className="h-[50px]" />
       </div>
     </div>
   )

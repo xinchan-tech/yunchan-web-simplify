@@ -64,7 +64,7 @@ const EtfTable = (props: PageTableProps) => {
     }
   })
 
-  const [list, { setList, onSort }] = useTableData<TableDataType>([], 'symbol')
+  const [list, { setList, onSort }] = useTableData<TableDataType>([])
 
   useEffect(() => {
     const r: TableDataType[] = []
@@ -110,7 +110,7 @@ const EtfTable = (props: PageTableProps) => {
   const onSortChange: JknRcTableProps<TableDataType>['onSort'] = (columnKey, sort) => {
     if (!props.type || ['all', 'ixic', 'spx', 'dji', 'etf'].includes(props.type)) {
       const columnMap: Record<string, UsStockColumn> = {
-        code: 'symbol',
+        symbol: 'symbol',
         price: 'close',
         amount: 'amount',
         percent: 'increase',

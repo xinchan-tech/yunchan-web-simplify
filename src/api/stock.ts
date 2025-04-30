@@ -2026,6 +2026,7 @@ type SaveUserPlottingParams = {
   symbol: string
   kline: string
   text?: string
+  indicator_id?: number
   css?: {
     width: number
     color: string

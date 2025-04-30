@@ -295,7 +295,7 @@ export const MessageTransform = {
     } else if (+msg.contentType === +ChatMessageType.System){
       message = {
         ...message,
-        content: msg.content.content,
+        content: msg.content.content.content,
         type: ChatMessageType.System
       } as ChatSystemMessage
     }

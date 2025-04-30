@@ -57,7 +57,7 @@ export const MainChart = (props: MainChartProps) => {
     },
   })
 
-  const createOverlay = useCallback(({ type, params, points, id }: ChartEvents['drawStart']) => {
+  const createOverlay = useCallback(({ type, params, points, id, indicatorId }: ChartEvents['drawStart']) => {
     chartImp.current?.createOverlay(type, {
       onEnd: e => {
         chartEvent.get().emit('drawEnd', {
@@ -73,7 +73,8 @@ export const MainChart = (props: MainChartProps) => {
           JknAlert.toast('未知的绘图类型')
           return true
         }
-        saveUserPlotting({
+        
+        const params: FuncParams<typeof saveUserPlotting>[0] = {
           hash: e.overlay.id,
           symbol: symbol,
           kline: chartStore.interval.toString(),
@@ -92,7 +93,14 @@ export const MainChart = (props: MainChartProps) => {
             x: `${dateUtils.toUsDay(p.timestamp).format('YYYY-MM-DD HH:mm:00')}@0.00`,
             y: p.value!
           }))
-        }).catch(() => {
+        }
+
+        if(e.overlay.paneId !== ChartTypes.MAIN_PANE_ID){
+          const indicator = e.chart.getIndicators({paneId: e.overlay.paneId})[0]
+          params.indicator_id = +indicator?.id
+        }
+
+        saveUserPlotting(params).catch(() => {
           JknAlert.toast('保存绘图失败')
         })
         return true
@@ -120,19 +128,20 @@ export const MainChart = (props: MainChartProps) => {
       },
       params,
       points: points ?? [],
-      id
+      id,
+      indicatorId
     })
   }, [chartStore.interval, symbol])
 
 
   useEffect(() => {
-    chartImp.current?.removeOverlay()
     plotting.data?.forEach(data => {
       const type = renderUtils.getOverlayById(data.plotting_id)
       if (!type) return
       createOverlay({
         type,
         id: data.hash,
+        indicatorId: data.indicator_id ? data.indicator_id.toString() : undefined,
         params: {
           cross: data.cross === 1,
           color: data.css?.color ?? '#ffffff',
@@ -148,6 +157,9 @@ export const MainChart = (props: MainChartProps) => {
       })
     })
 
+    return () => {
+      chartImp.current?.removeOverlay()
+    }
 
   }, [plotting.data, createOverlay])
 
@@ -359,8 +371,22 @@ export const MainChart = (props: MainChartProps) => {
 
     chartImp.current?.applyNewData(stockData)
 
+    const store = chartManage.getChart(props.chartId)
+
+    if(store){
+      if(renderUtils.isTimeIndexChart(store.interval)){
+        const tick = stockUtils.getIndexTimeTick(store.symbol)
+
+        if(tick.total === candlesticks.length){
+          chartImp.current?.setPriceMarkStyle('full')
+        }else{
+          chartImp.current?.setPriceMarkStyle('last')
+        }
+      }
+    }
+
     chartImp.current?.removeBackTestIndicator()
-  }, [candlesticks, chartStore.mode])
+  }, [candlesticks, chartStore.mode, props.chartId])
 
   /**
    * 缠论数据变化

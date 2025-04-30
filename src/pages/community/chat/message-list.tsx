@@ -149,7 +149,7 @@ const ChatMessageRow = ({ message, isRevokeMessage, me }: PropsWithChildren<Chat
     if (message.content) {
       return (
         <div className="text-center py-2.5 text-sm text-tertiary">
-          {message.senderName || message.senderId} {message.content}
+          {message.content}
         </div>
       )
     }

@@ -50,7 +50,6 @@ import { nanoid } from 'nanoid'
 import { listify } from 'radash'
 import type { TableProps } from 'rc-table'
 import { memo, useCallback, useEffect, useMemo, useState } from 'react'
-import { useNavigate } from 'react-router'
 import { chartManage, stockBaseCodeInfoExtend, useSymbolQuery } from '../lib'
 
 const StockInfo = () => {
@@ -489,7 +488,29 @@ const StockNews = () => {
           <div className="bg-[#3d3152] flex w-full rounded-lg items-center px-2 py-1 box-border">
             <HoverCard openDelay={100}>
               <HoverCardTrigger>
-                <JknIcon.Svg name="message" className="mr-2 mt-0.5 text-[#A77FED]" size={14} />
+                <div className="flex-1 flex items-center">
+                  <JknIcon.Svg name="message" className="mr-2 mt-0.5 flex-shrink-0 text-[#A77FED]" size={14} />
+                  <Carousel
+                    plugins={[
+                      Autoplay({
+                        delay: 1000 * 5
+                      })
+                    ]}
+                    orientation="vertical"
+                  >
+                    <CarouselContent className="h-12">
+                      {newList.data?.event.map(item => (
+                        <div key={nanoid()} className="flex-grow-0 flex-shrink-0 basis-full flex items-center line-clamp-2">
+                          <span className="text-xs">
+                            {dateUtils.dateAgo(dayjs(item.time * 1000))}
+                            &nbsp; · 【美东】{item.title}
+                          </span>
+                        </div>
+                      ))}
+                    </CarouselContent>
+                  </Carousel>
+                </div>
+
               </HoverCardTrigger>
               <HoverCardContent
                 side="left"
@@ -547,27 +568,6 @@ const StockNews = () => {
                 </div>
               </HoverCardContent>
             </HoverCard>
-            <div className="flex-1">
-              <Carousel
-                plugins={[
-                  Autoplay({
-                    delay: 1000 * 5
-                  })
-                ]}
-                orientation="vertical"
-              >
-                <CarouselContent className="h-12">
-                  {newList.data?.event.map(item => (
-                    <div key={nanoid()} className="flex-grow-0 flex-shrink-0 basis-full flex items-center line-clamp-2">
-                      <span className="text-xs">
-                        {dateUtils.dateAgo(dayjs(item.time * 1000))}
-                        &nbsp; · 【美东】{item.title}
-                      </span>
-                    </div>
-                  ))}
-                </CarouselContent>
-              </Carousel>
-            </div>
             <JknIcon.Svg name="arrow-right" size={8} />
           </div>
         </div>

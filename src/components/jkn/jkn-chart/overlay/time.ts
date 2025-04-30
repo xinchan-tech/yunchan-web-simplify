@@ -110,7 +110,9 @@ export const TimeOverlay = createOverlayTemplate({
       { x: coordinates[0].x, y: coordinates[0].y },
       { x: coordinates[1].x, y: coordinates[0].y }
     ]) as Point[]
-    const dataList = chart.getDataList().slice(points[0].dataIndex, points[1].dataIndex + 1)
+    const start = Math.min(points[0].dataIndex, points[1].dataIndex)
+    const end = Math.max(points[0].dataIndex, points[1].dataIndex)
+    const dataList = chart.getDataList().slice(start, end + 1)
 
     let kline = 1
     let day = 1

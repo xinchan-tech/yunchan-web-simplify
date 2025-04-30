@@ -116,7 +116,7 @@ const EconomicTimeline: React.FC = () => {
       }
 
       // 只有当日期大于等于今天时，才设置轴点颜色为主色
-      return isCurrentOrFuture ? { ...itemConfig, dot: primaryColor } : itemConfig
+      return isCurrentOrFuture ? { ...itemConfig, dot: primaryColor, tailColor: primaryColor } : itemConfig
     })
   }, [EconomicData])
 

@@ -40,6 +40,7 @@ export type ChartEvents = {
     type: ChartOverlayType,
     id?: string
     params: DrawOverlayParams,
+    indicatorId?: string
     points?: {
       timestamp: number
       value: number

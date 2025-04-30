@@ -169,7 +169,7 @@ const StockAlarmList = () => {
         rowKey="id"
         data={alarmQuery.data ?? []}
         hasMore={alarmQuery.hasNextPage}
-        fetchMore={alarmQuery.fetchNextPage}
+        fetchMore={() => !alarmQuery.isFetchingNextPage && alarmQuery.fetchNextPage()}
         loading={alarmQuery.isLoading}
         renderItem={row => <AlarmItem symbol={row.symbol} data={row} onDelete={onDelete} />}
       />
@@ -424,7 +424,7 @@ const StockAlarmRecordList = () => {
         loading={alarmQuery.isLoading}
         data={alarmQuery.data ?? []}
         hasMore={alarmQuery.hasNextPage}
-        fetchMore={alarmQuery.fetchNextPage}
+        fetchMore={() => !alarmQuery.isFetchingNextPage && alarmQuery.fetchNextPage()}
         renderItem={row => <AlarmRecordItem symbol={row.symbol} data={row} onDelete={onDelete} />}
       />
     </div>
