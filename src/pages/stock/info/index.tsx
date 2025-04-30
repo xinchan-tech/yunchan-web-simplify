@@ -678,7 +678,7 @@ const StockRelated = () => {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <div onClick={() => setMenuType('plates')} onKeyDown={() => { }}>
-              <span className="text-lg font-bold">
+              <span className="text-lg font-bold font-pingfang text-foreground">
                 {plates?.find(item => item.id === plateId)?.name ? (
                   <span>{plates?.find(item => item.id === plateId)?.name}</span>
                 ) : (
