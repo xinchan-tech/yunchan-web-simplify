@@ -43,7 +43,8 @@ const MenuRight = () => {
       .conversationManager.sync(),
     select: (data) => {
       return data.reduce((acc, item) => acc + item.unread, 0)
-    }
+    },
+    refetchInterval: 1000 * 60,
   })
 
   useAppEvent('alarm', useCallback(() => {

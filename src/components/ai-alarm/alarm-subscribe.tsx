@@ -20,9 +20,10 @@ export const AlarmSubscribe = memo(() => {
 
       const unSubscribe = ws.onAlarm(e => {
         appEvent.emit('alarm', e)
-        if(noticeCache){
+        if(!noticeCache){
           noticeCache = new Audio(NoticeMp3)
         }
+
         noticeCache?.play()
         const n = toast(
           <AlarmContent
