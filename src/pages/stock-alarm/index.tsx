@@ -63,9 +63,9 @@ const StockAlarmPage = () => {
     <div className="rounded-xs bg-background h-full overflow-hidden ml-1 w-[calc(100%-4px)]">
       <div className="text-center h-full py-5 box-border">
         <Tabs value={activeTab} onValueChange={onTabClick as any} className="h-full flex flex-col">
-          <TabsList variant="flat" className="mx-5">
+          <TabsList variant="flat" className="w-[calc(100%-2rem)] mx-auto overflow-hidden">
             <TabsTrigger value={'list'} asChild>
-              <span className="w-full">
+              <span className="flex-1 overflow-hidden ">
                 &emsp;警报列表
                 {
                   conditionCount > 0 ? (
@@ -76,7 +76,7 @@ const StockAlarmPage = () => {
               </span>
             </TabsTrigger>
             <TabsTrigger value={'log'} asChild>
-              <span className="w-full relative">&emsp;触发日志
+              <span className="flex-1 overflow-hidden ">&emsp;触发日志
                 {
                   unRead.data && unRead.data.count > 0 ? (
                     <span>({unRead.data.count > 99 ? '99+' : unRead.data.count})</span>
