@@ -20,6 +20,7 @@ import { AlarmStockPicker } from './components/alarm-stock-picker'
 import { DatePicker } from './components/date-picker'
 import { FrequencySelect } from './components/frequency-select'
 import { NameInput } from './components/name-input'
+import { JknAlert } from "../jkn/jkn-alert"
 
 const formSchema = z.object({
   symbol: z.string({ message: '股票代码错误' }).min(1, '股票代码错误'),
@@ -53,8 +54,6 @@ export const PriceAlarmSetting = (props: PriceAlarmSetting) => {
     enabled: !!symbol
   })
 
-  const { toast } = useToast()
-
   const queryClient = useQueryClient()
 
   const onSubmit = async () => {
@@ -62,7 +61,7 @@ export const PriceAlarmSetting = (props: PriceAlarmSetting) => {
 
     if (!valid) {
       for (const err of Object.keys(form.formState.errors) as unknown as (keyof typeof form.formState.errors)[]) {
-        toast({ description: form.formState.errors[err]?.message })
+        JknAlert.error(form.formState.errors[err]?.message ?? '')
         return
       }
     }
@@ -100,18 +99,18 @@ export const PriceAlarmSetting = (props: PriceAlarmSetting) => {
     }
 
     if (rise.length + fall.length === 0) {
-      toast({ description: '股价设置条件必须要一个以上' })
+      JknAlert.error('股价设置条件必须要一个以上')
       return
     }
 
     const [err] = await to(addAlarm(params))
 
     if (err) {
-      toast({ description: err.message })
+      JknAlert.error(err.message)
       return
     }
 
-    toast({ description: '添加成功' })
+    JknAlert.success('添加成功')
     queryClient.refetchQueries({
       queryKey: [getAlarmConditionsList.cacheKey]
     })

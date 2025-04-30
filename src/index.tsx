@@ -6,12 +6,13 @@ import { QueryClientProvider } from '@tanstack/react-query'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { StrictMode, Suspense } from 'react'
 import '@/plugins/decimal-plugin'
-import {} from '@/utils/stock'
+import { } from '@/utils/stock'
 import { RouterProvider } from 'react-router'
 import { router } from './router'
 import './app.scss'
 import { IndicatorUtils } from './utils/coiling/index.ts'
 import { queryClient } from './utils/query-client.ts'
+import { initImDataSource } from "./pages/community/lib/datasource.ts"
 
 if (typeof window !== 'undefined' && import.meta.env.MODE === 'development') {
   scan({
@@ -22,6 +23,7 @@ if (typeof window !== 'undefined' && import.meta.env.MODE === 'development') {
 // initDataSource()
 
 IndicatorUtils.init()
+initImDataSource()
 
 const rootEl = document.getElementById('root')
 if (rootEl) {

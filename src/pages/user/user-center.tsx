@@ -285,14 +285,14 @@ const UserCenter = () => {
           </Button>
         </UserInfoCell>
 
-        <UserInfoCell label="账单明细">
+        {/* <UserInfoCell label="账单明细">
           <Button
             className="bg-accent text-foreground rounded w-[72px] ml-5"
             onClick={() => navigate('/app/user/subscribe')}
           >
             前往
           </Button>
-        </UserInfoCell>
+        </UserInfoCell> */}
 
         {user?.show_invite === 1 ? (
           <UserInfoCell label="填写邀请码">
@@ -479,7 +479,7 @@ const AppleLoginModal = () => {
     })
   })
 
-  const refreshUser = useUser(s => s.refreshUser)
+  // const refreshUser = useUser(s => s.refreshUser)
 
   const onClick = (e: React.MouseEvent<HTMLDivElement>) => {
     e.stopPropagation()
@@ -498,7 +498,7 @@ const AppleLoginModal = () => {
       JknAlert.info({
         content: '旧账号所有权限已经转移到此账号, 请重新登录',
         onAction: async () => {
-          appEvent.emit('logout')
+          appEvent.emit('logout', false)
         }
       })
     })

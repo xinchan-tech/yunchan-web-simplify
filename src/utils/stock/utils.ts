@@ -1,4 +1,4 @@
-import { StockChartInterval, type StockExtendResultMap, StockPeriod, type StockRawRecord } from '@/api'
+import { StockChartInterval, type StockExtendResultMap, StockPeriod, StockQuote, type StockRawRecord } from '@/api'
 import { router } from '@/router'
 import dayjs from 'dayjs'
 import Decimal from 'decimal.js'
@@ -442,6 +442,7 @@ export const stockUtils = {
       router.navigate(`/app/stock?${qs.stringify(query)}`)
     }
   },
+  
 
   parseTime
 }

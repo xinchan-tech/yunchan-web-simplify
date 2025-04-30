@@ -69,6 +69,7 @@ const Bills = () => {
           rowClassName={v => (v.status_text === '已取消' ? 'text-[#808080]' : '')}
           rowKey="id"
           columns={columns}
+          scroll={{y: undefined}}
           isLoading={bills.isLoading}
           border={false}
         />

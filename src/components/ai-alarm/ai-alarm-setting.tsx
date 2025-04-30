@@ -1,5 +1,5 @@
 import { type StockCategory, addAlarm, getAlarmConditionsList, getAlarmTypes } from '@/api'
-import { useToast, useZForm } from '@/hooks'
+import { useZForm } from '@/hooks'
 import { useConfig } from '@/store'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useBoolean, useUpdateEffect } from 'ahooks'
@@ -17,6 +17,7 @@ import { AlarmStockPicker } from './components/alarm-stock-picker'
 import { DatePicker } from './components/date-picker'
 import { FrequencySelect } from './components/frequency-select'
 import { NameInput } from './components/name-input'
+import { JknAlert } from "../jkn/jkn-alert"
 
 const formSchema = z.object({
   symbol: z.string({ message: '股票代码错误' }).min(1, '股票代码错误'),
@@ -47,7 +48,6 @@ const AiAlarmSetting = (props: AiAlarmSetting) => {
   })
   const [loading, { toggle }] = useBoolean(false)
 
-  const { toast } = useToast()
   const queryClient = useQueryClient()
 
   const categoryType = form.watch('categoryType')
@@ -57,7 +57,7 @@ const AiAlarmSetting = (props: AiAlarmSetting) => {
 
     if (!valid) {
       for (const err of Object.keys(form.formState.errors) as unknown as (keyof typeof form.formState.errors)[]) {
-        toast({ description: form.formState.errors[err]?.message })
+        JknAlert.error(form.formState.errors[err]?.message ?? '')
         return
       }
     }
@@ -80,16 +80,16 @@ const AiAlarmSetting = (props: AiAlarmSetting) => {
     const [err] = await to(addAlarm(params))
 
     if (err) {
-      toast({ description: err.message })
+      JknAlert.error(err.message)
       toggle()
       return
     }
-
-    toast({ description: '添加成功' })
+    JknAlert.success('添加成功')
     toggle()
     queryClient.refetchQueries({
       queryKey: [getAlarmConditionsList.cacheKey]
     })
+    form.reset()
   }
 
   return (
@@ -199,7 +199,7 @@ const AiAlarmSetting = (props: AiAlarmSetting) => {
           ) : null}
         </form>
       </FormProvider>
-      <div className="text-right mt-auto mb-6 space-x-2 px-8">
+      <div className="text-right mt-auto mb-6 space-x-2 px-8 flex items-center justify-end">
         <Button className="w-24" variant="outline" onClick={props.onClose}>
           取消
         </Button>

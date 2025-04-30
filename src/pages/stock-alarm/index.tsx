@@ -2,11 +2,14 @@ import {
   AlarmType,
   PriceAlarmTrigger,
   StockChartInterval,
+  cleanAllAlarmConditions,
   clearAlarmLogs,
   deleteAlarmCondition,
   deleteAlarmLog,
   getAlarmConditionsList,
-  getAlarmLogsList
+  getAlarmLogUnreadCount,
+  getAlarmLogsList,
+  markAlarmLogRead
 } from '@/api'
 import {
   DropdownMenu,
@@ -28,31 +31,63 @@ import {
 import { useQueryParams, useToast } from '@/hooks'
 import { useConfig } from '@/store'
 import { dateUtils } from '@/utils/date'
+import { useAppEvent } from "@/utils/event"
 import { stockUtils } from '@/utils/stock'
 import { cn } from '@/utils/style'
-import { WsV2 } from '@/utils/ws'
-import { useInfiniteQuery } from '@tanstack/react-query'
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import to from 'await-to-js'
 import dayjs from "dayjs"
 import Decimal from 'decimal.js'
-import { Fragment, type KeyboardEventHandler, useEffect, useState } from 'react'
+import { Fragment, type KeyboardEventHandler, useCallback, useEffect, useRef, useState } from 'react'
 
 const StockAlarmPage = () => {
   const [activeTab, setActiveTab] = useState<'list' | 'log'>('list')
+  const [conditionCount, setConditionCount] = useState(0)
+  // const queryClient = useQueryClient()
+
+  const unRead = useQuery({
+    queryKey: [getAlarmLogUnreadCount.cacheKey],
+    queryFn: getAlarmLogUnreadCount
+  })
+
+  const onTabClick = (tab: 'list' | 'log') => {
+    setActiveTab(tab)
+    if (tab === 'log') {
+      markAlarmLogRead().then(() => {
+        unRead.refetch()
+      })
+    }
+  }
+
   return (
     <div className="rounded-xs bg-background h-full overflow-hidden ml-1 w-[calc(100%-4px)]">
       <div className="text-center h-full py-5 box-border">
-        <Tabs value={activeTab} onValueChange={setActiveTab as any} className="h-full flex flex-col">
+        <Tabs value={activeTab} onValueChange={onTabClick as any} className="h-full flex flex-col">
           <TabsList variant="flat" className="mx-5">
             <TabsTrigger value={'list'} asChild>
-              <span className="w-full">&emsp;警报列表&emsp;</span>
+              <span className="w-full">
+                &emsp;警报列表
+                {
+                  conditionCount > 0 ? (
+                    <span>({conditionCount > 99 ? '99+' : conditionCount})</span>
+                  ) : null
+                }
+                &emsp;
+              </span>
             </TabsTrigger>
             <TabsTrigger value={'log'} asChild>
-              <span className="w-full">&emsp;触发日志&emsp;</span>
+              <span className="w-full relative">&emsp;触发日志
+                {
+                  unRead.data && unRead.data.count > 0 ? (
+                    <span>({unRead.data.count > 99 ? '99+' : unRead.data.count})</span>
+                  ) : null
+                }
+                &emsp;
+              </span>
             </TabsTrigger>
           </TabsList>
           <TabsContent value="list" className="flex-1 overflow-hidden">
-            <StockAlarmList />
+            <StockAlarmList onChange={setConditionCount} />
           </TabsContent>
           <TabsContent value="log" className="flex-1 overflow-hidden">
             <StockAlarmRecordList />
@@ -65,11 +100,12 @@ const StockAlarmPage = () => {
 
 type AlarmItemType = ArrayItem<Awaited<ReturnType<typeof getAlarmConditionsList>>['items']>
 
-const StockAlarmList = () => {
+const StockAlarmList = ({ onChange }: { onChange: (value: number) => void }) => {
   const [search, setSearch] = useState('')
   const [showSearch, setShowSearch] = useState(false)
   const [sort, setSort] = useState({ order: '', orderBy: '' })
   const [query] = useQueryParams<{ symbol?: string }>()
+  const total = useRef(0)
   const alarmQuery = useInfiniteQuery({
     queryKey: [getAlarmConditionsList.cacheKey, search, sort],
     queryFn: async ({ pageParam = 0 }) =>
@@ -84,21 +120,50 @@ const StockAlarmList = () => {
     getNextPageParam: (lastPage, _, lastPageParam) =>
       lastPage.total_pages > lastPageParam ? lastPageParam + 1 : undefined,
     getPreviousPageParam: () => undefined,
-    select: data => data.pages.flatMap(p => p.items ?? [])
+    select: data => {
+      total.current = data.pages[0]?.total_items ?? 0
+      return data.pages.flatMap(p => p.items ?? [])
+    }
   })
 
-  const { toast } = useToast()
+  useEffect(() => {
+    if (!alarmQuery.isLoading) {
+      onChange(total.current)
+    }
+  }, [alarmQuery.isLoading, onChange])
+
 
   const onDelete = async (id: string) => {
     const [err] = await to(deleteAlarmCondition([id]))
 
     if (err) {
-      toast({ description: err.message })
+      JknAlert.error(err.message)
       return
     }
 
-    toast({ description: '删除成功' })
+    JknAlert.success('删除成功')
     alarmQuery.refetch()
+  }
+
+  const onClean = async () => {
+    JknAlert.confirm({
+      content: '是否清空所有警报条件？',
+      okBtnText: '清空',
+      okBtnVariant: 'destructive',
+      onAction: async r => {
+        if (r === 'confirm') {
+          const [err] = await to(cleanAllAlarmConditions())
+
+          if (err) {
+            JknAlert.error(err.message)
+            return
+          }
+
+          JknAlert.success('清空成功')
+          alarmQuery.refetch()
+        }
+      }
+    })
   }
 
   const onSearch: KeyboardEventHandler<HTMLInputElement> = e => {
@@ -123,7 +188,14 @@ const StockAlarmList = () => {
   return (
     <div className="h-full flex flex-col">
       <div className="px-5 flex items-center w-full box-border border-b-primary pb-2">
+        <JknIcon.Svg
+          name="clean"
+          size={18}
+          className="cursor-pointer rounded flex items-center justify-center p-1 hover:bg-accent"
+          onClick={onClean}
+        />
         <StockAlarm code={query.symbol}>
+
           <JknIcon.Svg
             name="plus"
             size={16}
@@ -149,9 +221,6 @@ const StockAlarmList = () => {
             onClick={onChangeSearch}
           />
         </div>
-        {/* <StockSelect /> */}
-        {/* <JknIcon.Svg className="cursor-pointer" name="sort" size={26} /> */}
-        {/* <JknIcon.Svg className="mr-2 cursor-pointer rounded p-1 hover:bg-accent" name="sort" size={18} /> */}
         <SortButton
           list={[
             { label: '代码(A到Z)', order: 'asc', field: 'symbol' },
@@ -173,8 +242,6 @@ const StockAlarmList = () => {
         loading={alarmQuery.isLoading}
         renderItem={row => <AlarmItem symbol={row.symbol} data={row} onDelete={onDelete} />}
       />
-      {/* <JknVirtualList className="flex-1" itemHeight={70} rowKey="id" data={alarmQuery.data ?? []}
-        renderItem={(row) => <AlarmItem symbol={row.symbol} data={row} onDelete={onDelete} />} /> */}
     </div>
   )
 }
@@ -381,17 +448,22 @@ const StockAlarmRecordList = () => {
     })
   }
 
-  useEffect(() => {
-    const ws = WsV2.getWs()
+  useAppEvent('alarm', useCallback(() => {
+    alarmQuery.refetch()
+  }, [alarmQuery.refetch]))
 
-    const unSubscribe = ws?.onAlarm(() => {
-      alarmQuery.refetch()
-    })
 
-    return () => {
-      unSubscribe?.()
-    }
-  }, [alarmQuery.refetch])
+  // useEffect(() => {
+  //   const ws = WsV2.getWs()
+
+  //   const unSubscribe = ws?.onAlarm(() => {
+  //     alarmQuery.refetch()
+  //   })
+
+  //   return () => {
+  //     unSubscribe?.()
+  //   }
+  // }, [alarmQuery.refetch])
 
   return (
     <div className="h-full flex flex-col">
@@ -538,7 +610,7 @@ const AlarmRecordItem = ({ symbol, data, onDelete }: AlarmRecordItemProps) => {
       ) : null}
       <div className="text-tertiary text-xs text-left mt-1.5 leading-5">
         {data.type === AlarmType.PERCENT ? (
-          <span className="leading-7">
+          <span className="leading-7" data-direction={data.condition.data.pnl_percent < 0 ? 'up' : 'down'}>
             报警触发价&nbsp;
             {(data.condition.data.pnl_price + data.condition.data.base_price).toFixed(3)}&nbsp;
             {data.condition.data.trigger_type === 1 ? '盈亏比例' : '盈亏金额'}

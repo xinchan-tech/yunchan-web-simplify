@@ -37,15 +37,8 @@ type TableDataType = {
   prePercent: number
   // 盘后涨跌幅
   afterPercent: number
-  // 换手率
-  turnoverRate?: number
-  // 市盈率
-  pe?: number
-  // 市净率
-  pb?: number
   collect: 1 | 0
   isUp?: boolean
-  totalShare?: number
 }
 //单表格
 const PageTable = (props: PageTableProps) => {
@@ -79,10 +72,13 @@ const PageTable = (props: PageTableProps) => {
 
   useEffect(() => {
     if (sysConfig.PUBLIC_BASE_BUILD_ENV === 'PRODUCTION') return
+
+    if (query.isFetching) return
+
     if (!['close', 'increase', 'total_mv', 'amount', 'stock_before', 'stock_after'].includes(sort.column)) {
       return
     }
-    if(!query.data) return
+    // if (!query.data) return
 
     const columnMap: Record<string, string> = {
       close: 'Close',
@@ -127,14 +123,14 @@ const PageTable = (props: PageTableProps) => {
     return () => {
       cancel()
     }
-  }, [pagination, sort, stockMap, query.data])
+  }, [pagination, sort, stockMap, query.isFetching])
 
   useUnmount(() => {
     stockSubscribe.unsubscribeRank()
   })
 
 
-  const [list, { setList, onSort, cleanSort }] = useTableData<TableDataType>([], 'symbol')
+  const [list, { setList, onSort, cleanSort }] = useTableData<TableDataType>([])
 
   useEffect(() => {
     const r: TableDataType[] = []
@@ -146,31 +142,23 @@ const PageTable = (props: PageTableProps) => {
 
     const allPage = query.data.items
 
-    for (const item of allPage) {
-      // const [lastData, beforeData, afterData] = stockUtils.toStock(item)
-      const lastData = stockUtils.toStock(item.stock, { extend: item.extend })
-
-      const beforeData = stockUtils.toStock(item.extend.stock_before, { extend: item.extend })
-      const afterData = stockUtils.toStock(item.extend.stock_after, { extend: item.extend })
+    for (const { stock, extend, quote, symbol, name } of allPage) {
+      const lastData = stockUtils.toStock(stock, { extend })
 
       if (!lastData) continue
 
       r.push({
-        symbol: item.symbol,
-        name: item.name,
-        price: lastData.close,
-        percent: stockUtils.getPercent(lastData),
-        total: stockUtils.getMarketValue(lastData),
-        amount: lastData.turnover,
+        symbol: symbol,
+        name: name,
+        price: quote.close,
+        percent: quote.change,
+        total: quote.market_cap,
+        amount: quote.amount,
         industry: lastData.industry ?? '-',
-        prePercent: stockUtils.getPercentUnsafe(beforeData),
-        afterPercent: stockUtils.getPercentUnsafe(afterData),
-        turnoverRate: stockUtils.getTurnOverRate(lastData),
-        pe: stockUtils.getPE(lastData),
-        pb: stockUtils.getPB(lastData),
+        prePercent: quote.pre_change ?? Number.NaN,
+        afterPercent: quote.post_change ?? Number.NaN,
         collect: lastData.extend?.collect ?? 0,
-        isUp: stockUtils.isUp(lastData),
-        totalShare: lastData.totalShare
+        isUp: quote.change > 0
       })
     }
 
@@ -192,7 +180,7 @@ const PageTable = (props: PageTableProps) => {
         turnoverRate: 'turnover_rate'
       }
 
-      if (columnKey === 'symbol' || columnKey === 'industry' || columnKey === 'pe' || columnKey === 'pb') {
+      if (columnKey === 'symbol' || columnKey === 'industry') {
         onSort(columnKey, sort)
         stockSubscribe.unsubscribeRank()
         return
@@ -307,8 +295,8 @@ const PageTable = (props: PageTableProps) => {
               symbol={row.symbol}
               initValue={row.total}
               decimal={2}
-              totalShare={row.totalShare ?? 0}
               showColor={false}
+              totalShare={0}
             />
           </div>
         )

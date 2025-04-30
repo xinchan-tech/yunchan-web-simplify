@@ -1,4 +1,4 @@
-import { JknSearchInput } from "@/components"
+import { JknSearchInput, ScrollArea } from "@/components"
 import { chatManager, useChatStore } from "../lib/store"
 import { ChatCmdType, ChatConnectStatus, ChatMessageType, type ChatSession } from "../lib/types"
 import { useChatEvent } from "../lib/event"
@@ -130,7 +130,7 @@ export const Sessions = () => {
   }
 
   return (
-    <div>
+    <div className="w-full h-full flex flex-col overflow-hidden">
       <div className="flex items-center text-xs text-tertiary px-2 py-1">
         <span className="size-2 rounded-full mr-2" style={{ background: statusInfo[state].color }} />
         <span>{statusInfo[state].text}</span>
@@ -144,82 +144,84 @@ export const Sessions = () => {
           placeholder="搜索"
         />
       </div>
-      {
-        sessionList.map(s => (
-          <div
-            key={s.channel.id}
-            onMouseEnter={() => {
-              setHoverChannel(s.channel.id)
-            }}
-            className="flex conversation-card overflow-hidden cursor-pointer data-[checked=true]:bg-accent"
-            data-checked={s.channel.id === channel?.id}
-            onClick={() => onSelectChannel(s)}
-            onKeyDown={() => { }}
-          >
-            <div className="group-avatar rounded-md flex items-center text-ellipsis justify-center relative">
-              <UserAvatar type="2" src={s.channel.avatar} shape="square" uid={s.channel.id} name={s.channel.name} className="!size-10" />
-              {s.unRead > 0 ? (
-                <div className="absolute h-[14px] box-border unread min-w-5 text-xs">
-                  {s.unRead > 99 ? '99+' : s.unRead}
+      <ScrollArea className="flex-1">
+        {
+          sessionList.map(s => (
+            <div
+              key={s.channel.id}
+              onMouseEnter={() => {
+                setHoverChannel(s.channel.id)
+              }}
+              className="flex conversation-card overflow-hidden cursor-pointer data-[checked=true]:bg-accent w-[240px] box-border"
+              data-checked={s.channel.id === channel?.id}
+              onClick={() => onSelectChannel(s)}
+              onKeyDown={() => { }}
+            >
+              <div className="group-avatar rounded-md flex items-center text-ellipsis justify-center relative">
+                <UserAvatar type="2" src={s.channel.avatar} shape="square" uid={s.channel.id} name={s.channel.name} className="!size-10" />
+                {s.unRead > 0 ? (
+                  <div className="absolute h-[14px] box-border unread min-w-5 text-xs">
+                    {s.unRead > 99 ? '99+' : s.unRead}
+                  </div>
+                ) : null}
+              </div>
+              <div className="group-data flex-1 overflow-hidden">
+                <div className="group-title flex  justify-between relative">
+                  <div className="flex items-baseline">
+                    <div
+                      title={s.channel.name}
+                      className="overflow-hidden whitespace-nowrap text-ellipsis w-full text-sm"
+                    >
+                      {s.channel.name || ''}
+                    </div>
+                  </div>
+                  {
+                    hoverChannel === s.channel.id ? (
+                      <div
+                        onClick={e => { e.stopPropagation() }}
+                        onKeyDown={() => { }}
+                        className="absolute right-0 top-0"
+                      >
+                        <ChannelInfo channel={s.channel} />
+                      </div>
+                    ) : null
+                  }
                 </div>
-              ) : null}
-            </div>
-            <div className="group-data flex-1 overflow-hidden">
-              <div className="group-title flex  justify-between relative">
-                <div className="flex items-baseline">
-                  <div
-                    title={s.channel.name}
-                    className="overflow-hidden whitespace-nowrap text-ellipsis w-full text-sm"
-                  >
-                    {s.channel.name || ''}
+                <div className="group-last-msg flex justify-between items-center">
+                  <div className="flex-1 text-xs text-tertiary text-ellipsis overflow-hidden whitespace-nowrap w-full flex items-center">
+                    <span className="flex-1 overflow-hidden text-ellipsis whitespace-nowrap">
+                      {s.isMentionMe ? <span className="text-destructive">[有人@我]</span> : null}
+                      {
+                        s.message?.type === ChatMessageType.Image || s.message?.type === ChatMessageType.Text ? (
+                          <>{s.message?.senderName}: &nbsp;</>
+                        ) : null
+                      }
+                      {s.message?.type ? {
+                        [ChatMessageType.Cmd]: (s.message as any).cmdType === ChatCmdType.MessageRevoke ? `${s.message?.senderName}撤回了一条消息` : '[系统消息]',
+                        [ChatMessageType.Text]: s.message?.content,
+                        [ChatMessageType.Image]: '[图片]',
+                        [ChatMessageType.System]: s.message?.content,
+                        [ChatMessageType.ChannelUpdate]: s.message?.content,
+                        [ChatMessageType.Vote]: `${s.message.senderName ?? ''}发起了投票：${s.message?.content}`
+                      }[s.message?.type] : ''}
+                    </span>
+                    <span className="ml-auto flex-shrink-0">
+                      &nbsp;
+                      {
+                        formatTimeStr((s.message?.timestamp ?? 0) * 1000, {
+                          timezone: 'local',
+                          format: 'ago'
+                        })
+                      }
+                    </span>
+
                   </div>
                 </div>
-                {
-                  hoverChannel === s.channel.id ? (
-                    <div
-                      onClick={e => { e.stopPropagation() }}
-                      onKeyDown={() => { }}
-                      className="absolute right-0 top-0"
-                    >
-                      <ChannelInfo channel={s.channel} />
-                    </div>
-                  ) : null
-                }
-              </div>
-              <div className="group-last-msg flex justify-between items-center">
-                <div className="flex-1 text-xs text-tertiary text-ellipsis overflow-hidden whitespace-nowrap w-full flex items-center">
-                  <span className="flex-1 overflow-hidden text-ellipsis whitespace-nowrap">
-                    {s.isMentionMe ? <span className="text-destructive">[有人@我]</span> : null}
-                    {
-                      s.message?.type === ChatMessageType.Image || s.message?.type === ChatMessageType.Text ? (
-                        <>{s.message?.senderName}: &nbsp;</>
-                      ) : null
-                    }
-                    {s.message?.type ? {
-                      [ChatMessageType.Cmd]: (s.message as any).cmdType === ChatCmdType.MessageRevoke ? `${s.message?.senderName}撤回了一条消息` : '[系统消息]',
-                      [ChatMessageType.Text]: s.message?.content,
-                      [ChatMessageType.Image]: '[图片]',
-                      [ChatMessageType.System]: s.message?.content,
-                      [ChatMessageType.ChannelUpdate]: s.message?.content,
-                      [ChatMessageType.Vote]: `${s.message.senderName ?? ''}发起了投票：${s.message?.content}`
-                    }[s.message?.type] : ''}
-                  </span>
-                  <span className="ml-auto flex-shrink-0">
-                    &nbsp;
-                    {
-                      formatTimeStr((s.message?.timestamp ?? 0) * 1000, {
-                        timezone: 'local',
-                        format: 'ago'
-                      })
-                    }
-                  </span>
-
-                </div>
               </div>
             </div>
-          </div>
-        ))
-      }
+          ))
+        }
+      </ScrollArea>
 
       <style jsx>
         {`

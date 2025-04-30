@@ -20,7 +20,11 @@ type ViewMode =
 
 export enum ChartType {
   Candle = 0,
-  Area = 1
+  Area = 1,
+  /**
+   * 美国线
+   */
+  AmericanLine = 2,
 }
 
 export enum MainYAxis {

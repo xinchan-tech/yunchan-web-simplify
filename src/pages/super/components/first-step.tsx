@@ -121,6 +121,8 @@ const FeaturedRankingPanel = () => {
     name: string
     value: string
     authorized: 0 | 1
+    is_hot: 0 | 1
+    icon?: string
   }[]
   const selection = useRef<string[]>([])
 
@@ -140,33 +142,12 @@ const FeaturedRankingPanel = () => {
 
   const [_, toastNotAuth] = useAuthorized()
 
-  const getIcon = (name: string) => {
-    if (name === '首页热门榜') {
-      return <JknIcon name="ic_fire_red" />
-    } if (name === '小盘黑马榜') {
-      return <JknIcon name="ic_diamond" />
-    } if (name === '今日股王榜') {
-      return <JknIcon name="ic_crown" />
-    } if (name === 'TOP1000+强') {
-      return <JknIcon name="ic_good" />
+  const getIcon = (name?: string) => {
+    if (name) {
+      return <JknIcon name={name === 'ic_praise' ? 'ic_good' : name as any} />
     }
     return null
   }
-
-  const hasRecommend = (name: string) => {
-    if (name === '首页热门榜') {
-      return true
-    }if (name === '小盘黑马榜') {
-      return true
-    }if (name === '今日股王榜') {
-      return true
-    }if (name === 'TOP1000+强') {
-      return true
-    }
-    return false
-  }
-
-  
 
   return (
     <ToggleGroup
@@ -175,7 +156,7 @@ const FeaturedRankingPanel = () => {
       onValueChange={value => {
         selection.current = value
       }}
-      hoverColor="#2E2E2E"
+      hoverColor="#3D3D3D"
     >
       {data?.map(child =>
         child.name !== '' ? (
@@ -189,7 +170,7 @@ const FeaturedRankingPanel = () => {
               )}
             >
               {!child.authorized && <JknIcon name="ic_lock" className="absolute right-0 top-0 w-3 h-3 rounded-none" />}
-              {hasRecommend(child.name) && (
+              {child.is_hot === 1 && (
                 <div
                   style={{
                     position: 'absolute',
@@ -213,7 +194,7 @@ const FeaturedRankingPanel = () => {
               )}
               <div className="flex items-center gap-[2px]">
                 <span className="flex items-center opacity-60 group-hover:opacity-100 group-data-[state=on]:opacity-100">
-                  {getIcon(child.name)}
+                  {getIcon(child.icon)}
                 </span>
                 <span>{child.name}</span>
               </div>
@@ -267,7 +248,7 @@ const GoldenPoolPanel = () => {
             className="flex-grow grid grid-cols-4 gap-[10px]"
             type="multiple"
             value={value}
-            hoverColor="#2E2E2E"
+            hoverColor="#3D3D3D"
             onValueChange={_onValueChange}
           >
             {collects.data?.map(item => (

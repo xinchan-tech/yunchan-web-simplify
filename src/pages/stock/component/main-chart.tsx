@@ -438,7 +438,7 @@ export const MainChart = (props: MainChartProps) => {
     })
 
     const cancelCharTypeEvent = chartEvent.on('chartTypeChange', type => {
-      chartImp.current?.setChartType(type === ChartType.Candle ? 'candle' : 'area')
+      chartImp.current?.setChartType(type === ChartType.Candle ? 'candle' : type === ChartType.AmericanLine ? 'ohlc' : 'area')
     })
 
     const cancelIndicatorEvent = chartEvent.on('mainIndicatorChange', ({ type, indicator }) => {

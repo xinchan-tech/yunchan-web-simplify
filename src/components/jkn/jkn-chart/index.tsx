@@ -114,7 +114,7 @@ interface JknChartIns {
   // setLeftAxis: (show: boolean) => void
   setAxisType: (type: 'normal' | 'percentage' | 'double') => void
   // setRightAxis: (type: 'percentage' | 'normal') => void
-  setChartType: (type: 'area' | 'candle') => void
+  setChartType: (type: 'area' | 'candle' | 'ohlc') => void
   removeAllCoiling: () => void
   createIndicator: (params: IndicatorParams) => void
   removeIndicator: (indicator: string) => void
@@ -505,7 +505,7 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
     setChartType: type => {
       chart.current?.setStyles({
         candle: {
-          type: (type === 'area' ? 'area' : 'candle_solid') as CandleType
+          type: (type === 'area' ? 'area' : type === 'ohlc' ? 'ohlc' : 'candle_solid') as CandleType
         }
       })
     },

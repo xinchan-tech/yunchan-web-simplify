@@ -64,7 +64,7 @@ const StockFinancials = () => {
         if (aDate !== bDate) {
           return order === 'desc' ? aDate.localeCompare(bDate) : bDate.localeCompare(aDate)
         }
- 
+
         if (aPeriod !== bPeriod) {
           const a = aPeriod === '盘前' ? 3 : aPeriod === '盘后' ? 2 : 1
           const b = bPeriod === '盘前' ? 3 : bPeriod === '盘后' ? 2 : 1
@@ -162,7 +162,7 @@ const StockFinancials = () => {
           <SubscribeSpan.Price
             showColor={false}
             symbol={row.code}
-            subscribe={true}
+            trading="intraDay"
             initValue={row.price}
             decimal={3}
             initDirection={row.isUp}
@@ -180,6 +180,7 @@ const StockFinancials = () => {
           <SubscribeSpan.PercentBlink
             symbol={row.code}
             decimal={2}
+            trading="intraDay"
             initValue={row.percent}
             initDirection={row.isUp}
             nanText="--"

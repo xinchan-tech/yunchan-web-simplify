@@ -253,6 +253,14 @@ export const deleteAlarmCondition = async (ids: string[]) => {
   return request.post('/stock-svc/alarm/conditions/delete', { ids }).then(r => r.data)
 }
 
+/**
+ * 清除所有警报条件
+ * @returns 
+ */
+export const cleanAllAlarmConditions = async () => {
+  return request.post('/stock-svc/alarm/conditions/clear').then(r => r.data) 
+}
+
 type BaseAlarmRecord = {
   symbol: string
   stock_cycle: number
@@ -325,4 +333,19 @@ export const deleteAlarmLog = async (ids: string[]) => {
  */
 export const clearAlarmLogs = async () => {
   return request.post('/stock-svc/alarm/logs/deleteAll').then(r => r.data)
+}
+
+/**
+ * 获取报警未读数量
+ */
+export const getAlarmLogUnreadCount = async () => {
+  return request.get<{ count: number }>('/stock-svc/alarm/logs/unreadCount').then(r => r.data)
+}
+getAlarmLogUnreadCount.cacheKey = 'stock-svc:alarms:unreadCount'
+
+/**
+ * 标记已读
+ */
+export const markAlarmLogRead = async (type?: AlarmType) => {
+  return request.post('/stock-svc/alarm/logs/isRead', { type }).then(r => r.data)
 }

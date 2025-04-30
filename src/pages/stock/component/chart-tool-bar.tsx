@@ -112,12 +112,7 @@ export const CoilingBar = () => {
   // type === 21时是缠论的选择
   // const hasCoiling = useChartManage.getState().getActiveChart().mainIndicators.find(i => +i.type === 21)
   const system = useChartManage(s => s.getActiveChart().system)
-  // const indicator = useQuery({
-  //   queryKey: [getStockIndicators.cacheKey],
-  //   queryFn: getStockIndicators
-  // })
-
-  // const coilingList = indicator.data?.main.find(i => i.name === '缠论系统')?.indicators.find(o => o.id === system)?.items
+  const [expand, setExpand] = useState(true)
   const coiling = useChartManage(s => s.getActiveChart().coiling)
 
   const coilingList = [
@@ -141,66 +136,79 @@ export const CoilingBar = () => {
   return (
     <>
       {system
-        ? coilingList?.map(c => {
-          const render = () => {
-            switch (c.id) {
-              case CoilingIndicatorId.PEN:
-                return (
-                  <span
-                    className="cursor-pointer"
-                    style={{ color: coiling.includes(c.id) ? '#DBDBDB' : '#575757' }}
-                    onClick={() => _onClickCoiling(c.id)}
-                    onKeyDown={() => { }}
-                  >
-                    <JknIcon.Svg
-                      name="mins"
-                      size={12}
-                      className="mr-1"
-                      style={{ color: coiling.includes(c.id) ? '#E7C88D' : '#575757' }}
-                    />
-                    <span>{c.name}</span>
-                  </span>
-                )
-              case CoilingIndicatorId.ONE_TYPE:
-              case CoilingIndicatorId.TWO_TYPE:
-              case CoilingIndicatorId.THREE_TYPE:
-                return (
-                  <span
-                    className="cursor-pointer flex items-center"
-                    onClick={() => _onClickCoiling(c.id as any)}
-                    onKeyDown={() => { }}
-                  >
-                    <JknIcon.Checkbox
-                      checked={coiling.includes(c.id)}
-                      uncheckedIcon="chart-coiling-bs"
-                      checkedIcon="chart-coiling-bs-active"
-                      className="h-4 w-4 rounded-none mr-1"
-                    />
-                    <span style={{ color: coiling.includes(c.id) ? '#DBDBDB' : '#575757' }}>{c.name}</span>
-                  </span>
-                )
-              case CoilingIndicatorId.PIVOT:
-                return (
-                  <span
-                    className="cursor-pointer flex items-center"
-                    onClick={() => _onClickCoiling(c.id as any)}
-                    style={{ color: coiling.includes(c.id) ? '#DBDBDB' : '#575757' }}
-                    onKeyDown={() => { }}
-                  >
-                    <JknIcon.Svg
-                      name="poivts"
-                      size={16}
-                      style={{ color: coiling.includes(c.id) ? '#DBDBDB' : '#575757' }}
-                    />
-                    <span>{c.name}</span>
-                  </span>
-                )
-              default:
-                return null
+        ? (
+          <>
+          <span className="inline-flex items-center cursor-pointer" onClick={() => setExpand(s => !s)} onKeyDown={() => {}}>
+            缠论
+            &nbsp;
+            <span className="size-4 p-[1px] text-xs inline-block leading-4 text-white rounded-xs bg-[#3D3D3D] data-[checked=true]:bg-primary text-center" data-checked={expand}>AI</span>
+          </span>
+            {
+              expand ? (
+                coilingList?.map(c => {
+                  const render = () => {
+                    switch (c.id) {
+                      case CoilingIndicatorId.PEN:
+                        return (
+                          <span
+                            className="cursor-pointer"
+                            style={{ color: coiling.includes(c.id) ? '#DBDBDB' : '#575757' }}
+                            onClick={() => _onClickCoiling(c.id)}
+                            onKeyDown={() => { }}
+                          >
+                            <JknIcon.Svg
+                              name="mins"
+                              size={12}
+                              className="mr-1"
+                              style={{ color: coiling.includes(c.id) ? '#E7C88D' : '#575757' }}
+                            />
+                            <span>{c.name}</span>
+                          </span>
+                        )
+                      case CoilingIndicatorId.ONE_TYPE:
+                      case CoilingIndicatorId.TWO_TYPE:
+                      case CoilingIndicatorId.THREE_TYPE:
+                        return (
+                          <span
+                            className="cursor-pointer flex items-center"
+                            onClick={() => _onClickCoiling(c.id as any)}
+                            onKeyDown={() => { }}
+                          >
+                            <JknIcon.Checkbox
+                              checked={coiling.includes(c.id)}
+                              uncheckedIcon="chart-coiling-bs"
+                              checkedIcon="chart-coiling-bs-active"
+                              className="h-4 w-4 rounded-none mr-1"
+                            />
+                            <span style={{ color: coiling.includes(c.id) ? '#DBDBDB' : '#575757' }}>{c.name}</span>
+                          </span>
+                        )
+                      case CoilingIndicatorId.PIVOT:
+                        return (
+                          <span
+                            className="cursor-pointer flex items-center"
+                            onClick={() => _onClickCoiling(c.id as any)}
+                            style={{ color: coiling.includes(c.id) ? '#DBDBDB' : '#575757' }}
+                            onKeyDown={() => { }}
+                          >
+                            <JknIcon.Svg
+                              name="poivts"
+                              size={16}
+                              style={{ color: coiling.includes(c.id) ? '#DBDBDB' : '#575757' }}
+                            />
+                            <span>{c.name}</span>
+                          </span>
+                        )
+                      default:
+                        return null
+                    }
+                  }
+                  return <Fragment key={c.id}>{render()}</Fragment>
+                })
+              ): null
             }
-          }
-          return <Fragment key={c.id}>{render()}</Fragment>
-        })
+          </>
+        )
         : null}
     </>
   )
@@ -313,7 +321,9 @@ export const ChartTypeSelect = memo(() => {
                 ? 'chart-area'
                 : chartType === ChartType.Candle
                   ? 'chart-candle'
-                  : 'chart-area'
+                  : chartType === ChartType.AmericanLine
+                    ? 'chart-area'
+                    : 'chart-area'
             }
             size={20}
             className="m-auto"
@@ -335,6 +345,13 @@ export const ChartTypeSelect = memo(() => {
         >
           <JknIcon.Svg name="chart-candle" size={20} />
           K线图
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          data-checked={!renderUtils.isTimeIndexChart(interval) && chartType === ChartType.AmericanLine}
+          onClick={() => onChartTypeChange(ChartType.AmericanLine)}
+        >
+          <JknIcon.Svg name="chart-area" size={20} />
+          美国线
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
@@ -1000,7 +1017,7 @@ const BackTest = () => {
   const interval = useChartManage(s => s.getActiveChart().interval)
   const [auth, toast] = useAuthorized('backTestTime')
   const onChangeMode = () => {
-    if(renderUtils.isTimeIndexChart(interval)){
+    if (renderUtils.isTimeIndexChart(interval)) {
       JknAlert.toast('分时图不支持回测')
       return
     }

@@ -79,6 +79,37 @@ export type StockExtendResult =
 
 export type StockExtendResultMap = Record<StockExtendResult, any>
 
+export type StockQuote = {
+  /**
+   * 成交额
+   */
+  amount: number
+  /**
+   * 涨跌幅
+   */
+  change: number
+  /**
+   * 收盘价
+   */
+  close: number
+  /**
+   * 市场价
+   */
+  market_cap: number
+  /**
+   * 成交量
+   */
+  volume: number
+  /**
+   * 盘前涨跌幅
+   */
+  pre_change?: number
+  /**
+   * 盘后涨跌幅
+   */
+  post_change?: number
+}
+
 export const getAllStocks = async (key?: string) => {
   return request.get<{ data: string; key: string }>('/index/getAllStock', { params: { key } }).then(r => r.data)
 }
@@ -749,6 +780,7 @@ type GetUsStocksResult = {
     symbol: string
     name: string
     stock: StockRawRecord
+    quote: StockQuote
   }[]
   last: number
   limit: number
