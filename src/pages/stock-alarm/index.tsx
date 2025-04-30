@@ -532,7 +532,7 @@ const AlarmRecordItem = ({ symbol, data, onDelete }: AlarmRecordItemProps) => {
                 ? useConfig.getState().getStockColor(true, 'hex')
                 : useConfig.getState().getStockColor(false, 'hex')
             }
-            count={4}
+            count={data.condition.score_total}
           />
         </div>
       ) : null}

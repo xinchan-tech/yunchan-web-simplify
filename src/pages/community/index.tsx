@@ -84,7 +84,7 @@ const CommunityPage = () => {
   }
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden">
+    <div className="flex h-screen w-screen overflow-hidden min-w-[1200px]">
       <div className="w-[64px] border-r-primary items-stretch flex flex-col">
         <div className="px-2.5 my-2.5">
           <UserAvatar size={48} className="size-12 rounded" name={user?.realname} uid={user?.username ?? ''} src={user?.avatar} shape="square" type="1" />
