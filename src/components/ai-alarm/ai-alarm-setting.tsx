@@ -22,12 +22,16 @@ import { JknAlert } from "../jkn/jkn-alert"
 const formSchema = z.object({
   symbol: z.string({ message: '股票代码错误' }).min(1, '股票代码错误'),
   stockCycle: z.array(z.string()).min(1, '至少选择一个周期'),
-  categoryIds: z.array(z.string()).min(1, '请选择警报类型'),
+  categoryIds: z.array(z.string()).optional(),
   categoryHdlyIds: z.array(z.string()).optional(),
   frequency: z.string({ message: '周期错误' }),
   name: z.string().optional(),
   date: z.string().optional(),
   categoryType: z.string().optional()
+}).refine(data => {
+  return (data.categoryIds?.length ?? 0) + (data.categoryHdlyIds?.length ?? 0) > 0
+}, {
+  message: '请选择报警类型'
 })
 
 interface AiAlarmSetting {

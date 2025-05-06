@@ -73,7 +73,7 @@ export const MainChart = (props: MainChartProps) => {
           JknAlert.toast('未知的绘图类型')
           return true
         }
-        
+
         const params: FuncParams<typeof saveUserPlotting>[0] = {
           hash: e.overlay.id,
           symbol: symbol,
@@ -95,8 +95,8 @@ export const MainChart = (props: MainChartProps) => {
           }))
         }
 
-        if(e.overlay.paneId !== ChartTypes.MAIN_PANE_ID){
-          const indicator = e.chart.getIndicators({paneId: e.overlay.paneId})[0]
+        if (e.overlay.paneId !== ChartTypes.MAIN_PANE_ID) {
+          const indicator = e.chart.getIndicators({ paneId: e.overlay.paneId })[0]
           params.indicator_id = +indicator?.id
         }
 
@@ -373,13 +373,13 @@ export const MainChart = (props: MainChartProps) => {
 
     const store = chartManage.getChart(props.chartId)
 
-    if(store){
-      if(renderUtils.isTimeIndexChart(store.interval)){
+    if (store) {
+      if (renderUtils.isTimeIndexChart(store.interval)) {
         const tick = stockUtils.getIndexTimeTick(store.symbol)
 
-        if(tick.total === candlesticks.length){
+        if (tick.total === candlesticks.length) {
           chartImp.current?.setPriceMarkStyle('full')
-        }else{
+        } else {
           chartImp.current?.setPriceMarkStyle('last')
         }
       }
@@ -413,7 +413,7 @@ export const MainChart = (props: MainChartProps) => {
       } else {
         chartImp.current?.setTimeShareChart()
         const c = chartManage.getChart(props.chartId)
-        chartImp.current?.setChartType(c?.type === ChartType.Candle ? 'candle' : 'area')
+        chartImp.current?.setChartType(c?.type === ChartType.Candle ? 'candle' : c?.type === ChartType.AmericanLine ? 'ohlc' : 'area')
       }
 
       chartManage.setMode('normal')
@@ -423,7 +423,7 @@ export const MainChart = (props: MainChartProps) => {
           startAt: renderUtils.getChartStartDate(interval)
         })
       })
-  
+
       useKChart.getState().chartStores[props.chartId].mainIndicators.forEach(indicator => {
         chartImp.current?.setIndicator(indicator.id.toString(), {
           interval,

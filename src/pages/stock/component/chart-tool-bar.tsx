@@ -4,7 +4,6 @@ import {
   addStockIndicatorCollect,
   getStockIndicatorsV2,
   getStockTabList,
-  removeStockCollectCate,
   removeStockIndicatorCollect
 } from '@/api'
 import {
@@ -139,11 +138,11 @@ export const CoilingBar = () => {
       {system
         ? (
           <>
-          <span className="inline-flex items-center cursor-pointer" onClick={() => setExpand(s => !s)} onKeyDown={() => {}}>
-            缠论
-            &nbsp;
-            <span className="size-4 p-[1px] text-xs inline-block leading-4 text-white rounded-xs bg-[#3D3D3D] data-[checked=true]:bg-primary text-center" data-checked={expand}>AI</span>
-          </span>
+            <span className="inline-flex items-center cursor-pointer" onClick={() => setExpand(s => !s)} onKeyDown={() => { }}>
+              缠论
+              &nbsp;
+              <span className="size-4 p-[1px] text-xs inline-block leading-4 text-white rounded-xs bg-[#3D3D3D] data-[checked=true]:bg-primary text-center" data-checked={expand}>AI</span>
+            </span>
             {
               expand ? (
                 coilingList?.map(c => {
@@ -206,7 +205,7 @@ export const CoilingBar = () => {
                   }
                   return <Fragment key={c.id}>{render()}</Fragment>
                 })
-              ): null
+              ) : null
             }
           </>
         )

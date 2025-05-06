@@ -71,7 +71,6 @@ export const JknVirtualInfinite = forwardRef<JknVirtualInfiniteIns, JknVirtualIn
     ref
   ) => {
     const containerRef = useRef<ComponentRef<typeof JknInfiniteArea>>(null)
-
     const virtualizer = useVirtualizer({
       count: data.length,
       getScrollElement: () =>

@@ -393,6 +393,10 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
           type: 'candle' as LayoutChildType,
           options: {
             axis: {
+              gap: {
+                top: 20,
+                bottom: 20
+              },
               position: 'right' as AxisPosition,
               name: 'normal'
             },

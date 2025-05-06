@@ -305,7 +305,7 @@ const PriceSetting = forwardRef((props: PriceSettingProps, _) => {
       setList(list.map(item => (item.id === id ? { ...item, value: '', checked: false } : item)))
       return
     }
-    setList(list.map(item => (item.id === id ? { ...item, value } : item)))
+    setList(list.map(item => (item.id === id ? { ...item, value, checked: value === '' ? item.checked : true } : item)))
   }
 
   const onCheckedValue = (id: string) => {

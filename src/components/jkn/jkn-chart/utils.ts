@@ -33,6 +33,7 @@ export const transformTextColor = (text: string, compareData: Candlestick, field
 }
 
 export const transformCandleColor = (candle: Candlestick) => {
+  // if(candle.close - candle.open <= 0) return
   const percent = (candle.close - candle.prevClose) / candle.prevClose
 
   if (Math.abs(percent) < 0.09) {

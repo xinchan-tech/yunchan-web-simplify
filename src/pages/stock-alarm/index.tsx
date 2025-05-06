@@ -38,12 +38,10 @@ import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import to from 'await-to-js'
 import dayjs from "dayjs"
 import Decimal from 'decimal.js'
-import { Fragment, type KeyboardEventHandler, useCallback, useEffect, useRef, useState } from 'react'
+import { Fragment, type KeyboardEventHandler, useCallback, useRef, useState } from 'react'
 
 const StockAlarmPage = () => {
   const [activeTab, setActiveTab] = useState<'list' | 'log'>('list')
-  const [conditionCount, setConditionCount] = useState(0)
-  // const queryClient = useQueryClient()
 
   const unRead = useQuery({
     queryKey: [getAlarmLogUnreadCount.cacheKey],
@@ -67,11 +65,6 @@ const StockAlarmPage = () => {
             <TabsTrigger value={'list'} asChild>
               <span className="flex-1 overflow-hidden ">
                 &emsp;警报列表
-                {
-                  conditionCount > 0 ? (
-                    <span>({conditionCount > 99 ? '99+' : conditionCount})</span>
-                  ) : null
-                }
                 &emsp;
               </span>
             </TabsTrigger>
@@ -87,7 +80,7 @@ const StockAlarmPage = () => {
             </TabsTrigger>
           </TabsList>
           <TabsContent value="list" className="flex-1 overflow-hidden">
-            <StockAlarmList onChange={setConditionCount} />
+            <StockAlarmList />
           </TabsContent>
           <TabsContent value="log" className="flex-1 overflow-hidden">
             <StockAlarmRecordList />
@@ -100,7 +93,7 @@ const StockAlarmPage = () => {
 
 type AlarmItemType = ArrayItem<Awaited<ReturnType<typeof getAlarmConditionsList>>['items']>
 
-const StockAlarmList = ({ onChange }: { onChange: (value: number) => void }) => {
+const StockAlarmList = () => {
   const [search, setSearch] = useState('')
   const [showSearch, setShowSearch] = useState(false)
   const [sort, setSort] = useState({ order: '', orderBy: '' })
@@ -125,13 +118,6 @@ const StockAlarmList = ({ onChange }: { onChange: (value: number) => void }) => 
       return data.pages.flatMap(p => p.items ?? [])
     }
   })
-
-  useEffect(() => {
-    if (!alarmQuery.isLoading) {
-      onChange(total.current)
-    }
-  }, [alarmQuery.isLoading, onChange])
-
 
   const onDelete = async (id: string) => {
     const [err] = await to(deleteAlarmCondition([id]))
@@ -195,7 +181,6 @@ const StockAlarmList = ({ onChange }: { onChange: (value: number) => void }) => 
           onClick={onClean}
         />
         <StockAlarm code={query.symbol}>
-
           <JknIcon.Svg
             name="plus"
             size={16}
@@ -310,8 +295,6 @@ const AlarmItem = ({ symbol, data, onDelete }: AlarmItemProps) => {
 
     return null
   }
-
-  // const navigate = useNavigate()
 
   const onNav = () => {
     if (data.stock_cycle) {
