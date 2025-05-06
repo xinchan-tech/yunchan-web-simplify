@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.7.8](https://github.com/xinchan-gx/yunchan-web/compare/2.7.7...2.7.8) (2025-05-06)
+
+### ✨ Features | 新功能
+
+* 添加聊天频道类型支持，更新ChatInput组件以处理不同的发言权限 ([208fd2c](https://github.com/xinchan-gx/yunchan-web/commit/208fd2cb265c32865fcaaa0313368944d0f2d404))
+* 添加输入权限控制，根据聊天频道类型限制用户输入 ([f7a0c26](https://github.com/xinchan-gx/yunchan-web/commit/f7a0c262df4c2a9b5694cacd9d8d410b82ec0227))
+
 ## [2.7.7](https://github.com/xinchan-gx/yunchan-web/compare/2.7.6...2.7.7) (2025-04-30)
 
 ### ✨ Features | 新功能
