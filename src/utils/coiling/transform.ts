@@ -92,6 +92,7 @@ type IndicatorDataDrawGradient = IndicatorDataBase<'DRAWGRADIENT'> & {
     points: {
       x: number
       y: number
+      offsetY: number
     }[]
   }[]
 }
@@ -244,7 +245,7 @@ export const drawGradientTransform = (raw: IndicatorRawData) => {
     if ((value as any[]).length < 2) {
       return
     }
-    const points: { x: number; y: number }[] = []
+    const points: { x: number; y: number; offsetY: number }[] = []
     const [x, y1, y2, color1, color2] = value as [number, string, string, string, string, number]
     let maxY = Number.NEGATIVE_INFINITY
     let minY = Number.POSITIVE_INFINITY
@@ -252,7 +253,7 @@ export const drawGradientTransform = (raw: IndicatorRawData) => {
 
     y1.split(',').forEach((y, i) => {
       const _y = Number.parseFloat(y)
-      points.push({ x: i + x, y: _y })
+      points.push({ x: i + x, y: _y, offsetY: 0 })
       maxY = Math.max(maxY, _y)
       minY = Math.min(minY, _y)
       len++
@@ -262,11 +263,55 @@ export const drawGradientTransform = (raw: IndicatorRawData) => {
       const _y = Number.parseFloat(y)
       maxY = Math.max(maxY, _y)
       minY = Math.min(minY, _y)
-      return { x: x + i, y: _y }
+      return { x: x + i, y: _y, offsetY: 0 }
     })
+
+    /**
+     * 处理前交叉点
+     */
+    const previousPoints = points.slice(0, 2)
+    const previousY2Points = y2Points.slice(0, 2)
+
+    if (previousPoints.length === 2 && previousY2Points.length === 2) {
+      const intersection = getIntersection(
+        [previousPoints[0].x, previousPoints[0].y],
+        [previousPoints[1].x, previousPoints[1].y],
+        [previousY2Points[0].x, previousY2Points[0].y],
+        [previousY2Points[1].x, previousY2Points[1].y]
+      )
+
+      if (intersection) {
+        const [, y] = intersection
+        points[0].offsetY = y - points[0].y
+        y2Points[0].offsetY = y - y2Points[0].y
+      }
+    }
+
+    /**
+     * 处理后交叉点
+     */
+    const lastPoints = points.slice(-2)
+    const lastY2Points = y2Points.slice(-2)
+
+    if (lastPoints.length === 2 && lastY2Points.length === 2) {
+      const intersection = getIntersection(
+        [lastPoints[0].x, lastPoints[0].y],
+        [lastPoints[1].x, lastPoints[1].y],
+        [lastY2Points[0].x, lastY2Points[0].y],
+        [lastY2Points[1].x, lastY2Points[1].y]
+      )
+
+      if (intersection) {
+        const [, y] = intersection
+        points[points.length - 1].offsetY = y - points[points.length - 1].y
+        y2Points[y2Points.length - 1].offsetY = y - y2Points[y2Points.length - 1].y
+      }
+    }
+
     y2Points.reverse()
     points.push(...y2Points)
-
+    // console.log(points)
+    
     // gradients.push([x, x + len, minY, maxY, points, color1, color2])
     gradients.push({ x1: x, y1: minY, x2: x + len, y2: maxY, color: [color1, color2], points })
   })
@@ -396,8 +441,6 @@ export const drawBandTransform = (raw: IndicatorRawData) => {
   })
 
   raw.draw_data = polygons
-
-  console.log(polygons)
 
   return raw
 }

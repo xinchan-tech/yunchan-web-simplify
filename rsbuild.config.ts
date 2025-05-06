@@ -38,7 +38,7 @@ export default defineConfig({
         }
       },
       '/api': {
-        target: 'http://api.awstest.mgjkn.com',
+        target: 'https://api.us.mgjkn.com',
         changeOrigin: true,
         pathRewrite: {
           '^/api': ''

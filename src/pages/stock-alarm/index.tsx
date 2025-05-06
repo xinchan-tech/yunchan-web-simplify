@@ -225,7 +225,7 @@ const StockAlarmList = () => {
         hasMore={alarmQuery.hasNextPage}
         fetchMore={() => !alarmQuery.isFetchingNextPage && alarmQuery.fetchNextPage()}
         loading={alarmQuery.isLoading}
-        renderItem={row => <AlarmItem symbol={row.symbol} data={row} onDelete={onDelete} />}
+        renderItem={(row, index) => <AlarmItem index={total.current - index} symbol={row.symbol} data={row} onDelete={onDelete} />}
       />
     </div>
   )
@@ -234,9 +234,10 @@ const StockAlarmList = () => {
 interface AlarmItemProps {
   symbol: string
   data: AlarmItemType
+  index: number
   onDelete: (id: string) => void
 }
-const AlarmItem = ({ symbol, data, onDelete }: AlarmItemProps) => {
+const AlarmItem = ({ symbol, data, index, onDelete }: AlarmItemProps) => {
   const renderTrigger = () => {
     if (data.type === AlarmType.AI) {
       const cyc = stockUtils.intervalToStr(data.stock_cycle)
@@ -311,6 +312,9 @@ const AlarmItem = ({ symbol, data, onDelete }: AlarmItemProps) => {
       onKeyDown={() => { }}
     >
       <div className="flex items-center w-full relative whitespace-nowrap">
+        <div className="h-4 min-w-4 flex-shrink-0 bg-[#2E2E2E] rounded-full text-xs leading-4 px-1 text-center box-border mr-2.5">
+          {index}
+        </div>
         <JknIcon.Stock symbol={symbol} className="w-4 h-4 leading-4 mr-1" />
         <span className="whitespace-nowrap text-ellipsis overflow-hidden text-left"><span>{symbol}</span>，{renderTrigger()}</span>
         <span className="bg-accent rounded-xs px-1 py-[1px] box-border text-tertiary text-xs ml-1">
@@ -329,39 +333,49 @@ const AlarmItem = ({ symbol, data, onDelete }: AlarmItemProps) => {
           {/* <JknIcon.Svg name="edit" size={16} className="cursor-pointer p-1 rounded hover:bg-accent" /> */}
         </div>
       </div>
-      {data.type === AlarmType.PERCENT ? (
-        <div className="text-tertiary text-xs text-left mt-2.5">
-          起始价格{data.condition.float_param.price}&nbsp;&nbsp;
-          <span>
-            止损起始点
-            {data.condition.float_param.type === 1 ? (data.condition.float_param.price * (1 + data.condition.float_param.change_value)).toFixed(2)
-              : (data.condition.float_param.change_value + data.condition.float_param.price).toFixed(2)}
+      <div className="flex w-full ">
+        <div className="min-w-4 flex-shrink-0 text-transparent rounded-full text-xs leading-1 px-1 text-center box-border mr-2.5 self-stretch flex flex-col items-center">
+          <span className="-mt-1.5">
+            {index}
           </span>
+          <Separator orientation="vertical" className="flex-1 border-[#575757]" />
         </div>
-      ) : null}
-      <div className="text-tertiary text-xs text-left mt-2.5">
-        <span>
-          添加时间&nbsp;
-          {dayjs(+data.create_time * 1000).format('MM/DD w HH:mm')}
-        </span>
-        &emsp;
-        {data.type !== AlarmType.PERCENT ? (
-          <span>
-            <span className="text-secondary">频率·</span>
-            {data.condition.frequency === 1 ? '持续提醒' : '仅提醒一次'}
-          </span>
-        ) : (
-          null
-        )}
+        <div className="flex-1">
+          {data.type === AlarmType.PERCENT ? (
+            <div className="text-left mt-2.5 text-foreground">
+              起始价格{data.condition.float_param.price}&nbsp;&nbsp;
+              <span>
+                止损起始点
+                {data.condition.float_param.type === 1 ? (data.condition.float_param.price * (1 + data.condition.float_param.change_value)).toFixed(2)
+                  : (data.condition.float_param.change_value + data.condition.float_param.price).toFixed(2)}
+              </span>
+            </div>
+          ) : null}
+          <div className="text-tertiary text-xs text-left mt-2.5">
+            <span>
+              添加时间&nbsp;
+              {dayjs(+data.create_time * 1000).format('MM/DD w HH:mm')}
+            </span>
+            &emsp;
+            {data.type !== AlarmType.PERCENT ? (
+              <span>
+                <span className="text-secondary">频率·</span>
+                {data.condition.frequency === 1 ? '持续提醒' : '仅提醒一次'}
+              </span>
+            ) : (
+              null
+            )}
+          </div>
+          {data.expire_time ? (
+            <div className="text-tertiary text-xs text-left mt-2.5">
+              <span>
+                到期时间&nbsp;
+                {dateUtils.toUsDay(data.expire_time).format('YYYY/MM/DD')}
+              </span>
+            </div>
+          ) : null}
+        </div>
       </div>
-      {data.expire_time ? (
-        <div className="text-tertiary text-xs text-left mt-2.5">
-          <span>
-            到期时间&nbsp;
-            {dateUtils.toUsDay(data.expire_time).format('YYYY/MM/DD')}
-          </span>
-        </div>
-      ) : null}
       <style jsx>
         {`
           .alarm-list-item-action {
@@ -532,7 +546,7 @@ const AlarmRecordItem = ({ symbol, data, onDelete }: AlarmRecordItemProps) => {
     if (data.type === AlarmType.PERCENT) {
       const value = data.condition.data.pnl_percent
       return (
-        <span data-direction={value > 0 ? 'up' : 'down'}>
+        <span data-direction={value < 0 ? 'up' : 'down'}>
           {
             value <= 0 ? (
               <span>
@@ -593,7 +607,7 @@ const AlarmRecordItem = ({ symbol, data, onDelete }: AlarmRecordItemProps) => {
       ) : null}
       <div className="text-tertiary text-xs text-left mt-1.5 leading-5">
         {data.type === AlarmType.PERCENT ? (
-          <span className="leading-7" data-direction={data.condition.data.pnl_percent < 0 ? 'up' : 'down'}>
+          <span className="leading-7" data-direction={data.condition.data.pnl_percent > 0 ? 'up' : 'down'}>
             报警触发价&nbsp;
             {(data.condition.data.pnl_price + data.condition.data.base_price).toFixed(3)}&nbsp;
             {data.condition.data.trigger_type === 1 ? '盈亏比例' : '盈亏金额'}

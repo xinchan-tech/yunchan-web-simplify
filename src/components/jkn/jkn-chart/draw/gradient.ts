@@ -17,6 +17,7 @@ type GradientShape = {
   points: {
     x: number
     y: number
+    offsetY: number
   }[]
 }
 
@@ -38,17 +39,50 @@ export const drawGradient: DrawGradientFunc = (params, data) => {
     if (x1Pixel > realToPixel || x2Pixel < realFromPixel) return
 
     const gradient = params.ctx.createLinearGradient(middleX, y1Pixel, middleX, y2Pixel)
-    polygon.color.reverse().forEach((color, i) => {
+    
+    polygon.color.slice().reverse().forEach((color, i) => {
       gradient.addColorStop(i / (polygon.color.length - 1), color)
+    })
+
+    const coordinates = polygon.points.map((point, index, arr) => {
+      const originalY = params.yAxis.convertToPixel(point.y)
+      const originalX = params.xAxis.convertToPixel(point.x)
+
+      if (!point.offsetY) {
+        return { x: originalX, y: originalY }
+      }
+
+      /**
+       * 找相邻的且y点不为0的点计算k值
+       */
+      let kPoint = arr[index - 1]
+      if(!kPoint) {
+        kPoint = arr[index + 1]
+        if(kPoint.y === 0){
+          kPoint = arr[index - 1]
+        }
+      }else if(kPoint.y === 0){
+        kPoint = arr[index + 1]
+      }
+
+      if (!kPoint) {
+        return { x: originalX, y: originalY }
+      }
+
+      const kY = params.yAxis.convertToPixel(kPoint.y)
+      const kX = params.xAxis.convertToPixel(kPoint.x)
+
+      const transformedY = params.yAxis.convertToPixel(point.y + point.offsetY)
+      const k  = (originalY - kY) / (originalX - kX)
+      const transformedX = originalX + (transformedY - originalY) / k
+
+      return { x: transformedX, y: transformedY }
     })
 
     const rect = new Rect({
       name: 'gradientRect',
       attrs: {
-        coordinates: polygon.points.map(point => ({
-          x: params.xAxis.convertToPixel(point.x),
-          y: params.yAxis.convertToPixel(point.y)
-        }))
+        coordinates
       },
       styles: {
         color: gradient
