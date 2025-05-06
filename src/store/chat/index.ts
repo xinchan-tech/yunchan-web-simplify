@@ -1,7 +1,8 @@
 import { create } from 'zustand'
-import { type ChatChannelState, chatConstants, ChatMessageType, type ChatStore, ChatCmdType } from './types'
+import { type ChatChannelState, chatConstants, assetsStoreType, ChatMessageType, type ChatStore, ChatCmdType } from './types'
 import { Channel, ChannelInfo, ConnectStatus } from 'wukongimjssdk'
 import { createJSONStorage, persist } from 'zustand/middleware'
+import { AssetsInfoStore } from '@/api'
 import { useConfig } from '../config'
 
 const wsUrlPrefix = `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${window.location.host}`
@@ -77,3 +78,8 @@ export const chatManager = {
   }
 }
 export { chatConstants, ChatMessageType, ChatCmdType }
+
+export const useAssetsInfoStore = create<AssetsInfoStore>((set) => ({
+  data: null,
+  setData: (data: any) => set({ data }), // 设置数据
+}));
