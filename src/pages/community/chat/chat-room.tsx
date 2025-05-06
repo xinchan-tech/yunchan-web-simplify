@@ -20,12 +20,14 @@ import { useMessageStatusListener } from "../lib/hooks"
 import { syncChannelInfo } from "../lib/datasource"
 import { useCountDown } from "ahooks"
 import { useQuery } from "@tanstack/react-query"
+import { cn } from "@/utils/style"
 
 export const ChatRoom = () => {
   const [channelStatus, setChannelStatus] = useState<ChatChannelState>(ChatChannelState.NotConnect)
   const [channelInfo, setChannelInfo] = useState<Nullable<ChatChannel>>(null)
   const [subscribes, setSubscribes] = useState<Nullable<ChatSubscriber[]>>([])
   const [message, setMessage] = useImmer<ChatMessage[]>([])
+  const rightHide = useChatStore(s => s.rightHide)
   const chatStatus = useChatStore(s => s.state)
   const channel = useChatStore(s => s.channel)
   const channelLast = useLatestRef(channel)
@@ -315,8 +317,8 @@ export const ChatRoom = () => {
       voteList.refetch()
     }
 
-    if(message.type === ChatMessageType.Cmd) {
-      if(message.cmdType === ChatCmdType.ChannelUpdate){
+    if (message.type === ChatMessageType.Cmd) {
+      if (message.cmdType === ChatCmdType.ChannelUpdate) {
         refreshSubscriber()
       }
     }
@@ -489,7 +491,41 @@ export const ChatRoom = () => {
             ) : null
           }
         </div>
-        <div className="flex-shrink-0 w-[220px] border-0 border-solid border-l border-[#2E2E2E] flex flex-col">
+        <div className={cn(
+          'flex-shrink-0 w-[220px] border-0 border-solid border-l border-[#2E2E2E] flex flex-col relative',
+          rightHide ? 'w-0' : 'w-[220px]'
+        )}>
+          <div className="absolute top-1/2 -left-2.5 w-2.5 h-12 bg-[#2C2C2C] -translate-y-1/2 chat-right-hide flex items-center justify-center cursor-pointer z-10"
+            onClick={() => chatManager.setRightHide(!useChatStore.getState().rightHide)}
+            onKeyDown={() => { }}
+          >
+            <JknIcon.Svg name="arrow-fill" size={8} className={cn('text-[#B8B8B8]', rightHide ? 'rotate-180' : '')} />
+          </div>
+          <style jsx>
+            {
+              `
+                .chat-right-hide::before, .chat-right-hide::after {
+                  content: '';
+                  position: absolute;
+                  height: 10px;
+                  width: 10px;
+                  left: 0;
+                  z-index: 9;
+                  background-color: #2C2C2C;
+                }
+                .chat-right-hide::before {
+                  top: -7px;
+                  border-top-left-radius: 4px;
+                  transform: skewY(-45deg);
+                }
+                .chat-right-hide::after {
+                  bottom: -7px;
+                  border-bottom-left-radius: 4px;
+                  transform: skewY(45deg);
+                }
+              `
+            }
+          </style>
           <div className="chat-room-notice p-2 box-border flex-shrink-0 border-0 border-solid border-b border-[#2E2E2E] flex flex-col">
             <div className="chat-room-notice-title text-sm py-1">公告</div>
             <div className="h-[164px] overflow-y-auto">

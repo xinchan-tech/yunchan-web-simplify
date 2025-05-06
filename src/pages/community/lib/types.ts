@@ -50,6 +50,7 @@ export interface ChatStore {
   config: ChatConfig
   channel?: ChatChannel
   usersExpanded: boolean
+  rightHide: boolean
   chatConfig: {
     voteShow: Record<string, { show: boolean; voteId: number }>
   }

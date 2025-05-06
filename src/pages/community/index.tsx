@@ -13,8 +13,11 @@ import WKSDK, { type MessageListener, type ChannelInfoListener, type Conversatio
 import { VoteMessageContent } from "./lib/types"
 import { UserAvatar } from "./components/user-avatar"
 import { appEvent } from "@/utils/event"
+import { useMount } from "ahooks"
 
 WKSDK.shared().register(ChatMessageType.Vote, () => new VoteMessageContent())
+
+
 
 const CommunityPage = () => {
   const user = useUser(s => s.user)
@@ -26,6 +29,21 @@ const CommunityPage = () => {
       chatEvent.emit('updateMessage', r)
     })
   }, []))
+
+  useMount(() => {
+    window.addEventListener('storage', (e) => {
+      if(e.key === 'user'){
+        try {
+          const newValue = JSON.parse(e.newValue ?? '{}')
+          if(useUser.getState().user?.username !== newValue.state?.user?.username){
+            window.location.reload()
+          }
+        }catch (error) {
+          console.log('error', error)
+        }
+      }
+    })
+  })
 
   
 
