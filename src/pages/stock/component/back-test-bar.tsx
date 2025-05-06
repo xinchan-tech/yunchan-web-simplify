@@ -26,7 +26,7 @@ import { useMount, useUnmount } from 'ahooks'
 import dayjs from 'dayjs'
 import Decimal from 'decimal.js'
 import { memo, useRef, useState } from 'react'
-import { useChartManage } from '../lib'
+import { useKChart } from '../lib'
 import { renderUtils } from '../lib/utils'
 import confetti from 'canvas-confetti'
 
@@ -455,8 +455,8 @@ export const BackTestBar = memo((props: BackTestBarProps) => {
     className: 'w-[540px]',
     closeOnMaskClick: false,
     content: () => {
-      const symbol = useChartManage.getState().chartStores[props.chartId].symbol
-      const timeIndex = useChartManage.getState().chartStores[props.chartId].interval
+      const symbol = useKChart.getState().chartStores[props.chartId].symbol
+      const timeIndex = useKChart.getState().chartStores[props.chartId].interval
 
       const total = Math.max(tradeRecord.buy.length, tradeRecord.sell.length)
 

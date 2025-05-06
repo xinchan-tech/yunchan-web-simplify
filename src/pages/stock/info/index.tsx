@@ -54,7 +54,7 @@ import { chartManage, stockBaseCodeInfoExtend, useSymbolQuery } from '../lib'
 
 const StockInfo = () => {
   return (
-    <div className="h-full flex flex-col overflow-hidden rounded-xs ml-1">
+    <div className="h-full flex flex-col overflow-hidden rounded-xs ml-1 min-w-[300px]">
       <div className="flex-1 flex flex-col overflow-hidden">
         <div className="bg-background rounded overflow-hidden flex-shrink-0 pb-1">
           <StockBaseInfo />
@@ -613,7 +613,7 @@ const StockRelated = () => {
     }
   }, [relates.data?.plates])
 
-  const [list, { setList, onSort }] = useTableData<TableDataType>([], 'symbol')
+  const [list, { setList, onSort }] = useTableData<TableDataType>([])
 
   useEffect(() => {
     if (!relates.data) {
@@ -790,7 +790,7 @@ const StockRelated = () => {
 const GoldenStockPool = () => {
   const [type, setType] = useState('-1')
   const { token } = useToken()
-  const [list, { setList, onSort }] = useTableData<ReturnType<typeof stockUtils.toStockWithExt>>([], 'symbol')
+  const [list, { setList, onSort }] = useTableData<ReturnType<typeof stockUtils.toStockWithExt>>([])
 
   const query = useQuery({
     queryKey: [getStockCollects.cacheKey, type],

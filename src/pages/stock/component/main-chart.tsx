@@ -10,7 +10,7 @@ import qs from 'qs'
 import { type ComponentRef, useCallback, useEffect, useRef, useState } from 'react'
 import { chartEvent, type ChartEvents } from '../lib/event'
 import { useCandlesticks } from '../lib/request'
-import { ChartType, MainYAxis, chartManage, useChartManage } from '../lib/store'
+import { ChartType, MainYAxis, chartManage, useKChart } from '../lib/store'
 import { renderUtils } from '../lib/utils'
 import { BackTestBar } from './back-test-bar'
 import { ChartContextMenu } from './chart-context-menu'
@@ -36,8 +36,8 @@ const convertToStock = (candlesticks: StockRawRecord[]) =>
 export const MainChart = (props: MainChartProps) => {
   const [symbol, setSymbol] = useState(getSymbolByUrl())
   const gapShow = useConfig(s => s.setting.gapShow)
-  const activeChartId = useChartManage(s => s.activeChartId)
-  const chartStore = useChartManage(s => s.chartStores[props.chartId])
+  const activeChartId = useKChart(s => s.activeChartId)
+  const chartStore = useKChart(s => s.chartStores[props.chartId])
   const chartImp = useRef<ComponentRef<typeof JknChart>>(null)
   const { candlesticks, startAt } = useCandlesticks(symbol, chartStore.interval)
   const stockCache = useRef({
@@ -164,12 +164,12 @@ export const MainChart = (props: MainChartProps) => {
   }, [plotting.data, createOverlay])
 
   useStockBarSubscribe([`${symbol}@${stockUtils.intervalToPeriod(chartStore.interval)}`], data => {
-    const mode = useChartManage.getState().chartStores[props.chartId].mode
+    const mode = useKChart.getState().chartStores[props.chartId].mode
     if (mode === 'backTest') return
-    const interval = useChartManage.getState().chartStores[props.chartId].interval
+    const interval = useKChart.getState().chartStores[props.chartId].interval
     const record = stockUtils.toStock(data.rawRecord)
     const trading = stockUtils.getTrading(record.timestamp)
-    const symbol = useChartManage.getState().chartStores[props.chartId].symbol
+    const symbol = useKChart.getState().chartStores[props.chartId].symbol
     const [_symbol] = data.topic.split('@')
     if (_symbol !== symbol) {
       console.log('stock bar subscribe symbol error')
@@ -236,10 +236,10 @@ export const MainChart = (props: MainChartProps) => {
 
   useEffect(() => {
     return stockSubscribe.onQuoteTopic(symbol, data => {
-      const _symbol = useChartManage.getState().chartStores[props.chartId].symbol
+      const _symbol = useKChart.getState().chartStores[props.chartId].symbol
       if (data.topic !== _symbol) return
       const trading = useTime.getState().getTrading()
-      const mode = useChartManage.getState().chartStores[props.chartId].mode
+      const mode = useKChart.getState().chartStores[props.chartId].mode
       if (mode === 'backTest') return
 
       if (!renderUtils.shouldUpdateChart(trading, chartStore.interval)) {
@@ -274,7 +274,7 @@ export const MainChart = (props: MainChartProps) => {
   useMount(() => {
     chartManage.cleanStockOverlay()
     chartManage.setMode('normal')
-    const _store = useChartManage.getState().chartStores[props.chartId]
+    const _store = useKChart.getState().chartStores[props.chartId]
 
     const stockData = convertToStock(candlesticks)
 
@@ -392,7 +392,7 @@ export const MainChart = (props: MainChartProps) => {
    * 缠论数据变化
    */
   useEffect(() => {
-    chartImp.current?.setCoiling(chartStore.coiling, useChartManage.getState().chartStores[props.chartId].interval)
+    chartImp.current?.setCoiling(chartStore.coiling, useKChart.getState().chartStores[props.chartId].interval)
   }, [chartStore.coiling, props.chartId])
   /**
    * chart事件处理
@@ -424,13 +424,13 @@ export const MainChart = (props: MainChartProps) => {
         })
       })
   
-      useChartManage.getState().chartStores[props.chartId].mainIndicators.forEach(indicator => {
+      useKChart.getState().chartStores[props.chartId].mainIndicators.forEach(indicator => {
         chartImp.current?.setIndicator(indicator.id.toString(), {
           interval,
         })
       })
 
-      useChartManage.getState().chartStores[props.chartId].secondaryIndicators.forEach(indicator => {
+      useKChart.getState().chartStores[props.chartId].secondaryIndicators.forEach(indicator => {
         chartImp.current?.setSubIndicator(indicator.id.toString(), {
           interval,
         })
@@ -475,7 +475,7 @@ export const MainChart = (props: MainChartProps) => {
         if (!stockCache.current.compare.has(symbol)) {
           if (!stockCache.current.rightAxisBeforePk) {
             stockCache.current.rightAxisBeforePk = {
-              ...useChartManage.getState().chartStores[props.chartId].yAxis
+              ...useKChart.getState().chartStores[props.chartId].yAxis
             }
           }
           const color = colorUtil.colorPalette[stockCache.current.compare.size]

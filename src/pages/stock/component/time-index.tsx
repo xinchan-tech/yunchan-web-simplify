@@ -8,14 +8,14 @@ import dayjs from 'dayjs'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { kChartUtils, timeIndex } from '../lib'
 import { type ChartEvents, chartEvent } from '../lib/event'
-import { chartManage, useChartManage } from '../lib/store'
+import { chartManage, useKChart } from '../lib/store'
 
 const leftMenu = ['盘前分时', '盘中分时', '盘后分时', '多日分时']
 
 const ItemWidth = 55
 
 export const TimeIndexSelect = () => {
-  const interval = useChartManage(s => s.getActiveChart().interval)
+  const interval = useKChart(s => s.getActiveChart().interval)
   const usTime = useTime(s => s.usTime)
   const localStamp = useTime(s => s.localStamp)
   const [size, dom] = useDomSize<HTMLDivElement>()

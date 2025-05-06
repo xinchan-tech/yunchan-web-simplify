@@ -89,5 +89,5 @@ export const markAsRead = (cateId: string) => {
  * 标记系统已读
  */
 export const markSystemAsRead = (cateId: string) => {
-  return request.post<void>('/notice/log/setIsRead', { uid: cateId }).then(r => r.data)
+  return request.post<void>('/notice/log/setIsRead', { notice_cate_id: cateId }, {headers: {'Content-Type': 'application/x-www-form-urlencoded'}}).then(r => r.data)
 }

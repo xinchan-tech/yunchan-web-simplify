@@ -24,7 +24,7 @@ import { useConfig, useUser } from '@/store'
 import { cn } from '@/utils/style'
 import { useMutation } from '@tanstack/react-query'
 import { type PropsWithChildren, useState } from 'react'
-import { useChartManage } from '../stock/lib'
+import { useKChart } from '../stock/lib'
 
 const SettingPage = () => {
   const config = useConfig()
@@ -314,7 +314,7 @@ const SettingPage = () => {
             <Button
               variant="outline"
               size="mini"
-              onClick={() => useChartManage.setState(useChartManage.getInitialState())}
+              onClick={() => useKChart.setState(useKChart.getInitialState())}
             >
               清除个股缓存
             </Button>

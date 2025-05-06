@@ -1625,7 +1625,7 @@ export const addStockIndicatorCollect = (ids: string[]) => {
 }
 
 export const removeStockIndicatorCollect = (ids: string[]) => {
-  return request.post('/stock-svc/indicators/collect/remove', { ids }).then(r => r.data)
+  return request.post('/stock-svc/indicators/collect/cancel', { ids }).then(r => r.data)
 }
 
 type GetStockIndicatorDataParams = {

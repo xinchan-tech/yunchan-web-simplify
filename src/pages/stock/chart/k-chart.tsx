@@ -6,7 +6,7 @@ import { CoilingBar } from '../component/chart-tool-bar'
 import { DrawToolBox } from '../component/draw-tool-box'
 import { MainChart } from '../component/main-chart'
 import { chartEvent } from '../lib/event'
-import { chartManage, useChartManage } from '../lib/store'
+import { chartManage, useKChart } from '../lib/store'
 import { renderUtils } from '../lib/utils'
 
 // biome-ignore lint/suspicious/noEmptyInterface: <explanation>
@@ -18,11 +18,11 @@ const getChartIdByIndex = (index: number) => `chart-${index}`
  * @examples
  */
 export const KChart = (_props: KChartProps) => {
-  // const currentSymbol = useChartManage(s => s.currentSymbol)
-  const viewMode = useChartManage(s => s.viewMode)
+  // const currentSymbol = useKChart(s => s.currentSymbol)
+  const viewMode = useKChart(s => s.viewMode)
   // const symbol = useSymbolQuery()
   const [queryParams, setQueryParams] = useQueryParams<{ symbol: string; q?: string }>()
-  const active = useChartManage(s => s.activeChartId)
+  const active = useKChart(s => s.activeChartId)
 
 
   useEffect(() => {

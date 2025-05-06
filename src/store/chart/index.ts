@@ -1,6 +1,8 @@
 import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
-import { useUser } from "../user"
+import { useUser } from '../user'
+import { IDBPDatabase, openDB } from 'idb'
+import { getSysConfigDb, sysConfigStoreSheet } from '@/utils/db'
 
 export enum StockChartInterval {
   /**
@@ -49,7 +51,7 @@ export enum ChartType {
   /**
    * 美国线
    */
-  AmericanLine = 2,
+  AmericanLine = 2
 }
 
 export enum MainYAxis {
@@ -152,7 +154,7 @@ export type ChartStore = {
   }
 }
 
-export interface ChartManageStore {
+export interface KChartStore {
   userId?: string
   /**
    * 视图模式
@@ -232,7 +234,7 @@ export const createDefaultChartStore = (chartId: string, symbol?: string): Chart
   }
 }
 
-export const useChartManage = create<ChartManageStore>()(
+export const useKChart = create<KChartStore>()(
   persist(
     (_set, get) => ({
       viewMode: 'single',
@@ -256,17 +258,65 @@ export const useChartManage = create<ChartManageStore>()(
 )
 
 useUser.subscribe(state => {
-  console.log('user state changed', state)
   const userId = state.user?.username
 
-  if(!userId) return
+  if (!userId) return
 
-  const chartManage = useChartManage.getState()
+  const chartManage = useKChart.getState()
 
-  if(!chartManage.userId){
-    useChartManage.setState({
+  if (!chartManage.userId) {
+    useKChart.setState({
       userId
     })
+    saveProfile(useKChart.getState())
+    return
   }
 
+  if (chartManage.userId !== userId) {
+    saveProfile(useKChart.getState())
+
+    return loadProfile(userId).then(r => {
+      if (!r) {
+        const defaultChart = useKChart.getInitialState()
+        useKChart.setState({
+          ...defaultChart,
+          userId
+        })
+        saveProfile(useKChart.getState())
+      }
+    })
+  }
 })
+
+const saveProfile = async (state: KChartStore) => {
+  const db = await getSysConfigDb()
+
+  if (db) {
+    const userId = state.userId
+
+    if (userId) {
+      const profile = await db.get(sysConfigStoreSheet.KChart, userId)
+      if (profile) {
+        await db.put(sysConfigStoreSheet.KChart, { ...state, getActiveChart: undefined })
+      } else {
+        await db.add(sysConfigStoreSheet.KChart, { ...state, getActiveChart: undefined })
+      }
+    }
+  }
+}
+
+const loadProfile = async (userId: string) => {
+  const db = await getSysConfigDb()
+
+  if (db) {
+    const profile = await db.get(sysConfigStoreSheet.KChart, userId)
+
+    if (profile) {
+      useKChart.setState({
+        ...profile
+      })
+
+      return profile
+    }
+  }
+}

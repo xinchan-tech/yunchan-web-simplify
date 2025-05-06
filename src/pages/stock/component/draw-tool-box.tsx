@@ -8,7 +8,7 @@ import { CSS } from '@dnd-kit/utilities'
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import { type Updater, useImmer } from "use-immer"
-import { useChartManage } from '../lib'
+import { useKChart } from '../lib'
 import { chartEvent } from '../lib/event'
 
 const defaultBar: {
@@ -188,7 +188,7 @@ export const DrawToolBox = () => {
     })
   }, [setSetting])
 
-  const drawTool = useChartManage(s => s.drawTool)
+  const drawTool = useKChart(s => s.drawTool)
   return (
     <DrawToolContext.Provider value={{ ...setting, setDrawSetting: setSetting }}>
       <DndContext onDragEnd={onDragEnd}>
@@ -290,7 +290,7 @@ const DrawSettingBar = ({ pos }: { pos: { x: number; y: number }, type: ChartOve
 }
 
 const DrawToolBar = () => {
-  const barStore = useChartManage(s => s.drawToolBar)
+  const barStore = useKChart(s => s.drawToolBar)
   const [active, setActive] = useState<Nullable<{ type: string, uid: string }>>()
 
   const drawBar = useMemo(() => {

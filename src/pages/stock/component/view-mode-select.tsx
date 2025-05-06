@@ -1,10 +1,10 @@
 import { Button, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, JknIcon } from '@/components'
 import { useCallback } from 'react'
 import type { ViewMode } from '../lib'
-import { chartManage, useChartManage } from '../lib/store'
+import { chartManage, useKChart } from '../lib/store'
 
 export const ViewModeSelect = () => {
-  const viewMode = useChartManage(s => s.viewMode)
+  const viewMode = useKChart(s => s.viewMode)
 
   const setViewMode = useCallback((params: { viewMode: string }) => {
     chartManage.setViewMode(params.viewMode as ViewMode)

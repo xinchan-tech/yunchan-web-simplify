@@ -5,7 +5,7 @@ import { renderUtils } from './utils'
 import {
   type ViewMode,
   type ChartStore,
-  useChartManage,
+  useKChart,
   type StockChartInterval,
   CoilingIndicatorId,
   type Indicator,
@@ -14,14 +14,14 @@ import {
 } from '@/store'
 
 export type { ChartStore, StockChartInterval, Indicator }
-export { useChartManage, MainYAxis, CoilingIndicatorId, ChartType }
+export { useKChart, MainYAxis, CoilingIndicatorId, ChartType }
 
 export const chartManage = {
   /**
    * 修改存储数据
    */
   setStore: (fn: (store: ChartStore) => void, chart?: string) => {
-    useChartManage.setState(state => {
+    useKChart.setState(state => {
       return produce(state, draft => {
         const id = chart || state.activeChartId
         fn(draft.chartStores[id])
@@ -29,17 +29,17 @@ export const chartManage = {
     })
   },
   setActiveChart: (chartId: string) => {
-    useChartManage.setState({
+    useKChart.setState({
       activeChartId: chartId
     })
   },
   showDrawTool: (show: boolean) => {
-    useChartManage.setState({
+    useKChart.setState({
       drawTool: show
     })
   },
   getChart: (chartId: string): Nullable<ChartStore> => {
-    const chart = useChartManage.getState().chartStores[chartId]
+    const chart = useKChart.getState().chartStores[chartId]
     return chart
   },
   setSymbol: (symbol: string, chartId?: string) => {
@@ -118,7 +118,7 @@ export const chartManage = {
    *
    */
   addSecondaryIndicator: (indicator: Indicator, chartId?: string) => {
-    const secondary = useChartManage.getState().getActiveChart().secondaryIndicators
+    const secondary = useKChart.getState().getActiveChart().secondaryIndicators
 
     if (secondary.length >= 5) {
       appEvent.emit('toast', { message: '最多只能添加5个附图指标' })
@@ -153,32 +153,32 @@ export const chartManage = {
    * 设置视图模式
    */
   setViewMode: (viewMode: ViewMode) => {
-    const currentViewMode = useChartManage.getState().viewMode
+    const currentViewMode = useKChart.getState().viewMode
     if (currentViewMode === viewMode) return
 
     const currentModeCount = renderUtils.getViewMode(currentViewMode)
     const targetModeCount = renderUtils.getViewMode(viewMode)
 
     if (currentModeCount === targetModeCount) {
-      useChartManage.setState({
+      useKChart.setState({
         viewMode,
         activeChartId: 'chart-0'
       })
       return
     }
 
-    const chartStores = useChartManage.getState().chartStores
-    const activeChart = useChartManage.getState().getActiveChart()
+    const chartStores = useKChart.getState().chartStores
+    const activeChart = useKChart.getState().getActiveChart()
     const newChartStores: typeof chartStores = {}
 
-    const newActive = currentModeCount > targetModeCount ? 'chart-0' : useChartManage.getState().activeChartId
+    const newActive = currentModeCount > targetModeCount ? 'chart-0' : useKChart.getState().activeChartId
 
     for (let i = 0; i < targetModeCount; i++) {
       const chartId = `chart-${i}`
       newChartStores[chartId] = chartStores[chartId] || { ...activeChart, id: chartId }
     }
 
-    useChartManage.setState({
+    useKChart.setState({
       viewMode,
       activeChartId: newActive,
       chartStores: newChartStores
@@ -186,8 +186,8 @@ export const chartManage = {
   },
   setStockOverlay: (symbol: string, name: string, chartId?: string) => {
     const overlayStock = chartId
-      ? useChartManage.getState().chartStores[chartId].overlayStock
-      : useChartManage.getState().getActiveChart().overlayStock
+      ? useKChart.getState().chartStores[chartId].overlayStock
+      : useKChart.getState().getActiveChart().overlayStock
 
     if (overlayStock.some(stock => stock.symbol === symbol)) return
 
@@ -198,7 +198,7 @@ export const chartManage = {
     chartEvent.get().emit('stockCompareChange', { type: 'add', symbol })
 
     chartManage.setYAxis({
-      left: useChartManage.getState().getActiveChart().yAxis.left,
+      left: useKChart.getState().getActiveChart().yAxis.left,
       right: MainYAxis.Percentage
     })
   },
@@ -235,7 +235,7 @@ export const chartManage = {
     }, chartId)
   },
   addCoiling: (coiling: CoilingIndicatorId, chartId?: string) => {
-    const _coiling = useChartManage.getState().chartStores[chartId ?? useChartManage.getState().activeChartId].coiling
+    const _coiling = useKChart.getState().chartStores[chartId ?? useKChart.getState().activeChartId].coiling
 
     if (_coiling.includes(coiling)) return
 
@@ -245,7 +245,7 @@ export const chartManage = {
     chartEvent.get().emit('coilingChange', { type: 'add', coiling: [coiling] })
   },
   removeCoiling: (coiling: CoilingIndicatorId, chartId?: string) => {
-    const _coiling = useChartManage.getState().chartStores[chartId ?? useChartManage.getState().activeChartId].coiling
+    const _coiling = useKChart.getState().chartStores[chartId ?? useKChart.getState().activeChartId].coiling
 
     if (!_coiling.includes(coiling)) return
 
