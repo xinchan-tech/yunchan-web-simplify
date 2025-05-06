@@ -71,6 +71,12 @@ export enum ChatConnectStatus {
   SyncingFail = 6
 }
 
+export enum ChatChannelType {
+  Public = '0',
+  OnlyManager = '1',
+  OnlyOwner = '2'
+}
+
 export interface ChatChannel {
   id: Channel['channelID']
   name: ChannelInfo['title']
@@ -81,6 +87,7 @@ export interface ChatChannel {
   notice: string
   inChannel: boolean
   state?: ChatChannelState
+  chatType: ChatChannelType
   tags?: string
   editable: boolean
   maxCount: number

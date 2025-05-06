@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react"
-import { type ChatChannel, ChatChannelState, ChatConnectStatus, type ChatMessage, ChatMessageType, type ChatSubscriber } from "../lib/types"
+import { type ChatChannel, ChatChannelState, ChatChannelType, ChatConnectStatus, type ChatMessage, ChatMessageType, type ChatSubscriber } from "../lib/types"
 import { chatManager, useChatStore } from "../lib/store"
 import WKSDK, { Channel, Mention, MessageImage, MessageStatus, MessageText, PullMode, type Reply } from "wukongimjssdk"
 import { ChannelTransform, MessageTransform, SubscriberTransform } from "../lib/transform"
@@ -400,6 +400,19 @@ export const ChatRoom = () => {
     return false
   }, [voteShow, voteList.data, channelStatus, channel])
 
+  const canInput = useMemo(() => {
+    let _canInput = channelInfo?.chatType === ChatChannelType.Public
+    if (!_canInput) {
+      if (channelInfo?.chatType === ChatChannelType.OnlyManager) {
+        _canInput = me?.isManager || me?.isOwner || false
+      } else {
+        _canInput = me?.isOwner || false
+      }
+    }
+
+    return _canInput
+  }, [channelInfo?.chatType, me])
+
   return (
     <div className="w-full h-full overflow-hidden flex flex-col">
       {
@@ -454,16 +467,20 @@ export const ChatRoom = () => {
               <MessageList messages={message} onFetchMore={fetchMoreMessage} hasMore={message[0] && message[0]?.messageSeq > 0} me={me} />
             ) : <div className="flex-1 flex items-center justify-center text-sm text-secondary" />
           }
-          <Resizable
-            minHeight={240}
-            maxHeight={480}
-            defaultSize={{
-              height: 240
-            }}
-            className="w-full border-0 border-t border-solid border-accent flex-shrink-0"
-          >
-            <ChatInput hasForbidden={me?.hasForbidden ?? false} inChannel={(channelInfo?.inChannel ?? false)} channelReady={ChatChannelState.Fetched === channelStatus} onSubmit={onSubmit} me={me} />
-          </Resizable>
+          {
+            canInput ? (
+              <Resizable
+                minHeight={240}
+                maxHeight={480}
+                defaultSize={{
+                  height: 240
+                }}
+                className="w-full border-0 border-t border-solid border-accent flex-shrink-0"
+              >
+                <ChatInput chatType={channelInfo?.chatType ?? ChatChannelType.Public} hasForbidden={me?.hasForbidden ?? false} inChannel={(channelInfo?.inChannel ?? false)} channelReady={ChatChannelState.Fetched === channelStatus} onSubmit={onSubmit} me={me} />
+              </Resizable>
+            ) : null
+          }
         </div>
         <div className="flex-shrink-0 w-[200px] border-l-primary flex flex-col">
           <div className="chat-room-notice p-2 box-border  flex-shrink-0 border-b-primary flex flex-col">
