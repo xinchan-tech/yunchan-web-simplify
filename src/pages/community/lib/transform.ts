@@ -527,6 +527,7 @@ export const ChannelTransform = {
       editable: channel.orgData.editable,
       maxCount: channel.orgData.max_num,
       brief: channel.orgData.brief,
+      chatType: channel.orgData.chat_type,
       isReadNotice: channel.orgData.is_notice_read === 1,
     }
   }

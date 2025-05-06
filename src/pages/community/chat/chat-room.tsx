@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react"
-import { type ChatChannel, ChatChannelState, ChatConnectStatus, type ChatMessage, ChatMessageType, type ChatSubscriber } from "../lib/types"
+import { type ChatChannel, ChatChannelState, ChatChannelType, ChatConnectStatus, type ChatMessage, ChatMessageType, type ChatSubscriber } from "../lib/types"
 import { chatManager, useChatStore } from "../lib/store"
 import WKSDK, { Channel, Mention, MessageImage, MessageStatus, MessageText, PullMode, type Reply } from "wukongimjssdk"
 import { ChannelTransform, MessageTransform, SubscriberTransform } from "../lib/transform"
@@ -462,7 +462,7 @@ export const ChatRoom = () => {
             }}
             className="w-full border-0 border-t border-solid border-accent flex-shrink-0"
           >
-            <ChatInput hasForbidden={me?.hasForbidden ?? false} inChannel={(channelInfo?.inChannel ?? false)} channelReady={ChatChannelState.Fetched === channelStatus} onSubmit={onSubmit} me={me} />
+            <ChatInput chatType={channelInfo?.chatType ?? ChatChannelType.Public} hasForbidden={me?.hasForbidden ?? false} inChannel={(channelInfo?.inChannel ?? false)} channelReady={ChatChannelState.Fetched === channelStatus} onSubmit={onSubmit} me={me} />
           </Resizable>
         </div>
         <div className="flex-shrink-0 w-[200px] border-l-primary flex flex-col">

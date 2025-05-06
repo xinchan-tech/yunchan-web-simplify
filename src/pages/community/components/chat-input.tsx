@@ -6,18 +6,19 @@ import { Popover } from '@radix-ui/react-popover'
 import Image from '@tiptap/extension-image'
 import { EditorContent, type JSONContent, useEditor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
-import { type PropsWithChildren, forwardRef, useEffect, useId, useImperativeHandle, useState } from 'react'
+import { type PropsWithChildren, forwardRef, useEffect, useId, useImperativeHandle, useMemo, useState } from 'react'
 import { useImmer } from 'use-immer'
 import { Reply, WKSDK } from 'wukongimjssdk'
 import { type ChatEvent, chatEvent } from '../lib/event'
 import { useChatStore } from "../lib/store"
-import type { ChatMessage, ChatSubscriber } from "../lib/types"
+import { ChatChannelType, ChatMessage, ChatSubscriber } from "../lib/types"
 import { MessageTransform } from "../lib/transform"
 import { VoteForm } from "./vote-form"
 import { draftCache } from "../cache"
 
 interface ChatInputProps {
   hasForbidden: boolean
+  chatType: ChatChannelType
   inChannel: boolean
   channelReady: boolean
   me?: ChatSubscriber
@@ -176,7 +177,7 @@ export const ChatInput = forwardRef<ChatInputInstance, ChatInputProps>((props, r
     if (!channel) return
 
     draftCache.get(channel).then(draft => {
-      if(!draft) return
+      if (!draft) return
 
       editor?.commands.setContent(draft.content)
     })
@@ -238,10 +239,23 @@ export const ChatInput = forwardRef<ChatInputInstance, ChatInputProps>((props, r
     }
   }, [channel, editor, setMentionList, setReplyMessage])
 
+  const canInput = useMemo(() => {
+    let _canInput = props.chatType === ChatChannelType.Public
+    if (!_canInput) {
+      if (props.chatType === ChatChannelType.OnlyManager) {
+        _canInput = props.me?.isManager || props.me?.isOwner || false
+      } else {
+        _canInput = props.me?.isOwner || false
+      }
+    }
+
+    return _canInput
+  }, [props.chatType, props.me])
+
 
   useEffect(() => {
-    editor?.setEditable(props.inChannel && !props.hasForbidden)
-  }, [props.hasForbidden, props.inChannel, editor])
+    editor?.setEditable(props.inChannel && !props.hasForbidden && canInput)
+  }, [props.hasForbidden, props.inChannel, editor, canInput])
 
 
   return (
@@ -280,7 +294,13 @@ export const ChatInput = forwardRef<ChatInputInstance, ChatInputProps>((props, r
               {!editor?.isEditable ? (
                 props.inChannel ? (
                   <div className="absolute inset-0 flex items-center justify-center left-0 right-0 top-0 bottom-0 box-border">
-                    <div className="text-tertiary text-base">您已被禁言</div>
+                    {
+                      !canInput ? (
+                        <div className="text-tertiary text-base">管理员已限制当前群组的发言</div>
+                      ) : (
+                        <div className="text-tertiary text-base">您已被禁言</div>
+                      )
+                    }
                   </div>
                 ) : (
                   <div className="absolute inset-0 flex items-center justify-center left-0 right-0 top-0 bottom-0 box-border">
@@ -408,7 +428,7 @@ export const VoteInput = ({ children }: PropsWithChildren) => {
       footer={null}
     >
       {
-        ({close}) => <VoteForm
+        ({ close }) => <VoteForm
           channel={channel}
           onClose={close}
           onSubmit={close}
