@@ -43,10 +43,6 @@ export const StockAlarmList = () => {
 
   const dataGroupBy = useMemo(() => {
     const groupBy = group(alarmQuery.data ?? [], item => {
-      if (sort.orderBy === 'symbol') {
-        return item.symbol.slice(0, 1)
-      }
-
       return dateUtils.toUsDay(item.create_time).format('YYYY-MM-DD')
     })
 
@@ -157,16 +153,14 @@ export const StockAlarmList = () => {
           dataGroupBy.map((item) => (
             <GroupArea key={item.key}
               title={
-                sort.orderBy === 'symbol' ? item.key : (
-                  <span>
-                    {item.key.slice(5)}&nbsp;&nbsp;
-                    <JknIcon name="ic_us" className="inline-block ml-1 size-3" />
-                    &nbsp;
-                    <span className="text-tertiary text-sm">
-                      美东时间
-                    </span>
+                <span>
+                  {item.key.slice(5)}&nbsp;&nbsp;
+                  <JknIcon name="ic_us" className="inline-block ml-1 size-3" />
+                  &nbsp;
+                  <span className="text-tertiary text-sm">
+                    美东时间
                   </span>
-                )
+                </span>
               }
             >
               {item.list?.map((row) => (
@@ -308,7 +302,7 @@ const AlarmItem = ({ symbol, data, index, onDelete }: AlarmItemProps) => {
           <div className="text-tertiary text-xs text-left mt-2.5">
             <span>
               添加时间&nbsp;
-              {dayjs(+data.create_time * 1000).format('MM/DD w HH:mm')}
+              {dateUtils.toUsDay(data.expire_time).format('MM/DD w HH:mm')}
             </span>
             &emsp;
             {data.type !== AlarmType.PERCENT ? (

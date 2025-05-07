@@ -38,10 +38,6 @@ export const StockAlarmRecordList = () => {
 
   const dataGroupBy = useMemo(() => {
     const groupBy = group(alarmQuery.data ?? [], item => {
-      if (sort.orderBy === 'symbol') {
-        return item.symbol.slice(0, 1)
-      }
-
       return dateUtils.toUsDay(item.alarm_time).format('YYYY-MM-DD')
     })
 
@@ -129,16 +125,14 @@ export const StockAlarmRecordList = () => {
           dataGroupBy.map((item) => (
             <GroupArea key={item.key}
               title={
-                sort.orderBy === 'symbol' ? item.key : (
-                  <span>
-                    {item.key.slice(5)}&nbsp;&nbsp;
-                    <JknIcon name="ic_us" className="inline-block ml-1 size-3" />
-                    &nbsp;
-                    <span className="text-tertiary text-sm">
-                      美东时间
-                    </span>
+                <span>
+                  {item.key.slice(5)}&nbsp;&nbsp;
+                  <JknIcon name="ic_us" className="inline-block ml-1 size-3" />
+                  &nbsp;
+                  <span className="text-tertiary text-sm">
+                    美东时间
                   </span>
-                )
+                </span>
               }
             >
               {item.list?.map((row) => (
