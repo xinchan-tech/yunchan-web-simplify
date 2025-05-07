@@ -46,7 +46,7 @@ const HomePage = () => {
   return (
     <div className="home-container h-screen w-full overflow-y-auto bg-[#0A0A0A]">
       <div className="home-navigate flex items-center justify-between px-12 py-2 sticky top-0 bg-[#0a0a0a]">
-        <div className="home-logo w-[186px] h-[43px] cursor-pointer" onClick={gotoDashboard} onKeyDown={() => {}}>
+        <div className="home-logo w-[186px] h-[43px] cursor-pointer" onClick={gotoDashboard} onKeyDown={() => { }}>
           <img src={LogoTitle} alt="logo" className="size-full" />
         </div>
         <div className="flex items-center space-x-12">
@@ -69,9 +69,13 @@ const HomePage = () => {
           <Link to="/app/stock?symbol=QQQ" className="home-navigate-item hover:text-primary">
             K线图表
           </Link>
-          <Link to="/assets" className="home-navigate-item hover:text-primary">
-            AI交易
-          </Link>
+          {
+            sysConfig.PUBLIC_BASE_BUILD_ENV !== 'PRODUCTION' ? (
+              <Link to="/assets" className="home-navigate-item hover:text-primary">
+                AI交易
+              </Link>
+            ) : null
+          }
           <a href="#download" className="home-navigate-item hover:text-primary">
             下载
           </a>
@@ -124,7 +128,7 @@ const HomePage = () => {
               下载
             </p>
             {sysConfig.OS === 'ios' ? (
-              <span onClick={() => JknAlert.toast('iOS 版本即将推出，敬请期待')} onKeyDown={() => {}}>
+              <span onClick={() => JknAlert.toast('iOS 版本即将推出，敬请期待')} onKeyDown={() => { }}>
                 <img src={ApkDownload} alt="logo" className="h-[46px] w-[196px]" />
               </span>
             ) : (
@@ -132,9 +136,9 @@ const HomePage = () => {
                 <img src={ApkDownload} alt="logo" className="h-[46px] w-[196px]" />
               </a>
             )}
-            <span onClick={toast} onKeyDown={() => {}}>
+            <a href="https://play.google.com/store/apps/details?id=com.todaychart.play">
               <img src={AndroidDownload} alt="logo" className="h-[46px] w-[196px]" />
-            </span>
+            </a>
 
             <a href="https://apps.apple.com/us/app/id6744859604?l=zh-Hans-CN">
               <img src={IosDownload} alt="logo" className="h-[46px] w-[196px]" />
