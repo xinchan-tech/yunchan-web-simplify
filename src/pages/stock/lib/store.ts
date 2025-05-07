@@ -10,10 +10,11 @@ import {
   CoilingIndicatorId,
   type Indicator,
   ChartType,
-  MainYAxis
+  MainYAxis,
+  type KChartStore
 } from '@/store'
 
-export type { ChartStore, StockChartInterval, Indicator }
+export type { ChartStore, StockChartInterval, Indicator, KChartStore }
 export { useKChart, MainYAxis, CoilingIndicatorId, ChartType }
 
 export const chartManage = {

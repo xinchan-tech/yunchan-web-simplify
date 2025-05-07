@@ -169,7 +169,7 @@ export const renderUtils = {
       return current.add(-1 * 15 * interval, 'd').format('YYYY-MM-DD HH:mm:ss')
     }
 
-    if (interval >= StockChartInterval.HALF_YEAR) {
+    if (interval >= StockChartInterval.MONTH) {
       return undefined
     }
 
