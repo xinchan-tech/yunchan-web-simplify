@@ -1,5 +1,32 @@
 # Changelog
 
+## [2.7.9](https://github.com/xinchan-gx/yunchan-web/compare/2.7.8...2.7.9) (2025-05-07)
+
+### ✨ Features | 新功能
+
+* 更新股票订阅逻辑，使用常量替代字符串以提高可维护性 ([c68e6a3](https://github.com/xinchan-gx/yunchan-web/commit/c68e6a3cf1abd9fc253fc93e3ac022033fc360ea))
+* 更新聊天相关类型导入，增强类型安全性 ([43b0e62](https://github.com/xinchan-gx/yunchan-web/commit/43b0e62b643e7daaf79a90bf5e256e704b89dfea))
+* 更新API地址，增强图表渐变处理逻辑，优化警报列表渲染 ([10f02af](https://github.com/xinchan-gx/yunchan-web/commit/10f02af458e4d52980c1635a59d06c0a13baa9df))
+* 更新JknIcon组件，添加labelSide属性以支持标签位置调整 ([3dda3d7](https://github.com/xinchan-gx/yunchan-web/commit/3dda3d72c09ae112217fb4352883cceedc89986b))
+* 更新WebSocket股票URL，添加警报和消息音频通知 ([c65d2ab](https://github.com/xinchan-gx/yunchan-web/commit/c65d2ab4998a81494a68b8daea1506f63d5fb018))
+* 添加美国线图标和更新图表类型选择逻辑 ([3401bd3](https://github.com/xinchan-gx/yunchan-web/commit/3401bd34ccbca3da52629b19bb438c9f388858f5))
+* 添加canvas-confetti库并在BackTestBar组件中实现庆祝效果；更新DropdownSelector组件的选项名称 ([fbff871](https://github.com/xinchan-gx/yunchan-web/commit/fbff871c58893b9929473b1a6e5f2f8db6386907))
+* 优化警报列表和触发日志的样式，增强可读性 ([b2befb6](https://github.com/xinchan-gx/yunchan-web/commit/b2befb66a6e5849c9ac9914ccd8db362dae6a9e7))
+* 优化警报设置逻辑，调整警报类型选择和状态管理，增强用户体验 ([14d1155](https://github.com/xinchan-gx/yunchan-web/commit/14d11557583867bf4b25da7099ef39ede477809b))
+* 重构图表管理逻辑，统一使用useKChart替代useChartManage，优化存储和数据获取 ([4346d89](https://github.com/xinchan-gx/yunchan-web/commit/4346d89bfac4d56e57a11f9db8d7f87334534a08))
+* add American Line chart type and enhance coiling bar functionality ([d6a60d7](https://github.com/xinchan-gx/yunchan-web/commit/d6a60d73cc95681a4cd04f61b9dc92de61a77ac7))
+* add arrow-fill SVG icon and implement chat room right panel toggle ([8735f17](https://github.com/xinchan-gx/yunchan-web/commit/8735f178471ac5f1c86eb87f4e66e58a2539bda9))
+* Enhance stock alarm and chart features ([df6bbc1](https://github.com/xinchan-gx/yunchan-web/commit/df6bbc1a334da5842638bc458e1093190475aa29))
+* **stock-alarm:** add SortButton and GroupArea components for sorting and grouping alarms ([1dfd5a6](https://github.com/xinchan-gx/yunchan-web/commit/1dfd5a6ec969abbe836d6f48be4964eda76f140d))
+
+### 🐛 Bug Fixes | Bug 修复
+
+* 修复图标链接路径，确保正确加载图标；优化未读消息计数的查询逻辑 ([996dc57](https://github.com/xinchan-gx/yunchan-web/commit/996dc575fc56770501e0b5638af6b236a2167d4a))
+
+### 🎫 Chores | 其他更新
+
+* 更新开发依赖版本并优化构建配置 ([3ebfb5e](https://github.com/xinchan-gx/yunchan-web/commit/3ebfb5e5a42b56621691c3b205d5b533c9069f45))
+
 ## [2.7.8](https://github.com/xinchan-gx/yunchan-web/compare/2.7.7...2.7.8) (2025-05-06)
 
 ### ✨ Features | 新功能
