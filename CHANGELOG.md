@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.7.11](https://github.com/xinchan-gx/yunchan-web/compare/2.7.10...2.7.11) (2025-05-07)
+
+### ✨ Features | 新功能
+
+* 根据环境变量条件渲染AI交易链接，优化用户体验 ([3a92f78](https://github.com/xinchan-gx/yunchan-web/commit/3a92f7825d59b31a3b684234910794d1c0217e92))
+
 ## [2.7.10](https://github.com/xinchan-gx/yunchan-web/compare/2.7.8...2.7.10) (2025-05-07)
 
 ### ✨ Features | 新功能
