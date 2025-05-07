@@ -31,14 +31,14 @@ function Calendar({ className, classNames, showOutsideDays = true, ...props }: C
           'text-muted-foreground rounded-md w-10 h-10 font-normal text-[0.8rem] p-0 flex items-center justify-center',
         row: 'flex w-full mt-2',
         cell: cn(
-          'relative p-0 text-center w-10 h-10 text-sm flex items-center justify-center bg-transport focus-within:relative focus-within:z-20 [&:has([aria-selected])]:bg-primary [&:has([aria-selected].day-outside)]:bg-primary [&:has([aria-selected].day-range-end)]:rounded-r-md',
+          'relative p-0 text-center w-10 h-10 text-sm flex items-center justify-center bg-transport focus-within:relative focus-within:z-20 [&:has([aria-selected].day-outside)]:bg-primary [&:has([aria-selected].day-range-end)]:rounded-r-md',
           props.mode === 'range'
             ? '[&:has(>.day-range-end)]:rounded-r-md [&:has(>.day-range-start)]:rounded-l-md first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md'
             : '[&:has([aria-selected])]:rounded-md'
         ),
         day: cn(
           buttonVariants({ variant: 'default', reset: true }),
-          'h-8 w-8 p-0 font-normal aria-selected:opacity-100'
+          'h-8 w-8 p-0 font-normal aria-selected:opacity-100 hover:text-black hover:!bg-foreground focus-visible:!border-none focus-visible:!text-black focus:bg-foreground focus:text-black aria-selected:bg-foreground aria-selected:text-black'
         ),
         day_range_start: 'day-range-start',
         day_range_end: 'day-range-end',

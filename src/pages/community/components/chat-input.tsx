@@ -330,7 +330,7 @@ interface ChatInputToolProps {
 const ChatInputTool = ({ onSelectEmoji, onImageUpload, me }: ChatInputToolProps) => {
   const teacher = useUser(s => s.user?.teacher)
   return (
-    <div className="chat-room-input-box flex items-center space-x-4 h-[32px] box-border border-b-primary">
+    <div className="chat-room-input-box flex items-center space-x-4 h-[32px] box-border">
       <EmojiPicker onPicker={onSelectEmoji}>
         <div className="flex items-center justify-center cursor-pointer text-tertiary">
           <JknIcon.Svg name="emoji" size={20} />
@@ -357,6 +357,9 @@ const ChatInputTool = ({ onSelectEmoji, onImageUpload, me }: ChatInputToolProps)
           </div>
         ) : null
       }
+           <VoteInput>
+              <JknIcon.Svg name="rank" size={18} />
+            </VoteInput>
     </div>
   )
 }

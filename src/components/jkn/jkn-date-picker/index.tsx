@@ -28,6 +28,7 @@ function JknDatePicker({ children, onChange, date: _date, time, popover, ...prop
   const format = time ? 'YYYY-MM-DD HH:mm' : 'YYYY-MM-DD'
 
   const _onSelect = (d?: Date) => {
+
     const oldDate = dayjs(date || Date.now())
     if (d) {
       let newDate = dayjs(d)
@@ -61,7 +62,7 @@ function JknDatePicker({ children, onChange, date: _date, time, popover, ...prop
       <PopoverTrigger asChild>
         {typeof children === 'function' ? children(date, { open: setTrue, close: setFalse }) : children}
       </PopoverTrigger>
-      <PopoverContent className="p-0 w-[306px]" style={{ height: 390 + (time ? 42 : 0) }} {...popover}>
+      <PopoverContent className="p-0 w-fit" style={{ height: 390 + (time ? 42 : 0) }} {...popover}>
         <Calendar mode="single" selected={dayjs(date || Date.now()).toDate()} onDayClick={_onSelect} {...props} />
         {
           time ? (

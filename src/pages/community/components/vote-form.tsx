@@ -70,7 +70,7 @@ export const VoteForm = ({ id, channel, onSubmit, onClose }: VoteFormProps) => {
     title: '',
     items: [{ title: '', id: 0 }],
     endTime: '',
-    desc: '',
+    desc: ' ',
     voteLimit: '1',
     custom: 0
   })
@@ -130,7 +130,7 @@ export const VoteForm = ({ id, channel, onSubmit, onClose }: VoteFormProps) => {
                 name="title"
                 render={({ field }) => (
                   <FormItem className="pb-4 flex justify-center space-y-0">
-                    <FormLabel className="text-sm w-28 flex-shrink-0">投票标题</FormLabel>
+                    <FormLabel className="text-sm w-28 flex-shrink-0 !text-foreground">投票标题</FormLabel>
                     <FormControl>
                       <Input {...field} placeholder="请输入投票名称" className="placeholder:text-tertiary h-10 rounded-md" />
                     </FormControl>
@@ -138,34 +138,77 @@ export const VoteForm = ({ id, channel, onSubmit, onClose }: VoteFormProps) => {
                 )}
               />
               <FormItem className="flex justify-center space-y-0 pb-4">
-                <FormLabel className="text-sm w-28 flex-shrink-0">投票选项</FormLabel>
-                <ScrollArea className="h-[160px] w-full">
-                  <div className="space-y-4">
-                    {
-                      optionsFields.fields.map((item, index) => (
-                        <FormField
-                          key={item.id}
-                          control={form.control}
-                          name={`items.${index}.title`}
-                          render={({ field }) => (
-                            <FormItem className="flex justify-center space-y-0">
-                              <FormControl>
-                                <VoteStockPicker index={index}   {...field} onChange={(value) => { field.onChange(value) }} onAdd={() => optionsFields.append({ title: '', id: 0 })} onDelete={() => optionsFields.remove(index)} />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                      ))
-                    }
-                  </div>
-                </ScrollArea>
+                <FormLabel className="text-sm w-28 flex-shrink-0 !text-foreground">投票选项</FormLabel>
+                {
+                  optionsFields.fields.length > 8 ? (
+                    <div className="flex-1">
+                      <ScrollArea className="h-[376px]">
+                        <div className="space-y-4">
+                          {
+                            optionsFields.fields.slice(0, optionsFields.fields.length - 1).map((item, index) => (
+                              <FormField
+                                key={item.id}
+                                control={form.control}
+                                name={`items.${index}.title`}
+                                render={({ field }) => (
+                                  <FormItem className="flex justify-center space-y-0">
+                                    <FormControl>
+                                      <VoteStockPicker index={1} {...field} onChange={(value) => { field.onChange(value) }} onAdd={() => optionsFields.append({ title: '', id: 0 })} onDelete={() => optionsFields.remove(index)} />
+                                    </FormControl>
+                                  </FormItem>
+                                )}
+                              />
+                            ))
+                          }
+                        </div>
+                      </ScrollArea>
+                      <div className="mt-4">
+                        {
+                          optionsFields.fields.slice(-1).map((item, index) => (
+                            <FormField
+                              key={item.id}
+                              control={form.control}
+                              name={`items.${optionsFields.fields.length - 1}.title`}
+                              render={({ field }) => (
+                                <FormItem className="flex justify-center space-y-0">
+                                  <FormControl>
+                                    <VoteStockPicker index={0} {...field} onChange={(value) => { field.onChange(value) }} onAdd={() => optionsFields.append({ title: '', id: 0 })} onDelete={() => optionsFields.remove(index)} />
+                                  </FormControl>
+                                </FormItem>
+                              )}
+                            />
+                          ))
+                        }
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-4 flex-1">
+                      {
+                        optionsFields.fields.map((item, index, arr) => (
+                          <FormField
+                            key={item.id}
+                            control={form.control}
+                            name={`items.${index}.title`}
+                            render={({ field }) => (
+                              <FormItem className="flex justify-center space-y-0">
+                                <FormControl>
+                                  <VoteStockPicker index={arr.length - index - 1}   {...field} onChange={(value) => { field.onChange(value) }} onAdd={() => optionsFields.append({ title: '', id: 0 })} onDelete={() => optionsFields.remove(index)} />
+                                </FormControl>
+                              </FormItem>
+                            )}
+                          />
+                        ))
+                      }
+                    </div>
+                  )
+                }
               </FormItem>
               <FormField
                 control={form.control}
                 name="endTime"
                 render={({ field }) => (
                   <FormItem className="pb-4 flex justify-center space-y-0">
-                    <FormLabel className="text-sm w-28 flex-shrink-0">投票截止时间</FormLabel>
+                    <FormLabel className="text-sm w-28 flex-shrink-0 !text-foreground">投票截止时间</FormLabel>
                     <FormControl>
                       <JknDatePicker time date={field.value} onChange={field.onChange} disabled={e => !dayjs().add(-1, 'day').isBefore(e)} popover={{ side: 'left' }}>
                         {
@@ -189,7 +232,7 @@ export const VoteForm = ({ id, channel, onSubmit, onClose }: VoteFormProps) => {
                 )}
               />
 
-              <FormField
+              {/* <FormField
                 control={form.control}
                 name="voteLimit"
                 render={({ field }) => (
@@ -237,7 +280,7 @@ export const VoteForm = ({ id, channel, onSubmit, onClose }: VoteFormProps) => {
                     </FormControl>
                   </FormItem>
                 )}
-              />
+              /> */}
             </form>
           </FormProvider>
         )
