@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react"
-import { type ChatChannel, ChatChannelState, ChatChannelType, ChatConnectStatus, type ChatMessage, ChatMessageType, type ChatSubscriber } from "../lib/types"
+import { type ChatChannel, ChatChannelState, ChatChannelType, ChatCmdType, ChatConnectStatus, type ChatMessage, ChatMessageType, type ChatSubscriber } from "../lib/types"
 import { chatManager, useChatStore } from "../lib/store"
 import WKSDK, { Channel, Mention, MessageImage, MessageStatus, MessageText, PullMode, type Reply } from "wukongimjssdk"
 import { ChannelTransform, MessageTransform, SubscriberTransform } from "../lib/transform"

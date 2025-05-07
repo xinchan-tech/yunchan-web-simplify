@@ -11,7 +11,7 @@ import { useImmer } from 'use-immer'
 import { Reply, WKSDK } from 'wukongimjssdk'
 import { type ChatEvent, chatEvent } from '../lib/event'
 import { useChatStore } from "../lib/store"
-import { ChatChannelType, ChatMessage, ChatSubscriber } from "../lib/types"
+import { ChatChannelType, type ChatMessage, type ChatSubscriber } from "../lib/types"
 import { MessageTransform } from "../lib/transform"
 import { VoteForm } from "./vote-form"
 import { draftCache } from "../cache"
