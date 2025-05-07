@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.7.12](https://github.com/xinchan-gx/yunchan-web/compare/2.7.11...2.7.12) (2025-05-07)
+
+### ✨ Features | 新功能
+
+* 添加 autoContainer 属性到 JknInfiniteArea 组件，优化滚动区域布局；调整 GroupArea 组件的 z-index 样式 ([e35241d](https://github.com/xinchan-gx/yunchan-web/commit/e35241dbe078ed2f61f69a5585c195509e39be01))
+
 ## [2.7.11](https://github.com/xinchan-gx/yunchan-web/compare/2.7.10...2.7.11) (2025-05-07)
 
 ### ✨ Features | 新功能
