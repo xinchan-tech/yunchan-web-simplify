@@ -152,7 +152,7 @@ export const StockAlarmList = () => {
           onChange={onSort}
         />
       </div>
-      <JknInfiniteArea direction="down" className="flex-1" hasMore={alarmQuery.hasNextPage} fetchMore={() => !alarmQuery.isFetchingNextPage && alarmQuery.fetchNextPage()}>
+      <JknInfiniteArea direction="down" autoContainer={true} className="flex-1" hasMore={alarmQuery.hasNextPage} fetchMore={() => !alarmQuery.isFetchingNextPage && alarmQuery.fetchNextPage()}>
         {
           dataGroupBy.map((item) => (
             <GroupArea key={item.key}

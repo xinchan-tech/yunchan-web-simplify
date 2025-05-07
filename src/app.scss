@@ -332,3 +332,10 @@ a:active {
   text-decoration: none;
   color: currentColor;
 }
+
+.jkn-infinite-area[data-auto-container="true"] {
+  > div[data-radix-scroll-area-viewport] > div {
+    min-width: auto !important;
+    display: block !important;
+  }
+}

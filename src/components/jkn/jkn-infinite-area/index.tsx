@@ -18,6 +18,7 @@ interface JknInfiniteAreaProps {
   className?: string
   fetchMore?: () => void
   style?: CSSProperties
+  autoContainer?: boolean
 }
 
 type JknInfiniteAreaInstance = {
@@ -33,7 +34,7 @@ const getScrollViewId = (container: HTMLDivElement | null) => {
 }
 
 export const JknInfiniteArea = forwardRef<JknInfiniteAreaInstance, PropsWithChildren<JknInfiniteAreaProps>>(
-  ({ direction = 'down', hasMore, className, children, fetchMore, style }, ref) => {
+  ({ direction = 'down', hasMore, className, children, fetchMore, style, autoContainer }, ref) => {
     const uid = useId()
     const container = useRef<HTMLDivElement>(null)
     const fetchFn = useLatestRef(fetchMore)
@@ -83,7 +84,7 @@ export const JknInfiniteArea = forwardRef<JknInfiniteAreaInstance, PropsWithChil
     }))
 
     return (
-      <ScrollArea className={cn('jkn-infinite-area', className)} ref={container} style={style}>
+      <ScrollArea className={cn('jkn-infinite-area', className)} ref={container} style={style} data-auto-container={autoContainer}>
         {direction === 'up' ? <div data-load-more={uid} className="jkn-infinite-load-up h-[1px]" /> : null}
         {children}
         {direction === 'down' ? <div data-load-more={uid} className="jkn-infinite-load-down h-[1px]" /> : null}

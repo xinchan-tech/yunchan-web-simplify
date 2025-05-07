@@ -53,8 +53,8 @@ interface GroupAreaProps {
 export const GroupArea = ({ title, children }: GroupAreaProps) => {
   return (
     <div className="border-0 border-b border-solid border-[#3D3D3D] w-full box-border text-foreground">
-      <div className="text-left py-2 pl-5 sticky top-0 bg-[#0F0F0F] z-10">{title}</div>
-      <div className="">{children}</div>
+      <div className="text-left py-2 pl-5 sticky top-0 bg-[#0F0F0F] " style={{ zIndex: 1 }}>{title}</div>
+      <div className="relative" style={{zIndex: 0}}>{children}</div>
     </div>
   )
 }
