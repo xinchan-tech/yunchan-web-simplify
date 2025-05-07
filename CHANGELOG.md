@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.7.14](https://github.com/xinchan-tech/yunchan-web/compare/2.7.13...2.7.14) (2025-05-07)
+
+### ✨ Features | 新功能
+
+* 修改 AlarmItem 组件，显示创建时间而非过期时间 ([01c6c94](https://github.com/xinchan-tech/yunchan-web/commit/01c6c94e54226580642fc9f82145fb3cb20bbe4a))
+* 优化 StockAlarmList 和 StockAlarmRecordList 组件的查询逻辑，提升性能 ([e1f2b18](https://github.com/xinchan-tech/yunchan-web/commit/e1f2b1861dc28cdd9a54c1e104f8913d8ffd3b79))
+
 ## [2.7.13](https://github.com/xinchan-gx/yunchan-web/compare/2.7.12...2.7.13) (2025-05-07)
 
 ### ✨ Features | 新功能
