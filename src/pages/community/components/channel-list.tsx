@@ -124,6 +124,7 @@ const GroupChannelCard = (props: {
         .then(() => {
           JknAlert.success('更换群聊成功')
           refreshUser()
+          window.location.reload()
         })
     },
     onError: (e) => {

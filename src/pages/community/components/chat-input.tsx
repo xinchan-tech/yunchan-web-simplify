@@ -357,9 +357,6 @@ const ChatInputTool = ({ onSelectEmoji, onImageUpload, me }: ChatInputToolProps)
           </div>
         ) : null
       }
-           <VoteInput>
-              <JknIcon.Svg name="rank" size={18} />
-            </VoteInput>
     </div>
   )
 }
