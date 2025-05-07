@@ -108,7 +108,7 @@ interface JknChartIns {
   applyNewData: Chart['applyNewData']
   appendCandlestick: (kline: Candlestick, interval: number) => void
   restoreCandlestick: (count: number) => void
-  isSameIntervalCandlestick: (kline: Candlestick, interval: number) => undefined | boolean
+  isSameIntervalCandlestick: (kline: {timestamp: number}, interval: number) => undefined | boolean
   setCoiling: (coiling: CoilingIndicatorId[], interval: number) => void
   removeCoiling: (coiling: CoilingIndicatorId[]) => void
   // setLeftAxis: (show: boolean) => void

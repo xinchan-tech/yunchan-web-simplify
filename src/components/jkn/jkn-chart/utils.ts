@@ -100,7 +100,7 @@ export const findEqualTime = (data: Candlestick[], time: number) => {
  *
  * @returns 返回undefined表示是错误数据, 返回true表示是相同时间段, 返回false表示不是相同时间段
  */
-export const isSameInterval = (src: Candlestick, target: Candlestick, interval: number) => {
+export const isSameInterval = (src: { timestamp: number }, target: { timestamp: number }, interval: number) => {
   const maxTime = src.timestamp + interval * 60 * 1000
 
   if (target.timestamp < src.timestamp) {
@@ -221,16 +221,18 @@ export const drawOverlayParamsToFigureStyle = (type: string, params: DrawOverlay
   }
 }
 
-export const createOverlayTemplate = <T extends DrawOverlayParams = DrawOverlayParams>(template: OverlayTemplate<T>) => {
+export const createOverlayTemplate = <T extends DrawOverlayParams = DrawOverlayParams>(
+  template: OverlayTemplate<T>
+) => {
   return {
     needDefaultPointFigure: true,
     needDefaultXAxisFigure: false,
     needDefaultYAxisFigure: false,
-    onRightClick: (e) => {
+    onRightClick: e => {
       e.preventDefault?.()
       return true
     },
-    onPressedMoveEnd: (e) => {
+    onPressedMoveEnd: e => {
       e.overlay.onDrawEnd?.(e)
       return true
     },

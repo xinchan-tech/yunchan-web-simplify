@@ -43,7 +43,7 @@ export const SupportLineOverlay = createOverlayTemplate({
     }
     return []
   },
-  createPointFigures: ({ coordinates, bounding, overlay, yAxis }) => {
+  createPointFigures: ({ coordinates, bounding, overlay }) => {
     const styles = drawOverlayParamsToFigureStyle('line', overlay.extendData)
     if (coordinates.length === 1) {
       return [
@@ -68,7 +68,7 @@ export const SupportLineOverlay = createOverlayTemplate({
           attrs: {
             x: bounding.width,
             y: coordinates[0].y,
-            text: yAxis?.convertFromPixel(coordinates[0].y).toFixed(3) ?? '',
+            text: overlay.points[0].value?.toFixed(3) ?? '',
             align: 'right',
             baseline: 'bottom'
           },

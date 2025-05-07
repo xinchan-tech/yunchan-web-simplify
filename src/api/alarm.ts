@@ -265,6 +265,7 @@ type BaseAlarmRecord = {
   symbol: string
   stock_cycle: number
   id: string
+  is_read: 0 | 1
   alarm_time: number
 }
 
@@ -346,6 +347,6 @@ getAlarmLogUnreadCount.cacheKey = 'stock-svc:alarms:unreadCount'
 /**
  * 标记已读
  */
-export const markAlarmLogRead = async (type?: AlarmType) => {
-  return request.post('/stock-svc/alarm/logs/isRead', { type }).then(r => r.data)
+export const markAlarmLogRead = async (ids?: number[]) => {
+  return request.post('/stock-svc/alarm/logs/isRead', { ids }).then(r => r.data)
 }

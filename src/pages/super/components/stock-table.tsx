@@ -33,7 +33,7 @@ interface StockTableProps {
   onUpdate?: () => void
 }
 const StockTable = (props: StockTableProps) => {
-  const [list, { setList, onSort }] = useTableData<TableDataType>([], 'symbol')
+  const [list, { setList, onSort }] = useTableData<TableDataType>([])
   useEffect(() => {
     if (!props.data) {
       setList([])
@@ -82,30 +82,31 @@ const StockTable = (props: StockTableProps) => {
   const [sortExt, setSortExt] = useState('')
   const _onSort: typeof onSort = (column, order) => {
     if (column === 'close') {
+      console.log('close', order, sortExt)
       if (!sortExt) {
         setSortExt('close')
         onSort('close', order)
         return
       }
 
-      if (sortExt === 'close' && order === 'desc') {
+      if (sortExt === 'close' && order === 'asc') {
         onSort('close', order)
         return
       }
 
-      if (sortExt === 'close' && order === 'asc') {
+      if (sortExt === 'close' && order === 'desc') {
         setSortExt('percent')
         onSort('percent', order)
 
         return
       }
 
-      if (sortExt === 'percent' && order === 'desc') {
+      if (sortExt === 'percent' && order === 'asc') {
         onSort('percent', order)
         return
       }
 
-      if (sortExt === 'percent' && order === 'asc') {
+      if (sortExt === 'percent' && order === 'desc') {
         setSortExt('close')
         onSort('close', order)
         return
