@@ -4,7 +4,7 @@ import {
   addStockIndicatorCollect,
   getStockIndicatorsV2,
   getStockTabList,
-  removeStockCollectCate
+  removeStockIndicatorCollect
 } from '@/api'
 import {
   CoilingIndicatorId,
@@ -18,6 +18,7 @@ import {
   HoverCardContent,
   HoverCardTrigger,
   Input,
+  JknAlert,
   JknIcon,
   JknSearchInput,
   ScrollArea,
@@ -36,7 +37,7 @@ import { useLocalStorageState, useVirtualList } from 'ahooks'
 import { Fragment, type PropsWithChildren, type ReactNode, memo, useEffect, useMemo, useRef, useState } from 'react'
 import { timeIndex, useSymbolQuery } from '../lib'
 import { chartEvent } from '../lib/event'
-import { ChartType, chartManage, useChartManage } from '../lib/store'
+import { ChartType, chartManage, useKChart } from '../lib/store'
 import { renderUtils } from '../lib/utils'
 import { IndicatorParamsForm } from './indicator-param-form'
 
@@ -107,17 +108,12 @@ export const ChartToolBar = () => {
 }
 
 export const CoilingBar = () => {
-  // const coiling = useChartManage.getState().getActiveChart().mainIndicators
+  // const coiling = useKChart.getState().getActiveChart().mainIndicators
   // type === 21时是缠论的选择
-  // const hasCoiling = useChartManage.getState().getActiveChart().mainIndicators.find(i => +i.type === 21)
-  const system = useChartManage(s => s.getActiveChart().system)
-  // const indicator = useQuery({
-  //   queryKey: [getStockIndicators.cacheKey],
-  //   queryFn: getStockIndicators
-  // })
-
-  // const coilingList = indicator.data?.main.find(i => i.name === '缠论系统')?.indicators.find(o => o.id === system)?.items
-  const coiling = useChartManage(s => s.getActiveChart().coiling)
+  // const hasCoiling = useKChart.getState().getActiveChart().mainIndicators.find(i => +i.type === 21)
+  const system = useKChart(s => s.getActiveChart().system)
+  const [expand, setExpand] = useState(true)
+  const coiling = useKChart(s => s.getActiveChart().coiling)
 
   const coilingList = [
     { name: '笔', id: CoilingIndicatorId.PEN },
@@ -140,66 +136,79 @@ export const CoilingBar = () => {
   return (
     <>
       {system
-        ? coilingList?.map(c => {
-          const render = () => {
-            switch (c.id) {
-              case CoilingIndicatorId.PEN:
-                return (
-                  <span
-                    className="cursor-pointer"
-                    style={{ color: coiling.includes(c.id) ? '#DBDBDB' : '#575757' }}
-                    onClick={() => _onClickCoiling(c.id)}
-                    onKeyDown={() => { }}
-                  >
-                    <JknIcon.Svg
-                      name="mins"
-                      size={12}
-                      className="mr-1"
-                      style={{ color: coiling.includes(c.id) ? '#E7C88D' : '#575757' }}
-                    />
-                    <span>{c.name}</span>
-                  </span>
-                )
-              case CoilingIndicatorId.ONE_TYPE:
-              case CoilingIndicatorId.TWO_TYPE:
-              case CoilingIndicatorId.THREE_TYPE:
-                return (
-                  <span
-                    className="cursor-pointer flex items-center"
-                    onClick={() => _onClickCoiling(c.id as any)}
-                    onKeyDown={() => { }}
-                  >
-                    <JknIcon.Checkbox
-                      checked={coiling.includes(c.id)}
-                      uncheckedIcon="chart-coiling-bs"
-                      checkedIcon="chart-coiling-bs-active"
-                      className="h-4 w-4 rounded-none mr-1"
-                    />
-                    <span style={{ color: coiling.includes(c.id) ? '#DBDBDB' : '#575757' }}>{c.name}</span>
-                  </span>
-                )
-              case CoilingIndicatorId.PIVOT:
-                return (
-                  <span
-                    className="cursor-pointer flex items-center"
-                    onClick={() => _onClickCoiling(c.id as any)}
-                    style={{ color: coiling.includes(c.id) ? '#DBDBDB' : '#575757' }}
-                    onKeyDown={() => { }}
-                  >
-                    <JknIcon.Svg
-                      name="poivts"
-                      size={16}
-                      style={{ color: coiling.includes(c.id) ? '#DBDBDB' : '#575757' }}
-                    />
-                    <span>{c.name}</span>
-                  </span>
-                )
-              default:
-                return null
+        ? (
+          <>
+            <span className="inline-flex items-center cursor-pointer" onClick={() => setExpand(s => !s)} onKeyDown={() => { }}>
+              缠论
+              &nbsp;
+              <span className="size-4 p-[1px] text-xs inline-block leading-4 text-white rounded-xs bg-[#3D3D3D] data-[checked=true]:bg-primary text-center" data-checked={expand}>AI</span>
+            </span>
+            {
+              expand ? (
+                coilingList?.map(c => {
+                  const render = () => {
+                    switch (c.id) {
+                      case CoilingIndicatorId.PEN:
+                        return (
+                          <span
+                            className="cursor-pointer"
+                            style={{ color: coiling.includes(c.id) ? '#DBDBDB' : '#575757' }}
+                            onClick={() => _onClickCoiling(c.id)}
+                            onKeyDown={() => { }}
+                          >
+                            <JknIcon.Svg
+                              name="mins"
+                              size={12}
+                              className="mr-1"
+                              style={{ color: coiling.includes(c.id) ? '#E7C88D' : '#575757' }}
+                            />
+                            <span>{c.name}</span>
+                          </span>
+                        )
+                      case CoilingIndicatorId.ONE_TYPE:
+                      case CoilingIndicatorId.TWO_TYPE:
+                      case CoilingIndicatorId.THREE_TYPE:
+                        return (
+                          <span
+                            className="cursor-pointer flex items-center"
+                            onClick={() => _onClickCoiling(c.id as any)}
+                            onKeyDown={() => { }}
+                          >
+                            <JknIcon.Checkbox
+                              checked={coiling.includes(c.id)}
+                              uncheckedIcon="chart-coiling-bs"
+                              checkedIcon="chart-coiling-bs-active"
+                              className="h-4 w-4 rounded-none mr-1"
+                            />
+                            <span style={{ color: coiling.includes(c.id) ? '#DBDBDB' : '#575757' }}>{c.name}</span>
+                          </span>
+                        )
+                      case CoilingIndicatorId.PIVOT:
+                        return (
+                          <span
+                            className="cursor-pointer flex items-center"
+                            onClick={() => _onClickCoiling(c.id as any)}
+                            style={{ color: coiling.includes(c.id) ? '#DBDBDB' : '#575757' }}
+                            onKeyDown={() => { }}
+                          >
+                            <JknIcon.Svg
+                              name="poivts"
+                              size={16}
+                              style={{ color: coiling.includes(c.id) ? '#DBDBDB' : '#575757' }}
+                            />
+                            <span>{c.name}</span>
+                          </span>
+                        )
+                      default:
+                        return null
+                    }
+                  }
+                  return <Fragment key={c.id}>{render()}</Fragment>
+                })
+              ) : null
             }
-          }
-          return <Fragment key={c.id}>{render()}</Fragment>
-        })
+          </>
+        )
         : null}
     </>
   )
@@ -207,7 +216,7 @@ export const CoilingBar = () => {
 
 //分时图选择
 export const TimeShareSelect = memo(() => {
-  const interval = useChartManage(s => s.getActiveChart().interval)
+  const interval = useKChart(s => s.getActiveChart().interval)
 
   const intervalStr = useMemo(() => {
     if (!renderUtils.isTimeIndexChart(interval))
@@ -256,7 +265,7 @@ export const TimeShareSelect = memo(() => {
 })
 
 export const PeriodSelect = memo(() => {
-  const interval = useChartManage(s => s.getActiveChart().interval)
+  const interval = useKChart(s => s.getActiveChart().interval)
 
   const intervalStr = useMemo(() => {
     if (renderUtils.isTimeIndexChart(interval)) return '分时图'
@@ -293,8 +302,8 @@ export const PeriodSelect = memo(() => {
 })
 
 export const ChartTypeSelect = memo(() => {
-  const chartType = useChartManage(s => s.getActiveChart().type)
-  const interval = useChartManage(s => s.getActiveChart().interval)
+  const chartType = useKChart(s => s.getActiveChart().type)
+  const interval = useKChart(s => s.getActiveChart().interval)
 
   const onChartTypeChange = (type: ChartType) => {
     if (type === ChartType.Candle && renderUtils.isTimeIndexChart(interval)) {
@@ -312,7 +321,9 @@ export const ChartTypeSelect = memo(() => {
                 ? 'chart-area'
                 : chartType === ChartType.Candle
                   ? 'chart-candle'
-                  : 'chart-area'
+                  : chartType === ChartType.AmericanLine
+                    ? 'chart-american'
+                    : 'chart-area'
             }
             size={20}
             className="m-auto"
@@ -334,6 +345,13 @@ export const ChartTypeSelect = memo(() => {
         >
           <JknIcon.Svg name="chart-candle" size={20} />
           K线图
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          data-checked={!renderUtils.isTimeIndexChart(interval) && chartType === ChartType.AmericanLine}
+          onClick={() => onChartTypeChange(ChartType.AmericanLine)}
+        >
+          <JknIcon.Svg name="chart-american" size={20} />
+          美国线
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
@@ -394,9 +412,9 @@ export const IndicatorModal = (props: { onClickParams: () => void }) => {
   const [search, setSearch] = useState('')
   const [category, setCategory] = useState<Nullable<string>>()
   const [type, setType] = useState<'main' | 'secondary'>('main')
-  const mainIndicators = useChartManage(s => s.getActiveChart().mainIndicators)
-  const secondaryIndicators = useChartManage(s => s.getActiveChart().secondaryIndicators)
-  const system = useChartManage(s => s.getActiveChart().system)
+  const mainIndicators = useKChart(s => s.getActiveChart().mainIndicators)
+  const secondaryIndicators = useKChart(s => s.getActiveChart().secondaryIndicators)
+  const system = useKChart(s => s.getActiveChart().system)
 
   const onSearch = (keyword?: string) => {
     setSearch(keyword ?? '')
@@ -492,7 +510,7 @@ export const IndicatorModal = (props: { onClickParams: () => void }) => {
   const collect = useOptimisticUpdate({
     cacheKey: [getStockIndicatorsV2.cacheKey],
     action: (params: { id: string; collect: boolean }) =>
-      params.collect ? addStockIndicatorCollect([params.id]) : removeStockCollectCate([params.id]),
+      params.collect ? addStockIndicatorCollect([params.id]) : removeStockIndicatorCollect([params.id]),
     onOptimisticUpdate: (params: { id: string; collect: boolean }, draft: NonNullable<typeof indicator.data>) => {
       draft.forEach(i => {
         i.items?.forEach(o => {
@@ -616,7 +634,7 @@ const viewModeMenuItems = [
 ]
 
 const ViewModeSelect = () => {
-  const viewMode = useChartManage(s => s.viewMode)
+  const viewMode = useKChart(s => s.viewMode)
   const onClick = (mode: string) => {
     chartManage.setViewMode(mode as any)
   }
@@ -673,13 +691,13 @@ const StockPkModal = () => {
 
   const [searchResult] = useStockSearch(search)
 
-  const pk = useChartManage(s => s.getActiveChart().overlayStock)
+  const pk = useKChart(s => s.getActiveChart().overlayStock)
 
   const { toast } = useToast()
 
   const onClick = (symbol: string, name: string) => {
     if (pk.find(p => p.symbol === symbol)) return false
-    const current = useChartManage.getState().getActiveChart().symbol
+    const current = useKChart.getState().getActiveChart().symbol
 
     if (current === symbol) {
       toast({
@@ -688,7 +706,7 @@ const StockPkModal = () => {
       return false
     }
 
-    const len = useChartManage.getState().getActiveChart().overlayStock.length
+    const len = useKChart.getState().getActiveChart().overlayStock.length
 
     if (len >= 5) {
       toast({
@@ -861,7 +879,7 @@ export const OverlayMarkModal = () => {
   const [search, setSearch] = useState('')
   const [category, setCategory] = useState<string>()
 
-  const overlayMark = useChartManage(s => s.getActiveChart().overlayMark)
+  const overlayMark = useKChart(s => s.getActiveChart().overlayMark)
 
   useEffect(() => {
     if (!tabList.data?.length) return
@@ -972,7 +990,7 @@ export const OverlayMarkModal = () => {
 }
 
 const AlarmPicker = () => {
-  const symbol = useChartManage(s => s.getActiveChart().symbol)
+  const symbol = useKChart(s => s.getActiveChart().symbol)
   return (
     <>
       <StockAlarm code={symbol}>
@@ -995,10 +1013,15 @@ const AlarmPicker = () => {
 }
 
 const BackTest = () => {
-  const mode = useChartManage(s => s.getActiveChart().mode)
-  const interval = useChartManage(s => s.getActiveChart().interval)
+  const mode = useKChart(s => s.getActiveChart().mode)
+  const interval = useKChart(s => s.getActiveChart().interval)
   const [auth, toast] = useAuthorized('backTestTime')
   const onChangeMode = () => {
+    if (renderUtils.isTimeIndexChart(interval)) {
+      JknAlert.toast('分时图不支持回测')
+      return
+    }
+
     const time = auth()
     if (!time || interval < time) {
       toast()
@@ -1023,7 +1046,7 @@ const BackTest = () => {
 }
 
 const DrawTool = () => {
-  const showDrawTool = useChartManage(s => s.drawTool)
+  const showDrawTool = useKChart(s => s.drawTool)
   return (
     <div
       className={cn(

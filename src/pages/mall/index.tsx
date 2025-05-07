@@ -101,7 +101,7 @@ const MallPage = () => {
         form.setValue(key as any, value)
       })
     },
-    onOk: async () => { }
+    onOk: async () => { return true },
   })
 
   const token = useToken(s => s.token)

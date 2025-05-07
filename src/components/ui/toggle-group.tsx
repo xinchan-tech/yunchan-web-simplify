@@ -20,7 +20,7 @@ const ToggleGroup = React.forwardRef<
     className={cn('flex items-center gap-2 flex-wrap', className)}
     style={
       {
-        '--toggle-active-bg': activeColor ?? '#3D3D3D',
+        '--toggle-active-bg': activeColor ?? '#fff',
         '--toggle-hover-bg': hoverColor ?? '#2E2E2E',
         ...style
       } as React.CSSProperties

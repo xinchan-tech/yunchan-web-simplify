@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react"
-import { type ChatChannel, ChatChannelState, ChatChannelType, ChatConnectStatus, type ChatMessage, ChatMessageType, type ChatSubscriber } from "../lib/types"
+import { type ChatChannel, ChatChannelState, ChatChannelType, ChatCmdType, ChatConnectStatus, type ChatMessage, ChatMessageType, type ChatSubscriber } from "../lib/types"
 import { chatManager, useChatStore } from "../lib/store"
 import WKSDK, { Channel, Mention, MessageImage, MessageStatus, MessageText, PullMode, type Reply } from "wukongimjssdk"
 import { ChannelTransform, MessageTransform, SubscriberTransform } from "../lib/transform"
@@ -20,12 +20,14 @@ import { useMessageStatusListener } from "../lib/hooks"
 import { syncChannelInfo } from "../lib/datasource"
 import { useCountDown } from "ahooks"
 import { useQuery } from "@tanstack/react-query"
+import { cn } from "@/utils/style"
 
 export const ChatRoom = () => {
   const [channelStatus, setChannelStatus] = useState<ChatChannelState>(ChatChannelState.NotConnect)
   const [channelInfo, setChannelInfo] = useState<Nullable<ChatChannel>>(null)
   const [subscribes, setSubscribes] = useState<Nullable<ChatSubscriber[]>>([])
   const [message, setMessage] = useImmer<ChatMessage[]>([])
+  const rightHide = useChatStore(s => s.rightHide)
   const chatStatus = useChatStore(s => s.state)
   const channel = useChatStore(s => s.channel)
   const channelLast = useLatestRef(channel)
@@ -70,7 +72,7 @@ export const ChatRoom = () => {
       if (channelLast.current?.id !== _channel?.channelID) {
         return
       }
-      // console.log(r)
+      console.log(r)
       return Promise.all(r.map(MessageTransform.toChatMessage))
     }).then(res => {
       if (!res) return
@@ -314,7 +316,13 @@ export const ChatRoom = () => {
     if (message.type === ChatMessageType.Vote) {
       voteList.refetch()
     }
-  }, [setMessage, voteList.refetch]))
+
+    if (message.type === ChatMessageType.Cmd) {
+      if (message.cmdType === ChatCmdType.ChannelUpdate) {
+        refreshSubscriber()
+      }
+    }
+  }, [setMessage, voteList.refetch, refreshSubscriber]))
 
   useChatEvent('imageUploadSuccess', useCallback((message) => {
     setMessage(draft => {
@@ -348,6 +356,7 @@ export const ChatRoom = () => {
 
     setChannelInfo(c)
     channelCache.updateOrSave(c)
+
   }, [channelLast]))
 
   useChatEvent('revoke', useCallback((e) => {
@@ -418,7 +427,7 @@ export const ChatRoom = () => {
       {
         noticeModal.context
       }
-      <div className="chat-room-title h-10">
+      <div className="chat-room-title h-10 border-solid border-0 border-b border-[#2E2E2E]">
         <div className="group-chat-header justify-between flex h-10">
           <div className="leading-10 border h-full bg-[#141414] border-b-primary w-full text-sm px-4">
             {channelInfo?.name}&nbsp;
@@ -433,8 +442,8 @@ export const ChatRoom = () => {
           </div>
         </div>
       </div>
-      <div className="flex-1 flex h-full relative overflow-hidden">
-        <div className="flex-1 h-full flex flex-col overflow-hidden relative">
+      <div className="flex-1 flex h-full relative overflow-hidden ">
+        <div className="flex-1 h-full flex flex-col overflow-hidden relative bg-[#0A0A0A]">
           {
             showVoteTips && ChatChannelState.Fetched === channelStatus && channelInfo?.inChannel ? (
               <div className="absolute top-2.5 left-2.5 right-2.5 bg-[#263D35] rounded-[4px] z-10 flex items-center">
@@ -448,7 +457,7 @@ export const ChatRoom = () => {
                   {
                     voteList.data?.items.map(item => (
                       <div key={item.id} className="text-foreground leading-none p-2.5 w-full box-border">
-                        <div className="text-sm">{item.user_name}发起了投票{item.title}</div>
+                        <div className="text-sm w-full whitespace-nowrap text-ellipsis overflow-hidden">{item.user_name}发起了投票: {item.title}</div>
                         <div className="text-xs w-full whitespace-nowrap text-ellipsis overflow-hidden mt-1">
                           {
                             item.desc
@@ -482,8 +491,42 @@ export const ChatRoom = () => {
             ) : null
           }
         </div>
-        <div className="flex-shrink-0 w-[200px] border-l-primary flex flex-col">
-          <div className="chat-room-notice p-2 box-border  flex-shrink-0 border-b-primary flex flex-col">
+        <div className={cn(
+          'flex-shrink-0 w-[220px] border-0 border-solid border-l border-[#2E2E2E] flex flex-col relative',
+          rightHide ? 'w-0' : 'w-[220px]'
+        )}>
+          <div className="absolute top-1/2 -left-2.5 w-2.5 h-12 bg-[#2C2C2C] -translate-y-1/2 chat-right-hide flex items-center justify-center cursor-pointer z-10"
+            onClick={() => chatManager.setRightHide(!useChatStore.getState().rightHide)}
+            onKeyDown={() => { }}
+          >
+            <JknIcon.Svg name="arrow-fill" size={8} className={cn('text-[#B8B8B8]', rightHide ? 'rotate-180' : '')} />
+          </div>
+          <style jsx>
+            {
+              `
+                .chat-right-hide::before, .chat-right-hide::after {
+                  content: '';
+                  position: absolute;
+                  height: 10px;
+                  width: 10px;
+                  left: 0;
+                  z-index: 9;
+                  background-color: #2C2C2C;
+                }
+                .chat-right-hide::before {
+                  top: -7px;
+                  border-top-left-radius: 4px;
+                  transform: skewY(-45deg);
+                }
+                .chat-right-hide::after {
+                  bottom: -7px;
+                  border-bottom-left-radius: 4px;
+                  transform: skewY(45deg);
+                }
+              `
+            }
+          </style>
+          <div className="chat-room-notice p-2 box-border flex-shrink-0 border-0 border-solid border-b border-[#2E2E2E] flex flex-col">
             <div className="chat-room-notice-title text-sm py-1">公告</div>
             <div className="h-[164px] overflow-y-auto">
               <RichText className="text-sm text-secondary" text={channelInfo?.notice ?? ''} />
@@ -492,7 +535,7 @@ export const ChatRoom = () => {
           <div className="chat-room-users h-full flex flex-col overflow-hidden">
             <div className="chat-room-users-title p-2 flex items-center">
               <div className="text">群成员</div>
-              <div className="text-xs text-tertiary bg-accent rounded-xl px-1 min-w-4 text-center ml-1">
+              <div className="text-xs text-tertiary rounded-xl px-1 min-w-4 text-center ml-1">
                 {channelInfo?.userNum}
               </div>
             </div>

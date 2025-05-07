@@ -1,18 +1,24 @@
 import { router } from "@/router"
 import { useConfig, useUser } from "@/store"
 import { cn } from "@/utils/style"
-import { ReactNode, useEffect, useState } from "react"
+import { ReactNode, useCallback, useEffect, useState } from "react"
 import { JknAlert, JknIcon } from ".."
+import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { getAlarmLogsList, getAlarmLogUnreadCount } from "@/api"
+import WKSDK from "wukongimjssdk"
+import { useAppEvent } from "@/utils/event"
 
 type MenuItem = {
   icon: IconName | ReactNode
   title: string
   path: string
+  count?: number
   handler?: () => void
 }
 
 const MenuRight = () => {
   const [pathname, setPathname] = useState(router.state.location.pathname)
+  const queryClient = useQueryClient()
 
   useEffect(() => {
     const s = router.subscribe(s => {
@@ -24,7 +30,28 @@ const MenuRight = () => {
     }
   }, [])
 
+  const unRead = useQuery({
+    queryKey: [getAlarmLogUnreadCount.cacheKey],
+    queryFn: getAlarmLogUnreadCount
+  })
+
   const user = useUser(s => s.user)
+
+  const messageCount = useQuery({
+    queryKey: ['chat-im-session'],
+    queryFn: () => WKSDK.shared()
+      .conversationManager.sync(),
+    select: (data) => {
+      return data.reduce((acc, item) => acc + item.unread, 0)
+    },
+    refetchInterval: 1000 * 60,
+  })
+
+  useAppEvent('alarm', useCallback(() => {
+    queryClient.setQueryData([getAlarmLogUnreadCount.cacheKey], (oldData: any) => {
+      return {count: (oldData?.count ?? 0) + 1}
+    })
+  }, []))
 
 
   const menus: MenuItem[] = [
@@ -38,24 +65,20 @@ const MenuRight = () => {
       title: '榜单',
       path: '/app/push'
     },
-    // {
-    //   icon: <JknIcon.Svg name="financial" size={24} />,
-    //   title: '财务',
-    //   path: '/finance'
-    // },
     {
       icon: <JknIcon.Svg name="alarm" size={24} />,
       title: '警报',
-      path: '/app/stock/alarm'
+      path: '/app/stock/alarm',
+      count: unRead.data?.count,
     },
     {
       icon: <JknIcon.Svg name="group" size={24} />,
       title: "群聊",
       path: "/chat",
+      count: messageCount.data,
     },
   ]
 
-  // const [auth, toastNotAuth] = useAuthorized('vcomment')
 
   const onNav = (path: string) => {
     if (path === "/chat") {
@@ -79,9 +102,6 @@ const MenuRight = () => {
       }
     }
 
-
-
-
     if (path.startsWith('/app/stock')) {
       const search = new URLSearchParams(window.location.search)
       const symbol = search.get('symbol') ?? 'QQQ'
@@ -104,13 +124,18 @@ const MenuRight = () => {
         <div className="text-center  cursor-pointer hover:text-primary" key={item.title} onClick={() => onNav(item.path)}
           onKeyDown={() => { }}>
           <div
-            className={cn("flex flex-col items-center cursor-pointer hover:bg-accent w-8 h-[28px] justify-center rounded-xs", pathname === item.path && 'bg-primary/30')}
+            className={cn("flex flex-col items-center cursor-pointer hover:bg-accent w-8 h-[28px] justify-center rounded-xs relative", pathname === item.path && 'bg-primary/30')}
           >
             <div className={cn('flex', pathname === item.path ? 'text-primary' : '')}>
               {
                 item.icon
               }
             </div>
+            {item.count ? (
+              <div className="absolute top-0 right-0 bg-destructive rounded-full size-3 flex items-center justify-center text-xs text-foreground">
+                <span className="scale-75">{item.count > 9 ? '9+' : item.count}</span>
+              </div>
+            ) : null}
           </div>
           <span className={cn('text-xs leading-[24px]]', pathname === item.path ? 'text-primary' : '')}>
             {item.title}

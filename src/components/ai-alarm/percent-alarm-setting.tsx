@@ -19,6 +19,7 @@ import { Separator } from '../ui/separator'
 import { AlarmStockPicker } from './components/alarm-stock-picker'
 import { DatePicker } from './components/date-picker'
 import { NameInput } from './components/name-input'
+import { JknAlert } from "../jkn/jkn-alert"
 
 const formSchema = z.object({
   symbol: z.string({ message: '股票代码错误' }).min(1, '股票代码错误'),
@@ -52,7 +53,7 @@ export const PercentageAlarmSetting = (props: PercentageAlarmSettingProps) => {
     enabled: !!symbol
   })
 
-  const { toast } = useToast()
+  // const { toast } = useToast()
 
   const queryClient = useQueryClient()
 
@@ -61,7 +62,7 @@ export const PercentageAlarmSetting = (props: PercentageAlarmSettingProps) => {
 
     if (!valid) {
       for (const err of Object.keys(form.formState.errors) as unknown as (keyof typeof form.formState.errors)[]) {
-        toast({ description: form.formState.errors[err]?.message })
+        JknAlert.error(form.formState.errors[err]?.message ?? '')
         return
       }
     }
@@ -124,23 +125,23 @@ export const PercentageAlarmSetting = (props: PercentageAlarmSettingProps) => {
     }
 
     if (floatParams.length === 0) {
-      toast({ description: '浮动警报设置条件必须要一个以上' })
+      JknAlert.error('浮动警报设置条件必须要一个以上')
       return
     }
 
     const [err] = await to(addAlarm(params))
 
     if (err) {
-      toast({ description: err.message })
+      JknAlert.error(err.message)
       return
     }
 
-    toast({ description: '添加成功' })
+    JknAlert.success('添加成功')
     queryClient.refetchQueries({
       queryKey: [getAlarmConditionsList.cacheKey]
     })
-    form.setValue('fall', [])
-    form.setValue('rise', [])
+    form.setValue('fall', null as any)
+    form.setValue('rise', null as any)
   }
 
   return (
@@ -168,7 +169,12 @@ export const PercentageAlarmSetting = (props: PercentageAlarmSettingProps) => {
               name="rise"
               render={({ field }) => (
                 <FormItem className="pb-4 flex space-y-0">
-                  <FormLabel className="w-32 text-secondary text-base font-normal">浮动警报</FormLabel>
+                  <FormLabel className="w-32 text-secondary text-base font-normal pt-2">
+                    <span className="text-stock-up">
+                      上涨追踪
+                      <JknIcon.Svg name="stock-up" size={12} />
+                    </span>
+                  </FormLabel>
                   <FormControl className="flex-1">
                     <PriceSetting mode="fall" value={field.value} onChange={field.onChange} />
                   </FormControl>
@@ -181,7 +187,12 @@ export const PercentageAlarmSetting = (props: PercentageAlarmSettingProps) => {
               name="fall"
               render={({ field }) => (
                 <FormItem className="pb-4 flex space-y-0">
-                  <FormLabel className="w-32 text-secondary text-base font-normal" />
+                  <FormLabel className="w-32 text-secondary text-base font-normal pt-2">
+                    <span className="text-stock-down">
+                      下跌追踪
+                      <JknIcon.Svg name="stock-down" size={12} />
+                    </span>
+                  </FormLabel>
                   <FormControl className="flex-1">
                     <PriceSetting mode="rise" value={field.value} onChange={field.onChange} />
                   </FormControl>
@@ -257,8 +268,8 @@ interface PriceSettingProps {
 const PriceSetting = forwardRef((props: PriceSettingProps, _) => {
   const form = useFormContext()
   const symbol = form.watch('symbol')
-  const [list, setList] = useState<{ value: string; id: string; type: 'price' | 'percent' }[]>([
-    { value: '', id: nanoid(8), type: 'percent' }
+  const [list, setList] = useState<{ value: string; id: string; type: 'price' | 'percent', checked: boolean }[]>([
+    { value: '', id: nanoid(8), type: 'percent', checked: false }
   ])
   const query = useQuery({
     queryKey: [getStockBaseCodeInfo.cacheKey, symbol, ['total_share']],
@@ -273,11 +284,11 @@ const PriceSetting = forwardRef((props: PriceSettingProps, _) => {
         })
         : null
   })
-
+  console.log(list)
   useEffect(() => {
-    if (!props.value?.length) {
-      setList([{ value: '', id: nanoid(8), type: 'percent' }])
-      return
+    console.log(props.value)
+    if (!props.value) {
+      setList([{ value: '', id: nanoid(8), type: 'percent', checked: false }])
     }
   }, [props.value])
 
@@ -285,16 +296,20 @@ const PriceSetting = forwardRef((props: PriceSettingProps, _) => {
     if (query.data) {
       const v = '5'
 
-      setList([{ value: v, id: nanoid(8), type: 'percent' }])
+      setList([{ value: v, id: nanoid(8), type: 'percent', checked: false }])
     }
   }, [query.data])
 
   const onValueChange = (id: string, value: string) => {
     if (value === '-' || Number.parseFloat(value) < 0) {
-      setList(list.map(item => (item.id === id ? { ...item, value: '' } : item)))
+      setList(list.map(item => (item.id === id ? { ...item, value: '', checked: false } : item)))
       return
     }
-    setList(list.map(item => (item.id === id ? { ...item, value } : item)))
+    setList(list.map(item => (item.id === id ? { ...item, value, checked: value === '' ? item.checked : true } : item)))
+  }
+
+  const onCheckedValue = (id: string) => {
+    setList(list.map(item => (item.id === id ? { ...item, checked: !item.checked } : item)))
   }
 
   const onChangeType = (id: string, type: 'price' | 'percent') => {
@@ -303,12 +318,12 @@ const PriceSetting = forwardRef((props: PriceSettingProps, _) => {
 
   useEffect(() => {
     props.onChange?.(
-      list.map(item => (item.type === 'percent' ? item.value ? `${item.value}%` : '' : item.value))
+      list.filter(item => item.checked).map(item => (item.type === 'percent' ? item.value ? `${item.value}%` : '' : item.value))
     )
   }, [list, props.onChange])
 
   const addListItem = () => {
-    setList([...list, { value: '', id: nanoid(8), type: 'percent' }])
+    setList([...list, { value: '', id: nanoid(8), type: 'percent', checked: false }])
   }
 
   const removeListItem = (id: string) => {
@@ -336,17 +351,7 @@ const PriceSetting = forwardRef((props: PriceSettingProps, _) => {
       {list.map((item, index) => (
         <div key={item.id} className="flex flex-col">
           <div className={cn('text-tertiary flex items-center space-x-2 my-2')}>
-            {props.mode === 'rise' ? (
-              <span className="text-stock-down">
-                 下跌追踪
-                <JknIcon.Svg name="stock-down" size={12} />
-              </span>
-            ) : (
-              <span className="text-stock-up">
-                上涨追踪
-                <JknIcon.Svg name="stock-up" size={12} />
-              </span>
-            )}
+            <JknIcon.Checkbox checked={item.checked} onClick={() => onCheckedValue(item.id)} className="rounded-none" />
             <div className="!ml-auto flex items-center rounded-sm  text-xs px-1 py-0.5 hover:bg-accent cursor-pointer text-secondary !mr-6">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>

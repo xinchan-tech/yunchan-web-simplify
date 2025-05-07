@@ -128,7 +128,7 @@ const LargeCap = () => {
       </ScrollContainer>
 
       <div className="flex-1 relative">
-        <div onClick={onChartDoubleClick} onKeyDown={() => {}} className="w-full h-full box-border">
+        <div onClick={onChartDoubleClick} onKeyDown={() => { }} className="w-full h-full box-border">
           <LargeCapChart code={activeStock} type={stockType} />
         </div>
       </div>
@@ -154,7 +154,7 @@ const StockBarItem = ({ stock, check, onActiveStockChange }: StockBarItemProps) 
         }
       )}
       onClick={() => onActiveStockChange(stock.symbol)}
-      onKeyDown={() => {}}
+      onKeyDown={() => { }}
     >
       <JknIcon.Stock symbol={stock.symbol} className="w-[28px] h-[28px]" />
       <div className="ml-3 flex flex-col">
@@ -389,7 +389,7 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
   }, [candlesticks])
 
   useStockBarSubscribe(
-    code ? [`${code}@quote`] : [],
+    code ? [`${code}@1m`] : [],
     useCallback(data => {
       const c = chart.current?.getChart()
       const stock = stockUtils.toStock(data.rawRecord)
@@ -435,6 +435,8 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
       const lastData = c?.getDataList()?.slice(-1)[0]
 
       if (!lastData) return
+
+      if (!chart.current?.isSameIntervalCandlestick({ timestamp: data.record.time }, StockChartInterval.ONE_MIN)) return
 
       chart.current?.appendCandlestick(
         {

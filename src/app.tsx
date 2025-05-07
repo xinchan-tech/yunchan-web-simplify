@@ -12,6 +12,7 @@ import {
   AuthGuard,
   Footer,
   HeaderUser,
+  JknAlert,
   Menu,
   MenuRight,
   StockSelect,
@@ -25,11 +26,13 @@ import { ChartToolBar } from "./pages/stock/component/chart-tool-bar"
 import { AlarmSubscribe } from "./components/ai-alarm/alarm-subscribe"
 import qs from "qs"
 import { AESCrypt } from "./utils/string"
+import dayjs from "dayjs"
 
 export const CHAT_STOCK_JUMP = 'chat_stock_jump'
 export const CHAT_TO_APP_REFRESH_USER = 'chat_to_app_refresh_user'
 export const APP_TO_CHAT_REFRESH_USER = 'app_to_chat_refresh_user'
-console.log(import.meta.env.MODE)
+
+let expireToast = false
 
 const App = () => {
   const setConsults = useConfig(s => s.setConsults)
@@ -41,8 +44,28 @@ const App = () => {
   const refreshUser = useUser(s => s.refreshUser)
   const { i18n } = useTranslation()
   const setUser = useUser(s => s.setUser)
+  const expire = useUser(s => s.user?.authorized[0]?.expire_time)
   const queryClient = useQueryClient()
   const path = useLocation()
+
+  useEffect(() => {
+    if(!expire) return
+
+    if(expireToast) return
+
+    const expireDay = dayjs().diff(dayjs(+expire * 1000), 'day')
+
+    if(expireDay < 0){
+      return
+    }
+
+    if(expireDay < 3){
+      JknAlert.info({
+        content: '您的软件将在三天内过期，请尽快续费'
+      })
+      expireToast = true
+    }
+  }, [expire])
 
   const configQuery = useQuery({
     queryKey: ['system:config'],

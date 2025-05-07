@@ -1,6 +1,7 @@
 import { Channel, ChannelInfo, ConnectStatus } from 'wukongimjssdk'
 import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
+import { AssetsInfoStore } from '@/api'
 import { useConfig } from '../config'
 import { type ChatChannelState, ChatCmdType, ChatMessageType, type ChatStore, chatConstants } from './types'
 
@@ -77,3 +78,8 @@ export const chatManager = {
   }
 }
 export { chatConstants, ChatMessageType, ChatCmdType }
+
+export const useAssetsInfoStore = create<AssetsInfoStore>((set) => ({
+  data: null,
+  setData: (data: any) => set({ data }), // 设置数据
+}));

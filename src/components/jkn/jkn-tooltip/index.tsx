@@ -1,11 +1,12 @@
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { Tooltip, TooltipArrow, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { cn } from "@/utils/style"
 import type { TooltipContentProps } from '@radix-ui/react-tooltip'
-import { type ComponentType, type RefObject, forwardRef } from 'react'
+import type { ComponentType } from 'react'
 
 type WithTooltipProps<T> = T & {
   label?: string
   contentClassName?: string
-} & TooltipContentProps
+} & Omit<TooltipContentProps, 'onChange'>
 
 export const withTooltip = <T extends {}>(Component: ComponentType<T>) => {
   return ({ label, contentClassName, align, alignOffset, side, sideOffset, ...props }: WithTooltipProps<T>) => {
@@ -13,17 +14,18 @@ export const withTooltip = <T extends {}>(Component: ComponentType<T>) => {
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
-            <RefWrapper>
+            <div>
               <Component {...(props as T)} />
-            </RefWrapper>
+            </div>
           </TooltipTrigger>
           <TooltipContent
             side={side}
             align={align}
             sideOffset={sideOffset}
             alignOffset={alignOffset}
-            className={contentClassName}
+            className={cn('bg-accent text-sm w-fit px-2', contentClassName)}
           >
+            <TooltipArrow className="fill-accent" />
             <div>{label}</div>
           </TooltipContent>
         </Tooltip>
@@ -31,11 +33,3 @@ export const withTooltip = <T extends {}>(Component: ComponentType<T>) => {
     )
   }
 }
-
-const RefWrapper = forwardRef<any, any>(({ children, ...props }, ref) => {
-  return (
-    <div ref={ref as RefObject<HTMLDivElement>} {...props}>
-      {children}
-    </div>
-  )
-})

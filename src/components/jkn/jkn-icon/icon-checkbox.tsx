@@ -6,6 +6,6 @@ interface IconCheckboxProps extends ComponentProps<typeof JknIcon> {
   checkedIcon?: IconName
   uncheckedIcon?: IconName
 }
-export const JknIconCheckbox = ({ checked, checkedIcon, uncheckedIcon, ...props }: IconCheckboxProps) => {
+export const JknIconCheckbox = ({ checked, checkedIcon = 'checkbox_mult_sel', uncheckedIcon = 'checkbox_mult_nor', ...props }: IconCheckboxProps) => {
   return <>{checked ? <JknIcon name={checkedIcon} {...props} /> : <JknIcon name={uncheckedIcon} {...props} />}</>
 }

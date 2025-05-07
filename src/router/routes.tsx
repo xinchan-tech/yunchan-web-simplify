@@ -187,7 +187,7 @@ export const routes: RouteObject[] = [
         handle: {
           title: '个人中心'
         }
-      }
+      },
     ]
   },
   // {
@@ -213,6 +213,36 @@ export const routes: RouteObject[] = [
       }
     ]
   },
+  {
+    path: '/assets',
+    Component: lazy(() => import('@/pages/assets')),
+    children: [
+      {
+        index: true,
+        Component: lazy(() => import('@/pages/assets/wallet'))
+      },
+      {
+        path: 'aiTrading',
+        Component: lazy(() => import('@/pages/assets/ai-trading'))
+      },
+      {
+        path: 'invest',
+        Component: lazy(() => import('@/pages/assets/invest'))
+      },
+      {
+        path: 'historyList',
+        Component: lazy(() => import('@/pages/assets/history-list'))
+      },
+      {
+        path: 'curvReport',
+        Component: lazy(() => import('@/pages/assets/curv-report'))
+      }
+    ]
+  },
+  {
+    path: '/home',
+    Component: lazy(() => import('@/pages/home')),
+    },
   {
     path: '*',
     element: <Navigate to="/app" />,

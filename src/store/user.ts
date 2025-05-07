@@ -77,7 +77,8 @@ export const useUser = create<UserStore>()(
     }),
     {
       name: 'user',
-      storage: createJSONStorage(() => localStorage)
+      storage: createJSONStorage(() => localStorage),
+      onRehydrateStorage: () => (state, error) => {}
     }
   )
 )

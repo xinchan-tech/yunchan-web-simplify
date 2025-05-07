@@ -19,7 +19,7 @@ export const RevokeRecord = ({ message, revokeMessage }: RevokeTextRecordProps) 
   }
 
   return (
-    <div className="text-center text-sm text-tertiary my-2.5">
+    <div className="text-center text-sm text-tertiary py-2.5">
       {formatTimeStr(revokeMessage.timestamp * 1000, {
         timezone: zone,
         format: format

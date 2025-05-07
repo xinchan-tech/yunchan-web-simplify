@@ -14,7 +14,7 @@ import { stockUtils } from '@/utils/stock'
 import { useQuery } from '@tanstack/react-query'
 import dayjs from 'dayjs'
 import Decimal from 'decimal.js'
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 
 type TableDataType = {
   name: string
@@ -53,7 +53,30 @@ const StockFinancials = () => {
     }
   }, [query.data?.dates, active])
 
-  const [data, { onSort, setList }] = useTableData<TableDataType>([])
+  const [data, { onSort, setList }] = useTableData<TableDataType>([], {
+    sort: useCallback((d: TableDataType[], k: keyof TableDataType, order: 'asc' | 'desc') => {
+      if (k !== 'date') return
+      const _d = [...d]
+      _d.sort((a, b) => {
+        const [aDate, aPeriod] = a.date.split(' ')
+        const [bDate, bPeriod] = b.date.split(' ')
+
+        if (aDate !== bDate) {
+          return order === 'desc' ? aDate.localeCompare(bDate) : bDate.localeCompare(aDate)
+        }
+
+        if (aPeriod !== bPeriod) {
+          const a = aPeriod === '盘前' ? 3 : aPeriod === '盘后' ? 2 : 1
+          const b = bPeriod === '盘前' ? 3 : bPeriod === '盘后' ? 2 : 1
+          return order === 'desc' ? a - b : b - a
+        }
+
+        return (b.total ?? 0) - (a.total ?? 0)
+      })
+
+      return _d
+    }, [])
+  })
 
   useEffect(() => {
     const r: TableDataType[] = []
@@ -84,7 +107,7 @@ const StockFinancials = () => {
         name: lastStock.name,
         code: lastStock.symbol,
         id,
-        date: `${date.substring(5, 10)} ${time}`,
+        date: `${date} ${time}`,
         price: lastStock?.close || undefined,
         percent: lastStock?.percent && lastStock.percent,
         turnover: lastStock?.turnover || undefined,
@@ -139,7 +162,7 @@ const StockFinancials = () => {
           <SubscribeSpan.Price
             showColor={false}
             symbol={row.code}
-            subscribe={true}
+            trading="intraDay"
             initValue={row.price}
             decimal={3}
             initDirection={row.isUp}
@@ -157,6 +180,7 @@ const StockFinancials = () => {
           <SubscribeSpan.PercentBlink
             symbol={row.code}
             decimal={2}
+            trading="intraDay"
             initValue={row.percent}
             initDirection={row.isUp}
             nanText="--"
@@ -201,7 +225,7 @@ const StockFinancials = () => {
         dataIndex: 'date',
         align: 'right',
         sort: true,
-        render: (_: any, row) => <span className="text-[#808080]">{row.date}</span>
+        render: (_: any, row) => <span className="text-[#808080]">{row.date.slice(5)}</span>
       }
     ],
     []

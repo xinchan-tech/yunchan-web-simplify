@@ -69,6 +69,9 @@ const HomePage = () => {
           <Link to="/app/stock?symbol=QQQ" className="home-navigate-item hover:text-primary">
             K线图表
           </Link>
+          <Link to="/assets" className="home-navigate-item hover:text-primary">
+            AI交易
+          </Link>
           <a href="#download" className="home-navigate-item hover:text-primary">
             下载
           </a>

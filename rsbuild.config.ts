@@ -3,7 +3,6 @@ import { defineConfig } from '@rsbuild/core'
 import { pluginReact } from '@rsbuild/plugin-react'
 import { pluginSass } from '@rsbuild/plugin-sass'
 import { pluginTypedCSSModules } from '@rsbuild/plugin-typed-css-modules'
-import { RsdoctorRspackPlugin } from '@rsdoctor/rspack-plugin'
 import CompressionPlugin from 'compression-webpack-plugin'
 import { pluginReleaseTag } from './scripts/release-tag'
 import { pluginSvgSpriteIcons } from './scripts/rsbuild-plugin-svg-sprite-icons'
@@ -39,7 +38,7 @@ export default defineConfig({
         }
       },
       '/api': {
-        target: 'http://api.awstest.mgjkn.com',
+        target: 'https://api.awstest.mgjkn.com',
         changeOrigin: true,
         pathRewrite: {
           '^/api': ''
@@ -92,5 +91,8 @@ export default defineConfig({
         }
       }
     }
+  },
+  performance: {
+    buildCache: false
   }
 })

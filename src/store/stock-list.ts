@@ -1,6 +1,6 @@
 import { getAllStocks } from '@/api'
 import { createStoreIndexStorage } from '@/plugins/createStoreIndexStorage'
-import pako from 'pako'
+import { gzDecode } from '@/utils/string'
 import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
 
@@ -48,14 +48,17 @@ export const useStockList = create<StockListStore>()(
         return state => {
           if (!state?.key) {
             getAllStocks().then(r => {
-              const data = atob(r.data)
-              const dataUint8 = new Uint8Array(data.length)
-              for (let i = 0; i < data.length; i++) {
-                dataUint8[i] = data.charCodeAt(i)
-              }
-              const res = JSON.parse(pako.inflate(dataUint8, { to: 'string' })) as [string, string, string, string][]
+              const res = JSON.parse(gzDecode(r.data)) as [string, string, string, string][]
               res.sort((a, b) => a[1].localeCompare(b[1]))
               s.setList(res, r.key)
+            })
+          } else {
+            getAllStocks(state.key).then(r => {
+              if (r.key !== state.key) {
+                const res = JSON.parse(gzDecode(r.data)) as [string, string, string, string][]
+                res.sort((a, b) => a[1].localeCompare(b[1]))
+                s.setList(res, r.key)
+              }
             })
           }
         }

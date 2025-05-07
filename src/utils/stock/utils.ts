@@ -1,4 +1,4 @@
-import { StockChartInterval, type StockExtendResultMap, StockPeriod, type StockRawRecord } from '@/api'
+import { StockChartInterval, type StockExtendResultMap, StockPeriod, StockQuote, type StockRawRecord } from '@/api'
 import { router } from '@/router'
 import dayjs from 'dayjs'
 import Decimal from 'decimal.js'
@@ -408,10 +408,15 @@ export const stockUtils = {
     }
   },
 
-  getIndexTimeTick: () => {
-    const PRE_NUMBER = 330
+  getIndexTimeTick: (symbol?: string) => {
+    let PRE_NUMBER = 330
     const POST_NUMBER = 390
-    const AFTER_NUMBER = 240
+    let AFTER_NUMBER = 240
+
+    if(symbol && ['IXIC', 'DJI', 'SPY'].includes(symbol)) {
+      PRE_NUMBER = 0
+      AFTER_NUMBER = 0
+    }
 
     return {
       pre: PRE_NUMBER,
@@ -437,6 +442,7 @@ export const stockUtils = {
       router.navigate(`/app/stock?${qs.stringify(query)}`)
     }
   },
+  
 
   parseTime
 }

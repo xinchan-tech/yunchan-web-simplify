@@ -22,6 +22,7 @@ const useChatStore = create<ChatStore>()(
         timeFormat: 'ago'
       },
       channel: undefined,
+      rightHide: false,
       usersExpanded: true,
       chatConfig: {
         voteShow: {}
@@ -37,6 +38,7 @@ const useChatStore = create<ChatStore>()(
           timeFormat: state.config.timeFormat
         },
         channel: state.channel,
+        rightHide: state.rightHide,
         chatConfig: state.chatConfig,
         usersExpanded: state.usersExpanded
       })
@@ -99,6 +101,11 @@ export const chatManager = {
         timezone: config.timezone,
         timeFormat: config.format
       }
+    })
+  },
+  setRightHide: (rightHide: boolean) => {
+    useChatStore.setState({
+      rightHide
     })
   }
 }

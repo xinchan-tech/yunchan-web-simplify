@@ -10,13 +10,12 @@ import qs from 'qs'
 import { type ComponentRef, useCallback, useEffect, useRef, useState } from 'react'
 import { chartEvent, type ChartEvents } from '../lib/event'
 import { useCandlesticks } from '../lib/request'
-import { ChartType, MainYAxis, chartManage, useChartManage } from '../lib/store'
+import { ChartType, MainYAxis, chartManage, useKChart } from '../lib/store'
 import { renderUtils } from '../lib/utils'
 import { BackTestBar } from './back-test-bar'
 import { ChartContextMenu } from './chart-context-menu'
 import dayjs from "dayjs"
 import { useQuery } from "@tanstack/react-query"
-import { sysConfig } from "@/utils/config"
 import { isArray } from "radash"
 
 interface MainChartProps {
@@ -37,8 +36,8 @@ const convertToStock = (candlesticks: StockRawRecord[]) =>
 export const MainChart = (props: MainChartProps) => {
   const [symbol, setSymbol] = useState(getSymbolByUrl())
   const gapShow = useConfig(s => s.setting.gapShow)
-  const activeChartId = useChartManage(s => s.activeChartId)
-  const chartStore = useChartManage(s => s.chartStores[props.chartId])
+  const activeChartId = useKChart(s => s.activeChartId)
+  const chartStore = useKChart(s => s.chartStores[props.chartId])
   const chartImp = useRef<ComponentRef<typeof JknChart>>(null)
   const { candlesticks, startAt } = useCandlesticks(symbol, chartStore.interval)
   const stockCache = useRef({
@@ -53,12 +52,12 @@ export const MainChart = (props: MainChartProps) => {
     queryFn: () => getUserPlotting({ symbol, kline: chartStore.interval }),
     enabled: candlesticks.length > 0,
     select: data => {
-      if(!data) return []
+      if (!data) return []
       return data.filter(d => (d.stock_kline_value === chartStore.interval || d.cross === 1) && d.symbol === symbol)
     },
   })
 
-  const createOverlay = useCallback(({ type, params, points, id }: ChartEvents['drawStart']) => {
+  const createOverlay = useCallback(({ type, params, points, id, indicatorId }: ChartEvents['drawStart']) => {
     chartImp.current?.createOverlay(type, {
       onEnd: e => {
         chartEvent.get().emit('drawEnd', {
@@ -66,7 +65,7 @@ export const MainChart = (props: MainChartProps) => {
           e
         })
 
-        if(type === 'pen'){
+        if (type === 'pen') {
           return true
         }
         const pid = renderUtils.getOverlayByType(type)
@@ -74,7 +73,8 @@ export const MainChart = (props: MainChartProps) => {
           JknAlert.toast('未知的绘图类型')
           return true
         }
-        saveUserPlotting({
+
+        const params: FuncParams<typeof saveUserPlotting>[0] = {
           hash: e.overlay.id,
           symbol: symbol,
           kline: chartStore.interval.toString(),
@@ -93,7 +93,14 @@ export const MainChart = (props: MainChartProps) => {
             x: `${dateUtils.toUsDay(p.timestamp).format('YYYY-MM-DD HH:mm:00')}@0.00`,
             y: p.value!
           }))
-        }).catch(() => {
+        }
+
+        if (e.overlay.paneId !== ChartTypes.MAIN_PANE_ID) {
+          const indicator = e.chart.getIndicators({ paneId: e.overlay.paneId })[0]
+          params.indicator_id = +indicator?.id
+        }
+
+        saveUserPlotting(params).catch(() => {
           JknAlert.toast('保存绘图失败')
         })
         return true
@@ -121,19 +128,20 @@ export const MainChart = (props: MainChartProps) => {
       },
       params,
       points: points ?? [],
-      id
+      id,
+      indicatorId
     })
   }, [chartStore.interval, symbol])
 
 
   useEffect(() => {
-    chartImp.current?.removeOverlay()
     plotting.data?.forEach(data => {
       const type = renderUtils.getOverlayById(data.plotting_id)
       if (!type) return
       createOverlay({
         type,
         id: data.hash,
+        indicatorId: data.indicator_id ? data.indicator_id.toString() : undefined,
         params: {
           cross: data.cross === 1,
           color: data.css?.color ?? '#ffffff',
@@ -149,16 +157,19 @@ export const MainChart = (props: MainChartProps) => {
       })
     })
 
+    return () => {
+      chartImp.current?.removeOverlay()
+    }
 
   }, [plotting.data, createOverlay])
 
   useStockBarSubscribe([`${symbol}@${stockUtils.intervalToPeriod(chartStore.interval)}`], data => {
-    const mode = useChartManage.getState().chartStores[props.chartId].mode
+    const mode = useKChart.getState().chartStores[props.chartId].mode
     if (mode === 'backTest') return
-    const interval = useChartManage.getState().chartStores[props.chartId].interval
+    const interval = useKChart.getState().chartStores[props.chartId].interval
     const record = stockUtils.toStock(data.rawRecord)
     const trading = stockUtils.getTrading(record.timestamp)
-    const symbol = useChartManage.getState().chartStores[props.chartId].symbol
+    const symbol = useKChart.getState().chartStores[props.chartId].symbol
     const [_symbol] = data.topic.split('@')
     if (_symbol !== symbol) {
       console.log('stock bar subscribe symbol error')
@@ -182,12 +193,12 @@ export const MainChart = (props: MainChartProps) => {
 
 
     const lastData = chartImp.current?.getChart()?.getDataList()?.slice(-1)[0]
-  
+
     if (chartImp.current?.isSameIntervalCandlestick(record, interval)) {
       lastBarInInterval.current = record
-      
+
       if (trading === 'intraDay') {
-   
+
         chartImp.current?.appendCandlestick(
           {
             ...record,
@@ -225,10 +236,10 @@ export const MainChart = (props: MainChartProps) => {
 
   useEffect(() => {
     return stockSubscribe.onQuoteTopic(symbol, data => {
-      const _symbol = useChartManage.getState().chartStores[props.chartId].symbol
+      const _symbol = useKChart.getState().chartStores[props.chartId].symbol
       if (data.topic !== _symbol) return
       const trading = useTime.getState().getTrading()
-      const mode = useChartManage.getState().chartStores[props.chartId].mode
+      const mode = useKChart.getState().chartStores[props.chartId].mode
       if (mode === 'backTest') return
 
       if (!renderUtils.shouldUpdateChart(trading, chartStore.interval)) {
@@ -263,7 +274,7 @@ export const MainChart = (props: MainChartProps) => {
   useMount(() => {
     chartManage.cleanStockOverlay()
     chartManage.setMode('normal')
-    const _store = useChartManage.getState().chartStores[props.chartId]
+    const _store = useKChart.getState().chartStores[props.chartId]
 
     const stockData = convertToStock(candlesticks)
 
@@ -360,14 +371,28 @@ export const MainChart = (props: MainChartProps) => {
 
     chartImp.current?.applyNewData(stockData)
 
+    const store = chartManage.getChart(props.chartId)
+
+    if (store) {
+      if (renderUtils.isTimeIndexChart(store.interval)) {
+        const tick = stockUtils.getIndexTimeTick(store.symbol)
+
+        if (tick.total === candlesticks.length) {
+          chartImp.current?.setPriceMarkStyle('full')
+        } else {
+          chartImp.current?.setPriceMarkStyle('last')
+        }
+      }
+    }
+
     chartImp.current?.removeBackTestIndicator()
-  }, [candlesticks, chartStore.mode])
+  }, [candlesticks, chartStore.mode, props.chartId])
 
   /**
    * 缠论数据变化
    */
   useEffect(() => {
-    chartImp.current?.setCoiling(chartStore.coiling, useChartManage.getState().chartStores[props.chartId].interval)
+    chartImp.current?.setCoiling(chartStore.coiling, useKChart.getState().chartStores[props.chartId].interval)
   }, [chartStore.coiling, props.chartId])
   /**
    * chart事件处理
@@ -388,8 +413,9 @@ export const MainChart = (props: MainChartProps) => {
       } else {
         chartImp.current?.setTimeShareChart()
         const c = chartManage.getChart(props.chartId)
-        chartImp.current?.setChartType(c?.type === ChartType.Candle ? 'candle' : 'area')
+        chartImp.current?.setChartType(c?.type === ChartType.Candle ? 'candle' : c?.type === ChartType.AmericanLine ? 'ohlc' : 'area')
       }
+
       chartManage.setMode('normal')
       Array.from(stockCache.current.compare.entries()).forEach(([_, indicatorId]) => {
         chartImp.current?.setStockCompare(indicatorId, {
@@ -397,10 +423,22 @@ export const MainChart = (props: MainChartProps) => {
           startAt: renderUtils.getChartStartDate(interval)
         })
       })
+
+      useKChart.getState().chartStores[props.chartId].mainIndicators.forEach(indicator => {
+        chartImp.current?.setIndicator(indicator.id.toString(), {
+          interval,
+        })
+      })
+
+      useKChart.getState().chartStores[props.chartId].secondaryIndicators.forEach(indicator => {
+        chartImp.current?.setSubIndicator(indicator.id.toString(), {
+          interval,
+        })
+      })
     })
 
     const cancelCharTypeEvent = chartEvent.on('chartTypeChange', type => {
-      chartImp.current?.setChartType(type === ChartType.Candle ? 'candle' : 'area')
+      chartImp.current?.setChartType(type === ChartType.Candle ? 'candle' : type === ChartType.AmericanLine ? 'ohlc' : 'area')
     })
 
     const cancelIndicatorEvent = chartEvent.on('mainIndicatorChange', ({ type, indicator }) => {
@@ -437,7 +475,7 @@ export const MainChart = (props: MainChartProps) => {
         if (!stockCache.current.compare.has(symbol)) {
           if (!stockCache.current.rightAxisBeforePk) {
             stockCache.current.rightAxisBeforePk = {
-              ...useChartManage.getState().chartStores[props.chartId].yAxis
+              ...useKChart.getState().chartStores[props.chartId].yAxis
             }
           }
           const color = colorUtil.colorPalette[stockCache.current.compare.size]

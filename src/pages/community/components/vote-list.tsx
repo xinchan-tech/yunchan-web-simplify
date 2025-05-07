@@ -2,9 +2,10 @@ import { getVoteDetail, submitVote } from "@/api"
 import { useMutation, useQuery } from "@tanstack/react-query"
 import VoteTitleBg from '@/assets/icon/vote-title-bg.png'
 import dayjs from "dayjs"
-import { Button, JknAlert, JknIcon, ScrollArea, SkeletonLoading, StockPicker, StockSelect, StockView, useModal } from "@/components"
+import { Button, JknAlert, JknIcon, ScrollArea, SkeletonLoading, StockPicker, StockView, useModal } from "@/components"
 import { useState, type CSSProperties } from "react"
 import to from "await-to-js"
+import { chatConstants } from "@/store"
 
 interface VoteDetailListProps {
   voteId: number
@@ -27,6 +28,9 @@ export const VoteDetailList = (props: VoteDetailListProps) => {
   const canVote = (detail.data?.items.reduce((acc, item) => acc + (item.is_voted ? 1 : 0), 0) ?? 0) < (detail.data?.vote_limit ?? 0)
 
   const hasClose = detail.data?.status === 3
+
+  // 剩余投票数
+  const leftVoteCount = (detail.data?.vote_limit ?? 0) - (detail.data?.items.reduce((acc, item) => acc + (item.is_voted ? 1 : 0), 0) ?? 0)
 
   const vote = useMutation({
     mutationFn: async (id: number) => {
@@ -91,9 +95,9 @@ export const VoteDetailList = (props: VoteDetailListProps) => {
 
       const [res] = await to(submitVote(props.voteId, [{ title: selectStock, id: 0 }]))
 
-      if(res) {
+      if (res) {
         JknAlert.error(res.message)
-    
+
         return false
       }
 
@@ -107,7 +111,7 @@ export const VoteDetailList = (props: VoteDetailListProps) => {
   })
 
   const onCreate = () => {
-    if(!canVote){
+    if (!canVote) {
       JknAlert.error('您已达到最大投票数')
       return
     }
@@ -115,12 +119,16 @@ export const VoteDetailList = (props: VoteDetailListProps) => {
     StockSelectModal.modal.open()
   }
 
+  const gotoStock = (code: string) => {
+    const channel = new BroadcastChannel(chatConstants.broadcastChannelId)
+    channel.postMessage({ type: 'chat_stock_jump', payload: code })
+  }
 
   return (
     <div className="w-[548px] rounded-lg overflow-hidden">
-      <div className="h-[160px] p-5 box-content" style={{ background: `url(${VoteTitleBg}) no-repeat`, backgroundSize: '100%' }}>
+      <div className="h-[174px] p-5 box-content" style={{ background: `url(${VoteTitleBg}) no-repeat`, backgroundSize: '100%' }}>
         <JknIcon.Svg name="close" className="absolute right-4 top-4 cursor-pointer font-thin" size={28} onClick={props.onClose} />
-        <div className="text-[40px] font-bold text-white mt-10" >
+        <div className="text-[40px] font-bold text-white mt-10 whitespace-nowrap text-ellipsis overflow-hidden" >
           {detail.data?.title}
         </div>
         <div className="text-secondary mt-2 flex items-center">
@@ -132,6 +140,9 @@ export const VoteDetailList = (props: VoteDetailListProps) => {
               detail.data?.end_time ? dayjs(detail.data.end_time * 1000).format('YYYY-MM-DD HH:mm') : ''
             )
           }
+        </div>
+        <div className="text-secondary mt-2">
+          剩余投票次数: {Math.max(0, leftVoteCount)}
         </div>
         <div className="underline cursor-pointer mt-2 text-xl" onClick={showDesc} onKeyDown={() => { }}>
           投票说明
@@ -152,7 +163,9 @@ export const VoteDetailList = (props: VoteDetailListProps) => {
                   }
                 </div>
                 <div className="text-sm text-primary flex items-center text-[#575757] py-3.5 px-3 vote-progress flex-1 overflow-hidden box-border relative" style={{ '--vote-progress-width': `${(totalCount ? (item.count / totalCount) : 0) * 100}%` } as CSSProperties}>
-                  <StockView code={item.title} showName />
+                  <div onDoubleClick={() => gotoStock(item.title)} onKeyDown={() => { }} className="flex-1 overflow-hidden cursor-pointer relative z-20">
+                    <StockView code={item.title} showName navToTrading={false} />
+                  </div>
                   <div className="ml-auto text-[#575757] mr-4">
                     {((totalCount ? (item.count / totalCount) : 0) * 100).toFixed(2)}%
                   </div>
@@ -185,6 +198,7 @@ export const VoteDetailList = (props: VoteDetailListProps) => {
       <style jsx>{`
         .vote-progress::after {
           content: '';
+          z-index: 0;
           position: absolute;
           left: 0;
           top: 0;

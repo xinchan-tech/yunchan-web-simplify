@@ -32,7 +32,7 @@ const PlateStocks = (props: PlateStocksProps) => {
     enabled: !!props.plateId
   })
 
-  const [list, { setList, onSort }] = useTableData<TableDataType>([], 'symbol')
+  const [list, { setList, onSort }] = useTableData<TableDataType>([])
   useCheckboxGroup([])
 
   useEffect(() => {
@@ -143,6 +143,7 @@ const PlateStocks = (props: PlateStocksProps) => {
           </div>
         )
       },
+      
       {
         title: '所属行业',
         dataIndex: 'industry',

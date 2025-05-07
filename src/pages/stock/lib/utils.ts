@@ -1,11 +1,11 @@
 import { StockChartInterval, type StockRawRecord } from '@/api'
 import { dateUtils } from '@/utils/date'
 import type { StockTrading } from '@/utils/stock'
-import type { ChartManageStore, Indicator } from './store'
+import type { KChartStore, Indicator } from './store'
 import type { ChartOverlayType } from "@/components"
 
 export const renderUtils = {
-  getViewMode: (s: ChartManageStore['viewMode']) => {
+  getViewMode: (s: KChartStore['viewMode']) => {
     switch (s) {
       case 'single':
         return 1

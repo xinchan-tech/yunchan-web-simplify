@@ -107,7 +107,7 @@ export const useConnectIM = () => {
         window.close()
       }
     }
-    initImDataSource()
+
     WKSDK.shared().connectManager.connect()
     return () => {
       channel.close()

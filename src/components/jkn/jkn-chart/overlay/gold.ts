@@ -105,7 +105,7 @@ const getTexts = (lines: (LineAttrs & { value: number })[]): TextAttrs[] => {
 
     const { y } = coordinates[0]
 
-    const text = value.toFixed(2)
+    const text = value.toFixed(3)
 
     texts.push({
       text: text,

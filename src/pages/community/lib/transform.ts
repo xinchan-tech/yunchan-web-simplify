@@ -292,6 +292,12 @@ export const MessageTransform = {
         voteId: content.voteId,
         type: ChatMessageType.Vote
       } as ChatVoteMessage
+    } else if (+msg.contentType === +ChatMessageType.System){
+      message = {
+        ...message,
+        content: msg.content.content.content,
+        type: ChatMessageType.System
+      } as ChatSystemMessage
     }
 
     return message

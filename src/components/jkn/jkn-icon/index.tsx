@@ -53,12 +53,12 @@ const _JknIcon = ({ name, stock, className, checked, label, style, ...props }: J
   return icon
 }
 
-const wrapperLabel = (component: ReactNode, label: string | ReactNode) => {
+const wrapperLabel = (component: ReactNode, label: string | ReactNode, labelSide?: 'top' | 'bottom' | 'left' | 'right',) => {
   return (
     <HoverCard openDelay={300} closeDelay={300}>
       <HoverCardTrigger className="flex items-center">{component}</HoverCardTrigger>
 
-      <HoverCardContent align="center" side="bottom" className="w-fit py-1 px-2 text-sm">
+      <HoverCardContent align="center" side={labelSide || 'bottom'} className="w-fit py-1 px-2 text-sm">
         <HoverCardArrow width={10} height={4} className="text-accent fill-accent" />
         {label}
       </HoverCardContent>
@@ -103,10 +103,11 @@ interface JknSvgIconProps extends HtmlHTMLAttributes<SVGElement> {
   title?: string
   size?: number
   label?: string
+  labelSide?: 'top' | 'bottom' | 'left' | 'right'
   hoverable?: boolean
 }
 
-const JknSvgIcon = ({ name, title, size = 24, label, hoverable, className, style, ...props }: JknSvgIconProps) => {
+const JknSvgIcon = ({ name, title, size = 24, label, hoverable, className, style, labelSide, ...props }: JknSvgIconProps) => {
   const icon = (
     <svg
       width={size}
@@ -120,7 +121,7 @@ const JknSvgIcon = ({ name, title, size = 24, label, hoverable, className, style
     </svg>
   )
 
-  return label ? wrapperLabel(icon, label) : icon
+  return label ? wrapperLabel(icon, label, labelSide) : icon
 }
 
 interface JknIconStockProps extends Omit<JknIconProps, 'stock'> {

@@ -108,19 +108,20 @@ interface JknChartIns {
   applyNewData: Chart['applyNewData']
   appendCandlestick: (kline: Candlestick, interval: number) => void
   restoreCandlestick: (count: number) => void
-  isSameIntervalCandlestick: (kline: Candlestick, interval: number) => undefined | boolean
+  isSameIntervalCandlestick: (kline: {timestamp: number}, interval: number) => undefined | boolean
   setCoiling: (coiling: CoilingIndicatorId[], interval: number) => void
   removeCoiling: (coiling: CoilingIndicatorId[]) => void
   // setLeftAxis: (show: boolean) => void
   setAxisType: (type: 'normal' | 'percentage' | 'double') => void
   // setRightAxis: (type: 'percentage' | 'normal') => void
-  setChartType: (type: 'area' | 'candle') => void
+  setChartType: (type: 'area' | 'candle' | 'ohlc') => void
   removeAllCoiling: () => void
   createIndicator: (params: IndicatorParams) => void
   removeIndicator: (indicator: string) => void
+  setIndicator: (indicatorId: string, params: Partial<IndicatorParams>) => void
   setIndicatorVisible: (indicatorId: string, visible: boolean) => void
   createSubIndicator: (params: IndicatorParams) => Nullable<string>
-  setSubIndicator: (indicatorId: string, params: IndicatorParams) => void
+  setSubIndicator: (indicatorId: string, params: Partial<IndicatorParams>) => void
   removeSubIndicator: (indicatorId: string) => void
   createStockCompare: (symbol: string, params: { color: string; interval: number; startAt?: string }) => string
   removeStockCompare: (symbol: string) => void
@@ -148,12 +149,14 @@ interface JknChartIns {
       value: number
     }[]
     id?: string
+    indicatorId?: string
   }) => void
   setOverlay: (id: string, params: DrawOverlayParams) => void
   lockOverlay: (id?: string) => void
   unlockOverlay: (id?: string) => void
   removeOverlay: (id?: string | string[]) => void
   hideOverlay: (visible: boolean) => void
+  setPriceMarkStyle: (style: 'full' | 'last') => void
 }
 
 const getAxisType = (chart: Chart) => {
@@ -213,7 +216,8 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
         indicator: {
           tooltip: {
             text: {
-              color: '#DBDBDB'
+              color: '#DBDBDB',
+              size: 14
             }
           }
         },
@@ -279,7 +283,8 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
               ]
             },
             text: {
-              color: '#DBDBDB'
+              color: '#DBDBDB',
+              size: 14
             }
           },
           priceMark: {
@@ -388,6 +393,10 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
           type: 'candle' as LayoutChildType,
           options: {
             axis: {
+              gap: {
+                top: 20,
+                bottom: 20
+              },
               position: 'right' as AxisPosition,
               name: 'normal'
             },
@@ -446,7 +455,7 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
     isSameIntervalCandlestick: (candlestick, interval) => {
       const lastData = chart.current?.getDataList().slice(-1)[0]
       if (!lastData) return
-      
+
       return isSameInterval(lastData, candlestick, interval)
     },
     setAxisType: type => {
@@ -500,7 +509,7 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
     setChartType: type => {
       chart.current?.setStyles({
         candle: {
-          type: (type === 'area' ? 'area' : 'candle_solid') as CandleType
+          type: (type === 'area' ? 'area' : type === 'ohlc' ? 'ohlc' : 'candle_solid') as CandleType
         }
       })
     },
@@ -547,7 +556,6 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
     },
     createIndicator: ({ indicator, symbol, interval, name, isRemote }) => {
       const formula = useIndicator.getState().formula
-
       if (!formula[indicator]) return
 
       chart.current?.createIndicator(
@@ -564,8 +572,20 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
     removeIndicator: indicator => {
       chart.current?.removeIndicator({ id: indicator })
     },
+    setIndicator: (indicator, { interval }) => {
+      const formula = useIndicator.getState().formula
+      if (!formula[indicator]) return
+
+      const indicatorId = chart.current?.getIndicators({ id: indicator })[0]
+      if (!indicatorId) return
+
+      chart.current?.overrideIndicator({
+        name: 'local-indicator',
+        id: indicator,
+        calcParams: [indicator, indicatorId.calcParams[1], interval ?? indicatorId.calcParams[2]],
+      })
+    },
     setIndicatorVisible: (indicatorId, visible) => {
-      console.log(visible)
       chart.current?.overrideIndicator({
         id: indicatorId,
         visible,
@@ -594,8 +614,8 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
       chart.current.overrideIndicator({
         name: 'local-indicator',
         id: sub?.id,
-        calcParams: [params.indicator, params.symbol, params.interval],
-        extendData: { name: params.name, indicatorId: params.indicator }
+        calcParams: [params.indicator ?? sub.calcParams[0], params.symbol ?? sub.calcParams[1], params.interval ?? sub.calcParams[2]],
+        // extendData: { name: params.name, indicatorId: params.indicator }
       })
     },
     removeSubIndicator(indicatorId) {
@@ -861,9 +881,18 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
     },
     createOverlay: (type, opts) => {
       const uid = opts.id || `overlay-${nanoid(8)}`
+      let paneId: string = ChartTypes.MAIN_PANE_ID
+      if (opts.indicatorId) {
+        const indicator = chart.current?.getIndicators({ id: opts.indicatorId })[0]
+        if (indicator) {
+          paneId = indicator.paneId
+        }
+      }
+
       chart.current?.createOverlay({
         id: uid,
         name: type,
+        paneId,
         onDrawEnd: (e) => opts.onEnd(e as OverlayEvent<DrawOverlayParams>),
         onDrawStart: (e) => {
           return opts.onStart(type, e as OverlayEvent<DrawOverlayParams>)
@@ -949,6 +978,19 @@ export const JknChart = forwardRef<JknChartIns, JknChartProps>((props: JknChartP
     hideOverlay: (visible) => {
       chart.current?.overrideOverlay({
         visible: visible
+      })
+    },
+    setPriceMarkStyle: (style) => {
+      chart.current?.setStyles({
+        candle: {
+          priceMark: {
+            last: {
+              line: {
+                type: style
+              }
+            }
+          }
+        }
       })
     }
   }))

@@ -1,15 +1,15 @@
-import { Button, type ChartOverlayType, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, JknAlert, JknColorPicker, JknColorPickerPopover, JknIcon, JknRcTable, type JknRcTableProps, Popover, PopoverContent, PopoverTrigger, useModal } from '@/components'
+import { getUserPlotting } from "@/api"
+import { Button, type ChartOverlayType, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, JknAlert, JknColorPickerPopover, JknIcon, JknRcTable, type JknRcTableProps, Popover, PopoverContent, PopoverTrigger, useModal, withTooltip } from '@/components'
+import { useCheckboxGroup } from "@/hooks"
+import { dateUtils } from "@/utils/date"
+import { stockUtils } from "@/utils/stock"
 import { DndContext, type DragEndEvent, useDraggable } from '@dnd-kit/core'
 import { CSS } from '@dnd-kit/utilities'
-import { createContext, Fragment, type PropsWithChildren, useContext, useEffect, useMemo, useState } from 'react'
-import { chartManage, renderUtils, useChartManage } from '../lib'
-import { chartEvent } from '../lib/event'
-import { type Updater, useImmer } from "use-immer"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
-import { getUserPlotting } from "@/api"
-import { stockUtils } from "@/utils/stock"
-import { dateUtils } from "@/utils/date"
-import { useCheckboxGroup } from "@/hooks"
+import { createContext, useContext, useEffect, useMemo, useState } from 'react'
+import { type Updater, useImmer } from "use-immer"
+import { useKChart } from '../lib'
+import { chartEvent } from '../lib/event'
 
 const defaultBar: {
   icon: ChartOverlayType
@@ -188,7 +188,7 @@ export const DrawToolBox = () => {
     })
   }, [setSetting])
 
-  const drawTool = useChartManage(s => s.drawTool)
+  const drawTool = useKChart(s => s.drawTool)
   return (
     <DrawToolContext.Provider value={{ ...setting, setDrawSetting: setSetting }}>
       <DndContext onDragEnd={onDragEnd}>
@@ -279,18 +279,18 @@ const DrawSettingBar = ({ pos }: { pos: { x: number; y: number }, type: ChartOve
         </div>
       </div>
       <div className="flex items-center">
-        <DrawSettingColorPicker color={setting.color} onChange={c => _setSetting({ ...setting, color: c })} />
-        <DrawSettingLineWidthPicker width={setting.width} onChange={w => _setSetting({ ...setting, width: w })} />
-        <DrawSettingLineTypePicker type={setting.type} onChange={t => _setSetting({ ...setting, type: t })} />
-        <DrawSettingLockPicker lock={setting.lock} onChange={l => _setLock(l)} />
-        <DrawSettingDeletePicker lock={setting.lock} onClick={() => _setDelete()} />
+        <DrawSettingColorPicker color={setting.color} onChange={c => _setSetting({ ...setting, color: c })} label="颜色选择" side="bottom" sideOffset={4} />
+        <DrawSettingLineWidthPicker width={setting.width} onChange={w => _setSetting({ ...setting, width: w })} label="画线宽度" side="bottom" sideOffset={4}  />
+        <DrawSettingLineTypePicker type={setting.type} onChange={t => _setSetting({ ...setting, type: t })} label="画线类型" side="bottom" sideOffset={4} />
+        <DrawSettingLockPicker lock={setting.lock} onChange={l => _setLock(l)} label="锁定画线" side="bottom" sideOffset={4}  />
+        <DrawSettingDeletePicker lock={setting.lock} onClick={() => _setDelete()} label="删除画线" side="bottom" sideOffset={4}  />
       </div>
     </div>
   )
 }
 
 const DrawToolBar = () => {
-  const barStore = useChartManage(s => s.drawToolBar)
+  const barStore = useKChart(s => s.drawToolBar)
   const [active, setActive] = useState<Nullable<{ type: string, uid: string }>>()
 
   const drawBar = useMemo(() => {
@@ -359,13 +359,14 @@ const DrawToolBar = () => {
               size={20}
               className="p-1"
               hoverable
+              labelSide="right"
               label={item.label}
             />
           </div>
         ))
       }
       <div className="hover:text-foreground hover:cursor-pointer data-[active=true]:text-primary">
-        <JknIcon.Svg name={'draw-more' as any} size={20} className="p-1" hoverable label="更多画线工具" />
+        <JknIcon.Svg name={'draw-more' as any} size={20} className="p-1" hoverable label="更多画线工具" labelSide="right" />
       </div>
     </div>
   )
@@ -424,19 +425,19 @@ const DrawToolAction = () => {
   return (
     <div className="grid grid-cols-1 gap-2.5">
       <div data-checked={!visible} className="hover:text-foreground hover:cursor-pointer data-[checked=true]:text-primary" onClick={() => onSetVisible()} onKeyDown={() => void 0}>
-        <JknIcon.Svg name="invisible" size={20} className="p-1" hoverable label="显示" />
+        <JknIcon.Svg name="invisible" size={20} className="p-1" hoverable label="显示" labelSide="right" />
       </div>
       <div data-checked={cross} className="hover:text-foreground hover:cursor-pointer data-[checked=true]:text-primary" onClick={() => onSetCross()} onKeyDown={() => void 0}>
-        <JknIcon.Svg name="draw-link" size={20} className="p-1" hoverable label="跨周期绘制" />
+        <JknIcon.Svg name="draw-link" size={20} className="p-1" hoverable label="跨周期绘制" labelSide="right" />
       </div>
       <div className="hover:text-foreground hover:cursor-pointer" onClick={() => onDelete()} onKeyDown={() => void 0}>
-        <JknIcon.Svg name="draw-delete" size={20} className="p-1" hoverable label="清除所有" />
+        <JknIcon.Svg name="draw-delete" size={20} className="p-1" hoverable label="清除所有" labelSide="right" />
       </div>
       <div data-checked={continuous} className="hover:text-foreground hover:cursor-pointer data-[checked=true]:text-primary" onClick={() => onSetContinuous()} onKeyDown={() => void 0}>
-        <JknIcon.Svg name="draw-continuous" size={20} className="p-1" hoverable label="连续绘制" />
+        <JknIcon.Svg name="draw-continuous" size={20} className="p-1" hoverable label="连续绘制" labelSide="right" />
       </div>
       <div className="hover:text-foreground hover:cursor-pointer data-[checked=true]:text-primary" onClick={() => statistics.modal.open()} onKeyDown={() => void 0}>
-        <JknIcon.Svg name="draw-statistics" size={20} className="p-1" hoverable label="绘制统计" />
+        <JknIcon.Svg name="draw-statistics" size={20} className="p-1" hoverable label="绘制统计" labelSide="right" />
       </div>
       {
         statistics.context
@@ -446,7 +447,7 @@ const DrawToolAction = () => {
 }
 
 
-const DrawSettingColorPicker = ({ color, onChange }: { color: string; onChange: (newColor: string) => void }) => {
+const DrawSettingColorPicker = withTooltip(({ color, onChange }: { color: string; onChange: (newColor: string) => void }) => {
 
   return (
     <JknColorPickerPopover color={color} onChange={onChange}>
@@ -456,9 +457,9 @@ const DrawSettingColorPicker = ({ color, onChange }: { color: string; onChange: 
       </div>
     </JknColorPickerPopover>
   )
-}
+})
 
-const DrawSettingLineWidthPicker = ({ width, onChange }: { width: number; onChange: (newWidth: number) => void }) => {
+const DrawSettingLineWidthPicker = withTooltip(({ width, onChange }: { width: number; onChange: (newWidth: number) => void }) => {
   const lines = [1, 2, 3, 4, 5]
 
   return (
@@ -488,8 +489,8 @@ const DrawSettingLineWidthPicker = ({ width, onChange }: { width: number; onChan
     </DropdownMenu>
   )
 }
-
-const DrawSettingLineTypePicker = ({ type, onChange }: { type: string; onChange: (newType: string) => void }) => {
+)
+const DrawSettingLineTypePicker = withTooltip(({ type, onChange }: { type: string; onChange: (newType: string) => void }) => {
   const types = ['solid', 'dashed', 'dotted']
 
   return (
@@ -520,17 +521,17 @@ const DrawSettingLineTypePicker = ({ type, onChange }: { type: string; onChange:
       </DropdownMenuContent>
     </DropdownMenu>
   )
-}
+})
 
-const DrawSettingLockPicker = ({ lock, onChange }: { lock: boolean; onChange: (newLock: boolean) => void }) => {
+const DrawSettingLockPicker = withTooltip(({ lock, onChange }: { lock: boolean; onChange: (newLock: boolean) => void }) => {
   return (
     <div className="size-4 p-1.5 mx-1 hover:bg-accent rounded cursor-pointer data-[checked=true]:bg-primary" data-checked={lock} onClick={() => onChange(!lock)} onKeyDown={() => void 0}>
       <JknIcon.Svg name="draw-lock" className="w-full h-full" />
     </div>
   )
-}
+})
 
-const DrawSettingDeletePicker = ({ onClick, lock }: { lock: boolean, onClick: () => void }) => {
+const DrawSettingDeletePicker = withTooltip(({ onClick, lock }: { lock: boolean, onClick: () => void }) => {
   const _onClick = () => {
     if (!lock) {
       onClick()
@@ -551,7 +552,7 @@ const DrawSettingDeletePicker = ({ onClick, lock }: { lock: boolean, onClick: ()
       <JknIcon.Svg name="draw-delete" className="w-full h-full" />
     </div>
   )
-}
+})
 
 const DrawStatisticsTable = () => {
   const draws = useQuery({

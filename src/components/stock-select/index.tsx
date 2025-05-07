@@ -2,7 +2,7 @@ import { useStockSearch } from '@/hooks'
 import { useStockList } from '@/store'
 import { cn } from '@/utils/style'
 import { useBoolean, useLocalStorageState, useVirtualList } from 'ahooks'
-import { useRef, useState } from 'react'
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import { JknIcon } from '../jkn/jkn-icon'
 import { Input, type InputProps } from '../ui/input'
 import { Popover, PopoverAnchor, PopoverContent } from '../ui/popover'
@@ -12,26 +12,30 @@ export { StockPicker } from './picker'
 
 interface StockSelectProps extends Omit<InputProps, 'onChange'> {
   onChange?: (symbol: string) => void
+  showKeyWord?: boolean
 }
 
-const StockSelect = ({ onChange, className, width, ...props }: StockSelectProps) => {
+const StockSelect = ({ onChange, showKeyWord, className, width, ...props }: StockSelectProps) => {
   const [open, { setTrue, setFalse }] = useBoolean(false)
   const stockList = useStockList()
   const [keyword, setKeyword] = useState('')
+  const virtualListRef = useRef<VirtualStockListIns>(null)
   const [history, setHistory] = useLocalStorageState<typeof stockList.list>('stock-search-history', {
     defaultValue: []
   })
 
   const _onClick = (symbol: string) => {
     setFalse()
-
     setTimeout(() => {
       const s = stockList.list.find(item => item[1] === symbol)
-
+      
       if (s) {
         setHistory(_s => {
           const newHistory = _s?.filter(item => item[1] !== symbol) ?? []
           newHistory.unshift(s)
+          if(newHistory.length > 10){
+            newHistory.pop()
+          }
           return newHistory
         })
         onChange?.(symbol)
@@ -45,6 +49,15 @@ const StockSelect = ({ onChange, className, width, ...props }: StockSelectProps)
     setTimeout(() => {
       setHistory([])
     }, 200)
+  }
+
+  const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      const symbol = virtualListRef.current?.getFirstSymbol() 
+      if(symbol){
+        _onClick(symbol)
+      }
+    }
   }
 
   const onSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -69,6 +82,7 @@ const StockSelect = ({ onChange, className, width, ...props }: StockSelectProps)
             <Input
               value={keyword}
               onChange={onSearch}
+              onKeyDown={onKeyDown}
               className="border-none placeholder:text-[#B8B8B8] text-base"
               size="sm"
               onClick={() => setTrue()}
@@ -77,14 +91,14 @@ const StockSelect = ({ onChange, className, width, ...props }: StockSelectProps)
             />
           </div>
         </PopoverAnchor>
-        <PopoverContent align="start" className="w-48 bg-muted" onOpenAutoFocus={e => e.preventDefault()}>
+        <PopoverContent align="start" className="w-48 bg-muted" style={{ width }} onOpenAutoFocus={e => e.preventDefault()}>
           {history?.length && !keyword ? (
             <div>
               <div className="flex items-center justify-between px-2 py-2 border-0 border-b border-solid border-border">
                 <div className="text-sm">最近搜索</div>
                 <JknIcon name="del" onClick={_onClean} className="w-4 h-4 cursor-pointer" />
               </div>
-              <ScrollArea className="h-[300px]">
+              <div className="">
                 {history?.map(ele => (
                   <div
                     className="h-[49px] px-2 border-b-primary flex items-center hover:bg-accent cursor-pointer"
@@ -109,10 +123,10 @@ const StockSelect = ({ onChange, className, width, ...props }: StockSelectProps)
                     </div>
                   </div>
                 ))}
-              </ScrollArea>
+              </div>
             </div>
           ) : (
-            <VirtualStockList keyword={keyword} onClick={_onClick} />
+            <VirtualStockList keyword={keyword} onClick={_onClick} ref={virtualListRef} />
           )}
         </PopoverContent>
       </Popover>
@@ -125,7 +139,11 @@ interface VirtualStockListProps {
   keyword?: string
 }
 
-const VirtualStockList = (props: VirtualStockListProps) => {
+interface VirtualStockListIns {
+  getFirstSymbol: () => Nullable<string>
+}
+
+const VirtualStockList = forwardRef<VirtualStockListIns, VirtualStockListProps>((props, ref) => {
   const [data] = useStockSearch(props.keyword ?? '')
 
   const containerRef = useRef<HTMLDivElement>(null)
@@ -138,6 +156,10 @@ const VirtualStockList = (props: VirtualStockListProps) => {
     overscan: 20
   })
 
+  useImperativeHandle(ref, () => ({
+    getFirstSymbol: () => list[0]?.data[1] ?? null
+  }), [list])
+  
   return (
     <ScrollArea ref={containerRef} className="h-[500px]">
       <div ref={wrapperRef}>
@@ -168,6 +190,6 @@ const VirtualStockList = (props: VirtualStockListProps) => {
       </div>
     </ScrollArea>
   )
-}
+})
 
 export default StockSelect

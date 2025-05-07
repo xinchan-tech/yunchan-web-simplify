@@ -8,6 +8,10 @@ import { sha256 } from 'js-sha256'
 import { customAlphabet } from 'nanoid'
 import { isString } from 'radash'
 
+import { StockChartInterval } from '@/store'
+
+export { StockChartInterval }
+
 type StockTime = string
 type StockOpen = number
 type StockClose = number // 收盘价（最新价）
@@ -79,6 +83,37 @@ export type StockExtendResult =
 
 export type StockExtendResultMap = Record<StockExtendResult, any>
 
+export type StockQuote = {
+  /**
+   * 成交额
+   */
+  amount: number
+  /**
+   * 涨跌幅
+   */
+  change: number
+  /**
+   * 收盘价
+   */
+  close: number
+  /**
+   * 市场价
+   */
+  market_cap: number
+  /**
+   * 成交量
+   */
+  volume: number
+  /**
+   * 盘前涨跌幅
+   */
+  pre_change?: number
+  /**
+   * 盘后涨跌幅
+   */
+  post_change?: number
+}
+
 export const getAllStocks = async (key?: string) => {
   return request.get<{ data: string; key: string }>('/index/getAllStock', { params: { key } }).then(r => r.data)
 }
@@ -107,35 +142,6 @@ export const getStockBaseCodeInfo = async (params: GetStockBaseCodeInfoParams) =
   return r
 }
 getStockBaseCodeInfo.cacheKey = 'basic:stock:code:info'
-
-export enum StockChartInterval {
-  /**
-   * 0：盘中分时图，-1：盘前分时图，-2：盘后分时图，小于1440-任意分钟的分钟线, 1440-日线, 7200：5日分时图, 10080-周线, 43200-月线,
-   * 129600-季线, 259200-半年线
-   */
-  INTRA_DAY = 0,
-  PRE_MARKET = -1,
-  AFTER_HOURS = -2,
-  FIVE_DAY = 7200,
-  ONE_MIN = 1,
-  TWO_MIN = 2,
-  THREE_MIN = 3,
-  FIVE_MIN = 5,
-  TEN_MIN = 10,
-  FIFTEEN_MIN = 15,
-  THIRTY_MIN = 30,
-  FORTY_FIVE_MIN = 45,
-  ONE_HOUR = 60,
-  TWO_HOUR = 120,
-  THREE_HOUR = 180,
-  FOUR_HOUR = 240,
-  DAY = 1440,
-  WEEK = 10080,
-  MONTH = 43200,
-  QUARTER = 129600,
-  HALF_YEAR = 259200,
-  YEAR = 518400
-}
 
 export enum StockPeriod {
   INTRA_DAY = 'quote',
@@ -749,6 +755,7 @@ type GetUsStocksResult = {
     symbol: string
     name: string
     stock: StockRawRecord
+    quote: StockQuote
   }[]
   last: number
   limit: number
@@ -1618,7 +1625,7 @@ export const addStockIndicatorCollect = (ids: string[]) => {
 }
 
 export const removeStockIndicatorCollect = (ids: string[]) => {
-  return request.post('/stock-svc/indicators/collect/remove', { ids }).then(r => r.data)
+  return request.post('/stock-svc/indicators/collect/cancel', { ids }).then(r => r.data)
 }
 
 type GetStockIndicatorDataParams = {
@@ -2019,13 +2026,13 @@ export const getPalTop = (params?: { date?: string; limit?: number }) => {
 }
 getPalTop.cacheKey = 'pal:top'
 
-
 type SaveUserPlottingParams = {
   hash: string
   plotting_id: number
   symbol: string
   kline: string
   text?: string
+  indicator_id?: number
   css?: {
     width: number
     color: string
@@ -2047,7 +2054,11 @@ export const saveUserPlotting = (params: SaveUserPlottingParams) => {
   return request.post('/stock-svc/plottings', params).then(r => r.data)
 }
 
-type GetUserPlottingUser = Omit<SaveUserPlottingParams, 'kline'> & { stock_kline_value: number, stock_kline_id: number, plotting: string }
+type GetUserPlottingUser = Omit<SaveUserPlottingParams, 'kline'> & {
+  stock_kline_value: number
+  stock_kline_id: number
+  plotting: string
+}
 
 export const getUserPlotting = (params?: { symbol: string; kline: number }) => {
   return request.get<GetUserPlottingUser[]>('/stock-svc/plottings', { params }).then(r => r.data)
@@ -2058,8 +2069,6 @@ export const deleteUserPlotting = (hash: string[]) => {
   return request.post('/stock-svc/plottings/delete', { Hash: hash }).then(r => r.data)
 }
 
-export const deleteUserPlottingByInterval= (symbol: string, interval: number) => {
-  return request
-    .post('/stock-svc/plottings/withSymbol/delete', { symbol, kline: interval })
-    .then(r => r.data)
+export const deleteUserPlottingByInterval = (symbol: string, interval: number) => {
+  return request.post('/stock-svc/plottings/withSymbol/delete', { symbol, kline: interval }).then(r => r.data)
 }

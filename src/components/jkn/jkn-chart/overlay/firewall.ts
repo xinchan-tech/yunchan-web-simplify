@@ -44,7 +44,7 @@ export const FireWallOverlay = createOverlayTemplate({
       }))
     ]
   },
-  createPointFigures: ({ coordinates, bounding, overlay, yAxis }) => {
+  createPointFigures: ({ coordinates, bounding, overlay }) => {
     const lineStyles = drawOverlayParamsToFigureStyle('line', overlay.extendData)
     const textStyles = drawOverlayParamsToFigureStyle('text', overlay.extendData)
     if (coordinates.length >= 1) {
@@ -73,7 +73,7 @@ export const FireWallOverlay = createOverlayTemplate({
           attrs: {
             x: bounding.width,
             y: c.y,
-            text: yAxis?.convertFromPixel(c.y).toFixed(3) ?? '',
+            text: overlay.points[i].value?.toFixed(3) ?? '',
             align: 'right',
             baseline: 'bottom'
           },
@@ -88,4 +88,4 @@ export const FireWallOverlay = createOverlayTemplate({
     }
     return []
   }
-});
+})

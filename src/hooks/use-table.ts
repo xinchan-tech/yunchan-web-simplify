@@ -1,9 +1,9 @@
-import type { QuoteBuffer, StockSubscribeHandler } from '@/utils/stock'
 import { isNumber } from 'radash'
 import { useCallback, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { useLatestRef } from './use-latest-ref'
 import { useStockQuoteSubscribe } from './use-stock-subscribe'
+import type { SubscribeQuoteType } from "@/utils/stock"
 
 type OrderKey<T = any> = keyof T | ((arg: T) => string)
 
@@ -53,11 +53,19 @@ const sortData = <T extends Record<string, any>>(s: T[], columnKey: keyof T, ord
   return _s
 }
 
-export const useTableData = <T extends Record<string, any>>(data: T[], _?: OrderKey<T>) => {
+type CustomSortFn<T> = (data: T[], key: keyof T, order: 'asc' | 'desc') => Nullable<T[]>
+
+type UseTableDataOptions<T> = {
+  key: OrderKey<T>
+  sort: CustomSortFn<T>
+}
+
+export const useTableData = <T extends Record<string, any>>(data: T[], opts?: Partial<UseTableDataOptions<T>>) => {
   const [list, setList] = useState<T[]>(data)
   const listLast = useLatestRef(list)
   const initList = useRef<T[]>([])
   const lastOrder = useRef<{ field?: keyof T; order?: 'asc' | 'desc' }>({ field: undefined, order: undefined })
+  const { sort: customSort } = opts || {}
 
   const _setList = useCallback(
     (cb: T[] | ((d: T[]) => T[])) => {
@@ -70,28 +78,43 @@ export const useTableData = <T extends Record<string, any>>(data: T[], _?: Order
       initList.current = [...data]
 
       if (lastOrder.current.field && lastOrder.current.order) {
-        setList(sortData(data, lastOrder.current.field, lastOrder.current.order))
+        setList(s => {
+          if (customSort) {
+            const r = customSort(s, lastOrder.current.field!, lastOrder.current.order!)
+            if (r) return r
+          }
+
+          return sortData(s, lastOrder.current.field!, lastOrder.current.order!)
+        })
       } else {
         setList(data)
       }
     },
-    [listLast]
+    [listLast, customSort]
   )
 
   const updateList = useCallback(setList, [])
 
-  const onSort = useCallback((columnKey: keyof T, order: 'asc' | 'desc' | undefined) => {
-    if (!order) {
-      lastOrder.current = { field: undefined, order: undefined }
-      setList([...initList.current])
-      return
-    }
+  const onSort = useCallback(
+    (columnKey: keyof T, order: 'asc' | 'desc' | undefined) => {
+      if (!order) {
+        lastOrder.current = { field: undefined, order: undefined }
+        setList([...initList.current])
+        return
+      }
 
-    lastOrder.current = { field: columnKey, order }
-    setList(s => {
-      return sortData(s, columnKey, order)
-    })
-  }, [])
+      lastOrder.current = { field: columnKey, order }
+      setList(s => {
+        if (customSort) {
+          const r = customSort(s, lastOrder.current.field!, lastOrder.current.order!)
+          if (r) return r
+        }
+
+        return sortData(s, lastOrder.current.field!, lastOrder.current.order!)
+      })
+    },
+    [customSort]
+  )
 
   const cleanSort = useCallback(() => {
     lastOrder.current = { field: undefined, order: undefined }
@@ -107,7 +130,7 @@ type SortTableType = {
 
 export type SortTableDataTransform<T extends SortTableType> = (
   src: T,
-  data: Parameters<StockSubscribeHandler<'quoteTopic'>>[0]
+  data: SubscribeQuoteType
 ) => T
 
 export const useTableSortDataWithWs = <T extends SortTableType>(
@@ -156,7 +179,7 @@ export const useTableSortDataWithWs = <T extends SortTableType>(
   useStockQuoteSubscribe(
     symbols,
     useCallback(
-      (e: QuoteBuffer) => {
+      (e: Record<string, SubscribeQuoteType>) => {
         if (!lastOrder.current.order || !lastOrder.current.field) return
         const field = lastOrder.current.field
 

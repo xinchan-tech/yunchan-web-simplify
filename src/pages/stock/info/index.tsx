@@ -50,12 +50,11 @@ import { nanoid } from 'nanoid'
 import { listify } from 'radash'
 import type { TableProps } from 'rc-table'
 import { memo, useCallback, useEffect, useMemo, useState } from 'react'
-import { useNavigate } from 'react-router'
 import { chartManage, stockBaseCodeInfoExtend, useSymbolQuery } from '../lib'
 
 const StockInfo = () => {
   return (
-    <div className="h-full flex flex-col overflow-hidden rounded-xs ml-1">
+    <div className="h-full flex flex-col overflow-hidden rounded-xs ml-1 min-w-[300px]">
       <div className="flex-1 flex flex-col overflow-hidden">
         <div className="bg-background rounded overflow-hidden flex-shrink-0 pb-1">
           <StockBaseInfo />
@@ -468,7 +467,7 @@ const StockNews = () => {
     const dateGroup: Record<string, typeof data> = {}
 
     data.forEach(item => {
-      const date = dateUtils.toUsDay(item.time).format('M-D w')
+      const date = dateUtils.toUsDay(item.time).format('YYYY-MM-DD')
 
       if (!dateGroup[date]) {
         dateGroup[date] = []
@@ -477,7 +476,7 @@ const StockNews = () => {
       dateGroup[date].push(item)
     })
 
-    return listify(dateGroup, (k, v) => ({ date: k, event: v }))
+    return listify(dateGroup, (k, v) => ({ date: k, event: v })).sort((a, b) => dayjs(b.date).valueOf() - dayjs(a.date).valueOf())
   }, [newList.data])
 
   const [expand, setExpand] = useState(false)
@@ -489,7 +488,29 @@ const StockNews = () => {
           <div className="bg-[#3d3152] flex w-full rounded-lg items-center px-2 py-1 box-border">
             <HoverCard openDelay={100}>
               <HoverCardTrigger>
-                <JknIcon.Svg name="message" className="mr-2 mt-0.5 text-[#A77FED]" size={14} />
+                <div className="flex-1 flex items-center">
+                  <JknIcon.Svg name="message" className="mr-2 mt-0.5 flex-shrink-0 text-[#A77FED]" size={14} />
+                  <Carousel
+                    plugins={[
+                      Autoplay({
+                        delay: 1000 * 5
+                      })
+                    ]}
+                    orientation="vertical"
+                  >
+                    <CarouselContent className="h-12">
+                      {newList.data?.event.map(item => (
+                        <div key={nanoid()} className="flex-grow-0 flex-shrink-0 basis-full flex items-center line-clamp-2">
+                          <span className="text-xs">
+                            {dateUtils.dateAgo(dayjs(item.time * 1000))}
+                            &nbsp; · 【美东】{item.title}
+                          </span>
+                        </div>
+                      ))}
+                    </CarouselContent>
+                  </Carousel>
+                </div>
+
               </HoverCardTrigger>
               <HoverCardContent
                 side="left"
@@ -515,7 +536,7 @@ const StockNews = () => {
                       >
                         <div>
                           <span className="">
-                            {item.date}&nbsp;&nbsp;
+                            {dayjs(item.date).format('M-D w')}&nbsp;&nbsp;
                             <JknIcon name="ic_us" className="size-3" />
                             &nbsp;美东时间
                           </span>
@@ -547,24 +568,6 @@ const StockNews = () => {
                 </div>
               </HoverCardContent>
             </HoverCard>
-            <div className="flex-1">
-              <Carousel
-                plugins={[
-                  Autoplay({
-                    delay: 1000 * 5
-                  })
-                ]}
-                orientation="vertical"
-              >
-                <CarouselContent className="h-12">
-                  {newList.data?.event.map(item => (
-                    <div key={nanoid()} className="flex-grow-0 flex-shrink-0 basis-full flex items-center">
-                      {<span className="text-xs">{item.title}</span>}
-                    </div>
-                  ))}
-                </CarouselContent>
-              </Carousel>
-            </div>
             <JknIcon.Svg name="arrow-right" size={8} />
           </div>
         </div>
@@ -610,7 +613,7 @@ const StockRelated = () => {
     }
   }, [relates.data?.plates])
 
-  const [list, { setList, onSort }] = useTableData<TableDataType>([], 'symbol')
+  const [list, { setList, onSort }] = useTableData<TableDataType>([])
 
   useEffect(() => {
     if (!relates.data) {
@@ -787,7 +790,7 @@ const StockRelated = () => {
 const GoldenStockPool = () => {
   const [type, setType] = useState('-1')
   const { token } = useToken()
-  const [list, { setList, onSort }] = useTableData<ReturnType<typeof stockUtils.toStockWithExt>>([], 'symbol')
+  const [list, { setList, onSort }] = useTableData<ReturnType<typeof stockUtils.toStockWithExt>>([])
 
   const query = useQuery({
     queryKey: [getStockCollects.cacheKey, type],

@@ -1,14 +1,14 @@
 import type { getStockIndicators } from '@/api'
 import { HoverCard, HoverCardContent, HoverCardTrigger, JknIcon } from '@/components'
 import { useCallback } from 'react'
-import { chartManage, useChartManage } from '../lib/store'
+import { chartManage, useKChart } from '../lib/store'
 import { SearchList } from './search-list'
 
 interface MainIndicatorProps {
   data?: Awaited<ReturnType<typeof getStockIndicators>>
 }
 export const MainIndicator = (props: MainIndicatorProps) => {
-  const system = useChartManage(s => s.getActiveChart().system)
+  const system = useKChart(s => s.getActiveChart().system)
   const _setMainSystem = useCallback((system: string) => {
     chartManage.setSystem(system)
   }, [])

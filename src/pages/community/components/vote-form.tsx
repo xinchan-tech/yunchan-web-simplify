@@ -211,7 +211,7 @@ export const VoteForm = ({ id, channel, onSubmit, onClose }: VoteFormProps) => {
                     <FormControl>
                       <ToggleGroup
                         hoverColor="#2E2E2E"
-                        activeColor="#2E2E2E"
+                        // activeColor="#2E2E2E"
                         variant="ghost"
                         value={field.value.toString()} onValueChange={v => field.onChange(+v)} type="single" className="flex items-center space-x-4 flex-1 justify-end">
                         <ToggleGroupItem value="1" className="w-24 h-10 rounded-md">
