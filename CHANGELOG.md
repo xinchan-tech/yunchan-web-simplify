@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.7.13](https://github.com/xinchan-gx/yunchan-web/compare/2.7.12...2.7.13) (2025-05-07)
+
+### ✨ Features | 新功能
+
+* 在 GroupChannelCard 成功更换群聊后添加页面重载；移除 ChatInputTool 中的投票输入组件；更新 utils 中的时间间隔判断逻辑 ([f848a8e](https://github.com/xinchan-gx/yunchan-web/commit/f848a8e91e356e4895d0b8147df30515ce99056a))
+
 ## [2.7.12](https://github.com/xinchan-gx/yunchan-web/compare/2.7.11...2.7.12) (2025-05-07)
 
 ### ✨ Features | 新功能
