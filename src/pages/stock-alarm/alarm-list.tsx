@@ -302,7 +302,7 @@ const AlarmItem = ({ symbol, data, index, onDelete }: AlarmItemProps) => {
           <div className="text-tertiary text-xs text-left mt-2.5">
             <span>
               添加时间&nbsp;
-              {dateUtils.toUsDay(data.expire_time).format('MM/DD w HH:mm')}
+              {dateUtils.toUsDay(data.create_time).format('MM/DD w HH:mm')}
             </span>
             &emsp;
             {data.type !== AlarmType.PERCENT ? (
