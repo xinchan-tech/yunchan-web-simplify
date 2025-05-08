@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.7.15](https://github.com/xinchan-tech/yunchan-web/compare/2.7.14...2.7.15) (2025-05-08)
+
+### 🐛 Bug Fixes | Bug 修复
+
+* 修复 LargeCapChart 中时间戳处理逻辑，确保正确比较蜡烛图间隔 ([3828060](https://github.com/xinchan-tech/yunchan-web/commit/38280603e0cb14c94483fbb1b6db7e2e45af559e))
+
 ## [2.7.14](https://github.com/xinchan-tech/yunchan-web/compare/2.7.13...2.7.14) (2025-05-07)
 
 ### ✨ Features | 新功能
