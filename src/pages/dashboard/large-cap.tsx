@@ -433,10 +433,10 @@ const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
     const unSubscribe = stockSubscribe.onQuoteTopic(code, data => {
       const c = chart.current?.getChart()
       const lastData = c?.getDataList()?.slice(-1)[0]
-
+     
       if (!lastData) return
 
-      if (!chart.current?.isSameIntervalCandlestick({ timestamp: data.record.time }, StockChartInterval.ONE_MIN)) return
+      if (!chart.current?.isSameIntervalCandlestick({ timestamp: data.record.time * 1000 }, StockChartInterval.ONE_MIN)) return
 
       chart.current?.appendCandlestick(
         {
