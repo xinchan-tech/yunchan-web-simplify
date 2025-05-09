@@ -121,7 +121,7 @@ const AiConfig = ({ list, row }: { list: TableDataType[]; row: TableDataType }) 
     // }, [type])
 
     useEffect(() => {
-        if (row.price) {
+        if (row?.price) {
             form.setValue('price', row.price)
         }
         setStock(row)
@@ -230,7 +230,7 @@ const AiConfig = ({ list, row }: { list: TableDataType[]; row: TableDataType }) 
     }
 
     return (
-        <div className="border-[1px] border-solid border-[#3c3c3c] rounded-md p-6 flex-1">
+        <div className="bg-[#1A191B] rounded-[2rem] p-6 flex-1">
             <div className="text-2xl font-bold">AI交易配置</div>
             <FormProvider {...form}>
                 <div className="w-[32rem] mt-5 ">

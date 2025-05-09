@@ -6,7 +6,9 @@ import { useCheckboxGroup, useTableData, useTableRowClickToStockTrading } from '
 import { useMemo, useState, useEffect } from 'react'
 import Decimal from 'decimal.js'
 import { stockUtils } from '@/utils/stock'
-import dayjs from 'dayjs'
+import { numToDay } from '@/utils/date'
+import { getColor } from '../const'
+import { cn } from '@/utils/style'
 
 type TableDataType = {
   cost?: number;
@@ -90,7 +92,6 @@ const InvestList = () => {
       })
     }
     setList(r)
-    console.log('r', r)
     setTotal(r.length)
   }, [query.data, setList])
 
@@ -164,7 +165,7 @@ const InvestList = () => {
         align: 'left',
         width: '13.5%',
         sort: true,
-        render: (_: any, row) => Decimal.create(row.profit_loss).toShortCN(3)
+        render: (_: any, row) => <span className={getColor(row.profit_lo)}>{Decimal.create(row.profit_loss).toShortCN(3)}</span> 
       },
       {
         title: '回报率',
@@ -173,7 +174,7 @@ const InvestList = () => {
         width: '13.5%',
         sort: true,
         render: (_, row) => (
-          <span className='text-stock-up'>{row.return_rate ?? '--'}</span>
+          <span className={cn('text-stock-up', getColor(row.return_rate))}>{row.return_rate ?? '--'}</span>
         )
       },
       {
@@ -190,7 +191,7 @@ const InvestList = () => {
         align: 'center',
         width: '13.5%',
         sort: true,
-        render: (_: any, row) => <span className="text-[#808080]">{row.profit_loss_today}</span>
+        render: (_: any, row) => <span className={cn('text-[#808080]', getColor(row.return_rate))}>{row.profit_loss_today}</span>
       },
       {
         title: '当日盈比例',
@@ -198,7 +199,7 @@ const InvestList = () => {
         width: '13.5%',
         align: 'center',
         sort: true,
-        render: (_: any, row) => <span className="text-[#808080]">{row.profit_loss_rate_today}</span>
+        render: (_: any, row) => <span className={cn('text-[#808080]', getColor(row.return_rate))}>{row.profit_loss_rate_today}</span>
       },
       {
         title: '持仓时间',
@@ -206,19 +207,19 @@ const InvestList = () => {
         width: '13.5%',
         align: 'center',
         sort: true,
-        render: (_: any, row) => <span className="">{row.position_time ? dayjs(row.position_time * 1000).format('YYYY-MM-DD') : '--'}</span>
+        render: (_: any, row) => <span className="">{row.position_time ? numToDay(row.position_time) : '--'}</span>
       },
     ],
     []
   )
 
-  return <div className="border-[1px] border-solid border-[#3c3c3c] rounded-md pt-6 px-[2px] box-border w-full">
+  return <div className="bg-[#1A191B] rounded-[2rem] pt-6 px-[2px] box-border w-full">
     <div className="flex justify-between items-center px-6 box-border">
       <div className="border-[1px] border-solid border-[#3c3c3c] rounded-lg w-[10rem] p-1.5 box-border text-[#B8B8B8] text-base">投资组合股票 {total}只</div>
       <StockSelectCache allowClear placeholder="查询" className='rounded-lg' width="18.75rem" onChange={v => setKeyWord(v)} />
     </div>
 
-    <div className="overflow-auto h-full mt-5">
+    <div className="overflow-auto h-full mt-5 border-0 border-t-[1px] border-solid border-[#2E2E2E] mx-[1.5rem]">
       <JknRcTable
         headerHeight={61}
         onSort={onSort}

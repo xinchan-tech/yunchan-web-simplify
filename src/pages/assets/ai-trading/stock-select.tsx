@@ -7,6 +7,8 @@ type TableDataType = ReturnType<typeof stockUtils.toStockWithExt>
 import { cn } from '@/utils/style'
 import { useEffect, useState } from 'react';
 import { useBoolean } from 'ahooks'
+import { getColor } from '../const'
+
 
 type stockType = {
     image?: string;
@@ -106,7 +108,7 @@ const StockSelect = ({ list, row, width = "32rem", onChange, classNmae }: {onCha
                     initValue={row.percent}
                     initDirection={row.isUp}
                     nanText="--"
-                    className='ml-2.5 min-w-[4rem] inline-block text-right'
+                    className={cn('ml-2.5 min-w-[4rem] inline-block text-right', getColor(row.percent))}
                 />
                 {
                     showIcon ? <JknIcon.Svg name="arrow-down" size={12} className='ml-2.5' /> : null

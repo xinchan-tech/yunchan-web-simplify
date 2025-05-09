@@ -12,6 +12,7 @@ import { type Stock, stockUtils } from '@/utils/stock'
 import { useEffect, useState, useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { cn } from '@/utils/style'
+import { getColor } from '../const'
 type TableDataType = ReturnType<typeof stockUtils.toStockWithExt>
 const baseExtends: StockExtend[] = ['total_share', 'basic_index', 'day_basic', 'alarm_ai', 'alarm_all', 'financials']
 
@@ -62,7 +63,6 @@ const Securitygroup = ({ onUpdate, className, ...props }: { className?: string, 
             const thumbs = lastStock?.thumbs ?? []
 
             const subStock: Stock | null = ['afterHours', 'close'].includes(trading) ? afterStock : beforeStock
-            console.log('subStock', stock, subStock)
 
             return {
                 ...lastStock,
@@ -71,14 +71,14 @@ const Securitygroup = ({ onUpdate, className, ...props }: { className?: string, 
                 code: stock.symbol,
                 thumbs,
                 price: lastStock?.close,
-                percent: subStock ? stockUtils.getPercent(lastStock) : undefined,
+                percent: lastStock ? stockUtils.getPercent(lastStock) : undefined,
                 subPrice: subStock?.close,
                 subPercent: subStock ? stockUtils.getPercent(subStock) : undefined
             }
         })
         setList(r)
+        setActive(r[0].code)
         onUpdate?.(r[0], r)
-        console.log(r)
     }, [query.data, setList])
 
 
@@ -128,6 +128,7 @@ const Securitygroup = ({ onUpdate, className, ...props }: { className?: string, 
                         decimal={2}
                         initValue={row.percent}
                         initDirection={row.isUp}
+                        className={getColor(row.percent)}
                         nanText="--"
                     />
                 )
@@ -139,13 +140,18 @@ const Securitygroup = ({ onUpdate, className, ...props }: { className?: string, 
     const onRowClick = (row: TableDataType) => {
         return {
             onClick: () => {
+                setActive(row.code)
                 onUpdate?.(row, data)
             }
         }
     }
 
+    const onRowClickName = (row: TableDataType) => {
+        return row.code === active ? 'active_row' : ''
+    }
 
-    return <div className={cn("border-[1px] border-[#3c3c3c] border-solid px-0.5 py-6 rounded-md w-[28.25rem]", className)}>
+
+    return <div className={cn("px-0.5 py-6 bg-[#1A191B] rounded-[2rem] w-[28.25rem]", className)}>
         <div className="text-2xl flex flex-col ml-6 mt-2.5">
             <span>证券投资组合</span>
             <span className="text-sm">概述您的多元化股票投资组合。</span>
@@ -159,8 +165,17 @@ const Securitygroup = ({ onUpdate, className, ...props }: { className?: string, 
                 data={data}
                 onSort={onSort}
                 onRow={(row) => onRowClick(row)}
+                rowClassName={row => onRowClickName(row)}
             />
+
         </div>
+        <style jsx>{`
+        {  
+            .active_row {
+                background-color: #302F34;
+            }
+        }
+        `}</style>
     </div>
 }
 

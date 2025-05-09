@@ -7,12 +7,13 @@ import DialogAssets from './dialog'
 import { getAccountInfo } from '@/api'
 import { useEffect, useState } from 'react'
 import { useAssetsInfoStore } from '@/store/chat'
+import { getColor } from '../const'
 
 interface InfoType {
     avatar?: string;//头像
     balance?: number;//可用余额
     id?: number;
-    invest?: number;// 投资组合
+    invest?: object;// 投资组合
     nickname?: string;   // 昵称
     return_rate?: number;  // 回报率
     today_invest?: number; // 当日回报
@@ -32,66 +33,68 @@ const AssetsInfo = () => {
         queryFn: () => getAccountInfo(),
         // refetchInterval: 30 * 1000,
     })
-
-    useEffect(() => {
-        console.log('query.data', getAccountInfo.cacheKey)
-    }, [])
+    console.log('query', query)
 
     useEffect(() => {
         const { data } = query
         if (data) {
-            setInfo(query.data || {})
-            useAssetsInfoStore?.getState()?.setData(data)
+            const reslut: InfoType = { ...data, ...(data?.invest || {}) }
+            setInfo(reslut || {})
+
+            useAssetsInfoStore?.getState()?.setData(reslut)
         }
-    }, [query])
+    }, [query.data])
 
     const infoData = [
         {
             title: '可用金额',
             num: 'balance',
             percent: ({ balance = 0, total_asset = 0 }: InfoType) =>
-                `比例 ${total_asset ? Number(balance) / Number(total_asset) * 100 : 0}%`,
+                `比例 ${total_asset ? (Number(balance) / Number(total_asset) * 100).toFixed(2) : 0}%`,
             rate: ''
         },
         {
             title: '投资组合',
-            num: 'invest',
-            percent: ({ return_rate }: InfoType) => `回报率 ${return_rate}%`,
-            rate: ({ today_profit }: InfoType) => `$${today_profit}`
+            num: 'market_cap',
+            percent: ({ return_rate = 0 }: InfoType) => <>回报率 <span className={getColor(return_rate)}>${return_rate}%</span> </>,
+            color: ({ return_rate = 0 }: InfoType) => getColor(return_rate),
+            rate: ({ profit_loss = 0 }: InfoType) => `$${profit_loss}`
         },
         {
             title: '当日回报',
-            num: 'today_invest',
-            percent: ({ today_return_rate }: InfoType) => `回报率 ${today_return_rate}%`,
+            num: 'profit_loss_today',
+            percent: ({ return_rate_today = 0 }: InfoType) => <>回报率 <span className={getColor(return_rate_today)}>{return_rate_today}%</span></>,
+            color: ({ return_rate_today = 0 }: InfoType) => getColor(return_rate_today),
             rate: ''
         },
     ]
 
-    return <div className="h-[11.25rem] border-[1px] border-solid box-border border-[#3D3D3D] rounded-[10px] py-[2.5rem] px-[1.5rem] w-full flex item-center">
+    return <div className="h-[11.25rem] box-border py-[2.5rem] px-[1.5rem] w-full flex item-center bg-[#1A191B] rounded-[2rem]">
         <div className="flex item-center flex-col justify-center">
             <img src={photo} alt="" className='w-[4rem] h-[4rem] object-contain' />
             <span className='max-w-[5rem] block leading-7 whitespace-nowrap text-ellipsis overflow-hidden'>{info.nickname}</span>
         </div>
         <div className='ml-[2.5rem]'>
             <DialogAssets type='deposit' refreshInfo={() => query.refetch()} >
-                <div className='px-[10px] py-[12px] box-border flex items-center justify-center bg-[#2962ff] rounded-[6px] w-[7.25rem] text-center font-sm cursor-pointer'>
+                <div className='px-[10px] py-[12px] box-border flex items-center justify-center bg-[#441ABC] rounded-[300px] w-[7.25rem] text-center font-sm cursor-pointer'>
                     <JknIcon.Svg name="assets-add" size={24} />
                     <span className='ml-1'>存款</span>
                 </div>
             </DialogAssets>
             <DialogAssets type='retreat' refreshInfo={() => query.refetch()} >
-                <div className='px-[10px] py-[12px] box-border flex items-center justify-center bg-[#2e2e2e] rounded-[6px] w-[7.25rem] text-center font-sm cursor-pointer mt-[10px] ' >
+                <div className='px-[10px] py-[12px] box-border flex items-center justify-center bg-[#2e2e2e] rounded-[300px] w-[7.25rem] text-center font-sm cursor-pointer mt-[10px] ' >
                     <JknIcon.Svg name="assets-retreat" size={24} />
                     <span className='ml-1'>撤退</span>
                 </div>
             </DialogAssets>
         </div>
-        <div className='border-[1px] border-solid box-border border-[#3D3D3D] mx-[2.5rem]'></div>
+        <div className='w-[1px] bg-[#3D3D3D] mx-[2.5rem]'></div>
 
         <div className='flex items-center justify-between text-[#808080] flex-1'>
             <div className='flex flex-col   text-left'>
-                <div className='text-[#808080] text-xl font-semibold'>
-                    总资产
+                <div className='text-[#84838F] text-xl font-semibold flex items-center'>
+                    <JknIcon.Svg name="total-assets" size={22} />
+                    <span className='ml-[4px]'>总资产</span>
                 </div>
                 <div className='mt-[1.25rem] text-left text-[#dbdbdb] text-3xl font-semibold'>
                     ${info.total_asset || 0}
@@ -100,15 +103,15 @@ const AssetsInfo = () => {
             {
                 infoData.map((item, index) => {
                     return <div key={`${index}_itemi`} className='flex overflow-hidden flex-col justify-center text-left min-w-[11.25rem] ml-[10px]'>
-                        <div className=' text-xl font-semibold'>
+                        <div className=' text-xl font-base'>
                             {item.title}
                         </div>
-                        <div className='mt-[0.625rem] text-left text-[#dbdbdb] text-[1.75rem] font-semibold'>
+                        <div className='mt-[0.625rem] text-left text-[#dbdbdb] text-[1.75rem]'>
                             ${info[item.num] || 0}
                         </div>
                         <div className='mt-[0.625rem]  text-base flex'>
                             <span>{typeof item.percent == 'function' ? item.percent(info) : info[item.percent]} </span>
-                            <span className='ml-1.5'>{typeof item.rate == 'function' ? item.rate(info) : info[item.rate]} </span>
+                            <span className={cn('ml-1.5', typeof item.color == 'function' && item.color(item))}>{typeof item.rate == 'function' ? item.rate(info) : info[item.rate]} </span>
                         </div>
                     </div>
                 })

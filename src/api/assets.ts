@@ -127,3 +127,9 @@ export const getInvestStocks = ({ params }: { params: Record<string, any> }) => 
 }
 
 getInvestStocks.cacheKey = 'assets:invest:stocks'
+
+export const getStockChartKline = ( params ) => {
+    return request.get('/chart/kline', { params })
+}
+
+getStockChartKline.key = 'assets:stock:chart:kline'
