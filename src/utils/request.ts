@@ -1,7 +1,8 @@
 import { useConfig, useToken } from '@/store'
 import axios from 'axios'
+import { sysConfig } from './config'
 import { appEvent } from './event'
-import { sysConfig } from "./config"
+import { JknAlert } from "@/components"
 
 const request = axios.create()
 request.defaults.baseURL = sysConfig.PUBLIC_BASE_API_URL

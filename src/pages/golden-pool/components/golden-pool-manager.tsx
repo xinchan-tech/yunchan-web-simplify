@@ -1,40 +1,40 @@
-import type React from 'react'
 import {
-  useState,
-  useEffect,
-  type MouseEventHandler,
-  type FC,
-  type ReactNode,
-  memo,
-  PropsWithChildren,
-  useRef
-} from 'react'
-import { useQueryClient } from '@tanstack/react-query'
+  addStockCollectCate,
+  getStockCollectCates,
+  removeStockCollectCate,
+  sortStockCollectCate,
+  updateStockCollectCate
+} from '@/api'
 import {
   Button,
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogTrigger,
   Input,
   JknAlert,
   JknIcon,
-  JknRcTable,
-  type JknRcTableProps,
-  Dialog,
-  DialogContent,
-  DialogClose,
-  DialogTrigger,
+  TcRcTable,
+  type TcRcTableProps,
   useModal
 } from '@/components'
 import { useOptimisticUpdate, useToast } from '@/hooks'
-import {
-  getStockCollectCates,
-  removeStockCollectCate,
-  updateStockCollectCate,
-  addStockCollectCate,
-  sortStockCollectCate
-} from '@/api'
+import { useAuthorized } from '@/hooks'
+import { useQueryClient } from '@tanstack/react-query'
 import { useQuery } from '@tanstack/react-query'
 import to from 'await-to-js'
 import dayjs from 'dayjs'
-import { useAuthorized } from '@/hooks'
+import type React from 'react'
+import {
+  type FC,
+  type MouseEventHandler,
+  PropsWithChildren,
+  type ReactNode,
+  memo,
+  useEffect,
+  useRef,
+  useState
+} from 'react'
 
 /**
  * 金池管理器组件
@@ -72,7 +72,7 @@ const GoldenPoolTable = () => {
     queryFn: () => getStockCollectCates()
   })
 
-  const columns: JknRcTableProps['columns'] = [
+  const columns: TcRcTableProps['columns'] = [
     { title: '名称', dataIndex: 'name', align: 'left', width: '30%' },
     { title: '股票数量', dataIndex: 'total', align: 'left', width: '20%' },
     {
@@ -171,7 +171,7 @@ const GoldenPoolTable = () => {
   return (
     <div className="w-full overflow-hidden">
       <div className="h-[391px] w-full overflow-hidden pool-manager">
-        <JknRcTable className="px-8" columns={columns} data={cates.data} isLoading={cates.isLoading} />
+        <TcRcTable className="px-8" columns={columns} data={cates.data} isLoading={cates.isLoading} />
       </div>
       <div className="flex justify-end text-center mr-8 mb-5">
         <GoldenPoolNameEdit onUpdate={cates.refetch}>

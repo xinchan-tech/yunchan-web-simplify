@@ -1,6 +1,6 @@
 import { getAlarmTypes } from '@/api'
 import { ScrollArea, ToggleGroup, ToggleGroupItem } from '@/components'
-import { JknIcon } from '@/components/jkn/jkn-icon'
+import { JknIcon } from '@/components/tc/jkn-icon'
 import { useQuery } from '@tanstack/react-query'
 import { forwardRef } from 'react'
 

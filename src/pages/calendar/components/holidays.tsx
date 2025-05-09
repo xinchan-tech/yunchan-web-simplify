@@ -1,5 +1,5 @@
 import { getStockHoliday } from '@/api'
-import { CapsuleTabs, JknDatePicker, JknRcTable, type JknRcTableProps } from '@/components'
+import { CapsuleTabs, JknDatePicker, TcRcTable, type TcRcTableProps } from '@/components'
 import { useTime } from '@/store'
 import { useQuery } from '@tanstack/react-query'
 import dayjs from 'dayjs'
@@ -37,7 +37,7 @@ const Holidays = () => {
     [getCurrentUsTime]
   )
 
-  const columns = useMemo<JknRcTableProps<TableDataType>['columns']>(
+  const columns = useMemo<TcRcTableProps<TableDataType>['columns']>(
     () => [
       {
         title: '交易所',
@@ -99,7 +99,7 @@ const Holidays = () => {
         </CapsuleTabs>
       </div>
       <div className="w-[960px] mx-auto flex-1 overflow-hidden">
-        <JknRcTable columns={columns} data={query.data ?? []} />
+        <TcRcTable columns={columns} data={query.data ?? []} />
       </div>
     </div>
   )

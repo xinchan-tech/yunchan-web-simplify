@@ -80,3 +80,11 @@ export const stringToUint8Array = (str: string): Uint8Array => {
   const tmpUint8Array = new Uint8Array(arr)
   return tmpUint8Array
 }
+
+export const parseNumber = (str: string, defaultNumber: number): number => {
+  if (str === undefined || str === null || str === '') {
+    return defaultNumber
+  }
+  const num = Number(str)
+  return Number.isNaN(num) ? defaultNumber : num
+}

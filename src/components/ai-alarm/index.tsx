@@ -2,7 +2,7 @@ import { cn } from '@/utils/style'
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden'
 import { useBoolean } from 'ahooks'
 import { type PropsWithChildren, useEffect } from 'react'
-import { JknIcon } from '../jkn/jkn-icon'
+import { JknIcon } from '../tc/jkn-icon'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '../ui/dialog'
 import PriceAlarmForm from './price-alarm-form'
 
@@ -30,7 +30,7 @@ export const StockAlarm = (props: PropsWithChildren<AiAlarmProps>) => {
       </div>
       {visible ? (
         <Dialog open={open} onOpenChange={v => !v && setFalse()} modal={true}>
-          <DialogContent className="w-[600px] overflow-hidden" onOpenAutoFocus={(e) => e.preventDefault()}>
+          <DialogContent className="w-[600px] overflow-hidden" onOpenAutoFocus={e => e.preventDefault()}>
             <DialogHeader>
               <DialogTitle asChild>
                 <div className="px-4 flex items-center">

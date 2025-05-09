@@ -4157,7 +4157,6 @@ function checkCoordinateOnLine(coordinate, attrs) {
     var e_1, _a;
     var lines = [];
     lines = lines.concat(attrs);
-    console.log(12322);
     try {
         for (var lines_1 = __values(lines), lines_1_1 = lines_1.next(); !lines_1_1.done; lines_1_1 = lines_1.next()) {
             var line_1 = lines_1_1.value;
@@ -5263,14 +5262,6 @@ var StoreImp = /** @class */ (function () {
          */
         this._zoomEnabled = true;
         /**
-         * Zoom scale factor
-         */
-        this._zoomScale = 1;
-        /**
-         *
-         */
-        this._coordinate = null;
-        /**
          * Scroll enabled flag
          */
         this._scrollEnabled = true;
@@ -5286,6 +5277,10 @@ var StoreImp = /** @class */ (function () {
          * Distance from the last data to the right of the drawing area
          */
         this._offsetRightDistance = DEFAULT_OFFSET_RIGHT_DISTANCE;
+        /**
+         * The number of bar to the right of the drawing area from the last data when scrolling starts
+         */
+        this._lastBarSpace = DEFAULT_BAR_SPACE;
         /**
          * The number of bar to the right of the drawing area from the last data when scrolling starts
          */
@@ -5887,8 +5882,6 @@ var StoreImp = /** @class */ (function () {
         this.setBarSpace(barSpace, function () {
             _this._lastBarRightSideDiffBarCount += (floatIndex - _this.coordinateToFloatIndex(x));
         });
-        this._zoomScale = scale;
-        this._coordinate = coordinate !== null && coordinate !== void 0 ? coordinate : null;
         var realScale = this._barSpace / prevBarSpace;
         if (realScale !== 1) {
             this.executeAction(ActionType.OnZoom, { scale: realScale });
@@ -6473,9 +6466,9 @@ var StoreImp = /** @class */ (function () {
         return this._chart;
     };
     StoreImp.prototype.setXAxisTick = function (tick) {
-        var _a;
         this._fixedXAxisTick = tick;
         if (this.isFixedXAxisTick()) {
+            this._lastBarSpace = this._barSpace;
             this._barSpace = this._totalBarSpace / this._fixedXAxisTick;
             this._offsetRightDistance = (this._fixedXAxisTick - this._dataList.length) * this._barSpace;
             this.setOffsetRightDistance(this._offsetRightDistance);
@@ -6483,7 +6476,8 @@ var StoreImp = /** @class */ (function () {
             this.setCrosshair(this._crosshair, { notInvalidate: true });
         }
         else {
-            this.zoom(this._zoomScale, (_a = this._coordinate) !== null && _a !== void 0 ? _a : undefined);
+            this.setBarSpace(this._lastBarSpace);
+            this.setOffsetRightDistance(DEFAULT_OFFSET_RIGHT_DISTANCE);
         }
     };
     return StoreImp;
@@ -8293,9 +8287,9 @@ var CrosshairLineView = /** @class */ (function (_super) {
     return CrosshairLineView;
 }(View));
 
-var deleteIcon = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACQAAAAkCAYAAADhAJiYAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAFeSURBVHgB7ZbfbYMwEMbPKAN0BLpBu0Gf+LdE0wkSJggblI6QDfqCgKcyQjdIRugCQL+TWikiVjkbWSWSf5K55DD25/NhjsjjWYYiQ9q2fYYpx3G8E3TPkyQpyYCADIGQQiiGlFIHMmRD5oR8wcr/jG7TNKNU+CXGEXKNdpXIk1eYrc0KxRMrVcZxnE/9gUbMAUL2LsUwPEdd18XUv9F03LINguAxiqJPcgCEPCFCH5hjh7/F5T1dDoV8cSWGSdO0Y6vbhdUl9ZUghPKLLYeVHFFV1cPPz/P03lUODcPwxgca7zHOEnIJtuw49Wlfewjh435HjuBd6Pv+mGXZnkzhE5cbLUQ6zvqT+r+xFoTwn7hJ/VJsvva/hIZ+ET6H5vCC5lidoCVv2dnQL8JaEIr8exO/lNvNIdRHIVli8qxkyzo0roFPS+sjjPE+12c2QiiiXmBmBxLQofjLyeNxzDfq4IWzWwL7OAAAAABJRU5ErkJggg==';
-var eyeIcon = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACQAAAAkCAYAAADhAJiYAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAM2SURBVHgB7VdLctpAEB2pUv6tfIPgG8AJAhv/NoETxD6ByQlMThBzApMTyNnw2wAnMDmBlRt4xWcB5D3R41LGmhkZUlm4eFWURqNR91P3m+5BqR12eGcI1H9Gp9MpBEEw4Pj8/PzEfP5BbQAYLcPoZwx5LaxWq2POY/yM8RjD8XK5HF1eXj5YyBTwi7Ns545QFEXHR0dHNxjWNYEciPFrIhJ3JhnYqFxcXMQbEer3+zcw0EgRGWI84pXGtWGSPjg4KKp15L5wjo4TRznIeAnRweHhYUQHKSLfYGyockAIHqfIKCFjfd9KKB1iamOxWFybmvDBSJOGM0Jh1iRSVAzD8FEMUaClLcnEkjoKPpmnj1yEuBAvD6gX/H5Mp1Pr17yFDNMEcZdok/P0kUUqsBniizBypfzOKeAiohgzinl2E9a0RPSvnr8QEgEnacLih7Ozs5qLCL8OJCL1d0py76ZerxfheZXrkIVSrVZ75vxLykDmuzY0mUyulTsqScgdZLibrl2p3tvbo49EU6hv93o+FLa3uFxp45qtDXB8n9JYySQj97cuG5VKhVW9JtW92u1268l7kvOn1Fe1XIZS65NQG3Umxu6spTbFiW9DIBhVrItIjLs51I0OaPnICApKImmS4dzp6elY+ple6wS0ynLS5Acw8kzZT3lWprCVH28WsAvik42aGRqF+/v7DbVughTXrc+Admojw5QqaTWz2Wzssyc+Ezuw0QhFXBURV12LywazHUi9iuVZWUuAPc+3OaRp12X9Our6YbvdrkOQ3PoK1xK14CPjAKtyxUOGdexRbr/yiJL41gtQZTnRFLYDCb2NDNN0wl2p1rVEIxbjTjK0JUU1iaQmQwQZi1+V9byHqzzwtafM4wd0pF/4Z7uJSDdu3I7ZbM01mccPhjyjAm9L5oaa0RU+iwxhPeSbJz1lOZT7ICm6B5ky73FtQq/WnRw4jJj/DgpybUnuh8pNRJ+rrxJHOU+dNg09KaOTAw19cBfEuOdp8leaNOY+4ldN/zNhVObzecNXl3yElKkZKQUk9kl5apE0yyaq9V0eIk5CeSA7hvWkyKhwDve/1Tpaw03Fv8MO2+IP0teMV99KlJoAAAAASUVORK5CYII=';
-var eyeCloseIcon = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACQAAAAkCAYAAADhAJiYAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAMlSURBVHgB7VdJctpAFG3JVS4PG3ID+QTGJ4i08rCJOUHiEwSfwHAC8AlMTgDZMG1QTgA5QcgJwoZpAeQ9/EU1KqFu4Y3LxatSqSV1/37/95+k1AEHfDA4ag/U6/XcycnJveM4l7i81WqV0z4P8Pwb9/D29naoMiIToVar5YPAE4a+5ZIQ5H6AWM1yvh2hOBGMR9hogOFPjIfL5XK0Eeg4eVyf8f1eEzHEc2BjMSOhTqdTgbBiRASbP89ms2qhUBipdCU8KiCKeLK+dH19XVb7EKKfnJ6e1pVYhUTm83nJRCSOXq+XgwJFIUbwGB92WSuRELWDgJ561WwoAkL1BnS73TyUqmsyE4/QsSAT7BMtSbCRvUVIjqkvCwbT6TQwHRHXnJ+fe4vFgkczsPEtkKKl8iSFPa70Na4++ezs7EVjX0gTTiLtdvsFCvzDUfSpOcd8Jw6dCFqEsrkH9xI/3WBjIUTTEyaWlMUxxUxPMAWQvC/PmWTgXkX0PfL92kLNZvNeyCjXdQsmn9FCmVn54ubm5gpXwLGQ8yCnkiZDLPXAMdMKc91ats4UH8qYWEoTJPP/iKCLOHl+B5k+ywn845PJp2CMIskzx00mkwtX0zY0kRF4ck+sVaL5+j3qXd4gS93d3VXVa27K0YdJKKf2gGFdpuQZAaRG7vHx8QPNhWcfEVI0LYLWAxl6SdEUlQx5HCoDGEwyn5Ytu0EQsD4V5Hslcq5d4Hwo0KCJmU90UlqOIWqm4GD2joIJHB45fxP2sA7P8rvaL+xDXDzCyGcyydCDaStTgxQn+LYCcStB6NfYpxqi6zEtumI5qIEcFJ3QNiFWZlT0TelgRjWZXbrH/NHR0Wg8Hg9tSg2yM8kklo53V1zd+CLJI4GSWkMBdD71djK+jaJOigCSYbH11xPR7SGTPmdt0HhESHhPUdcJhDimnYXb2MKCWEnr9ta5Qln8UQgRRm0x+ith14nMnJrrbJv8eJgryUW/pNlfgxujLnHOFzb72u9RKKEdmvbK+hv0TcLct1xiTWQvQhGi8oDN8rDI5UYYShA6x7+4D9A9NrL62wEHfEj8BzEdMkGDYLeWAAAAAElFTkSuQmCC';
+var deleteIcon = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEgAAABICAYAAABV7bNHAAAAAXNSR0IArs4c6QAAAz1JREFUeF7tW9GR2jAQ1Y5dAOkAz1g2/F06CBXkUkFCBTdXQUgF4SpIroIjFUAHyR+DZUZ0EAoQVlByuYGbi1dGEtiZ9a+k9e7T29VKWgGjrxYBIHzqESCAEIYQQASQWxAhBhGDiEFuCLSBQavV6hoAPgNA34c1ALDZ7Xa3eZ7PfMirkxE8Bkkp+0opGciQEed8EUj2b7HBASrL8kFrfR3IiAXnfBRI9nkAEkL8ZIz1Ahmx5Zy/CiT7bADpQwM4506sFUJ4lYeB66QsJty0+zbItzzMBgLo0su87xn3Lc8bg6SUPaXUjdb6g698BlMuQPsPxthsHwc/2cq2cjGTy+x2u7nW2kuiZ6tcqH4m0YyiaJQkyQb7hxVAQog5Y+wNJqxj7VY5FApQURTGpb50zHhbddFMHAXohUx4EcfxuyRJtrZatKHfcrnsx3FsJvrJE6qq+pbneW2WjwL0PBPWWr/OsswEu859QggDjgkXf7JkgE2apkmdITYAnTVzDY160zSBAEK2PgQQAXTstN5drCgK+SxzRpfG0HHkVPlSyiul1PeD8ehxCepi/1jmxzZZ6KmGhBj3uFV6CLHMHy2NIZS/lEyt9TjLsq9Oy7wZTFsNZApNFhpF0bzDu/gjC/cnEuZWZDQcDv1sVv9KF0JMGGNv90cGV5dyC5f/GmAA4D6O46ntVgkN0phCTZdNTJ5ru299CCBkRgggAsjtmokYRAzqGIPKsnyvtZ4CgDmRnOwPrO7rJrFp/86vYnuD5cHtCLpZbNq/8wA1NSB0fyzvOnuQDm1wU/kEkGM1CTGobct8UxcI3Z9cjFzM7VCeGEQMIgY1uvpuGtTJxcjF/j8XeyosN4foWZbVlp8clt9Y9m/kkq1zMVOxxhj7CAA9ALhN07T24q5p/87HIGzGXNsJIARBAogAcnMyYlAHGXT0Hsw8lRwMBlM3Hpw2er1e31RVdfhv9Mwb+5OPA7PWVuHb1EGfA6DWFlgppRKbEpc6kJwZZIS38bkCAIyxJBRjj2n3ApAR9FhkNQEAUz8U6o0qZtMWAGZVVd35eg3gDSBM8662E0ChbzW6ygxbvYlBxCBbrrzcjxhEDCIGuSGAjP4FSzqFZw9p9i8AAAAASUVORK5CYII=';
+var eyeIcon = 'data:image/png;base64,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';
+var eyeCloseIcon = 'data:image/png;base64,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';
 var expendDown = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAGCAYAAAD37n+BAAABYmlUWHRYTUw6Y29tLmFkb2JlLnhtcAAAAAAAPD94cGFja2V0IGJlZ2luPSLvu78iIGlkPSJXNU0wTXBDZWhpSHpyZVN6TlRjemtjOWQiPz4KPHg6eG1wbWV0YSB4bWxuczp4PSJhZG9iZTpuczptZXRhLyIgeDp4bXB0az0iWE1QIENvcmUgNi4wLjAiPgogPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4KICA8cmRmOkRlc2NyaXB0aW9uIHJkZjphYm91dD0iIgogICAgeG1sbnM6dGlmZj0iaHR0cDovL25zLmFkb2JlLmNvbS90aWZmLzEuMC8iCiAgIHRpZmY6T3JpZW50YXRpb249IjEiLz4KIDwvcmRmOlJERj4KPC94OnhtcG1ldGE+Cjw/eHBhY2tldCBlbmQ9InIiPz4iLqjnAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAACnSURBVHgBbZDNDQIhEIV3INwtAQ4cONqB28HagZ24VmALWoElaAceCYGELcEC+HGGrAnZOAmZYd6XgTcQQogDBud8VEotw5+IMcqc85NqVkoZaq2t4ZybtrD3/pBSehNDLBNC7PFypwZj7IHAuYOppsk7YoiFTpwxNRgAbjQN82mVL1rruWn98+hnQvCKoFxbHzxHhF8/BrZ/ttZKXEAziL5GY8zS618wC1FM6xC1ggAAAABJRU5ErkJggg==';
 var expendUp = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAGCAYAAAD37n+BAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAACnSURBVHgBbU/bDcIwDGzSBTpCKiUDsAHdoGzACkwATMAKMAFsABvwHSVSMgL/eXGu8hFVtXRy7DufLqxblXNOpJTe9O77fhrH0bc8bwdjzD7G+C2lCAIdaq3nzQOIz2jkPED8qBCc82fllmKIMIQQboyxY91dlVKXakJ9EYO/I+KJWWsdOWH3Aw4Qf9oI4OecMxkKwHMMHQ48su/WYiop5Qt/mUhD2j+rL2DcCUjpAwAAAABJRU5ErkJggg==';
 
@@ -8312,10 +8306,17 @@ var expendUp = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAGCAYAAAD37n
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+var expendImgCache = new Map();
 var IndicatorTooltipView = /** @class */ (function (_super) {
     __extends(IndicatorTooltipView, _super);
     function IndicatorTooltipView() {
         var _this = _super.apply(this, __spreadArray([], __read(arguments), false)) || this;
+        _this.isExpand = true;
+        _this._boundExpendClickEvent = function () { return function () {
+            _this.isExpand = !_this.isExpand;
+            _this.getWidget().getPane().update();
+            return true;
+        }; };
         _this._boundFeatureClickEvent = function (currentFeatureInfo, event) { return function () {
             var _a;
             var pane = _this.getWidget().getPane();
@@ -8361,6 +8362,7 @@ var IndicatorTooltipView = /** @class */ (function (_super) {
     };
     IndicatorTooltipView.prototype.drawIndicatorTooltip = function (ctx, left, top, maxWidth) {
         var _this = this;
+        var _a, _b, _c;
         var pane = this.getWidget().getPane();
         var chartStore = pane.getChart().getChartStore();
         var styles = chartStore.getStyles().indicator;
@@ -8368,76 +8370,168 @@ var IndicatorTooltipView = /** @class */ (function (_super) {
         if (this.isDrawTooltip(chartStore.getCrosshair(), tooltipStyles)) {
             var indicators = chartStore.getIndicatorsByPaneId(pane.getId());
             var tooltipTextStyles_1 = tooltipStyles.text;
-            indicators.forEach(function (indicator) {
-                var _a;
-                var prevRowHeight = 0;
-                var coordinate = { x: left, y: top };
-                var _b = _this.getIndicatorTooltipData(indicator), name = _b.name, calcParamsText = _b.calcParamsText, legends = _b.legends, features = _b.features, action = _b.action;
-                var nameValid = name.length > 0;
-                var legendValid = legends.length > 0;
-                var _left = left;
-                var _top = top;
-                var _coordinate = { x: _left, y: _top };
-                var _prevRowHeight = 0;
-                if (nameValid || legendValid) {
-                    var _c = __read(_this.classifyTooltipFeatures(features), 3), leftFeatures = _c[0], middleFeatures = _c[1], rightFeatures = _c[2];
-                    /**
-                     * 计算背景形状
-                     */
-                    _prevRowHeight = _this.getStandardTooltipFeaturesRect(ctx, leftFeatures, _coordinate, _left, _prevRowHeight, maxWidth);
-                    if (nameValid) {
-                        var text = name;
-                        if (calcParamsText.length > 0) {
-                            text = "".concat(text).concat(calcParamsText);
-                        }
-                        _prevRowHeight = _this.getStandardTooltipTitleRect(ctx, [
-                            {
-                                title: { text: '', color: tooltipTextStyles_1.color },
-                                value: { text: text, color: tooltipTextStyles_1.color }
+            if (this.isExpand) {
+                indicators.forEach(function (indicator) {
+                    var _a;
+                    var prevRowHeight = 0;
+                    var coordinate = { x: left, y: top };
+                    var _b = _this.getIndicatorTooltipData(indicator), name = _b.name, calcParamsText = _b.calcParamsText, legends = _b.legends, features = _b.features, action = _b.action;
+                    var nameValid = name.length > 0;
+                    var legendValid = legends.length > 0;
+                    var _left = left;
+                    var _top = top;
+                    var _coordinate = { x: _left, y: _top };
+                    var _prevRowHeight = 0;
+                    if (nameValid || legendValid) {
+                        var _c = __read(_this.classifyTooltipFeatures(features), 3), leftFeatures = _c[0], middleFeatures = _c[1], rightFeatures = _c[2];
+                        /**
+                         * 计算背景形状
+                         */
+                        _prevRowHeight = _this.getStandardTooltipFeaturesRect(ctx, leftFeatures, _coordinate, _left, _prevRowHeight, maxWidth);
+                        if (nameValid) {
+                            var text = name;
+                            if (calcParamsText.length > 0) {
+                                text = "".concat(text).concat(calcParamsText);
                             }
-                        ], _coordinate, _left, _prevRowHeight, maxWidth, tooltipTextStyles_1, indicator, action);
-                    }
-                    _prevRowHeight = _this.getStandardTooltipFeaturesRect(ctx, middleFeatures, _coordinate, _left, _prevRowHeight, maxWidth);
-                    if (legendValid) {
-                        _prevRowHeight = _this.getStandardTooltipLegendsRect(ctx, legends, _coordinate, _left, _prevRowHeight, maxWidth, tooltipStyles.text);
-                    }
-                    // draw right icons
-                    _prevRowHeight = _this.getStandardTooltipFeaturesRect(ctx, rightFeatures, _coordinate, _left, _prevRowHeight, maxWidth);
-                    _top = _coordinate.y + _prevRowHeight + 2;
-                    (_a = _this.createFigure({
-                        name: 'rect',
-                        attrs: { x: coordinate.x + 2, y: coordinate.y, width: _coordinate.x - coordinate.x - 4, height: _prevRowHeight },
-                        styles: {
-                            // 随机颜色
-                            color: 'rgba(15,15,15,.8)',
-                            style: PolygonType.Fill,
-                            borderRadius: 4
+                            _prevRowHeight = _this.getStandardTooltipTitleRect(ctx, [
+                                {
+                                    title: { text: '', color: tooltipTextStyles_1.color },
+                                    value: { text: text, color: tooltipTextStyles_1.color }
+                                }
+                            ], _coordinate, _left, _prevRowHeight, maxWidth, tooltipTextStyles_1, indicator, action);
                         }
-                    })) === null || _a === void 0 ? void 0 : _a.draw(ctx);
-                    /**
-                     * 画图形
-                     */
-                    if (nameValid) {
-                        var text = name;
-                        if (calcParamsText.length > 0) {
-                            text = "".concat(text).concat(calcParamsText);
+                        _prevRowHeight = _this.getStandardTooltipFeaturesRect(ctx, middleFeatures, _coordinate, _left, _prevRowHeight, maxWidth);
+                        if (legendValid) {
+                            _prevRowHeight = _this.getStandardTooltipLegendsRect(ctx, legends, _coordinate, _left, _prevRowHeight, maxWidth, tooltipStyles.text);
                         }
-                        prevRowHeight = _this.drawStandardTooltipTitle(ctx, [
-                            {
-                                title: { text: '', color: tooltipTextStyles_1.color },
-                                value: { text: text, color: tooltipTextStyles_1.color }
+                        // draw right icons
+                        _prevRowHeight = _this.getStandardTooltipFeaturesRect(ctx, rightFeatures, _coordinate, _left, _prevRowHeight, maxWidth);
+                        _top = _coordinate.y + _prevRowHeight + 4;
+                        (_a = _this.createFigure({
+                            name: 'rect',
+                            attrs: { x: coordinate.x + 2, y: coordinate.y - 2, width: _coordinate.x - coordinate.x - 4, height: _prevRowHeight + 4 },
+                            styles: {
+                                // 随机颜色
+                                color: 'rgba(15,15,15,.8)',
+                                style: PolygonType.Fill,
+                                borderRadius: 4
                             }
-                        ], coordinate, left, prevRowHeight, maxWidth, tooltipTextStyles_1, indicator, action);
+                        })) === null || _a === void 0 ? void 0 : _a.draw(ctx);
+                        /**
+                         * 画图形
+                         */
+                        if (nameValid) {
+                            var text = name;
+                            if (calcParamsText.length > 0) {
+                                text = "".concat(text).concat(calcParamsText);
+                            }
+                            prevRowHeight = _this.drawStandardTooltipTitle(ctx, [
+                                {
+                                    title: { text: '', color: tooltipTextStyles_1.color },
+                                    value: { text: text, color: tooltipTextStyles_1.color }
+                                }
+                            ], coordinate, left, prevRowHeight, maxWidth, tooltipTextStyles_1, indicator, action);
+                        }
+                        prevRowHeight = _this.drawStandardTooltipFeatures(ctx, middleFeatures, coordinate, indicator, left, prevRowHeight, maxWidth);
+                        if (legendValid) {
+                            prevRowHeight = _this.drawStandardTooltipLegends(ctx, legends, coordinate, left, prevRowHeight, maxWidth, tooltipStyles.text);
+                        }
+                        // draw right icons
+                        prevRowHeight = _this.drawStandardTooltipFeatures(ctx, rightFeatures, coordinate, indicator, left, prevRowHeight, maxWidth);
+                        top = coordinate.y + prevRowHeight + 6;
                     }
-                    prevRowHeight = _this.drawStandardTooltipFeatures(ctx, middleFeatures, coordinate, indicator, left, prevRowHeight, maxWidth);
-                    if (legendValid) {
-                        prevRowHeight = _this.drawStandardTooltipLegends(ctx, legends, coordinate, left, prevRowHeight, maxWidth, tooltipStyles.text);
-                    }
-                    // draw right icons
-                    prevRowHeight = _this.drawStandardTooltipFeatures(ctx, rightFeatures, coordinate, indicator, left, prevRowHeight, maxWidth);
-                    top = coordinate.y + prevRowHeight + 2;
+                });
+            }
+            var styles_1 = chartStore.getStyles();
+            var candleStyles = styles_1.candle;
+            var expand = candleStyles.tooltip.expand;
+            var expendWidth = 0;
+            if (Array.isArray(indicators) && indicators.length > 0 && isValid(expand) && expand && pane.getId() === PaneIdConstants.CANDLE) {
+                var img_1 = expendImgCache.get(this.isExpand);
+                var indicatorCount_1 = 0;
+                if (!this.isExpand) {
+                    indicators.forEach(function (indicator) {
+                        var _a = _this.getIndicatorTooltipData(indicator), name = _a.name, legends = _a.legends;
+                        var nameValid = name.length > 0;
+                        var legendValid = legends.length > 0;
+                        if (nameValid || legendValid) {
+                            indicatorCount_1++;
+                        }
+                    });
                 }
-            });
+                var text = this.isExpand ? '' : indicatorCount_1.toString();
+                var textWidth = text !== '' ? ctx.measureText(text).width : 0;
+                expendWidth = 24 + (textWidth !== 0 ? (textWidth + 8) : 0);
+                (_a = this.createFigure({
+                    name: 'rect',
+                    attrs: {
+                        x: left + 6,
+                        y: top,
+                        width: expendWidth,
+                        height: 18
+                    },
+                    styles: {
+                        borderColor: '#DBDBDB',
+                        borderRadius: 2,
+                        borderSize: 1,
+                        color: 'rgba(15,15,15,.8)',
+                        style: PolygonType.StrokeFill
+                    }
+                }, {
+                    mouseClickEvent: this._boundExpendClickEvent()
+                })) === null || _a === void 0 ? void 0 : _a.draw(ctx);
+                if (text !== '') {
+                    (_b = this.createFigure({
+                        name: 'text',
+                        attrs: {
+                            x: left + expendWidth - 12,
+                            y: top + 3,
+                            text: text
+                        },
+                        styles: {
+                            color: '#fff',
+                            size: 14,
+                            family: 'Arial',
+                            weight: 'normal'
+                        }
+                    })) === null || _b === void 0 ? void 0 : _b.draw(ctx);
+                }
+                if (isValid(img_1)) {
+                    (_c = this.createFigure({
+                        name: 'img',
+                        attrs: {
+                            x: left + 14,
+                            y: top + 5,
+                            width: 8,
+                            height: 8,
+                            img: img_1
+                        },
+                        styles: {}
+                    })) === null || _c === void 0 ? void 0 : _c.draw(ctx);
+                }
+                else {
+                    img_1 = new window.Image();
+                    img_1.src = this.isExpand ? expendUp : expendDown;
+                    img_1.onload = function () {
+                        var _a;
+                        expendImgCache.set(_this.isExpand, img_1);
+                        (_a = _this.createFigure({
+                            name: 'img',
+                            attrs: {
+                                x: left + 14,
+                                y: top + 5,
+                                width: 8,
+                                height: 8,
+                                img: img_1
+                            },
+                            styles: {}
+                        }, {
+                            mouseClickEvent: _this._boundExpendClickEvent()
+                        })) === null || _a === void 0 ? void 0 : _a.draw(ctx);
+                    };
+                }
+                top += 24;
+            }
         }
         return top;
     };
@@ -8662,7 +8756,7 @@ var IndicatorTooltipView = /** @class */ (function (_super) {
                     activeStyles.paddingBottom = 3;
                     activeStyles.paddingTop = 3;
                     activeStyles.paddingLeft = 4;
-                    activeStyles.paddingRight = (isValid(action) && action.length !== 0) ? 22 * action.length : 4;
+                    activeStyles.paddingRight = (isValid(action) && action.length !== 0) ? 34 * action.length : 4;
                 }
                 coordinate.x += (marginLeft_3 + totalTextWidth + marginRight_3 + ((_a = activeStyles.paddingRight) !== null && _a !== void 0 ? _a : 0));
             });
@@ -8706,10 +8800,10 @@ var IndicatorTooltipView = /** @class */ (function (_super) {
                     activeStyles.borderColor = '#2962FF';
                     activeStyles.style = PolygonType.Stroke;
                     activeStyles.borderRadius = 3;
-                    activeStyles.paddingBottom = 3;
-                    activeStyles.paddingTop = 3;
+                    activeStyles.paddingBottom = 6;
+                    activeStyles.paddingTop = 6;
                     activeStyles.paddingLeft = 4;
-                    activeStyles.paddingRight = (isValid(action) && action.length !== 0) ? 26 * action.length : 4;
+                    activeStyles.paddingRight = (isValid(action) && action.length !== 0) ? 34 * action.length : 4;
                 }
                 var textX = coordinate.x + marginLeft_4 + titleTextWidth - ((_b = activeStyles.paddingLeft) !== null && _b !== void 0 ? _b : 0);
                 var textY = coordinate.y + marginTop_4 - ((_c = activeStyles.paddingTop) !== null && _c !== void 0 ? _c : 0);
@@ -8722,17 +8816,17 @@ var IndicatorTooltipView = /** @class */ (function (_super) {
                     mouseClickEvent: _this._boundActionClickEvent({ paneId: paneId_3, indicator: indicator }, IndicatorEventTarget.Click)
                 })) === null || _d === void 0 ? void 0 : _d.draw(ctx);
                 if (active && isValid(action) && action.length !== 0) {
-                    var _x_1 = textX + valueTextWidth + 4;
+                    var _x_1 = textX + valueTextWidth + 8;
                     action.forEach(function (ac) {
                         if (ac === 'visible') {
                             var iconImage_1 = new window.Image();
                             iconImage_1.src = indicator.visible ? eyeIcon : eyeCloseIcon;
-                            var _xx_1 = _x_1 + 6;
+                            var _xx_1 = _x_1 + 8;
                             iconImage_1.onload = function () {
                                 var _a;
                                 (_a = _this.createFigure({
                                     name: 'img',
-                                    attrs: { x: _xx_1, y: textY + 2, width: 16, height: 14, img: iconImage_1 },
+                                    attrs: { x: _xx_1, y: textY + 4, width: 18, height: 18, img: iconImage_1 },
                                     styles: __assign({ color: value.color, size: size_4, family: family_2, weight: weight_2 }, activeStyles)
                                 }, {
                                     mouseClickEvent: _this._boundActionClickEvent({ paneId: paneId_3, indicator: indicator }, indicator.visible ? IndicatorEventTarget.Invisible : IndicatorEventTarget.Visible)
@@ -8742,19 +8836,19 @@ var IndicatorTooltipView = /** @class */ (function (_super) {
                         if (ac === 'delete') {
                             var iconImage_2 = new window.Image();
                             iconImage_2.src = deleteIcon;
-                            var _xx_2 = _x_1 + 6;
+                            var _xx_2 = _x_1 + 8;
                             iconImage_2.onload = function () {
                                 var _a;
                                 (_a = _this.createFigure({
                                     name: 'img',
-                                    attrs: { x: _xx_2, y: textY + 2, width: 14, height: 14, img: iconImage_2 },
+                                    attrs: { x: _xx_2, y: textY + 4, width: 18, height: 18, img: iconImage_2 },
                                     styles: __assign({ color: value.color, size: size_4, family: family_2, weight: weight_2 }, activeStyles)
                                 }, {
                                     mouseClickEvent: _this._boundActionClickEvent({ paneId: paneId_3, indicator: indicator }, IndicatorEventTarget.Delete)
                                 })) === null || _a === void 0 ? void 0 : _a.draw(ctx);
                             };
                         }
-                        _x_1 += 14 + 8;
+                        _x_1 += 30;
                     });
                 }
                 coordinate.x += (marginLeft_4 + totalTextWidth + marginRight_4 + ((_e = activeStyles.paddingRight) !== null && _e !== void 0 ? _e : 0));
@@ -9964,18 +10058,10 @@ function i18n(key, locale) {
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var expendImgCache = new Map();
 var CandleTooltipView = /** @class */ (function (_super) {
     __extends(CandleTooltipView, _super);
     function CandleTooltipView() {
-        var _this = _super.apply(this, __spreadArray([], __read(arguments), false)) || this;
-        _this.isExpand = true;
-        _this._boundExpendClickEvent = function () { return function () {
-            _this.isExpand = !_this.isExpand;
-            _this.getWidget().getPane().update();
-            return true;
-        }; };
-        return _this;
+        return _super !== null && _super.apply(this, arguments) || this;
     }
     CandleTooltipView.prototype.drawImp = function (ctx) {
         var widget = this.getWidget();
@@ -9994,12 +10080,10 @@ var CandleTooltipView = /** @class */ (function (_super) {
             }
             else if (candleStyles.tooltip.showType === TooltipShowType.Standard &&
                 indicatorStyles.tooltip.showType === TooltipShowType.Standard) {
-                var _a = candleStyles.tooltip, offsetLeft = _a.offsetLeft, offsetTop = _a.offsetTop, offsetRight = _a.offsetRight, expand = _a.expand;
+                var _a = candleStyles.tooltip, offsetLeft = _a.offsetLeft, offsetTop = _a.offsetTop, offsetRight = _a.offsetRight;
                 var maxWidth = bounding.width - offsetRight;
-                var top_1 = this._drawCandleStandardTooltip(ctx, offsetLeft, offsetTop, maxWidth, expand);
-                if (this.isExpand) {
-                    this.drawIndicatorTooltip(ctx, offsetLeft, top_1, maxWidth);
-                }
+                var top_1 = this._drawCandleStandardTooltip(ctx, offsetLeft, offsetTop, maxWidth);
+                this.drawIndicatorTooltip(ctx, offsetLeft, top_1, maxWidth);
             }
             else if (candleStyles.tooltip.showType === TooltipShowType.Rect &&
                 indicatorStyles.tooltip.showType === TooltipShowType.Standard) {
@@ -10018,9 +10102,7 @@ var CandleTooltipView = /** @class */ (function (_super) {
             }
         }
     };
-    CandleTooltipView.prototype._drawCandleStandardTooltip = function (ctx, left, top, maxWidth, expand) {
-        var _this = this;
-        var _a, _b, _c;
+    CandleTooltipView.prototype._drawCandleStandardTooltip = function (ctx, left, top, maxWidth) {
         var chartStore = this.getWidget().getPane().getChart().getChartStore();
         var styles = chartStore.getStyles().candle;
         var tooltipStyles = styles.tooltip;
@@ -10030,95 +10112,7 @@ var CandleTooltipView = /** @class */ (function (_super) {
         var crosshair = chartStore.getCrosshair();
         if (this.isDrawTooltip(crosshair, tooltipStyles)) {
             var legends = this._getCandleTooltipLegends();
-            var expendWidth = 0;
-            var indicators = this.getWidget().getPane().getChart().getChartStore().getIndicatorsByPaneId(this.getWidget().getPane().getId());
-            if (Array.isArray(indicators) && indicators.length > 0 && isValid(expand) && expand) {
-                var img_1 = expendImgCache.get(this.isExpand);
-                var _coordinate_1 = __assign({}, coordinate);
-                var indicatorCount_1 = 0;
-                if (!this.isExpand) {
-                    indicators.forEach(function (indicator) {
-                        var _a = _this.getIndicatorTooltipData(indicator), name = _a.name, legends = _a.legends;
-                        var nameValid = name.length > 0;
-                        var legendValid = legends.length > 0;
-                        if (nameValid || legendValid) {
-                            indicatorCount_1++;
-                        }
-                    });
-                }
-                var text = this.isExpand ? '' : indicatorCount_1.toString();
-                var textWidth = text !== '' ? ctx.measureText(text).width : 0;
-                expendWidth = 14 + (textWidth !== 0 ? (textWidth + 5) : 0);
-                (_a = this.createFigure({
-                    name: 'rect',
-                    attrs: {
-                        x: _coordinate_1.x,
-                        y: _coordinate_1.y + 3,
-                        width: expendWidth,
-                        height: 14
-                    },
-                    styles: {
-                        borderColor: '#2E2E2E',
-                        borderRadius: 2,
-                        borderSize: 1,
-                        style: PolygonType.Stroke
-                    }
-                }, {
-                    mouseClickEvent: this._boundExpendClickEvent()
-                })) === null || _a === void 0 ? void 0 : _a.draw(ctx);
-                if (text !== '') {
-                    (_b = this.createFigure({
-                        name: 'text',
-                        attrs: {
-                            x: _coordinate_1.x + expendWidth - 10,
-                            y: _coordinate_1.y + 5,
-                            text: text
-                        },
-                        styles: {
-                            color: '#808080',
-                            size: 10,
-                            family: 'Arial',
-                            weight: 'normal'
-                        }
-                    })) === null || _b === void 0 ? void 0 : _b.draw(ctx);
-                }
-                if (isValid(img_1)) {
-                    (_c = this.createFigure({
-                        name: 'img',
-                        attrs: {
-                            x: _coordinate_1.x + 5,
-                            y: _coordinate_1.y + 7.5,
-                            width: 5,
-                            height: 4,
-                            img: img_1
-                        },
-                        styles: {}
-                    })) === null || _c === void 0 ? void 0 : _c.draw(ctx);
-                }
-                else {
-                    img_1 = new window.Image();
-                    img_1.src = this.isExpand ? expendUp : expendDown;
-                    img_1.onload = function () {
-                        var _a;
-                        expendImgCache.set(_this.isExpand, img_1);
-                        (_a = _this.createFigure({
-                            name: 'img',
-                            attrs: {
-                                x: _coordinate_1.x + 5,
-                                y: _coordinate_1.y + 7.5,
-                                width: 5,
-                                height: 4,
-                                img: img_1
-                            },
-                            styles: {}
-                        }, {
-                            mouseClickEvent: _this._boundExpendClickEvent()
-                        })) === null || _a === void 0 ? void 0 : _a.draw(ctx);
-                    };
-                }
-                coordinate.x += expendWidth - 2;
-            }
-            var _d = __read(this.classifyTooltipFeatures(tooltipStyles.features), 3), leftFeatures = _d[0], middleFeatures = _d[1], rightFeatures = _d[2];
+            var _a = __read(this.classifyTooltipFeatures(tooltipStyles.features), 3), leftFeatures = _a[0], middleFeatures = _a[1], rightFeatures = _a[2];
             prevRowHeight = this.drawStandardTooltipFeatures(ctx, leftFeatures, coordinate, null, left, prevRowHeight, maxWidth);
             prevRowHeight = this.drawStandardTooltipFeatures(ctx, middleFeatures, coordinate, null, left, prevRowHeight, maxWidth);
             if (legends.length > 0) {
@@ -11418,7 +11412,7 @@ var percentage = {
         var chart = _a.chart, defaultRange = _a.defaultRange, paneId = _a.paneId;
         var kLineDataList = chart.getDataList();
         var visibleRange = chart.getVisibleRange();
-        var kLineData = kLineDataList[visibleRange.from];
+        var kLineData = kLineDataList[visibleRange.realFrom];
         if (isValid(kLineData)) {
             var options = chart.getPaneOptions(paneId);
             if (isArray(options)) {

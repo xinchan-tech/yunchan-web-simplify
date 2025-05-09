@@ -23,15 +23,15 @@ import {
   JknIcon
 } from '@/components'
 import { useToast, useZForm } from '@/hooks'
-import { useToken } from '@/store'
+import { useToken, useUser } from '@/store'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useCountDown, useCounter } from 'ahooks'
+import dayjs from 'dayjs'
 import { REGEXP_ONLY_DIGITS } from 'input-otp'
 import { useState } from 'react'
 import { FormProvider, type SubmitErrorHandler } from 'react-hook-form'
 import { z } from 'zod'
 import { AppleLogin, GoogleLogin, WeChatLogin } from './login-other'
-import dayjs from 'dayjs'
 
 const resetFormSchema = z
   .object({
@@ -55,6 +55,8 @@ export const ResetForm = (props: {
   const setToken = useToken(s => s.setToken)
   const { toast } = useToast()
   const queryClient = useQueryClient()
+  const refreshUser = useUser(s => s.refreshUser)
+  const setLoginType = useUser(s => s.setLoginType)
 
   const onError: SubmitErrorHandler<RegisterSchema> = err => {
     toast({
@@ -90,9 +92,7 @@ export const ResetForm = (props: {
     }
   })
 
-  const onLoginSuccess = (token: string) => {
-    setToken(token)
-
+  const onLoginSuccess = () => {
     queryClient.refetchQueries({ queryKey: [getUser.cacheKey] })
 
     loginImService()
@@ -113,10 +113,15 @@ export const ResetForm = (props: {
   }
 
   const loginMutation = useMutation({
-    mutationFn: ({ type, data }: { type: string; data: any }) => {
-      return type === 'apple' ? loginByThird('apple', data) : loginByThird('google', data)
+    mutationFn: async ({ type, data }: { type: string; data: any }) => {
+      const r = await (type === 'apple' ? loginByThird('apple', data) : loginByThird('google', data))
+      setToken(r.token)
+      setLoginType(type === 'apple' ? 'apple' : 'google')
+      await refreshUser()
+
+      return r
     },
-    onSuccess: r => onLoginSuccess(r.token),
+    onSuccess: r => onLoginSuccess(),
     onError: err => {
       toast({
         description: err.message
@@ -172,7 +177,7 @@ export const ResetForm = (props: {
     <>
       {step !== 0 ? (
         <div className="w-[960px] mx-auto pt-[60px]">
-          <div className="flex items-center" onClick={onPrev} onKeyDown={() => {}}>
+          <div className="flex items-center" onClick={onPrev} onKeyDown={() => { }}>
             <div className="size-8 rounded bg-accent flex items-center justify-center mr-2">
               <JknIcon.Svg name="arrow-left" size={10} className="" />
             </div>
@@ -310,7 +315,7 @@ export const ResetForm = (props: {
                   <span
                     className="text-tertiary cursor-pointer"
                     onClick={() => !time && sendCode.mutate()}
-                    onKeyDown={() => {}}
+                    onKeyDown={() => { }}
                   >
                     重发
                     {time ? (
@@ -341,7 +346,7 @@ export const ResetForm = (props: {
                     <span
                       className="cursor-pointer text-primary"
                       onClick={() => props.setPage('register')}
-                      onKeyDown={() => {}}
+                      onKeyDown={() => { }}
                     >
                       立即注册
                     </span>

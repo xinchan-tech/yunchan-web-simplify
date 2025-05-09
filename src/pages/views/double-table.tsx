@@ -1,5 +1,5 @@
 import { getPlateList } from '@/api'
-import { JknRcTable, type JknRcTableProps, NumSpan, SubscribeSpan } from '@/components'
+import { TcRcTable, type TcRcTableProps, NumSpan, SubscribeSpan } from '@/components'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
 import { useTableData } from '@/hooks'
@@ -62,13 +62,13 @@ interface PlateListProps {
 }
 
 const PlateList = (props: PlateListProps) => {
-  const [list, { setList, onSort }] = useTableData(props.data, 'id')
+  const [list, { setList, onSort }] = useTableData(props.data)
 
   useEffect(() => {
     setList(props.data)
   }, [props.data, setList])
 
-  const column = useMemo<JknRcTableProps<PlateDataType>['columns']>(
+  const column = useMemo<TcRcTableProps<PlateDataType>['columns']>(
     () => [
       { title: '序号', dataIndex: 'index', align: 'center', width: 60, render: (_, __, index) => index + 1 },
       {
@@ -105,7 +105,7 @@ const PlateList = (props: PlateListProps) => {
     []
   )
   return (
-    <JknRcTable
+    <TcRcTable
       rowKey="id"
       isLoading={props.loading}
       columns={column}

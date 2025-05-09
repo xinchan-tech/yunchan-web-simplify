@@ -1,29 +1,46 @@
-import { useConfig, useToken } from '@/store'
-import { type WsSubscribeType, WsV2 } from '@/utils/ws'
-import { memo, useEffect } from 'react'
-import { JknIcon, Sonner, Star } from '..'
-import { toast, Toaster } from 'sonner'
 import { AlarmType } from '@/api'
-import { stockUtils } from '@/utils/stock'
+import { useConfig, useToken } from '@/store'
 import { dateUtils } from '@/utils/date'
+import { stockUtils } from '@/utils/stock'
+import { type WsSubscribeType, WsV2 } from '@/utils/ws'
+import { memo, useEffect, useRef } from 'react'
+import { toast } from 'sonner'
+import { JknIcon, Sonner, Star } from '..'
+import { appEvent } from "@/utils/event"
+import NoticeMp3 from '@/assets/notice/alarm_notice.mp3'
+
+let noticeCache: HTMLAudioElement | null = null
+
 
 export const AlarmSubscribe = memo(() => {
   const token = useToken(s => s.token)
+  const mute = useRef(true)
 
   useEffect(() => {
     if (token) {
       const ws = WsV2.create(token)
 
       const unSubscribe = ws.onAlarm(e => {
+        appEvent.emit('alarm', e)
+        if(!noticeCache){
+          noticeCache = new Audio(NoticeMp3)
+        }
+
+        noticeCache?.play().then(() => {
+          mute.current = false
+        }).catch(() => {
+          mute.current = true
+        })
         const n = toast(
           <AlarmContent
+            mute={mute.current}
             data={e}
             onClose={() => {
               toast.dismiss(n)
             }}
           />,
           {
-            duration: 10 * 1000
+            duration: 60 * 1000
           }
         )
       })
@@ -44,9 +61,10 @@ export const AlarmSubscribe = memo(() => {
 interface AlarmContentProps {
   data: WsSubscribeType['alarm']
   onClose: () => void
+  mute: boolean
 }
 
-const AlarmContent = ({ data, onClose }: AlarmContentProps) => {
+const AlarmContent = ({ data, onClose, mute }: AlarmContentProps) => {
   const onClick = () => {
     stockUtils.gotoStockPage(data.symbol, {
       interval: data.stock_cycle ?? 0
@@ -63,6 +81,11 @@ const AlarmContent = ({ data, onClose }: AlarmContentProps) => {
           <span className="text-base font-bold mr-2">警报</span>
           <JknIcon.Stock symbol={data.symbol} className="size-4 ml-2 mr-1" />
           <span className="text-sm">{data.symbol}</span>
+          {
+            mute ? (
+              <JknIcon.Svg name="mute" className="size-4 ml-2 mr-1 text-foreground" />
+            ): null
+          }
           <JknIcon.Svg
             name="close"
             size={12}
@@ -94,6 +117,22 @@ const AlarmContent = ({ data, onClose }: AlarmContentProps) => {
                 <span>{data.bull === '1' ? '↑' : '↓'}</span>
               </span>
               <span className="bg-accent py-0.5 rounded text-xs px-1">股价</span>
+            </>
+          ) : null}
+
+          {data.type === AlarmType.PERCENT ? (
+            <>
+              <span data-direction={data.pnl_percent > 0 ? 'up' : 'down'}>
+                <span>止损触发价</span>
+                {data.base_price}
+                <span>{data.pnl_percent > 0 ? '↑' : '↓'}</span>&nbsp;
+                <span className="text-foreground">
+                  {data.trigger_type === 1
+                    ? `盈亏比例${(data.pnl_percent * 100).toFixed(2)}%`
+                    : `盈亏金额${data.pnl_price}`}
+                </span>
+              </span>
+              <span className="bg-accent py-0.5 rounded text-xs px-1">浮动</span>
             </>
           ) : null}
         </div>

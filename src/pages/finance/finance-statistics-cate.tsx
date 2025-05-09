@@ -5,7 +5,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
   JknIcon,
-  JknRcTable
+  TcRcTable
 } from '@/components'
 import { useQueryParams } from '@/hooks'
 import { useQuery } from '@tanstack/react-query'
@@ -67,7 +67,7 @@ export const FinanceStatisticsCate = () => {
         </span>
       </div>
       <div className="mt-4 flex-1 overflow-hidden">
-        <JknRcTable
+        <TcRcTable
           isLoading={stockStatisticsCate.isLoading}
           rowKey={row => `${row.symbol}_${row.report_date}`}
           columns={financeTableColumns}

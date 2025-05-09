@@ -1,5 +1,5 @@
 import { type StockExtend, type UsStockColumn, getUsStocks } from '@/api'
-import { CollectStar, JknRcTable, type JknRcTableProps, StockView, SubscribeSpan } from '@/components'
+import { CollectStar, TcRcTable, type TcRcTableProps, StockView, SubscribeSpan } from '@/components'
 import { useStockQuoteSubscribe, useTableData, useTableRowClickToStockTrading } from '@/hooks'
 import { stockUtils } from '@/utils/stock'
 import { useInfiniteQuery } from '@tanstack/react-query'
@@ -64,7 +64,7 @@ const EtfTable = (props: PageTableProps) => {
     }
   })
 
-  const [list, { setList, onSort }] = useTableData<TableDataType>([], 'symbol')
+  const [list, { setList, onSort }] = useTableData<TableDataType>([])
 
   useEffect(() => {
     const r: TableDataType[] = []
@@ -107,10 +107,10 @@ const EtfTable = (props: PageTableProps) => {
     setList(r)
   }, [query.data, setList])
 
-  const onSortChange: JknRcTableProps<TableDataType>['onSort'] = (columnKey, sort) => {
+  const onSortChange: TcRcTableProps<TableDataType>['onSort'] = (columnKey, sort) => {
     if (!props.type || ['all', 'ixic', 'spx', 'dji', 'etf'].includes(props.type)) {
       const columnMap: Record<string, UsStockColumn> = {
-        code: 'symbol',
+        symbol: 'symbol',
         price: 'close',
         amount: 'amount',
         percent: 'increase',
@@ -136,18 +136,30 @@ const EtfTable = (props: PageTableProps) => {
 
   useStockQuoteSubscribe(query.data?.pages.flatMap(o => o.items).map(item => item.symbol) ?? [])
 
-  const columns = useMemo<JknRcTableProps<TableDataType>['columns']>(
+  const columns = useMemo<TcRcTableProps<TableDataType>['columns']>(
     () => [
       {
+        title: '',
+        dataIndex: 'collect',
+        align: 'center',
+        width: '4%',
+        render: (_, row) => <CollectStar checked={row.collect === 1} code={row.symbol} />
+      },
+      {
+        title: '',
+        dataIndex: 'index',
+        align: 'center',
+        width: '5%',
+        render: (_, _row, index) => <span onClick={(e) => {e.preventDefault();e.stopPropagation()}} onKeyDown={() => void 0}>{index + 1}</span>
+      },
+      {
         title: '名称代码',
-        dataIndex: 'name',
+        dataIndex: 'symbol',
         align: 'left',
         sort: true,
-        width: '28.5%',
+        width: '23%',
         render: (_, row) => (
           <div className="flex items-center h-[33px]">
-            <CollectStar checked={row.collect === 1} code={row.symbol} />
-            <span className="mr-3" />
             <StockView name={row.name} code={row.symbol as string} showName />
           </div>
         )
@@ -206,7 +218,8 @@ const EtfTable = (props: PageTableProps) => {
       {
         title: '总市值',
         dataIndex: 'total',
-        align: 'right',
+        align: 'left',
+        width: '10%',
         sort: true,
         render: (_, row) => (
           <div className="">
@@ -220,15 +233,59 @@ const EtfTable = (props: PageTableProps) => {
             />
           </div>
         )
+      },
+      {
+        title: '盘前涨跌幅',
+        dataIndex: 'prePercent',
+        align: 'left',
+        width: '10%',
+        sort: true,
+        render: (_, row) => (
+          <div className="">
+            <SubscribeSpan.PercentBlink
+              trading="preMarket"
+              symbol={row.symbol}
+              initValue={row.prePercent}
+              decimal={2}
+              showSign
+              initDirection={row.prePercent > 0}
+              zeroText="0.00%"
+              nanText="--"
+              showColor={true}
+            />
+          </div>
+        )
+      },
+      {
+        title: '盘后涨跌幅',
+        dataIndex: 'afterPercent',
+        align: 'left',
+        width: '10%',
+        sort: true,
+        render: (_, row) => (
+          <div className="">
+            <SubscribeSpan.PercentBlink
+              trading="afterHours"
+              symbol={row.symbol}
+              initValue={row.afterPercent}
+              decimal={2}
+              showSign
+              initDirection={row.afterPercent > 0}
+              zeroText="0.00%"
+              nanText="--"
+              showColor={true}
+            />
+          </div>
+        )
       }
     ],
-    [list, query.refetch]
+    []
   )
 
   const onRowClick = useTableRowClickToStockTrading('symbol')
 
   return (
-    <JknRcTable
+    <TcRcTable
       headerHeight={61}
       isLoading={query.isLoading}
       columns={columns}

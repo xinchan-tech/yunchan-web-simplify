@@ -8,7 +8,8 @@ import { useEffect } from 'react'
 export const HotTop = () => {
   const tops = useQuery({
     queryKey: [getPalTop.cacheKey],
-    queryFn: () => getPalTop()
+    queryFn: () => getPalTop(),
+    refetchInterval: 60 * 1000
   })
   const [chart, dom] = useChart()
 
@@ -79,6 +80,7 @@ export const HotTop = () => {
       },
       yAxis: {
         splitNumber: 3,
+        max: Math.max(...r.map(item => item.score)),
         type: 'value',
         axisLabel: {
           showMinLabel: false,

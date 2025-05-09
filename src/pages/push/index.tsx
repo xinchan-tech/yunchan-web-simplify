@@ -2,22 +2,19 @@ import { StockPushType, getStockPush, getStockPushList } from '@/api'
 import { getPushMenu } from '@/api/push'
 import {
   CapsuleTabs,
+  CollectStar,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
   JknIcon,
-  JknRcTable,
-  JknDatePicker,
-  type JknRcTableProps,
+  Star,
   StockView,
   SubscribeSpan,
-  CollectStar,
-  Button,
-  Star,
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem
+  TcRcTable,
+  type TcRcTableProps
 } from '@/components'
 import { useStockQuoteSubscribe, useTableData, useTableRowClickToStockTrading } from '@/hooks'
-import { useTime } from '@/store'
 import { dateUtils, getPrevTradingDays } from '@/utils/date'
 import { type Stock, stockUtils } from '@/utils/stock'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
@@ -46,9 +43,8 @@ type TableDataType = Stock & {
 }
 
 const getLastTime = () => {
-  const usTime = useTime.getState().usTime
-  const localTime = useTime.getState().localStamp
-  const localDate = dayjs(new Date().valueOf() - localTime + usTime).tz('America/New_York')
+  const localDate = dateUtils.toUsDay(Date.now().valueOf())
+
 
   if (localDate.isBefore(localDate.hour(9).minute(30).second(0))) {
     return getPrevTradingDays(localDate, 2)[0]
@@ -65,7 +61,7 @@ const getTableList = async (type: string, date?: string) => {
       date,
       extend: ['financials', 'total_share', 'collect', 'basic_index']
     })
-
+  
     res = r?.map(item => {
       const stock = stockUtils.toStockWithExt(item.stock, {
         extend: item.extend,
@@ -94,7 +90,7 @@ const getTableList = async (type: string, date?: string) => {
         name: item.name
       }) as TableDataType
       stock.update_time = item.datetime.toString()
-      stock.star = (item.score * (item.score * (item.bull === 0 ? -1 : 1))).toString()
+      stock.star = (item.score * (item.bull === 0 ? -1 : 1)).toString()
       stock.id = item.symbol
       stock.warning = (item.type - 1).toString()
       stock.percent = stockUtils.getPercent(stock)
@@ -113,7 +109,7 @@ const getTableList = async (type: string, date?: string) => {
 const PushPage = () => {
   const [activeType, setActiveType] = useState<string>('JRGW')
   const [date, setDate] = useState(getLastTime())
-  const [list, { setList, onSort }] = useTableData<TableDataType>([], 'id')
+  const [list, { setList, onSort }] = useTableData<TableDataType>([])
   const dates = useRef(getPrevTradingDays(date, 7).reverse())
 
   const menus = useQuery({
@@ -152,14 +148,27 @@ const PushPage = () => {
     // } else {
     //   setList([])
     // }
-
     setList(query.data ?? [])
   }, [query.data, setList])
 
   useStockQuoteSubscribe(query.data?.map(v => v.symbol) ?? [])
 
   const columns = (() => {
-    const common: JknRcTableProps<TableDataType>['columns'] = [
+    const common: TcRcTableProps<TableDataType>['columns'] = [
+      {
+        title: '',
+        dataIndex: 'collect',
+        align: 'center',
+        width: '5%',
+        render: (_, row) => <CollectStar checked={row.collect === 1} code={row.symbol} />
+      },
+      {
+        title: '',
+        dataIndex: 'index',
+        align: 'center',
+        width: '5%',
+        render: (_, _row, index) => <span onClick={(e) => {e.preventDefault();e.stopPropagation()}} onKeyDown={() => void 0}>{index + 1}</span>
+      },
       {
         title: '名称代码',
         dataIndex: 'symbol',
@@ -168,8 +177,6 @@ const PushPage = () => {
         sort: true,
         render: (_, row) => (
           <div className="flex items-center">
-            <CollectStar checked={row.collect === 1} code={row.symbol} />
-            <span className="mr-3" />
             <StockView name={row.name} code={row.symbol as string} showName />
           </div>
         )
@@ -242,27 +249,32 @@ const PushPage = () => {
         dataIndex: 'star',
         align: 'right',
         sort: true,
-        render: (v, row) =>
-          activeType === 'JRGW' ? (
-            Array.from({ length: v }).map((_, i) => (
-              <JknIcon
-                className="w-[16px] h-[16px]"
-                // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
-                key={i}
-                name={'ic_fire_red'}
-              />
-            ))
-          ) : (
-            <Star.Rect count={Math.abs(v)} activeColor={+row.bull === 1 ? '#22AB94' : '#F23645'} total={5} />
-          )
+        width: '12%',
+        render: (v, row) => (
+          <div>
+            {activeType === 'JRGW' ? (
+              Array.from({ length: v }).map((_, i) => (
+                <JknIcon
+                  className="w-[16px] h-[16px]"
+                  // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
+                  key={i}
+                  name={'ic_fire_red'}
+                />
+              ))
+            ) : (
+              <Star.Rect count={Math.abs(v)} activeColor={+row.bull === 1 ? '#22AB94' : '#F23645'} total={5} />
+            )}
+          </div>
+        )
       }
     ]
 
     if (activeType === 'JRGW') {
-      ;(common as any[]).splice(5, 0, {
+      ;(common as any[]).splice(7, 0, {
         title: '入选时间',
         dataIndex: 'create_time',
         align: 'left',
+        width: '12%',
         sort: true,
         render: (create_time: number) => <span>{dateUtils.toUsDay(create_time).format('HH:mm')}</span>
       })
@@ -312,10 +324,12 @@ const PushPage = () => {
           </div>
         ) : null} */}
         <div className="flex-1 overflow-hidden">
-          <JknRcTable
+          <TcRcTable
             headerHeight={61}
             rowKey="id"
+            border={false}
             onSort={onSort}
+            virtual
             columns={columns}
             data={list}
             isLoading={query.isLoading}

@@ -57,7 +57,7 @@ const useBaseSubscribe = (
 
   const onChange = useCallback<OnValueChangeFn>(
     (data, extra) => {
-      const newDirection = (data.record.close - data.record.preClose) > 0 ? 'up' : 'down'
+      const newDirection = data.record.close - data.record.preClose > 0 ? 'up' : 'down'
       if (newDirection !== direction) {
         setDirection(newDirection)
       }
@@ -376,7 +376,7 @@ export const MarketValueSubscribeSpan = memo(
 
     const subscribeFormatter = useCallback<SubscribeSpanProps['formatter']>(
       data => {
-        return numberFormatter(data.record.close * totalShare)
+        return numberFormatter(data.record.marketValue || data.record.close * totalShare)
       },
       [numberFormatter, totalShare]
     )
@@ -397,7 +397,7 @@ export const MarketValueSubscribeSpan = memo(
 export const withTableCellBlink = <T = any>(Component: ComponentType<T>) => {
   return memo((props: T) => {
     const ref = useRef<HTMLDivElement>(null)
-    const timer = useRef<number | null>(null)
+    // const timer = useRef<number | null>(null)
     const onValueChange = useCallback<OnValueChangeFn>((_, extra) => {
       let changeDirection = extra.changeDirection
       if (!changeDirection) {
@@ -409,24 +409,24 @@ export const withTableCellBlink = <T = any>(Component: ComponentType<T>) => {
         }
       }
 
-      if (timer.current) return
-      timer.current = window.setTimeout(() => {
-        if (changeDirection) {
-          // 往上找三级父元素
-          let target = ref.current?.parentElement
-          for (let i = 0; i < 3; i++) {
-            if (target?.classList.contains('rc-table-cell')) {
-              target?.setAttribute('data-blink', changeDirection)
+      // if (timer.current) return
+      // timer.current = window.setTimeout(() => {
+      //   if (changeDirection) {
+      //     // 往上找三级父元素
+      //     let target = ref.current?.parentElement
+      //     for (let i = 0; i < 3; i++) {
+      //       if (target?.classList.contains('rc-table-cell')) {
+      //         target?.setAttribute('data-blink', changeDirection)
 
-              setTimeout(() => {
-                target?.removeAttribute('data-blink')
-                timer.current = null
-              }, 400)
-            }
-            target = target?.parentElement
-          }
-        }
-      }, Math.random() * 200)
+      //         setTimeout(() => {
+      //           target?.removeAttribute('data-blink')
+      //           timer.current = null
+      //         }, 400)
+      //       }
+      //       target = target?.parentElement
+      //     }
+      //   }
+      // }, Math.random() * 200)
     }, [])
     return (
       <div className="inline-block" ref={ref}>

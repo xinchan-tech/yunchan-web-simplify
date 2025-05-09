@@ -1,4 +1,5 @@
 import { getUser } from '@/api'
+import { TCBroadcast } from '@/utils/broadcast'
 import { queryClient } from '@/utils/query-client'
 import { AESCrypt } from '@/utils/string'
 import { create } from 'zustand'
@@ -25,18 +26,29 @@ type User = Omit<Awaited<ReturnType<typeof getUser>>, 'permission'> & {
 
 interface UserStore {
   user?: User
+  loginType?: 'account' | 'wechat' | 'apple' | 'google'
+  setLoginType: (type: 'account' | 'wechat' | 'apple' | 'google') => void
   setUser: (user: Partial<User>) => void
   refreshUser: () => Promise<User>
   reset: () => void
   hasAuthorized: () => boolean
+  hasLogin: () => boolean
 }
 
 export const useUser = create<UserStore>()(
   persist(
     (set, get) => ({
       user: undefined,
-      setUser: user => set({ user: Object.assign({}, get().user ?? {}, user) as User }),
-      reset: () => set({ user: undefined }),
+      loginType: undefined,
+      setUser: user => {
+        const u = { user: Object.assign({}, get().user ?? {}, user) as User }
+        set(u)
+        TCBroadcast.sendUser(u.user)
+      },
+      reset: () => {
+        set({ user: undefined })
+        TCBroadcast.sendUser(undefined)
+      },
       refreshUser: async () => {
         const res = await queryClient.fetchQuery({
           queryKey: [getUser.cacheKey],
@@ -52,7 +64,7 @@ export const useUser = create<UserStore>()(
           permission: permission
         }
         set({ user })
-
+        TCBroadcast.sendUser(user)
         return user
       },
       hasAuthorized: () => {
@@ -69,11 +81,41 @@ export const useUser = create<UserStore>()(
         }
 
         return true
+      },
+      setLoginType: type => set({ loginType: type }),
+      hasLogin: () => {
+        const user = get().user
+
+        if (!user) {
+          return false
+        }
+
+        const { username } = user
+
+        if (!username) {
+          return false
+        }
+
+        return true
       }
     }),
     {
       name: 'user',
-      storage: createJSONStorage(() => localStorage)
+      storage: createJSONStorage(() => localStorage),
+      onRehydrateStorage: () => {
+        return () => {
+          const unSub = TCBroadcast.onUserChange(e => {
+            // console.log('user change', e.data.data.user)
+            useUser.setState({
+              user: e.data.data.user
+            })
+          })
+
+          window.addEventListener('beforeunload', () => {
+            unSub()
+          })
+        }
+      }
     }
   )
 )

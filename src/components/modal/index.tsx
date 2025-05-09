@@ -1,17 +1,16 @@
 import { usePropValue } from '@/hooks'
-import { useConfig } from '@/store'
 import { cn } from '@/utils/style'
 import type { DialogContentProps } from '@radix-ui/react-dialog'
+import { VisuallyHidden } from '@radix-ui/react-visually-hidden'
 import { isFunction } from '@tanstack/react-table'
 import { useBoolean, useUpdateEffect } from 'ahooks'
 import to from 'await-to-js'
 import { type ReactNode, useCallback } from 'react'
 import { FormProvider, type UseFormReturn } from 'react-hook-form'
 import type { z } from 'zod'
+import { JknIcon } from '../tc/jkn-icon'
 import { Button } from '../ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog'
-import { JknIcon } from '../jkn/jkn-icon'
-import { VisuallyHidden } from '@radix-ui/react-visually-hidden'
 
 export interface UseModalAction {
   open: (...arg: unknown[]) => void
@@ -26,9 +25,10 @@ export interface UseModalProps {
   onOpen?: (...arg: any[]) => void
   className?: string
   footer?: boolean | ReactNode
-  onOk?: (...arg: any[]) => void
+  onOk?: (...arg: any[]) => Promise<Nullable<boolean>> | Nullable<boolean>
   confirmLoading?: boolean
   closeOnMaskClick?: boolean
+  background?: string
 }
 
 export const useModal = ({
@@ -39,12 +39,12 @@ export const useModal = ({
   className,
   footer,
   confirmLoading,
+  background,
   ...props
 }: UseModalProps) => {
   const [modalVisible, { toggle: toggleModalVisible }] = useBoolean(false)
   const [innerTitle, setInnerTitle] = usePropValue(title)
   const [visible, { setFalse, setTrue }] = useBoolean(false)
-  const platform = useConfig(s => s.platform)
   const _onOpenChange = (open?: boolean) => {
     if (!open) {
       toggleModalVisible()
@@ -71,9 +71,11 @@ export const useModal = ({
 
   const modal: UseModalAction = {
     open: (...arg: unknown[]) => {
-      toggleModalVisible()
-      setTrue()
-      onOpen?.(...arg)
+      if (!visible) {
+        toggleModalVisible()
+        setTrue()
+        onOpen?.(...arg)
+      }
     },
     close: () => {
       toggleModalVisible()
@@ -88,11 +90,34 @@ export const useModal = ({
     }
   }
 
+  const [loading, { setTrue: showLoading, setFalse: hideLoading }] = useBoolean(false)
+
+  const _onOk = async () => {
+    if (!props.onOk) return
+
+    const r = props.onOk()
+
+    if (r instanceof Promise) {
+      showLoading()
+      const [err] = await to(r)
+      hideLoading()
+
+      if (err) {
+        throw err
+      }
+    }
+  }
+
   const render = () => {
     if (!visible) return null
     return (
       <Dialog open={modalVisible} onOpenChange={_onOpenChange} modal>
-        <DialogContent className={cn('w-[680px]', className)} onPointerDownOutside={onPointerDownOutside} onOpenAutoFocus={(e) => e.preventDefault()}>
+        <DialogContent
+          background={background}
+          className={cn('w-[680px]', className)}
+          onPointerDownOutside={onPointerDownOutside}
+          onOpenAutoFocus={e => e.preventDefault()}
+        >
           {innerTitle ? (
             <DialogHeader>
               <DialogTitle asChild>
@@ -104,7 +129,7 @@ export const useModal = ({
                         'box-border rounded cursor-pointer flex items-center justify-center ml-auto w-5 h-5 hover:bg-accent'
                       )}
                       onClick={toggleModalVisible}
-                      onKeyDown={() => {}}
+                      onKeyDown={() => { }}
                     >
                       <JknIcon.Svg name="close" className="w-3 h-3" />
                     </span>
@@ -127,7 +152,7 @@ export const useModal = ({
               <Button variant="outline" className="w-24 box-border" onClick={() => toggleModalVisible()}>
                 取消
               </Button>
-              <Button className="w-24 box-border " loading={confirmLoading} onClick={() => props.onOk?.()}>
+              <Button className="w-24 box-border " loading={confirmLoading || loading} onClick={() => _onOk()}>
                 确认
               </Button>
             </DialogFooter>
@@ -147,7 +172,7 @@ export const useModal = ({
 
 export interface UseFormModalProps<T extends z.ZodTypeAny> extends Omit<UseModalProps, 'onOk' | 'content'> {
   content: ReactNode
-  onOk: (values: z.infer<T>) => void
+  onOk: (values: z.infer<T>) => Promise<Nullable<boolean>> | Nullable<boolean>
   form: UseFormReturn<z.infer<T>>
 }
 
@@ -171,7 +196,7 @@ export const useFormModal = <T extends z.ZodTypeAny>({
     onOpen?.(...arg)
   }
 
-  const _onOk = async () => {
+  const _onOk = async (..._arg: any[]) => {
     await form.trigger()
     form.handleSubmit(_onFinish)()
   }
@@ -185,7 +210,7 @@ export const useFormModal = <T extends z.ZodTypeAny>({
   const { modal, context } = useModal({
     content: _content,
     onOpen: _onOpen,
-    onOk: _onOk,
+    onOk: _onOk as any,
     ...props
   })
 

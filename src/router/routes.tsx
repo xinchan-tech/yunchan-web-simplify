@@ -1,10 +1,31 @@
 import App from '@/app'
 import { lazy } from 'react'
-import type { RouteObject } from 'react-router'
+import { Navigate, type RouteObject } from 'react-router'
 
 export const routes: RouteObject[] = [
   {
     path: '/',
+    Component: lazy(() => import('@/pages/home')),
+    children: [
+      {
+        index: true,
+        Component: lazy(() => import('@/pages/home/home'))
+      },
+      {
+        path: 'features',
+        Component: lazy(() => import('@/pages/home/features'))
+      },
+      {
+        path: 'cookies',
+        Component: lazy(() => import('@/pages/home/cookies'))
+      }
+    ],
+    handle: {
+      title: '官网'
+    }
+  },
+  {
+    path: '/app',
     element: <App />,
     children: [
       {
@@ -15,83 +36,76 @@ export const routes: RouteObject[] = [
         }
       },
       {
-        path: '/stock',
+        path: '/app/stock',
         Component: lazy(() => import('@/pages/stock')),
         children: [
+          // {
+          //   index: true,
+          //   Component: lazy(() => import('@/pages/stock/info')),
+          //   handle: {
+          //     title: '个股盘口'
+          //   }
+          // },
           {
-            index: true,
-            element: <div/>,
-            handle: {
-              title: '个股盘口'
-            }
-          },
-          {
-            path: '/stock/alarm',
+            path: '/app/stock/alarm',
             Component: lazy(() => import('@/pages/stock-alarm')),
             handle: {
               title: '股票警报'
             }
           },
-          {
-            path: '/stock/*',
-            element: <div/>,
-            handle: {
-              title: '个股盘口'
-            }
-          }
+          // {
+          //   path: '/app/stock/*',
+          //   Component: lazy(() => import('@/pages/stock/info')),
+          //   handle: {
+          //     title: '个股盘口'
+          //   }
+          // }
         ]
       },
       {
-        path: '/golden',
+        path: '/app/golden',
         Component: lazy(() => import('@/pages/golden-pool')),
         handle: {
           title: '股票自选'
         }
       },
       {
-        path: '/views',
+        path: '/app/views',
         Component: lazy(() => import('@/pages/views')),
         handle: {
           title: '行情概览'
         }
       },
       {
-        path: '/super',
+        path: '/app/super',
         Component: lazy(() => import('@/pages/super')),
         handle: {
           title: '超级选股'
         }
       },
       {
-        path: '/calendar',
+        path: '/app/calendar',
         Component: lazy(() => import('@/pages/calendar')),
         handle: {
           title: '股票日历'
         }
       },
       {
-        path: '/message',
+        path: '/app/message',
         Component: lazy(() => import('@/pages/message')),
         handle: {
           title: '消息中心'
         }
       },
       {
-        path: '/shout',
+        path: '/app/shout',
         Component: lazy(() => import('@/pages/shout')),
         handle: {
           title: '大V快评'
         }
       },
-      // {
-      //   path: '/alarm',
-      //   Component: lazy(() => import('@/pages/alarm')),
-      //   handle: {
-      //     title: 'AI警报'
-      //   }
-      // },
       {
-        path: '/setting',
+        path: '/app/setting',
         Component: lazy(() => import('@/pages/setting')),
         handle: {
           title: '系统设置'
@@ -99,7 +113,7 @@ export const routes: RouteObject[] = [
       },
 
       {
-        path: '/push',
+        path: '/app/push',
         Component: lazy(() => import('@/pages/push')),
         handle: {
           title: '特色推送'
@@ -107,7 +121,7 @@ export const routes: RouteObject[] = [
       },
 
       {
-        path: '/mall',
+        path: '/app/mall',
         Component: lazy(() => import('@/pages/mall')),
         handle: {
           title: '特色商城'
@@ -115,7 +129,7 @@ export const routes: RouteObject[] = [
       },
 
       {
-        path: '/finance',
+        path: '/app/finance',
         Component: lazy(() => import('@/pages/finance')),
         handle: {
           title: '财务估值'
@@ -123,7 +137,7 @@ export const routes: RouteObject[] = [
       },
 
       {
-        path: '/login',
+        path: '/app/login',
         Component: lazy(() => import('@/pages/login')),
         handle: {
           title: '登录'
@@ -131,7 +145,7 @@ export const routes: RouteObject[] = [
       },
 
       {
-        path: '/user',
+        path: '/app/user',
         Component: lazy(() => import('@/pages/user')),
         children: [
           {
@@ -173,35 +187,67 @@ export const routes: RouteObject[] = [
         handle: {
           title: '个人中心'
         }
+      },
+    ]
+  },
+  // {
+  //   path: '/chat',
+  //   Component: lazy(() => import('@/pages/groupchat')),
+  //   handle: {
+  //     title: '讨论社群'
+  //   }
+  // },
+  // {
+  //   path: '/chat',
+  //   Component: lazy(() => import('@/pages/community')),
+  //   handle: {
+  //     title: '讨论社群'
+  //   },
+  //   children: [
+  //     {
+  //       index: true,
+  //       Component: lazy(() => import('@/pages/community/chat')),
+  //       handle: {
+  //         title: '讨论社群'
+  //       }
+  //     }
+  //   ]
+  // },
+  {
+    path: '/assets',
+    Component: lazy(() => import('@/pages/assets')),
+    children: [
+      {
+        index: true,
+        Component: lazy(() => import('@/pages/assets/wallet'))
+      },
+      {
+        path: 'aiTrading',
+        Component: lazy(() => import('@/pages/assets/ai-trading'))
+      },
+      {
+        path: 'invest',
+        Component: lazy(() => import('@/pages/assets/invest'))
+      },
+      {
+        path: 'historyList',
+        Component: lazy(() => import('@/pages/assets/history-list'))
+      },
+      {
+        path: 'curvReport',
+        Component: lazy(() => import('@/pages/assets/curv-report'))
       }
     ]
   },
   {
-    path: '/chat',
-    element: <div/>,
-    handle: {
-      title: '讨论社群'
-    }
-  },
-  {
     path: '/home',
     Component: lazy(() => import('@/pages/home')),
-    children: [
-      {
-        index: true,
-        Component: lazy(() => import('@/pages/home/home'))
-      },
-      {
-        path: 'features',
-        Component: lazy(() => import('@/pages/home/features'))
-      },
-      {
-        path: 'cookies',
-        Component: lazy(() => import('@/pages/home/cookies'))
-      }
-    ],
+    },
+  {
+    path: '*',
+    element: <Navigate to="/app" />,
     handle: {
-      title: '官网'
+      title: ''
     }
   }
 ]

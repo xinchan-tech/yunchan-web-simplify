@@ -1,16 +1,20 @@
 import mitt, { type Emitter } from 'mitt'
+import type { WsSubscribeType } from "./ws"
+import { useEffect } from "react"
 
 type Events = {
   login: unknown
   toast: { message: string }
   cleanPickerStockMethod: unknown
   cleanPickerStockFactor: unknown
-  logout: unknown
+  notAuth: unknown
+  logout: Nullable<boolean>
+  alarm: WsSubscribeType['alarm']
 }
 
 // useToken.getState().removeToken()
 // useUser.getState().reset()
-const appEvent = mitt<Events>()
+
 
 class EventEmitter<T extends Record<string, unknown>> {
   private event: Emitter<T>
@@ -56,4 +60,16 @@ export const createEvent = <T extends Record<string, unknown>>() => {
   return new EventEmitter<T>()
 }
 
-export { appEvent }
+const appEvent = createEvent<Events>()
+
+export const useAppEvent = <T extends keyof Events>(event: T, cb: (e: Events[T]) => void) => {
+  useEffect(() => {
+    const unsubscribe = appEvent.on(event, cb)
+
+    return () => {
+      unsubscribe()
+    }
+  }, [cb, event])
+}
+
+export { appEvent, type EventEmitter }

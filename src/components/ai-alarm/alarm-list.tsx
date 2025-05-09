@@ -2,8 +2,8 @@ import { AlarmType, deleteAlarm, getAlarms, getAlarmsGroup } from '@/api'
 import {
   Button,
   JknIcon,
-  JknRcTable,
-  type JknRcTableProps,
+  TcRcTable,
+  type TcRcTableProps,
   Popover,
   PopoverAnchor,
   PopoverClose,
@@ -61,7 +61,7 @@ const GroupAlarm = (props: AlarmItemProps) => {
   }
   const query = useQuery(options)
 
-  const [list, { setList, onSort }] = useTableData<Stock>([], 'symbol')
+  const [list, { setList, onSort }] = useTableData<Stock>([])
 
   useEffect(() => {
     if (query.data) {
@@ -126,7 +126,7 @@ const GroupAlarm = (props: AlarmItemProps) => {
   })
 
   const columns = useMemo(() => {
-    const c: JknRcTableProps<ArrayItem<typeof list>>['columns'] = [
+    const c: TcRcTableProps<ArrayItem<typeof list>>['columns'] = [
       {
         title: '序号',
         dataIndex: 'index',
@@ -304,11 +304,11 @@ const GroupAlarm = (props: AlarmItemProps) => {
 
   return (
     <div className="h-full overflow-hidden">
-      <JknRcTable
+      <TcRcTable
         rowKey="symbol"
         onRow={row => ({
           onClick: () => props.onChange?.(row.symbol),
-          onDoubleClick: () => router.navigate(`/stock/trading?symbol=${row.symbol}`)
+          onDoubleClick: () => router.navigate(`/app/stock/trading?symbol=${row.symbol}`)
         })}
         data={list}
         columns={columns}
@@ -416,7 +416,7 @@ const AlarmGroupList = (props: AlarmGroupListProps) => {
   })()
 
   const columns = useMemo(() => {
-    const c: JknRcTableProps<TableDataType>['columns'] = [
+    const c: TcRcTableProps<TableDataType>['columns'] = [
       {
         title: '序号',
         dataIndex: 'index',
@@ -580,7 +580,7 @@ const AlarmGroupList = (props: AlarmGroupListProps) => {
 
   return (
     <div className="h-full overflow-hidden">
-      <JknRcTable rowKey="id" data={data} columns={columns} />
+      <TcRcTable rowKey="id" data={data} columns={columns} />
     </div>
   )
 }

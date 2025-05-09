@@ -1,5 +1,5 @@
 import { type FC, useState } from 'react'
-import { JknIcon } from '../jkn/jkn-icon'
+import { JknIcon } from '../tc/jkn-icon'
 import StarRect from './rect'
 
 interface StarProps {

@@ -14,7 +14,7 @@ import {
   ScatterChart,
   type ScatterSeriesOption,
   TreemapChart,
-  type TreemapSeriesOption
+  type TreemapSeriesOption,
 } from 'echarts/charts'
 
 import {
@@ -40,7 +40,9 @@ import {
   type ToolboxComponentOption,
   TooltipComponent,
   type TooltipComponentOption,
-  TransformComponent
+  TransformComponent,
+  VisualMapComponent,
+  type VisualMapOption
 } from 'echarts/components'
 
 import { LabelLayout, UniversalTransition } from 'echarts/features'
@@ -70,7 +72,8 @@ echarts.use([
   BarChart,
   PieChart,
   MarkPointComponent,
-  ScatterChart
+  ScatterChart,
+  VisualMapComponent,
 ])
 
 export type ECOption = echarts.ComposeOption<
@@ -92,6 +95,7 @@ export type ECOption = echarts.ComposeOption<
   | PieSeriesOption
   | MarkPointComponentOption
   | ScatterSeriesOption
+  | VisualMapOption
 >
 
 export default echarts

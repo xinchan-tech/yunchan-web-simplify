@@ -4,6 +4,31 @@ import { twMerge } from 'tailwind-merge'
 
 export const cn = (...args: ClassValue[]) => twMerge(clsx(args))
 
+export declare namespace ColorType {
+  export type HSB = {
+    h: number
+    s: number
+    b: number
+  }
+  export type HSL = {
+    h: number
+    s: number
+    l: number
+  }
+  export type RGB = {
+    r: number
+    g: number
+    b: number
+  }
+  export type RGBA = {
+    r: number
+    g: number
+    b: number
+    a: number
+  }
+  export type HEX = string
+}
+
 export const colorUtil = {
   /**
    * 颜色盘
@@ -42,9 +67,64 @@ export const colorUtil = {
         }
       : undefined
   },
+  rgbaToHex(rgba: ColorType.RGBA) {
+    const r = Math.floor(rgba.r).toString(16).padStart(2, '0')
+    const g = Math.floor(rgba.g).toString(16).padStart(2, '0')
+    const b = Math.floor(rgba.b).toString(16).padStart(2, '0')
+    const a = Math.floor(rgba.a * 255).toString(16).padStart(2, '0')
+    return `#${r}${g}${b}${a}`.toUpperCase()
+  },
   rgbaToString(rgba?: { r: number; g: number; b: number; a: number }) {
     if (!rgba) return ''
     return `rgba(${rgba.r}, ${rgba.g}, ${rgba.b}, ${rgba.a})`
+  },
+  hsbToHex(hsb: ColorType.HSB) {
+    const rgb = this.hsbToRGB(hsb)
+    if (!rgb) return ''
+    return this.rgbToHex(rgb)
+  },
+  hsbToRGB(hsb: ColorType.HSB) {
+    const { h, s, b:_b } = hsb
+    const saturation = s / 100
+    const brightness = _b / 100
+    const chroma = brightness * saturation
+    const x = chroma * (1 - Math.abs(((h / 60) % 2) - 1))
+    const m = brightness - chroma
+
+    let r = 0
+    let g = 0
+    let b = 0
+    if (h >= 0 && h < 60) {
+      r = chroma
+      g = x
+      b = 0
+    } else if (h >= 60 && h < 120) {
+      r = x
+      g = chroma
+      b = 0
+    } else if (h >= 120 && h < 180) {
+      r = 0
+      g = chroma
+      b = x
+    } else if (h >= 180 && h < 240) {
+      r = 0
+      g = x
+      b = chroma
+    } else if (h >= 240 && h < 300) {
+      r = x
+      g = 0
+      b = chroma
+    } else if (h >= 300 && h < 360) {
+      r = chroma
+      g = 0
+      b = x
+    }
+
+    return {
+      r: Math.round((r + m) * 255),
+      g: Math.round((g + m) * 255),
+      b: Math.round((b + m) * 255)
+    }
   },
   hslToRGB(hsl: string) {
     const result = /^(\d+),\s*([\d.]+)%,\s*([\d.]+)%$/i.exec(hsl)
@@ -76,8 +156,32 @@ export const colorUtil = {
     return { r: Math.round(r * 255), g: Math.round(g * 255), b: Math.round(b * 255) }
   },
   rgbToHex(rgb: { r: number; g: number; b: number }) {
-    const r = `#${Math.floor(rgb.r).toString(16)}${Math.floor(rgb.g).toString(16)}${Math.floor(rgb.b).toString(16)}`
+    const r = `#${Math.floor(rgb.r).toString(16).padStart(2, '0')}${Math.floor(rgb.g).toString(16).padStart(2, '0')}${Math.floor(rgb.b).toString(16).padStart(2, '0')}`.toUpperCase()
     return r
+  },
+  parseRGBA(rgba: string): ColorType.RGBA | undefined {
+    /**
+     * 判断rgba和hex
+     */
+    const hexResult = /^#?([a-f\d]{6}|[a-f\d]{8})$/i.exec(rgba)
+
+    if (hexResult) {
+      const hex = hexResult[1]
+      const r = Number.parseInt(hex.slice(0, 2), 16)
+      const g = Number.parseInt(hex.slice(2, 4), 16)
+      const b = Number.parseInt(hex.slice(4, 6), 16)
+      const a = hex.length === 8 ? Number.parseInt(hex.slice(6, 8), 16) / 255 : 1
+      return { r, g, b, a }
+    }
+    
+    const result = /^rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)$/i.exec(rgba)
+    if (!result) return undefined
+    return {
+      r: Number(result[1]),
+      g: Number(result[2]),
+      b: Number(result[3]),
+      a: result[4] ? Number(result[4]) : 1
+    }
   },
   radomColorForPalette() {
     return this.colorPalette[Math.floor(Math.random() * this.colorPalette.length)]

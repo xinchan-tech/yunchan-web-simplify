@@ -9,7 +9,7 @@ import { colorUtil } from '@/utils/style'
 import { useQuery } from '@tanstack/react-query'
 import { useMount, useUnmount, useUpdateEffect } from 'ahooks'
 import { type PropsWithChildren, memo, useCallback, useEffect, useRef, useState } from 'react'
-import { withSort } from '../jkn/jkn-icon/with-sort'
+import { withSort } from '../tc/jkn-icon/with-sort'
 
 const extend: StockExtend[] = [
   'basic_index',

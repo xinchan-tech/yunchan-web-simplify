@@ -1,10 +1,8 @@
-import { useAuthorized, useToast } from '@/hooks'
+import { useAuthorized } from '@/hooks'
 import { router } from '@/router'
-import { useToken } from '@/store'
 import { cn } from '@/utils/style'
-import { Settings } from 'lucide-react'
-import { Fragment, type ReactNode, useEffect, useMemo, useState } from 'react'
-import { JknIcon } from '../jkn/jkn-icon'
+import { type ReactNode, useEffect, useMemo, useState } from 'react'
+import { JknIcon } from '../tc/jkn-icon'
 
 type MenuItem = {
   icon: IconName | ReactNode
@@ -14,8 +12,6 @@ type MenuItem = {
 
 const Menu = () => {
   const [pathname, setPathname] = useState(router.state.location.pathname)
-  const { token } = useToken()
-  const { toast } = useToast()
 
   useEffect(() => {
     const s = router.subscribe(s => {
@@ -32,22 +28,22 @@ const Menu = () => {
       {
         icon: <JknIcon.Svg name="dashboard" size={24} />,
         title: '首页',
-        path: '/'
+        path: '/app'
       },
       {
         icon: <JknIcon.Svg name="views" size={24} />,
         title: '行情',
-        path: '/views'
+        path: '/app/views'
       },
       {
         icon: <JknIcon.Svg name="pool" size={24} />,
         title: '自选',
-        path: '/golden'
+        path: '/app/golden'
       },
       {
         icon: <JknIcon.Svg name="picker" size={24} />,
         title: '选股',
-        path: '/super'
+        path: '/app/super'
       },
       // {
       //   icon: <JknIcon.Svg name="ai-alarm" size={24} />,
@@ -57,12 +53,12 @@ const Menu = () => {
       {
         icon: <JknIcon.Svg name="calendar" size={24} />,
         title: '日历',
-        path: '/calendar'
+        path: '/app/calendar'
       },
       {
-        icon: <JknIcon.Svg name="message" size={24} />,
+        icon: <JknIcon.Svg name="chat-message" size={24} />,
         title: '消息',
-        path: '/message'
+        path: '/app/message'
       }
       // {
       //   icon: <JknIcon.Svg name="shout" size={24} />,
@@ -81,14 +77,7 @@ const Menu = () => {
   const [auth, toastNotAuth] = useAuthorized('vcomment')
 
   const onNav = (path: string) => {
-    if (!token && path !== '/' && path !== '/setting') {
-      toast({
-        title: '请先登录'
-      })
-      return
-    }
-
-    if (path === '/shout' && !auth()) {
+    if (path === '/app/shout' && !auth()) {
       toastNotAuth()
       return
     }
@@ -99,10 +88,10 @@ const Menu = () => {
   return (
     <div className="h-full flex flex-col items-center w-full px-0.5 box-border space-y-2.5 text-foreground">
       {menus.map(item => (
-        <div className="text-center cursor-pointer hover:text-primary" key={item.title}>
+        <div className="text-center cursor-pointer hover:text-primary" key={item.title}
+          onClick={() => onNav(item.path)}
+          onKeyDown={() => { }}>
           <div
-            onClick={() => onNav(item.path)}
-            onKeyDown={() => {}}
             className={cn(
               'flex flex-col items-center hover:bg-accent w-8 h-[28px] justify-center rounded-xs',
               pathname === item.path && 'bg-primary/30'

@@ -1,0 +1,163 @@
+import { cn } from '@/utils/style'
+import copy from 'copy-to-clipboard'
+import { type ReactNode, useContext } from 'react'
+import { type Message, MessageImage, MessageText } from 'wukongimjssdk'
+import MsgHead from '../msg-head'
+
+import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from '@/components'
+import { useToast } from '@/hooks'
+import { useUser } from '@/store'
+import { useGroupChatShortStore } from '@/store/group-chat-new'
+import { GroupChatContext } from '../..'
+
+function copyImage(message: Message) {
+  const tempImg = document.createElement('img')
+  tempImg.src = message.content.remoteUrl
+
+  // 将 div 添加到 document
+  document.body.appendChild(tempImg)
+
+  // 选择 div 中的内容
+  const range = document.createRange()
+  range.selectNode(tempImg)
+  window.getSelection().removeAllRanges() // 清除现有的选择
+  window.getSelection().addRange(range)
+
+  // 执行复制命令
+  document.execCommand('copy')
+
+  // 清理选择和临时元素
+  window.getSelection().removeAllRanges()
+  document.body.removeChild(tempImg)
+}
+
+const MsgCard = (props: { data: Message; children: string | ReactNode; historyMode?: boolean }) => {
+  const { data, historyMode } = props
+  const subscribers = useGroupChatShortStore(state => state.subscribers)
+  const { user } = useUser()
+  const { toast } = useToast()
+  //  获取撤回权限
+  const getRevokePremession = (data: Message) => {
+    // 自己的都能撤回
+    if (data.fromUID === user?.username) {
+      return true
+    }
+    if (subscribers && subscribers.length > 0) {
+      const msgUid = data.fromUID
+      const self = subscribers.find(item => item.uid === user?.username)
+      const sender = subscribers.find(item => item.uid === msgUid)
+      // 发送人是群主的不能撤回
+      if (sender?.orgData.type === '2') {
+        return false
+      }
+      if (self && self.orgData.type !== '0') {
+        // 自己是群主都能撤回
+        if (self.orgData.type === '2') {
+          return true
+        }
+        if (self.orgData.type === '1') {
+          // 管理员只能撤回普通群员的
+          if (sender?.orgData.type === '0') {
+            return true
+          }
+        }
+      }
+    }
+
+    return false
+  }
+
+  const { handleReply, handleRevoke } = useContext(GroupChatContext)
+  return (
+    <div className={cn('flex msg-card items-start', data.send && 'justify-end', data.content.reply ? 'mb-2' : 'mb-6')}>
+      {data.send !== true && (
+        <div className="w-12 h-full rounded-md  left">
+          <MsgHead message={data} type="left" />
+        </div>
+      )}
+
+      <div className={cn('bubble  rounded-lg relative text-sm', data.send && 'right-bubble')}>
+        {!historyMode && (
+          <ContextMenu>
+            <ContextMenuTrigger asChild>
+              <span>{props.children}</span>
+            </ContextMenuTrigger>
+            <ContextMenuContent>
+              <ContextMenuItem
+                onClick={() => {
+                  typeof handleReply === 'function' && handleReply({ message: data, isQuote: true })
+                }}
+              >
+                引用
+              </ContextMenuItem>
+              <ContextMenuItem
+                onClick={() => {
+                  typeof handleReply === 'function' && handleReply({ message: data })
+                }}
+              >
+                回复
+              </ContextMenuItem>
+              {getRevokePremession(data) === true && (
+                <ContextMenuItem
+                  onClick={() => {
+                    typeof handleRevoke === 'function' && handleRevoke(data)
+                  }}
+                >
+                  撤回
+                </ContextMenuItem>
+              )}
+              <ContextMenuItem
+                onClick={() => {
+                  if (data.content instanceof MessageText && data.content.text) {
+                    copy(data.content.text)
+                    toast({ description: '复制成功' })
+                  } else if (data.content instanceof MessageImage && data.content.remoteUrl) {
+                    copyImage(data)
+                    toast({ description: '复制成功' })
+                  }
+                }}
+              >
+                复制
+              </ContextMenuItem>
+            </ContextMenuContent>
+          </ContextMenu>
+        )}
+      </div>
+
+      {data.send === true && (
+        <div className="w-12 h-full rounded-md  right">
+          <MsgHead message={data} type="right" />
+        </div>
+      )}
+      <style>
+        {`
+  
+                .sedn-card {
+
+                }
+                .msg-card {
+                    height: auto;
+                }
+                .bubble {
+                    background-color: rgb(65, 65, 65);
+                    color: #fff;
+                    padding: 12px;
+                    margin-left: 10px;
+                    min-height: 40px;
+                    box-sizing: border-box;
+                    display: flex;
+                    align-items: center;
+                    margin-top: 24px;
+                }
+                .bubble.right-bubble {
+                     margin-right: 10px;
+                }
+
+            
+        `}
+      </style>
+    </div>
+  )
+}
+
+export default MsgCard

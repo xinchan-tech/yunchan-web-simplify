@@ -1,4 +1,5 @@
 import request from '@/utils/request'
+import dayjs from 'dayjs'
 import WKSDK, { type Channel } from 'wukongimjssdk'
 
 export type getChatChannelsParams = {
@@ -6,7 +7,7 @@ export type getChatChannelsParams = {
   keywords?: string
   page?: string
   'order[price]'?: 'ASC' | 'DESC'
-  re_code?: string
+  account?: string
 }
 
 export type GroupChannelItem = {
@@ -283,4 +284,104 @@ export const revokeMessage = async (params: {
 
 export const readChannelNotice = (channelId: string) => {
   return request.post(`/channel/${channelId}/readNotice`).then(r => r.data)
+}
+
+type CreateVoteParams = {
+  id?: number
+  channel_account: string
+  title: string
+  desc: string
+  custom_item: number
+  vote_limit: number
+  start_time: number
+  end_time: number
+  items: {
+    title: string
+    id: number
+  }[]
+}
+
+type UpdateVoteParams = RequiredBy<CreateVoteParams, 'id'>
+
+export const createVote = async (params: CreateVoteParams | UpdateVoteParams) => {
+  return request.post('/chat-svc/vote/create', params).then(r => r.data)
+}
+
+type GetVoteListParams = {
+  channel_account: string
+  page: number
+  limit: number
+  /**
+   * 投票状态
+   * 0: 未开始
+   * 1: 进行中
+   * 2: 已结束
+   */
+  status?: 0 | 1 | 2
+}
+
+type GetVoteListResult = PageResult<{
+  status_name: string
+  id: number
+  channel_id: number
+  title: string
+  desc: string
+  custom_item: number
+  start_time: number
+  status: number
+  uid: string
+  vote_limit: number
+  vote_count: number
+  end_time: number
+  user_name: string
+}>
+
+export const getVoteList = async (params: GetVoteListParams) => {
+  return request.get<GetVoteListResult>('/chat-svc/vote/list', { params }).then(r => r.data)
+}
+getVoteList.cacheKey = 'groupChannels:getVoteList'
+
+type GetVoteDetailResult = {
+  status_name: string
+  id: number
+  channel_id: number
+  title: string
+  desc: string
+  custom_item: number
+  start_time: number
+  status: number
+  uid: string
+  vote_limit: number
+  end_time: number
+  items: {
+    is_voted: boolean
+    id: number
+    title: string
+    count: number
+  }[]
+}
+
+export const getVoteDetail = async (voteId: string) => {
+  return request.get<GetVoteDetailResult>('/chat-svc/vote/detail', { params: { vote_id: voteId } }).then(r => r.data)
+}
+getVoteDetail.cacheKey = 'groupChannels:getVoteDetail'
+
+export const submitVote = async (voteId: number, items: { title: string; id: number }[]) => {
+  return request.post('/chat-svc/vote/user', { vote_id: voteId, items }).then(r => r.data)
+}
+
+export const createSaleSession = async () => {
+  const code = localStorage.getItem('invite-code')
+  let invCode = undefined
+
+  if (code) {
+    const codeObj = JSON.parse(code)
+    if (codeObj.timestamp) {
+      const current = dayjs()
+      if (current.diff(codeObj.timestamp, 'day') <= 3) {
+        invCode = codeObj.code
+      }
+    }
+  }
+  return request.post('/chat-svc/sales/channel/create', { inv_code: invCode }).then(r => r.data)
 }

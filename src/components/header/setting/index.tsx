@@ -1,23 +1,22 @@
 import { logout } from '@/api'
+import logoTitleSm from '@/assets/image/logo-title-sm.png'
 import { JknAlert, JknAvatar, JknIcon, Popover, PopoverContent, PopoverTrigger, useModal } from '@/components'
 import { useToast } from '@/hooks'
 import { useToken, useUser } from '@/store'
+import { appEvent } from '@/utils/event'
+import { useBoolean, useMount, useUnmount } from 'ahooks'
 import to from 'await-to-js'
 import type { ReactNode } from 'react'
-import LoginForm from '../user/login-form'
-import UserCenter from '../user/user-center'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router'
-import { useBoolean, useMount, useUnmount } from 'ahooks'
-import { appEvent } from '@/utils/event'
-import logoTitleSm from '@/assets/image/logo-title-sm.png'
+import LoginForm from '../user/login-form'
+import UserCenter from '../user/user-center'
 
 export const HeaderSetting = () => {
   const token = useToken(s => s.token)
   const user = useUser(s => s.user)
   const { toast } = useToast()
   const reset = useUser(s => s.reset)
-  const { t } = useTranslation()
   const removeToken = useToken(s => s.removeToken)
   const navigate = useNavigate()
   const [visible, { setFalse, toggle }] = useBoolean()
@@ -25,11 +24,11 @@ export const HeaderSetting = () => {
   useMount(() => {
     appEvent.on('login', () => {
       const currentPath = window.location.pathname
-      if (currentPath === '/login') {
+      if (currentPath === '/app/login') {
         return
       }
       const params = encodeURIComponent(currentPath)
-      navigate(`/login?redirect=${params}`)
+      navigate(`/app/login?redirect=${params}`)
       return
     })
   })
@@ -57,7 +56,7 @@ export const HeaderSetting = () => {
           removeToken()
           const path = window.location.pathname
           if (path !== '/') {
-            if (path.startsWith('/home')) {
+            if (path.startsWith('/app')) {
               window.location.href = path
             } else {
               window.location.href = '/'
@@ -83,16 +82,16 @@ export const HeaderSetting = () => {
     }
   })
 
-  const userCenter = useModal({
-    content: <UserCenter />,
-    className: 'w-[600px]',
-    title: t('user center'),
-    footer: false,
-    closeIcon: true,
-    onOpen: () => {
-      setFalse()
-    }
-  })
+  // const userCenter = useModal({
+  //   content: <UserCenter />,
+  //   className: 'w-[600px]',
+  //   title: t('user center'),
+  //   footer: false,
+  //   closeIcon: true,
+  //   onOpen: () => {
+  //     setFalse()
+  //   }
+  // })
 
   return (
     <>
@@ -115,14 +114,14 @@ export const HeaderSetting = () => {
               <HeaderSettingCell
                 icon={<JknAvatar src={user?.avatar} title={user?.realname} className="size-5" />}
                 title={user?.realname}
-                onClick={() => userCenter.modal.open()}
+                onClick={() => { navigate('/app/user'); setFalse() }}
               />
             ) : null}
             <HeaderSettingCell
               icon="home"
               title="返回官网"
               onClick={() => {
-                navigate('/home')
+                navigate('/')
                 setFalse()
               }}
             />
@@ -131,7 +130,7 @@ export const HeaderSetting = () => {
               icon="setting"
               title="软件设置"
               onClick={() => {
-                navigate('/setting')
+                navigate('/app/setting')
                 setFalse()
               }}
             />
@@ -148,7 +147,7 @@ export const HeaderSetting = () => {
                 label=" "
                 color="#2962FF"
                 onClick={() => {
-                  navigate('/login')
+                  navigate('/app/login')
                   setFalse()
                 }}
               />
@@ -159,7 +158,7 @@ export const HeaderSetting = () => {
       {/* {
         loginForm.context
       } */}
-      {userCenter.context}
+      {/* {userCenter.context} */}
     </>
   )
 }
@@ -177,7 +176,7 @@ const HeaderSettingCell = ({ icon, title, label, color, onClick }: HeaderSetting
       className="flex items-center px-2.5 w-full text-sm h-11 hover:bg-accent box-border cursor-pointer"
       style={{ color }}
       onClick={onClick}
-      onKeyDown={() => {}}
+      onKeyDown={() => { }}
     >
       {typeof icon === 'string' ? <JknIcon.Svg name={icon as IconName} size={20} /> : icon}
       <span className="ml-2.5">{title}</span>

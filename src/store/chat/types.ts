@@ -42,3 +42,10 @@ export interface ChatStore {
   lastChannelReady: boolean
   usersExpanded: boolean
 }
+
+
+export interface AssetsInfoStore {
+  data: any;
+  setData: (data: any) => void;
+  refreshData: () => void;
+}

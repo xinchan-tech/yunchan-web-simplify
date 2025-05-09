@@ -3,11 +3,11 @@ import { useMount, useUnmount } from 'ahooks'
 import { type HierarchyRectangularNode, type Selection, hierarchy, select, treemap } from 'd3'
 import { useEffect, useRef } from 'react'
 
+import { useLatestRef } from '@/hooks'
 import { router } from '@/router'
 import { getStringWidth } from '@/utils/string'
 import Decimal from 'decimal.js'
 import { debounce } from 'radash'
-import { useLatestRef } from '@/hooks'
 
 type TreeMapData = {
   name: string
@@ -53,11 +53,9 @@ interface TreeMapProps {
   data: TreeMapData[]
   parentLabel?: boolean
   loading?: boolean
+  nav?: boolean
 }
 
-const SINGLE_CHART_WIDTH = getStringWidth('树', '12px sans-serif')
-const ELLIPSIS_WIDTH = getStringWidth('...', '12px sans-serif')
-const ONE_PX_WIDTH = getStringWidth('T', '1px sans-serif')
 
 const TreeMap = (props: TreeMapProps) => {
   // const listMap = useStockList(s => s.listMap)
@@ -144,7 +142,8 @@ const TreeMap = (props: TreeMapProps) => {
       .attr('height', d => d.y1 - d.y0)
       .attr('fill', d => d.data.color ?? 'transport')
       .on('click', (_, d) => {
-        router.navigate(`/stock?symbol=${d.data.name}`)
+        props.nav && 
+        router.navigate(`/app/stock?symbol=${d.data.name}`)
       })
   }
 
@@ -201,10 +200,19 @@ const TreeMap = (props: TreeMapProps) => {
       .enter()
       .append('text')
       .attr('x', d => {
-        const text = d.data.name
+        let text = d.data.name !== 'root' ? d.data.name : ''
         const rectWidth = d.x1 - d.x0
         const maxTextWidth = rectWidth * 0.6
         const rectHeight = d.y1 - d.y0
+        // const area = rectWidth * rectHeight;
+        
+        if(rectHeight < 20){
+          text = ''
+        }
+
+        if(rectWidth < 34){
+          text = ''
+        }
 
         let textSize = Math.max(Math.sqrt(maxTextWidth * rectHeight) / 6, 12)
 
@@ -229,13 +237,14 @@ const TreeMap = (props: TreeMapProps) => {
         return d.y0 + (d.y1 - d.y0) / 2 - 2
       })
       .text(d => {
-        return d.data.name
+        return d.data.symbolText
       })
       .attr('font-size', d => `${d.data.symbolSize}px`)
       .attr('fill', 'white')
       .attr('style', 'user-select: none;')
       .on('click', (_, d) => {
-        router.navigate(`/stock/trading?symbol=${d.data.name}`)
+        props.nav && 
+        router.navigate(`/app/stock/trading?symbol=${d.data.name}`)
       })
   }
 
@@ -246,10 +255,18 @@ const TreeMap = (props: TreeMapProps) => {
       .enter()
       .append('text')
       .text(d => {
-        const text = `${Decimal.create(d.data.data).gt(0) ? '+' : ''}${Decimal.create(d.data.data)}%`
+        let text = `${Decimal.create(d.data.data).gt(0) ? '+' : ''}${Decimal.create(d.data.data)}%`
         const rectWidth = d.x1 - d.x0
         const maxTextWidth = rectWidth * 0.4
         const rectHeight = (d.y1 - d.y0) * 0.8
+
+        if(rectHeight < 20){
+          text = ''
+        }
+
+        if(rectWidth < 34){
+          text = ''
+        }
         let textSize = Math.max(Math.sqrt(maxTextWidth * rectHeight) / 6, 10)
         if (textSize < 10) {
           textSize = 10
@@ -278,7 +295,8 @@ const TreeMap = (props: TreeMapProps) => {
       .attr('fill', () => '#fff')
       .attr('style', 'user-select: none;') // corrected 'sty' to 'style' and added 'user-select: none;'
       .on('click', (_, d) => {
-        router.navigate(`/stock/trading?symbol=${d.data.name}`)
+        props.nav && 
+        router.navigate(`/app/stock/trading?symbol=${d.data.name}`)
       })
   }
 

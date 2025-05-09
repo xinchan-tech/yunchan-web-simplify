@@ -8,8 +8,8 @@ import { useBoolean } from 'ahooks'
 import dayjs from 'dayjs'
 import { uid } from 'radash'
 import { useEffect, useMemo, useRef } from 'react'
-import { JknIcon } from '../jkn/jkn-icon'
-import { JknRcTable, type JknRcTableProps } from '../jkn/jkn-rc-table'
+import { JknIcon } from '../tc/jkn-icon'
+import { TcRcTable, type TcRcTableProps } from '../tc/tc-rc-table'
 import StockView from '../stock-view'
 import { Popover, PopoverAnchor, PopoverContent } from '../ui/popover'
 
@@ -94,7 +94,7 @@ export const AiAlarmNotice = () => {
     }
   }, [query.isFetched, aiAlarmAutoNotice, setTrue, query.data?.items])
 
-  const columns = useMemo<JknRcTableProps<Awaited<ReturnType<typeof getAlarmLogs>>['items'][0]>['columns']>(
+  const columns = useMemo<TcRcTableProps<Awaited<ReturnType<typeof getAlarmLogs>>['items'][0]>['columns']>(
     () => [
       {
         title: '序号',
@@ -197,7 +197,7 @@ export const AiAlarmNotice = () => {
                   &nbsp;[美东时间]
                 </div>
                 <div>
-                  <JknRcTable scroll={{ y: 'auto' }} columns={columns} data={dataByGroup[date]} rowKey="id" />
+                  <TcRcTable scroll={{ y: 'auto' }} columns={columns} data={dataByGroup[date]} rowKey="id" />
                 </div>
               </div>
             ))}

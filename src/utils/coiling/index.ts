@@ -1,21 +1,21 @@
 import type { StockRawRecord } from '@/api'
 import { useIndicator } from '@/store'
+import { nanoid } from 'nanoid'
 import { chain, isEmpty, isPromise, listify } from 'radash'
 import { stockUtils } from '../stock'
 import {
-  type IndicatorRawData,
   type IndicatorData,
+  type IndicatorRawData,
   drawBandTransform,
   drawGradientTransform,
   drawIconTransform,
   drawLineTransform,
   drawNumberTransform,
+  drawPipeTransform,
   drawRectRelTransform,
   drawStickLineTransform,
-  drawTextTransform,
-  drawPipeTransform
+  drawTextTransform
 } from './transform'
-import { nanoid } from 'nanoid'
 
 export type { IndicatorData } from './transform'
 
@@ -133,18 +133,15 @@ export class IndicatorUtils {
 
   static async calcCoiling(data: StockRawRecord[], interval: number) {
     await IndicatorUtils.withCoilingModuleReady()
-
+  
     const module = IndicatorUtils.ins.coilingModule as Awaited<ReturnType<typeof window.CoilingModule>>
     // const calcId = nanoid(8)
     const _data = data.map((item: StockRawRecord) => {
       return [Math.floor(stockUtils.parseTime(item[0]) / 1000), ...item.slice(1)] as unknown as StockRawRecord
     }, true)
-    try {
-      const r = await module.coiling_calculate(_data, data.length - 100, interval)
-      // console.log('计算id:', calcId, r)
-      return r
-    } catch (e) {
-      // console.error('计算失败:', calcId, e)
-    }
+    const r = await module.coiling_calculate(_data, data.length - 100, interval)
+ 
+    // console.log('计算id:', calcId, r)
+    return r
   }
 }

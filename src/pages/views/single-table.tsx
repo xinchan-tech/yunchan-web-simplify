@@ -6,7 +6,7 @@ import {
   getIndexRecommends,
   getUsStocks
 } from '@/api'
-import { CollectStar, JknRcTable, type JknRcTableProps, StockView, SubscribeSpan } from '@/components'
+import { CollectStar, TcRcTable, type TcRcTableProps, StockView, SubscribeSpan } from '@/components'
 import { useStockQuoteSubscribe, useTableData, useTableRowClickToStockTrading } from '@/hooks'
 import { stockUtils } from '@/utils/stock'
 import { useQuery } from '@tanstack/react-query'
@@ -85,7 +85,7 @@ const SingleTable = (props: SingleTableProps) => {
     queryFn: () => QueryFn()
   })
 
-  const [list, { setList, onSort }] = useTableData<TableDataType>([], 'symbol')
+  const [list, { setList, onSort }] = useTableData<TableDataType>([])
 
   useEffect(() => {
     const r: TableDataType[] = []
@@ -126,10 +126,10 @@ const SingleTable = (props: SingleTableProps) => {
     setList(r)
   }, [query.data, setList])
 
-  const onSortChange: JknRcTableProps<TableDataType>['onSort'] = (columnKey, sort) => {
+  const onSortChange: TcRcTableProps<TableDataType>['onSort'] = (columnKey, sort) => {
     if (!props.type || ['all', 'ixic', 'spx', 'dji', 'etf'].includes(props.type)) {
       const columnMap: Record<string, UsStockColumn> = {
-        code: 'symbol',
+        symbol: 'symbol',
         price: 'close',
         amount: 'amount',
         percent: 'increase',
@@ -155,18 +155,30 @@ const SingleTable = (props: SingleTableProps) => {
 
   useStockQuoteSubscribe(query.data?.map(o => o.symbol) ?? [])
 
-  const columns = useMemo<JknRcTableProps<TableDataType>['columns']>(
+  const columns = useMemo<TcRcTableProps<TableDataType>['columns']>(
     () => [
       {
+        title: '',
+        dataIndex: 'collect',
+        align: 'center',
+        width: '4%',
+        render: (_, row) => <CollectStar checked={row.collect === 1} code={row.symbol} />
+      },
+      {
+        title: '',
+        dataIndex: 'index',
+        align: 'center',
+        width: '4%',
+        render: (_, _row, index) => <span onClick={(e) => {e.preventDefault();e.stopPropagation()}} onKeyDown={() => void 0}>{index + 1}</span>
+      },
+      {
         title: '名称代码',
-        dataIndex: 'name',
+        dataIndex: 'symbol',
         align: 'left',
-        width: '28.5%',
+        width: '12.5%',
         sort: true,
         render: (_, row) => (
           <div className="flex items-center">
-            <CollectStar checked={row.collect === 1} code={row.symbol} />
-            <span className="mr-3" />
             <StockView name={row.name} code={row.symbol as string} showName />
           </div>
         )
@@ -175,7 +187,7 @@ const SingleTable = (props: SingleTableProps) => {
         title: '现价',
         dataIndex: 'price',
         align: 'left',
-        width: '13.5%',
+        width: '11.5%',
         sort: true,
         render: (_, row) => (
           <SubscribeSpan.PriceBlink
@@ -193,7 +205,7 @@ const SingleTable = (props: SingleTableProps) => {
         title: '涨跌幅',
         dataIndex: 'percent',
         align: 'left',
-        width: '13.5%',
+        width: '11.5%',
         sort: true,
         render: (_, row) => (
           <SubscribeSpan.PercentBlink
@@ -228,7 +240,7 @@ const SingleTable = (props: SingleTableProps) => {
         title: '总市值',
         dataIndex: 'total',
         align: 'left',
-        width: '15%',
+        width: '13%',
         sort: true,
         render: (_, row) => (
           <SubscribeSpan.MarketValueBlink
@@ -239,6 +251,50 @@ const SingleTable = (props: SingleTableProps) => {
             decimal={2}
             totalShare={row.totalShare ?? 0}
           />
+        )
+      },
+      {
+        title: '盘前涨跌幅',
+        dataIndex: 'prePercent',
+        align: 'left',
+        width: '10%',
+        sort: true,
+        render: (_, row) => (
+          <div className="">
+            <SubscribeSpan.PercentBlink
+              trading="preMarket"
+              symbol={row.symbol}
+              initValue={row.prePercent}
+              decimal={2}
+              showSign
+              initDirection={row.prePercent > 0}
+              zeroText="0.00%"
+              nanText="--"
+              showColor={true}
+            />
+          </div>
+        )
+      },
+      {
+        title: '盘后涨跌幅',
+        dataIndex: 'afterPercent',
+        align: 'left',
+        width: '10%',
+        sort: true,
+        render: (_, row) => (
+          <div className="">
+            <SubscribeSpan.PercentBlink
+              trading="afterHours"
+              symbol={row.symbol}
+              initValue={row.afterPercent}
+              decimal={2}
+              showSign
+              initDirection={row.afterPercent > 0}
+              zeroText="0.00%"
+              nanText="--"
+              showColor={true}
+            />
+          </div>
         )
       },
       {
@@ -255,7 +311,7 @@ const SingleTable = (props: SingleTableProps) => {
   const onRowClick = useTableRowClickToStockTrading('symbol')
 
   return (
-    <JknRcTable
+    <TcRcTable
       headerHeight={61}
       isLoading={query.isLoading}
       columns={columns}
