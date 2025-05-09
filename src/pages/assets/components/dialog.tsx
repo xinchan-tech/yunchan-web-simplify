@@ -63,7 +63,8 @@ const DialogAssets: React.FC<DialogAssetsProps> = ({ children, refreshInfo, type
         })
             .finally(() => setLoadingFalse())
             .catch((err) => {
-                toast({ description: String(err) })
+                const errArr = String(err).split(":")
+                toast({ description: errArr[errArr.length-1]})
             })
     };
 

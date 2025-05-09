@@ -93,6 +93,7 @@ const AiConfig = ({ list, row }: { list: TableDataType[]; row: TableDataType }) 
         aiQuantity: "",
         retailPrice: "",
         retailQuantity: "",
+        symbol: ""
     });
 
 
@@ -124,7 +125,8 @@ const AiConfig = ({ list, row }: { list: TableDataType[]; row: TableDataType }) 
         if (row?.price) {
             form.setValue('price', row.price)
         }
-        setStock(row)
+        setStock(row.symbol)
+        form && form.setValue('symbol', row.symbol)
     }, [row])
 
     useEffect(() => {
@@ -180,6 +182,7 @@ const AiConfig = ({ list, row }: { list: TableDataType[]; row: TableDataType }) 
             if (status == 1) {
                 toast({ description: '保存成功' })
                 form.reset()
+                form && form.setValue('symbol', params.symbol)
             } else {
                 toast({ description: msg })
             }
@@ -191,7 +194,7 @@ const AiConfig = ({ list, row }: { list: TableDataType[]; row: TableDataType }) 
     function getSaveParams(key: SelectedActionType) {
         const data = form.getValues()
         const param = {
-            symbol: stock?.symbol,
+            symbol: data.symbol,
             type,
             direction: key == 'buy' ? 1 : 2,
             condition: {}
@@ -202,8 +205,7 @@ const AiConfig = ({ list, row }: { list: TableDataType[]; row: TableDataType }) 
                 params: [{ price, quantity }]
             }
         } else {
-
-            const { aiPrice, aiQuantity, retailPrice, retailQuantity } = data
+            const { aiPrice, aiQuantity, retailPrice, retailQuantity, symbol } = data
             console.log(data, aiPrice, aiQuantity, retailPrice, retailQuantity)
             param.condition = {
                 ai_params: [
@@ -258,7 +260,17 @@ const AiConfig = ({ list, row }: { list: TableDataType[]; row: TableDataType }) 
 
                     {/* 股票选择 */}
                     <div className="mt-5 w-full box-border">
-                        <StockSelectCompent />
+                        <FormField
+                            control={form.symbol}
+                            name="symbol"
+                            render={({ field }) => (
+                                <FormItem className="flex items-center space-y-0">
+                                    <FormControl>
+                                        <StockSelect {...field} />
+                                    </FormControl>
+                                </FormItem>
+                            )}
+                        />
                     </div>
 
                     {/* 类型选择 */}

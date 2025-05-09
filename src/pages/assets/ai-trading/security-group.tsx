@@ -4,7 +4,7 @@ import {
     StockView,
     SubscribeSpan
 } from '@/components'
-import { getStockCollects, type StockRawRecord, getStockFinancials } from '@/api'
+import { getInvestStocks, type StockRawRecord, getStockFinancials } from '@/api'
 import { useTableData } from '@/hooks'
 import { stockUtils } from '@/utils/stock'
 import { useConfig, useTime } from '@/store'
@@ -22,9 +22,9 @@ const Securitygroup = ({ onUpdate, className, ...props }: { className?: string, 
     const [data, { onSort, setList }] = useTableData<TableDataType>([])
 
     const query = useQuery({
-        queryKey: [getStockCollects.cacheKey],
+        queryKey: [getInvestStocks.cacheKey],
         queryFn: () =>
-            getStockCollects({
+            getInvestStocks({
                 cate_id: 1,
                 limit: 300,
                 extend: baseExtends
@@ -37,7 +37,7 @@ const Securitygroup = ({ onUpdate, className, ...props }: { className?: string, 
             return
         }
 
-        const r: TableDataType[] = query.data.items.map(stock => {
+        const r: TableDataType[] = query.data.map(stock => {
             const lastStock = stockUtils.toStock(stock.stock, {
                 extend: stock.extend,
                 symbol: stock.symbol,
@@ -68,7 +68,7 @@ const Securitygroup = ({ onUpdate, className, ...props }: { className?: string, 
                 code: stock.symbol,
                 thumbs,
                 price: lastStock?.close,
-                percent: subStock ? stockUtils.getPercent(lastStock) : undefined,
+                percent: lastStock ? stockUtils.getPercent(lastStock) : undefined,
                 subPrice: subStock?.close,
                 subPercent: subStock ? stockUtils.getPercent(subStock) : undefined
             }
