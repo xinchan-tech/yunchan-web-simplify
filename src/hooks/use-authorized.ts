@@ -1,5 +1,6 @@
 import { router } from '@/router'
 import { type UserPermission, useUser } from '@/store'
+import { appEvent } from '@/utils/event'
 import { useCallback } from 'react'
 import { useToast } from './use-toast'
 
@@ -22,10 +23,8 @@ export const useAuthorized = <T extends Authorized>(
     return permission[key]
   }, [key, permission])
 
-  const { toast } = useToast()
-
   const toastNotAuth = useCallback(
-    (message?: string, redirect?: boolean) => {
+    (message?: string, _redirect?: boolean) => {
       let msg = message
       if (!msg) {
         switch (key) {
@@ -44,20 +43,17 @@ export const useAuthorized = <T extends Authorized>(
         }
       }
 
-      toast({
-        description: msg
-      })
-
-      if (redirect) {
-        if (globalRedirectTimer) {
-          clearTimeout(globalRedirectTimer)
-        }
-        globalRedirectTimer = window.setTimeout(() => {
-          router.navigate('/mall')
-        }, 3000)
-      }
+      appEvent.emit('notAuth')
+      // if (redirect) {
+      //   if (globalRedirectTimer) {
+      //     clearTimeout(globalRedirectTimer)
+      //   }
+      //   globalRedirectTimer = window.setTimeout(() => {
+      //     router.navigate('/app/mall')
+      //   }, 3000)
+      // }
     },
-    [toast, key]
+    [key]
   )
 
   return [authPermission, toastNotAuth]

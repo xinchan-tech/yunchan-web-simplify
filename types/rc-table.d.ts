@@ -7,11 +7,13 @@ import {
 declare module 'rc-table' {
   interface ColumnType<RecordType> extends RcColumnType<RecordType> {
     sort?: boolean
-    onSort?: (columnKey: keyof RecordType, order: 'asc' | 'desc') => void
+    onSort?: (data: RecordType[], columnKey: keyof RecordType, order: 'asc' | 'desc') => RecordType[]
+    sortType?: 'string' | 'number' | 'custom'
   }
 
   interface ColumnGroupType<RecordType> extends RcColumnGroupType<RecordType> {
     sort?: boolean
-    onSort?: (columnKey: keyof RecordType, order: 'asc' | 'desc') => void
+    onSort?: (data: RecordType[], columnKey: keyof RecordType, order: 'asc' | 'desc') => RecordType[]
+    sortType?: 'string' | 'number' | 'custom'
   }
 }

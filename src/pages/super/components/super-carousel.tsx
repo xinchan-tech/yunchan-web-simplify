@@ -1,11 +1,10 @@
-import * as React from 'react'
-import { cn } from '@/utils/style'
+import { JknIcon } from '@/components/tc/jkn-icon'
 import { Button } from '@/components/ui/button'
-import { ArrowLeftIcon, ArrowRightIcon } from '@radix-ui/react-icons'
-import useEmblaCarousel, { type UseEmblaCarouselType } from 'embla-carousel-react'
+import { cn } from '@/utils/style'
 import Decimal from 'decimal.js'
+import useEmblaCarousel, { type UseEmblaCarouselType } from 'embla-carousel-react'
+import * as React from 'react'
 import { SelectCheckIcon } from './super-icon'
-import { JknIcon } from '@/components/jkn/jkn-icon'
 
 /**
  * 经济数据项类型定义
@@ -359,6 +358,7 @@ const EconomicDataItem: React.FC<EconomicDataItemProps> = ({ item, onCheckChange
           isChecked ? 'border-[#089981]' : 'border-[#B8B8B8B]'
         )}
         onClick={handleCheckboxClick}
+        onKeyDown={() => { }}
       >
         <div className="flex flex-row items-center justify-between">
           <span className="text-base text-[#DBDBDB] truncate">{item.name}</span>

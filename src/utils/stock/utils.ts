@@ -1,13 +1,13 @@
-import { StockChartInterval, type StockExtendResultMap, StockPeriod, type StockRawRecord } from '@/api'
+import { StockChartInterval, type StockExtendResultMap, StockPeriod, StockQuote, type StockRawRecord } from '@/api'
+import { router } from '@/router'
 import dayjs from 'dayjs'
 import Decimal from 'decimal.js'
+import qs from 'qs'
 import { isNumber } from 'radash'
 import { dateUtils } from '../date'
-import { type Stock, StockRecord, type StockResultRecord, type StockTrading, type StockWithExt } from './stock'
-import type { StockSubscribeHandler } from './subscribe'
 import { AESCrypt } from '../string'
-import { router } from '@/router'
-import qs from 'qs'
+import { type Stock, StockRecord, type StockResultRecord, type StockTrading, type StockWithExt } from './stock'
+import type { SubscribeQuoteType } from "./subscribe"
 
 /**
  * 判断时间数据
@@ -269,8 +269,9 @@ export const stockUtils = {
   /**
    * 涨幅 能返回infinity和NaN
    */
-  getPercentUnsafe: (stock: Stock, decimal?: number, percent?: boolean): number => {
-    let n = Decimal.create(stock.close).minus(stock.prevClose).div(stock.prevClose)
+  getPercentUnsafe: (stock: Partial<Stock>, decimal?: number, percent?: boolean): number => {
+    if (!stock.prevClose || !isNumber(+stock.prevClose)) return Number.NEGATIVE_INFINITY
+    let n = Decimal.create(stock.close ?? 0).minus(stock.prevClose).div(stock.prevClose)
 
     if (percent) {
       n = n.mul(100)
@@ -340,7 +341,7 @@ export const stockUtils = {
   /**
    * 计算订阅的市场总值
    */
-  getSubscribeMarketValue: (stock: Partial<Stock>, data: Parameters<StockSubscribeHandler<'quote'>>[0]['record']) => {
+  getSubscribeMarketValue: (stock: Partial<Stock>, data: SubscribeQuoteType['record']) => {
     if (!stock.totalShare) return
     return data.close * stock.totalShare
   },
@@ -348,7 +349,7 @@ export const stockUtils = {
   /**
    * 计算订阅的换手率
    */
-  getSubscribeTurnOverRate: (stock: Partial<Stock>, data: Parameters<StockSubscribeHandler<'quote'>>[0]['record']) => {
+  getSubscribeTurnOverRate: (stock: Partial<Stock>, data: SubscribeQuoteType['record']) => {
     const marketValue = stockUtils.getSubscribeMarketValue(stock, data)
 
     if (!marketValue) return
@@ -407,10 +408,15 @@ export const stockUtils = {
     }
   },
 
-  getIndexTimeTick: () => {
-    const PRE_NUMBER = 330
+  getIndexTimeTick: (symbol?: string) => {
+    let PRE_NUMBER = 330
     const POST_NUMBER = 390
-    const AFTER_NUMBER = 240
+    let AFTER_NUMBER = 240
+
+    if(symbol && ['IXIC', 'DJI', 'SPY'].includes(symbol)) {
+      PRE_NUMBER = 0
+      AFTER_NUMBER = 0
+    }
 
     return {
       pre: PRE_NUMBER,
@@ -420,7 +426,7 @@ export const stockUtils = {
     }
   },
 
-  gotoStockPage: (symbol: string, opts?: { interval: number }) => {
+  gotoStockPage: (symbol: string, opts?: { interval: number; alarm?: boolean }) => {
     const { interval } = opts ?? {}
     const query: any = {
       symbol
@@ -430,8 +436,18 @@ export const stockUtils = {
       query.q = AESCrypt.encrypt(JSON.stringify({ interval }))
     }
 
-    router.navigate(`/stock?${qs.stringify(query)}`)
+    if (opts?.alarm) {
+      router.navigate(`/app/stock/alarm?${qs.stringify(query)}`)
+    } else {
+      router.navigate(`/app/stock?${qs.stringify(query)}`)
+    }
   },
+
+  /**
+   * 是否是三大指数股票
+   */
+  isThreeIndexStock: (symbol: string) => ['IXIC', 'DJI', 'SPY'].includes(symbol),
+  
 
   parseTime
 }

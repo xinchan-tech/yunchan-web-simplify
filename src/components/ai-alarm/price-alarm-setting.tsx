@@ -9,7 +9,7 @@ import { nanoid } from 'nanoid'
 import { forwardRef, useEffect, useState } from 'react'
 import { FormProvider, useFormContext } from 'react-hook-form'
 import { z } from 'zod'
-import { JknIcon } from '../jkn/jkn-icon'
+import { JknIcon } from '../tc/jkn-icon'
 import { Button } from '../ui/button'
 import { Checkbox } from '../ui/checkbox'
 import { FormControl, FormField, FormItem, FormLabel } from '../ui/form'
@@ -20,6 +20,7 @@ import { AlarmStockPicker } from './components/alarm-stock-picker'
 import { DatePicker } from './components/date-picker'
 import { FrequencySelect } from './components/frequency-select'
 import { NameInput } from './components/name-input'
+import { JknAlert } from "../tc/jkn-alert"
 
 const formSchema = z.object({
   symbol: z.string({ message: '股票代码错误' }).min(1, '股票代码错误'),
@@ -41,7 +42,7 @@ export const PriceAlarmSetting = (props: PriceAlarmSetting) => {
     rise: [],
     fall: [],
     name: '',
-    frequency: '1',
+    frequency: '0',
     date: ''
   })
 
@@ -53,8 +54,6 @@ export const PriceAlarmSetting = (props: PriceAlarmSetting) => {
     enabled: !!symbol
   })
 
-  const { toast } = useToast()
-
   const queryClient = useQueryClient()
 
   const onSubmit = async () => {
@@ -62,7 +61,7 @@ export const PriceAlarmSetting = (props: PriceAlarmSetting) => {
 
     if (!valid) {
       for (const err of Object.keys(form.formState.errors) as unknown as (keyof typeof form.formState.errors)[]) {
-        toast({ description: form.formState.errors[err]?.message })
+        JknAlert.error(form.formState.errors[err]?.message ?? '')
         return
       }
     }
@@ -78,7 +77,8 @@ export const PriceAlarmSetting = (props: PriceAlarmSetting) => {
     const rise: number[] = []
     const fall: number[] = []
 
-    form.getValues('rise')?.map(v => {
+    form.getValues('rise')?.forEach(v => {
+      if(!v) return
       const price = Decimal.create(v)
       if (price.gt(stock.close)) {
         rise.push(price.toNumber())
@@ -99,21 +99,23 @@ export const PriceAlarmSetting = (props: PriceAlarmSetting) => {
     }
 
     if (rise.length + fall.length === 0) {
-      toast({ description: '股价设置条件必须要一个以上' })
+      JknAlert.error('股价设置条件必须要一个以上')
       return
     }
 
     const [err] = await to(addAlarm(params))
 
     if (err) {
-      toast({ description: err.message })
+      JknAlert.error(err.message)
       return
     }
 
-    toast({ description: '添加成功' })
+    JknAlert.success('添加成功')
     queryClient.refetchQueries({
       queryKey: [getAlarmConditionsList.cacheKey]
     })
+
+    form.setValue('rise', [])
   }
 
   return (
@@ -224,6 +226,13 @@ const PriceSetting = forwardRef((props: PriceSettingProps, _) => {
   })
 
   useEffect(() => {
+    if(!props.value?.length) {
+      setList([{ checked: false, value: '', id: nanoid(8) }])
+      return
+    }
+  }, [props.value])
+
+  useEffect(() => {
     if (query.data) {
       const stock = stockUtils.toStock(query.data.stock, {
         extend: query.data.extend,
@@ -234,13 +243,9 @@ const PriceSetting = forwardRef((props: PriceSettingProps, _) => {
         .mul(1.05)
         .toFixed(2)
 
-      const down = Decimal.create(stock.close ?? 0)
-        .mul(0.95)
-        .toFixed(2)
 
       setList([
-        { checked: false, value: up, id: nanoid(8) },
-        { checked: false, value: down, id: nanoid(8) }
+        { checked: false, value: up, id: nanoid(8) }
       ])
     }
   }, [query.data])
@@ -266,7 +271,7 @@ const PriceSetting = forwardRef((props: PriceSettingProps, _) => {
   }
 
   useEffect(() => {
-    props.onChange?.(list.filter(item => item.value).map(item => item.value))
+    props.onChange?.(list.map(item => item.value))
   }, [list, props.onChange])
 
   const addListItem = () => {

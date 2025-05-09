@@ -1,4 +1,4 @@
-import { StockSelectCache, JknRcTable, type JknRcTableProps, CollectStar, StockView, SubscribeSpan } from '@/components'
+import { StockSelectCache, TcRcTable, type TcRcTableProps, CollectStar, StockView, SubscribeSpan } from '@/components'
 import { getInvestStocks } from '@/api'
 import { useQuery } from '@tanstack/react-query'
 import { useQueryParams } from '@/hooks'
@@ -95,7 +95,7 @@ const InvestList = () => {
     setTotal(r.length)
   }, [query.data, setList])
 
-  const columns: JknRcTableProps<TableDataType>['columns'] = useMemo(
+  const columns: TcRcTableProps<TableDataType>['columns'] = useMemo(
     () => [
       {
         title: '序号',
@@ -113,7 +113,7 @@ const InvestList = () => {
         sort: true,
         render: (_, row) => (
           <div className="flex items-center h-[33px]">
-            <StockView doubleClick={false} name={row.name} code={row.code as string} showName />
+            <StockView name={row.name} code={row.code as string} showName />
           </div>
         )
       },
@@ -219,8 +219,8 @@ const InvestList = () => {
       <StockSelectCache allowClear placeholder="查询" className='rounded-lg' width="18.75rem" onChange={v => setKeyWord(v)} />
     </div>
 
-    <div className="overflow-auto h-full mt-5 border-0 border-t-[1px] border-solid border-[#2E2E2E] mx-[1.5rem]">
-      <JknRcTable
+    <div className="overflow-auto h-full mt-5">
+      <TcRcTable
         headerHeight={61}
         onSort={onSort}
         isLoading={query.isLoading}

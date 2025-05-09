@@ -1,7 +1,7 @@
 import { getConfig, getStockCollectCates } from '@/api'
 import { useToast } from '@/hooks'
 import { appEvent } from '@/utils/event'
-import { wsManager, WsV2 } from '@/utils/ws'
+import { wsManager } from '@/utils/ws'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useMount, useUpdateEffect } from 'ahooks'
 import { uid } from 'radash'
@@ -9,25 +9,30 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Outlet, useLocation, useNavigate } from 'react-router'
 import {
-  AiAlarmNotice,
+  AuthGuard,
   Footer,
   HeaderUser,
   JknAlert,
+  JknIcon,
   Menu,
   MenuRight,
   StockSelect,
   Toaster
 } from './components'
 
+import { useJoinGroupByInviteCode } from "./pages/groupchat/hooks"
 import { router, routes } from './router'
 import { chatConstants, useConfig, useToken, useUser } from './store'
-// import { ChartToolBar } from "./pages/stock/component/chart-tool-bar"
 import { AlarmSubscribe } from "./components/ai-alarm/alarm-subscribe"
+import qs from "qs"
+import { AESCrypt } from "./utils/string"
+import dayjs from "dayjs"
 
 export const CHAT_STOCK_JUMP = 'chat_stock_jump'
 export const CHAT_TO_APP_REFRESH_USER = 'chat_to_app_refresh_user'
 export const APP_TO_CHAT_REFRESH_USER = 'app_to_chat_refresh_user'
 
+let expireToast = false
 
 const App = () => {
   const setConsults = useConfig(s => s.setConsults)
@@ -37,11 +42,32 @@ const App = () => {
   const hasSelected = useConfig(s => s.hasSelected)
   const token = useToken(s => s.token)
   const refreshUser = useUser(s => s.refreshUser)
-  const { t, i18n } = useTranslation()
+  const { i18n } = useTranslation()
   const setUser = useUser(s => s.setUser)
-  const notLogin = useRef(0)
+  const expire = useUser(s => s.user?.authorized[0]?.expire_time)
   const queryClient = useQueryClient()
   const path = useLocation()
+  const hasAuthorized = useUser(s => s.hasAuthorized)
+  const hasLogin = useUser(s => s.hasLogin)
+
+  useEffect(() => {
+    if (!expire) return
+
+    if (expireToast) return
+
+    const expireDay = dayjs().diff(dayjs(+expire * 1000), 'day')
+
+    if (expireDay < 0) {
+      return
+    }
+
+    if (expireDay < 3) {
+      JknAlert.info({
+        content: '您的软件将在三天内过期，请尽快续费'
+      })
+      expireToast = true
+    }
+  }, [expire])
 
   const configQuery = useQuery({
     queryKey: ['system:config'],
@@ -49,12 +75,12 @@ const App = () => {
   })
 
   // 加群提示
-  // const inviteModal = useJoinGroupByInviteCode({
-  //   showTip: true,
-  //   onSuccess: () => {
-  //     refreshUser()
-  //   }
-  // })
+  const inviteModal = useJoinGroupByInviteCode({
+    showTip: true,
+    onSuccess: () => {
+      refreshUser()
+    }
+  })
 
   useEffect(() => {
     if (token) {
@@ -127,83 +153,127 @@ const App = () => {
     channel.current.onmessage = event => {
       if (event.data.type === CHAT_STOCK_JUMP) {
         if (event.data.payload) {
-          navigate(`/stock?symbol=${event.data.payload}`)
+          navigate(`/app/stock?symbol=${event.data.payload}`)
         }
       } else if (event.data.type === CHAT_TO_APP_REFRESH_USER) {
         refreshUser()
       }
     }
-    const handler = () => {
-      useToken.getState().removeToken()
-      useUser.getState().reset()
-      if (notLogin.current === 0 && window.location.pathname !== '/app') {
-        notLogin.current = 1
-        JknAlert.info({
-          content: '请先登录账号',
-          onAction: async () => {
-            notLogin.current = 0
-            window.location.href = '/'
-          }
-        })
-      }
-    }
-    appEvent.on('logout', handler)
+
 
     return () => {
       channel.current?.close()
-      appEvent.off('logout', handler)
     }
   }, [navigate])
 
+  useMount(() => {
+    const query = qs.parse(window.location.search, { ignoreQueryPrefix: true })
+    if (query.code) {
+      const current = new Date().getTime()
+      const codeObj = {
+        code: query.code,
+        cid: query.cid,
+        timestamp: current
+      }
+
+      localStorage.setItem('invite-code', JSON.stringify(codeObj))
+    }
+  })
+
+
+  useEffect(() => {
+    if (path.pathname === '/app') {
+      const query = qs.parse(path.search, { ignoreQueryPrefix: true })
+      if (query.q) {
+        const qStr = JSON.parse(AESCrypt.decrypt(query.q as string))
+
+        if (qStr.mall) {
+          appEvent.emit('notAuth', false)
+        }
+      }
+    }
+  }, [path.search, path.pathname])
 
   return (
-    <div className="container-layout dark">
-      <Toaster />
-      {/* {
-        inviteModal.contenxt
-      } */}
-      <div className="flex flex-col h-full overflow-hidden w-full">
-        <div className="box-border px-2.5 flex items-center h-11">
-          <HeaderUser />
-          {/* {
-            path.pathname.startsWith('/stock') ? (
-              <ChartToolBar />
-            ) : null
-          } */}
-          <div className="ml-auto">
-            <StockSelect className="rounded-[300px] px-3 bg-[#2E2E2E]" onChange={(s) => navigate(`/stock?symbol=${s}`)} />
-          </div>
-        </div>
-        <div className="flex-1 overflow-hidden flex bg-accent">
-          <div className="w-[40px] flex-shrink-0 bg-accent pt-1">
-            <div className="h-full bg-background w-full  flex flex-col items-center rounded-tr-xs pt-3">
-              <Menu />
+    <AuthGuard>
+      <div className="container-layout dark">
+        <Toaster />
+        {
+          inviteModal.contenxt
+        }
+        <div className="flex flex-col h-full overflow-hidden w-full">
+          <div className="box-border px-2.5 flex items-center h-11">
+            <HeaderUser />
+            {
+              path.pathname.startsWith('/app/stock') ? (
+                <ChartToolBar />
+              ) : null
+            }
+            <div className="ml-auto">
+              <StockSelect className="rounded-[300px] px-3 bg-[#2E2E2E]" onChange={(s) => navigate(`/app/stock?symbol=${s}`)} />
             </div>
           </div>
-
-          <div className="flex-1 overflow-hidden flex flex-col">
-            <div className="flex-1 overflow-hidden p-1 box-border">
-              <div className="rounded-xs overflow-hidden w-full h-full">
-                <Outlet />
+          <div className="flex-1 overflow-hidden flex bg-accent">
+            <div className="w-[40px] flex-shrink-0 bg-accent pt-1">
+              <div className="h-full bg-background w-full  flex flex-col items-center rounded-tr-xs pt-3">
+                <Menu />
               </div>
             </div>
 
-            <div className="footer px-1 box-border">
-              <Footer />
-            </div>
-          </div>
+            <div className="flex-1 overflow-hidden flex flex-col">
+              <div className="flex-1 overflow-hidden p-1 box-border">
+                <div className="rounded-xs overflow-hidden w-full h-full">
+                  <Outlet />
+                </div>
+              </div>
 
-          <div className="w-[40px] flex-shrink-0 flex flex-col mt-1 bg-background rounded-tl-xs">
-            <MenuRight />
-            <div className="mt-auto">
-              <AlarmSubscribe />
+              <div className="footer px-1 box-border">
+                <Footer />
+              </div>
+            </div>
+
+            <div className="w-[40px] flex-shrink-0 flex flex-col mt-1 bg-background rounded-tl-xs">
+              <MenuRight />
+              <div className="mt-auto">
+                <AlarmSubscribe />
+              </div>
             </div>
           </div>
         </div>
-      </div>
+        {
+          !hasAuthorized() && hasLogin() ? (
+            <div
+              className="size-11 bg-[#4D8252] flex items-center justify-center absolute right-12 bottom-8 rounded-full cursor-pointer"
+              onClick={() => {
+                if (useConfig.getState().ip === 'CN') {
+                  JknAlert.info({
+                    content: '根据中国大陆地区相关政策要求，此项功能暂不面向中国大陆地区用户开放，感谢理解！Due to regulatory requirements in Mainland China, This feature is not available in Mainland China.Thanks for your understanding​',
+                    title: '服务不可用'
+                  })
+                  return
+                }
+                if (!token) {
+                  JknAlert.info({
+                    content: '请先登录',
 
-      <style jsx>
-        {`
+                  })
+                  return
+                }
+                window.open(
+                  `${window.location.origin}/chat`,
+                  "tc-community",
+                  "hideit,height=850,width=1200,resizable=yes,scrollbars=yes,status=no,location=no"
+                )
+                return
+
+              }}
+            >
+              <JknIcon.Svg name="service" className="text-white h-4 w-[20px]" />
+            </div>
+          ) : null
+        }
+        <style jsx>
+          {`
           .container-layout {
             background-color: hsl(var(--background));
             overflow: hidden;
@@ -247,8 +317,9 @@ const App = () => {
             align-items: center;
           }
         `}
-      </style>
-    </div >
+        </style>
+      </div >
+    </AuthGuard>
   )
 }
 
@@ -314,7 +385,7 @@ const AppTitle = () => {
       .find(r => r.path === '/')!
       .children!.find(r => (pathname === '/' ? r.index : r.path === pathname))
 
-    if (pathname.startsWith('/stock')) {
+    if (pathname.startsWith('/app/stock')) {
       if (pathname.includes('trading')) {
         return '个股盘口'
       }

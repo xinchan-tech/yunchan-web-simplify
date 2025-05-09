@@ -102,7 +102,7 @@ type AddAlarmParams = {
     fall?: number[]
     frequency?: number
     is_email?: '0' | '1'
-    float_params?: {price: number, type: number; change_value: number}[]
+    float_params?: { price: number; type: number; change_value: number }[]
   }
 }
 export const addAlarm = async (params: AddAlarmParams) => {
@@ -253,10 +253,19 @@ export const deleteAlarmCondition = async (ids: string[]) => {
   return request.post('/stock-svc/alarm/conditions/delete', { ids }).then(r => r.data)
 }
 
+/**
+ * 清除所有警报条件
+ * @returns
+ */
+export const cleanAllAlarmConditions = async () => {
+  return request.post('/stock-svc/alarm/conditions/clear').then(r => r.data)
+}
+
 type BaseAlarmRecord = {
   symbol: string
   stock_cycle: number
   id: string
+  is_read: 0 | 1
   alarm_time: number
 }
 
@@ -290,11 +299,26 @@ type PriceAlarmRecord = BaseAlarmRecord & {
   }
 }
 
+type PercentAlarmRecord = BaseAlarmRecord & {
+  type: AlarmType.PERCENT
+  condition: {
+    data: {
+      pnl_percent: number
+      pnl_price: number
+      trigger_price: number
+      trigger_type: number
+      base_price: number
+    }
+  }
+}
+
 /**
  * 触发警报日志列表
  */
 export const getAlarmLogsList = async (params: GetAlarmLogsParams) => {
-  return request.get<Page<PriceAlarmRecord | AiAlarmRecord>>('/stock-svc/alarm/logs', { params }).then(r => r.data)
+  return request
+    .get<Page<PriceAlarmRecord | AiAlarmRecord | PercentAlarmRecord>>('/stock-svc/alarm/logs', { params })
+    .then(r => r.data)
 }
 getAlarmLogsList.cacheKey = 'stock-svc:alarms:logs'
 
@@ -310,4 +334,19 @@ export const deleteAlarmLog = async (ids: string[]) => {
  */
 export const clearAlarmLogs = async () => {
   return request.post('/stock-svc/alarm/logs/deleteAll').then(r => r.data)
+}
+
+/**
+ * 获取报警未读数量
+ */
+export const getAlarmLogUnreadCount = async () => {
+  return request.get<{ count: number }>('/stock-svc/alarm/logs/unreadCount').then(r => r.data)
+}
+getAlarmLogUnreadCount.cacheKey = 'stock-svc:alarms:unreadCount'
+
+/**
+ * 标记已读
+ */
+export const markAlarmLogRead = async (ids?: (number | string)[]) => {
+  return request.post('/stock-svc/alarm/logs/isRead', { ids }).then(r => r.data)
 }

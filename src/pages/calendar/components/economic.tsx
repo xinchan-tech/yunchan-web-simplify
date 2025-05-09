@@ -1,12 +1,12 @@
 import { getStockEconomic, getStockEconomicDetail } from '@/api'
-import { JknIcon, JknRcTable, type JknRcTableProps, useFormModal, useModal } from '@/components'
+import { JknIcon, TcRcTable, type TcRcTableProps, useFormModal } from '@/components'
 import { useTime } from '@/store'
 import echarts, { type ECOption } from '@/utils/echarts'
 import { useQuery } from '@tanstack/react-query'
 import { useMount, useUnmount } from 'ahooks'
 import dayjs from 'dayjs'
 import Decimal from 'decimal.js'
-import { useCallback, useEffect, useMemo, useRef } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 import { useForm, useFormContext } from 'react-hook-form'
 
 type TableDataType = {
@@ -67,7 +67,7 @@ const StockEconomic = () => {
       form.setValue('nextDate', nextDate)
       formModal.title(id)
     },
-    onOk: () => {}
+    onOk: async () => true
   })
 
   const getColor = useCallback(
@@ -87,7 +87,7 @@ const StockEconomic = () => {
     [time]
   )
 
-  const columns: JknRcTableProps<TableDataType>['columns'] = [
+  const columns: TcRcTableProps<TableDataType>['columns'] = [
     {
       title: '序号',
       dataIndex: 'rank',
@@ -141,8 +141,8 @@ const StockEconomic = () => {
       render: (_, row) => (
         <div className="space-x-1 text-right" style={{ color: getColor(row.date) }}>
           {
-            // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
             Array.from(new Array(row.star)).map((_, i) => (
+              // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
               <JknIcon name="ic_star_on" key={i} className="w-3 h-3" />
             ))
           }
@@ -160,7 +160,7 @@ const StockEconomic = () => {
             <span
               className="cursor-pointer"
               onClick={() => formModal.open({ id: row.key, nextDate: row.nextDate.slice(0, 11) || '--' })}
-              onKeyDown={() => {}}
+              onKeyDown={() => { }}
               style={{ color: getColor(row.date) }}
             >
               详解
@@ -173,7 +173,7 @@ const StockEconomic = () => {
 
   return (
     <div className="bg-background h-full overflow-hidden">
-      <JknRcTable rowKey="id" columns={columns} data={data} />
+      <TcRcTable rowKey="id" columns={columns} data={data} />
       {formModal.context}
     </div>
   )

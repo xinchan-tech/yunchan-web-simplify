@@ -1,16 +1,16 @@
 import { CapsuleTabs } from '@/components'
 import { useState } from 'react'
+import EconomicTimeline from './components/economic-timeline'
 import { FedInterestRateDecision } from './components/fed-interest-rate-decision'
 import StockFinancials from './components/financials'
 import StockHolidays from './components/holidays'
 import { WitchingDay } from './components/witching-day'
-import EconomicTimeline from './components/economic-timeline'
 
 const StockCalendar = () => {
   const [active, setActive] = useState('financials')
   return (
     <div className="h-full w-full overflow-hidden flex justify-center bg-black">
-      <div className="h-full overflow-hidden flex flex-col w-page-content pt-[40px] stock-views">
+      <div className="h-full overflow-hidden flex flex-col w-page-content pt-[40px] stock-views box-border">
         <div className="flex items-center flex-shrink-0 pl-2">
           <CapsuleTabs activeKey={active} onChange={setActive}>
             <CapsuleTabs.Tab value="financials" label="财报个股" />

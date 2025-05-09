@@ -1,23 +1,20 @@
 import { getStockFinancials } from '@/api'
 import {
-  AiAlarm,
   Button,
-  CapsuleTabs,
   CollectStar,
-  JknCheckbox,
   JknDatePicker,
   JknIcon,
-  JknRcTable,
-  type JknRcTableProps,
+  TcRcTable,
+  type TcRcTableProps,
   StockView,
   SubscribeSpan
 } from '@/components'
-import { useCheckboxGroup, useTableData, useTableRowClickToStockTrading } from '@/hooks'
+import { useTableData, useTableRowClickToStockTrading } from '@/hooks'
 import { stockUtils } from '@/utils/stock'
 import { useQuery } from '@tanstack/react-query'
 import dayjs from 'dayjs'
 import Decimal from 'decimal.js'
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 
 type TableDataType = {
   name: string
@@ -56,7 +53,30 @@ const StockFinancials = () => {
     }
   }, [query.data?.dates, active])
 
-  const [data, { onSort, setList }] = useTableData<TableDataType>([])
+  const [data, { onSort, setList }] = useTableData<TableDataType>([], {
+    sort: useCallback((d: TableDataType[], k: keyof TableDataType, order: 'asc' | 'desc') => {
+      if (k !== 'date') return
+      const _d = [...d]
+      _d.sort((a, b) => {
+        const [aDate, aPeriod] = a.date.split(' ')
+        const [bDate, bPeriod] = b.date.split(' ')
+
+        if (aDate !== bDate) {
+          return order === 'desc' ? aDate.localeCompare(bDate) : bDate.localeCompare(aDate)
+        }
+
+        if (aPeriod !== bPeriod) {
+          const a = aPeriod === '盘前' ? 3 : aPeriod === '盘后' ? 2 : 1
+          const b = bPeriod === '盘前' ? 3 : bPeriod === '盘后' ? 2 : 1
+          return order === 'desc' ? a - b : b - a
+        }
+
+        return (b.total ?? 0) - (a.total ?? 0)
+      })
+
+      return _d
+    }, [])
+  })
 
   useEffect(() => {
     const r: TableDataType[] = []
@@ -87,7 +107,7 @@ const StockFinancials = () => {
         name: lastStock.name,
         code: lastStock.symbol,
         id,
-        date: `${date.substring(5, 10)} ${time}`,
+        date: `${date} ${time}`,
         price: lastStock?.close || undefined,
         percent: lastStock?.percent && lastStock.percent,
         turnover: lastStock?.turnover || undefined,
@@ -103,8 +123,22 @@ const StockFinancials = () => {
     setList(r)
   }, [query.data?.items, setList])
 
-  const columns: JknRcTableProps<TableDataType>['columns'] = useMemo(
+  const columns: TcRcTableProps<TableDataType>['columns'] = useMemo(
     () => [
+      {
+        title: '',
+        dataIndex: 'collect',
+        align: 'center',
+        width: '4%',
+        render: (_, row) => <CollectStar checked={row.collect === 1} code={row.code} />
+      },
+      {
+        title: '',
+        dataIndex: 'index',
+        align: 'center',
+        width: '4%',
+        render: (_, _row, index) => <span>{index + 1}</span>
+      },
       {
         title: '名称代码',
         dataIndex: 'code',
@@ -113,8 +147,6 @@ const StockFinancials = () => {
         sort: true,
         render: (_, row) => (
           <div className="flex items-center h-[33px]">
-            <CollectStar checked={row.collect === 1} code={row.code} />
-            <span className="mr-3" />
             <StockView name={row.name} code={row.code as string} showName />
           </div>
         )
@@ -129,8 +161,8 @@ const StockFinancials = () => {
         render: (_: any, row) => (
           <SubscribeSpan.Price
             showColor={false}
-            symbol=""
-            subscribe={false}
+            symbol={row.code}
+            trading="intraDay"
             initValue={row.price}
             decimal={3}
             initDirection={row.isUp}
@@ -146,9 +178,9 @@ const StockFinancials = () => {
         sort: true,
         render: (_: any, row) => (
           <SubscribeSpan.PercentBlink
-            symbol=""
-            subscribe={false}
+            symbol={row.code}
             decimal={2}
+            trading="intraDay"
             initValue={row.percent}
             initDirection={row.isUp}
             nanText="--"
@@ -161,7 +193,15 @@ const StockFinancials = () => {
         align: 'left',
         width: '13.5%',
         sort: true,
-        render: (_: any, row) => Decimal.create(row.turnover).toShortCN(3)
+        render: (_: any, row) => (
+          <SubscribeSpan.TurnoverBlink
+            trading="intraDay"
+            symbol={row.code}
+            decimal={2}
+            initValue={row.turnover}
+            showColor={false}
+          />
+        )
       },
       {
         title: '总市值',
@@ -169,14 +209,23 @@ const StockFinancials = () => {
         align: 'left',
         width: '13.5%',
         sort: true,
-        render: (_: any, row) => Decimal.create(row.total).toShortCN(3)
+        render: (_: any, row) => (
+          <SubscribeSpan.MarketValueBlink
+            trading="intraDay"
+            symbol={row.code}
+            initValue={row.total}
+            decimal={2}
+            totalShare={0}
+            showColor={false}
+          />
+        )
       },
       {
         title: '财报时间',
         dataIndex: 'date',
         align: 'right',
         sort: true,
-        render: (_: any, row) => <span className="text-[#808080]">{row.date}</span>
+        render: (_: any, row) => <span className="text-[#808080]">{row.date.slice(5)}</span>
       }
     ],
     []
@@ -196,7 +245,7 @@ const StockFinancials = () => {
       </div>
 
       <div className="flex-1 overflow-hidden">
-        <JknRcTable
+        <TcRcTable
           headerHeight={61}
           onSort={onSort}
           isLoading={query.isLoading}

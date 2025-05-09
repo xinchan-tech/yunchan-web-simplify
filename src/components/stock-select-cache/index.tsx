@@ -3,7 +3,7 @@ import { useStockList } from '@/store'
 import { cn } from '@/utils/style'
 import { useBoolean, useLocalStorageState, useVirtualList } from 'ahooks'
 import { useRef, useState } from 'react'
-import { JknIcon } from '../jkn/jkn-icon'
+import { JknIcon } from '../tc/jkn-icon'
 import { Input, type InputProps } from '../ui/input'
 import { Popover, PopoverAnchor, PopoverContent } from '../ui/popover'
 import { ScrollArea } from '../ui/scroll-area'
@@ -19,7 +19,7 @@ const StockSelect = ({ onChange, showKeyWord, allowClear, className, width, ...p
     const stockList = useStockList()
     const [keyword, setKeyword] = useState('')
     const [selected, setSelected] = useState<string | null>(null)
-    const [hovered, setHovered] = useState(false); // 控制图标切换
+    const [hovered, setHovered] = useState(false) // 控制图标切换
     const [history, setHistory] = useLocalStorageState<typeof stockList.list>('stock-search-history', {
         defaultValue: []
     })
@@ -57,11 +57,11 @@ const StockSelect = ({ onChange, showKeyWord, allowClear, className, width, ...p
     }
 
     const close = (e: React.MouseEvent): void => { // 清除数据
-        e.stopPropagation(); // 阻止事件冒泡
+        e.stopPropagation() // 阻止事件冒泡
         setSelected(null)
-        setFalse();
+        setFalse()
         onChange?.('')
-    };
+    }
 
     return (
         <div className="w-48" style={{ width }}>
@@ -75,7 +75,9 @@ const StockSelect = ({ onChange, showKeyWord, allowClear, className, width, ...p
                 <PopoverAnchor asChild>
                     <div className={cn("border-[1px] flex justify-between items-center border-solid border-[#3c3c3c] text-sm rounded-md p-2.5 box-border w-full hover:border-[#2E2E2E] cursor-pointer",
                         !selected && 'text-[#808080]')}
-                        onClick={() => setTrue()}>
+                        onClick={() => setTrue()}
+                        onKeyDown={() => { }}
+                    >
                         {selected ? selected : '请选择股票搜索'}
                         <div
                             className='cursor-pointer'
@@ -91,7 +93,7 @@ const StockSelect = ({ onChange, showKeyWord, allowClear, className, width, ...p
                     </div>
                 </PopoverAnchor>
                 <PopoverContent align="start" className="w-48 bg-muted" style={{ width }} onOpenAutoFocus={e => e.preventDefault()}>
-                    <div className={cn('my-3 mx-2 box-border rounded-sm flex items-center px-2 bg-muted h-[38px] border-[1px] border-solid border-[#3c3c3c] rounded-md', className)}>
+                    <div className={cn('my-3 mx-2 box-border flex items-center px-2 bg-muted h-[38px] border-[1px] border-solid border-[#3c3c3c] rounded-md', className)}>
                         <JknIcon.Svg className="w-5 h-5" color="#B8B8B8" name="search" />
                         <Input
                             value={keyword}
@@ -137,7 +139,7 @@ const StockSelect = ({ onChange, showKeyWord, allowClear, className, width, ...p
                             </ScrollArea>
                         </div>
                     ) : (
-                        <VirtualStockList keyword={keyword} onClick={_onClick} width={width} />
+                        <VirtualStockList keyword={keyword} onClick={_onClick} width={width as string} />
                     )}
                 </PopoverContent>
             </Popover>

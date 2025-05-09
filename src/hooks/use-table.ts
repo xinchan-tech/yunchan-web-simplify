@@ -1,8 +1,9 @@
 import { isNumber } from 'radash'
 import { useCallback, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router'
-import { useStockQuoteSubscribe } from "./use-stock-subscribe"
-import type { QuoteBuffer } from "@/utils/stock"
+import { useLatestRef } from './use-latest-ref'
+import { useStockQuoteSubscribe } from './use-stock-subscribe'
+import type { SubscribeQuoteType } from "@/utils/stock"
 
 type OrderKey<T = any> = keyof T | ((arg: T) => string)
 
@@ -52,52 +53,105 @@ const sortData = <T extends Record<string, any>>(s: T[], columnKey: keyof T, ord
   return _s
 }
 
-export const useTableData = <T extends Record<string, any>>(data: T[], _?: OrderKey<T>) => {
-  const [list, setList] = useState<T[]>(data)
-  const initList = useRef<T[]>([])
-  const lastOrder = useRef<{ field?: keyof T; order?: 'asc' | 'desc' }>({ field: undefined, order: undefined })
+type CustomSortFn<T> = (data: T[], key: keyof T, order: 'asc' | 'desc') => Nullable<T[]>
 
-  const _setList = useCallback((data: T[]) => {
-    initList.current = [...data]
-
-    if (lastOrder.current.field && lastOrder.current.order) {
-      setList(sortData(data, lastOrder.current.field, lastOrder.current.order))
-    } else {
-      setList(data)
-    }
-  }, [])
-
-  const updateList = useCallback(setList, [])
-
-  const onSort = useCallback((columnKey: keyof T, order: 'asc' | 'desc' | undefined) => {
-    if (!order) {
-      lastOrder.current = { field: undefined, order: undefined }
-      setList([...initList.current])
-      return
-    }
-
-    lastOrder.current = { field: columnKey, order }
-    setList(s => {
-      return sortData(s, columnKey, order)
-    })
-  }, [])
-
-  return [list, { setList: _setList, onSort, updateList }] as const
+type UseTableDataOptions<T> = {
+  key: OrderKey<T>
+  sort: CustomSortFn<T>
 }
 
-export const useTableSortDataWithWs = <T extends Record<string, any>>(data: T[], symbolKey: keyof T, key: OrderKey<T>) => {
+export const useTableData = <T extends Record<string, any>>(data: T[], opts?: Partial<UseTableDataOptions<T>>) => {
+  const [list, setList] = useState<T[]>(data)
+  const listLast = useLatestRef(list)
+  const initList = useRef<T[]>([])
+  const lastOrder = useRef<{ field?: keyof T; order?: 'asc' | 'desc' }>({ field: undefined, order: undefined })
+  const { sort: customSort } = opts || {}
+
+  const _setList = useCallback(
+    (cb: T[] | ((d: T[]) => T[])) => {
+      let data: typeof cb = cb
+      if (typeof cb === 'function') {
+        data = cb(listLast.current)
+      } else {
+        data = cb
+      }
+      initList.current = [...data]
+
+      if (lastOrder.current.field && lastOrder.current.order) {
+        setList(s => {
+          if (customSort) {
+            const r = customSort(s, lastOrder.current.field!, lastOrder.current.order!)
+            if (r) return r
+          }
+
+          return sortData(s, lastOrder.current.field!, lastOrder.current.order!)
+        })
+      } else {
+        setList(data)
+      }
+    },
+    [listLast, customSort]
+  )
+
+  const updateList = useCallback(setList, [])
+
+  const onSort = useCallback(
+    (columnKey: keyof T, order: 'asc' | 'desc' | undefined) => {
+      if (!order) {
+        lastOrder.current = { field: undefined, order: undefined }
+        setList([...initList.current])
+        return
+      }
+
+      lastOrder.current = { field: columnKey, order }
+      setList(s => {
+        if (customSort) {
+          const r = customSort(s, lastOrder.current.field!, lastOrder.current.order!)
+          if (r) return r
+        }
+
+        return sortData(s, lastOrder.current.field!, lastOrder.current.order!)
+      })
+    },
+    [customSort]
+  )
+
+  const cleanSort = useCallback(() => {
+    lastOrder.current = { field: undefined, order: undefined }
+  }, [])
+
+  return [list, { setList: _setList, onSort, updateList, cleanSort }] as const
+}
+
+type SortTableType = {
+  symbol: string
+  [key: string]: any
+}
+
+export type SortTableDataTransform<T extends SortTableType> = (
+  src: T,
+  data: SubscribeQuoteType
+) => T
+
+export const useTableSortDataWithWs = <T extends SortTableType>(
+  data: T[],
+  options: {
+    transform: SortTableDataTransform<T>
+  }
+) => {
   const [list, setList] = useState<T[]>(data)
   const initList = useRef<T[]>([])
   const lastOrder = useRef<{ field?: keyof T; order?: 'asc' | 'desc' }>({ field: undefined, order: undefined })
-  const keysSort = useRef<string[]>([])
-  const lastSortTime = useRef<number>(Date.now())
+  const listOrderByRowKey = useRef<T[]>([])
+  const lastSortTime = useRef(0)
 
-  const symbols = useMemo(() =>{
-      return list.map(v =>v[symbolKey] as string)
-  }, [list, symbolKey])
+  const symbols = useMemo(() => {
+    return Array.from(new Set(list.map(item => item.symbol)))
+  }, [list])
 
   const _setList = useCallback((data: T[]) => {
     initList.current = [...data]
+    listOrderByRowKey.current = sortData(data, 'symbol', 'asc')
 
     if (lastOrder.current.field && lastOrder.current.order) {
       setList(sortData(data, lastOrder.current.field, lastOrder.current.order))
@@ -106,55 +160,47 @@ export const useTableSortDataWithWs = <T extends Record<string, any>>(data: T[],
     }
   }, [])
 
-  
-
   const updateList = useCallback(setList, [])
 
   const onSort = useCallback((columnKey: keyof T, order: 'asc' | 'desc' | undefined) => {
     if (!order) {
       lastOrder.current = { field: undefined, order: undefined }
       setList([...initList.current])
-      keysSort.current = initList.current.map(o => o[key as string])
       return
     }
 
     lastOrder.current = { field: columnKey, order }
     setList(s => {
       const r = sortData(s, columnKey, order)
-      keysSort.current = r.map(o => o[key as string]) 
       return r
     })
-  }, [key])
+  }, [])
 
+  useStockQuoteSubscribe(
+    symbols,
+    useCallback(
+      (e: Record<string, SubscribeQuoteType>) => {
+        if (!lastOrder.current.order || !lastOrder.current.field) return
+        const field = lastOrder.current.field
 
-  useStockQuoteSubscribe(symbols, useCallback((e: QuoteBuffer) => {
-    if(!lastOrder.current.order || !lastOrder.current.field) return
-    const field = lastOrder.current.field
-    Object.keys(e).forEach(item => {
-      const v = initList.current.find((v: any) => item === v[key] as string) as any
+        Object.keys(e).forEach(item => {
+          const index = binarySearch(listOrderByRowKey.current, item)
 
-      if(!v) return
+          if (index === -1) return
 
-      if(field === 'percent'){
-        v[field as any] = e[item].record.changePercent
-      }else{
-        if((e[item].record as any)[field] === undefined) return
+          listOrderByRowKey.current[index] = options.transform(listOrderByRowKey.current[index], e[item])
+        })
 
-        v[field as any] = (e[item].record as any)[field]
-      }
-    })
-
-    if(Date.now() - lastSortTime.current > 2000) {
-
-      lastSortTime.current = Date.now()
-      setList(() => {
-        const r = sortData(initList.current, field, lastOrder.current.order!)
-        keysSort.current = r.map(o => o[key as string])
-        return r
-      })
-    }
-
-  }, [key]))
+        if (Date.now() - lastSortTime.current > 2000) {
+          lastSortTime.current = Date.now()
+          setList(() => {
+            return sortData(listOrderByRowKey.current, field, lastOrder.current.order!)
+          })
+        }
+      },
+      [options.transform]
+    )
+  )
 
   return [list, { setList: _setList, onSort, updateList }] as const
 }
@@ -164,9 +210,32 @@ export const useTableRowClickToStockTrading = (symbolField: string, _interval?: 
   return useCallback(
     (record: any) => {
       return {
-        onClick: () => navigate(`/stock?symbol=${record[symbolField]}`)
+        onClick: () => navigate(`/app/stock?symbol=${record[symbolField]}`)
       }
     },
     [symbolField, navigate]
   )
+}
+
+/**
+ * 二分法查找symbol的index
+ */
+export const binarySearch = (list: SortTableType[], symbol: string) => {
+  let low = 0
+  let high = list.length - 1
+
+  while (low <= high) {
+    const mid = Math.floor((low + high) / 2)
+    if (list[mid].symbol === symbol) {
+      return mid
+    }
+
+    if (list[mid].symbol < symbol) {
+      low = mid + 1
+    } else {
+      high = mid - 1
+    }
+  }
+
+  return -1
 }

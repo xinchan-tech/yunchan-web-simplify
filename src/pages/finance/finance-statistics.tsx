@@ -1,5 +1,5 @@
 import { getStockFinancialsStatistics } from '@/api'
-import { JknIcon, JknRcTable, StockSelect, SubscribeSpan } from '@/components'
+import { JknIcon, TcRcTable, StockSelect, SubscribeSpan } from '@/components'
 import { useQueryParams } from '@/hooks'
 import { useStockList } from '@/store'
 import { type StockWithExt, stockUtils } from '@/utils/stock'
@@ -70,7 +70,7 @@ export const FinanceStatistics = (props: FinanceStatisticsProps) => {
         </span>
       </div>
       <div className="mt-8 flex-1 overflow-hidden">
-        <JknRcTable
+        <TcRcTable
           isLoading={stockStatistics.isLoading}
           rowKey={row => `${row.symbol}_${row.report_date}`}
           columns={financeTableColumns}

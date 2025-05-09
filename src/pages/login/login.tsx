@@ -1,11 +1,12 @@
 import { bindInviteCode, getUser, login, loginByThird, loginImService } from '@/api'
 import { Button, Form, FormControl, FormField, FormItem, FormLabel, Input } from '@/components'
 import { useToast, useZForm } from '@/hooks'
-import { useToken } from '@/store'
+import { useToken, useUser } from '@/store'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import dayjs from 'dayjs'
 import { z } from 'zod'
 import { AppleLogin, GoogleLogin, WeChatLogin } from './login-other'
+import to from "await-to-js"
 
 interface LoginFormProps {
   afterLogin?: () => void
@@ -26,14 +27,20 @@ export const LoginForm = (
   const setToken = useToken(s => s.setToken)
   const { toast } = useToast()
   const queryClient = useQueryClient()
+  const refreshUser = useUser(s => s.refreshUser)
+  const setLoginType = useUser(s => s.setLoginType)
 
-  const onLoginSuccess = (token: string) => {
-    setToken(token)
+  const onLoginSuccess = () => {
 
     queryClient.refetchQueries({ queryKey: [getUser.cacheKey] })
 
     loginImService()
 
+    props.afterLogin?.()
+  }
+
+  const loginByUsername = () => {
+    const loginParams = form.getValues() as any
     const code = localStorage.getItem('invite-code')
 
     if (code) {
@@ -41,27 +48,44 @@ export const LoginForm = (
       if (codeObj.timestamp) {
         const current = dayjs()
         if (current.diff(codeObj.timestamp, 'day') <= 3) {
-          bindInviteCode(codeObj.code, codeObj.cid)
+          loginParams.cid = codeObj.cid
+          loginParams.inv_code = codeObj.code
         }
       }
     }
-
-    props.afterLogin?.()
-  }
-
-  const loginByUsername = () => {
-    return login(form.getValues())
+    return login(loginParams)
   }
 
   const loginMutation = useMutation({
-    mutationFn: ({ type, data }: { type: string; data: any }) => {
+    mutationFn: async ({ type, data }: { type: string; data: any }) => {
+      let r = null
       if (type === 'username') {
-        return loginByUsername()
+        r = await loginByUsername()
+        setLoginType('account')
+      } else {
+        r = await (type === 'apple' ? loginByThird('apple', data) : loginByThird('google', data))
+        setLoginType(type === 'apple' ? 'apple' : 'google')
       }
 
-      return type === 'apple' ? loginByThird('apple', data) : loginByThird('google', data)
+      setToken(r.token)
+
+      const code = localStorage.getItem('invite-code')
+
+      if (code) {
+        const codeObj = JSON.parse(code)
+        if (codeObj.timestamp) {
+          const current = dayjs()
+          if (current.diff(codeObj.timestamp, 'day') <= 3) {
+            await to(bindInviteCode(codeObj.code, codeObj.cid))
+          }
+        }
+      }
+
+      await refreshUser()
+
+      return r
     },
-    onSuccess: r => onLoginSuccess(r.token),
+    onSuccess: r => onLoginSuccess(),
     onError: err => {
       toast({
         description: err.message
@@ -69,10 +93,14 @@ export const LoginForm = (
     }
   })
 
+  const loginType = useUser(s => s.loginType)
+
   return (
     <>
       <div className="login-content h-full w-[371px] box-border flex flex-col">
-        <p className="text-[32px] mb-12">欢迎登录</p>
+        <p className="text-[32px] mb-12">
+          欢迎登录
+        </p>
         <Form {...form}>
           <form className="space-y-5 text-foreground">
             <FormField
@@ -107,13 +135,25 @@ export const LoginForm = (
                       type="password"
                     />
                   </FormControl>
-                  <div
-                    className="text-right text-sm cursor-pointer"
-                    onClick={() => props.setPage('resetPassword')}
-                    onKeyDown={() => {}}
-                  >
-                    忘记密码？
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-tertiary leading-6">
+                      上次登录方式:&nbsp;
+                      {{
+                        account: '账号登录',
+                        apple: 'Apple 登录',
+                        wechat: '微信登录',
+                        google: 'Google 登录'
+                      }[loginType ?? 'account']}
+                    </span>
+                    <span
+                      className="text-right text-sm cursor-pointer"
+                      onClick={() => props.setPage('resetPassword')}
+                      onKeyDown={() => { }}
+                    >
+                      忘记密码？
+                    </span>
                   </div>
+
                 </FormItem>
               )}
             />
@@ -137,7 +177,7 @@ export const LoginForm = (
             <span
               className="cursor-pointer text-primary"
               onClick={() => props.setPage('register')}
-              onKeyDown={() => {}}
+              onKeyDown={() => { }}
             >
               立即注册
             </span>

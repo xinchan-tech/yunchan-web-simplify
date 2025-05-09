@@ -1,11 +1,8 @@
 import { getPlateStocks } from '@/api'
 import {
-  AiAlarm,
   CollectStar,
-  JknCheckbox,
-  JknIcon,
-  JknRcTable,
-  type JknRcTableProps,
+  TcRcTable,
+  type TcRcTableProps,
   StockView,
   SubscribeSpan
 } from '@/components'
@@ -35,7 +32,7 @@ const PlateStocks = (props: PlateStocksProps) => {
     enabled: !!props.plateId
   })
 
-  const [list, { setList, onSort }] = useTableData<TableDataType>([], 'symbol')
+  const [list, { setList, onSort }] = useTableData<TableDataType>([])
   useCheckboxGroup([])
 
   useEffect(() => {
@@ -48,18 +45,30 @@ const PlateStocks = (props: PlateStocksProps) => {
 
   useStockQuoteSubscribe(plateStocks.data?.map(o => o.symbol) ?? [])
 
-  const columns = useMemo<JknRcTableProps<TableDataType>['columns']>(
+  const columns = useMemo<TcRcTableProps<TableDataType>['columns']>(
     () => [
       {
+        title: '',
+        dataIndex: 'collect',
+        align: 'center',
+        width: '4%',
+        render: (_, row) => <CollectStar checked={row.extend?.collect === 1} code={row.symbol} />
+      },
+      {
+        title: '',
+        dataIndex: 'index',
+        align: 'center',
+        width: '5%',
+        render: (_, _row, index) => <span onClick={(e) => {e.preventDefault();e.stopPropagation()}} onKeyDown={() => void 0}>{index + 1}</span>
+      },
+      {
         title: '名称代码',
-        dataIndex: 'name',
+        dataIndex: 'symbol',
         align: 'left',
         sort: true,
-        width: '28.5%',
+        width: '23.5%',
         render: (_, row) => (
           <div className="flex items-center h-[33px]">
-            <CollectStar checked={row.extend?.collect === 1} code={row.symbol} />
-            <span className="mr-3" />
             <StockView name={row.name} code={row.symbol as string} showName />
           </div>
         )
@@ -118,7 +127,8 @@ const PlateStocks = (props: PlateStocksProps) => {
       {
         title: '总市值',
         dataIndex: 'marketValue',
-        align: 'right',
+        align: 'left',
+        width: '13.5%',
         sort: true,
         render: (_, row) => (
           <div className="">
@@ -133,6 +143,7 @@ const PlateStocks = (props: PlateStocksProps) => {
           </div>
         )
       },
+      
       {
         title: '所属行业',
         dataIndex: 'industry',
@@ -147,7 +158,7 @@ const PlateStocks = (props: PlateStocksProps) => {
   const onRowClick = useTableRowClickToStockTrading('symbol')
 
   return (
-    <JknRcTable
+    <TcRcTable
       headerHeight={61}
       isLoading={plateStocks.isLoading}
       rowKey="symbol"

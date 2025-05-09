@@ -1,11 +1,11 @@
 import { addStockCollectBatch, removeStockCollect } from '@/api'
-import { usePropValue, useToast } from '@/hooks'
 import { getStockCollectCates } from '@/api'
+import { JknAlert } from '@/components/tc/jkn-alert'
+import Star from '@/components/star'
+import { usePropValue, useToast } from '@/hooks'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useMemoizedFn } from 'ahooks'
 import { memo } from 'react'
-import { JknAlert } from '@/components/jkn/jkn-alert'
-import Star from '@/components/star'
 
 interface GoldenPoolStarProps {
   /**

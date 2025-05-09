@@ -1,11 +1,11 @@
 import type { getStockFinancialsStatistics } from '@/api'
-import { type JknRcTableProps, NumSpan, SubscribeSpan } from '@/components'
+import { type TcRcTableProps, NumSpan, SubscribeSpan } from '@/components'
 import { cn } from '@/utils/style'
 import Decimal from 'decimal.js'
 
 // const columnHelper = createColumnHelper<ArrayItem<Awaited<ReturnType<typeof getStockFinancialsStatistics>>['items']>>()
 
-export const financeTableColumns: JknRcTableProps<
+export const financeTableColumns: TcRcTableProps<
   ArrayItem<Awaited<ReturnType<typeof getStockFinancialsStatistics>>['items']>
 >['columns'] = [
   {

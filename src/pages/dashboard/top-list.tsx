@@ -1,16 +1,16 @@
-import {  getIncreaseTopV2 } from '@/api'
+import { getIncreaseTopV2 } from '@/api'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
   JknIcon,
-  JknRcTable,
-  type JknRcTableProps,
+  TcRcTable,
+  type TcRcTableProps,
   StockView,
   SubscribeSpan
 } from '@/components'
-import { useStockQuoteSubscribe, useTableRowClickToStockTrading, useTableSortDataWithWs } from '@/hooks'
+import { type SortTableDataTransform, useTableRowClickToStockTrading, useTableSortDataWithWs } from '@/hooks'
 import { useTime } from '@/store'
 import { type StockTrading, stockUtils } from '@/utils/stock'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
@@ -32,12 +32,22 @@ const tradingToKey = (trading: StockTrading) => {
   }
 }
 
+const transform: SortTableDataTransform<TableDataType> = (row, { record }) => {
+  row.close = record.close
+  row.percent = record.percent
+  row.turnover = record.turnover
+  row.marketValue = record.close * (row.totalShare ?? 0)
+  return row
+}
+
 const TopList = () => {
   const trading = useTime(s => s.getTrading())
   const [type, setType] = useState<string>(tradingToKey(trading))
 
   const { t } = useTranslation()
-  const [list, { setList, onSort }] = useTableSortDataWithWs<TableDataType>([], 'symbol', 'symbol')
+  const [list, { setList, onSort }] = useTableSortDataWithWs<TableDataType>([], {
+    transform
+  })
 
   const query = useQuery({
     queryKey: [getIncreaseTopV2.cacheKey, type],
@@ -83,15 +93,14 @@ const TopList = () => {
 
   const onTypeChange = (s: string) => {
     setType(s)
-    queryClient.invalidateQueries({queryKey: [getIncreaseTopV2.cacheKey, s]}).then()
-   }
+    queryClient.invalidateQueries({ queryKey: [getIncreaseTopV2.cacheKey, s] }).then()
+  }
 
-  useStockQuoteSubscribe(query.data?.map(d => d.symbol) ?? [])
-
-  const columns: JknRcTableProps<TableDataType>['columns'] = [
+  const columns: TcRcTableProps<TableDataType>['columns'] = [
     {
       title: '名称代码',
       dataIndex: 'name',
+      
       align: 'left',
       sort: true,
       render: (_, row) => <StockView className="min-h-[26px]" code={row.symbol} name={row.name} />
@@ -194,12 +203,11 @@ const TopList = () => {
         </DropdownMenu>
       </div>
       <div className="flex-1 overflow-hidden">
-        <JknRcTable
+        <TcRcTable.SortTable
           rowKey="symbol"
           isLoading={query.isLoading}
           columns={columns}
           data={list}
-          onSort={onSort}
           onRow={onRowClick}
         />
       </div>

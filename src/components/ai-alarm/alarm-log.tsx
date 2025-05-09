@@ -1,5 +1,5 @@
 import { AlarmType, getAlarmLogs } from '@/api'
-import { JknIcon, JknRcTable, type JknRcTableProps, StockView } from '@/components'
+import { JknIcon, TcRcTable, type TcRcTableProps, StockView } from '@/components'
 import { cn } from '@/utils/style'
 import { useQuery } from '@tanstack/react-query'
 import { useMemo } from 'react'
@@ -26,7 +26,7 @@ const AlarmLog = (props: AlarmLogProps) => {
   })
 
   const columns = useMemo(() => {
-    const r: JknRcTableProps['columns'] = [
+    const r: TcRcTableProps['columns'] = [
       {
         title: '序号',
         dataIndex: 'index',
@@ -111,7 +111,7 @@ const AlarmLog = (props: AlarmLogProps) => {
 
   return (
     <div className="h-full overflow-hidden">
-      <JknRcTable columns={columns} data={data} isLoading={query.isLoading} rowKey="id" />
+      <TcRcTable columns={columns} data={data} isLoading={query.isLoading} rowKey="id" />
     </div>
   )
 }

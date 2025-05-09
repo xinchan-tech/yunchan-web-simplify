@@ -29,7 +29,6 @@ import { useBoolean, useMount, useUnmount } from 'ahooks'
 import to from 'await-to-js'
 import copy from 'copy-to-clipboard'
 import QRCode from 'qrcode'
-import qs from 'qs'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useFormContext } from 'react-hook-form'
 import { z } from 'zod'
@@ -37,6 +36,7 @@ import { BasicPage } from './basic-page'
 import { GroupPage } from './group-page'
 import { IncrementPage } from './increment-page'
 import { IntroPage } from './intro-page'
+import dayjs from "dayjs"
 
 const versions = [
   // { name: '旗舰达人', value: 'basic' },
@@ -101,21 +101,7 @@ const MallPage = () => {
         form.setValue(key as any, value)
       })
     },
-    onOk: async () => {}
-  })
-
-  useMount(() => {
-    const query = qs.parse(window.location.search, { ignoreQueryPrefix: true })
-    if (query.code) {
-      const current = new Date().getTime()
-      const codeObj = {
-        code: query.code,
-        cid: query.cid,
-        timestamp: current
-      }
-
-      localStorage.setItem('invite-code', JSON.stringify(codeObj))
-    }
+    onOk: async () => { return true },
   })
 
   const token = useToken(s => s.token)
@@ -229,7 +215,10 @@ const gotoPayPage = (url: string) => {
   document.body.removeChild(a)
 }
 
-//收银台
+/**
+ * TODO: 使用@/components/mall-dialog/Cashier替换
+ * @returns
+ */
 const CashierPage = () => {
   const form = useFormContext()
   const name = form.getValues('name')
@@ -288,6 +277,19 @@ const CashierPage = () => {
       number: 1,
       product_id: productId,
       platform: type!
+    }
+
+    const code = localStorage.getItem('invite-code')
+
+    if (code) {
+      const codeObj = JSON.parse(code)
+      if (codeObj.timestamp) {
+        const current = dayjs()
+        if (current.diff(codeObj.timestamp, 'day') <= 3) {
+          params.cid = codeObj.cid
+          params.inv_code = codeObj.code
+        }
+      }
     }
 
     const res = await createMallProductOrder(params)
@@ -359,7 +361,7 @@ const CashierPage = () => {
     if (payStatus !== 'paid') {
       JknAlert.info({
         content: '未验证到支付成功，请确认',
-        onAction: async () => {}
+        onAction: async () => { }
       })
     } else {
       setPayUrl('')
@@ -468,7 +470,7 @@ const CashierPage = () => {
             />
             <span>
               &nbsp;我已经阅读并同意
-              <span className="text-primary cursor-pointer" onClick={() => agreement.modal.open()} onKeyDown={() => {}}>
+              <span className="text-primary cursor-pointer" onClick={() => agreement.modal.open()} onKeyDown={() => { }}>
                 《软件订阅协议》
               </span>
             </span>
@@ -500,7 +502,7 @@ const CashierPage = () => {
                 {type !== 'wechat' && (
                   <span className="text-tertiary text-xs">
                     未跳转到支付页面？复制付款
-                    <span className="text-primary cursor-pointer" onClick={onCopyUrl} onKeyDown={() => {}}>
+                    <span className="text-primary cursor-pointer" onClick={onCopyUrl} onKeyDown={() => { }}>
                       链接
                     </span>
                   </span>

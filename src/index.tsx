@@ -6,12 +6,13 @@ import { QueryClientProvider } from '@tanstack/react-query'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { StrictMode, Suspense } from 'react'
 import '@/plugins/decimal-plugin'
-import {} from '@/utils/stock'
+import { } from '@/utils/stock'
 import { RouterProvider } from 'react-router'
 import { router } from './router'
 import './app.scss'
-import { queryClient } from './utils/query-client.ts'
 import { IndicatorUtils } from './utils/coiling/index.ts'
+import { queryClient } from './utils/query-client.ts'
+import { SysConfigProvider } from "./config.tsx"
 
 if (typeof window !== 'undefined' && import.meta.env.MODE === 'development') {
   scan({
@@ -28,12 +29,14 @@ if (rootEl) {
   const root = ReactDOM.createRoot(rootEl)
   root.render(
     <StrictMode>
-      <QueryClientProvider client={queryClient}>
-        <Suspense fallback={<div />}>
-          <RouterProvider router={router} />
-        </Suspense>
-        <ReactQueryDevtools initialIsOpen={false} />
-      </QueryClientProvider>
+      <SysConfigProvider>
+        <QueryClientProvider client={queryClient}>
+          <Suspense fallback={<div />}>
+            <RouterProvider router={router} />
+          </Suspense>
+          <ReactQueryDevtools initialIsOpen={false} />
+        </QueryClientProvider>
+      </SysConfigProvider>
     </StrictMode>
   )
 }

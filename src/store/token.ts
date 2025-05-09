@@ -1,3 +1,4 @@
+import { TCBroadcast } from '@/utils/broadcast'
 import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
 
@@ -11,12 +12,31 @@ export const useToken = create<TokenStore>()(
   persist(
     set => ({
       token: '',
-      setToken: (token: string) => set(() => ({ token })),
-      removeToken: () => set(() => ({ token: undefined }))
+      setToken: (token: string) => {
+        set(() => ({ token }))
+        TCBroadcast.sendToken(token)
+      },
+      removeToken: () => {
+        set(() => ({ token: undefined }))
+        TCBroadcast.sendToken(undefined)
+      }
     }),
     {
       name: 'token',
-      storage: createJSONStorage(() => localStorage)
+      storage: createJSONStorage(() => localStorage),
+      onRehydrateStorage: () => {
+        return () => {
+          const unSub = TCBroadcast.onTokenChange(e => {
+            useToken.setState({
+              token: e.data.data.token
+            })
+          })
+
+          window.addEventListener('beforeunload', () => {
+            unSub()
+          })
+        }
+      }
     }
   )
 )

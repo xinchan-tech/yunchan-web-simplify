@@ -1,12 +1,12 @@
 import { getWxLoginStatus } from '@/api'
 import { JknIcon, useModal } from '@/components'
-import { useToken } from '@/store'
+import { router } from '@/router'
+import { useToken, useUser } from '@/store'
 import { appEvent } from '@/utils/event'
 import { useMount, useUnmount } from 'ahooks'
-import { uid } from 'radash'
-import { useRef, useEffect } from 'react'
 import QRCode from 'qrcode'
-import { router } from '@/router'
+import { uid } from 'radash'
+import { useEffect, useRef } from 'react'
 
 interface ThirdLoginFormProps {
   onLogin: (data: any) => void
@@ -30,7 +30,7 @@ type AppleLoginResult = {
 export const AppleLogin = (props: ThirdLoginFormProps) => {
   useMount(() => {
     window.AppleID.auth.init({
-      clientId: 'com.jkn.app.web',
+      clientId: 'com.todaychart.web',
       redirectURI: import.meta.env.PUBLIC_BASE_APPLE_REDIRECT_URI,
       scope: 'email',
       state: 'https://www.mgjkn.com/main',
@@ -121,6 +121,7 @@ export const GoogleLogin = (props: ThirdLoginFormProps) => {
 const WxLoginForm = () => {
   const canvas = useRef<HTMLCanvasElement>(null)
   const timer = useRef<number>()
+  const setLoginType = useUser(state => state.setLoginType)
 
   useMount(() => {
     const size = 160
@@ -156,7 +157,8 @@ const WxLoginForm = () => {
         if (res.code) {
           useToken.getState().setToken(res.code)
           window.clearInterval(timer.current)
-          router.navigate('/')
+          setLoginType('wechat')
+          router.navigate('/app')
         }
       })
     }, 4000)

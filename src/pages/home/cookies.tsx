@@ -8,7 +8,8 @@ const CookiesPage = () => {
       <section>
         <h2>一、Cookies的定义及用途</h2>
         <p>
-          Cookies 是指存储在用户本地终端上的小型文本文件，用于记录和存储用户的相关信息。我们在网站中使用Cookies以实现以下功能：
+          Cookies
+          是指存储在用户本地终端上的小型文本文件，用于记录和存储用户的相关信息。我们在网站中使用Cookies以实现以下功能：
         </p>
         <ol className="pl-4">
           <li>确保网站的正常运行，提升用户体验。</li>
@@ -107,12 +108,12 @@ const CookiesPage = () => {
         <p>版本：1.0 | 今日图表团队</p>
 
         <p>
-          附：关键条款说明<br/>
-          • 必要性原则：禁用必要Cookies将导致核心功能失效。<br/>
-          • 第三方管理：广告Cookies需通过合作方（如Google）独立设置。<br/>
+          附：关键条款说明
+          <br />• 必要性原则：禁用必要Cookies将导致核心功能失效。
+          <br />• 第三方管理：广告Cookies需通过合作方（如Google）独立设置。
+          <br />
         </p>
       </section>
-
     </div>
   )
 }

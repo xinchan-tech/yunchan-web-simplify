@@ -8,6 +8,10 @@ import { sha256 } from 'js-sha256'
 import { customAlphabet } from 'nanoid'
 import { isString } from 'radash'
 
+import { StockChartInterval } from '@/store'
+
+export { StockChartInterval }
+
 type StockTime = string
 type StockOpen = number
 type StockClose = number // 收盘价（最新价）
@@ -79,6 +83,37 @@ export type StockExtendResult =
 
 export type StockExtendResultMap = Record<StockExtendResult, any>
 
+export type StockQuote = {
+  /**
+   * 成交额
+   */
+  amount: number
+  /**
+   * 涨跌幅
+   */
+  change: number
+  /**
+   * 收盘价
+   */
+  close: number
+  /**
+   * 市场价
+   */
+  market_cap: number
+  /**
+   * 成交量
+   */
+  volume: number
+  /**
+   * 盘前涨跌幅
+   */
+  pre_change?: number
+  /**
+   * 盘后涨跌幅
+   */
+  post_change?: number
+}
+
 export const getAllStocks = async (key?: string) => {
   return request.get<{ data: string; key: string }>('/index/getAllStock', { params: { key } }).then(r => r.data)
 }
@@ -107,35 +142,6 @@ export const getStockBaseCodeInfo = async (params: GetStockBaseCodeInfoParams) =
   return r
 }
 getStockBaseCodeInfo.cacheKey = 'basic:stock:code:info'
-
-export enum StockChartInterval {
-  /**
-   * 0：盘中分时图，-1：盘前分时图，-2：盘后分时图，小于1440-任意分钟的分钟线, 1440-日线, 7200：5日分时图, 10080-周线, 43200-月线,
-   * 129600-季线, 259200-半年线
-   */
-  INTRA_DAY = 0,
-  PRE_MARKET = -1,
-  AFTER_HOURS = -2,
-  FIVE_DAY = 7200,
-  ONE_MIN = 1,
-  TWO_MIN = 2,
-  THREE_MIN = 3,
-  FIVE_MIN = 5,
-  TEN_MIN = 10,
-  FIFTEEN_MIN = 15,
-  THIRTY_MIN = 30,
-  FORTY_FIVE_MIN = 45,
-  ONE_HOUR = 60,
-  TWO_HOUR = 120,
-  THREE_HOUR = 180,
-  FOUR_HOUR = 240,
-  DAY = 1440,
-  WEEK = 10080,
-  MONTH = 43200,
-  QUARTER = 129600,
-  HALF_YEAR = 259200,
-  YEAR = 518400
-}
 
 export enum StockPeriod {
   INTRA_DAY = 'quote',
@@ -527,6 +533,7 @@ type GetStockCollectsResult = {
     id: string
     symbol: string
     name: string
+    sort: number
     create_time: string
     stock: StockRawRecord
     extend?: Record<StockExtendResult, unknown>
@@ -698,6 +705,13 @@ export const sortStockCollectCate = (id: string, sort: number) => {
 }
 
 /**
+ * 股票金池排序
+ */
+export const sortStockCollect = (id: string, sort: number) => {
+  return request.post<void>(`/stock-svc/collect/stocks/${id}/setSort`, { sort }).then(r => r.data)
+}
+
+/**
  * 股票：symbol
  * 现价：'close',
  * 成交额： 'amount',
@@ -741,6 +755,7 @@ type GetUsStocksResult = {
     symbol: string
     name: string
     stock: StockRawRecord
+    quote: StockQuote
   }[]
   last: number
   limit: number
@@ -754,7 +769,7 @@ type GetUsStocksResult = {
  * 全部美股
  */
 export const getUsStocks = async (params: GetUsStocksParams) => {
-  const r = await request.get<GetUsStocksResult>('/stock/cutom/getUsStocks', { params: params }).then(r => r.data)
+  const r = await request.get<GetUsStocksResult>('/stock-svc/stocks', { params: params }).then(r => r.data)
   return r
 }
 getUsStocks.cacheKey = 'stock:cutom:getUsStocks'
@@ -874,9 +889,9 @@ export type StockCategory = {
  * 获取选股分类所有数据
  */
 export const getStockCategoryData = () => {
-  return request.get<GetStockCategoryResult>('/stock/category/data').then(r => r.data)
+  return request.get<GetStockCategoryResult>('/stock-svc/stocks/category/data').then(r => r.data)
 }
-getStockCategoryData.cacheKey = '/stock/category/data'
+getStockCategoryData.cacheKey = '/stock-svc/stocks/category/data'
 
 /**
  * 财务
@@ -1074,7 +1089,7 @@ type GetStockSelectionResult = {
  * 筛选股票
  */
 export const getStockSelection = (params: StockSelectionParams) => {
-  return request.post<GetStockSelectionResult[]>('/stock/selection', params).then(r => r.data)
+  return request.post<GetStockSelectionResult[]>('/stock-svc/stocks/selection', params).then(r => r.data)
 }
 
 type GetStockFinancialsParams = {
@@ -1103,7 +1118,7 @@ type GetStockFinancialsResult = {
  * 财报个股
  */
 export const getStockFinancials = (params: GetStockFinancialsParams) => {
-  return request.get<GetStockFinancialsResult>('/stock/financials', { params }).then(r => r.data)
+  return request.get<GetStockFinancialsResult>('/stock-svc/calendar/financials', { params }).then(r => r.data)
 }
 getStockFinancials.cacheKey = 'stock:financials'
 
@@ -1610,7 +1625,7 @@ export const addStockIndicatorCollect = (ids: string[]) => {
 }
 
 export const removeStockIndicatorCollect = (ids: string[]) => {
-  return request.post('/stock-svc/indicators/collect/remove', { ids }).then(r => r.data)
+  return request.post('/stock-svc/indicators/collect/cancel', { ids }).then(r => r.data)
 }
 
 type GetStockIndicatorDataParams = {
@@ -2010,3 +2025,50 @@ export const getPalTop = (params?: { date?: string; limit?: number }) => {
     .then(r => r.data)
 }
 getPalTop.cacheKey = 'pal:top'
+
+type SaveUserPlottingParams = {
+  hash: string
+  plotting_id: number
+  symbol: string
+  kline: string
+  text?: string
+  indicator_id?: number
+  css?: {
+    width: number
+    color: string
+    lineType: string
+    fontSize?: number
+  }
+  cross: 0 | 1
+  slope: number
+  points: {
+    x: string
+    y: number
+  }[]
+  create_time: string
+}
+/**
+ * 保存用户绘制图形
+ */
+export const saveUserPlotting = (params: SaveUserPlottingParams) => {
+  return request.post('/stock-svc/plottings', params).then(r => r.data)
+}
+
+type GetUserPlottingUser = Omit<SaveUserPlottingParams, 'kline'> & {
+  stock_kline_value: number
+  stock_kline_id: number
+  plotting: string
+}
+
+export const getUserPlotting = (params?: { symbol: string; kline: number }) => {
+  return request.get<GetUserPlottingUser[]>('/stock-svc/plottings', { params }).then(r => r.data)
+}
+getUserPlotting.cacheKey = 'stock:plotting'
+
+export const deleteUserPlotting = (hash: string[]) => {
+  return request.post('/stock-svc/plottings/delete', { Hash: hash }).then(r => r.data)
+}
+
+export const deleteUserPlottingByInterval = (symbol: string, interval: number) => {
+  return request.post('/stock-svc/plottings/withSymbol/delete', { symbol, kline: interval }).then(r => r.data)
+}

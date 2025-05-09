@@ -1,4 +1,4 @@
-import { StockSelectCache, JknRcTable, JknPopconfirm, Button, type JknRcTableProps, JknRangePicker, StockView, SubscribeSpan } from '@/components'
+import { StockSelectCache, TcRcTable, JknPopconfirm, Button, type TcRcTableProps, JknRangePicker, StockView, SubscribeSpan } from '@/components'
 import { getTradesList, delTadesCancel } from '@/api'
 import { useQuery } from '@tanstack/react-query'
 import { useQueryParams, useToast } from '@/hooks'
@@ -88,7 +88,7 @@ const HistoryList = () => {
     })
   }
 
-  const columns: JknRcTableProps<TableDataType>['columns'] = useMemo(
+  const columns: TcRcTableProps<TableDataType>['columns'] = useMemo(
     () => [
       {
         title: '行动方向',
@@ -110,7 +110,7 @@ const HistoryList = () => {
         sort: true,
         render: (_, row) => (
           <div className="flex items-center h-[33px]">
-            <StockView doubleClick={false} name={row.name} code={row.code as string} showName />
+            <StockView name={row.name} code={row.code as string} showName />
           </div>
         )
       },
@@ -204,7 +204,7 @@ const HistoryList = () => {
     </div>
 
     <div className="overflow-auto h-full pb-10 box-border px-5 mt-5">
-      <JknRcTable
+      <TcRcTable
         headerHeight={61}
         onSort={onSort}
         isLoading={query.isLoading}

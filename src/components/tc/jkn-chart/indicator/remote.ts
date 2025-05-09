@@ -1,0 +1,41 @@
+import { IndicatorSeries, type IndicatorTemplate } from '@/plugins/jkn-kline-chart'
+import { useIndicator } from '@/store'
+import { type IndicatorData, IndicatorUtils } from '@/utils/coiling'
+import { AESCrypt } from '@/utils/string'
+import { candlestickToRaw } from '../utils'
+import { localIndicator } from './local'
+
+type RemoteIndicatorExtend = {
+  name: string
+  action?: ('visible' | 'delete')[]
+}
+
+export const remoteIndicator: IndicatorTemplate<IndicatorData, any, RemoteIndicatorExtend> = {
+  name: 'remote-indicator',
+  shortName: 'remote-indicator',
+  zLevel: 1,
+  series: IndicatorSeries.Normal,
+  calcParams: [],
+  getValueRangeInVisibleRange: localIndicator.getValueRangeInVisibleRange,
+  calc: async (dataList, indicator) => {
+    const [indicatorId, symbol, interval] = indicator.calcParams as [string, string, number]
+    const formula = useIndicator.getState().formula
+    const rawData = dataList.map(candlestickToRaw)
+
+    if (!formula[indicatorId]) return []
+
+    const r = await IndicatorUtils.calcIndicator(
+      {
+        formula: AESCrypt.decrypt(formula[indicatorId]),
+        symbal: symbol,
+        indicatorId
+      },
+      rawData,
+      interval
+    )
+
+    return r
+  },
+  createTooltipDataSource: localIndicator.createTooltipDataSource,
+  draw: localIndicator.draw
+}

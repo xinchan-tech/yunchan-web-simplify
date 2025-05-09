@@ -1,5 +1,5 @@
 import { getCollectHot } from '@/api'
-import { CapsuleTabs, JknRcTable, type JknRcTableProps, StockView, SubscribeSpan } from '@/components'
+import { CapsuleTabs, TcRcTable, type TcRcTableProps, StockView, SubscribeSpan } from '@/components'
 import { useStockQuoteSubscribe, useTableData, useTableRowClickToStockTrading } from '@/hooks'
 import { stockUtils } from '@/utils/stock'
 import { useQuery } from '@tanstack/react-query'
@@ -16,7 +16,7 @@ const TopList = () => {
     queryFn: () => getCollectHot({ extend: ['total_share'] }),
     refetchInterval: 30 * 1000
   })
-  const [list, { setList, onSort }] = useTableData<TableDataType>([], 'symbol')
+  const [list, { setList, onSort }] = useTableData<TableDataType>([])
 
   useEffect(() => {
     setList(
@@ -29,7 +29,7 @@ const TopList = () => {
 
   useStockQuoteSubscribe(query.data?.find(v => v.type === HotType)?.stocks.map(v => v.symbol) ?? [], () => {})
 
-  const columns: JknRcTableProps<TableDataType>['columns'] = [
+  const columns: TcRcTableProps<TableDataType>['columns'] = [
     {
       title: '名称代码',
       dataIndex: 'name',
@@ -106,7 +106,7 @@ const TopList = () => {
         </CapsuleTabs>
       </div>
       <div className="h-[calc(100%-38px)] overflow-hidden">
-        <JknRcTable
+        <TcRcTable
           isLoading={query.isLoading}
           onSort={onSort}
           rowKey="symbol"

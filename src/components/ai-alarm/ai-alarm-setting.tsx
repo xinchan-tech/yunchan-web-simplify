@@ -1,5 +1,5 @@
 import { type StockCategory, addAlarm, getAlarmConditionsList, getAlarmTypes } from '@/api'
-import { useToast, useZForm } from '@/hooks'
+import { useZForm } from '@/hooks'
 import { useConfig } from '@/store'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useBoolean, useUpdateEffect } from 'ahooks'
@@ -7,7 +7,7 @@ import to from 'await-to-js'
 import { forwardRef, useEffect, useMemo, useState } from 'react'
 import { FormProvider, useFormContext } from 'react-hook-form'
 import { z } from 'zod'
-import { JknIcon } from '../jkn/jkn-icon'
+import { JknIcon } from '../tc/jkn-icon'
 import { Button } from '../ui/button'
 import { FormControl, FormField, FormItem, FormLabel } from '../ui/form'
 import { Separator } from '../ui/separator'
@@ -17,16 +17,21 @@ import { AlarmStockPicker } from './components/alarm-stock-picker'
 import { DatePicker } from './components/date-picker'
 import { FrequencySelect } from './components/frequency-select'
 import { NameInput } from './components/name-input'
+import { JknAlert } from "../tc/jkn-alert"
 
 const formSchema = z.object({
   symbol: z.string({ message: '股票代码错误' }).min(1, '股票代码错误'),
   stockCycle: z.array(z.string()).min(1, '至少选择一个周期'),
-  categoryIds: z.array(z.string()).min(1, '请选择警报类型'),
+  categoryIds: z.array(z.string()).optional(),
   categoryHdlyIds: z.array(z.string()).optional(),
   frequency: z.string({ message: '周期错误' }),
   name: z.string().optional(),
   date: z.string().optional(),
   categoryType: z.string().optional()
+}).refine(data => {
+  return (data.categoryIds?.length ?? 0) + (data.categoryHdlyIds?.length ?? 0) > 0
+}, {
+  message: '请选择报警类型'
 })
 
 interface AiAlarmSetting {
@@ -41,13 +46,12 @@ const AiAlarmSetting = (props: AiAlarmSetting) => {
     categoryIds: [],
     symbol: props.code ?? '',
     name: '',
-    frequency: '1',
+    frequency: '0',
     date: '',
     categoryType: '多头策略'
   })
   const [loading, { toggle }] = useBoolean(false)
 
-  const { toast } = useToast()
   const queryClient = useQueryClient()
 
   const categoryType = form.watch('categoryType')
@@ -57,7 +61,7 @@ const AiAlarmSetting = (props: AiAlarmSetting) => {
 
     if (!valid) {
       for (const err of Object.keys(form.formState.errors) as unknown as (keyof typeof form.formState.errors)[]) {
-        toast({ description: form.formState.errors[err]?.message })
+        JknAlert.error(form.formState.errors[err]?.message ?? '')
         return
       }
     }
@@ -80,16 +84,18 @@ const AiAlarmSetting = (props: AiAlarmSetting) => {
     const [err] = await to(addAlarm(params))
 
     if (err) {
-      toast({ description: err.message })
+      JknAlert.error(err.message)
       toggle()
       return
     }
-
-    toast({ description: '添加成功' })
+    JknAlert.success('添加成功')
     toggle()
     queryClient.refetchQueries({
       queryKey: [getAlarmConditionsList.cacheKey]
     })
+    const _categoryType = form.getValues('categoryType')
+    form.reset()
+    form.setValue('categoryType', _categoryType)
   }
 
   return (
@@ -146,7 +152,7 @@ const AiAlarmSetting = (props: AiAlarmSetting) => {
                   className="w-32 flex-shrink-0 text-base font-normal"
                   style={{ color: categoryType === '多头策略' ? 'hsl(var(--stock-up-color))' : '#808080' }}
                 >
-                  底部信号
+                  抄底信号
                 </FormLabel>
                 <FormControl>
                   <StockHdlySelect {...field} />
@@ -199,7 +205,7 @@ const AiAlarmSetting = (props: AiAlarmSetting) => {
           ) : null}
         </form>
       </FormProvider>
-      <div className="text-right mt-auto mb-6 space-x-2 px-8">
+      <div className="text-right mt-auto mb-6 space-x-2 px-8 flex items-center justify-end">
         <Button className="w-24" variant="outline" onClick={props.onClose}>
           取消
         </Button>
@@ -222,7 +228,7 @@ const AlarmsTypeSelect = forwardRef((props: AlarmsTypeSelectProps, _) => {
     queryKey: [getAlarmTypes.cacheKey],
     queryFn: () => getAlarmTypes()
   })
-  const [type, setType] = useState('多头策略')
+  // const [type, setType] = useState('多头策略')
   const [method, setMethod] = useState<Awaited<ReturnType<typeof getAlarmTypes>>['stocks'][0]>()
 
   const data = useMemo(() => query.data?.stocks.find(item => item.name === '报警类型'), [query.data])
@@ -230,6 +236,7 @@ const AlarmsTypeSelect = forwardRef((props: AlarmsTypeSelectProps, _) => {
   const form = useFormContext()
 
   const categoryHdlyIds = form.watch('categoryHdlyIds')
+  const categoryType = form.watch('categoryType')
 
   useUpdateEffect(() => {
     if (categoryHdlyIds.length > 0) {
@@ -253,8 +260,7 @@ const AlarmsTypeSelect = forwardRef((props: AlarmsTypeSelectProps, _) => {
   }
 
   const onChangeType = (_type: string) => {
-    setType(_type)
-    if (type !== _type) {
+    if (categoryType !== _type) {
       props.onChange?.([])
     }
     form.setValue('categoryType', _type)
@@ -262,46 +268,23 @@ const AlarmsTypeSelect = forwardRef((props: AlarmsTypeSelectProps, _) => {
     if (_type === '空头策略') {
       form.setValue('categoryHdlyIds', [])
     }
-    // const item = method?.children?.find(item => item.name === type)
-    // if (item) {
-    //   setMethod(item)
-    //   props.onChange?.(props.value?.filter(v => !item.children.map(i => i.id).includes(v)) ?? [])
-    // }
   }
+
+
 
   return (
     <>
       <div className="flex-1 flex flex-col">
-        {/* <div className="py-3 ml-3">
-          {data?.children?.map(item => (
-            <div
-              key={item.id}
-              className={cn(
-                'h-10 leading-10 w-40 mb-2 relative text-center rounded-sm text-secondary transition-all cursor-pointer bg-accent',
-                method?.id === item.id && 'bg-primary text-foreground'
-              )}
-              onClick={() => setMethod(item)}
-              onKeyDown={() => { }}
-            >
-              {item.name}
-              {method?.id === item.id && props.value?.length && props.value.length > 0 ? (
-                <div className="bg-stock-down rounded-full absolute -right-2 -top-2 w-4 h-4 text-xs">
-                  {props.value?.length}
-                </div>
-              ) : null}
-            </div>
-          ))}
-        </div> */}
         <div className="py-2">
           {method?.children?.map(item => (
             <div key={item.id} className="flex mb-4">
               <div
                 className="flex-shrink-0 flex items-center text-base font-normal w-32 cursor-pointer"
                 onClick={() => onChangeType(item.name)}
-                onKeyDown={() => {}}
+                onKeyDown={() => { }}
                 style={{
                   color:
-                    item.name === type
+                    item.name === categoryType
                       ? item.name === '多头策略'
                         ? 'hsl(var(--stock-up-color))'
                         : 'hsl(var(--stock-down-color))'
@@ -312,7 +295,7 @@ const AlarmsTypeSelect = forwardRef((props: AlarmsTypeSelectProps, _) => {
                 {item.name}
                 {item.name === '多头策略' ? '↑' : '↓'}
               </div>
-              {type === item.name ? (
+              {categoryType === item.name ? (
                 <ToggleGroup
                   value={props.value}
                   onValueChange={v => _onValueChange(v, item.name)}

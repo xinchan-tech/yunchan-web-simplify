@@ -1,19 +1,26 @@
-import { cn } from "@/utils/style"
 import { router } from "@/router"
-import { ReactNode, useEffect, useState } from "react"
-import { useConfig, useToken, useUser } from "@/store"
-import { useAuthorized, useToast } from "@/hooks"
-import { JknAlert, JknIcon } from ".."
+import { chatManager, useConfig, useToken, useUser } from "@/store"
+import { cn } from "@/utils/style"
+import { ReactNode, useCallback, useEffect, useState } from "react"
+import { JknAlert, JknBadge, JknIcon } from ".."
+import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { getAlarmLogUnreadCount, loginImService } from "@/api"
+import WKSDK from "wukongimjssdk"
+import { useAppEvent } from "@/utils/event"
+import { BroadcastChannelMessageType, TCBroadcast } from "@/utils/broadcast"
 
 type MenuItem = {
   icon: IconName | ReactNode
   title: string
   path: string
+  count?: number
   handler?: () => void
 }
 
 const MenuRight = () => {
   const [pathname, setPathname] = useState(router.state.location.pathname)
+  const queryClient = useQueryClient()
+  const token = useToken(s => s.token)
 
   useEffect(() => {
     const s = router.subscribe(s => {
@@ -25,49 +32,111 @@ const MenuRight = () => {
     }
   }, [])
 
+  const unRead = useQuery({
+    queryKey: [getAlarmLogUnreadCount.cacheKey],
+    queryFn: getAlarmLogUnreadCount,
+    enabled: !!token,
+  })
+
   const user = useUser(s => s.user)
-  const { token } = useToken()
-  const { toast } = useToast()
+
+  const messageCount = useQuery({
+    queryKey: ['chat-im-session'],
+    queryFn: () => WKSDK.shared()
+      .conversationManager.sync().then(r => r.reduce((acc, item) => acc + item.unread, 0)),
+    enabled: !!token,
+  })
+
+  useEffect(() => {
+    const unsubscribe = TCBroadcast.on(BroadcastChannelMessageType.CommunityOpen, () => {
+      WKSDK.shared().disconnect()
+    })
+    const unsubscribe2 = TCBroadcast.on(BroadcastChannelMessageType.CommunityUnRead, (e) => {
+      queryClient.setQueryData(['chat-im-session'], () => {
+        return e.data.data.count
+      })
+    })
+    const unsubscribe3 = TCBroadcast.on(BroadcastChannelMessageType.CommunityClose, () => {
+      WKSDK.shared().connect()
+    })
+    return () => {
+      unsubscribe()
+      unsubscribe2()
+      unsubscribe3()
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!token || !user?.username) {
+      return
+    }
+
+    const localConfig = chatManager.getWsConfig()
+
+    loginImService()
+
+    WKSDK.shared().config.uid = user.username
+    WKSDK.shared().config.token = token
+    WKSDK.shared().config.addr = localConfig.addr
+    WKSDK.shared().config.deviceFlag = localConfig.deviceFlag
+    WKSDK.shared().config.heartbeatInterval = 10 * 1000
+
+    const handlerMessage = () => {
+      queryClient.setQueryData(['chat-im-session'], (oldData: any) => {
+        return (oldData ?? 0) + 1
+      })
+    }
+
+    WKSDK.shared().chatManager.addCMDListener(handlerMessage)
+    WKSDK.shared().chatManager.addMessageListener(handlerMessage)
+    const openState = localStorage.getItem('chat-open-state')
+    if (!openState) {
+      WKSDK.shared().connectManager.connect()
+    }
+
+    return () => {
+      WKSDK.shared().chatManager.removeCMDListener(handlerMessage)
+      WKSDK.shared().chatManager.removeMessageListener(handlerMessage)
+      WKSDK.shared().disconnect()
+    }
+  }, [token, user?.username])
+
+
+  useAppEvent('alarm', useCallback(() => {
+    queryClient.setQueryData([getAlarmLogUnreadCount.cacheKey], (oldData: any) => {
+      return { count: (oldData?.count ?? 0) + 1 }
+    })
+  }, []))
+
 
   const menus: MenuItem[] = [
     {
       icon: <JknIcon.Svg name="stock" size={24} />,
       title: '图表',
-      path: '/stock'
+      path: '/app/stock'
     },
     {
       icon: <JknIcon.Svg name="push" size={24} />,
       title: '榜单',
-      path: '/push'
+      path: '/app/push'
     },
-    // {
-    //   icon: <JknIcon.Svg name="financial" size={24} />,
-    //   title: '财务',
-    //   path: '/finance'
-    // },
     {
       icon: <JknIcon.Svg name="alarm" size={24} />,
       title: '警报',
-      path: '/stock/alarm'
+      path: '/app/stock/alarm',
+      count: unRead.data?.count,
     },
     {
       icon: <JknIcon.Svg name="group" size={24} />,
       title: "群聊",
-      path: "/chat-group",
+      path: "/chat",
+      count: messageCount.data,
     },
   ]
 
-  // const [auth, toastNotAuth] = useAuthorized('vcomment')
 
   const onNav = (path: string) => {
-    if (!token) {
-      toast({
-        title: '请先登录'
-      })
-      return
-    }
-
-    if (path === "/chat-group") {
+    if (path === "/chat") {
       if (user?.permission && user.permission.chat === true) {
         if (useConfig.getState().ip === 'CN') {
           JknAlert.info({
@@ -76,27 +145,31 @@ const MenuRight = () => {
           })
           return
         }
+        // const openState = localStorage.getItem('chat-open-state')
+
+        // if (openState) {
+        //   window.open('javascript:;', 'tc-community')
+        // } else {
+
+        // }
         window.open(
           `${window.location.origin}/chat`,
-          "whatever",
-          "hideit,height=750,width=1000,resizable=yes,scrollbars=yes,status=no,location=no"
+          "tc-community",
+          "hideit,height=850,width=1200,resizable=yes,scrollbars=yes,status=no,location=no"
         )
         return
       } else {
-        onNav("/mall")
+        onNav("/app/mall")
         return
       }
     }
 
-
-
-
-    if (path.startsWith('/stock')) {
+    if (path.startsWith('/app/stock')) {
       const search = new URLSearchParams(window.location.search)
       const symbol = search.get('symbol') ?? 'QQQ'
 
-      if(window.location.pathname.startsWith('/stock/alarm') && pathname === '/stock/alarm'){
-        router.navigate(`/stock?symbol=${symbol}`)
+      if (window.location.pathname.startsWith('/app/stock/alarm') && pathname === '/app/stock/alarm') {
+        router.navigate(`/app/stock?symbol=${symbol}`)
         return
 
       }
@@ -109,17 +182,20 @@ const MenuRight = () => {
   return (
     <div className="px-0.5 box-border space-y-3 pt-3 flex h-full flex-col items-center text-secondary">
       {menus.map(item => (
-        <div className="text-center" key={item.title}>
+
+        <div className="text-center  cursor-pointer hover:text-primary" key={item.title} onClick={() => onNav(item.path)}
+          onKeyDown={() => { }}>
           <div
-            onClick={() => onNav(item.path)}
-            onKeyDown={() => { }}
-            className={cn("flex flex-col items-center cursor-pointer hover:bg-accent w-8 h-[28px] justify-center rounded-xs", pathname === item.path && 'bg-primary/30')}
+            className={cn("flex flex-col items-center cursor-pointer hover:bg-accent w-8 h-[28px] justify-center rounded-xs relative", pathname === item.path && 'bg-primary/30')}
           >
             <div className={cn('flex', pathname === item.path ? 'text-primary' : '')}>
               {
                 item.icon
               }
             </div>
+            {item.count ? (
+              <JknBadge.Number max={99} number={item.count} className="absolute -right-0.5 top-0" />
+            ) : null}
           </div>
           <span className={cn('text-xs leading-[24px]]', pathname === item.path ? 'text-primary' : '')}>
             {item.title}

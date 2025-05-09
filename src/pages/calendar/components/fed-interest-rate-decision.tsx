@@ -1,5 +1,5 @@
 import { getStockEconomicDetail, getStockFedCalendar } from '@/api'
-import { JknIcon, JknRcTable, type JknRcTableProps } from '@/components'
+import { JknIcon, TcRcTable, type TcRcTableProps } from '@/components'
 import echarts, { type ECOption } from '@/utils/echarts'
 import { useQuery } from '@tanstack/react-query'
 import { useMount, useUnmount } from 'ahooks'
@@ -121,7 +121,7 @@ export const FedInterestRateDecision = () => {
     })
   }, [query.data])
 
-  const columns = useMemo<JknRcTableProps<any>['columns']>(
+  const columns = useMemo<TcRcTableProps<any>['columns']>(
     () => [
       {
         title: <span className="text-stock-up">月份</span>,
@@ -212,7 +212,7 @@ export const FedInterestRateDecision = () => {
 
         <div className="mb-12">
           <p className="text-center text-lg text-white">美联储日程</p>
-          <JknRcTable scroll={{ y: 'auto' }} columns={columns} data={data} rowKey="id" />
+          <TcRcTable scroll={{ y: 'auto' }} columns={columns} data={data} rowKey="id" />
         </div>
 
         <div className="flex items-center">

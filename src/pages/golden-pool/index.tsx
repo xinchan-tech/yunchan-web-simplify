@@ -3,7 +3,8 @@ import {
   getStockCollectCates,
   getStockCollects,
   moveStockCollectBatch,
-  removeStockCollect
+  removeStockCollect,
+  sortStockCollect
 } from '@/api'
 import {
   Button,
@@ -11,8 +12,8 @@ import {
   JknAlert,
   JknCheckbox,
   JknIcon,
-  JknRcTable,
-  type JknRcTableProps,
+  TcRcTable,
+  type TcRcTableProps,
   Star,
   StockView,
   SubscribeSpan
@@ -34,6 +35,11 @@ import {
 } from '@/hooks'
 import { GoldenPoolManager, GoldenPoolNameEdit } from '@/pages/golden-pool/components/golden-pool-manager'
 import { stockUtils } from '@/utils/stock'
+import type { DragEndEvent } from '@dnd-kit/core'
+import { DndContext, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
+import { restrictToVerticalAxis } from '@dnd-kit/modifiers'
+import { SortableContext, arrayMove, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import to from 'await-to-js'
 import { useCallback, useEffect, useMemo, useState } from 'react'
@@ -42,6 +48,11 @@ const baseExtends: StockExtend[] = ['total_share', 'basic_index', 'day_basic', '
 
 type TableDataType = ReturnType<typeof stockUtils.toStockWithExt> & {
   id: string
+  sort: number
+}
+
+interface RowProps extends React.HTMLAttributes<HTMLTableRowElement> {
+  'data-row-key': string
 }
 
 const GoldenPool = () => {
@@ -62,7 +73,7 @@ const GoldenPool = () => {
       })
   })
 
-  const [list, { setList, onSort }] = useTableData<TableDataType>([], 'symbol')
+  const [list, { setList, onSort }] = useTableData<TableDataType>([])
 
   useStockQuoteSubscribe(list.map(item => item.symbol))
 
@@ -75,7 +86,8 @@ const GoldenPool = () => {
           symbol: o.symbol
         }),
         collect: 1,
-        id: o.id
+        id: o.id,
+        sort: o.sort
       })) ?? []
 
     setList(stockList)
@@ -139,15 +151,29 @@ const GoldenPool = () => {
     [removeFav.mutate]
   )
 
-  const columns: JknRcTableProps<TableDataType>['columns'] = useMemo(
+  const columns: TcRcTableProps<TableDataType>['columns'] = useMemo(
     () => [
+      {
+        title: <Star checked={list.length > 0} onChange={() => handleRemoveFav(list.map(item => item.symbol))} />,
+        dataIndex: 'collect',
+        align: 'center',
+        width: 40,
+        render: (_, row) => (
+          <span className="inline-flex items-center">
+            <Star checked={true} onChange={() => handleRemoveFav([row.symbol])} />
+          </span>
+        )
+      },
+      {
+        title: '',
+        dataIndex: 'index',
+        align: 'center',
+        width: 60,
+        render: (_, _row, index) => <span onClick={(e) => {e.preventDefault();e.stopPropagation()}} onKeyDown={() => void 0}>{index + 1}</span>
+      },
       {
         title: (
           <div className="inline-flex items-center whitespace-nowrap">
-            <span className="inline-flex items-center">
-              <Star checked={true} onChange={() => handleRemoveFav(list.map(item => item.symbol))} />
-            </span>
-            <span className="mr-3" />
             <span className="inline-flex items-center">名称代码</span>
           </div>
         ),
@@ -157,10 +183,6 @@ const GoldenPool = () => {
         sort: true,
         render: (_, row) => (
           <div className="flex items-center h-[33px]">
-            <div className="flex justify-center items-center">
-              <Star checked={true} onChange={() => handleRemoveFav([row.symbol])} />
-            </div>
-            <span className="mr-3" />
             <StockView name={row.name} code={row.symbol as string} showName />
           </div>
         )
@@ -190,6 +212,7 @@ const GoldenPool = () => {
         render: (_, row) => (
           <SubscribeSpan.PercentBlink
             symbol={row.symbol}
+            showSign
             decimal={2}
             initValue={stockUtils.getPercent(row)}
             initDirection={stockUtils.isUp(row)}
@@ -210,7 +233,7 @@ const GoldenPool = () => {
         title: '总市值',
         dataIndex: 'marketValue',
         align: 'left',
-        width: '19.5%',
+        width: '12.5%',
         sort: true,
         render: (_, row) => (
           <SubscribeSpan.MarketValue
@@ -225,7 +248,7 @@ const GoldenPool = () => {
       {
         title: '所属行业',
         dataIndex: 'industry',
-        align: 'left',
+        align: 'right',
         sort: true,
         render: (_, row) => <span className="text-[14px]">{row.industry}</span>
       },
@@ -298,6 +321,41 @@ const GoldenPool = () => {
     )
   }
 
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        // https://docs.dndkit.com/api-documentation/sensors/pointer#activation-constraints
+        distance: 1
+      }
+    })
+  )
+
+  const onDragEnd = ({ active, over }: DragEndEvent) => {
+    if (active.id !== over?.id) {
+      const activeIndex = list.findIndex(i => i.id === active.id)
+      const overIndex = list.findIndex(i => i.id === over?.id)
+      setList(arrayMove(list, activeIndex, overIndex))
+
+      sortStockCollect(active.id as string, overIndex)
+    }
+  }
+
+  const Row: React.FC<Readonly<RowProps>> = props => {
+    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+      id: props['data-row-key']
+    })
+
+    const style: React.CSSProperties = {
+      ...props.style,
+      transform: CSS.Translate.toString(transform),
+      transition,
+      cursor: 'move',
+      ...(isDragging ? { position: 'relative', zIndex: 9999 } : {})
+    }
+
+    return <tr {...props} ref={setNodeRef} style={style} {...attributes} {...listeners} />
+  }
+
   return (
     <div className="h-full w-full overflow-hidden flex justify-center bg-black">
       <div className="h-full overflow-hidden flex flex-col w-table pt-[40px] golden-pool">
@@ -346,15 +404,35 @@ const GoldenPool = () => {
           </DropdownMenu>
         </div>
         <div className="flex-1 overflow-hidden">
-          <JknRcTable
-            headerHeight={48}
-            isLoading={collects.isLoading}
-            rowKey="symbol"
-            columns={columns}
-            data={list}
-            onRow={onRowClick}
-            onSort={onSort}
-          />
+          <DndContext sensors={sensors} modifiers={[restrictToVerticalAxis]} onDragEnd={onDragEnd}>
+            <SortableContext
+              // rowKey array
+              items={list.map(i => i.id)}
+              strategy={verticalListSortingStrategy}
+            >
+              <TcRcTable
+                headerHeight={61}
+                isLoading={collects.isLoading}
+                rowKey="id"
+                border={false}
+                components={{
+                  body: { row: Row }
+                }}
+                columns={columns}
+                data={list}
+                onRow={onRowClick}
+                onSort={onSort}
+              />
+              {/* <Table<DataType>
+                components={{
+                  body: { row: Row },
+                }}
+                rowKey="key"
+                columns={columns}
+                dataSource={dataSource}
+              /> */}
+            </SortableContext>
+          </DndContext>
         </div>
         <style jsx>
           {`

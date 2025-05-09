@@ -1,10 +1,10 @@
 import {
-    JknRcTable,
-    type JknRcTableProps,
+    TcRcTable,
+    type TcRcTableProps,
     StockView,
     SubscribeSpan
 } from '@/components'
-import { getInvestStocks, type StockRawRecord, getStockFinancials } from '@/api'
+import { getStockCollects, type StockRawRecord, getStockFinancials } from '@/api'
 import { useTableData } from '@/hooks'
 import { stockUtils } from '@/utils/stock'
 import { useConfig, useTime } from '@/store'
@@ -22,9 +22,9 @@ const Securitygroup = ({ onUpdate, className, ...props }: { className?: string, 
     const [data, { onSort, setList }] = useTableData<TableDataType>([])
 
     const query = useQuery({
-        queryKey: [getInvestStocks.cacheKey],
+        queryKey: [getStockCollects.cacheKey],
         queryFn: () =>
-            getInvestStocks({
+            getStockCollects({
                 cate_id: 1,
                 limit: 300,
                 extend: baseExtends
@@ -37,7 +37,7 @@ const Securitygroup = ({ onUpdate, className, ...props }: { className?: string, 
             return
         }
 
-        const r: TableDataType[] = query.data.map(stock => {
+        const r: TableDataType[] = query.data.items.map(stock => {
             const lastStock = stockUtils.toStock(stock.stock, {
                 extend: stock.extend,
                 symbol: stock.symbol,
@@ -68,7 +68,7 @@ const Securitygroup = ({ onUpdate, className, ...props }: { className?: string, 
                 code: stock.symbol,
                 thumbs,
                 price: lastStock?.close,
-                percent: lastStock ? stockUtils.getPercent(lastStock) : undefined,
+                percent: subStock ? stockUtils.getPercent(lastStock) : undefined,
                 subPrice: subStock?.close,
                 subPercent: subStock ? stockUtils.getPercent(subStock) : undefined
             }
@@ -79,17 +79,17 @@ const Securitygroup = ({ onUpdate, className, ...props }: { className?: string, 
     }, [query.data, setList])
 
 
-    const columns: JknRcTableProps<TableDataType>['columns'] = useMemo(
+    const columns: TcRcTableProps<TableDataType>['columns'] = useMemo(
         () => [
             {
                 title: '名称代码',
                 dataIndex: 'code',
                 align: 'left',
-                width: '50%',
+                width: '25%',
                 sort: true,
                 render: (_, row) => (
                     <div className="flex items-center h-[33px]">
-                        <StockView doubleClick={false} name={row.name} code={row.code as string} showName />
+                        <StockView name={row.name} code={row.code as string} showName />
                     </div>
                 )
             },
@@ -98,7 +98,7 @@ const Securitygroup = ({ onUpdate, className, ...props }: { className?: string, 
                 title: '现价',
                 dataIndex: 'price',
                 align: 'left',
-                width: '25%',
+                width: '13.5%',
                 sort: true,
                 render: (_: any, row) => (
                     <SubscribeSpan.Price
@@ -115,8 +115,8 @@ const Securitygroup = ({ onUpdate, className, ...props }: { className?: string, 
             {
                 title: '涨跌幅',
                 dataIndex: 'percent',
-                align: 'right',
-                width: '20%',
+                align: 'left',
+                width: '13%',
                 sort: true,
                 render: (_: any, row) => (
                     <SubscribeSpan.PercentBlink
@@ -143,14 +143,14 @@ const Securitygroup = ({ onUpdate, className, ...props }: { className?: string, 
     }
 
 
-    return <div className={cn("bg-[#1A191B] rounded-[2rem] h-full flex flex-col px-0.5 py-6 w-[28.25rem] box-border", className)}>
+    return <div className={cn("bg-[#1A191B] rounded-[2rem] px-0.5 py-6 w-[28.25rem] box-border", className)}>
         <div className="text-2xl flex flex-col ml-6 mt-2.5">
             <span>证券投资组合</span>
             <span className="text-sm">概述您的多元化股票投资组合。</span>
         </div>
 
-        <div className="flex-1 overflow-hidden px-[6px]">
-            <JknRcTable
+        <div className="flex-1 overflow-hidden h-full">
+            <TcRcTable
                 rowKey="code"
                 isLoading={query.isLoading}
                 columns={columns}

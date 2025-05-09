@@ -4,7 +4,7 @@ import { stockUtils } from '@/utils/stock'
 import { useRequest } from 'ahooks'
 import dayjs from 'dayjs'
 import { useEffect, useRef, useState } from 'react'
-import { JknIcon } from '../../jkn/jkn-icon'
+import { JknIcon } from '../../tc/jkn-icon'
 
 const FooterTime = () => {
   const [localUsTime, setLocalUsTime] = useState(0)

@@ -4,7 +4,7 @@ import { useToken } from '@/store'
 import { cn } from '@/utils/style'
 import { ChevronsLeft, Settings } from 'lucide-react'
 import { Fragment, type ReactNode, useEffect, useMemo, useState } from 'react'
-import { JknIcon } from '../jkn/jkn-icon'
+import { JknIcon } from '../tc/jkn-icon'
 
 type MenuItem = {
   icon: IconName | ReactNode

@@ -1,8 +1,8 @@
 import { StockChartInterval, getLargeCapIndexes, getStockChartQuote } from '@/api'
-import {  JknIcon, SubscribeSpan } from '@/components'
+import { ChartTypes, JknChart, JknIcon, SubscribeSpan } from '@/components'
 import { useSnapshotOnce, useStockBarSubscribe, useStockQuoteSubscribe } from '@/hooks'
 import { useConfig, useTime } from '@/store'
-import { type Stock, stockSubscribe, type StockTrading, stockUtils } from '@/utils/stock'
+import { type Stock, type StockTrading, stockSubscribe, stockUtils } from '@/utils/stock'
 import { cn, colorUtil } from '@/utils/style'
 import { useQuery } from '@tanstack/react-query'
 import Decimal from 'decimal.js'
@@ -56,7 +56,7 @@ const LargeCap = () => {
 
   const navigate = useNavigate()
   const onChartDoubleClick = useCallback(() => {
-    navigate(`/stock/trading?symbol=${activeStock}`)
+    navigate(`/app/stock/trading?symbol=${activeStock}`)
   }, [activeStock, navigate])
 
   const { t } = useTranslation()
@@ -128,7 +128,7 @@ const LargeCap = () => {
       </ScrollContainer>
 
       <div className="flex-1 relative">
-        <div onClick={onChartDoubleClick} onKeyDown={() => {}} className="w-full h-full box-border">
+        <div onClick={onChartDoubleClick} onKeyDown={() => { }} className="w-full h-full box-border">
           <LargeCapChart code={activeStock} type={stockType} />
         </div>
       </div>
@@ -154,7 +154,7 @@ const StockBarItem = ({ stock, check, onActiveStockChange }: StockBarItemProps) 
         }
       )}
       onClick={() => onActiveStockChange(stock.symbol)}
-      onKeyDown={() => {}}
+      onKeyDown={() => { }}
     >
       <JknIcon.Stock symbol={stock.symbol} className="w-[28px] h-[28px]" />
       <div className="ml-3 flex flex-col">
@@ -192,9 +192,279 @@ interface LargeCapChartProps {
 }
 
 const LargeCapChart = ({ code, type }: LargeCapChartProps) => {
+  const chart = useRef<ComponentRef<typeof JknChart>>(null)
+  const lastBarInInterval = useRef<Stock | null>(null)
 
+  useEffect(() => {
+    const tick = stockUtils.getIndexTimeTick()
+    const c = chart.current?.getChart()
+    const splitId = 'split-indicator-large-cap'
+    if ('IXIC' === code || 'DJI' === code || 'SPX' === code) {
+      tick.pre = 0
+      tick.after = 0
+      tick.total = tick.pre + tick.post + tick.after
+      c?.removeIndicator({
+        id: splitId
+      })
+    } else {
+      c?.createIndicator(
+        {
+          name: 'split-indicator',
+          id: splitId,
+          calcParams: [[tick.pre / tick.total, (tick.post + tick.pre) / tick.total]]
+        },
+        true,
+        {
+          id: ChartTypes.MAIN_PANE_ID
+        }
+      )
+    }
 
-  return <div/>
+    c?.setXAxisTick(tick.total)
+    c?.setLeftMinVisibleBarCount(1)
+    c?.setScrollEnabled(false)
+    c?.setZoomEnabled(false)
+
+    const upColor = useConfig.getState().getStockColor(true, 'hex')
+    const downColor = useConfig.getState().getStockColor(false, 'hex')
+
+    c?.setStyles({
+      grid: {
+        vertical: {
+          show: false
+        },
+        horizontal: {
+          show: false
+        }
+      },
+      yAxis: {
+        axisLine: {
+          show: false
+        }
+      },
+      xAxis: {
+        tickText: {
+          color: '#B8B8B8'
+        },
+        axisLine: {
+          show: false
+        }
+      },
+      candle: {
+        type: 'area' as any,
+        area: {
+          lineColor: data => {
+            const postData = data.slice(0, tick.pre + tick.post).pop()
+            const lastData = data[data.length - 1]
+            const lastColor = Decimal.create(lastData?.close).gt(lastData?.prevClose ?? 0) ? upColor : downColor
+
+            const preColor = data.length > tick.pre ? '#50535E' : lastColor
+
+            const afterColor = data.length >= tick.total ? '#50535E' : lastColor
+
+            return [
+              { type: 'segment', color: preColor, offset: tick.pre },
+              {
+                type: 'segment',
+                color: Decimal.create(postData?.close).gt(postData?.prevClose ?? 0) ? upColor : downColor,
+                offset: tick.post + tick.pre
+              },
+              { type: 'segment', color: afterColor }
+            ]
+          },
+          backgroundColor(data) {
+            const postData = data.slice(0, tick.pre + tick.post).pop()
+            const lastData = data[data.length - 1]
+            const lastColor = Decimal.create(lastData?.close).gt(lastData?.prevClose ?? 0) ? upColor : downColor
+
+            const color = Decimal.create(postData?.close).gt(postData?.prevClose ?? 0) ? upColor : downColor
+
+            const preColor = data.length > tick.pre ? '#DBDBDB' : lastColor
+            const afterColor = data.length >= tick.total ? '#DBDBDB' : lastColor
+
+            return [
+              {
+                type: 'segment',
+                offset: tick.pre,
+                color: [
+                  {
+                    offset: 0,
+                    color: colorUtil.rgbaToString(colorUtil.hexToRGBA(preColor, 0))
+                  },
+                  {
+                    offset: 1,
+                    color: colorUtil.rgbaToString(colorUtil.hexToRGBA(preColor, 0.1))
+                  }
+                ]
+              },
+              {
+                type: 'segment',
+                offset: tick.pre + tick.post,
+                color: [
+                  {
+                    offset: 0,
+                    color: colorUtil.rgbaToString(colorUtil.hexToRGBA(color, 0.0))
+                  },
+                  {
+                    offset: 1,
+                    color: colorUtil.rgbaToString(colorUtil.hexToRGBA(color, 0.1))
+                  }
+                ]
+              },
+              {
+                type: 'segment',
+                color: [
+                  {
+                    offset: 0,
+                    color: colorUtil.rgbaToString(colorUtil.hexToRGBA(afterColor, 0.0))
+                  },
+                  {
+                    offset: 1,
+                    color: colorUtil.rgbaToString(colorUtil.hexToRGBA(afterColor, 0.1))
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        tooltip: {
+          custom: [],
+          expand: false
+        },
+        priceMark: {
+          last: {
+            line: {
+              type: 'full'
+            },
+            text: {},
+            color(data) {
+              const lastData = data.slice(-1)[0]
+              return Decimal.create(lastData.close).gt(lastData.prevClose)
+                ? colorUtil.rgbaToString(colorUtil.hexToRGBA(upColor, 1))
+                : colorUtil.rgbaToString(colorUtil.hexToRGBA(downColor, 1))
+            }
+          }
+        }
+      }
+    })
+
+    c?.setPaneOptions({
+      id: ChartTypes.MAIN_PANE_ID,
+      axis: {
+        gap: {
+          top: 0,
+          bottom: 0
+        }
+      }
+    })
+  }, [code])
+
+  const candlesticks = useQuery({
+    queryKey: [getStockChartQuote.cacheKey, code],
+    queryFn: () =>
+      getStockChartQuote(code!, ['IXIC', 'DJI', 'SPX'].includes(code!) ? StockChartInterval.INTRA_DAY : 'full-day'),
+    enabled: !!code && type !== undefined,
+    placeholderData: () => [],
+    select: list => {
+      return list.map(s => stockUtils.toStock(s))
+    }
+  })
+
+  useEffect(() => {
+    chart.current?.applyNewData(candlesticks.data ?? [])
+    const tick = stockUtils.getIndexTimeTick()
+    if (candlesticks.data?.length === tick.total) {
+      chart.current?.getChart()?.setStyles({
+        candle: {
+          priceMark: {
+            last: {
+              line: {
+                show: true
+              }
+            }
+          }
+        }
+      })
+    }
+  }, [candlesticks])
+
+  useStockBarSubscribe(
+    code ? [`${code}@1m`] : [],
+    useCallback(data => {
+      const c = chart.current?.getChart()
+      const stock = stockUtils.toStock(data.rawRecord)
+      const lastData = c?.getDataList()[c.getDataList().length - 1]
+
+      if (!lastData) {
+        chart.current?.applyNewData([stock])
+      } else {
+        if (chart.current?.isSameIntervalCandlestick(stock, StockChartInterval.ONE_MIN)) {
+          lastBarInInterval.current = stock
+          chart.current?.appendCandlestick(
+            {
+              ...stock,
+              close: lastData?.close ?? stock.close
+            },
+            StockChartInterval.ONE_MIN
+          )
+          return
+        }
+
+        if (lastBarInInterval.current) {
+          chart.current?.appendCandlestick(
+            {
+              ...lastBarInInterval.current
+            },
+            StockChartInterval.ONE_MIN
+          )
+        }
+        chart.current?.appendCandlestick(
+          {
+            ...stock
+          },
+          StockChartInterval.ONE_MIN
+        )
+      }
+    }, [])
+  )
+
+  useEffect(() => {
+    if (!code) return
+    const unSubscribe = stockSubscribe.onQuoteTopic(code, data => {
+      const c = chart.current?.getChart()
+      const lastData = c?.getDataList()?.slice(-1)[0]
+     
+      if (!lastData) return
+
+      if (!chart.current?.isSameIntervalCandlestick({ timestamp: data.record.time * 1000 }, StockChartInterval.ONE_MIN)) return
+
+      chart.current?.appendCandlestick(
+        {
+          ...lastData,
+          close: data.record.close
+        },
+        StockChartInterval.ONE_MIN
+      )
+    })
+
+    return unSubscribe
+  }, [code])
+
+  // useStockQuoteSubscribe(code ? [code] : [], useCallback<StockSubscribeHandler<'quote'>>((data) => {
+  //   console.log(data)
+  //   const c = chart.current?.getChart()
+  //   const lastData = c?.getDataList()?.slice(-1)[0]
+
+  //   if (!lastData) return
+
+  //   chart.current?.appendCandlestick({
+  //     ...lastData,
+  //     quote: data.record.close,
+  //     prevQuote: data.record.preClose
+  //   }, 1)
+  // }, []))
+
+  return <JknChart ref={chart} className="w-full h-full" showLogo />
 }
 
 export default LargeCap

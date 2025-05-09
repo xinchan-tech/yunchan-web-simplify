@@ -1,3 +1,17 @@
+type OS = 'windows' | 'mac' | 'ios' | 'android' | 'other'
+
+const os: OS = (() => {
+  return /windows|win32/i.test(navigator.userAgent)
+    ? 'windows'
+    : /macintosh|mac os x/i.test(navigator.userAgent)
+      ? 'mac'
+      : /iphone|ipad/i.test(navigator.userAgent)
+        ? 'ios'
+        : /android/i.test(navigator.userAgent)
+          ? 'android'
+          : 'other'
+})()
+
 export const sysConfig = {
   PUBLIC_BASE_API_URL: import.meta.env.PUBLIC_BASE_API_URL,
   PUBLIC_BASE_WS_URL: import.meta.env.PUBLIC_BASE_WS_URL,
@@ -10,6 +24,8 @@ export const sysConfig = {
   PUBLIC_BASE_AES_IV: import.meta.env.PUBLIC_BASE_AES_IV,
   PUBLIC_BASE_OSS_ACCESSKEYID: import.meta.env.PUBLIC_BASE_OSS_ACCESSKEYID,
   PUBLIC_BASE_OSS_ACCESS_KEY_SECRET: import.meta.env.PUBLIC_BASE_OSS_ACCESS_KEY_SECRET,
-  PUBLIC_BASE_BUILD_ENV: import.meta.env.PUBLIC_BASE_BUILD_ENV
+  PUBLIC_BASE_BUILD_ENV: import.meta.env.PUBLIC_BASE_BUILD_ENV,
+  PUBLIC_BASE_WS_IM: import.meta.env.PUBLIC_BASE_WS_IM,
+  OS: os
 }
 window._sysConfig = sysConfig

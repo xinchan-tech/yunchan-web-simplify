@@ -1,8 +1,8 @@
+import { useQueryParams } from '@/hooks'
 import { useState } from 'react'
 import { LoginForm } from './login'
 import { RegisterForm } from './register'
 import { ResetForm } from './reset'
-import { useQueryParams } from '@/hooks'
 import './login.scss'
 
 const LoginPage = () => {

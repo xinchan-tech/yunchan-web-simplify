@@ -1,10 +1,10 @@
-import { JknIcon } from '@/components/jkn/jkn-icon'
+import { JknIcon } from '@/components/tc/jkn-icon'
 import { router } from '@/router'
 import { useCallback } from 'react'
 
 export const HeaderMall = () => {
   const onClick = useCallback(() => {
-    router.navigate('/mall')
+    router.navigate('/app/mall')
   }, [])
   return (
     <div

@@ -1,10 +1,11 @@
-import { getLargeCapIndexes } from '@/api'
+import { getLargeCapIndexes, StockChartInterval } from '@/api'
 import { useStockQuoteSubscribe } from '@/hooks'
 import { stockUtils } from '@/utils/stock'
 import { cn } from '@/utils/style'
 import { useQuery } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
 import { SubscribeSpan } from '../num-span'
+import { JknIcon } from "../tc/jkn-icon"
 
 // const codes = ['IXIC', 'SPX', 'DJI']
 export const StockBar = () => {
@@ -37,17 +38,25 @@ export const StockBar = () => {
   return (
     <div>
       {stockData?.map(item => (
-        <span key={item.code}>
+        <span key={item.code} onClick={() => stockUtils.gotoStockPage(item.code, {interval: StockChartInterval.DAY})} onKeyDown={() => {}} className="cursor-pointer">
           <span className="text-secondary">{item.name}:</span>&nbsp;
           <span className={cn(item.percent >= 0 ? 'text-stock-up' : 'text-stock-down')}>
-            <SubscribeSpan.Price
-              symbol={item.code}
-              initValue={item.price ?? 0}
-              initDirection={item.percent > 0}
-              decimal={3}
-              arrow
-              showSign
-            />
+            <span className="inline-flex items-center">
+              <SubscribeSpan.Price
+                symbol={item.code}
+                initValue={item.price ?? 0}
+                initDirection={item.percent > 0}
+                decimal={3}
+                showSign
+              />
+              <JknIcon.Svg
+                name={item.percent >= 0 ? 'stock-up' : 'stock-down'}
+                className={cn(
+                  item.percent >= 0 ? 'text-stock-up' : 'text-stock-down',
+                  'ml-1 size-3'
+                )}
+              />
+            </span>
             &emsp;
             <SubscribeSpan.Percent
               symbol={item.code}
@@ -60,7 +69,7 @@ export const StockBar = () => {
             &emsp;
             <SubscribeSpan.Percent
               symbol={item.code}
-              initValue={item.percent * 100}
+              initValue={item.percent}
               initDirection={item.percent >= 0}
               decimal={2}
               showSign

@@ -1,5 +1,5 @@
 import { getPlateList } from '@/api'
-import { Button, JknRcTable, type JknRcTableProps, SubscribeSpan } from '@/components'
+import { Button, TcRcTable, type TcRcTableProps, SubscribeSpan } from '@/components'
 import { useTableData } from '@/hooks'
 import { useQuery } from '@tanstack/react-query'
 import Decimal from 'decimal.js'
@@ -63,7 +63,7 @@ const SectorTable = (props: SectorTableProps) => {
   }, [props.type])
 
   // 使用useTableData处理表格数据和排序
-  const [list, { setList, onSort }] = useTableData<PlateDataType>([], 'id')
+  const [list, { setList, onSort }] = useTableData<PlateDataType>([])
 
   // 当数据更新时，更新表格数据
   useEffect(() => {
@@ -78,7 +78,7 @@ const SectorTable = (props: SectorTableProps) => {
   }, [plateQuery.data, setList])
 
   // 定义表格列配置
-  const columns = useMemo<JknRcTableProps<PlateDataType>['columns']>(
+  const columns = useMemo<TcRcTableProps<PlateDataType>['columns']>(
     () => [
       {
         title: '板块名称',
@@ -122,7 +122,7 @@ const SectorTable = (props: SectorTableProps) => {
   return (
     <>
       {!showDetail ? (
-        <JknRcTable
+        <TcRcTable
           headerHeight={61}
           rowKey="id"
           columns={columns}

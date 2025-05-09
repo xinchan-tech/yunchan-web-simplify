@@ -20,6 +20,7 @@ import { useCheckbox, useToast, useZForm } from '@/hooks'
 import { cn } from '@/utils/style'
 import { useMutation } from '@tanstack/react-query'
 import { useCountDown, useCounter } from 'ahooks'
+import dayjs from "dayjs"
 import { REGEXP_ONLY_DIGITS } from 'input-otp'
 import { useState } from 'react'
 import { FormProvider, type SubmitErrorHandler } from 'react-hook-form'
@@ -61,7 +62,13 @@ export const RegisterForm = (props: {
         <AgreementTerms />
       </div>
     ),
-    footer: <div className="text-center my-4"><Button className="px-4" onClick={() => agreementModal.modal.close()}>确&nbsp;认</Button></div>
+    footer: (
+      <div className="text-center my-4">
+        <Button className="px-4" onClick={() => agreementModal.modal.close()}>
+          确&nbsp;认
+        </Button>
+      </div>
+    )
   })
 
   const sendCode = useMutation({
@@ -112,6 +119,19 @@ export const RegisterForm = (props: {
         password: data.password,
         password_confirm: data.passwordConfirm,
         code: code
+      }
+
+      const _code = localStorage.getItem('invite-code')
+
+      if (_code) {
+        const codeObj = JSON.parse(_code)
+        if (codeObj.timestamp) {
+          const current = dayjs()
+          if (current.diff(codeObj.timestamp, 'day') <= 3) {
+            r.inv_code = codeObj.code
+            r.cid = codeObj.cid
+          }
+        }
       }
 
       return registerByEmail(r)
@@ -293,7 +313,14 @@ export const RegisterForm = (props: {
                   <JknCheckbox checked={checked} onClick={toggle} className="text-sm" />
                   &nbsp;
                   <span className="text-sm text-secondary">
-                    我已阅读并接受<span className="text-primary cursor-pointer" onClick={() => agreementModal.modal.open()} onKeyDown={() => { }}>《软件服务条款》</span>
+                    我已阅读并接受
+                    <span
+                      className="text-primary cursor-pointer"
+                      onClick={() => agreementModal.modal.open()}
+                      onKeyDown={() => { }}
+                    >
+                      《软件服务条款》
+                    </span>
                   </span>
                 </FormItem>
                 <Button className="mt-4" block loading={sendCode.isPending}>
@@ -314,9 +341,7 @@ export const RegisterForm = (props: {
               </div>
             </div>
           </FormProvider>
-          {
-            agreementModal.context
-          }
+          {agreementModal.context}
         </div>
       )}
     </>
