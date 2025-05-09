@@ -116,7 +116,7 @@ const ReportCurv = ({ rowdata }: { rowdata: TableDataType }) => {
     <div className="flex">
       <div className="w-[12.5rem] flex items-end">
         <div className="flex max-w-full items-end ">
-          <StockView name={rowdata?.name} code={rowdata?.code as string} showName className="" />
+          <StockView doubleClick={false} name={rowdata?.name} code={rowdata?.code as string} showName className="" />
           {/* <img src={imageLogo} alt="" className="w-6 h-6" /> */}
           {/* <JknIcon stock={data?.[0]} className="mr-3" /> */}
           {/* <span className="ml-2 text-base inline-block">AAPL</span> */}

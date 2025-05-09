@@ -110,7 +110,7 @@ const HistoryList = () => {
         sort: true,
         render: (_, row) => (
           <div className="flex items-center h-[33px]">
-            <StockView name={row.name} code={row.code as string} showName />
+            <StockView doubleClick={false} name={row.name} code={row.code as string} showName />
           </div>
         )
       },

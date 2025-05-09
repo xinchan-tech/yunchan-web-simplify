@@ -5,6 +5,7 @@ import { JknIcon, Input } from '@/components'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 type TableDataType = ReturnType<typeof stockUtils.toStockWithExt>
 import { cn } from '@/utils/style'
+import { useStockSearch } from '@/hooks'
 import { useEffect, useState } from 'react';
 import { useBoolean } from 'ahooks'
 import { getColor } from '../const'
@@ -30,6 +31,7 @@ const StockSelect = ({ list, row, width = "32rem", onChange, classNmae }: {onCha
     const listMap = useStockList(s => s.listMap)
     const [stock, setStock] = useState<TableDataType | null>(null)
     const [keyword, setKeyword] = useState<string>('')
+        const [result] = useStockSearch(keyword)
 
     useEffect(() => {
         console.log('list', list)
@@ -88,6 +90,7 @@ const StockSelect = ({ list, row, width = "32rem", onChange, classNmae }: {onCha
     }
 
     const ItemComponent: React.FC<{ showIcon?: boolean, row: TableDataType }> = ({ showIcon = false, row = {} }) => {
+        console.log(row, 9999)
         return <div className={cn("pb-2.5 py-2 box-border flex justify-between items-center h-[33px] cursor-pointer",
             !showIcon && 'hover:bg-[#3c3c3c]', `w-full`,
         )}
@@ -144,7 +147,7 @@ const StockSelect = ({ list, row, width = "32rem", onChange, classNmae }: {onCha
                 <JknVirtualList
                     className="h-[400px] w-full mt-5 [&>div>div]:[display:block!important]"
                     rowKey="code"
-                    data={filteredStockList}
+                    data={result}
                     itemHeight={60}
                     renderItem={(row) => {
                         return <ItemComponent row={row} />

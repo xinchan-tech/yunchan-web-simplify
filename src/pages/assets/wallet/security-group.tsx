@@ -88,11 +88,11 @@ const Securitygroup = ({ onUpdate, className, ...props }: { className?: string, 
                 title: '名称代码',
                 dataIndex: 'code',
                 align: 'left',
-                width: '25%',
+                width: '50%',
                 sort: true,
                 render: (_, row) => (
                     <div className="flex items-center h-[33px]">
-                        <StockView name={row.name} code={row.code as string} showName />
+                        <StockView doubleClick={false} name={row.name} code={row.code as string} showName />
                     </div>
                 )
             },
@@ -101,7 +101,7 @@ const Securitygroup = ({ onUpdate, className, ...props }: { className?: string, 
                 title: '现价',
                 dataIndex: 'price',
                 align: 'left',
-                width: '13.5%',
+                width: '25%',
                 sort: true,
                 render: (_: any, row) => (
                     <SubscribeSpan.Price
@@ -118,8 +118,8 @@ const Securitygroup = ({ onUpdate, className, ...props }: { className?: string, 
             {
                 title: '涨跌幅',
                 dataIndex: 'percent',
-                align: 'left',
-                width: '13%',
+                align: 'right',
+                width: '25%',
                 sort: true,
                 render: (_: any, row) => (
                     <SubscribeSpan.PercentBlink
@@ -146,12 +146,13 @@ const Securitygroup = ({ onUpdate, className, ...props }: { className?: string, 
         }
     }
 
+
     const onRowClickName = (row: TableDataType) => {
         return row.code === active ? 'active_row' : ''
     }
 
 
-    return <div className={cn("px-0.5 py-6 bg-[#1A191B] rounded-[2rem] w-[28.25rem]", className)}>
+    return <div className={cn("px-0.5 py-6 bg-[#1A191B] rounded-[2rem] w-[28.25rem] flex flex-col", className)}>
         <div className="text-2xl flex flex-col ml-6 mt-2.5">
             <span>证券投资组合</span>
             <span className="text-sm">概述您的多元化股票投资组合。</span>
