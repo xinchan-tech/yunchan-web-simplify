@@ -16,7 +16,7 @@ const AiTrading = () => {
         setSharedData(row)
         setList(data)
     }
-    return <div className='mt-5 flex flex-1 overflow-hidden'>
+    return <div className='flex flex-1 overflow-hidden'>
         <Securitygroup onUpdate={onUpdate} className='w-[40rem]' />
         <div className='ml-5 flex flex-1'>
             <AiConfig key={'ai-config'} list={list} row={sharedData} />

@@ -11,7 +11,7 @@ const Wallet = () => {
         setSharedData(row)
     }
 
-    return <div className='mt-5 flex flex-1 overflow-hidden'>
+    return <div className='flex flex-1 overflow-hidden'>
         <Securitygroup onUpdate={onUpdate} />
         <div className='ml-5 flex-1'>
             <ReportCurv rowdata={sharedData} />

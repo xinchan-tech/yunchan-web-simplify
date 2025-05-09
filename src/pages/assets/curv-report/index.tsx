@@ -49,7 +49,7 @@ const CurvReport = () => {
         ops && chart.current?.setOption(ops)
     }
 
-    return <div className='mt-5 flex flex-1 bg-[#1A191B] rounded-[2rem] w-full h-full p-6 box-border flex flex-col'>
+    return <div className='flex flex-1 bg-[#1A191B] rounded-[2rem] w-full h-full p-6 box-border flex flex-col'>
         <div className="px-3 py-2.5">
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>

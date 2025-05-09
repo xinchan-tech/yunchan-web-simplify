@@ -204,11 +204,6 @@ const App = () => {
         <div className="flex flex-col h-full overflow-hidden w-full">
           <div className="box-border px-2.5 flex items-center h-11">
             <HeaderUser />
-            {
-              path.pathname.startsWith('/app/stock') ? (
-                <ChartToolBar />
-              ) : null
-            }
             <div className="ml-auto">
               <StockSelect className="rounded-[300px] px-3 bg-[#2E2E2E]" onChange={(s) => navigate(`/app/stock?symbol=${s}`)} />
             </div>
