@@ -83,8 +83,8 @@ const MenuInline = () => {
       {menus.map(item => (
         <div
           onClick={() => onNav(item.path)}
-          className={cn('text-center text-inherit w-full  min-w-[7.8125rem] p-2.5 box-border text-gray-400 cursor-pointer hover:text-white hover:bg-[#2E2E2E] rounded-md flex justify-start items-center',
-            pathname === item.path && 'bg-[#2E2E2E]')} key={item.title}>
+          className={cn('text-center text-inherit w-full  min-w-[7.8125rem] p-2.5 box-border text-gray-400 cursor-pointer hover:text-white hover:bg-[#2E2E2E] rounded-[18.75rem] flex justify-start items-center',
+            pathname === item.path && `bg-[#2E2E2E] active_border ` )} key={item.title}>
           <div
             onKeyDown={() => { }}
             className={cn(
@@ -96,7 +96,8 @@ const MenuInline = () => {
           <span className={cn('text-base ml-2', pathname === item.path ? 'text-white' : '')}>{item.title}</span>
         </div>
       ))}
-      <style jsx>{`
+      {/* <style jsx>
+        {`
             {
               .active-icon {
                 filter: invert(50%) sepia(96%) saturate(6798%) hue-rotate(227deg) brightness(99%) contrast(94%);
@@ -105,7 +106,34 @@ const MenuInline = () => {
               .active-text {
                 color: hsl(var(--primary))
               }
-            }`}</style>
+              .active_border {
+                background: linear-gradient(45deg, hsl(358, 95%, 77%), hsl(43, 95%, 77%), hsl(59, 98%, 95%), hsl(191, 92%, 79%), hsl(197, 95%, 52%), hsl(244, 84%, 76%), hsl(43, 95%, 77%));
+                background-clip: text;
+                -webkit-text-fill-color: transparent;
+                border: 1px solid;
+                border-image: linear-gradient(45deg, hsl(358, 95%, 77%), hsl(43, 95%, 77%), hsl(59, 98%, 95%), hsl(191, 92%, 79%), hsl(197, 95%, 52%), hsl(244, 84%, 76%), hsl(43, 95%, 77%)) 1;
+                animation: animate 3s linear infinite;
+                -webkit-clip-path: ellipse(18.75rem 18.75rem at 50% 50%);
+                -moz-clip-path: ellipse(18.75rem 18.75rem at 50% 50%);
+                clip-path: ellipse(18.75rem 18.75rem at 50% 50%);
+                
+              }
+
+              .active_border::before {
+                  background: linear-gradient(45deg, hsl(358, 95%, 77%), hsl(43, 95%, 77%), hsl(59, 98%, 95%), hsl(191, 92%, 79%), hsl(197, 95%, 52%), hsl(244, 84%, 76%), hsl(43, 95%, 77%));
+              }
+
+              @keyframes animate {
+                0% {
+                  filter: hue-rotate(0deg);
+                }
+                
+                100% {
+                  filter: hue-rotate(360deg);
+                }
+              }
+            }`}
+            </style> */}
     </div>
   )
 }

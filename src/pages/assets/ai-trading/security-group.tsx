@@ -61,7 +61,7 @@ const Securitygroup = ({ onUpdate, className, ...props }: { className?: string, 
             const thumbs = lastStock?.thumbs ?? []
 
             const subStock: Stock | null = ['afterHours', 'close'].includes(trading) ? afterStock : beforeStock
-
+   
             return {
                 ...lastStock,
                 name: stock.name,
@@ -125,6 +125,7 @@ const Securitygroup = ({ onUpdate, className, ...props }: { className?: string, 
                         decimal={2}
                         initValue={row.percent}
                         initDirection={row.isUp}
+                        className={row.percent > 0 ? "text-[#5EDEA0]" : "text-[#FC43A8]"}
                         nanText="--"
                     />
                 )
@@ -142,7 +143,7 @@ const Securitygroup = ({ onUpdate, className, ...props }: { className?: string, 
     }
 
 
-    return <div className={cn("border-[1px] border-[#3c3c3c] border-solid px-0.5 py-6 rounded-md w-[28.25rem]", className)}>
+    return <div className={cn("bg-[#1A191B] rounded-[2rem] px-0.5 py-6 w-[28.25rem] box-border", className)}>
         <div className="text-2xl flex flex-col ml-6 mt-2.5">
             <span>证券投资组合</span>
             <span className="text-sm">概述您的多元化股票投资组合。</span>

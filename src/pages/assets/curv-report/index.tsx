@@ -1,7 +1,3 @@
-
-import AssetsTop from '../components/top';
-import AssetsInfo from '../components/info';
-import { MenuInline } from "@/components";
 import { useChart } from "@/hooks";
 import { useEffect, useState } from "react";
 import { getLineChartOps, getBarChartOps } from '../const'
@@ -53,7 +49,7 @@ const CurvReport = () => {
         ops && chart.current?.setOption(ops)
     }
 
-    return <div className='mt-5 flex flex-1 border-[1px] border-solid border-[#3c3c3c] rounded-md w-full h-full p-6 box-border flex flex-col'>
+    return <div className='mt-5 flex flex-1 bg-[#1A191B] rounded-[2rem] w-full h-full p-6 box-border flex flex-col'>
         <div className="px-3 py-2.5">
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>

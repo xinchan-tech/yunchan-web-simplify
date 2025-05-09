@@ -2,6 +2,7 @@ import { useConfig, useTime } from '@/store'
 import dayjs, { type Dayjs } from 'dayjs'
 import type { StockTrading } from './stock'
 import { m } from 'node_modules/react-router/dist/production/fog-of-war-BDQTYoRQ.d.mts'
+import { number } from 'zod'
 
 /**
  * 将小时和分钟转换为数字
@@ -9,6 +10,22 @@ import { m } from 'node_modules/react-router/dist/production/fog-of-war-BDQTYoRQ
  */
 export const hourMinToNum = (str: string) => {
   return Number.parseInt(str.replace(':', ''))
+}
+
+/**
+ * 将数字秒转为 天时分 
+ * @param num 
+ * @returns string
+ */
+export const numToDay = (num: number) => {
+  const days = Math.floor(num / (60 * 60 * 24));
+  const hours = Math.floor((num % (60 * 60 * 24)) / (60 * 60));
+  const minutes = Math.floor((num % (60 * 60)) / 60);
+  let result = '';
+  if (days > 0) result += `${days}天`;
+  if (hours > 0) result += `${hours}小时`;
+  if (minutes > 0) result += `${minutes}分钟`;
+  return result
 }
 
 export const dateToWeek = (date: Dayjs | string, unit = '星期') => {

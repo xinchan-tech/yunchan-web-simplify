@@ -9,12 +9,6 @@ import { stockUtils } from '@/utils/stock'
 import { useStockList } from '@/store'
 import dayjs from 'dayjs'
 import { cn } from '@/utils/style'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components';
 
 type TableDataType = {
   name: string
@@ -63,24 +57,18 @@ const HistoryList = () => {
     }
 
     for (const { id, time, ...stock } of query.data.items) {
-      const lastStock = stockUtils.toStock(stock.stock, {
+      
+      const lastStock = stockUtils.toStockWithExt(stock.stock, {
         extend: stock.extend,
         name: stock.name,
         symbol: stock.symbol
       })
+      const infoStore = listMap[stock.symbol] || []
       r.push({
         ...stock,
-        name: lastStock.name,
+        name: infoStore[3] || '',
         code: lastStock.symbol,
         id,
-        // price: lastStock?.close || undefined,
-        // percent: lastStock?.percent && lastStock.percent,
-        // turnover: lastStock?.turnover || undefined,
-        // total: lastStock?.marketValue || undefined,
-        // industry: lastStock?.industry,
-        // prePercent: beforeStock?.percent,
-        // afterPercent: afterStock?.percent,
-        // collect: lastStock?.extend?.collect,
         isUp: stockUtils.isUp(lastStock),
       })
     }
@@ -109,7 +97,7 @@ const HistoryList = () => {
         width: '6%',
         sort: true,
         render: (_, { direction }) => (
-          <div className={cn("flex items-center h-[33px] text-[#22AB94]", direction == 1 ? 'text-[#22AB94]' : 'text-[#F23645]')}>
+          <div className={cn("flex items-center h-[33px] text-[#22AB94]", direction == 1 ? 'text-[#5EDEA0]' : 'text-[#FC43A8]')}>
             {direction == 1 ? '买入' : '卖出'}
           </div>
         )
@@ -205,7 +193,7 @@ const HistoryList = () => {
     setEndTime(end ? dayjs(end).valueOf() / 1000 : undefined)
   }
 
-  return <div className="border-[1px] border-solid border-[#3c3c3c] rounded-md pt-6 px-[2px] box-border w-full">
+  return <div className="bg-[#1A191B] rounded-[2rem] pt-6 px-[2px] box-border w-full">
     <div className="flex  justify-end  items-center px-6 box-border">
       <div className='flex align-center '>
         <div className="flex items-center justify-end mr-6">
