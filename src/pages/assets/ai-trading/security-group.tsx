@@ -61,7 +61,7 @@ const Securitygroup = ({ onUpdate, className, ...props }: { className?: string, 
             const thumbs = lastStock?.thumbs ?? []
 
             const subStock: Stock | null = ['afterHours', 'close'].includes(trading) ? afterStock : beforeStock
-   
+
             return {
                 ...lastStock,
                 name: stock.name,
@@ -74,7 +74,7 @@ const Securitygroup = ({ onUpdate, className, ...props }: { className?: string, 
             }
         })
         setList(r)
-        onUpdate?.(r[0], r)
+        // onUpdate?.(r[0], r)  初始化时不自动加载交易数据
         console.log(r)
     }, [query.data, setList])
 
@@ -89,7 +89,7 @@ const Securitygroup = ({ onUpdate, className, ...props }: { className?: string, 
                 sort: true,
                 render: (_, row) => (
                     <div className="flex items-center h-[33px]">
-                        <StockView name={row.name} code={row.code as string} showName />
+                        <StockView isDoubleClicIcon={false} name={row.name} code={row.code as string} showName />
                     </div>
                 )
             },
@@ -125,6 +125,7 @@ const Securitygroup = ({ onUpdate, className, ...props }: { className?: string, 
                         decimal={2}
                         initValue={row.percent}
                         initDirection={row.isUp}
+                        showPositive={true}
                         className={row.percent > 0 ? "text-[#5EDEA0]" : "text-[#FC43A8]"}
                         nanText="--"
                     />

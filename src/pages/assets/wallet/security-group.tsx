@@ -76,9 +76,12 @@ const Securitygroup = ({ onUpdate, className, ...props }: { className?: string, 
                 subPercent: subStock ? stockUtils.getPercent(subStock) : undefined
             }
         })
+        console.log(r, 89898)
         setList(r)
-        setActive(r[0].code)
-        onUpdate?.(r[0], r)
+        if (r[0]) {
+            setActive(r[0]?.code)
+            onUpdate?.(r[0], r)
+        }
     }, [query.data, setList])
 
 
@@ -92,7 +95,7 @@ const Securitygroup = ({ onUpdate, className, ...props }: { className?: string, 
                 sort: true,
                 render: (_, row) => (
                     <div className="flex items-center h-[33px]">
-                        <StockView name={row.name} code={row.code as string} showName />
+                        <StockView isDoubleClicIcon={false} name={row.name} code={row.code as string} showName />
                     </div>
                 )
             },
@@ -126,6 +129,7 @@ const Securitygroup = ({ onUpdate, className, ...props }: { className?: string, 
                         symbol=""
                         subscribe={false}
                         decimal={2}
+                        showPositive={true}
                         initValue={row.percent}
                         initDirection={row.isUp}
                         className={getColor(row.percent)}

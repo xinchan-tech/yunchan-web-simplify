@@ -10,7 +10,7 @@ import { isString } from 'radash'
 
 //账户信息
 export const getAccountInfo = () => {
-    return request.get('/qs-svc/account/wallet').then(r => r.data)
+    return request.get('/qs-svc/account/wallet').then(r => r.data).catch(err=>err)
 }
 
 getAccountInfo.cacheKey = 'assets:account:info'
@@ -19,6 +19,11 @@ getAccountInfo.cacheKey = 'assets:account:info'
 type AddDepositType = {
     account_id: string,
     amount: number
+}
+
+//开通账号
+export const createAccount = () => {
+    return request.post('/qs-svc/account')
 }
 
 //存款

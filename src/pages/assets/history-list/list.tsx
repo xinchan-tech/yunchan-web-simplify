@@ -81,7 +81,7 @@ const HistoryList = () => {
       if (status == 1) {
         query.refetch()
       }
-      toast(status == 1 ? '操作成功' : msg)
+      toast({description: status == 1 ? '操作成功' : msg})
     })
     .catch((err) => {
       toast({ description: String(err) })
@@ -94,7 +94,7 @@ const HistoryList = () => {
         title: '行动方向',
         dataIndex: 'direction',
         align: 'left',
-        width: '6%',
+        width: '7%',
         sort: true,
         render: (_, { direction }) => (
           <div className={cn("flex items-center h-[33px] text-[#22AB94]", direction == 1 ? 'text-[#5EDEA0]' : 'text-[#FC43A8]')}>
@@ -110,7 +110,7 @@ const HistoryList = () => {
         sort: true,
         render: (_, row) => (
           <div className="flex items-center h-[33px]">
-            <StockView name={row.name} code={row.code as string} showName />
+            <StockView isDoubleClicIcon={false} name={row.name} code={row.code as string} showName />
           </div>
         )
       },
@@ -119,9 +119,9 @@ const HistoryList = () => {
         title: '日期',
         dataIndex: 'create_time',
         align: 'left',
-        width: '10%',
+        width: '15%',
         sort: true,
-        render: (_: any, { create_time }) => create_time ? dayjs(create_time * 1000).format('YYYY-MM-DD') : "--"
+        render: (_: any, { create_time }) => create_time ? dayjs(create_time * 1000).format('YYYY-MM-DD HH:mm:ss') : "--"
       },
       {
         title: '订单价格',

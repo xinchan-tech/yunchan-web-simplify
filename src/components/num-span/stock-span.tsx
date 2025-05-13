@@ -25,7 +25,7 @@ interface NumberSubscribeSpanProps {
   onValueChange?: OnValueChangeFn
 }
 
-const BaseNumberFormatter = (v: number | string | undefined, decimal: number, zeroText?: string) => {
+const BaseNumberFormatter = (v: number | string | undefined, decimal: number, zeroText?: string, showPositive?: boolean) => {
   if (zeroText) {
     if (!v) {
       return zeroText
@@ -41,7 +41,8 @@ const BaseNumberFormatter = (v: number | string | undefined, decimal: number, ze
     return v
   }
 
-  return (+v).toFixed(decimal)
+  const num = +v
+  return num > 0 && showPositive ? `+${num.toFixed(decimal)}` : num.toFixed(decimal)
 }
 
 const useBaseSubscribe = (
@@ -157,6 +158,7 @@ interface PercentSubscribeSpanProps
   type?: 'percent' | 'amount'
   nanText?: string
   onChange?: SubscribeSpanProps['onChange']
+  showPositive?: boolean
 }
 
 export const PercentSubscribeSpan = memo(
@@ -171,6 +173,7 @@ export const PercentSubscribeSpan = memo(
     nanText,
     onChange,
     onValueChange,
+    showPositive = false,
     ...props
   }: PercentSubscribeSpanProps) => {
     const numberFormatter = useCallback(
@@ -179,12 +182,12 @@ export const PercentSubscribeSpan = memo(
           if ((Number.isNaN(v) || !Number.isFinite(v)) && nanText) {
             return nanText
           }
-          const r = BaseNumberFormatter(+(v || 0) * 100, decimal, zeroText)
+          const r = BaseNumberFormatter(+(v || 0) * 100, decimal, zeroText, showPositive)
           return r === zeroText ? r : `${r}%`
         }
-        return BaseNumberFormatter(v, decimal, zeroText)
+        return BaseNumberFormatter(v, decimal, zeroText, showPositive)
       },
-      [decimal, zeroText, type, nanText]
+      [decimal, zeroText, type, nanText, showPositive]
     )
 
     const {

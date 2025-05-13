@@ -11,10 +11,12 @@ import { useState } from 'react'
 interface AlarmStickPickerProps {
   value?: string
   onChange?: (value: string) => void
+  classNmae?: string
+  width?: string
 }
 
-const StockSelect = ({ value, width = "32rem", onChange, classNmae }: { onChange?: (row: TableDataType) => void, classNmae?: string, width?: string, value: String; }) => {
-const stockMap = useStockList(s => s.listMap)
+const StockSelect = ({ value, width = "32rem", onChange }: AlarmStickPickerProps) => {
+  const stockMap = useStockList(s => s.listMap)
   const [search, setSearch] = useState('')
   const [result] = useStockSearch(search)
   const [open, setOpen] = useState(false)
@@ -26,10 +28,10 @@ const stockMap = useStockList(s => s.listMap)
     select: data =>
       data
         ? stockUtils.toStockWithExt(data.stock, {
-            extend: data.extend,
-            symbol: data.symbol,
-            name: data.name
-          })
+          extend: data.extend,
+          symbol: data.symbol,
+          name: data.name
+        })
         : null
   })
 
@@ -43,7 +45,7 @@ const stockMap = useStockList(s => s.listMap)
               open && 'border-[3px] border-primary'
             )}
             onClick={() => setOpen(true)}
-            onKeyDown={() => {}}
+            onKeyDown={() => { }}
           >
             {value ? (
               <>
@@ -72,13 +74,13 @@ const stockMap = useStockList(s => s.listMap)
                 ) : null}
               </>
             ) : (
-              <span className="text-tertiary text-xs">--</span>
+              <span className="text-tertiary text-xs text-lg">请选择股票</span>
             )}
             <JknIcon.Svg name="arrow-down" className="ml-auto text-tertiary" size={10} />
           </div>
         </div>
       </PopoverTrigger>
-      <PopoverContent  className={cn("p-2.5 box-border h-[432]", `w-[${width}]`)}>
+      <PopoverContent className={cn("p-2.5 box-border h-[432]", `w-[${width}]`)}>
         <div className="w-full">
           <div className="flex items-center border-b-primary px-4">
             <JknIcon.Svg name="search" className="w-6 h-6 text-tertiary" />
@@ -103,7 +105,7 @@ const stockMap = useStockList(s => s.listMap)
                     onChange?.(symbol)
                     setOpen(false)
                   }}
-                  onKeyDown={() => {}}
+                  onKeyDown={() => { }}
                 >
                   <JknIcon.Stock symbol={symbol} className="w-6 h-6 mr-2 flex-shrink-0" />
                   <span>{symbol}</span>

@@ -10,14 +10,15 @@ interface StockViewProps {
   iconSize?: number
   className?: string
   navToTrading?: boolean
+  isDoubleClicIcon?: boolean
 }
 
-const StockView = ({ code, name, showName = false, iconSize = 24, className, navToTrading = true }: StockViewProps) => {
+const StockView = ({ code, name, showName = false, iconSize = 24, className, navToTrading = true, isDoubleClicIcon= true }: StockViewProps) => {
   const listMap = useStockList(s => s.listMap)
   const stock = listMap[code]
 
   const onDoubleClick = () => {
-    if (navToTrading) {
+    if (navToTrading && isDoubleClicIcon) {
       router.navigate(`/app/stock?symbol=${code}`)
     }
   }

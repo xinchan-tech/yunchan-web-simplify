@@ -12,7 +12,7 @@ import {
 
 const CurvReport = () => {
     const [chart, dom] = useChart()
-    const [selectedKey, setSelectedKey] = useState('YKQX')
+    const [selectedKey, setSelectedKey] = useState('GGKZZT')
     const [resizeTrigger, setResizeTrigger] = useState(0)
     const debouncedResizeTrigger = useDebounce(resizeTrigger, 500)
 

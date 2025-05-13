@@ -14,7 +14,7 @@ import { type ReactNode, useState } from 'react'
 
 const formSchema = z.object({
     amount: z
-        .number({ required_error: '请输入金额' })
+        .number({ invalid_type_error: '请输入金额' })
         .min(0.01, { message: '金额必须大于0' })
         .refine((value) => /^\d+(\.\d{1,2})?$/.test(value.toString()), {
             message: '金额最多只能保留两位小数',
@@ -63,8 +63,7 @@ const DialogAssets: React.FC<DialogAssetsProps> = ({ children, refreshInfo, type
         })
             .finally(() => setLoadingFalse())
             .catch((err) => {
-                const errArr = String(err).split(":")
-                toast({ description: errArr[errArr.length-1]})
+                toast({ description: err.message})
             })
     };
 

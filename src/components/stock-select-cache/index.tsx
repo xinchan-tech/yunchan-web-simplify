@@ -81,11 +81,12 @@ const StockSelect = ({ onChange, showKeyWord, allowClear, className, width, ...p
                         {selected ? selected : '请选择股票搜索'}
                         <div
                             className='cursor-pointer'
-                            onMouseEnter={() => setHovered(true)} // 鼠标移入时切换图标
-                            onMouseLeave={() => setHovered(false)} // 鼠标移出时恢复图标
+                            // onMouseEnter={() => setHovered(true)} // 鼠标移入时切换图标
+                            // onMouseLeave={() => setHovered(false)} // 鼠标移出时恢复图标
                         >
                             {
-                                hovered && selected && allowClear ?
+                                // hovered && 
+                                selected && allowClear ?
                                     <JknIcon.Svg name="close" size={12} onClick={close} /> :
                                     <JknIcon.Svg name="arrow-down" size={12} className='ml-2.5' />
                             }

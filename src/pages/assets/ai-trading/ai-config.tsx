@@ -4,14 +4,16 @@ import { Input } from '@/components';
 import { cn } from '@/utils/style';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { z } from 'zod'
-import { Button, JknIcon } from '@/components';
+import { Button, JknIcon, JknDatePicker } from '@/components';
 import { useZForm, useToast } from '@/hooks'
-import { saveTrades, TradesParamsType } from '@/api'
+import { saveTrades, TradesParamsType, getStockBaseCodeInfo } from '@/api'
 import { useToast } from '@/hooks'
 import BigNumber from 'bignumber.js';
 import { FormProvider, useFormContext } from 'react-hook-form'
 import { useAssetsInfoStore } from '@/store/chat'
+import Decimal from 'decimal.js'
 import { useBoolean } from 'ahooks'
+import { useQuery } from '@tanstack/react-query'
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 
 import {
@@ -78,12 +80,14 @@ const formSchema = z.object({
 
 type AiTypes = 'percent' | 'price'
 
-const AiConfig = ({ list, row }: { list: TableDataType[]; row: TableDataType }) => {
+const AiConfig = ({ row }: { list: TableDataType[]; row: TableDataType }) => {
     const [type, setType] = useState(1);
     const [selectedAction, setSelectedAction] = useState<SelectedActionType>('buy'); // 选中状态
     const [aiType, setAiType] = useState<AiTypes>("percent")
-    const [stock, setStock] = useState<TableDataType | null>(null);
+    const [stock, setStock] = useState<string>('');
+    const [createTime, setCreateTime] = useState<string>("")
     const [loading, { setTrue: setLoadingTrue, setFalse: setLoadingFalse }] = useBoolean(false);
+    const [hovered, setHovered] = useState(false); // 控制图标切换
     const { toast } = useToast();
 
     let form = useZForm(formSchema, {
@@ -93,7 +97,6 @@ const AiConfig = ({ list, row }: { list: TableDataType[]; row: TableDataType }) 
         aiQuantity: "",
         retailPrice: "",
         retailQuantity: "",
-        symbol: ""
     });
 
 
@@ -113,6 +116,37 @@ const AiConfig = ({ list, row }: { list: TableDataType[]; row: TableDataType }) 
         { key: 2, label: `AI浮动追踪` },
     ];
 
+    const query = useQuery({
+        queryKey: [getStockBaseCodeInfo.cacheKey, stock, ['total_share']],
+        queryFn: () => getStockBaseCodeInfo({ symbol: stock, extend: ['total_share'] }),
+        enabled: !!stock,
+        select: data => data
+            ? stockUtils.toStock(data.stock, {
+                extend: data.extend,
+                symbol: data.symbol,
+                name: data.name
+            })
+            : null
+    })
+
+    const calcPrice = (type: 'price' | 'percent') => {
+        if (!(aiQuantity && aiPrice)) return ''
+        let v
+        let x = selectedAction == 'buy' ? -1 : 1
+        if (aiType === 'percent') {
+            v = Decimal.create(query.data?.close ?? 0)
+                .mul(1 + x * (+aiPrice / 100))
+                .toNumber()
+
+
+        } else {
+            v = Decimal.create(query.data?.close ?? 0)
+                .plus(x * + aiPrice)
+                .toNumber()
+        }
+        return (v * aiQuantity).toFixed(2)
+    }
+
     const onTypeChange = (key: string) => {
         setType(key);
     };
@@ -125,8 +159,7 @@ const AiConfig = ({ list, row }: { list: TableDataType[]; row: TableDataType }) 
         if (row?.price) {
             form.setValue('price', row.price)
         }
-        setStock(row.symbol)
-        form && form.setValue('symbol', row.symbol)
+        if (row?.symbol) setStock(row.symbol)
     }, [row])
 
     useEffect(() => {
@@ -166,11 +199,12 @@ const AiConfig = ({ list, row }: { list: TableDataType[]; row: TableDataType }) 
     }, [retailQuantity])
 
     const onsubmit = async (key: SelectedActionType) => {
+        if (!stock) return toast({ description: '请先选择股票' })
         const verify = type == 1 ? ['price', 'quantity'] : ["aiPrice", "aiQuantity", "retailPrice", "retailQuantity"]
         const valid = await form.trigger(verify);
         if (!valid) return
         if (selectedAction == 'buy') { //买入比较可用金额
-            const info = useAssetsInfoStore?.getState()?.data
+            const info = useAssetsInfoStore?.getState()?.data || {}
             let _totalAmount = type == 1 ? totalAmount : aiTotalAmount
             if (_totalAmount > info.balance) return toast({ description: '可用金额不足，请先存款！' })
         } else {  //卖出比较数量
@@ -182,35 +216,40 @@ const AiConfig = ({ list, row }: { list: TableDataType[]; row: TableDataType }) 
             if (status == 1) {
                 toast({ description: '保存成功' })
                 form.reset()
-                form && form.setValue('symbol', params.symbol)
             } else {
                 toast({ description: msg })
             }
         }).catch((err) => {
-            toast({ description: String(err) })
+            toast({ description: err.message })
         }).finally(() => setLoadingFalse())
     }
 
     function getSaveParams(key: SelectedActionType) {
         const data = form.getValues()
+        let datetime = ''
+        if (createTime) {
+            const date = new Date(createTime);
+            const timestampInMilliseconds = date.getTime();
+            datetime = Math.floor(timestampInMilliseconds / 1000);
+        }
         const param = {
-            symbol: data.symbol,
+            symbol: stock,
             type,
             direction: key == 'buy' ? 1 : 2,
             condition: {}
         }
+        if (datetime) param.datetime = datetime
         if (type == 1) {
             const { price, quantity } = data
             param.condition = {
                 params: [{ price, quantity }]
             }
         } else {
-            const { aiPrice, aiQuantity, retailPrice, retailQuantity, symbol } = data
-            console.log(data, aiPrice, aiQuantity, retailPrice, retailQuantity)
+            const { aiPrice, aiQuantity, retailPrice, retailQuantity } = data
             param.condition = {
                 ai_params: [
                     { type: 3, change_value: retailPrice, quantity: retailQuantity },
-                    { type: aiType == 'percent' ? 1 : 2, change_value: aiPrice, quantity: aiQuantity }
+                    { type: aiType == 'percent' ? 1 : 2, change_value: aiType == 'percent' ? aiPrice / 100 : aiPrice, quantity: aiQuantity }
                 ]
             }
         }
@@ -218,17 +257,9 @@ const AiConfig = ({ list, row }: { list: TableDataType[]; row: TableDataType }) 
         return param
     }
 
-    const onSelectChange = (row: TableDataType) => {
-        form.setValue('price', row.price)
-        setStock(row)
-    }
-
-    const StockSelectCompent = useCallback(() => {
-        return <StockSelect list={list} row={row} classNmae="pr-[12px]" onChange={row => onSelectChange(row)} />
-    }, [row])
-
-    const onChangeAiType = (type: string) => {
-        console.log(type, 9999)
+    const onClose = (e: React.MouseEvent) => {
+        e.stopPropagation()
+        setCreateTime('')
     }
 
     return (
@@ -260,17 +291,7 @@ const AiConfig = ({ list, row }: { list: TableDataType[]; row: TableDataType }) 
 
                     {/* 股票选择 */}
                     <div className="mt-5 w-full box-border">
-                        <FormField
-                            control={form.symbol}
-                            name="symbol"
-                            render={({ field }) => (
-                                <FormItem className="flex items-center space-y-0">
-                                    <FormControl>
-                                        <StockSelect {...field} />
-                                    </FormControl>
-                                </FormItem>
-                            )}
-                        />
+                        <StockSelect value={stock} onChange={val => setStock(val)} />
                     </div>
 
                     {/* 类型选择 */}
@@ -283,7 +304,7 @@ const AiConfig = ({ list, row }: { list: TableDataType[]; row: TableDataType }) 
                                         <span className="text-[#DBDBDB] text-sm pr-5 box-border">
                                             {tabs.find((tab) => tab.key == type)?.label}
                                         </span>
-                                        <JknIcon.Svg name="arrow-down" size={10} />
+                                        <JknIcon.Svg name="arrow-down" className="ml-auto text-tertiary" size={10} />
                                     </div>
                                 </div>
                             </DropdownMenuTrigger>
@@ -375,7 +396,7 @@ const AiConfig = ({ list, row }: { list: TableDataType[]; row: TableDataType }) 
                                                             <div className="flex w-auto items-center rounded-sm text-xs px-1 py-0.5 hover:bg-accent cursor-pointer text-secondary">
                                                                 <DropdownMenu>
                                                                     <DropdownMenuTrigger asChild>
-                                                                        <span>{aiType == 'percent' ? "按回撤比例" : "按价格差额"}</span>
+                                                                        <span>{aiType == 'percent' ? "按回撤比例(%)" : "按价格差额"}</span>
                                                                     </DropdownMenuTrigger>
                                                                     <DropdownMenuContent>
                                                                         <DropdownMenuItem
@@ -436,7 +457,7 @@ const AiConfig = ({ list, row }: { list: TableDataType[]; row: TableDataType }) 
                                         <div className="text-[#808080] text-xs font-bold mb-1 text-right pr-[12px] box-border">
                                             金额
                                         </div>
-                                        <div className="text-[#808080] text-sm">{aiTotalAmount}</div>
+                                        <div className="text-[#808080] text-sm">{calcPrice()}</div>
                                     </div>
                                 </div>
                             </div>
@@ -502,6 +523,29 @@ const AiConfig = ({ list, row }: { list: TableDataType[]; row: TableDataType }) 
                             </div>
                         </>
                     }
+
+                    < div >
+                        <div className="box-border flex justify-between border-[1px] border-solid border-[#3c3c3c] px-2.5 py-1 rounded-md mt-5">
+                            <div className="flex-1">
+                                <JknDatePicker onChange={v => setCreateTime(v)} >
+                                    {v => (
+                                        <div className="rounded-xs py-2 text-base cursor-pointer flex items-center justify-between text-tertiary">
+                                            {v ?? '选择日期'}&nbsp;
+                                            <span onMouseEnter={() => setHovered(true)}
+                                                onMouseLeave={() => setHovered(false)} >
+                                                {
+                                                    hovered && createTime ? <JknIcon.Svg name="close" className="" size={10} /> :
+                                                        <span onClick={(e) => onClose(e)}><JknIcon.Svg name="arrow-down" className="" size={10} /></span>
+                                                }
+                                            </span>
+
+                                        </div>
+                                    )}
+                                </JknDatePicker>
+                            </div>
+                        </div>
+                    </div>
+
 
                     {/* 提交按钮 */}
                     <div className="mt-10">

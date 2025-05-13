@@ -7,7 +7,7 @@ import { useMemo, useState, useEffect } from 'react'
 import Decimal from 'decimal.js'
 import { stockUtils } from '@/utils/stock'
 import { numToDay } from '@/utils/date'
-import { getColor } from '../const'
+import { getColor, numberFormat } from '../const'
 import { cn } from '@/utils/style'
 
 type TableDataType = {
@@ -113,7 +113,7 @@ const InvestList = () => {
         sort: true,
         render: (_, row) => (
           <div className="flex items-center h-[33px]">
-            <StockView name={row.name} code={row.code as string} showName />
+            <StockView isDoubleClicIcon={false} name={row.name} code={row.code as string} showName />
           </div>
         )
       },
@@ -153,11 +153,11 @@ const InvestList = () => {
       },
       {
         title: '市值',
-        dataIndex: 'market_value',
+        dataIndex: 'hold_market_cap',
         align: 'left',
         width: '13%',
         sort: true,
-        render: (_: any, row) => Decimal.create(row.market_value).toShortCN(3)
+        render: (_: any, row) => Decimal.create(row.hold_market_cap).toShortCN(3)
       },
       {
         title: '盈亏额',
@@ -165,7 +165,7 @@ const InvestList = () => {
         align: 'left',
         width: '13.5%',
         sort: true,
-        render: (_: any, row) => <span className={getColor(row.profit_lo)}>{Decimal.create(row.profit_loss).toShortCN(3)}</span> 
+        render: (_: any, row) => <span className={getColor(row.profit_loss)}>{row.profit_loss > 0 ? '+' : ''}{Decimal.create(row.profit_loss).toShortCN(3)}</span>
       },
       {
         title: '回报率',
@@ -174,7 +174,7 @@ const InvestList = () => {
         width: '13.5%',
         sort: true,
         render: (_, row) => (
-          <span className={cn('text-stock-up', getColor(row.return_rate))}>{row.return_rate ?? '--'}</span>
+          <span className={cn('text-stock-up', getColor(row.return_rate))}>{row.return_rate ? `${numberFormat(row.return_rate, 100)}` : '--'}</span>
         )
       },
       {
@@ -183,7 +183,7 @@ const InvestList = () => {
         width: '13.5%',
         align: 'center',
         sort: true,
-        render: (_: any, row) => <span className="text-[#808080]">{row.position_rate}</span>
+        render: (_: any, row) => <span className="text-[#808080]">{row.position_rate ? `${(row.position_rate * 100).toFixed(2)}%` : '--'}</span>
       },
       {
         title: '当日盈亏额',
@@ -191,7 +191,7 @@ const InvestList = () => {
         align: 'center',
         width: '13.5%',
         sort: true,
-        render: (_: any, row) => <span className={cn('text-[#808080]', getColor(row.return_rate))}>{row.profit_loss_today}</span>
+        render: (_: any, row) => <span className={cn('text-[#808080]', getColor(row.profit_loss_today))}>{numberFormat(row.profit_loss_today || 0)}</span>
       },
       {
         title: '当日盈比例',
@@ -199,7 +199,7 @@ const InvestList = () => {
         width: '13.5%',
         align: 'center',
         sort: true,
-        render: (_: any, row) => <span className={cn('text-[#808080]', getColor(row.return_rate))}>{row.profit_loss_rate_today}</span>
+        render: (_: any, row) => <span className={cn('text-[#808080]', getColor(row.profit_loss_rate_today))}>{numberFormat(row.profit_loss_rate_today || 0, 100)}</span>
       },
       {
         title: '持仓时间',

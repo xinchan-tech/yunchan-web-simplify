@@ -1,6 +1,21 @@
-export const getColor = (value: number | string) => {
-    if (value === '') return ''
+export const getColor = (value: number | string | undefined | null) => {
+    if (!value) return ''
+    if (typeof value === 'string' && !/^-?\d*\.?\d+$/.test(value)) return ''
+    if (typeof value !== 'number' && typeof value !== 'string') return ''
     return Number(value) >= 0 ? 'text-[#5EDEA0]' : 'text-[#FC43A8]'
+}
+
+export function numberFormat(value: number, coefficient?: number) {
+    // 判断是否为数字或数字字符串
+    if (typeof value === 'string' && !/^-?\d*\.?\d+$/.test(value)) return '--'
+    if (typeof value !== 'number' && typeof value !== 'string') return 0
+
+    let num = +value
+    if (isNaN(num)) return 0
+    const positive = num > 0 ? '+' : ''
+    coefficient && (num = num * coefficient) ? '%' : ''
+
+    return `${positive}${num % 1 === 0 ? num : num.toFixed(2)}${coefficient ? '%' : ''}`
 }
 
 export const getLineChartOps = (averageValue = 0, { xArr = [], yArr = [] } = {}) => {
@@ -48,16 +63,22 @@ export const getLineChartOps = (averageValue = 0, { xArr = [], yArr = [] } = {})
         yAxis: {
             type: 'value',
             axisLine: {
-                lineStyle: {
-                    color: '#22AB94',
-                },
+                show: false // 不显示y轴线
             },
             axisLabel: {
-                color: '#fff',
-                fontSize: 14,
+                color: '#B8B8B8',
             },
             splitLine: {
-                show: false
+                show: true,
+                lineStyle: {
+                    color: function (value: number) {
+                        // 只在y=0时显示虚线
+                        return value === 0 ? '#fff' : 'transparent';
+                    },
+                    type: 'dashed',
+                    width: 1,
+                    opacity: 0.2
+                },
             },
             // max: function (val) {
             //     if (val.max < averageValue) val.max = averageValue
@@ -101,7 +122,7 @@ export const getLineChartOps = (averageValue = 0, { xArr = [], yArr = [] } = {})
                     showSymbol: true,    // 悬停时显示数据点
                     symbolSize: 8,       // 悬停点的尺寸
                     itemStyle: {
-                        color: function (params) {
+                        color: function (params: { color: string }) {
                             return params.color;
                         },
                         borderWidth: 2, // 圆点的边框宽度
@@ -157,106 +178,138 @@ export const getLineChartOps = (averageValue = 0, { xArr = [], yArr = [] } = {})
     };
 }
 
+
 export const getBarChartOps = () => {
+    const rawData = [
+        100, -300, 100, -200, 220, 100, 210, -200, 150, -150,
+        -400, 120, 250, -250, 300, 400, 220, 150, -200, -100,
+        80, 150, -500, -400, 180, 260,
+    ];
+    const categories = [
+        'AMZN', 'TSLA', 'QQQ', 'AAPL', 'AAL', 'NVDA', 'MSFT', 'MSXT', 'HUD', 'GRDS',
+        'HTYD', 'NHYF', 'BGTD', 'HTED', 'NHYF', 'NGG', 'NHY', 'HYD', 'NHYRD', 'MYG',
+        'NGTD', 'MUH', 'NHDE', 'JUF', 'HJKI', 'NHG',
+    ];
+
     return {
+        backgroundColor: '#18171B',
         tooltip: {
             trigger: 'axis',
             borderColor: '#3B3741',
             backgroundColor: '#2e2e2e',
             position: 'top',
             borderRadius: 12,
-            textStyle: {
-                color: '#fff',
-            },
-            axisPointer: {
-                type: 'shadow', // 鼠标悬停时显示阴影
+            textStyle: { color: '#fff' },
+            axisPointer: { type: 'shadow' },
+            formatter: (params: any) => {
+                const [series] = params
+                return `
+                    <div class="flex items-center gap-2" style="min-width: 96px; display: flex;">
+                      <span style="display:inline-block;margin-right:4px;border-radius:10px;width:10px;height:10px;background-color:#${series.data > 0 ? '2962FF' : 'D61B5F'};"></span>
+                      <div class="text-lg" style="color: #FFFFFF;font-size: 14px">${series.name}</div> 
+                      <div class="text-xs" style="color: #FFFFFF; font-size: 16px">${series.data}</div>
+                    </div>`
             },
         },
         xAxis: {
             type: 'category',
-            data: [
-                'AMZN', 'TSLA', 'QQQ', 'AAPL', 'AAL', 'NVDA', 'MSFT', 'MSXT', 'HUD', 'GRDS',
-                'HTYD', 'NHYF', 'BGTD', 'HTED', 'NHYF', 'NGG', 'NHY', 'HYD', 'NHYRD', 'MYG',
-                'NGTD', 'MUH', 'NHDE', 'JUF', 'HJKI', 'NHG',
-            ],
+            data: categories,
             axisLine: {
+                show: true,
                 lineStyle: {
-                    color: '#DBDBDB', // 坐标轴颜色
-                },
+                    color: '#fff',
+                    type: 'dashed',
+                    width: 1,
+                    opacity: 0.2
+                }
             },
             axisLabel: {
-                color: '#B8B8B8', // 坐标轴文字颜色
+                color: '#B8B8B8',
                 fontSize: 14,
                 show: false,
             },
-            axisTick: {
-                show: false
-            },
+            axisTick: { show: false },
         },
         yAxis: {
             type: 'value',
-            axisLine: {
-                lineStyle: {
-                    color: '#1B1B1B', // 坐标轴颜色
-                },
-            },
-            axisLabel: {
-                color: '#B8B8B8', // 坐标轴文字颜色
-            },
-            splitLine: {
-                lineStyle: {
-                    color: '#1b1b1b', // 网格线颜色
-                },
-            },
+            axisLine: { show: false },
+            axisLabel: { color: '#B8B8B8' },
+            splitLine: { show: false },
         },
-        grid: {
-            left: 60,
-            right: 30,
-            top: 40,
-            bottom: 30
-        },
+        grid: { left: 60, right: 30, top: 40, bottom: 30 },
         series: [
             {
-                name: '盈亏',
                 type: 'bar',
+                data: rawData,
                 label: {
                     show: true,
-                    color: '#DBDBDB', // 标签文字颜色
+                    color: '#DBDBDB',
                     fontSize: 14,
-                    formatter: '{b}', // 显示数值
-                    position: 'top',
-                    offset: [0, -10],
+                    formatter: '{b}',
+                    position: 'outside',
+                    distance: 20,
+                    align: 'center',
+                    verticalAlign: function (params: { value: number }) {
+                        return params.value >= 0 ? 'bottom' : 'top';
+                    }
                 },
-                data: [
-                    100, -200, 150, -100, 200, 300, 250, -300, 100, -150,
-                    -400, 200, 100, -250, 300, 400, 200, 100, -200, -100,
-                    150, 200, -300, -400, 300, 400,
-                ],
                 itemStyle: {
-                    borderRadius: [10],
-                    shadowColor: 'rgba(0, 0, 0, 0.5)',
-                    shadowBlur: 10,
-                    color: (params: any) => ({
-                        type: 'linear',
-                        x: params.value >= 0 ? 1 : 0,
-                        y: params.value >= 0 ? 1 : 0,
-                        x2: params.value >= 0 ? 0 : 1,
-                        y2: params.value >= 0 ? 0 : 1,
-                        colorStops: [
-                            {
-                                offset: .1, color: '#1A191B'
-                            },
-                            {
-                                offset: 1, color: params.value >= 0 ? '#1C316B' : '#421D2A' // 蓝色为正值，红色为负值 // 100% 处的颜色
+                    color: function (params: { value: number }) {
+                        if (params.value >= 0) {
+                            return {
+                                type: 'linear',
+                                x: 0, y: 0, x2: 0, y2: 1,
+                                colorStops: [
+                                    { offset: 0, color: '#1C316B' },
+                                    { offset: 1, color: '#1A191B ' }
+                                ]
                             }
-                        ],
-                        global: false // 缺省为 false
-                        // 根据值动态设置颜色
-
-                    }),
+                        } else {
+                            return {
+                                type: 'linear',
+                                x: 0, y: 1, x2: 0, y2: 0,
+                                colorStops: [
+                                    { offset: 0, color: '#421D2A' },
+                                    { offset: 1, color: '#1A191B' }
+                                ]
+                            }
+                        }
+                    },
+                    borderRadius: [10],
                 },
-                barWidth: '60', // 柱状图宽度
+                barWidth: 32,
             },
-        ],
+            {
+                type: 'bar',
+                data: rawData.map(value => value > 0 ? value + 6 : value - 6),
+                barWidth: 32,
+                itemStyle: {
+                    color: function (params: { value: number }) {
+                        if (params.value >= 0) {
+                            return {
+                                type: 'linear',
+                                x: 0, y: 0, x2: 0, y2: 1,
+                                colorStops: [
+                                    { offset: 0, color: '#2962FF' },
+                                    { offset: 1, color: '#1C316B' }
+                                ]
+                            }
+                        } else {
+                            return {
+                                type: 'linear',
+                                x: 0, y: 1, x2: 0, y2: 0,
+                                colorStops: [
+                                    { offset: 0, color: '#D61B5F' },
+                                    { offset: 1, color: '#421D2A' }
+                                ]
+                            }
+                        }
+                    },
+                    borderRadius: [10],
+                },
+                z: 1,
+                barGap: '-100%'
+            }
+        ]
     }
 }
