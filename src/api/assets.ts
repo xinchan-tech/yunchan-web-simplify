@@ -138,3 +138,10 @@ export const getStockChartKline = ( params ) => {
 }
 
 getStockChartKline.key = 'assets:stock:chart:kline'
+
+
+export const getStockInvestProfit = ( params ) => {
+    return request.get('/qs-svc/invest/profit/data', { params })
+}
+
+getStockInvestProfit.key = 'assets:invest:profit:data'

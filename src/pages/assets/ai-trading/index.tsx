@@ -11,15 +11,15 @@ type TableDataType = ReturnType<typeof stockUtils.toStockWithExt>
 import { MenuInline } from "@/components";
 const AiTrading = () => {
     const [sharedData, setSharedData] = useState<TableDataType>(''); // 父组件管理共享状态
-    const [list, setList] = useState<TableDataType[]>([])
-    const onUpdate = (row: TableDataType, data: TableDataType[]) => {
+    const onUpdate = (row: TableDataType) => {
         setSharedData(row)
-        setList(data)
     }
-    return <div className='flex flex-1 overflow-hidden'>
-        <Securitygroup onUpdate={onUpdate} className='w-[40rem]' />
+    return <div className='flex w-full overflow-hidden'>
+        <div className='h-full'>
+        <AiConfig className='h-full px-10 box-border' key={'ai-config'} row={sharedData} />
+        </div>
         <div className='ml-5 flex flex-1'>
-            <AiConfig key={'ai-config'} list={list} row={sharedData} />
+            <Securitygroup onUpdate={onUpdate} className='w-full px-5 box-border' />
         </div>
     </div>
 

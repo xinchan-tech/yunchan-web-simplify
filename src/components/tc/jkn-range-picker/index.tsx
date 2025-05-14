@@ -4,11 +4,13 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import type { DayPickerRangeProps, DateRange } from 'react-day-picker'
 import { JknIcon, Input } from '@/components'
+import { usePropValue } from '@/hooks';
 import { buttonVariants } from '@/components/ui/button'
 import { cn } from '@/utils/style'
 import dayjs from 'dayjs';
 import { useBoolean } from 'ahooks'
 interface DatePickerPropsBase {
+    value?: string[]
     placeholder?: string[]
     allowClear?: Boolean
     onChange?: (start: string, end: string) => void
@@ -26,12 +28,12 @@ interface DatePickerPropsBase {
  *  hover 颜色不好看
  */
 type JknDatePickerProps = Omit<DayPickerRangeProps, 'mode'> & DatePickerPropsBase
-const JknRangePicker = ({ children, onChange, onClose, allowClear, placeholder, classNames, ...props }: JknDatePickerProps) => {
+const JknRangePicker = ({ children, value, onChange, onClose, allowClear, placeholder, classNames, ...props }: JknDatePickerProps) => {
     const [range, setRange] = useState<{ from?: Date; to?: Date }>({}); // 共享的日期范围
     const [open, { setTrue, setFalse }] = useBoolean(false)
     const [leftMonth, setLeftMonth] = useState<Date>(new Date()); // 左边选择器的月份
     const [rightMonth, setRightMonth] = useState<Date>(new Date(new Date().setMonth(new Date().getMonth() + 1))); // 右边选择器的月份
-    const [date, setDate] = useState<string[]>([])
+    const [date, setDate] = usePropValue<string[] | undefined>(value ? value : undefined)
     const [isOPen, { setTrue: setOpen, setFalse: setClose }] = useBoolean(false); // 控制图标切换
     const [hovered, setHovered] = useState(false); // 控制图标切换
 
@@ -76,9 +78,9 @@ const JknRangePicker = ({ children, onChange, onClose, allowClear, placeholder, 
         <PopoverTrigger asChild>
             <div className='w-[25rem] flex items-center cursor-pointer border-[1px] pr-4 box-border  border-solid border-[#3c3c3c] rounded-lg box-border text-[#B8B8B8] text-base'>
 
-                <Input className='pl-7 border-0 focus:order-0 flex-1 placeholder:text-[#808080]' readOnly placeholder={(placeholder?.[0] ?? "开始日期")} value={date[0] || ''} onClick={open ? setFalse : setTrue} />
+                <Input className='pl-7 border-0 focus:order-0 flex-1 placeholder:text-[#808080]' readOnly placeholder={(placeholder?.[0] ?? "开始日期")} value={date ? date[0] || '' : ''} onClick={open ? setFalse : setTrue} />
                 -
-                <Input className='border-0 flex-1 placeholder:text-[#808080]' readOnly placeholder={(placeholder?.[1] ?? "结束日期")} value={date[1] || ''} onClick={open ? setFalse : setTrue} />
+                <Input className='border-0 flex-1 placeholder:text-[#808080]' readOnly placeholder={(placeholder?.[1] ?? "结束日期")} value={date ? date[1] || '' : ''} onClick={open ? setFalse : setTrue} />
                 {/* {
                     date.length && allowClear ? */}
                 <div className={cn('flex justify-center items-center  w-[1.2rem] h-[1.2rem]  mx-2 rounded-full',
@@ -88,11 +90,11 @@ const JknRangePicker = ({ children, onChange, onClose, allowClear, placeholder, 
                     // onMouseLeave={() => setHovered(false)} // 鼠标移出时恢复图标
                     onClick={close}>
                     {
-                    // hovered &&
-                     date.length && allowClear ?
-                        <JknIcon.Svg name="close" size={12} />
-                        :
-                        <JknIcon.Svg name="date-icon" size={24} onClick={close} />
+                        // hovered &&
+                       date && date?.length && allowClear ?
+                            <JknIcon.Svg name="close" size={12} />
+                            :
+                            <JknIcon.Svg name="date-icon" size={24} onClick={close} />
                     }
                 </div>
             </div>

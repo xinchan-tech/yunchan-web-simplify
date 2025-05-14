@@ -10,6 +10,7 @@ import { stockUtils } from '@/utils/stock'
 import { useConfig, useTime } from '@/store'
 import { type Stock, stockUtils } from '@/utils/stock'
 import { useEffect, useState, useMemo } from 'react'
+import Decimal from 'decimal.js'
 import { useQuery } from '@tanstack/react-query'
 import { cn } from '@/utils/style'
 type TableDataType = ReturnType<typeof stockUtils.toStockWithExt>
@@ -63,6 +64,7 @@ const Securitygroup = ({ onUpdate, className, ...props }: { className?: string, 
             const subStock: Stock | null = ['afterHours', 'close'].includes(trading) ? afterStock : beforeStock
 
             return {
+                ...stock,
                 ...lastStock,
                 name: stock.name,
                 code: stock.symbol,
@@ -111,6 +113,21 @@ const Securitygroup = ({ onUpdate, className, ...props }: { className?: string, 
                         zeroText="--"
                     />
                 )
+            },
+            {
+                title: '数量',
+                dataIndex: 'quantity',
+                align: 'left',
+                width: '13.5%',
+                sort: true,
+            },
+            {
+                title: '市值',
+                dataIndex: 'hold_market_cap',
+                align: 'left',
+                width: '13%',
+                sort: true,
+                render: (_: any, row) => Decimal.create(row.hold_market_cap).toShortCN(3)
             },
             {
                 title: '涨跌幅',

@@ -10,7 +10,7 @@ const AssetsIndex = () => {
   return <AuthGuard>
     <div className="p-5 box-border box-border h-screen flex flex-col">
       <Toaster />
-      <div className='flex flex-1 pt-[0.9375rem] w-full h-full box-border overflow-hidden'>
+      <div className='flex flex-1 w-full h-full box-border overflow-hidden'>
 
         <div className='flex flex-col w-[14.5rem] py-[2.5rem] px-[1.25rem] bg-[#1A191B] rounded-[2rem]'>
           <AssetsTop />
@@ -18,7 +18,7 @@ const AssetsIndex = () => {
             <MenuInline />
           </div>
         </div>
-        <div className='flex-1 flex flex-col ml-8'>
+        <div className='flex-1 flex flex-col ml-5'>
           <div className=''>
             <AssetsInfo />
           </div>

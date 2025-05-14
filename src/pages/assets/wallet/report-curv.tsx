@@ -5,7 +5,7 @@ import { useDebounce } from 'ahooks'
 import { StockView } from '@/components'
 import { useQuery } from '@tanstack/react-query'
 import { type StockTrading, stockUtils } from '@/utils/stock'
-import { getStockChartKline } from '@/api'
+import { getStockInvestProfit } from '@/api'
 import { numToDay } from '@/utils/date'
 import BigNumber from 'bignumber.js';
 import dayjs from "dayjs";
@@ -25,6 +25,7 @@ const ReportCurv = ({ rowdata }: { rowdata: TableDataType }) => {
   const [chart, dom] = useChart()
   const [resizeTrigger, setResizeTrigger] = useState(0)
   const debouncedResizeTrigger = useDebounce(resizeTrigger, 500)
+  const [yArr, setYArr] = useState<YArrType>([])
 
   const averageValue = useMemo(() => {
     return new BigNumber(rowdata.cost || 0).multipliedBy(new BigNumber(rowdata.quantity || 0)).toFixed(2);
@@ -84,23 +85,20 @@ const ReportCurv = ({ rowdata }: { rowdata: TableDataType }) => {
   }, [rowdata])
 
   function querygetStockChartKline() {
-    const start_at = dayjs(rowdata?.timestamp).format("YYYY-MM-DD")
-    getStockChartKline({
+    getStockInvestProfit({
       symbol: rowdata?.symbol,
-      period: '60m',
-      start_at,
-      time_format: 'int'
-    }).then(res => {
-      let arr = res?.data?.list//?.splice(0, 10)
-      const xArr: XArrType = []
-      const yArr: YArrType = []
-      arr.forEach(v => {
-        const val = v[2] ? new BigNumber(v[2] || 0).multipliedBy(new BigNumber(rowdata?.quantity || 0)).toFixed(2) : '0'
-        yArr.push(Number(val))
-        xArr.push(dayjs.unix(v[0]).format("YYYY-MM-DD HH:00"))
-      })
-      setChartOption({ xArr, yArr })
-      // console.log('res', setStock(arr))
+    }).then(({ status, data }) => {
+      if (status == 1) {
+        const xArr: XArrType = []
+        const yArr: YArrType = []
+
+        data.forEach(v => {
+          yArr.push(v.value)
+          xArr.push(v.name)
+        })
+        setYArr(yArr)
+        setChartOption({ xArr, yArr })
+      }
     })
   }
 
@@ -110,11 +108,20 @@ const ReportCurv = ({ rowdata }: { rowdata: TableDataType }) => {
     chart.current.setOption(options)
   }
 
+  const handelUpdate = () => {
+    const newYArr = yArr.map((v, i) => {
+      return i == yArr.length - 1 ? Math.random() * 1000 : v
+    })
+    console.log(55555, newYArr)
+    const a = [1300, 1400, 2500, 2600, 2700, 1600]
+    chart?.current?.setOption({ xAxis:{data:a},series: [{ data: a }, { data: a.map(i => i >= Number(averageValue) ? i : Number(averageValue)) }, { data: a.map(i => i < Number(averageValue) ? i : Number(averageValue)) }] })
+  }
 
   return <div className="bg-[#1A191B] rounded-[2rem] w-[28.25rem] w-full h-full p-6 box-border flex flex-col">
     <div className="text-2xl ">
       回报曲线
     </div>
+    {/* <div onClick={() => handelUpdate()}>更新数据</div> */}
     <div className="flex">
       <div className="w-[12.5rem] flex items-end">
         <div className="flex max-w-full items-end ">

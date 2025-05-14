@@ -45,15 +45,6 @@ const formSchema = z.object({
         .refine((value) => value.toString().replace('.', '').length <= 9, {
             message: '金额不能超过九位数', // 校验金额不能超过九位数
         }),
-    retailPrice: z
-        .number({ invalid_type_error: '请输入目标价' })
-        .min(0.01, { message: '目标价必须大于0' })
-        .refine((value) => /^\d+(\.\d{1,3})?$/.test(value.toString()), {
-            message: '目标价最多只能保留三位小数',
-        })
-        .refine((value) => value.toString().replace('.', '').length <= 9, {
-            message: '目标价不能超过九位数', // 校验金额不能超过九位数
-        }),
     quantity: z
         .number({ invalid_type_error: '请输入数量' })
         .min(0.01, { message: '数量必须大于0' })
@@ -68,19 +59,11 @@ const formSchema = z.object({
         .refine((value) => value.toString().replace('.', '').length <= 9, {
             message: '数量不能超过九位数', // 校验金额不能超过九位数
         }),
-    retailQuantity: z
-        .number({ invalid_type_error: '请输入数量' })
-        .min(0.01, { message: '数量必须大于0' })
-        .int({ message: '数量必须是整数' })
-        .refine((value) => value.toString().replace('.', '').length <= 9, {
-            message: '数量不能超过九位数', // 校验金额不能超过九位数
-        }),
-
 });
 
 type AiTypes = 'percent' | 'price'
 
-const AiConfig = ({ row }: { list: TableDataType[]; row: TableDataType }) => {
+const AiConfig = ({ row, className }: { className?: string; row: TableDataType }) => {
     const [type, setType] = useState(1);
     const [selectedAction, setSelectedAction] = useState<SelectedActionType>('buy'); // 选中状态
     const [aiType, setAiType] = useState<AiTypes>("percent")
@@ -88,6 +71,8 @@ const AiConfig = ({ row }: { list: TableDataType[]; row: TableDataType }) => {
     const [createTime, setCreateTime] = useState<string>("")
     const [loading, { setTrue: setLoadingTrue, setFalse: setLoadingFalse }] = useBoolean(false);
     const [hovered, setHovered] = useState(false); // 控制图标切换
+    const [diffPrice, setDiffPrice] = useState<string | number>('');
+    const [totalDiffPrice, setTotalDiffPrice] = useState<string | number>('');
     const { toast } = useToast();
 
     let form = useZForm(formSchema, {
@@ -95,8 +80,6 @@ const AiConfig = ({ row }: { list: TableDataType[]; row: TableDataType }) => {
         quantity: '',
         aiPrice: "",
         aiQuantity: "",
-        retailPrice: "",
-        retailQuantity: "",
     });
 
 
@@ -105,11 +88,8 @@ const AiConfig = ({ row }: { list: TableDataType[]; row: TableDataType }) => {
     const quantity = watch('quantity'); // 监听数量
     const aiPrice = watch('aiPrice'); // 监听价格
     const aiQuantity = watch('aiQuantity'); // 监听数量
-    const retailPrice = watch('retailPrice'); // 监听数量
-    const retailQuantity = watch('retailQuantity'); // 监听数量
     const totalAmount = new BigNumber(price || 0).multipliedBy(new BigNumber(quantity || 0)).toFixed(2);
     const aiTotalAmount = new BigNumber(aiPrice || 0).multipliedBy(new BigNumber(aiQuantity || 0)).toFixed(2);
-    const retailTotalAmount = new BigNumber(retailPrice || 0).multipliedBy(new BigNumber(retailQuantity || 0)).toFixed(2);
 
     const tabs = [
         { key: 1, label: `常规类型` },
@@ -129,10 +109,10 @@ const AiConfig = ({ row }: { list: TableDataType[]; row: TableDataType }) => {
             : null
     })
 
-    const calcPrice = (type: 'price' | 'percent') => {
-        if (!(aiQuantity && aiPrice)) return ''
+    const getCalcPrice = () => {
+        if (!(aiQuantity && aiPrice)) return { price: 0, total: 0 }
         let v
-        let x = selectedAction == 'buy' ? -1 : 1
+        let x = selectedAction == 'buy' ? 1 : -1
         if (aiType === 'percent') {
             v = Decimal.create(query.data?.close ?? 0)
                 .mul(1 + x * (+aiPrice / 100))
@@ -144,20 +124,35 @@ const AiConfig = ({ row }: { list: TableDataType[]; row: TableDataType }) => {
                 .plus(x * + aiPrice)
                 .toNumber()
         }
-        return (v * aiQuantity).toFixed(2)
+        return { price: v, total: (v * aiQuantity).toFixed(2) }
     }
 
     const onTypeChange = (key: string) => {
         setType(key);
     };
 
-    // useEffect(()=>{
+    useEffect(() => {
+        const { price, total } = getCalcPrice()
+        if (total) {
+            setTotalDiffPrice(total)
+            setDiffPrice(price)
+        }
+    }, [aiQuantity, aiPrice, query.data, selectedAction])
 
-    // }, [type])
+    useEffect(() => {
+        const { close } = query?.data || {}
+        if (type == 1) {
+            setValue('price', close || '')
+        }
+        if (stock && !quantity) {
+            setValue('quantity', 1)
+            setValue('aiQuantity', 1)
+        }
+    }, [query.data])
 
     useEffect(() => {
         if (row?.price) {
-            form.setValue('price', row.price)
+            setValue('price', row.price)
         }
         if (row?.symbol) setStock(row.symbol)
     }, [row])
@@ -186,21 +181,10 @@ const AiConfig = ({ row }: { list: TableDataType[]; row: TableDataType }) => {
         }
     }, [aiQuantity])
 
-    useEffect(() => {
-        if (retailPrice) {
-            trigger('retailPrice')
-        }
-    }, [retailPrice])
-
-    useEffect(() => {
-        if (retailQuantity) {
-            trigger('retailQuantity')
-        }
-    }, [retailQuantity])
-
     const onsubmit = async (key: SelectedActionType) => {
         if (!stock) return toast({ description: '请先选择股票' })
-        const verify = type == 1 ? ['price', 'quantity'] : ["aiPrice", "aiQuantity", "retailPrice", "retailQuantity"]
+        if (!query.data?.close) return toast({ description: '股票数据异常，请联系管理员' })
+        const verify = type == 1 ? ['price', 'quantity'] : ["aiPrice", "aiQuantity"]
         const valid = await form.trigger(verify);
         if (!valid) return
         if (selectedAction == 'buy') { //买入比较可用金额
@@ -216,6 +200,7 @@ const AiConfig = ({ row }: { list: TableDataType[]; row: TableDataType }) => {
             if (status == 1) {
                 toast({ description: '保存成功' })
                 form.reset()
+                type == 1 && setValue('price', price )
             } else {
                 toast({ description: msg })
             }
@@ -245,11 +230,10 @@ const AiConfig = ({ row }: { list: TableDataType[]; row: TableDataType }) => {
                 params: [{ price, quantity }]
             }
         } else {
-            const { aiPrice, aiQuantity, retailPrice, retailQuantity } = data
+            const { aiPrice, aiQuantity } = data
             param.condition = {
                 ai_params: [
-                    { type: 3, change_value: retailPrice, quantity: retailQuantity },
-                    { type: aiType == 'percent' ? 1 : 2, change_value: aiType == 'percent' ? aiPrice / 100 : aiPrice, quantity: aiQuantity }
+                    { type: aiType == 'percent' ? 1 : 2, change_value: aiType == 'percent' ? aiPrice / 100 : aiPrice, quantity: aiQuantity, price: diffPrice }
                 ]
             }
         }
@@ -263,7 +247,7 @@ const AiConfig = ({ row }: { list: TableDataType[]; row: TableDataType }) => {
     }
 
     return (
-        <div className="bg-[#1A191B] rounded-[2rem] p-6 flex-1">
+        <div className={cn("bg-[#1A191B] rounded-[2rem] p-6 flex-1 overflow-auto", className)}>
             <div className="text-2xl font-bold">AI交易配置</div>
             <FormProvider {...form}>
                 <div className="w-[32rem] mt-5 ">
@@ -319,71 +303,9 @@ const AiConfig = ({ row }: { list: TableDataType[]; row: TableDataType }) => {
                     </div>
                     {
                         type == 2 ? <>
-                            {/* 买卖目标价 */}
-                            < div >
-                                <div className="box-border flex justify-between border-[1px] border-solid border-[#3c3c3c] px-2.5 py-1 rounded-md mt-5">
-                                    <div className="flex-1">
-                                        <FormField
-                                            control={form.control}
-                                            name="retailPrice"
-                                            render={({ field }) => (
-                                                <FormItem className="flex items-start items-center space-y-0 relative">
-                                                    <FormControl>
-                                                        <div className='flex flex-col'>
-                                                            <div className="text-[#808080] text-xs font-bold mb-1">{selectedAction == 'buy' ? "买入" : "卖出"}目标价</div>
-                                                            <Input
-                                                                type="number"
-                                                                min={0}
-                                                                placeholder='请输入价格'
-                                                                className={cn('border-none flex-1 text-center h-[20px] text-left p-0 placeholder:text-[#808080]')}
-                                                                {...form.register('retailPrice', { valueAsNumber: true })}
-                                                            />
-                                                        </div>
-                                                    </FormControl>
-                                                    <FormMessage className="text-sx text-destructive absolute right-2 left-[0] bottom-[-24px] w-[400px]" />
-                                                </FormItem>
-                                            )}
-                                        >
-                                        </FormField>
-                                    </div>
-                                    <div className="flex flex-1 flex-col items-center justify-center">
-                                        <div className="text-[#DBDBDB] text-sm">
-                                            <FormField
-                                                control={form.control}
-                                                name="retailQuantity"
-                                                render={({ field }) => (
-                                                    <FormItem className="flex items-start items-center space-y-0 relative">
-                                                        <FormControl>
-                                                            <div className='flex flex-col'>
-                                                                <div className="text-[#808080] text-xs font-bold mb-1 text-center">数量</div>
-                                                                <Input
-                                                                    type="number"
-                                                                    min={0}
-                                                                    placeholder='请输入数量'
-                                                                    className={cn('border-none flex-1 text-center h-[20px] text-center p-0 placeholder:text-[#808080]')}
-                                                                    {...form.register('retailQuantity', { valueAsNumber: true })}
-                                                                />
-                                                            </div>
-                                                        </FormControl>
-                                                        <FormMessage className="text-sx text-destructive absolute right-2 left-[0] bottom-[-24px] w-full text-center" />
-                                                    </FormItem>
-                                                )}
-                                            >
-                                            </FormField>
-                                        </div>
-                                    </div>
-                                    <div className="flex flex-1 flex-col items-end justify-center">
-                                        <div className="text-[#808080] text-xs font-bold mb-1 text-right pr-[12px] box-border">
-                                            金额
-                                        </div>
-                                        <div className="text-[#808080] text-sm">{retailTotalAmount}</div>
-                                    </div>
-                                </div>
-                            </div>
-
                             {/* 回撤配置 */}
                             <div className='mt-5'>
-                                <div className='text-[#B8B8B8] text-base my-2.5'>上涨追踪</div>
+                                <div className='text-[#B8B8B8] text-base my-2.5'>{selectedAction == 'buy' ? "下跌" : "上涨"}追踪</div>
                                 <div className="box-border flex justify-between border-[1px] border-solid border-[#3c3c3c] px-2.5 py-1 rounded-md mt-5">
                                     <div className="flex-1">
                                         <FormField
@@ -457,7 +379,7 @@ const AiConfig = ({ row }: { list: TableDataType[]; row: TableDataType }) => {
                                         <div className="text-[#808080] text-xs font-bold mb-1 text-right pr-[12px] box-border">
                                             金额
                                         </div>
-                                        <div className="text-[#808080] text-sm">{calcPrice()}</div>
+                                        <div className="text-[#808080] text-sm">{totalDiffPrice}</div>
                                     </div>
                                 </div>
                             </div>

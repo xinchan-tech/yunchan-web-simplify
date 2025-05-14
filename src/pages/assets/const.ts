@@ -19,7 +19,6 @@ export function numberFormat(value: number, coefficient?: number) {
 }
 
 export const getLineChartOps = (averageValue = 0, { xArr = [], yArr = [] } = {}) => {
-
     return {
         tooltip: {
             trigger: 'axis',
@@ -63,7 +62,7 @@ export const getLineChartOps = (averageValue = 0, { xArr = [], yArr = [] } = {})
         yAxis: {
             type: 'value',
             axisLine: {
-                show: false // 不显示y轴线
+                show: false
             },
             axisLabel: {
                 color: '#B8B8B8',
@@ -72,7 +71,6 @@ export const getLineChartOps = (averageValue = 0, { xArr = [], yArr = [] } = {})
                 show: true,
                 lineStyle: {
                     color: function (value: number) {
-                        // 只在y=0时显示虚线
                         return value === 0 ? '#fff' : 'transparent';
                     },
                     type: 'dashed',
@@ -80,10 +78,10 @@ export const getLineChartOps = (averageValue = 0, { xArr = [], yArr = [] } = {})
                     opacity: 0.2
                 },
             },
-            // max: function (val) {
-            //     if (val.max < averageValue) val.max = averageValue
-            //     return Math.ceil(val.max)
-            // }
+            max: function (val) {
+                if (val.max < averageValue) val.max = Number(averageValue)
+                return Math.ceil(val.max)
+            }
         },
         grid: {
             left: 60,
@@ -95,7 +93,7 @@ export const getLineChartOps = (averageValue = 0, { xArr = [], yArr = [] } = {})
             {
                 type: 'inside',
                 start: 0,
-                end: 10,
+                end: yArr.length < 20 ? 100 : 10,
                 disabled: yArr.length < 20
             },
         ],
@@ -105,8 +103,8 @@ export const getLineChartOps = (averageValue = 0, { xArr = [], yArr = [] } = {})
             splitNumber: 2,
             dimension: 1, // 按数据的第1个维度（y值）映射
             pieces: [
-                { min: 0, max: averageValue, color: "#FC43A8" },
-                { min: averageValue, color: "#C1F15F" }
+                { min: 0, max: Number(averageValue), color: "#FC43A8" },
+                { min: Number(averageValue), color: "#C1F15F" }
             ],
         },
         series: [
@@ -133,26 +131,6 @@ export const getLineChartOps = (averageValue = 0, { xArr = [], yArr = [] } = {})
                     borderColor: '#fff',
                     borderWidth: 2, // 圆点的边框宽度
                 },
-                areaStyle: {
-                    origin: averageValue,
-                    color: {
-                        type: 'linear',
-                        x: 0,
-                        y: 0,
-                        x2: 0,
-                        y2: 1,
-                        colorStops: [
-                            {
-                                offset: 0,
-                                color: 'rgba(34, 171, 148, 0.6)', // 渐变起始颜色
-                            },
-                            {
-                                offset: 1,
-                                color: 'rgba(34, 171, 148, 0)', // 渐变结束颜色
-                            },
-                        ],
-                    },
-                },
                 markLine: {
                     silent: true,
                     data: [
@@ -171,6 +149,68 @@ export const getLineChartOps = (averageValue = 0, { xArr = [], yArr = [] } = {})
                         formatter: '{c}', // 显示平均值
                         position: 'middle',
                         color: '#3D3D3D',
+                    },
+                },
+            },
+            {
+                data: yArr.map(i => i >= averageValue ? i : null),
+                type: 'line',
+                itemStyle: {
+                    opacity: 0
+                },
+                lineStyle: {
+                    opacity: 0
+                },
+                z: 10,
+                areaStyle: {
+                    origin: Number(averageValue),
+                    color: {
+                        type: 'linear',
+                        x: 0,
+                        y: 0,
+                        x2: 0,
+                        y2: 1,
+                        colorStops: [
+                            {
+                                offset: 0,
+                                color: 'rgba(94, 222, 160)', // 渐变起始颜色
+                            },
+                            {
+                                offset: 1,
+                                color: 'rgba(34, 171, 148, 0)', // 渐变结束颜色
+                            },
+                        ],
+                    },
+                },
+            },
+            {
+                data: yArr.map(i => i < averageValue ? i : null),
+                type: 'line',
+                itemStyle: {
+                    opacity: 0
+                },
+                lineStyle: {
+                    opacity: 0
+                },
+                z: 8,
+                areaStyle: {
+                    origin: Number(averageValue),
+                    color: {
+                        type: 'linear',
+                        x: 0,
+                        y: 0,
+                        x2: 0,
+                        y2: 1,
+                        colorStops: [
+                            {
+                                offset: 1,
+                                color: 'rgba(252, 67, 168)', // 渐变起始颜色
+                            },
+                            {
+                                offset: 0,
+                                color: 'rgba(252, 67, 168, 0.1)', // 渐变结束颜色
+                            },
+                        ],
                     },
                 },
             },

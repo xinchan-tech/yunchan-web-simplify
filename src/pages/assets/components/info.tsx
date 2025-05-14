@@ -38,7 +38,7 @@ const AssetsInfo = () => {
     useEffect(() => {
         const { data } = query
         if (data?.message) {
-            toast({ description: data.message })
+            // toast({ description: data.message })
             if (data?.message == "账户信息不存在") {
                 setInfo({ state: -1 })
                 useAssetsInfoStore?.getState()?.setData({ state: -1 })
