@@ -57,7 +57,7 @@ const HistoryList = () => {
     }
 
     for (const { id, time, ...stock } of query.data.items) {
-      
+
       const lastStock = stockUtils.toStockWithExt(stock.stock, {
         extend: stock.extend,
         name: stock.name,
@@ -81,11 +81,18 @@ const HistoryList = () => {
       if (status == 1) {
         query.refetch()
       }
-      toast({description: status == 1 ? '操作成功' : msg})
+      toast({ description: status == 1 ? '操作成功' : msg })
     })
-    .catch((err) => {
-      toast({ description: String(err) })
-    })
+      .catch((err) => {
+        toast({ description: String(err) })
+      })
+  }
+
+
+  function formatThousand(value) {
+    const [intPart, decPart] = String(value).split('.')
+    const intWithComma = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+    return decPart ? `${intWithComma}.${decPart}` : intWithComma
   }
 
   const columns: TcRcTableProps<TableDataType>['columns'] = useMemo(
@@ -143,7 +150,7 @@ const HistoryList = () => {
         align: 'left',
         width: '10%',
         sort: true,
-        render: (_: any, row) => Decimal.create(row.amount).toShortCN(3)
+        render: (_: any, row) => formatThousand(row.amount || 0)
       },
       {
         title: '类别',

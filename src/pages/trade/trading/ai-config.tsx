@@ -112,7 +112,7 @@ const AiConfig = ({ row, className }: { className?: string; row: TableDataType }
     const getCalcPrice = () => {
         if (!(aiQuantity && aiPrice)) return { price: 0, total: 0 }
         let v
-        let x = selectedAction == 'buy' ? 1 : -1
+        let x = selectedAction == 'buy' ? -1 : 1
         if (aiType === 'percent') {
             v = Decimal.create(query.data?.close ?? 0)
                 .mul(1 + x * (+aiPrice / 100))
@@ -190,7 +190,7 @@ const AiConfig = ({ row, className }: { className?: string; row: TableDataType }
         if (selectedAction == 'buy') { //买入比较可用金额
             const info = useAssetsInfoStore?.getState()?.data || {}
             let _totalAmount = type == 1 ? totalAmount : aiTotalAmount
-            if (_totalAmount > info.balance) return toast({ description: '可用金额不足，请先存款！' })
+            if (_totalAmount > info.balance) return toast({ description: '维持保证金不足！' })
         } else {  //卖出比较数量
             //目前还没有数量获取的地方
         }
@@ -198,7 +198,7 @@ const AiConfig = ({ row, className }: { className?: string; row: TableDataType }
         setLoadingTrue()
         saveTrades(params).then(({ status, msg }) => {
             if (status == 1) {
-                toast({ description: '保存成功' })
+                toast({ description: '订单已提交' })
                 form.reset()
                 type == 1 && setValue('price', price )
             } else {
