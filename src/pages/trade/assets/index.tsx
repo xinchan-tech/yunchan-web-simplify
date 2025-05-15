@@ -5,7 +5,7 @@ import { useState } from "react";
 type TableDataType = ReturnType<typeof stockUtils.toStockWithExt>
 
 const Wallet = () => {
-    const [sharedData, setSharedData] = useState<TableDataType>(''); // 父组件管理共享状态
+    const [sharedData, setSharedData] = useState<TableDataType>(''); 
 
     const onUpdate = (row: TableDataType, data: TableDataType[]) => {
         setSharedData(row)

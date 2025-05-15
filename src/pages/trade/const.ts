@@ -161,7 +161,6 @@ export const getLineChartOps = (averageValue = 0, { xArr = [], yArr = [] } = {})
                 lineStyle: {
                     opacity: 0
                 },
-                z: 10,
                 areaStyle: {
                     origin: Number(averageValue),
                     color: {

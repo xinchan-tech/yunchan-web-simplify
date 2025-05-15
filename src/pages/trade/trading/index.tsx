@@ -1,7 +1,7 @@
 
-import AssetsTop from '../components/top';
-import AssetsInfo from '../components/info';
-import Securitygroup from './security-group';
+import AssetsTop from '../components/top.tsx';
+import AssetsInfo from '../components/info.tsx';
+import Securitygroup from './security-group.tsx';
 import AiConfig from './ai-config.tsx'
 import { useState } from "react";
 import { stockUtils } from '@/utils/stock'

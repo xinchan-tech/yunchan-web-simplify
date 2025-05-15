@@ -31,30 +31,30 @@ const MenuInline = () => {
   const menus: MenuItem[] = useMemo(
     () => [
       {
-        icon: <JknIcon.Svg name="wallet-icon" size={24} />,
+        icon: <JknIcon.Svg name="assets-icon" size={24} />,
         title: '我的钱包',
-        path: '/assets'
+        path: '/trade/assets'
       },
       {
-        icon: <JknIcon.Svg name="aiTrading-icon" size={24} />,
+        icon: <JknIcon.Svg name="trading-icon" size={24} />,
         title: 'AI交易',
-        path: '/assets/aiTrading'
+        path: '/trade/trading'
       },
       {
-        icon: <JknIcon.Svg name="invest-icon" size={24} />,
+        icon: <JknIcon.Svg name="portfolio-icon" size={24} />,
         title: '投资组合',
-        path: '/assets/invest'
+        path: '/trade/portfolio'
       },
       {
-        icon: <JknIcon.Svg name="historyList-icon" size={24} />,
+        icon: <JknIcon.Svg name="order-icon" size={24} />,
         title: '历史查询',
-        path: '/assets/historyList'
+        path: '/trade/order'
       },
 
       {
-        icon: <JknIcon.Svg name="curvReport-icon" size={24} />,
+        icon: <JknIcon.Svg name="trend-icon" size={24} />,
         title: '回报曲线',
-        path: '/assets/curvReport'
+        path: '/trade/trend'
       },
     ],
     []

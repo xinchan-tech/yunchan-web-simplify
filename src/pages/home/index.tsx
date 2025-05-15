@@ -72,7 +72,7 @@ const HomePage = () => {
           </Link>
           {
             sysConfig.PUBLIC_BASE_BUILD_ENV !== 'PRODUCTION' ? (
-              <Link to="/assets" className="home-navigate-item hover:text-primary">
+              <Link to="/trade/assets" className="home-navigate-item hover:text-primary">
                 AI交易
               </Link>
             ) : null

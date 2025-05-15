@@ -214,35 +214,51 @@ export const routes: RouteObject[] = [
   //   ]
   // },
   {
-    path: '/assets',
-    Component: lazy(() => import('@/pages/assets')),
+    path: '/trade',
+    Component: lazy(() => import('@/pages/trade')),
     children: [
       {
         index: true,
-        Component: lazy(() => import('@/pages/assets/wallet'))
+        path: '/trade/assets',
+        Component: lazy(() => import('@/pages/trade/assets')),
+        handle: {
+          title: '我的钱包'
+        }
       },
       {
-        path: 'aiTrading',
-        Component: lazy(() => import('@/pages/assets/ai-trading'))
+        path: '/trade/trading',
+        Component: lazy(() => import('@/pages/trade/trading')),
+        handle: {
+          title: 'AI交易'
+        }
       },
       {
-        path: 'invest',
-        Component: lazy(() => import('@/pages/assets/invest'))
+        path: '/trade/portfolio',
+        Component: lazy(() => import('@/pages/trade/portfolio')),
+        handle: {
+          title: '组合投资'
+        }
       },
       {
-        path: 'historyList',
-        Component: lazy(() => import('@/pages/assets/history-list'))
+        path: '/trade/order',
+        Component: lazy(() => import('@/pages/trade/order')),
+        handle: {
+          title: '历史查询'
+        }
       },
       {
-        path: 'curvReport',
-        Component: lazy(() => import('@/pages/assets/curv-report'))
+        path: '/trade/trend',
+        Component: lazy(() => import('@/pages/trade/trend')),
+        handle: {
+          title: '回报曲线'
+        }
       }
     ]
   },
   {
     path: '/home',
     Component: lazy(() => import('@/pages/home')),
-    },
+  },
   {
     path: '*',
     element: <Navigate to="/app" />,

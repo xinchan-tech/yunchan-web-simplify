@@ -305,7 +305,7 @@ const AiConfig = ({ row, className }: { className?: string; row: TableDataType }
                         type == 2 ? <>
                             {/* 回撤配置 */}
                             <div className='mt-5'>
-                                <div className='text-[#B8B8B8] text-base my-2.5'>{selectedAction == 'buy' ? "下跌" : "上涨"}追踪</div>
+                                <div className='text-[#B8B8B8] text-base my-2.5'>{selectedAction == 'buy' ? "上涨" : "下跌"}追踪</div>
                                 <div className="box-border flex justify-between border-[1px] border-solid border-[#3c3c3c] px-2.5 py-1 rounded-md mt-5">
                                     <div className="flex-1">
                                         <FormField
